@@ -1,0 +1,31 @@
+{
+  "auth": {
+    "loginTitle": "Login",
+    "loginDescription": "Welcome back!",
+    "rememberMe": "Remember me",
+
+    "email": {
+      "label": "Email",
+      "placeholder": "Enter your email"
+    },
+    "password": {
+      "label": "Password",
+      "placeholder": "Enter your password"
+    },
+    "confirmPassword": {
+      "label": "Confirm Password",
+      "placeholder": "Confirm your password"
+    },
+    "validation": {
+      "emailInvalid": "Invalid email address",
+      "passwordInvalid": "Password must be at least 8 characters long"
+    },
+
+    "registerTitle": "Register",
+    "registerDescription": "Create a new account",
+    "signUp": "Sign up",
+    "registerLink": "Don't have an account?",
+    "loginButton": "Login",
+    "registerButton": "Register"
+  }
+}

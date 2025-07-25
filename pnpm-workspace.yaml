@@ -1,0 +1,58 @@
+packages:
+  - 'playground/**'
+  - 'test/**'
+
+catalogs:
+  build:
+    '@types/node': ^24.1.0
+    typescript: ^5.8.3
+    vue-tsc: ^3.0.3
+  cli:
+    '@antfu/ni': ^25.0.0
+    fast-glob: ^3.3.3
+    lint-staged: ^16.1.2
+    simple-git-hooks: ^2.13.0
+    taze: ^19.1.0
+    tsx: ^4.20.3
+  dev:
+    '@antfu/eslint-config': ^4.18.0
+    '@nuxt/devtools': ^2.6.2
+    '@nuxt/eslint': ^1.7.0
+    '@nuxt/module-builder': ^1.0.1
+    '@nuxt/schema': ^4.0.1
+    changelogen: ^0.6.2
+    eslint: ^9.31.0
+    eslint-plugin-format: ^1.0.1
+  frontend:
+    '@nuxt/ui': ^3.2.0
+    '@nuxt/ui-pro': ^3.2.0
+    '@pinia/nuxt': ^0.11.2
+    '@vueuse/core': ^13.5.0
+    '@vueuse/nuxt': ^13.5.0
+    pinia: ^3.0.3
+    sass-embedded: ^1.89.2
+    zod: ^4.0.5
+  icons:
+    '@iconify-json/lucide': ^1.2.57
+    '@iconify-json/simple-icons': ^1.2.44
+  nuxt:
+    '@nuxt/kit': ^4.0.1
+    '@nuxtjs/i18n': ^10.0.2
+    nuxt: ^4.0.1
+    nuxt-auth-utils: ^0.5.20
+  prod:
+    '@movk/core': ^0.0.3
+    defu: ^6.1.4
+    lru-cache: ^11.1.0
+  test:
+    '@nuxt/test-utils': ^3.19.2
+    vitest: ^3.2.4
+
+onlyBuiltDependencies:
+  - '@parcel/watcher'
+  - '@tailwindcss/oxide'
+  - esbuild
+  - sharp
+  - simple-git-hooks
+  - unrs-resolver
+  - vue-demi
