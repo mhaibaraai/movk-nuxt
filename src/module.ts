@@ -69,6 +69,7 @@ export default defineNuxtModule<ModuleOptions>({
 
     await installModule('nuxt-auth-utils')
     await installModule('@vueuse/nuxt')
+    await installModule('@nuxt/image')
 
     if (options.i18n) {
       await registerModule('@nuxtjs/i18n', 'i18n', {
