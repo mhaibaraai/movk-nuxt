@@ -1,0 +1,194 @@
+/* Flex Direction Utilities with Justify Content */
+@utility flex-row-start {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+}
+
+@utility flex-row-end {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+}
+
+@utility flex-row-center {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+}
+
+@utility flex-row-between {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+@utility flex-row-around {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+}
+
+@utility flex-row-evenly {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-evenly;
+}
+
+/* Flex Column Utilities */
+@utility flex-col-start {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+@utility flex-col-end {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+@utility flex-col-center {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+@utility flex-col-between {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+@utility flex-col-around {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+}
+
+@utility flex-col-evenly {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+}
+
+/* Flex Row Reverse Utilities */
+@utility flex-row-reverse-start {
+  display: flex;
+  flex-direction: row-reverse;
+  justify-content: flex-start;
+}
+
+@utility flex-row-reverse-end {
+  display: flex;
+  flex-direction: row-reverse;
+  justify-content: flex-end;
+}
+
+@utility flex-row-reverse-center {
+  display: flex;
+  flex-direction: row-reverse;
+  justify-content: center;
+}
+
+@utility flex-row-reverse-between {
+  display: flex;
+  flex-direction: row-reverse;
+  justify-content: space-between;
+}
+
+@utility flex-row-reverse-around {
+  display: flex;
+  flex-direction: row-reverse;
+  justify-content: space-around;
+}
+
+@utility flex-row-reverse-evenly {
+  display: flex;
+  flex-direction: row-reverse;
+  justify-content: space-evenly;
+}
+
+/* Flex Column Reverse Utilities */
+@utility flex-col-reverse-start {
+  display: flex;
+  flex-direction: column-reverse;
+  justify-content: flex-start;
+}
+
+@utility flex-col-reverse-end {
+  display: flex;
+  flex-direction: column-reverse;
+  justify-content: flex-end;
+}
+
+@utility flex-col-reverse-center {
+  display: flex;
+  flex-direction: column-reverse;
+  justify-content: center;
+}
+
+@utility flex-col-reverse-between {
+  display: flex;
+  flex-direction: column-reverse;
+  justify-content: space-between;
+}
+
+@utility flex-col-reverse-around {
+  display: flex;
+  flex-direction: column-reverse;
+  justify-content: space-around;
+}
+
+@utility flex-col-reverse-evenly {
+  display: flex;
+  flex-direction: column-reverse;
+  justify-content: space-evenly;
+}
+
+/* Quick Center Utilities */
+@utility flex-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+@utility inline-flex-center {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Axis-specific Center Utilities */
+@utility flex-x-center {
+  display: flex;
+  justify-content: center;
+}
+
+@utility flex-y-center {
+  display: flex;
+  align-items: center;
+}
+
+@utility inline-flex-x-center {
+  display: inline-flex;
+  justify-content: center;
+}
+
+@utility inline-flex-y-center {
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Functional Utilities for Custom Spacing */
+@utility flex-row-gap-* {
+  display: flex;
+  flex-direction: row;
+  gap: --value(--spacing-*, [length], [percentage]);
+}
+
+@utility flex-col-gap-* {
+  display: flex;
+  flex-direction: column;
+  gap: --value(--spacing-*, [length], [percentage]);
+}

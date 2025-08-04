@@ -1,0 +1,31 @@
+{
+  "auth": {
+    "loginTitle": "登录",
+    "loginDescription": "欢迎回来！",
+    "rememberMe": "记住我",
+
+    "email": {
+      "label": "邮箱",
+      "placeholder": "请输入邮箱"
+    },
+    "password": {
+      "label": "密码",
+      "placeholder": "请输入密码"
+    },
+    "confirmPassword": {
+      "label": "确认密码",
+      "placeholder": "请确认密码"
+    },
+    "validation": {
+      "emailInvalid": "邮箱格式不正确",
+      "passwordInvalid": "密码长度至少为8位"
+    },
+
+    "registerTitle": "注册",
+    "registerDescription": "创建一个新账户",
+    "signUp": "注册",
+    "registerLink": "没有账号？",
+    "loginButton": "登录",
+    "registerButton": "注册"
+  }
+}

@@ -1,0 +1,8 @@
+@import 'tailwindcss';
+@import '@nuxt/ui-pro';
+@import './flex-utilities.css';
+@import './owl-utilities.css';
+
+@theme static {
+  --font-sans: 'Public Sans', sans-serif;
+}

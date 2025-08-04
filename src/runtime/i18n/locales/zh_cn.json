@@ -1,0 +1,46 @@
+{
+  "common": {
+    "or": "或",
+    "continue": "继续",
+    "success": "成功",
+    "error": "错误",
+    "link": "链接",
+    "switchTo": "切换到"
+  },
+  "validation": {
+    "success": "请求成功",
+    "error": "请求错误",
+    "responseError": "响应错误",
+    "networkError": "网络错误",
+    "unauthorized": "认证失败，请重新登录",
+    "forbidden": "权限不足，无法访问该资源",
+    "notFound": "请求的资源不存在",
+    "tooManyRequests": "请求过于频繁，请稍后重试",
+    "serverError": "服务器错误，请稍后重试"
+  },
+  "colorMode": {
+    "switchToLight": "切换到亮色",
+    "switchToDark": "切换到暗色",
+    "system": "系统",
+    "light": "亮色",
+    "dark": "暗色"
+  },
+  "passwordStrength": {
+    "mustContain": "必须包含：",
+    "requirementsTitle": "密码要求",
+    "requirementMet": "符合要求",
+    "requirementNotMet": "不符合要求",
+    "requirements": {
+      "minLength": "至少8个字符",
+      "hasNumber": "至少1个数字",
+      "hasLowercase": "至少1个小写字母",
+      "hasUppercase": "至少1个大写字母"
+    },
+    "levels": {
+      "none": "请输入密码",
+      "weak": "弱密码",
+      "medium": "中密码",
+      "strong": "强密码"
+    }
+  }
+}
