@@ -1,14 +1,18 @@
 <script setup lang="ts">
-const { locales, locale, setLocale } = useI18n()
+import type { DropdownMenuItem } from '@nuxt/ui'
 
-const currentLocale = computed({
-  get() {
-    return locale.value
-  },
-  set(value) {
-    setLocale(value)
-  },
-})
+const { locale, setLocale, locales } = useI18n()
+const items = computed(() =>
+  locales.value.map(l => ({
+    ...l,
+    type: 'checkbox',
+    checked: locale.value === l.code,
+    onSelect: (e: Event) => {
+      e.preventDefault()
+      setLocale(l.code)
+    },
+  } satisfies DropdownMenuItem)),
+)
 </script>
 
 <template>
@@ -18,11 +22,20 @@ const currentLocale = computed({
       <LogoApplication />
       <div class="bg-elevated rounded-2xl right-4 top-4 absolute z-10 px-3 py-1 flex-center">
         <ThemePicker />
-        <MLocaleDropMenu
-          v-model="currentLocale"
-          :locales="locales"
-        />
-        <MColorModeButton />
+        <UDropdownMenu
+          arrow
+          label-key="name"
+          :ui="{ content: 'w-24' }"
+          :items="items"
+        >
+          <UButton
+            icon="i-lucide-languages"
+            color="neutral"
+            variant="ghost"
+          />
+        </UDropdownMenu>
+
+        <UColorModeButton />
       </div>
       <slot />
     </div>

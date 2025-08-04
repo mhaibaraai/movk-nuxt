@@ -1,6 +1,6 @@
 <script lang="ts" setup>
-import type { AuthFormProps } from '#movk/types'
-import type { FormSubmitEvent } from '@nuxt/ui'
+import type { ButtonProps, FormSubmitEvent } from '@nuxt/ui'
+import type { AuthFormProps } from '@nuxt/ui-pro'
 import { z } from 'zod/v4'
 
 definePageMeta({
@@ -12,7 +12,7 @@ useSeoMeta({
   title: computed(() => t('auth.loginTitle')),
 })
 
-const providers: AuthFormProps['providers'] = [
+const providers = ref([
   {
     label: 'Github',
     icon: 'i-simple-icons-github',
@@ -22,7 +22,7 @@ const providers: AuthFormProps['providers'] = [
       console.log('Login with Github')
     },
   },
-]
+] satisfies ButtonProps[])
 
 const fields = computed(() => [
   {
@@ -44,7 +44,7 @@ const fields = computed(() => [
     type: 'checkbox',
     label: t('auth.rememberMe'),
   },
-] as AuthFormProps['fields'])
+] satisfies AuthFormProps['fields'])
 
 const schema = z.object({
   email: z.email(t('auth.validation.emailInvalid')),
@@ -59,8 +59,8 @@ function onSubmit(event: FormSubmitEvent<Schema>) {
 </script>
 
 <template>
-  <div class="gap-4 flex-center md:w-2/3 lg:w-1/2 xl:w-[36%]">
-    <MAuthForm
+  <UPageCard class="flex-center md:w-2/3 lg:w-1/2 xl:w-[36%]">
+    <UAuthForm
       :title="t('auth.loginDescription')"
       :providers="providers"
       :fields="fields"
@@ -77,48 +77,6 @@ function onSubmit(event: FormSubmitEvent<Schema>) {
           {{ t('auth.signUp') }}
         </ULink>
       </template>
-    </MAuthForm>
-  </div>
+    </UAuthForm>
+  </UPageCard>
 </template>
-
-<style lang="scss" scoped>
-.login-background {
-  background: radial-gradient(
-    circle at center,
-    color-mix(in srgb, var(--ui-primary), transparent 70%) 0%,
-    color-mix(in srgb, var(--ui-primary), transparent 80%) 25%,
-    color-mix(in srgb, var(--ui-primary), transparent 85%) 50%,
-    color-mix(in srgb, var(--ui-primary), transparent 90%) 75%,
-    transparent 100%
-  );
-
-  backdrop-filter: blur(20px) saturate(1.2);
-  -webkit-backdrop-filter: blur(20px) saturate(1.2);
-  animation: breathing 4s ease-in-out infinite;
-  transform-origin: center center;
-}
-
-@keyframes breathing {
-  0%,
-  100% {
-    transform: scale(1);
-    opacity: 0.8;
-  }
-
-  50% {
-    transform: scale(1.02);
-    opacity: 1;
-  }
-}
-
-html.dark .login-background {
-  background: radial-gradient(
-    circle at center,
-    color-mix(in srgb, var(--ui-primary), transparent 75%) 0%,
-    color-mix(in srgb, var(--ui-primary), transparent 82%) 25%,
-    color-mix(in srgb, var(--ui-primary), transparent 88%) 50%,
-    color-mix(in srgb, var(--ui-primary), transparent 92%) 75%,
-    transparent 100%
-  );
-}
-</style>

@@ -22,6 +22,7 @@ const moduleOptionsSchema = z.object({
    * @default 'M'
    */
   prefix: z.string().default('M'),
+  i18n: z.boolean().default(false),
 })
 
 type ModuleOptions = z.input<typeof moduleOptionsSchema>
@@ -52,10 +53,11 @@ export default defineNuxtModule<ModuleOptions>({
       }
     }
 
-    await installModule('@vueuse/nuxt')
     await installModule('@nuxt/image')
-    await installModule('nuxt-auth-utils')
     await installModule('@nuxt/ui-pro')
+
+    await installModule('@vueuse/nuxt')
+    await installModule('nuxt-auth-utils')
 
     await registerModule('@nuxt/eslint', 'eslint', {
       config: {
@@ -68,15 +70,17 @@ export default defineNuxtModule<ModuleOptions>({
 
     nuxt.options.css.push(resolve('runtime/assets/main.css'))
 
-    nuxt.hook('i18n:registerModule', (register) => {
-      register({
-        langDir: resolve('./runtime/i18n/locales'),
-        locales: [
-          { code: 'zh_cn', file: 'zh_cn.json' },
-          { code: 'en', file: 'en.json' },
-        ],
+    if (options.i18n) {
+      nuxt.hook('i18n:registerModule', (register) => {
+        register({
+          langDir: resolve('./runtime/i18n/locales'),
+          locales: [
+            { code: 'zh_cn', file: 'zh_cn.json' },
+            { code: 'en', file: 'en.json' },
+          ],
+        })
       })
-    })
+    }
 
     addPlugin({ src: resolve('runtime/plugins/api.factory.ts') })
 

@@ -1,6 +1,6 @@
 <script lang="ts" setup>
-import type { AuthFormProps } from '#movk/types'
 import type { FormSubmitEvent } from '@nuxt/ui'
+import type { AuthFormProps } from '@nuxt/ui-pro'
 import { z } from 'zod/v4'
 
 definePageMeta({
@@ -17,19 +17,19 @@ const authForm = ref<{ state: { password?: string } } | null>(null)
 const fields = computed(() => [
   {
     name: 'email',
-    type: 'text',
+    type: 'text' as const,
     label: t('auth.email.label'),
     placeholder: t('auth.email.placeholder'),
     required: true,
   },
   {
     name: 'password',
-    type: 'password',
+    type: 'password' as const,
     label: t('auth.password.label'),
     placeholder: t('auth.password.placeholder'),
     required: true,
   },
-] as AuthFormProps['fields'])
+] satisfies AuthFormProps['fields'])
 
 const schema = z.object({
   email: z.email(t('auth.validation.emailInvalid')),
@@ -44,8 +44,8 @@ function onSubmit({ data }: FormSubmitEvent<Schema>) {
 </script>
 
 <template>
-  <div class="gap-4 flex-center md:w-2/3 lg:w-1/2 xl:w-[36%]">
-    <MAuthForm
+  <UPageCard class="flex-center md:w-2/3 lg:w-1/2 xl:w-[36%]">
+    <UAuthForm
       ref="authForm"
       :schema="schema"
       icon="i-lucide-user-plus"
@@ -59,6 +59,6 @@ function onSubmit({ data }: FormSubmitEvent<Schema>) {
       <template #validation>
         <MPasswordStrength :password="authForm?.state?.password" />
       </template>
-    </MAuthForm>
-  </div>
+    </UAuthForm>
+  </UPageCard>
 </template>

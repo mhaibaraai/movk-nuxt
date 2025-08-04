@@ -44,7 +44,6 @@
     "@nuxt/image": "catalog:",
     "@nuxt/kit": "catalog:",
     "@nuxt/ui-pro": "catalog:",
-    "@nuxtjs/i18n": "catalog:",
     "@vueuse/core": "catalog:",
     "defu": "catalog:",
     "lru-cache": "catalog:",

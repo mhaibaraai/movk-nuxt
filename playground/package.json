@@ -8,6 +8,9 @@
     "generate": "nuxi generate",
     "typecheck": "nuxi typecheck"
   },
+  "dependencies": {
+    "@nuxtjs/i18n": "catalog:"
+  },
   "devDependencies": {
     "nuxt": "catalog:",
     "sass-embedded": "catalog:"
