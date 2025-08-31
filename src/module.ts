@@ -54,7 +54,7 @@ export default defineNuxtModule<ModuleOptions>({
     }
 
     await installModule('@nuxt/image')
-    await installModule('@nuxt/ui-pro')
+    await installModule('@nuxt/ui')
 
     await installModule('@vueuse/nuxt')
     await installModule('nuxt-auth-utils')

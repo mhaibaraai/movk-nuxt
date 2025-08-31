@@ -31,26 +31,22 @@ useHead({
     lang,
     dir,
   },
-  titleTemplate: '%s - Movk Admin',
 })
 
 useSeoMeta({
+  titleTemplate: '%s - Movk Admin',
   title,
   description,
   ogTitle: title,
   ogDescription: description,
 })
+
+useFaviconFromTheme()
 </script>
 
 <template>
-  <UApp
-    :locale="locales[locale]"
-    :toaster="appConfig.toaster"
-  >
-    <NuxtLoadingIndicator
-      color="var(--ui-primary)"
-      :height="2"
-    />
+  <UApp :locale="locales[locale]" :toaster="appConfig.toaster">
+    <NuxtLoadingIndicator color="var(--ui-primary)" :height="2" />
 
     <NuxtLayout>
       <NuxtPage />

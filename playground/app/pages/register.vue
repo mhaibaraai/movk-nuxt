@@ -1,6 +1,5 @@
 <script lang="ts" setup>
-import type { FormSubmitEvent } from '@nuxt/ui'
-import type { AuthFormProps } from '@nuxt/ui-pro'
+import type { AuthFormProps, FormSubmitEvent } from '@nuxt/ui'
 import { z } from 'zod/v4'
 
 definePageMeta({

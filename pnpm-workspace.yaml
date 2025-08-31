@@ -2,36 +2,36 @@ packages:
   - playground
 
 catalog:
-  '@antfu/eslint-config': ^5.1.0
+  '@antfu/eslint-config': ^5.2.1
   '@antfu/ni': ^25.0.0
-  '@iconify-json/lucide': ^1.2.60
-  '@iconify-json/simple-icons': ^1.2.46
+  '@iconify-json/lucide': ^1.2.66
+  '@iconify-json/simple-icons': ^1.2.50
   '@movk/core': ^0.0.4
-  '@nuxt/devtools': ^2.6.2
-  '@nuxt/eslint': ^1.7.1
+  '@nuxt/devtools': ^2.6.3
+  '@nuxt/eslint': ^1.9.0
   '@nuxt/image': ^1.11.0
-  '@nuxt/kit': ^4.0.2
+  '@nuxt/kit': ^4.0.3
   '@nuxt/module-builder': ^1.0.2
-  '@nuxt/schema': ^4.0.2
-  '@nuxt/ui-pro': ^3.3.0
-  '@nuxtjs/i18n': ^10.0.3
-  '@types/node': ^24.1.0
-  '@vueuse/core': ^13.6.0
-  '@vueuse/nuxt': ^13.6.0
+  '@nuxt/schema': ^4.0.3
+  '@nuxt/ui': ^4.0.0-alpha.0
+  '@nuxtjs/i18n': ^10.0.6
+  '@types/node': ^24.3.0
+  '@vueuse/core': ^13.8.0
+  '@vueuse/nuxt': ^13.8.0
   defu: ^6.1.4
-  eslint: ^9.32.0
+  eslint: ^9.34.0
   eslint-plugin-format: ^1.0.1
   fast-glob: ^3.3.3
   lru-cache: ^11.1.0
-  nuxt: ^4.0.2
-  nuxt-auth-utils: ^0.5.22
-  sass-embedded: ^1.89.2
-  taze: ^19.1.0
-  tsx: ^4.20.3
+  nuxt: ^4.0.3
+  nuxt-auth-utils: ^0.5.23
+  sass-embedded: ^1.91.0
+  taze: ^19.3.0
+  tsx: ^4.20.5
   typescript: ^5.9.2
   vitest: ^3.2.4
-  vue-tsc: ^3.0.5
-  zod: ^4.0.14
+  vue-tsc: ^3.0.6
+  zod: ^4.1.5
 
 onlyBuiltDependencies:
   - '@parcel/watcher'

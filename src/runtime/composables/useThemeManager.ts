@@ -36,7 +36,8 @@ import { z } from 'zod/v4'
  *   key: 'app-theme',
  *   configItems: themeConfig,
  *   storage: 'localStorage',
- *   prefix: 'movk'
+ *   prefix: 'movk',
+ *   syncDebounce: 100
  * })
  *
  * // 获取当前主题
@@ -50,10 +51,18 @@ import { z } from 'zod/v4'
  *
  * // 重置主题
  * themeManager.resetTheme()
+ *
+ * // 微防抖同步
+ * themeManager.syncToAppConfig()
+ *
+ * // 手动立即同步
+ * themeManager.flush()
  * ```
  */
 export function createThemeManager<T extends ThemeConfig[]>(options: ThemeManagerOptions<T>) {
-  const { key, configItems, storage, prefix } = options
+  const { key, configItems, storage, prefix, syncDebounce } = options
+
+  const syncDelayMs = Math.max(0, syncDebounce ?? 16)
 
   const appConfig = useAppConfig()
   const flatSchema = buildFlatSchema(configItems as unknown as ThemeConfig[])
@@ -90,38 +99,42 @@ export function createThemeManager<T extends ThemeConfig[]>(options: ThemeManage
     prefix,
   })
 
-  const syncToAppConfig = debounce((config?: AnyObject) => {
+  const syncNow = (config?: AnyObject) => {
     const themeConfig = config || (storedTheme.state.value as AnyObject)
     if (!themeConfig)
       return
-
     try {
       updateAppConfig(themeConfig as any)
     }
     catch (error) {
       handleConfigError('sync to app config', error)
     }
-  }, 100)
-
-  if (import.meta.client && storedTheme.state.value) {
-    syncToAppConfig(storedTheme.state.value)
   }
 
-  const theme = computed<ThemeConfigFromItems<T>>(() => {
-    const storedValue = storedTheme.state.value
-    const extractedConfig = extractFromAppConfig()
+  let syncToAppConfig: (config?: AnyObject) => void = syncNow
+  if (syncDelayMs > 0) {
+    syncToAppConfig = debounce((config?: AnyObject) => {
+      syncNow(config)
+    }, syncDelayMs)
+  }
 
-    return defu(storedValue as any, extractedConfig) as ThemeConfigFromItems<T>
-  })
+  if (import.meta.client && storedTheme.state.value) {
+    syncNow(storedTheme.state.value)
+  }
 
   const processConfig = (config: ThemeConfigFromItems<T>): ThemeConfigFromItems<T> => {
     const processedConfig = { ...config }
 
     for (const item of configItems) {
-      const configKey = item.name as keyof ThemeConfigFromItems<T>
-      if (processedConfig[configKey] && item.processor) {
+      const configKey = item.name as string
+      const currentValue = (processedConfig as AnyObject)[configKey]
+      if (
+        currentValue !== undefined
+        && currentValue !== null
+        && item.processor
+      ) {
         try {
-          processedConfig[configKey] = item.processor(processedConfig[configKey])
+          ;(processedConfig as AnyObject)[configKey] = item.processor(currentValue)
         }
         catch (error) {
           handleConfigError(`config item "${item.name}" processing`, error)
@@ -132,19 +145,28 @@ export function createThemeManager<T extends ThemeConfig[]>(options: ThemeManage
     return processedConfig
   }
 
+  const normalizeAndValidate = (config: DeepPartial<ThemeConfigFromItems<T>>): ThemeConfigFromItems<T> => {
+    const validatedTheme = flatSchema.parse(config) as ThemeConfigFromItems<T>
+    return processConfig(validatedTheme)
+  }
+
+  const theme = computed<ThemeConfigFromItems<T>>(() => {
+    const storedValue = storedTheme.state.value as unknown as DeepPartial<ThemeConfigFromItems<T>>
+    return normalizeAndValidate(storedValue)
+  })
+
   const getCurrentTheme = (): ThemeConfigFromItems<T> => theme.value
 
   const updateTheme = (partialConfig: DeepPartial<ThemeConfigFromItems<T>>): ThemeConfigFromItems<T> => {
     try {
       const currentTheme = getCurrentTheme()
-      const updatedTheme = defu(partialConfig, currentTheme)
-      const validatedTheme = flatSchema.parse(updatedTheme) as ThemeConfigFromItems<T>
-      const processedTheme = processConfig(validatedTheme)
+      const updatedTheme = defu(partialConfig, currentTheme) as unknown as DeepPartial<ThemeConfigFromItems<T>>
+      const normalized = normalizeAndValidate(updatedTheme)
 
-      storedTheme.setItem(processedTheme)
-      syncToAppConfig(processedTheme)
+      storedTheme.setItem(normalized)
+      syncToAppConfig(normalized)
 
-      return processedTheme
+      return normalized
     }
     catch (error) {
       handleConfigError('theme update', error)
@@ -153,10 +175,15 @@ export function createThemeManager<T extends ThemeConfig[]>(options: ThemeManage
   }
 
   const resetTheme = (): ThemeConfigFromItems<T> => {
-    const extractedConfig = extractFromAppConfig() as ThemeConfigFromItems<T>
-    storedTheme.setItem(extractedConfig)
-    syncToAppConfig(extractedConfig)
-    return extractedConfig
+    const extractedConfig = extractFromAppConfig() as DeepPartial<ThemeConfigFromItems<T>>
+    const normalized = normalizeAndValidate(extractedConfig)
+    storedTheme.setItem(normalized)
+    syncToAppConfig(normalized)
+    return normalized
+  }
+
+  const flush = (): void => {
+    syncNow(storedTheme.state.value as AnyObject)
   }
 
   return {
@@ -165,6 +192,7 @@ export function createThemeManager<T extends ThemeConfig[]>(options: ThemeManage
     updateTheme,
     resetTheme,
     syncToAppConfig,
+    flush,
   }
 }
 
@@ -198,7 +226,7 @@ function buildFlatSchema(configItems: ThemeConfig[]): z.ZodType<any> {
     {} as Record<string, z.ZodType>,
   )
 
-  return z.object(schemaFields).partial()
+  return z.object(schemaFields).partial().strict()
 }
 
 function handleConfigError(operation: string, error: unknown, fallback?: any): any {

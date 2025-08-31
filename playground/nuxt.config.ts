@@ -19,4 +19,12 @@ export default defineNuxtConfig({
       { code: 'en', language: 'en', name: 'English', file: 'en.json' },
     ],
   },
+  icon: {
+    customCollections: [
+      {
+        prefix: 'custom',
+        dir: './app/assets/icons',
+      },
+    ],
+  },
 })

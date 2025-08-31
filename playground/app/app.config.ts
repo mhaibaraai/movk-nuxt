@@ -10,6 +10,8 @@ export default defineAppConfig({
     },
   },
   theme: {
+    prefix: 'movk',
+    key: 'admin-theme',
     radius: 0.25,
     blackAsPrimary: false,
   },

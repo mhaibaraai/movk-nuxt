@@ -21,8 +21,10 @@ const coreConfigItems = [
 ] as const satisfies ThemeConfig[]
 
 export function useTheme() {
+  const appConfig = useAppConfig()
   const themeManager = createThemeManager({
-    key: 'admin-theme',
+    key: appConfig.theme.key,
+    prefix: appConfig.theme.prefix,
     configItems: coreConfigItems,
   })
 
