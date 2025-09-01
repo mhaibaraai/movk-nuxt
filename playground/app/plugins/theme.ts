@@ -9,21 +9,21 @@ export default defineNuxtPlugin({
     if (import.meta.client) {
       const storage = JSON.parse(localStorage.getItem(`${storageKey}`) || '{}')
       function updateColor(type: 'primary' | 'neutral') {
-        const color = storage.ui.colors[type]
+        const color = storage.ui?.colors?.[type]
         if (color) {
           ui.colors[type] = color
         }
       }
 
       function updateRadius() {
-        const radius = storage.theme.radius
+        const radius = storage.theme?.radius
         if (radius) {
           theme.radius = Number.parseFloat(radius)
         }
       }
 
       function updateBlackAsPrimary() {
-        const blackAsPrimary = storage.theme.blackAsPrimary
+        const blackAsPrimary = storage.theme?.blackAsPrimary
         if (blackAsPrimary) {
           theme.blackAsPrimary = blackAsPrimary === 'true'
         }
@@ -41,7 +41,7 @@ export default defineNuxtPlugin({
           innerHTML: `
             const storage = JSON.parse(localStorage.getItem('${storageKey}') || '{}');
             let html = document.querySelector('style#nuxt-ui-colors').innerHTML;
-            if (storage.ui.colors.primary) {
+            if (storage.ui?.colors?.primary) {
               const primaryColor = storage.ui.colors.primary;
               if (primaryColor !== 'black') {
                 html = html.replace(
@@ -50,7 +50,7 @@ export default defineNuxtPlugin({
                 );
               }
             }
-            if (storage.ui.colors.neutral) {
+            if (storage.ui?.colors?.neutral) {
               let neutralColor = storage.ui.colors.neutral;
               html = html.replace(
                 /(--ui-color-neutral-\\d{2,3}:\\s*var\\(--color-)${ui.colors.neutral}(-\\d{2,3}.*?\\))/g,
@@ -64,7 +64,7 @@ export default defineNuxtPlugin({
           tagPriority: -1,
         }, {
           innerHTML: `
-            if (storage.theme.radius) {
+            if (storage.theme?.radius) {
               document.querySelector('style#nuxt-ui-radius').innerHTML = ':root { --ui-radius: ' + storage.theme.radius + 'rem; }';
             }
           `.replace(/\s+/g, ' '),
@@ -72,7 +72,7 @@ export default defineNuxtPlugin({
           tagPriority: -1,
         }, {
           innerHTML: `
-            if (storage.theme.blackAsPrimary === 'true') {
+            if (storage.theme?.blackAsPrimary === 'true') {
               document.querySelector('style#nuxt-ui-black-as-primary').innerHTML = ':root { --ui-primary: black; } .dark { --ui-primary: white; }';
             } else {
               document.querySelector('style#nuxt-ui-black-as-primary').innerHTML = '';

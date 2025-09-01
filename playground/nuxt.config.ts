@@ -1,6 +1,7 @@
 export default defineNuxtConfig({
-  modules: ['../src/module', '@nuxtjs/i18n'],
+  modules: ['../src/module', '@nuxtjs/i18n', '@vueuse/motion/nuxt'],
   devtools: { enabled: true },
+  css: ['~/assets/css/main.css'],
   runtimeConfig: {
     public: {
       apiBase: '',

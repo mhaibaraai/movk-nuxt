@@ -40,8 +40,6 @@ useSeoMeta({
   ogTitle: title,
   ogDescription: description,
 })
-
-useFaviconFromTheme()
 </script>
 
 <template>

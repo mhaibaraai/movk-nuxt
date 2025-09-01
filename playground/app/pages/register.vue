@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import type { AuthFormProps, FormSubmitEvent } from '@nuxt/ui'
+import type { FormSubmitEvent } from '@nuxt/ui'
 import { z } from 'zod/v4'
 
 definePageMeta({
@@ -28,7 +28,7 @@ const fields = computed(() => [
     placeholder: t('auth.password.placeholder'),
     required: true,
   },
-] satisfies AuthFormProps['fields'])
+])
 
 const schema = z.object({
   email: z.email(t('auth.validation.emailInvalid')),
@@ -43,21 +43,19 @@ function onSubmit({ data }: FormSubmitEvent<Schema>) {
 </script>
 
 <template>
-  <UPageCard class="flex-center md:w-2/3 lg:w-1/2 xl:w-[36%]">
-    <UAuthForm
-      ref="authForm"
-      :schema="schema"
-      icon="i-lucide-user-plus"
-      :title="t('auth.registerDescription')"
-      :submit="{
-        label: t('auth.registerButton'),
-      }"
-      :fields="fields"
-      @submit="onSubmit"
-    >
-      <template #validation>
-        <MPasswordStrength :password="authForm?.state?.password" />
-      </template>
-    </UAuthForm>
-  </UPageCard>
+  <UAuthForm
+    ref="authForm"
+    :schema="schema"
+    icon="i-lucide-user-plus"
+    :title="t('auth.registerDescription')"
+    :submit="{
+      label: t('auth.registerButton'),
+    }"
+    :fields="fields"
+    @submit="onSubmit"
+  >
+    <template #validation>
+      <MPasswordStrength :password="authForm?.state?.password" />
+    </template>
+  </UAuthForm>
 </template>

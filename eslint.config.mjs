@@ -20,7 +20,6 @@ export default withNuxt(
         'error',
         {
           singleline: 5,
-          multiline: 1,
         },
       ],
     },

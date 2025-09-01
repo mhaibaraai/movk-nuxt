@@ -9,7 +9,8 @@
     "typecheck": "nuxi typecheck"
   },
   "dependencies": {
-    "@nuxtjs/i18n": "catalog:"
+    "@nuxtjs/i18n": "catalog:",
+    "@vueuse/motion": "catalog:"
   },
   "devDependencies": {
     "nuxt": "catalog:",

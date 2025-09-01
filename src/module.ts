@@ -68,7 +68,7 @@ export default defineNuxtModule<ModuleOptions>({
       },
     })
 
-    nuxt.options.css.push(resolve('runtime/assets/main.css'))
+    nuxt.options.css.push(resolve('runtime/assets/css/main.css'))
 
     if (options.i18n) {
       nuxt.hook('i18n:registerModule', (register) => {
