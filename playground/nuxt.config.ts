@@ -4,7 +4,7 @@ export default defineNuxtConfig({
   css: ['~/assets/css/main.css'],
   runtimeConfig: {
     public: {
-      apiBase: '',
+      apiBase: 'https://mhaibaraai.cn/api/movk-backend',
     },
   },
   compatibilityDate: '2025-07-24',

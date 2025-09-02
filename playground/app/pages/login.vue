@@ -55,9 +55,20 @@ type Schema = z.infer<typeof schema>
 function onSubmit(event: FormSubmitEvent<Schema>) {
   console.log(event.data)
 }
+
+const { execute } = useApiFetch('/auth/login', {
+  method: 'POST',
+  body: {
+    email: 'mhaibaraai@gmail.com',
+    password: 'ChangeMe_123!',
+  },
+})
 </script>
 
 <template>
+  <UButton @click="execute()">
+    Login
+  </UButton>
   <UAuthForm
     :title="t('auth.loginDescription')"
     :providers="providers"

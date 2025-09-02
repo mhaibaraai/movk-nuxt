@@ -1,32 +1,8 @@
 import type { AnyObject } from '@movk/core'
 import type { ApiProfile } from '../types'
 import { defineNuxtPlugin, useToast } from '#imports'
+import { isEmpty } from '@movk/core'
 import { smartT } from '../utils/t'
-
-const STATUS_ERRORS: Record<number, string> = {
-  401: 'validation.unauthorized',
-  403: 'validation.forbidden',
-  404: 'validation.notFound',
-  429: 'validation.tooManyRequests',
-  500: 'validation.serverError',
-}
-
-function getErrorIcon(status?: number): string {
-  switch (status) {
-    case 401:
-      return 'lucide:shield-ellipsis'
-    case 403:
-      return 'lucide:circle-alert'
-    case 404:
-      return 'lucide:circle-help'
-    case 429:
-      return 'lucide:shield-minus'
-    case 500:
-      return 'lucide:shield-ban'
-    default:
-      return 'lucide:circle-x'
-  }
-}
 
 async function executeCallbacks(callbacks: any, context: any) {
   if (!callbacks)
@@ -50,28 +26,27 @@ export default defineNuxtPlugin(() => {
   const toast = useToast()
 
   const createApiFetcher = (apiProfile: ApiProfile, customInterceptors: AnyObject) => {
-    const { showToast, response: respConfig, debug, toast: customToast, customHeaders } = apiProfile
+    const { showToast, response: respConfig, toast: customToast, customHeaders } = apiProfile
 
-    const showToastMessage = (message: string, type: 'success' | 'error' = 'error', status?: number) => {
+    const showToastMessage = (message: string, type: 'success' | 'error' = 'error') => {
       if (!showToast || !import.meta.client)
         return
 
       toast.add({
         description: message,
         color: type,
-        icon: type === 'success' ? 'lucide:circle-check' : getErrorIcon(status),
+        icon: type === 'success' ? 'lucide-circle-check' : 'lucide-circle-x',
         ...customToast,
       })
     }
 
     const handleResponseError = (request: RequestInfo, response: any, error?: Error) => {
       const serverMsg = response._data?.[respConfig.messageKey]
-      const status = response.status
-      const errorMsg = serverMsg?.trim() || (status && STATUS_ERRORS[status] ? smartT(STATUS_ERRORS[status]) : smartT('validation.responseError'))
+      const errorMsg = serverMsg?.trim() || smartT('validation.responseError')
       const responseError = new Error(errorMsg)
 
       console.error(`[API Factory Error] ${errorMsg}`, { request, response, originalError: error })
-      showToastMessage(errorMsg, 'error', response.status)
+      showToastMessage(errorMsg, 'error')
 
       throw responseError
     }
@@ -82,7 +57,7 @@ export default defineNuxtPlugin(() => {
 
         const { options } = context
 
-        if (debug && customHeaders) {
+        if (!isEmpty(customHeaders)) {
           Object.entries(customHeaders).forEach(([key, value]) => {
             options.headers.set(key, value)
           })

@@ -38,8 +38,9 @@ function generateCacheKey(config: Record<string, any>): string {
  * const authProfile = validateApiProfile({
  *   timeout: 8000,
  *   auth: {
- *     token: 'Bearer xyz123',
- *     type: 'bearer'
+ *     enable: true,
+ *     tokenKey: 'Authorization',
+ *     tokenPrefix: 'Bearer '
  *   },
  *   response: {
  *     dataKey: 'data'

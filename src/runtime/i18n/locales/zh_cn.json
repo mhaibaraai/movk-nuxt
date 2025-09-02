@@ -10,13 +10,7 @@
   "validation": {
     "success": "请求成功",
     "error": "请求错误",
-    "responseError": "响应错误",
-    "networkError": "网络错误",
-    "unauthorized": "认证失败，请重新登录",
-    "forbidden": "权限不足，无法访问该资源",
-    "notFound": "请求的资源不存在",
-    "tooManyRequests": "请求过于频繁，请稍后重试",
-    "serverError": "服务器错误，请稍后重试"
+    "responseError": "响应错误"
   },
   "colorMode": {
     "switchToLight": "切换到亮色",

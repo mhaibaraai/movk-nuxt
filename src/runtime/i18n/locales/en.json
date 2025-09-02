@@ -10,13 +10,7 @@
   "validation": {
     "success": "Request successful",
     "error": "Request failed",
-    "responseError": "Response error",
-    "networkError": "Network error",
-    "unauthorized": "Authentication failed, please log in again",
-    "forbidden": "Insufficient permissions to access this resource",
-    "notFound": "The requested resource does not exist",
-    "tooManyRequests": "Too many requests, please try again later",
-    "serverError": "Server error, please try again later"
+    "responseError": "Response error"
   },
   "colorMode": {
     "switchToLight": "Switch to light",
