@@ -120,13 +120,13 @@ export function useApiFetch<DataT>(
  * await execute()
  * ```
  */
-export function useApiDownload(
+export function useApiDownload<DataT>(
   url: string | (() => string),
-  options: ApiFetchOptions<Response> = {},
+  options: ApiFetchOptions<DataT> = {},
 ) {
   const { download: downloadOptions, ...fetchOptions } = options
 
-  return useApiFetch<Response>(url, {
+  return useApiFetch<DataT>(url, {
     ...fetchOptions,
     onResponse({ response }) {
       if (!response.ok)

@@ -1,6 +1,6 @@
 import type { AnyObject } from '@movk/core'
 import type { ApiProfile } from '../types'
-import { defineNuxtPlugin, useToast } from '#imports'
+import { defineNuxtPlugin, useToast, useUserSession } from '#imports'
 import { isEmpty } from '@movk/core'
 import { smartT } from '../utils/t'
 
@@ -26,7 +26,7 @@ export default defineNuxtPlugin(() => {
   const toast = useToast()
 
   const createApiFetcher = (apiProfile: ApiProfile, customInterceptors: AnyObject) => {
-    const { showToast, response: respConfig, toast: customToast, customHeaders } = apiProfile
+    const { showToast, response: respConfig, toast: customToast, customHeaders, auth: authOptions } = apiProfile
 
     const showToastMessage = (message: string, type: 'success' | 'error' = 'error') => {
       if (!showToast || !import.meta.client)
@@ -56,6 +56,14 @@ export default defineNuxtPlugin(() => {
         await executeCallbacks(customInterceptors.onRequest, context)
 
         const { options } = context
+
+        if (authOptions?.enable) {
+          const { session } = useUserSession()
+          const token = session.value?.[authOptions.key]
+          if (token) {
+            options.headers.set(authOptions.name, authOptions.prefix + token)
+          }
+        }
 
         if (!isEmpty(customHeaders)) {
           Object.entries(customHeaders).forEach(([key, value]) => {

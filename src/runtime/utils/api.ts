@@ -20,39 +20,6 @@ function generateCacheKey(config: Record<string, any>): string {
   return `api-profile:${simpleHash(stableString)}`
 }
 
-/**
- * 验证并缓存API配置，提供配置验证和缓存机制
- *
- * @category API
- * @param apiProfile API配置输入对象
- * @returns 验证后的API配置对象
- * @example
- * ```ts
- * // 验证基础API配置
- * const profile = validateApiProfile({
- *   timeout: 5000,
- *   retries: 3
- * })
- *
- * // 验证带认证的API配置
- * const authProfile = validateApiProfile({
- *   timeout: 8000,
- *   auth: {
- *     enable: true,
- *     tokenKey: 'Authorization',
- *     tokenPrefix: 'Bearer '
- *   },
- *   response: {
- *     dataKey: 'data'
- *   }
- * })
- *
- * // 如果配置无效，将使用默认配置
- * const defaultProfile = validateApiProfile({
- *   timeout: 'invalid' // 会回退到默认配置
- * })
- * ```
- */
 export function validateApiProfile(apiProfile: ApiProfileInput): ApiProfile {
   const cacheKey = generateCacheKey(apiProfile)
   const cachedProfile = apiCache.get(cacheKey)
