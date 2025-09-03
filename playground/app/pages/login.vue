@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import type { ButtonProps, FormSubmitEvent } from '@nuxt/ui'
+import { useToast } from '@nuxt/ui/runtime/composables/useToast.js'
 import { z } from 'zod/v4'
 
 definePageMeta({

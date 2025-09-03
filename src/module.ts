@@ -1,5 +1,5 @@
 import type { UseFetchOptions } from '#app'
-import type { ApiFetchOptions } from './runtime/types'
+import type { ApiFetchOptions, ApiProfile } from './runtime/types'
 import {
   addComponentsDir,
   addImportsDir,
@@ -7,7 +7,6 @@ import {
   addServerScanDir,
   createResolver,
   defineNuxtModule,
-  hasNuxtModule,
   installModule,
 } from '@nuxt/kit'
 import defu from 'defu'
@@ -37,6 +36,42 @@ export default defineNuxtModule<ModuleOptions>({
     },
   },
   defaults: moduleOptionsSchema.parse({}),
+  moduleDependencies: {
+    '@nuxt/image': {
+      version: '>=1.11.0',
+    },
+    '@nuxt/ui': {
+      version: '>=4.0.0-alpha.1',
+    },
+    '@vueuse/nuxt': {
+      version: '>=13.9.0',
+    },
+    'nuxt-auth-utils': {
+      version: '>=0.5.23',
+    },
+    '@nuxt/eslint': {
+      version: '>=1.9.0',
+      defaults: {
+        config: {
+          standalone: false,
+          nuxt: {
+            sortConfigKeys: true,
+          },
+        },
+      },
+    },
+    '@nuxtjs/i18n': {
+      version: '>=10.0.6',
+      defaults: {
+        strategy: 'no_prefix',
+        defaultLocale: 'zh_cn',
+        locales: [
+          { code: 'zh_cn', language: 'zh-CN', name: '简体中文', file: 'zh_cn.json' },
+          { code: 'en', language: 'en', name: 'English', file: 'en.json' },
+        ],
+      },
+    },
+  },
   async setup(options, nuxt) {
     const { resolve } = createResolver(import.meta.url)
 
@@ -44,31 +79,9 @@ export default defineNuxtModule<ModuleOptions>({
     nuxt.options.alias['#movk'] = resolve('./runtime')
     nuxt.options.appConfig.movk = defu(nuxt.options.appConfig.movk || {}, options)
 
-    async function registerModule(name: string, key: string, options: Record<string, any>) {
-      if (!hasNuxtModule(name)) {
-        await installModule(name, options)
-      }
-      else {
-        (nuxt.options as any)[key] = defu((nuxt.options as any)[key], options)
-      }
-    }
-
-    await installModule('@nuxt/image')
-    await installModule('@nuxt/ui')
-
-    await installModule('@vueuse/nuxt')
-    await installModule('nuxt-auth-utils')
-
-    await registerModule('@nuxt/eslint', 'eslint', {
-      config: {
-        standalone: false,
-        nuxt: {
-          sortConfigKeys: true,
-        },
-      },
-    })
-
     nuxt.options.css.push(resolve('runtime/assets/css/main.css'))
+
+    // await installModule('@nuxt/ui')
 
     if (options.i18n) {
       nuxt.hook('i18n:registerModule', (register) => {
@@ -97,7 +110,17 @@ export default defineNuxtModule<ModuleOptions>({
 
 declare module 'nuxt/app' {
   interface NuxtApp {
-    $createApiFetcher: <DataT>(apiProfile: ApiFetchOptions<DataT>) => { $api: typeof $fetch, fetchOptions: Omit<UseFetchOptions<DataT>, '$fetch'> }
+    $createApiFetcher: <DataT>(apiProfile: ApiFetchOptions<DataT>) => {
+      $api: typeof $fetch
+      /**
+       * API 配置
+       */
+      apiProfile: ApiProfile
+      /**
+       * 请求配置
+       */
+      fetchOptions: Omit<UseFetchOptions<DataT>, '$fetch'>
+    }
   }
 }
 

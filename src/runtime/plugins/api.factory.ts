@@ -1,5 +1,5 @@
 import type { ApiFetchOptions } from '../types'
-import { defineNuxtPlugin, useToast, useUserSession } from '#imports'
+import { defineNuxtPlugin } from '#imports'
 import { isEmpty, separate } from '@movk/core'
 import { ApiProfileSchema } from '../types'
 import { validateApiProfile } from '../utils/api'
@@ -28,7 +28,7 @@ export default defineNuxtPlugin(() => {
   const toast = useToast()
 
   const createApiFetcher = <DataT>(options: ApiFetchOptions<DataT>) => {
-    const { picked, omitted } = separate(options, API_PROFILE_KEYS)
+    const { picked, omitted: fetchOptions } = separate(options, API_PROFILE_KEYS)
 
     const apiProfile = validateApiProfile(picked)
     const { showToast, response: respConfig, toast: customToast, customHeaders, auth: authOptions } = apiProfile
@@ -58,16 +58,14 @@ export default defineNuxtPlugin(() => {
 
     const $api = $fetch.create({
       async onRequest(context) {
-        // await executeCallbacks(customInterceptors.onRequest, context)
-
         const { options } = context
 
         if (authOptions?.enable) {
-          const { session } = useUserSession()
-          const token = session.value?.[authOptions.key]
-          if (token) {
-            options.headers.set(authOptions.name, authOptions.prefix + token)
-          }
+          // const { session } = useUserSession()
+          // const token = session.value?.[authOptions.key]
+          // if (token) {
+          //   options.headers.set(authOptions.name, authOptions.prefix + token)
+          // }
         }
 
         if (!isEmpty(customHeaders)) {
@@ -78,8 +76,6 @@ export default defineNuxtPlugin(() => {
       },
 
       async onRequestError(context) {
-        // await executeCallbacks(customInterceptors.onRequestError, context)
-
         const { error, request } = context
 
         console.error(`[API Factory Error] ${smartT('validation.error')}`, { request, error })
@@ -88,8 +84,6 @@ export default defineNuxtPlugin(() => {
       },
 
       async onResponse(context) {
-        // await executeCallbacks(customInterceptors.onResponse, context)
-
         const { response, request, error } = context
         const isJson = response.headers.get('content-type')?.toLowerCase().includes('application/json')
 
@@ -110,8 +104,6 @@ export default defineNuxtPlugin(() => {
       },
 
       async onResponseError(context) {
-        // await executeCallbacks(customInterceptors.onResponseError, context)
-
         const { response, request, error } = context
 
         handleResponseError(request, response, error)
@@ -120,6 +112,7 @@ export default defineNuxtPlugin(() => {
 
     return {
       $api,
+      apiProfile,
       fetchOptions,
     }
   }

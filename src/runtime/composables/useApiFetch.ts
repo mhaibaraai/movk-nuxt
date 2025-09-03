@@ -11,14 +11,14 @@ export function useApiFetch<DataT>(
   const { $createApiFetcher } = useNuxtApp()
   const { public: { apiBase } } = useRuntimeConfig()
 
-  const { $api, fetchOptions } = $createApiFetcher<DataT>(options)
+  const { $api, apiProfile, fetchOptions } = $createApiFetcher<DataT>(options)
 
   const defaultOptions: UseFetchOptions<DataT> = {
     baseURL: apiBase,
     lazy: true,
     immediate: false,
     transform: (response: any): DataT => {
-      const dataKey = options.response?.dataKey
+      const dataKey = apiProfile.response.dataKey
       return (dataKey && response) ? response[dataKey] : response
     },
     onResponse() {

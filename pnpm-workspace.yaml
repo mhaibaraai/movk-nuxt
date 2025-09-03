@@ -10,24 +10,24 @@ catalog:
   '@nuxt/devtools': ^2.6.3
   '@nuxt/eslint': ^1.9.0
   '@nuxt/image': ^1.11.0
-  '@nuxt/kit': ^4.0.3
+  '@nuxt/kit': ^4.1.0
   '@nuxt/module-builder': ^1.0.2
-  '@nuxt/schema': ^4.0.3
-  '@nuxt/ui': 4.0.0-alpha.0
+  '@nuxt/schema': ^4.1.0
+  '@nuxt/ui': ^4.0.0-alpha.1
   '@nuxtjs/i18n': ^10.0.6
   '@types/node': ^24.3.0
-  '@vueuse/core': ^13.8.0
+  '@vueuse/core': ^13.9.0
   '@vueuse/motion': ^3.0.3
-  '@vueuse/nuxt': ^13.8.0
+  '@vueuse/nuxt': ^13.9.0
   defu: ^6.1.4
   eslint: ^9.34.0
   eslint-plugin-format: ^1.0.1
   fast-glob: ^3.3.3
   lru-cache: ^11.1.0
-  nuxt: ^4.0.3
+  nuxt: ^4.1.0
   nuxt-auth-utils: ^0.5.23
-  sass-embedded: ^1.91.0
-  taze: ^19.3.0
+  sass-embedded: ^1.92.0
+  taze: ^19.4.0
   tsx: ^4.20.5
   typescript: ^5.9.2
   vitest: ^3.2.4
