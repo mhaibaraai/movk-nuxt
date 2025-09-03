@@ -6,7 +6,7 @@ catalog:
   '@antfu/ni': ^25.0.0
   '@iconify-json/lucide': ^1.2.66
   '@iconify-json/simple-icons': ^1.2.50
-  '@movk/core': ^0.0.4
+  '@movk/core': ^0.0.5
   '@nuxt/devtools': ^2.6.3
   '@nuxt/eslint': ^1.9.0
   '@nuxt/image': ^1.11.0

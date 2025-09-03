@@ -1,5 +1,5 @@
-import type { AnyObject } from '@movk/core'
-import type { ApiProfile } from './runtime/types'
+import type { UseFetchOptions } from '#app'
+import type { ApiFetchOptions } from './runtime/types'
 import {
   addComponentsDir,
   addImportsDir,
@@ -97,7 +97,7 @@ export default defineNuxtModule<ModuleOptions>({
 
 declare module 'nuxt/app' {
   interface NuxtApp {
-    $createApiFetcher: (apiProfile: ApiProfile, customInterceptors: AnyObject) => typeof $fetch
+    $createApiFetcher: <DataT>(apiProfile: ApiFetchOptions<DataT>) => { $api: typeof $fetch, fetchOptions: Omit<UseFetchOptions<DataT>, '$fetch'> }
   }
 }
 

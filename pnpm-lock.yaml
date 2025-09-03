@@ -19,8 +19,8 @@ catalogs:
       specifier: ^1.2.50
       version: 1.2.50
     '@movk/core':
-      specifier: ^0.0.4
-      version: 0.0.4
+      specifier: ^0.0.5
+      version: 0.0.5
     '@nuxt/devtools':
       specifier: ^2.6.3
       version: 2.6.3
@@ -112,7 +112,7 @@ importers:
         version: 1.2.50
       '@movk/core':
         specifier: 'catalog:'
-        version: 0.0.4(vue@3.5.20(typescript@5.9.2))
+        version: 0.0.5(vue@3.5.20(typescript@5.9.2))
       '@nuxt/image':
         specifier: 'catalog:'
         version: 1.11.0(@netlify/blobs@9.1.2)(db0@0.3.2)(ioredis@5.7.0)(magicast@0.3.5)
@@ -1081,10 +1081,10 @@ packages:
     peerDependencies:
       rollup: ^1.20.0 || ^2.0.0 || ^3.0.0 || ^4.0.0
 
-  '@movk/core@0.0.4':
-    resolution: {integrity: sha512-AfFB690YrY5gOQIgfEvAL5adC9QcyXU3KUSMy+gWNE0QpE9AtWBhkbUyKTZVnJhQtBXXGN5lz7mmEp+lyu2rBA==}
+  '@movk/core@0.0.5':
+    resolution: {integrity: sha512-I7LOmoijAklVh5xAJZhHPXaQmhfODXWRY4CyQJSFRzNsPR/p49HxMnQ8hDebvXMEsFYoWz6vUvHt85DAOYK4+Q==}
     peerDependencies:
-      vue: ^3.5.18
+      vue: ^3.5.21
 
   '@napi-rs/wasm-runtime@0.2.12':
     resolution: {integrity: sha512-ZVWUcfwY4E/yPitQJl481FjFo3K22D6qF0DuFH6Y/nbnE11GY5uguDxZMGXPQ8WQ0128MXQD7TnfHyK4oWoIJQ==}
@@ -2625,6 +2625,11 @@ packages:
     peerDependencies:
       vue: ^3.5.0
 
+  '@vueuse/core@13.9.0':
+    resolution: {integrity: sha512-ts3regBQyURfCE2BcytLqzm8+MmLlo5Ln/KLoxDVcsZ2gzIwVNnQpQOL/UKV8alUqjSZOlpFZcRNsLRqj+OzyA==}
+    peerDependencies:
+      vue: ^3.5.0
+
   '@vueuse/integrations@13.8.0':
     resolution: {integrity: sha512-64mD5Q7heVkr8JsqBFDh9xnQJrPLmWJghy8Qtj9UeLosQL9n+JYTcS7d+eNsEVwuvZvxfF7hUSi87jABm/eYpw==}
     peerDependencies:
@@ -2676,6 +2681,9 @@ packages:
   '@vueuse/metadata@13.8.0':
     resolution: {integrity: sha512-BYMp3Gp1kBUPv7AfQnJYP96mkX7g7cKdTIgwv/Jgd+pfQhz678naoZOAcknRtPLP4cFblDDW7rF4e3KFa+PfIA==}
 
+  '@vueuse/metadata@13.9.0':
+    resolution: {integrity: sha512-1AFRvuiGphfF7yWixZa0KwjYH8ulyjDCC0aFgrGRz8+P4kvDFSdXLVfTk5xAN9wEuD1J6z4/myMoYbnHoX07zg==}
+
   '@vueuse/motion@3.0.3':
     resolution: {integrity: sha512-4B+ITsxCI9cojikvrpaJcLXyq0spj3sdlzXjzesWdMRd99hhtFI6OJ/1JsqwtF73YooLe0hUn/xDR6qCtmn5GQ==}
     peerDependencies:
@@ -2695,6 +2703,11 @@ packages:
 
   '@vueuse/shared@13.8.0':
     resolution: {integrity: sha512-x4nfM0ykW+RmNJ4/1IzZsuLuWWrNTxlTWUiehTGI54wnOxIgI9EDdu/O5S77ac6hvQ3hk2KpOVFHaM0M796Kbw==}
+    peerDependencies:
+      vue: ^3.5.0
+
+  '@vueuse/shared@13.9.0':
+    resolution: {integrity: sha512-e89uuTLMh0U5cZ9iDpEI2senqPGfbPRTHM/0AaQkcxnpqjkZqDYP8rpfm7edOz8s+pOCOROEy1PIveSW8+fL5g==}
     peerDependencies:
       vue: ^3.5.0
 
@@ -7789,9 +7802,9 @@ snapshots:
       json5: 2.2.3
       rollup: 4.50.0
 
-  '@movk/core@0.0.4(vue@3.5.20(typescript@5.9.2))':
+  '@movk/core@0.0.5(vue@3.5.20(typescript@5.9.2))':
     dependencies:
-      '@vueuse/core': 13.8.0(vue@3.5.20(typescript@5.9.2))
+      '@vueuse/core': 13.9.0(vue@3.5.20(typescript@5.9.2))
       vue: 3.5.20(typescript@5.9.2)
       zod: 4.1.5
 
@@ -9687,6 +9700,13 @@ snapshots:
       '@vueuse/shared': 13.8.0(vue@3.5.20(typescript@5.9.2))
       vue: 3.5.20(typescript@5.9.2)
 
+  '@vueuse/core@13.9.0(vue@3.5.20(typescript@5.9.2))':
+    dependencies:
+      '@types/web-bluetooth': 0.0.21
+      '@vueuse/metadata': 13.9.0
+      '@vueuse/shared': 13.9.0(vue@3.5.20(typescript@5.9.2))
+      vue: 3.5.20(typescript@5.9.2)
+
   '@vueuse/integrations@13.8.0(change-case@5.4.4)(fuse.js@7.1.0)(jwt-decode@4.0.0)(vue@3.5.20(typescript@5.9.2))':
     dependencies:
       '@vueuse/core': 13.8.0(vue@3.5.20(typescript@5.9.2))
@@ -9702,6 +9722,8 @@ snapshots:
   '@vueuse/metadata@12.8.2': {}
 
   '@vueuse/metadata@13.8.0': {}
+
+  '@vueuse/metadata@13.9.0': {}
 
   '@vueuse/motion@3.0.3(magicast@0.3.5)(vue@3.5.20(typescript@5.9.2))':
     dependencies:
@@ -9742,6 +9764,10 @@ snapshots:
       - typescript
 
   '@vueuse/shared@13.8.0(vue@3.5.20(typescript@5.9.2))':
+    dependencies:
+      vue: 3.5.20(typescript@5.9.2)
+
+  '@vueuse/shared@13.9.0(vue@3.5.20(typescript@5.9.2))':
     dependencies:
       vue: 3.5.20(typescript@5.9.2)
 

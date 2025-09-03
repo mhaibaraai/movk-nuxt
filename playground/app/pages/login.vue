@@ -56,16 +56,20 @@ function onSubmit(event: FormSubmitEvent<Schema>) {
   console.log(event.data)
 }
 
-const { execute } = useApiFetch('/auth/login', {
+const { execute, data } = useApiFetch('/auth/login', {
   method: 'POST',
   body: {
     email: 'mhaibaraai@gmail.com',
     password: 'ChangeMe_123!',
   },
+  onResponse({ response }) {
+    console.log(response)
+  },
 })
 </script>
 
 <template>
+  {{ data }}
   <UButton @click="execute()">
     Login
   </UButton>

@@ -1,31 +1,36 @@
-import type { AnyObject } from '@movk/core'
-import type { ApiProfile } from '../types'
+import type { ApiFetchOptions } from '../types'
 import { defineNuxtPlugin, useToast, useUserSession } from '#imports'
-import { isEmpty } from '@movk/core'
+import { isEmpty, separate } from '@movk/core'
+import { ApiProfileSchema } from '../types'
+import { validateApiProfile } from '../utils/api'
 import { smartT } from '../utils/t'
 
-async function executeCallbacks(callbacks: any, context: any) {
-  if (!callbacks)
-    return
+// async function executeCallbacks(callbacks: any, context: any) {
+//   if (!callbacks)
+//     return
 
-  const callbackArray = Array.isArray(callbacks) ? callbacks : [callbacks]
+//   const callbackArray = Array.isArray(callbacks) ? callbacks : [callbacks]
 
-  for (const callback of callbackArray) {
-    if (typeof callback === 'function') {
-      try {
-        await callback(context)
-      }
-      catch (error) {
-        console.warn('[API Factory] Callback execution error:', error)
-      }
-    }
-  }
-}
+//   for (const callback of callbackArray) {
+//     if (typeof callback === 'function') {
+//       try {
+//         await callback(context)
+//       }
+//       catch (error) {
+//         console.warn('[API Factory] Callback execution error:', error)
+//       }
+//     }
+//   }
+// }
 
 export default defineNuxtPlugin(() => {
+  const API_PROFILE_KEYS = ApiProfileSchema.keyof().options
   const toast = useToast()
 
-  const createApiFetcher = (apiProfile: ApiProfile, customInterceptors: AnyObject) => {
+  const createApiFetcher = <DataT>(options: ApiFetchOptions<DataT>) => {
+    const { picked, omitted } = separate(options, API_PROFILE_KEYS)
+
+    const apiProfile = validateApiProfile(picked)
     const { showToast, response: respConfig, toast: customToast, customHeaders, auth: authOptions } = apiProfile
 
     const showToastMessage = (message: string, type: 'success' | 'error' = 'error') => {
@@ -51,9 +56,9 @@ export default defineNuxtPlugin(() => {
       throw responseError
     }
 
-    return $fetch.create({
+    const $api = $fetch.create({
       async onRequest(context) {
-        await executeCallbacks(customInterceptors.onRequest, context)
+        // await executeCallbacks(customInterceptors.onRequest, context)
 
         const { options } = context
 
@@ -73,7 +78,7 @@ export default defineNuxtPlugin(() => {
       },
 
       async onRequestError(context) {
-        await executeCallbacks(customInterceptors.onRequestError, context)
+        // await executeCallbacks(customInterceptors.onRequestError, context)
 
         const { error, request } = context
 
@@ -83,7 +88,7 @@ export default defineNuxtPlugin(() => {
       },
 
       async onResponse(context) {
-        await executeCallbacks(customInterceptors.onResponse, context)
+        // await executeCallbacks(customInterceptors.onResponse, context)
 
         const { response, request, error } = context
         const isJson = response.headers.get('content-type')?.toLowerCase().includes('application/json')
@@ -105,13 +110,18 @@ export default defineNuxtPlugin(() => {
       },
 
       async onResponseError(context) {
-        await executeCallbacks(customInterceptors.onResponseError, context)
+        // await executeCallbacks(customInterceptors.onResponseError, context)
 
         const { response, request, error } = context
 
         handleResponseError(request, response, error)
       },
     })
+
+    return {
+      $api,
+      fetchOptions,
+    }
   }
 
   return {
