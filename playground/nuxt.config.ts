@@ -13,6 +13,10 @@ export default defineNuxtConfig({
       cookieKey: 'movk-nuxt-i18n_redirected',
       fallbackLocale: 'zh_cn',
     },
+    locales: [
+      { code: 'zh_cn', language: 'zh-CN', name: '简体中文', file: 'zh_cn.json' },
+      { code: 'en', language: 'en', name: 'English', file: 'en.json' },
+    ],
   },
   icon: {
     customCollections: [

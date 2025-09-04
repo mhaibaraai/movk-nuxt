@@ -40,3 +40,21 @@ export function validateApiProfile(apiProfile: ApiProfileInput): ApiProfile {
   apiCache.set(cacheKey, profile)
   return profile
 }
+
+export async function executeCallbacks(callbacks: any, context: any) {
+  if (!callbacks)
+    return
+
+  const callbackArray = Array.isArray(callbacks) ? callbacks : [callbacks]
+
+  for (const callback of callbackArray) {
+    if (typeof callback === 'function') {
+      try {
+        await callback(context)
+      }
+      catch (error) {
+        console.warn('[API Factory] Callback execution error:', error)
+      }
+    }
+  }
+}

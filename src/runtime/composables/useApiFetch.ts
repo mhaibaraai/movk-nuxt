@@ -3,6 +3,7 @@ import type { ApiFetchOptions } from '../types'
 import { useFetch, useNuxtApp, useRuntimeConfig } from '#app'
 // import { extractFilename, separateMany, triggerDownload } from '@movk/core'
 import { defu } from 'defu'
+// import { executeCallbacks } from '../utils/api'
 
 export function useApiFetch<DataT>(
   url: string | (() => string),
@@ -20,9 +21,6 @@ export function useApiFetch<DataT>(
     transform: (response: any): DataT => {
       const dataKey = apiProfile.response.dataKey
       return (dataKey && response) ? response[dataKey] : response
-    },
-    onResponse() {
-      console.log('111')
     },
   }
 

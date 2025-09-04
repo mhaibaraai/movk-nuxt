@@ -1,31 +1,13 @@
 import type { ApiFetchOptions } from '../types'
-import { defineNuxtPlugin } from '#imports'
+import { defineNuxtPlugin, useUserSession } from '#imports'
 import { isEmpty, separate } from '@movk/core'
 import { ApiProfileSchema } from '../types'
 import { validateApiProfile } from '../utils/api'
 import { smartT } from '../utils/t'
 
-// async function executeCallbacks(callbacks: any, context: any) {
-//   if (!callbacks)
-//     return
-
-//   const callbackArray = Array.isArray(callbacks) ? callbacks : [callbacks]
-
-//   for (const callback of callbackArray) {
-//     if (typeof callback === 'function') {
-//       try {
-//         await callback(context)
-//       }
-//       catch (error) {
-//         console.warn('[API Factory] Callback execution error:', error)
-//       }
-//     }
-//   }
-// }
-
 export default defineNuxtPlugin(() => {
   const API_PROFILE_KEYS = ApiProfileSchema.keyof().options
-  const toast = useToast()
+  // const toast = useToast()
 
   const createApiFetcher = <DataT>(options: ApiFetchOptions<DataT>) => {
     const { picked, omitted: fetchOptions } = separate(options, API_PROFILE_KEYS)
@@ -37,12 +19,12 @@ export default defineNuxtPlugin(() => {
       if (!showToast || !import.meta.client)
         return
 
-      toast.add({
-        description: message,
-        color: type,
-        icon: type === 'success' ? 'lucide-circle-check' : 'lucide-circle-x',
-        ...customToast,
-      })
+      // toast.add({
+      //   description: message,
+      //   color: type,
+      //   icon: type === 'success' ? 'lucide-circle-check' : 'lucide-circle-x',
+      //   ...customToast,
+      // })
     }
 
     const handleResponseError = (request: RequestInfo, response: any, error?: Error) => {
@@ -61,11 +43,11 @@ export default defineNuxtPlugin(() => {
         const { options } = context
 
         if (authOptions?.enable) {
-          // const { session } = useUserSession()
-          // const token = session.value?.[authOptions.key]
-          // if (token) {
-          //   options.headers.set(authOptions.name, authOptions.prefix + token)
-          // }
+          const { session } = useUserSession()
+          const token = session.value?.[authOptions.key]
+          if (token) {
+            options.headers.set(authOptions.name, authOptions.prefix + token)
+          }
         }
 
         if (!isEmpty(customHeaders)) {

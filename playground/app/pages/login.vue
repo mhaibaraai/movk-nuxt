@@ -1,6 +1,5 @@
 <script lang="ts" setup>
 import type { ButtonProps, FormSubmitEvent } from '@nuxt/ui'
-import { useToast } from '@nuxt/ui/runtime/composables/useToast.js'
 import { z } from 'zod/v4'
 
 definePageMeta({
@@ -48,38 +47,37 @@ const fields = computed(() => [
 
 const schema = z.object({
   email: z.email(t('auth.validation.emailInvalid')),
-  password: z.string().min(8, t('auth.validation.passwordInvalid')),
+  password: z.string(t('auth.validation.passwordInvalid')).min(8, t('auth.validation.passwordInvalid')),
+  rememberMe: z.boolean().default(false),
 })
 
 type Schema = z.infer<typeof schema>
 
-function onSubmit(event: FormSubmitEvent<Schema>) {
-  console.log(event.data)
-}
-
-const { execute, data } = useApiFetch('/auth/login', {
-  method: 'POST',
-  body: {
-    email: 'mhaibaraai@gmail.com',
-    password: 'ChangeMe_123!',
-  },
-  onResponse({ response }) {
-    console.log(response)
-  },
+const state = ref<Schema>({
+  email: '',
+  password: '',
+  rememberMe: false,
 })
+
+const { execute } = useApiFetch('/auth/login', {
+  method: 'POST',
+  body: state.value,
+})
+
+function onSubmit(payload: FormSubmitEvent<Schema>) {
+  state.value = payload.data
+  execute()
+}
 </script>
 
 <template>
-  {{ data }}
-  <UButton @click="execute()">
-    Login
-  </UButton>
   <UAuthForm
+    icon="i-lucide-user"
     :title="t('auth.loginDescription')"
     :providers="providers"
     :fields="fields"
     :schema="schema"
-    :submit-button="{ label: t('auth.loginButton') }"
+    :submit="{ label: t('auth.loginButton') }"
     @submit="onSubmit"
   >
     <template #description>

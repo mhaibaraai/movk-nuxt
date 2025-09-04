@@ -4,7 +4,7 @@ import { getRandomUUID } from '@movk/core'
 import { z } from 'zod/v4'
 
 const ApiAuthSchema = z.object({
-  enable: z.boolean().default(false),
+  enable: z.boolean().default(true),
   key: z.string().default('token'),
   name: z.string().default('Authorization'),
   prefix: z.string().default('Bearer '),

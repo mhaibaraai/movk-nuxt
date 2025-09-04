@@ -23,7 +23,7 @@ catalog:
   eslint: ^9.34.0
   eslint-plugin-format: ^1.0.1
   fast-glob: ^3.3.3
-  lru-cache: ^11.1.0
+  lru-cache: ^11.2.1
   nuxt: ^4.1.0
   nuxt-auth-utils: ^0.5.23
   sass-embedded: ^1.92.0

@@ -4,10 +4,8 @@ import {
   addComponentsDir,
   addImportsDir,
   addPlugin,
-  addServerScanDir,
   createResolver,
   defineNuxtModule,
-  installModule,
 } from '@nuxt/kit'
 import defu from 'defu'
 import { z } from 'zod/v4'
@@ -41,7 +39,7 @@ export default defineNuxtModule<ModuleOptions>({
       version: '>=1.11.0',
     },
     '@nuxt/ui': {
-      version: '>=4.0.0-alpha.1',
+      version: '>=4.0.0-alpha.0',
     },
     '@vueuse/nuxt': {
       version: '>=13.9.0',
@@ -65,10 +63,6 @@ export default defineNuxtModule<ModuleOptions>({
       defaults: {
         strategy: 'no_prefix',
         defaultLocale: 'zh_cn',
-        locales: [
-          { code: 'zh_cn', language: 'zh-CN', name: '简体中文', file: 'zh_cn.json' },
-          { code: 'en', language: 'en', name: 'English', file: 'en.json' },
-        ],
       },
     },
   },
@@ -80,8 +74,6 @@ export default defineNuxtModule<ModuleOptions>({
     nuxt.options.appConfig.movk = defu(nuxt.options.appConfig.movk || {}, options)
 
     nuxt.options.css.push(resolve('runtime/assets/css/main.css'))
-
-    // await installModule('@nuxt/ui')
 
     if (options.i18n) {
       nuxt.hook('i18n:registerModule', (register) => {
@@ -104,7 +96,6 @@ export default defineNuxtModule<ModuleOptions>({
     })
 
     addImportsDir(resolve('runtime/composables'))
-    addServerScanDir(resolve('runtime/server'))
   },
 })
 
