@@ -40,7 +40,7 @@ catalogs:
       specifier: ^4.1.0
       version: 4.1.0
     '@nuxt/ui':
-      specifier: 4.0.0-alpha.1
+      specifier: ^4.0.0-alpha.1
       version: 4.0.0-alpha.1
     '@nuxtjs/i18n':
       specifier: ^10.0.6
