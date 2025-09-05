@@ -1,25 +1,18 @@
-import type { ZodType } from 'zod/v4'
+import type { ZodAny, ZodObject } from 'zod/v4'
 import type { AutoFormOptions, FieldMeta } from '../../types'
-import { computed } from 'vue'
-import { introspectSchema } from './introspect'
+import { isFunction } from '@movk/core'
 import { resolveControl } from './mapper'
 
-export interface FieldNode {
-  path: string
-  meta?: FieldMeta
-  control: ReturnType<typeof resolveControl>
-}
-
-export function useFieldTree(schema: ZodType, options: AutoFormOptions = {}) {
-  const fields = computed<FieldNode[]>(() => {
-    const entries = introspectSchema(schema)
-    return entries.map(e => ({
-      path: e.path,
-      meta: e.meta as FieldMeta | undefined,
-      control: resolveControl(e.meta as FieldMeta, options),
-    }))
+export function useFieldTree(schema: ZodObject<any>, options: AutoFormOptions = {}) {
+  const shape = schema.shape as Record<string, ZodAny>
+  const fields = Object.entries(shape).map(([key, value]) => {
+    const meta = isFunction(value.meta) ? value.meta() : value.meta || {}
+    return {
+      key,
+      meta,
+      control: resolveControl(meta as FieldMeta, options),
+    }
   })
-
   return {
     fields,
   }

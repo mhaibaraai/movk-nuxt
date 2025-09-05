@@ -1,4 +1,5 @@
 import type { z } from 'zod/v4'
+import type { Controls } from '../components/auto-form/controls'
 
 export * from './api'
 export * from './theme'
@@ -35,9 +36,7 @@ export type AutoFormRegistryMeta = FieldMeta
 
 export interface AutoFormOptions {
   // 控件映射（type → Vue 组件或渲染描述）
-  controls?: Record<string, any>
-  // 日志级别
-  logLevel?: 'silent' | 'warn' | 'debug'
+  controls?: Controls
 }
 
 // --------- 类型推断与控件 Props 提示 ---------

@@ -1,7 +1,7 @@
 import type { ZodType } from 'zod/v4'
 import { getMeta } from './registry'
 import { resolveDiscriminatedUnionSchema } from './union'
-import { getZodType, joinPath, unwrapOptionalDefault } from './utils'
+import { joinPath, unwrapOptionalDefault } from './utils'
 
 export interface IntrospectedField {
   path: string
