@@ -4,6 +4,7 @@ import {
   addComponentsDir,
   addImportsDir,
   addPlugin,
+  addTypeTemplate,
   createResolver,
   defineNuxtModule,
 } from '@nuxt/kit'
@@ -30,7 +31,7 @@ export default defineNuxtModule<ModuleOptions>({
     version,
     configKey: 'movk',
     compatibility: {
-      nuxt: '>=3.16.0',
+      nuxt: '>=4.1.1',
     },
   },
   defaults: moduleOptionsSchema.parse({}),
@@ -88,6 +89,11 @@ export default defineNuxtModule<ModuleOptions>({
     }
 
     addPlugin({ src: resolve('runtime/plugins/api.factory.ts') })
+
+    addTypeTemplate({
+      filename: 'runtime/types/auto-form-zod.d.ts',
+      src: resolve('runtime/types/zod.d.ts'),
+    })
 
     addComponentsDir({
       path: resolve('runtime/components'),

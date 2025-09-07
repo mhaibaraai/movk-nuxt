@@ -1,117 +1,211 @@
-<script setup lang="ts" generic="T extends ZodObject<any>">
-import type { StringOrVNode } from '@movk/core'
-import type { FormSubmitEvent, InferInput } from '@nuxt/ui'
-import type { Component } from 'vue'
-import type { ZodObject } from 'zod/v4'
-import type { AutoFormOptions } from '../../types'
-import type { Controls } from './controls'
-import { h, reactive, toRefs, watch } from 'vue'
-import { useFieldTree } from './useFieldTree'
-import { aggregateZodErrors, parsePath } from './utils'
+<script lang="ts">
+import type { FormData, FormError, FormErrorEvent, FormInputEvents, FormSubmitEvent, InferInput } from '@nuxt/ui'
+import type { GlobalMeta, z } from 'zod/v4'
+import type { ComponentProps, ComponentSlots, IsComponent } from '../../core'
+import type { AutoFormControl, AutoFormControls } from '../../types'
+import { UInput, UInputNumber, USelect, USwitch } from '#components'
+import { isFunction } from '@movk/core'
+import defu from 'defu'
+import { h, isVNode, resolveDynamicComponent } from 'vue'
+import { getPath, setPath } from '../../core'
+import { introspectSchema, resolveControl } from '../../utils/auto-form'
 
-type AutoFormStateType = InferInput<T>
-interface AutoFormEmits<T extends object> {
-  submit: [payload: FormSubmitEvent<T>]
+export interface AutoFormProps {
+  id?: string | number
+  /** Schema to validate the form state. Supports Standard Schema objects, Yup, Joi, and Superstructs. */
+  schema?: S
+  /**
+   * Custom validation function to validate the form state.
+   * @param state - The current state of the form.
+   * @returns A promise that resolves to an array of FormError objects, or an array of FormError objects directly.
+   */
+  validate?: (state: Partial<InferInput<S>>) => Promise<FormError[]> | FormError[]
+  /**
+   * The list of input events that trigger the form validation.
+   * @remarks The form always validates on submit.
+   * @defaultValue `['blur', 'change', 'input']`
+   */
+  validateOn?: FormInputEvents[]
+  /** Disable all inputs inside the form. */
+  disabled?: boolean
+  /**
+   * Delay in milliseconds before validating the form on input events.
+   * @defaultValue `300`
+   */
+  validateOnInputDelay?: number
+  /**
+   * If true, schema transformations will be applied to the state on submit.
+   * @defaultValue `true`
+   */
+  transform?: T
+
+  /**
+   * If true, this form will attach to its parent Form (if any) and validate at the same time.
+   * @defaultValue `true`
+   */
+  attach?: boolean
+
+  /**
+   * When `true`, all form elements will be disabled on `@submit` event.
+   * This will cause any focused input elements to lose their focus state.
+   * @defaultValue `true`
+   */
+  loadingAuto?: boolean
+  class?: any
+  onSubmit?: ((event: FormSubmitEvent<FormData<S, T>>) => void | Promise<void>) | (() => void | Promise<void>)
+  controls?: AutoFormControls
 }
 
-const { schema, options } = defineProps<{
-  schema: T
-  options?: AutoFormOptions
-}>()
-const emit = defineEmits<AutoFormEmits<AutoFormStateType>>()
+export interface AutoFormEmits {
+  submit: [event: FormSubmitEvent<FormData<S, T>>]
+  error: [event: FormErrorEvent]
+}
 
-// const state = defineModel<AutoFormStateType>()
+export function createControl<T extends IsComponent>(e: {
+  component: T
+  props?: ComponentProps<T>
+  slots?: ComponentSlots<T>
+}): AutoFormControl<T> {
+  return { component: e.component, props: e.props, slots: e.slots }
+}
 
-useFieldTree(schema, options)
+export function afMeta<C extends IsComponent>(component: C, meta?: Omit<GlobalMeta<C>, 'component'>): GlobalMeta<C> {
+  return {
+    component,
+    ...(meta || {} as any),
+  }
+}
+</script>
 
-// function getByPath(obj: any, path: string) {
-//   const segs = parsePath(path)
-//   let cur = obj
-//   for (const s of segs) {
-//     if (cur == null)
-//       return undefined
-//     cur = cur[s as any]
+<script setup lang="ts" generic="S extends z.ZodType, T extends boolean = true">
+const { schema, controls, ...props } = defineProps<AutoFormProps>()
+const emit = defineEmits<AutoFormEmits>()
+
+const state = defineModel<Partial<InferInput<S>>>({ default: {} })
+
+const defaultControls = {
+  string: createControl({ component: UInput, props: { ui: { root: 'text-red-500' } } }),
+  number: createControl({ component: UInputNumber }),
+  boolean: createControl({ component: USwitch }),
+  enum: createControl({ component: USelect }),
+} satisfies AutoFormControls
+
+function useFieldTree(schema: S | undefined, controls: AutoFormControls = {}) {
+  if (!schema) {
+    return {
+      fields: [],
+    }
+  }
+  const mapping = defu(controls, defaultControls)
+  const entries = introspectSchema(schema)
+  const fields = entries.map((entry) => {
+    console.log('entry', entry)
+    const meta = isFunction(entry.meta) ? entry.meta() : entry.meta || {}
+    return {
+      path: entry.path,
+      schema: entry.schema,
+      zodType: entry.zodType,
+      meta,
+      control: resolveControl(entry, mapping),
+    }
+  })
+  console.log('entries', entries)
+  return {
+    fields,
+  }
+}
+
+const { fields } = useFieldTree(schema, controls)
+
+// function makeFieldSlotCtx(slotProps: any, field: any) {
+//   const set = (v: any) => setPath(state as any, field.path, v)
+//   return {
+//     path: field.path,
+//     value: getPath(state as any, field.path),
+//     update: set,
+//     setValue: set,
+//     error: slotProps?.error,
+//     label: field.meta?.label,
+//     hint: field.meta?.hint,
+//     description: field.meta?.description,
+//     help: field.meta?.help,
+//     required: field.meta?.required,
+//     size: field.meta?.size,
+//     schema: field.schema,
+//     meta: field.meta,
+//     zodType: field.zodType,
 //   }
-//   return cur
 // }
 
-// function setByPath(obj: any, path: string, value: any) {
-//   const segs = parsePath(path)
-//   let cur = obj
-//   for (let i = 0; i < segs.length - 1; i++) {
-//     const s = segs[i]
-//     if (cur[s as any] == null)
-//       cur[s as any] = typeof segs[i + 1] === 'number' ? [] : {}
-//     cur = cur[s as any]
+// function wrapSlots(fns: Record<string, (props?: any) => any> | undefined, makeCtx: (p?: any) => any) {
+//   if (!fns)
+//     return undefined as any
+//   const out: Record<string, (p?: any) => any> = {}
+//   for (const key of Object.keys(fns)) {
+//     const fn = (fns as any)[key]
+//     if (typeof fn === 'function')
+//       out[key] = (p?: any) => fn(makeCtx(p))
 //   }
-//   cur[segs[segs.length - 1] as any] = value
+//   return out
 // }
 
-// function resolveComponentForField(meta?: FieldMeta) {
-//   // 默认退化到 UInput，如无可用组件
-//   // 依赖宿主应用已注册 Nuxt UI 组件
-//   return meta?.component ?? (globalThis as any).UInput ?? 'input'
+// function buildControlSlots(field: any) {
+//   return wrapSlots(field.control?.slots as any, (p?: any) => makeFieldSlotCtx(p, field))
 // }
 
-// function renderControl(fieldPath: string, meta?: FieldMeta) {
-//   const component = resolveComponentForField(meta)
-//   return h(component as any, {
-//     'modelValue': getByPath(state, fieldPath),
-//     'onUpdate:modelValue': (v: any) => setByPath(state, fieldPath, v),
-//     ...(meta?.controlProps || {}),
-//   })
-// }
-
-// async function validate(_state: any) {
-//   const result = await schema.value.safeParseAsync(_state)
-//   if (!result.success) {
-//     const { fieldErrors, formErrors } = aggregateZodErrors(result.error)
-//     return [
-//       ...fieldErrors,
-//       ...formErrors.map(msg => ({ path: '__root__', message: msg })),
-//     ]
+// function renderControl(field: any) {
+//   const comp = field.control.component as any
+//   if (isVNode(comp))
+//     return comp
+//   const component = resolveDynamicComponent(comp)
+//   if (import.meta.dev && field?.control?.props) {
+//     for (const key of Object.keys(field.control.props)) {
+//       if (/^on[A-Z].+/.test(key) && typeof (field.control.props as any)[key] !== 'function')
+//         console.warn(`[AutoForm] 事件属性应为函数: ${key} @ ${field.path}`)
+//     }
 //   }
-//   return []
+//   return h(
+//     component as any,
+//     {
+//       'modelValue': getPath(state as any, field.path),
+//       ...(field.control.props || {}),
+//       'ui': field.control.ui,
+//       'onUpdate:modelValue': (v: any) => setPath(state as any, field.path, v),
+//     },
+//     buildControlSlots(field),
+//   )
 // }
 
-// function onSubmit() {
-//   emit('submit', { ...state })
+// function buildFieldSlots(field: any) {
+//   const fs = (field.meta?.fieldSlots || {}) as Record<string, (props?: any) => any>
+//   const out = wrapSlots(fs, (p?: any) => makeFieldSlotCtx(p, field)) || {}
+//   if (typeof fs.default !== 'function')
+//     out.default = () => renderControl(field)
+//   return out
 // }
 </script>
 
 <template>
-  <UInput />
-  <div>1</div>
-  <!-- <UForm :state="state" :validate="validate" @submit.prevent="onSubmit">
-      <div>
-        <template v-for="(field, index) in fields" :key="field.path">
-          <UFormField
-            :name="field.path"
-            :label="field.meta?.label"
-            :description="field.meta?.description"
-            :hint="field.meta?.hint"
-            :help="field.meta?.help"
-            :required="field.meta?.required"
-            :size="field.meta?.size"
-            :eager-validation="field.meta?.eagerValidation"
-            :validate-on-input-delay="field.meta?.validateOnInputDelay"
-            :ui="field.meta?.ui"
-          >
-            <template #default>
-              <slot name="field" :path="field.path" :index="index" :render="() => renderControl(field.path, field.meta)">
-                <ClientOnly>
-                  <component
-                    :is="field.control.component || 'UInput'"
-                    :model-value="getByPath(state, field.path)"
-                    v-bind="field.control.props"
-                    :ui="field.control.ui"
-                    @update:model-value="(v: any) => setByPath(state, field.path, v)"
-                  />
-                </ClientOnly>
-              </slot>
-            </template>
-          </UFormField>
-        </template>
-      </div>
-    </UForm> -->
+  <UForm :state="state" :schema="schema" v-bind="props" @submit="emit('submit', $event)" @error="emit('error', $event)">
+    <slot name="before-fields" :fields="fields" :state="state" />
+    <!-- <template v-for="field in fields" :key="field.path">
+      <UFormField
+        v-slots="buildFieldSlots(field)"
+        :as="field.meta?.as"
+        :name="field.path"
+        :error-pattern="field.meta?.error"
+        :label="field.meta?.label"
+        :description="field.meta?.description"
+        :help="field.meta?.help"
+        :hint="field.meta?.hint"
+        :size="field.meta?.size"
+        :required="field.meta?.required"
+        :eager-validation="field.meta?.eagerValidation"
+        :validate-on-input-delay="field.meta?.validateOnInputDelay"
+        :class="field.meta?.class"
+        :ui="field.meta?.ui"
+      />
+    </template> -->
+    <slot name="after-fields" :fields="fields" :state="state" />
+  </UForm>
 </template>
