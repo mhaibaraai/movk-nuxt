@@ -40,7 +40,7 @@ export default defineNuxtModule<ModuleOptions>({
       version: '>=1.11.0',
     },
     '@nuxt/ui': {
-      version: '>=4.0.0-alpha.0',
+      version: '>=4.0.0-alpha.1',
     },
     '@vueuse/nuxt': {
       version: '>=13.9.0',
@@ -94,6 +94,8 @@ export default defineNuxtModule<ModuleOptions>({
       filename: 'runtime/types/auto-form-zod.d.ts',
       src: resolve('runtime/types/zod.d.ts'),
     })
+
+    addImportsDir(resolve('runtime/utils'))
 
     addComponentsDir({
       path: resolve('runtime/components'),

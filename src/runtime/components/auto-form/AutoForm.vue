@@ -1,16 +1,14 @@
-<script lang="ts">
-import type { FormData, FormError, FormErrorEvent, FormInputEvents, FormSubmitEvent, InferInput } from '@nuxt/ui'
-import type { GlobalMeta, z } from 'zod/v4'
-import type { ComponentProps, ComponentSlots, IsComponent } from '../../core'
-import type { AutoFormControl, AutoFormControls } from '../../types'
-import { UInput, UInputNumber, USelect, USwitch } from '#components'
-import { isFunction } from '@movk/core'
+<script setup lang="ts" generic="S extends z.ZodType, T extends boolean = true">
+import type { FormData, FormError, FormErrorEvent, FormFieldSlots, FormInputEvents, FormSubmitEvent, InferInput } from '@nuxt/ui'
+import type { z } from 'zod/v4'
+import type { AutoFormControls } from '../../types'
+import { UCalendar, UCheckbox, UCheckboxGroup, UColorPicker, UFileUpload, UInput, UInputMenu, UInputNumber, UInputTags, UPinInput, URadioGroup, USelect, USelectMenu, USlider, USwitch, UTextarea } from '#components'
 import defu from 'defu'
-import { h, isVNode, resolveDynamicComponent } from 'vue'
+import { Fragment, h, isVNode, resolveDynamicComponent } from 'vue'
 import { getPath, setPath } from '../../core'
-import { introspectSchema, resolveControl } from '../../utils/auto-form'
+import { createControl, introspectSchema, resolveControl } from '../../utils/auto-form'
 
-export interface AutoFormProps {
+export interface AutoFormProps<S extends z.ZodType, T extends boolean = true> {
   id?: string | number
   /** Schema to validate the form state. Supports Standard Schema objects, Yup, Joi, and Superstructs. */
   schema?: S
@@ -54,41 +52,50 @@ export interface AutoFormProps {
   class?: any
   onSubmit?: ((event: FormSubmitEvent<FormData<S, T>>) => void | Promise<void>) | (() => void | Promise<void>)
   controls?: AutoFormControls
+  size?: 'md' | 'xs' | 'sm' | 'lg' | 'xl'
 }
 
-export interface AutoFormEmits {
+export interface AutoFormEmits<S extends z.ZodType, T extends boolean = true> {
   submit: [event: FormSubmitEvent<FormData<S, T>>]
   error: [event: FormErrorEvent]
 }
 
-export function createControl<T extends IsComponent>(e: {
-  component: T
-  props?: ComponentProps<T>
-  slots?: ComponentSlots<T>
-}): AutoFormControl<T> {
-  return { component: e.component, props: e.props, slots: e.slots }
+export interface AutoFormSlots extends FormFieldSlots {
+  'before-fields': (p: { fields: any[], state: any }) => any
+  'after-fields': (p: { fields: any[], state: any }) => any
+  [key: string]: ((p: any) => any) | undefined
 }
 
-export function afMeta<C extends IsComponent>(component: C, meta?: Omit<GlobalMeta<C>, 'component'>): GlobalMeta<C> {
-  return {
-    component,
-    ...(meta || {} as any),
-  }
-}
-</script>
-
-<script setup lang="ts" generic="S extends z.ZodType, T extends boolean = true">
-const { schema, controls, ...props } = defineProps<AutoFormProps>()
-const emit = defineEmits<AutoFormEmits>()
+const { schema, controls, size, ...props } = defineProps<AutoFormProps<S, T>>()
+const emit = defineEmits<AutoFormEmits<S, T>>()
+const _slots = defineSlots<AutoFormSlots>()
 
 const state = defineModel<Partial<InferInput<S>>>({ default: {} })
 
+// 文本变体（password/email/url/search/tel）通过本地自定义实现，这里仅占位说明，不纳入默认映射
 const defaultControls = {
-  string: createControl({ component: UInput, props: { ui: { root: 'text-red-500' } } }),
-  number: createControl({ component: UInputNumber }),
-  boolean: createControl({ component: USwitch }),
-  enum: createControl({ component: USelect }),
+  // 基础类型
+  'string': createControl({ component: UInput }),
+  'number': createControl({ component: UInputNumber }),
+  'boolean': createControl({ component: USwitch }),
+  'enum': createControl({ component: USelect }),
+  'date': createControl({ component: UCalendar }),
+
+  // 自定义类型（通过 meta.type 指定）
+  'textarea': createControl({ component: UTextarea }),
+  'checkbox': createControl({ component: UCheckbox }),
+  'checkbox-group': createControl({ component: UCheckboxGroup }),
+  'radio-group': createControl({ component: URadioGroup }),
+  'select-menu': createControl({ component: USelectMenu }),
+  'input-menu': createControl({ component: UInputMenu }),
+  'slider': createControl({ component: USlider }),
+  'color': createControl({ component: UColorPicker }),
+  'tags': createControl({ component: UInputTags }),
+  'file': createControl({ component: UFileUpload }),
+  'pin': createControl({ component: UPinInput }),
 } satisfies AutoFormControls
+
+type Field = ReturnType<typeof useFieldTree>['fields'][number]
 
 function useFieldTree(schema: S | undefined, controls: AutoFormControls = {}) {
   if (!schema) {
@@ -99,17 +106,14 @@ function useFieldTree(schema: S | undefined, controls: AutoFormControls = {}) {
   const mapping = defu(controls, defaultControls)
   const entries = introspectSchema(schema)
   const fields = entries.map((entry) => {
-    console.log('entry', entry)
-    const meta = isFunction(entry.meta) ? entry.meta() : entry.meta || {}
     return {
       path: entry.path,
       schema: entry.schema,
       zodType: entry.zodType,
-      meta,
+      meta: entry.meta,
       control: resolveControl(entry, mapping),
     }
   })
-  console.log('entries', entries)
   return {
     fields,
   }
@@ -117,95 +121,181 @@ function useFieldTree(schema: S | undefined, controls: AutoFormControls = {}) {
 
 const { fields } = useFieldTree(schema, controls)
 
-// function makeFieldSlotCtx(slotProps: any, field: any) {
-//   const set = (v: any) => setPath(state as any, field.path, v)
-//   return {
-//     path: field.path,
-//     value: getPath(state as any, field.path),
-//     update: set,
-//     setValue: set,
-//     error: slotProps?.error,
-//     label: field.meta?.label,
-//     hint: field.meta?.hint,
-//     description: field.meta?.description,
-//     help: field.meta?.help,
-//     required: field.meta?.required,
-//     size: field.meta?.size,
-//     schema: field.schema,
-//     meta: field.meta,
-//     zodType: field.zodType,
-//   }
-// }
+function buildSlotProps(field: Field) {
+  return {
+    state,
+    zodType: field.zodType,
+    meta: field.meta,
+    path: field.path,
+    schema: field.schema,
+    value: getPath(state.value as any, field.path),
+    setValue: (v: any) => setPath(state.value as any, field.path, v),
+  }
+}
 
-// function wrapSlots(fns: Record<string, (props?: any) => any> | undefined, makeCtx: (p?: any) => any) {
-//   if (!fns)
-//     return undefined as any
-//   const out: Record<string, (p?: any) => any> = {}
-//   for (const key of Object.keys(fns)) {
-//     const fn = (fns as any)[key]
-//     if (typeof fn === 'function')
-//       out[key] = (p?: any) => fn(makeCtx(p))
-//   }
-//   return out
-// }
+function enhanceEventProps(originalProps: Record<string, any>, ctx: any) {
+  const next: Record<string, any> = {}
+  for (const key of Object.keys(originalProps || {})) {
+    const val = (originalProps as any)[key]
+    if (/^on[A-Z].+/.test(key) && typeof val === 'function') {
+      next[key] = (...args: any[]) => (val as any)(...args, ctx)
+    }
+    else {
+      next[key] = val
+    }
+  }
+  return next
+}
 
-// function buildControlSlots(field: any) {
-//   return wrapSlots(field.control?.slots as any, (p?: any) => makeFieldSlotCtx(p, field))
-// }
+function renderControl(field: Field) {
+  const control = field?.control
+  const comp = control?.component as any
+  if (!comp) {
+    return h('div', { class: 'text-red-500' }, `[AutoForm] 控件未映射: ${field?.path ?? ''}`)
+  }
+  if (isVNode(comp))
+    return comp
+  const component = resolveDynamicComponent(comp)
+  if (control?.props) {
+    for (const key of Object.keys(control.props)) {
+      if (/^on[A-Z].+/.test(key) && typeof (control.props as any)[key] !== 'function')
+        console.warn(`[AutoForm] 事件属性应为函数: ${key} @ ${field.path}`)
+    }
+  }
+  const originalProps = (control?.props || {}) as Record<string, any>
+  const userOnUpdate = (originalProps as any)['onUpdate:modelValue']
+  const rest = { ...originalProps }
+  delete (rest as any)['onUpdate:modelValue']
+  const ctx = buildSlotProps(field)
+  const wrapped = enhanceEventProps(rest, ctx)
+  return h(
+    component as any,
+    {
+      ...wrapped,
+      'onUpdate:modelValue': (v: any) => {
+        setPath(state.value as any, field.path, v)
+        if (typeof userOnUpdate === 'function')
+          userOnUpdate(v, ctx)
+      },
+      'modelValue': getPath(state.value as any, field.path),
+    },
+    control?.slots as any,
+  )
+}
 
-// function renderControl(field: any) {
-//   const comp = field.control.component as any
-//   if (isVNode(comp))
-//     return comp
-//   const component = resolveDynamicComponent(comp)
-//   if (import.meta.dev && field?.control?.props) {
-//     for (const key of Object.keys(field.control.props)) {
-//       if (/^on[A-Z].+/.test(key) && typeof (field.control.props as any)[key] !== 'function')
-//         console.warn(`[AutoForm] 事件属性应为函数: ${key} @ ${field.path}`)
-//     }
-//   }
-//   return h(
-//     component as any,
-//     {
-//       'modelValue': getPath(state as any, field.path),
-//       ...(field.control.props || {}),
-//       'ui': field.control.ui,
-//       'onUpdate:modelValue': (v: any) => setPath(state as any, field.path, v),
-//     },
-//     buildControlSlots(field),
-//   )
-// }
+function renderFieldSlot(fn?: (props?: any) => any, slotProps?: any) {
+  return fn ? (fn as any)(slotProps) : null
+}
 
-// function buildFieldSlots(field: any) {
-//   const fs = (field.meta?.fieldSlots || {}) as Record<string, (props?: any) => any>
-//   const out = wrapSlots(fs, (p?: any) => makeFieldSlotCtx(p, field)) || {}
-//   if (typeof fs.default !== 'function')
-//     out.default = () => renderControl(field)
-//   return out
-// }
+function hasNamedSlot(field: Field, name: keyof FormFieldSlots) {
+  const keySpecific = `${name}:${field.path}`
+  const s = _slots as any
+  return Boolean(field.meta?.fieldSlots?.[name] || s?.[keySpecific] || s?.[name])
+}
+
+function normalize(node: any): any[] {
+  if (node == null || node === false)
+    return []
+
+  if (Array.isArray(node))
+    return node.flatMap(n => normalize(n))
+
+  if (isVNode(node))
+    return [node]
+
+  const t = typeof node
+  if (t === 'string' || t === 'number')
+    return [node]
+
+  // 其它对象不参与字符串化，避免触发 JSON.stringify 循环
+  return []
+}
+
+function VNodeRender(props: { node: unknown }) {
+  const children = normalize(props.node as any)
+  if (children.length === 0)
+    return null as any
+  if (children.length === 1)
+    return children[0] as any
+  return h(Fragment, null, children)
+}
 </script>
 
 <template>
   <UForm :state="state" :schema="schema" v-bind="props" @submit="emit('submit', $event)" @error="emit('error', $event)">
     <slot name="before-fields" :fields="fields" :state="state" />
-    <!-- <template v-for="field in fields" :key="field.path">
+    <template v-for="field in fields" :key="field.path">
       <UFormField
-        v-slots="buildFieldSlots(field)"
         :as="field.meta?.as"
         :name="field.path"
-        :error-pattern="field.meta?.error"
+        :error-pattern="field.meta?.errorPattern"
         :label="field.meta?.label"
         :description="field.meta?.description"
         :help="field.meta?.help"
         :hint="field.meta?.hint"
-        :size="field.meta?.size"
+        :size="field.meta?.size ?? size"
         :required="field.meta?.required"
         :eager-validation="field.meta?.eagerValidation"
         :validate-on-input-delay="field.meta?.validateOnInputDelay"
         :class="field.meta?.class"
         :ui="field.meta?.ui"
-      />
-    </template> -->
+      >
+        <template v-if="hasNamedSlot(field, 'label')" #label="{ label }">
+          <slot :name="`label:${field.path}`" v-bind="{ label, ...buildSlotProps(field) }">
+            <slot name="label" v-bind="{ label, ...buildSlotProps(field) }">
+              <VNodeRender
+                :node="renderFieldSlot(field.meta?.fieldSlots?.label, { label, ...buildSlotProps(field) })"
+              />
+            </slot>
+          </slot>
+        </template>
+        <template v-if="hasNamedSlot(field, 'hint')" #hint="{ hint }">
+          <slot :name="`hint:${field.path}`" v-bind="{ hint, ...buildSlotProps(field) }">
+            <slot name="hint" v-bind="{ hint, ...buildSlotProps(field) }">
+              <VNodeRender :node="renderFieldSlot(field.meta?.fieldSlots?.hint, { hint, ...buildSlotProps(field) })" />
+            </slot>
+          </slot>
+        </template>
+        <template v-if="hasNamedSlot(field, 'description')" #description="{ description }">
+          <slot :name="`description:${field.path}`" v-bind="{ description, ...buildSlotProps(field) }">
+            <slot name="description" v-bind="{ description, ...buildSlotProps(field) }">
+              <VNodeRender
+                :node="renderFieldSlot(field.meta?.fieldSlots?.description, { description, ...buildSlotProps(field) })"
+              />
+            </slot>
+          </slot>
+        </template>
+        <template v-if="hasNamedSlot(field, 'help')" #help="{ help }">
+          <slot :name="`help:${field.path}`" v-bind="{ help, ...buildSlotProps(field) }">
+            <slot name="help" v-bind="{ help, ...buildSlotProps(field) }">
+              <VNodeRender :node="renderFieldSlot(field.meta?.fieldSlots?.help, { help, ...buildSlotProps(field) })" />
+            </slot>
+          </slot>
+        </template>
+        <template v-if="hasNamedSlot(field, 'error')" #error="{ error }">
+          <slot :name="`error:${field.path}`" v-bind="{ error, ...buildSlotProps(field) }">
+            <slot name="error" v-bind="{ error, ...buildSlotProps(field) }">
+              <VNodeRender
+                :node="renderFieldSlot(field.meta?.fieldSlots?.error, { error, ...buildSlotProps(field) })"
+              />
+            </slot>
+          </slot>
+        </template>
+        <template #default="{ error }">
+          <slot :name="`default:${field.path}`" v-bind="{ error, ...buildSlotProps(field) }">
+            <slot name="default" v-bind="{ error, ...buildSlotProps(field) }">
+              <VNodeRender
+                :node="renderFieldSlot(field.meta?.fieldSlots?.default, { error, ...buildSlotProps(field) })"
+              />
+              <template v-if="!field.meta?.fieldSlots || !field.meta?.fieldSlots.default">
+                <VNodeRender :node="renderControl(field)" />
+              </template>
+            </slot>
+          </slot>
+        </template>
+      </UFormField>
+    </template>
     <slot name="after-fields" :fields="fields" :state="state" />
+    <!-- <slot name="submit" :state="state" /> -->
   </UForm>
 </template>
