@@ -4,10 +4,21 @@
  */
 
 import type { StringOrVNode } from '@movk/core'
-import type { Component, DefineComponent, FunctionalComponent, VNode } from 'vue'
+import type { Component, DefineComponent } from 'vue'
 import { isObject } from '@movk/core'
 
-export type IsComponent = StringOrVNode | Component | DefineComponent | FunctionalComponent | ((...args: any[]) => VNode)
+/**
+ * 合并两个对象类型，U 中的属性会覆盖 T 中的属性
+ * @example
+ * ```ts
+ * type T = { a: number, c: string }
+ * type U = { a: string, b: boolean }
+ * type M = Merge<T, U> // { a: string, b: boolean, c: string }
+ * ```
+ */
+export type Merge<T, U> = Omit<T, keyof U> & U
+
+export type IsComponent = StringOrVNode | Component | DefineComponent | ((...args: any[]) => any)
 
 export type ComponentType<T> = T extends new (...args: any) => object ? 1
   : T extends (...args: any) => any ? 2

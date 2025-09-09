@@ -1,8 +1,8 @@
+import type { AnyObject } from '@movk/core'
 import type { FormFieldSlots } from '@nuxt/ui'
-import type { ComponentProps, ComponentSlots, IsComponent } from '../core'
 
 declare module 'zod/v4' {
-  interface GlobalMeta<C extends IsComponent = IsComponent> {
+  interface GlobalMeta {
     /**
      * The element or component this component should render as.
      * @defaultValue 'div'
@@ -32,15 +32,14 @@ declare module 'zod/v4' {
     class?: any
     ui?: { root?: string, wrapper?: string, labelWrapper?: string, label?: string, container?: string, description?: string, error?: string, hint?: string, help?: string }
     /**
-     * FormFieldSlots
      * @see https://ui4.nuxt.com/docs/components/form-field#slots
      */
-    fieldSlots?: FormFieldSlots
+    fieldSlots?: Partial<FormFieldSlots>
 
     type?: string
-    component?: C
-    controlProps?: ComponentProps<C>
-    controlSlots?: ComponentSlots<C>
+    component?: any
+    controlProps?: AnyObject
+    controlSlots?: AnyObject
   }
 }
 

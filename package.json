@@ -24,6 +24,8 @@
     "dist"
   ],
   "scripts": {
+    "test": "vitest",
+    "test:types": "vitest typecheck",
     "prepack": "nr build",
     "build": "nuxt-module-build build",
     "dev": "nr dev:prepare && nuxi dev playground",
@@ -32,7 +34,6 @@
     "release": "release-it --verbose",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "test": "vitest",
     "typecheck": "vue-tsc --noEmit && nuxt typecheck playground",
     "up": "taze major -wIr",
     "clean": "tsx scripts/rm.ts"
@@ -59,6 +60,7 @@
     "@nuxt/module-builder": "catalog:",
     "@nuxt/schema": "catalog:",
     "@types/node": "catalog:",
+    "@vitest/ui": "^3.2.4",
     "@vueuse/nuxt": "catalog:",
     "eslint": "catalog:",
     "eslint-plugin-format": "catalog:",

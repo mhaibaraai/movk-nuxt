@@ -2,11 +2,11 @@
 import type { FormData, FormError, FormErrorEvent, FormFieldSlots, FormInputEvents, FormSubmitEvent, InferInput } from '@nuxt/ui'
 import type { z } from 'zod/v4'
 import type { AutoFormControls } from '../../types'
-import { UCalendar, UCheckbox, UCheckboxGroup, UColorPicker, UFileUpload, UInput, UInputMenu, UInputNumber, UInputTags, UPinInput, URadioGroup, USelect, USelectMenu, USlider, USwitch, UTextarea } from '#components'
 import defu from 'defu'
 import { Fragment, h, isVNode, resolveDynamicComponent } from 'vue'
+import { DEFAULT_CONTROLS } from '../../constants/auto-form'
 import { getPath, setPath } from '../../core'
-import { createControl, introspectSchema, resolveControl } from '../../utils/auto-form'
+import { introspectSchema, resolveControl } from '../../utils/auto-form'
 
 export interface AutoFormProps<S extends z.ZodType, T extends boolean = true> {
   id?: string | number
@@ -73,28 +73,6 @@ const _slots = defineSlots<AutoFormSlots>()
 const state = defineModel<Partial<InferInput<S>>>({ default: {} })
 
 // 文本变体（password/email/url/search/tel）通过本地自定义实现，这里仅占位说明，不纳入默认映射
-const defaultControls = {
-  // 基础类型
-  'string': createControl({ component: UInput }),
-  'number': createControl({ component: UInputNumber }),
-  'boolean': createControl({ component: USwitch }),
-  'enum': createControl({ component: USelect }),
-  'date': createControl({ component: UCalendar }),
-
-  // 自定义类型（通过 meta.type 指定）
-  'textarea': createControl({ component: UTextarea }),
-  'checkbox': createControl({ component: UCheckbox }),
-  'checkbox-group': createControl({ component: UCheckboxGroup }),
-  'radio-group': createControl({ component: URadioGroup }),
-  'select-menu': createControl({ component: USelectMenu }),
-  'input-menu': createControl({ component: UInputMenu }),
-  'slider': createControl({ component: USlider }),
-  'color': createControl({ component: UColorPicker }),
-  'tags': createControl({ component: UInputTags }),
-  'file': createControl({ component: UFileUpload }),
-  'pin': createControl({ component: UPinInput }),
-} satisfies AutoFormControls
-
 type Field = ReturnType<typeof useFieldTree>['fields'][number]
 
 function useFieldTree(schema: S | undefined, controls: AutoFormControls = {}) {
@@ -103,7 +81,7 @@ function useFieldTree(schema: S | undefined, controls: AutoFormControls = {}) {
       fields: [],
     }
   }
-  const mapping = defu(controls, defaultControls)
+  const mapping = defu(controls, DEFAULT_CONTROLS)
   const entries = introspectSchema(schema)
   const fields = entries.map((entry) => {
     return {

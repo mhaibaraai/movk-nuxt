@@ -95,8 +95,6 @@ export default defineNuxtModule<ModuleOptions>({
       src: resolve('runtime/types/zod.d.ts'),
     })
 
-    addImportsDir(resolve('runtime/utils'))
-
     addComponentsDir({
       path: resolve('runtime/components'),
       prefix: options.prefix,
