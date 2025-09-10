@@ -7,6 +7,7 @@ import {
   addTypeTemplate,
   createResolver,
   defineNuxtModule,
+  installModule,
 } from '@nuxt/kit'
 import defu from 'defu'
 import { z } from 'zod/v4'
@@ -36,18 +37,18 @@ export default defineNuxtModule<ModuleOptions>({
   },
   defaults: moduleOptionsSchema.parse({}),
   moduleDependencies: {
-    '@nuxt/image': {
-      version: '>=1.11.0',
-    },
-    '@nuxt/ui': {
-      version: '>=4.0.0-alpha.1',
-    },
-    '@vueuse/nuxt': {
-      version: '>=13.9.0',
-    },
-    'nuxt-auth-utils': {
-      version: '>=0.5.23',
-    },
+    // '@nuxt/image': {
+    //   version: '>=1.11.0',
+    // },
+    // '@nuxt/ui': {
+    //   version: '>=4.0.0-alpha.1',
+    // },
+    // '@vueuse/nuxt': {
+    //   version: '>=13.9.0',
+    // },
+    // 'nuxt-auth-utils': {
+    //   version: '>=0.5',
+    // },
     '@nuxt/eslint': {
       version: '>=1.9.0',
       defaults: {
@@ -59,13 +60,13 @@ export default defineNuxtModule<ModuleOptions>({
         },
       },
     },
-    '@nuxtjs/i18n': {
-      version: '>=10.0.6',
-      defaults: {
-        strategy: 'no_prefix',
-        defaultLocale: 'zh_cn',
-      },
-    },
+    // '@nuxtjs/i18n': {
+    //   version: '>=10.0.6',
+    //   defaults: {
+    //     strategy: 'no_prefix',
+    //     defaultLocale: 'zh_cn',
+    //   },
+    // },
   },
   async setup(options, nuxt) {
     const { resolve } = createResolver(import.meta.url)
@@ -74,9 +75,17 @@ export default defineNuxtModule<ModuleOptions>({
     nuxt.options.alias['#movk'] = resolve('./runtime')
     nuxt.options.appConfig.movk = defu(nuxt.options.appConfig.movk || {}, options)
 
+    // TODO: 需要优化，避免重复安装
+    await installModule('@nuxt/ui')
+    await installModule('nuxt-auth-utils')
+    await installModule('@nuxt/image')
+    await installModule('@vueuse/nuxt')
+
     nuxt.options.css.push(resolve('runtime/assets/css/main.css'))
 
     if (options.i18n) {
+      await installModule('@nuxtjs/i18n')
+      // @ts-expect-error i18n:registerModule is not a valid hook key
       nuxt.hook('i18n:registerModule', (register) => {
         register({
           langDir: resolve('./runtime/i18n/locales'),

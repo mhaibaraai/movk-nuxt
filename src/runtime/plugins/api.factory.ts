@@ -1,5 +1,5 @@
 import type { ApiFetchOptions } from '../types'
-import { defineNuxtPlugin, useUserSession } from '#imports'
+import { defineNuxtPlugin, useToast, useUserSession } from '#imports'
 import { isEmpty, separate } from '@movk/core'
 import { ApiProfileSchema } from '../types'
 import { validateApiProfile } from '../utils/api'
@@ -7,7 +7,7 @@ import { smartT } from '../utils/t'
 
 export default defineNuxtPlugin(() => {
   const API_PROFILE_KEYS = ApiProfileSchema.keyof().options
-  // const toast = useToast()
+  const toast = useToast()
 
   const createApiFetcher = <DataT>(options: ApiFetchOptions<DataT>) => {
     const { picked, omitted: fetchOptions } = separate(options, API_PROFILE_KEYS)
@@ -19,12 +19,12 @@ export default defineNuxtPlugin(() => {
       if (!showToast || !import.meta.client)
         return
 
-      // toast.add({
-      //   description: message,
-      //   color: type,
-      //   icon: type === 'success' ? 'lucide-circle-check' : 'lucide-circle-x',
-      //   ...customToast,
-      // })
+      toast.add({
+        description: message,
+        color: type,
+        icon: type === 'success' ? 'lucide-circle-check' : 'lucide-circle-x',
+        ...customToast,
+      })
     }
 
     const handleResponseError = (request: RequestInfo, response: any, error?: Error) => {

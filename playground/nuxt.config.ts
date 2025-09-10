@@ -1,5 +1,5 @@
 export default defineNuxtConfig({
-  modules: ['../src/module', '@nuxtjs/i18n', '@vueuse/motion/nuxt'],
+  modules: ['../src/module', '@vueuse/motion/nuxt'],
   devtools: { enabled: true },
   css: ['~/assets/css/main.css'],
   runtimeConfig: {
@@ -9,6 +9,8 @@ export default defineNuxtConfig({
   },
   compatibilityDate: '2025-07-24',
   i18n: {
+    strategy: 'no_prefix',
+    defaultLocale: 'zh_cn',
     detectBrowserLanguage: {
       cookieKey: 'movk-nuxt-i18n_redirected',
       fallbackLocale: 'zh_cn',
@@ -25,5 +27,8 @@ export default defineNuxtConfig({
         dir: './app/assets/icons',
       },
     ],
+  },
+  movk: {
+    i18n: true,
   },
 })

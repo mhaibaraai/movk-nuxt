@@ -1,15 +1,8 @@
-import type { DEFAULT_CONTROLS } from '../constants/auto-form'
-import type { ComponentProps, ComponentSlots, IsComponent, Merge } from '../core'
-import { UInputNumber } from '#components'
+import type { ComponentProps, ComponentSlots, IsComponent } from '../core'
+import type { AutoFormControl, AutoFormControls } from './zod.d.ts'
+import defu from 'defu'
 import { z } from 'zod/v4'
-
-export interface AutoFormControl<C extends IsComponent> {
-  component: C
-  props?: ComponentProps<C>
-  slots?: ComponentSlots<C>
-}
-
-export type AutoFormControls = Record<string, AutoFormControl<IsComponent>>
+import { DEFAULT_CONTROLS } from '../constants/auto-form'
 
 type ShapeFor<T> = {
   [K in keyof T]?: z.ZodType
@@ -19,62 +12,102 @@ type StrictShapeFor<T> = {
   [K in keyof T]-?: z.ZodType
 } & { [x: string]: never }
 
-export function createAutoFormZ<T extends object = object, AFC extends AutoFormControls = AutoFormControls>() {
-  // 创建统一的控件映射，自定义控件覆盖默认控件
-  type UnifiedControls = Merge<typeof DEFAULT_CONTROLS, AFC>
+// 精简的类型化 Zod 构造器工厂 - 仅保留核心类型
+interface TypedZodFactory<_TControls extends AutoFormControls> {
+  // 基础类型（6个核心类型）
+  string: <TMeta extends import('zod/v4').GlobalMeta>(meta?: TMeta) => z.ZodString
+  number: <TMeta extends import('zod/v4').GlobalMeta>(meta?: TMeta) => z.ZodNumber
+  boolean: <TMeta extends import('zod/v4').GlobalMeta>(meta?: TMeta) => z.ZodBoolean
+  date: <TMeta extends import('zod/v4').GlobalMeta>(meta?: TMeta) => z.ZodDate
 
-  // 控件类型枚举
-  type AutoFormControlType = keyof UnifiedControls
+  // 枚举类型
+  enum: <TMeta extends import('zod/v4').GlobalMeta>(
+    values: readonly [string, ...string[]],
+    meta?: TMeta
+  ) => z.ZodEnum<any>
 
-  // 安全的组件类型提取
-  type COf<K extends AutoFormControlType> = K extends keyof UnifiedControls
-    ? UnifiedControls[K] extends AutoFormControl<infer C>
-      ? C
-      : never
-    : never
+  // 复合类型（4个核心复合类型）
+  object: <T extends z.ZodRawShape, TMeta extends import('zod/v4').GlobalMeta>(
+    shape: T,
+    meta?: TMeta
+  ) => z.ZodObject<T>
 
-  // 增强的 WithControlMeta 类型，支持函数重载的动态类型推断
-  type WithControlMeta<TSchema extends z.ZodType, C extends IsComponent> = Omit<TSchema, 'meta'> & {
-    // 重载1: 不指定 type，使用当前组件 C 的类型
-    meta: {
-      // 保持与原生 zod meta() 方法兼容
-      (): z.GlobalMeta | undefined
+  array: <T extends z.ZodTypeAny, TMeta extends import('zod/v4').GlobalMeta>(
+    schema: T,
+    meta?: TMeta
+  ) => z.ZodArray<T>
 
-      // 不指定 type，使用当前组件 C 的类型
-      (meta: z.GlobalMeta & {
-        controlProps?: ComponentProps<C>
-        controlSlots?: ComponentSlots<C>
-      }): WithControlMeta<TSchema, C>
+  union: <T extends readonly [z.ZodTypeAny, ...z.ZodTypeAny[]], TMeta extends import('zod/v4').GlobalMeta>(
+    options: T,
+    meta?: TMeta
+  ) => z.ZodUnion<T>
+}
 
-      // 指定 type，根据类型动态推断对应控件的组件类型
-      <K extends AutoFormControlType>(meta: z.GlobalMeta & {
-        type: K
-        controlProps?: ComponentProps<COf<K>>
-        controlSlots?: ComponentSlots<COf<K>>
-      }): WithControlMeta<TSchema, COf<K>>
-    }
+export function createAutoFormZ<TControls extends AutoFormControls>(controls?: TControls) {
+  const _controls = defu(controls, DEFAULT_CONTROLS) as TControls & typeof DEFAULT_CONTROLS
+
+  const typedZ: TypedZodFactory<typeof _controls> = {
+    // 基础类型
+    string: (meta) => {
+      const schema = z.string()
+      return meta ? schema.meta(meta) : schema
+    },
+
+    number: (meta) => {
+      const schema = z.number()
+      return meta ? schema.meta(meta) : schema
+    },
+
+    boolean: (meta) => {
+      const schema = z.boolean()
+      return meta ? schema.meta(meta) : schema
+    },
+
+    date: (meta) => {
+      const schema = z.date()
+      return meta ? schema.meta(meta) : schema
+    },
+
+    // 枚举类型
+    enum: (values, meta) => {
+      const schema = z.enum(values as any)
+      return meta ? schema.meta(meta) : schema
+    },
+
+    // 复合类型
+    object: (shape, meta) => {
+      const schema = z.object(shape)
+      return meta ? schema.meta(meta) : schema
+    },
+
+    array: (schema, meta) => {
+      const arraySchema = z.array(schema)
+      return meta ? arraySchema.meta(meta) : arraySchema
+    },
+
+    union: (options, meta) => {
+      const schema = z.union(options)
+      return meta ? schema.meta(meta) : schema
+    },
   }
 
-  const string = () => z.string() as WithControlMeta<z.ZodString, COf<'string'>>
-  const number = () => z.number() as WithControlMeta<z.ZodNumber, COf<'number'>>
-
-  const objectOf = () => {
+  const objectOf = <T extends object = object>() => {
     return function makeObject(shape: ShapeFor<T>) {
       return z.object(shape as Record<string, z.ZodType>)
     }
   }
 
-  const objectOfStrict = () => {
+  const objectOfStrict = <T extends object = object>() => {
     return function makeObject(shape: StrictShapeFor<T>) {
       return z.object(shape as Record<string, z.ZodType>) as unknown as z.ZodObject<any>
     }
   }
 
   return {
-    string,
-    number,
     objectOf,
     objectOfStrict,
+    z: typedZ,
+    controls: _controls,
   }
 }
 
@@ -85,33 +118,3 @@ export function createControl<T extends IsComponent>(e: {
 }): AutoFormControl<T> {
   return { component: e.component, props: e.props, slots: e.slots }
 }
-
-interface ApiUser {
-  name: string
-  age: number
-  email: string
-  address: {
-    street: string
-    city: string
-    state: string
-    zip: string
-  }
-  phone: string
-  role: 'user' | 'admin'
-}
-
-const _controls = {
-  test: createControl({
-    component: UInputNumber,
-    props: {
-      class: 'w-full',
-    },
-  }),
-} as const satisfies AutoFormControls
-
-const test = createAutoFormZ<ApiUser, typeof _controls>()
-
-test.objectOf()({
-  name: test.string().meta({ controlProps: {} }),
-  age: test.number().meta({ type: '', controlProps: {}, controlSlots: {} }),
-})

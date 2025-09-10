@@ -24,8 +24,6 @@
     "dist"
   ],
   "scripts": {
-    "test": "vitest",
-    "test:types": "vitest typecheck",
     "prepack": "nr build",
     "build": "nuxt-module-build build",
     "dev": "nr dev:prepare && nuxi dev playground",
@@ -36,19 +34,24 @@
     "lint:fix": "eslint . --fix",
     "typecheck": "vue-tsc --noEmit && nuxt typecheck playground",
     "up": "taze major -wIr",
-    "clean": "tsx scripts/rm.ts"
+    "clean": "tsx scripts/rm.ts",
+    "test": "vitest run",
+    "test:watch": "vitest watch",
+    "test:types": "vue-tsc --noEmit && cd playground && vue-tsc --noEmit"
   },
   "dependencies": {
     "@iconify-json/lucide": "catalog:",
     "@iconify-json/simple-icons": "catalog:",
     "@movk/core": "catalog:",
     "@nuxt/image": "catalog:",
+    "@nuxt/kit": "catalog:",
     "@nuxt/ui": "catalog:",
     "@nuxtjs/i18n": "catalog:",
     "@vueuse/core": "catalog:",
     "defu": "catalog:",
     "lru-cache": "catalog:",
     "nuxt-auth-utils": "catalog:",
+    "ufo": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {
@@ -56,16 +59,16 @@
     "@antfu/ni": "catalog:",
     "@nuxt/devtools": "catalog:",
     "@nuxt/eslint": "catalog:",
-    "@nuxt/kit": "catalog:",
     "@nuxt/module-builder": "catalog:",
     "@nuxt/schema": "catalog:",
+    "@nuxt/test-utils": "catalog:",
     "@types/node": "catalog:",
-    "@vitest/ui": "^3.2.4",
     "@vueuse/nuxt": "catalog:",
     "eslint": "catalog:",
     "eslint-plugin-format": "catalog:",
     "fast-glob": "catalog:",
     "nuxt": "catalog:",
+    "pkg-types": "catalog:",
     "taze": "catalog:",
     "tsx": "catalog:",
     "typescript": "catalog:",
