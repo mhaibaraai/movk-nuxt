@@ -68,7 +68,6 @@
     "eslint-plugin-format": "catalog:",
     "fast-glob": "catalog:",
     "nuxt": "catalog:",
-    "pkg-types": "catalog:",
     "taze": "catalog:",
     "tsx": "catalog:",
     "typescript": "catalog:",

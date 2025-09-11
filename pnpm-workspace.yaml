@@ -28,7 +28,7 @@ catalog:
   lru-cache: ^11.2.1
   nuxt: ^4.1.1
   nuxt-auth-utils: ^0.5.24
-  pkg-types: ^2.3.0
+  pkg-types: ^0.0.0
   sass-embedded: ^1.92.1
   taze: ^19.6.0
   tsx: ^4.20.5

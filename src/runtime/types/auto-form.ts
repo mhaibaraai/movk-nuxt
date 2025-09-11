@@ -1,85 +1,49 @@
-import type { DEFAULT_CONTROLS } from '../constants/auto-form'
 import type { ComponentProps, ComponentSlots, IsComponent } from '../core'
-import type { AutoFormControl, AutoFormControls, FactoryMethod } from './zod.d.ts'
-import { z } from 'zod/v4'
-import { mergeControls } from '../utils/auto-form'
 
-function applyMeta<T extends z.ZodTypeAny, M = unknown>(
-  schema: T,
-  meta?: M,
-): T {
-  return meta ? (schema.meta(meta as unknown as import('zod/v4').GlobalMeta) as T) : schema
+export interface AutoFormControl<C extends IsComponent> {
+  component: C
+  props?: ComponentProps<C>
+  slots?: ComponentSlots<C>
 }
 
-type ShapeFor<T> = {
-  [K in keyof T]?: z.ZodType
+export type AutoFormControls = Record<string, AutoFormControl<IsComponent>>
+
+// 基础控件映射类型（在下方声明 AutoFormControl / AutoFormControls 后使用）
+interface MetaBase<TControls> extends Omit<import('zod/v4').GlobalAutoFormMeta, 'controlProps' | 'controlSlots' | 'component' | 'type'> {
+  component?: IsComponent
+  type?: keyof TControls
 }
 
-type StrictShapeFor<T> = {
-  [K in keyof T]-?: z.ZodType
-} & { [x: string]: never }
-
-type ControlsOf<T extends AutoFormControls> = T & typeof DEFAULT_CONTROLS
-
-interface TypedZodFactory<TControls extends AutoFormControls> {
-  // 基础类型（统一使用 FactoryMethod，三段优先级：component > type > zodType）
-  string: FactoryMethod<ControlsOf<TControls>, 'string', z.ZodString>
-  number: FactoryMethod<ControlsOf<TControls>, 'number', z.ZodNumber>
-  boolean: FactoryMethod<ControlsOf<TControls>, 'boolean', z.ZodBoolean>
-  date: FactoryMethod<ControlsOf<TControls>, 'date', z.ZodDate>
-
-  // 枚举类型
-  enum: FactoryMethod<ControlsOf<TControls>, 'enum', z.ZodEnum<any>, [values: readonly [string, ...string[]]]>
-
-  // 复合类型
-  object: FactoryMethod<ControlsOf<TControls>, 'object', z.ZodObject<any>, [shape: z.ZodRawShape]>
-  array: FactoryMethod<ControlsOf<TControls>, 'array', z.ZodArray<any>, [schema: z.ZodTypeAny]>
-  union: FactoryMethod<ControlsOf<TControls>, 'union', z.ZodUnion<any>, [options: readonly [z.ZodTypeAny, ...z.ZodTypeAny[]]]>
+// 根据“component”直接推断 props/slots（内部）
+interface WithByComponent<C> {
+  controlProps?: ComponentProps<C>
+  controlSlots?: Partial<ComponentSlots<C>>
 }
 
-export function createAutoFormZ<TControls extends AutoFormControls>(controls?: TControls) {
-  const _controls = mergeControls(controls)
+// 根据“type”在控件映射中推断 props/slots
+type WithByType<TControls, K extends keyof TControls>
+  = TControls[K] extends AutoFormControl<infer C>
+    ? { controlProps?: ComponentProps<C>, controlSlots?: Partial<ComponentSlots<C>> }
+    : object
 
-  const typedZ: TypedZodFactory<typeof _controls> = {
-    // 基础类型
-    string: (meta?: any) => applyMeta(z.string(), meta),
-    number: (meta?: any) => applyMeta(z.number(), meta),
-    boolean: (meta?: any) => applyMeta(z.boolean(), meta),
-    date: (meta?: any) => applyMeta(z.date(), meta),
+// 根据“Zod 基本类型”在控件映射中推断 props/slots（兜底）
+type WithByZod<TControls, TZod extends string>
+  = TZod extends keyof TControls
+    ? TControls[TZod] extends AutoFormControl<infer C>
+      ? { controlProps?: ComponentProps<C>, controlSlots?: Partial<ComponentSlots<C>> }
+      : { controlProps?: object, controlSlots?: object }
+    : { controlProps?: object, controlSlots?: object }
 
-    // 枚举类型
-    enum: (values: any, meta?: any) => applyMeta(z.enum(values), meta),
-
-    // 复合类型
-    object: (shape: any, meta?: any) => applyMeta(z.object(shape), meta),
-    array: (schema: any, meta?: any) => applyMeta(z.array(schema), meta),
-    union: (options: any, meta?: any) => applyMeta(z.union(options), meta),
-  }
-
-  const objectOf = <T extends object = object>() => {
-    return function makeObject(shape: ShapeFor<T>) {
-      return z.object(shape as Record<string, z.ZodType>)
-    }
-  }
-
-  const objectOfStrict = <T extends object = object>() => {
-    return function makeObject(shape: StrictShapeFor<T>) {
-      return objectOf<T>()(shape as unknown as ShapeFor<T>).strict() as unknown as z.ZodObject<any>
-    }
-  }
-
-  return {
-    objectOf,
-    objectOfStrict,
-    z: typedZ,
-    controls: _controls,
-  }
-}
-
-export function createControl<T extends IsComponent>(e: {
-  component: T
-  props?: ComponentProps<T>
-  slots?: ComponentSlots<T>
-}): AutoFormControl<T> {
-  return { component: e.component, props: e.props, slots: e.slots }
+// 统一的工厂方法签名：支持三段优先级（component > type > zodType）
+export type FactoryMethod<
+  TControls,
+  TZod extends string,
+  TResult,
+  TExtraParams extends any[] = [],
+> = {
+  (...args: [...TExtraParams, meta?: MetaBase<TControls> & { component?: never, type?: never } & WithByZod<TControls, TZod>]): TResult
+} & {
+  <K extends keyof TControls>(...args: [...TExtraParams, meta: MetaBase<TControls> & { type: K, component?: never } & WithByType<TControls, K>]): TResult
+} & {
+  <C>(...args: [...TExtraParams, meta: MetaBase<TControls> & { component: C } & WithByComponent<C>]): TResult
 }

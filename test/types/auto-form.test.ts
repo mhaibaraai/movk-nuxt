@@ -1,7 +1,7 @@
-import type { AutoFormControls } from '../../src/runtime/types/zod.d.ts'
+import type { AutoFormControls } from '../../src/runtime/types'
 import { describe, it, vi } from 'vitest'
 import { h } from 'vue'
-import { createAutoFormZ, createControl } from '../../src/runtime/types/auto-form'
+import { createAutoFormControl, createAutoFormZ } from '../../src/runtime/shared/auto-form'
 
 vi.mock('../../src/runtime/constants/auto-form', () => ({ DEFAULT_CONTROLS: {} }))
 
@@ -9,7 +9,7 @@ describe('auto-form typing', () => {
   it('priority: component > type > zodType', () => {
     const MockNumber = (_props: { aaa?: number }, _ctx: { slots?: { bbb?: () => void } }) => null
     const customControls = {
-      mockTest: createControl({ component: MockNumber }),
+      mockTest: createAutoFormControl({ component: MockNumber, props: { aaa: 111 }, slots: {} }),
     } as const satisfies AutoFormControls
 
     const afz = createAutoFormZ(customControls)
