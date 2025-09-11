@@ -2,11 +2,9 @@
 import type { FormData, FormError, FormErrorEvent, FormFieldSlots, FormInputEvents, FormSubmitEvent, InferInput } from '@nuxt/ui'
 import type { z } from 'zod/v4'
 import type { AutoFormControls } from '../../types'
-import defu from 'defu'
 import { Fragment, h, isVNode, resolveDynamicComponent } from 'vue'
-import { DEFAULT_CONTROLS } from '../../constants/auto-form'
 import { getPath, setPath } from '../../core'
-import { introspectSchema, resolveControl } from '../../utils/auto-form'
+import { introspectSchema, mergeControls, resolveControl } from '../../utils/auto-form'
 
 export interface AutoFormProps<S extends z.ZodType, T extends boolean = true> {
   id?: string | number
@@ -81,7 +79,7 @@ function useFieldTree(schema: S | undefined, controls: AutoFormControls = {}) {
       fields: [],
     }
   }
-  const mapping = defu(controls, DEFAULT_CONTROLS)
+  const mapping = mergeControls(controls)
   const entries = introspectSchema(schema)
   const fields = entries.map((entry) => {
     return {

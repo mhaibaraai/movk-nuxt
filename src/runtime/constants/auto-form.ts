@@ -10,11 +10,12 @@ export const DEFAULT_CONTROLS = {
   'enum': createControl({ component: USelect }),
   'date': createControl({ component: UCalendar }),
   'bigint': createControl({ component: UInputNumber }),
-  
+
   // 复合类型
   'object': createControl({ component: UInput }), // 可以使用 JSON 输入或自定义对象编辑器
   'array': createControl({ component: UInputTags }), // 数组默认使用标签输入
-  
+  'union': createControl({ component: USelect }),
+
   // 自定义类型（通过 meta.type 指定）
   'textarea': createControl({ component: UTextarea }),
   'checkbox': createControl({ component: UCheckbox }),

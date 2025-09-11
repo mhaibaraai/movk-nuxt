@@ -2,6 +2,7 @@ import type { GlobalMeta, z } from 'zod/v4'
 import type { IsComponent } from '../core'
 import type { AutoFormControl, AutoFormControls } from '../types'
 import defu from 'defu'
+import { DEFAULT_CONTROLS } from '../constants/auto-form'
 import { joinPath } from '../core'
 
 interface AutoFormIntrospectedField {
@@ -17,6 +18,11 @@ function unwrapOptionalDefault<T extends z.ZodType>(schema: T): z.ZodType {
   while (cur?.def?.innerType) cur = cur.def.innerType
   return cur as z.ZodType
 }
+
+export function mergeControls<TCustom extends AutoFormControls>(custom?: TCustom): TCustom & typeof DEFAULT_CONTROLS {
+  return defu(custom, DEFAULT_CONTROLS) as TCustom & typeof DEFAULT_CONTROLS
+}
+
 // 递归地分析 Zod schema，返回一个包含所有字段信息的数组
 export function introspectSchema(schema: z.ZodType, parentPath?: string): AutoFormIntrospectedField[] {
   const result: AutoFormIntrospectedField[] = []
