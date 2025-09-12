@@ -1,10 +1,7 @@
-import type { AnyObject } from '@movk/core'
 import type { FormFieldSlots } from '@nuxt/ui'
-import type { DEFAULT_CONTROLS } from '../constants/auto-form'
 
 declare module 'zod/v4' {
   interface GlobalMeta extends GlobalAutoFormMeta { }
-
   interface GlobalAutoFormMeta {
     /**
      * The element or component this component should render as.
@@ -24,6 +21,9 @@ declare module 'zod/v4' {
      * @defaultValue 'md'
      */
     size?: 'md' | 'xs' | 'sm' | 'lg' | 'xl'
+    /**
+     * @defaultValue true
+     */
     required?: boolean
     /** If true, validation on input will be active immediately instead of waiting for a blur event. */
     eagerValidation?: boolean
@@ -38,11 +38,6 @@ declare module 'zod/v4' {
      * @see https://ui4.nuxt.com/docs/components/form-field#slots
      */
     fieldSlots?: Partial<FormFieldSlots>
-
-    type?: keyof typeof DEFAULT_CONTROLS
-    component?: any
-    controlProps?: AnyObject
-    controlSlots?: AnyObject
   }
 }
 

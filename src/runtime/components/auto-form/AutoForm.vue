@@ -1,12 +1,13 @@
-<script setup lang="ts" generic="S extends z.ZodType, T extends boolean = true">
+<script setup lang="ts" generic="S extends z.ZodObject, T extends boolean = true">
 import type { FormData, FormError, FormErrorEvent, FormFieldSlots, FormInputEvents, FormSubmitEvent, InferInput } from '@nuxt/ui'
 import type { z } from 'zod/v4'
 import type { AutoFormControls } from '../../types'
-import { Fragment, h, isVNode, resolveDynamicComponent } from 'vue'
+import { isFunction } from '@movk/core'
+import { Fragment, h, isVNode, resolveDynamicComponent, watchEffect } from 'vue'
 import { getPath, setPath } from '../../core'
 import { introspectSchema, mergeControls, resolveControl } from '../../utils/auto-form'
 
-export interface AutoFormProps<S extends z.ZodType, T extends boolean = true> {
+export interface AutoFormProps<S extends z.ZodObject, T extends boolean = true> {
   id?: string | number
   /** Schema to validate the form state. Supports Standard Schema objects, Yup, Joi, and Superstructs. */
   schema?: S
@@ -53,24 +54,23 @@ export interface AutoFormProps<S extends z.ZodType, T extends boolean = true> {
   size?: 'md' | 'xs' | 'sm' | 'lg' | 'xl'
 }
 
-export interface AutoFormEmits<S extends z.ZodType, T extends boolean = true> {
+export interface AutoFormEmits<S extends z.ZodObject, T extends boolean = true> {
   submit: [event: FormSubmitEvent<FormData<S, T>>]
   error: [event: FormErrorEvent]
 }
 
 export interface AutoFormSlots extends FormFieldSlots {
-  'before-fields': (p: { fields: any[], state: any }) => any
-  'after-fields': (p: { fields: any[], state: any }) => any
-  [key: string]: ((p: any) => any) | undefined
+  'before-fields': (props: { fields: any[], state: any }) => any
+  'after-fields': (props: { fields: any[], state: any }) => any
+  [key: string]: ((props: any) => any) | undefined
 }
 
 const { schema, controls, size, ...props } = defineProps<AutoFormProps<S, T>>()
 const emit = defineEmits<AutoFormEmits<S, T>>()
 const _slots = defineSlots<AutoFormSlots>()
 
-const state = defineModel<Partial<InferInput<S>>>({ default: {} })
+const state = defineModel<Partial<InferInput<S>>>({ default: () => ({}) })
 
-// 文本变体（password/email/url/search/tel）通过本地自定义实现，这里仅占位说明，不纳入默认映射
 type Field = ReturnType<typeof useFieldTree>['fields'][number]
 
 function useFieldTree(schema: S | undefined, controls: AutoFormControls = {}) {
@@ -81,21 +81,31 @@ function useFieldTree(schema: S | undefined, controls: AutoFormControls = {}) {
   }
   const mapping = mergeControls(controls)
   const entries = introspectSchema(schema)
+  // console.log(entries)
   const fields = entries.map((entry) => {
     return {
       path: entry.path,
       schema: entry.schema,
       zodType: entry.zodType,
       meta: entry.meta,
+      decorators: entry.decorators,
       control: resolveControl(entry, mapping),
     }
   })
+  console.log(fields)
   return {
     fields,
   }
 }
 
 const { fields } = useFieldTree(schema, controls)
+
+// 初始化默认值
+watchEffect(() => {
+  if (fields.length > 0 && schema) {
+    initializeDefaultValues(fields, state.value)
+  }
+})
 
 function buildSlotProps(field: Field) {
   return {
@@ -106,6 +116,23 @@ function buildSlotProps(field: Field) {
     schema: field.schema,
     value: getPath(state.value as any, field.path),
     setValue: (v: any) => setPath(state.value as any, field.path, v),
+  }
+}
+
+// 解析函数字段，如果是函数则调用并传入state参数
+function resolveFunctionField<T>(field: T | ((state: any) => T), currentState: any): T {
+  return isFunction(field) ? (field as any)(currentState) : field
+}
+
+// 初始化默认值
+function initializeDefaultValues(fields: Field[], stateValue: any) {
+  for (const field of fields) {
+    if (field.decorators?.defaultValue !== undefined) {
+      const currentValue = getPath(stateValue, field.path)
+      if (currentValue === undefined) {
+        setPath(stateValue, field.path, field.decorators.defaultValue)
+      }
+    }
   }
 }
 
@@ -204,16 +231,16 @@ function VNodeRender(props: { node: unknown }) {
       <UFormField
         :as="field.meta?.as"
         :name="field.path"
-        :error-pattern="field.meta?.errorPattern"
-        :label="field.meta?.label"
-        :description="field.meta?.description"
-        :help="field.meta?.help"
-        :hint="field.meta?.hint"
-        :size="field.meta?.size ?? size"
-        :required="field.meta?.required"
-        :eager-validation="field.meta?.eagerValidation"
-        :validate-on-input-delay="field.meta?.validateOnInputDelay"
-        :class="field.meta?.class"
+        :error-pattern="resolveFunctionField(field.meta?.errorPattern, state)"
+        :label="resolveFunctionField(field.meta?.label, state)"
+        :description="resolveFunctionField(field.meta?.description, state)"
+        :help="resolveFunctionField(field.meta?.help, state)"
+        :hint="resolveFunctionField(field.meta?.hint, state)"
+        :size="resolveFunctionField(field.meta?.size, state) ?? size"
+        :required="resolveFunctionField(field.meta?.required, state)"
+        :eager-validation="resolveFunctionField(field.meta?.eagerValidation, state)"
+        :validate-on-input-delay="resolveFunctionField(field.meta?.validateOnInputDelay, state)"
+        :class="resolveFunctionField(field.meta?.class, state)"
         :ui="field.meta?.ui"
       >
         <template v-if="hasNamedSlot(field, 'label')" #label="{ label }">

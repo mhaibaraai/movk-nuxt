@@ -8,31 +8,24 @@ export interface AutoFormControl<C extends IsComponent> {
 
 export type AutoFormControls = Record<string, AutoFormControl<IsComponent>>
 
-// 基础控件映射类型（在下方声明 AutoFormControl / AutoFormControls 后使用）
-interface MetaBase<TControls> extends Omit<import('zod/v4').GlobalAutoFormMeta, 'controlProps' | 'controlSlots' | 'component' | 'type'> {
-  component?: IsComponent
+interface MetaBase<TControls, C> {
   type?: keyof TControls
+  component?: C
+  props?: ComponentProps<C>
+  slots?: Partial<ComponentSlots<C>>
 }
 
-// 根据“component”直接推断 props/slots（内部）
-interface WithByComponent<C> {
-  controlProps?: ComponentProps<C>
-  controlSlots?: Partial<ComponentSlots<C>>
-}
-
-// 根据“type”在控件映射中推断 props/slots
 type WithByType<TControls, K extends keyof TControls>
   = TControls[K] extends AutoFormControl<infer C>
-    ? { controlProps?: ComponentProps<C>, controlSlots?: Partial<ComponentSlots<C>> }
+    ? MetaBase<TControls, C>
     : object
 
-// 根据“Zod 基本类型”在控件映射中推断 props/slots（兜底）
 type WithByZod<TControls, TZod extends string>
   = TZod extends keyof TControls
     ? TControls[TZod] extends AutoFormControl<infer C>
-      ? { controlProps?: ComponentProps<C>, controlSlots?: Partial<ComponentSlots<C>> }
-      : { controlProps?: object, controlSlots?: object }
-    : { controlProps?: object, controlSlots?: object }
+      ? MetaBase<TControls, C>
+      : object
+    : object
 
 // 统一的工厂方法签名：支持三段优先级（component > type > zodType）
 export type FactoryMethod<
@@ -41,9 +34,9 @@ export type FactoryMethod<
   TResult,
   TExtraParams extends any[] = [],
 > = {
-  (...args: [...TExtraParams, meta?: MetaBase<TControls> & { component?: never, type?: never } & WithByZod<TControls, TZod>]): TResult
+  (...args: [...TExtraParams, ({ component?: never, type?: never } & WithByZod<TControls, TZod>)?]): TResult
 } & {
-  <K extends keyof TControls>(...args: [...TExtraParams, meta: MetaBase<TControls> & { type: K, component?: never } & WithByType<TControls, K>]): TResult
+  <K extends keyof TControls>(...args: [...TExtraParams, ({ type: K, component?: never } & WithByType<TControls, K>)?]): TResult
 } & {
-  <C>(...args: [...TExtraParams, meta: MetaBase<TControls> & { component: C } & WithByComponent<C>]): TResult
+  <C extends IsComponent>(...args: [...TExtraParams, ({ component: C, type?: never } & MetaBase<TControls, C>)?]): TResult
 }

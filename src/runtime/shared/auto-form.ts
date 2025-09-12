@@ -4,11 +4,13 @@ import type { AutoFormControl, AutoFormControls, FactoryMethod } from '../types'
 import { z } from 'zod/v4'
 import { mergeControls } from '../utils/auto-form'
 
-function applyMeta<T extends z.ZodTypeAny, M = unknown>(
+function applyMeta<T extends z.ZodType, M = unknown>(
   schema: T,
   meta?: M,
 ): T {
-  return meta ? (schema.meta(meta as unknown as import('zod/v4').GlobalMeta) as T) : schema
+  return meta
+    ? (schema.meta(meta as import('zod/v4').GlobalMeta) as T)
+    : schema
 }
 
 type ShapeFor<T> = {
@@ -22,7 +24,6 @@ type StrictShapeFor<T> = {
 type ControlsOf<T extends AutoFormControls> = T & typeof DEFAULT_CONTROLS
 
 interface TypedZodFactory<TControls extends AutoFormControls> {
-  // 基础类型（统一使用 FactoryMethod，三段优先级：component > type > zodType）
   string: FactoryMethod<ControlsOf<TControls>, 'string', z.ZodString>
   number: FactoryMethod<ControlsOf<TControls>, 'number', z.ZodNumber>
   boolean: FactoryMethod<ControlsOf<TControls>, 'boolean', z.ZodBoolean>
@@ -33,11 +34,11 @@ interface TypedZodFactory<TControls extends AutoFormControls> {
 
   // 复合类型
   object: FactoryMethod<ControlsOf<TControls>, 'object', z.ZodObject<any>, [shape: z.ZodRawShape]>
-  array: FactoryMethod<ControlsOf<TControls>, 'array', z.ZodArray<any>, [schema: z.ZodTypeAny]>
-  union: FactoryMethod<ControlsOf<TControls>, 'union', z.ZodUnion<any>, [options: readonly [z.ZodTypeAny, ...z.ZodTypeAny[]]]>
+  array: FactoryMethod<ControlsOf<TControls>, 'array', z.ZodArray<any>, [schema: z.ZodType]>
+  union: FactoryMethod<ControlsOf<TControls>, 'union', z.ZodUnion<any>, [options: readonly [z.ZodType, ...z.ZodType[]]]>
 }
 
-export function createAutoFormZ<TControls extends AutoFormControls>(controls?: TControls) {
+export function createAutoFormZ<TState extends object = object, TControls extends AutoFormControls = AutoFormControls>(controls?: TControls) {
   const _controls = mergeControls(controls)
 
   const typedZ: TypedZodFactory<typeof _controls> = {
@@ -56,22 +57,22 @@ export function createAutoFormZ<TControls extends AutoFormControls>(controls?: T
     union: (options: any, meta?: any) => applyMeta(z.union(options), meta),
   }
 
-  const objectOf = <T extends object = object>() => {
-    return function makeObject(shape: ShapeFor<T>) {
+  const objectOf = () => {
+    return function makeObject(shape: ShapeFor<TState>) {
       return z.object(shape as Record<string, z.ZodType>)
     }
   }
 
-  const objectOfStrict = <T extends object = object>() => {
-    return function makeObject(shape: StrictShapeFor<T>) {
-      return objectOf<T>()(shape as unknown as ShapeFor<T>).strict() as unknown as z.ZodObject<any>
+  const objectOfStrict = () => {
+    return function makeObject(shape: StrictShapeFor<TState>) {
+      return objectOf()(shape as unknown as ShapeFor<TState>).strict() as unknown as z.ZodObject<any>
     }
   }
 
   return {
     objectOf,
     objectOfStrict,
-    z: typedZ,
+    afz: typedZ,
     controls: _controls,
   }
 }

@@ -26,9 +26,8 @@ catalog:
   eslint-plugin-format: ^1.0.1
   fast-glob: ^3.3.3
   lru-cache: ^11.2.1
-  nuxt: ^4.1.1
+  nuxt: https://pkg.pr.new/nuxt/nuxt@6a59b73
   nuxt-auth-utils: ^0.5.24
-  pkg-types: ^0.0.0
   sass-embedded: ^1.92.1
   taze: ^19.6.0
   tsx: ^4.20.5

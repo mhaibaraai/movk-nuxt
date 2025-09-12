@@ -1,6 +1,6 @@
 /**
- * vue-component-type-helpers
- * Copy from https://github.com/vuejs/language-tools/tree/master/packages/component-type-helpers
+ * @movk/core
+ * 后续迁移到@movk/core中的方法
  */
 
 import type { StringOrVNode } from '@movk/core'
@@ -17,6 +17,11 @@ import { isObject } from '@movk/core'
  * ```
  */
 export type Merge<T, U> = Omit<T, keyof U> & U
+
+/**
+ * vue-component-type-helpers
+ * Copy from https://github.com/vuejs/language-tools/tree/master/packages/component-type-helpers
+ */
 
 export type IsComponent = StringOrVNode | Component | DefineComponent | ((...args: any[]) => any)
 
@@ -337,4 +342,259 @@ export function joinPath(segments: (string | number)[]): string {
     out += `[ '${escaped}' ]`.replace(/\s+/g, ' ')
   }
   return out
+}
+
+/**
+ * 将字符串分解为单词数组。支持camelCase、snake_case、kebab-case等各种命名风格。
+ *
+ * @category String
+ * @param str 要分解的字符串
+ * @returns 单词数组
+ * @example
+ * ```ts
+ * words('helloWorld') // ['hello', 'World']
+ * words('hello_world') // ['hello', 'world']
+ * words('hello-world') // ['hello', 'world']
+ * words('XMLHttpRequest') // ['XML', 'Http', 'Request']
+ * ```
+ */
+export function words(str: string): string[] {
+  if (!str)
+    return []
+  // 匹配单词：字母数字组合，支持连续大写字母
+  const matches = str.match(/[A-Z]*[a-z]+|[A-Z]+(?=[A-Z][a-z]|[^a-zA-Z]|$)|\d+/g)
+  return matches || []
+}
+
+/**
+ * 将字符串转换为Start Case格式（每个单词首字母大写，用空格分隔）。
+ * 基于 generateLabelFromFieldName 的逻辑，支持各种命名风格。
+ *
+ * @category String
+ * @param str 要转换的字符串
+ * @returns Start Case格式的字符串
+ * @example
+ * ```ts
+ * startCase('firstName') // 'First Name'
+ * startCase('first_name') // 'First Name'
+ * startCase('first-name') // 'First Name'
+ * startCase('XMLHttpRequest') // 'XML Http Request'
+ * ```
+ */
+export function startCase(str: string): string {
+  if (!str)
+    return ''
+
+  // 处理camelCase: firstName -> First Name
+  let label = str.replace(/([A-Z])/g, ' $1')
+  // 处理snake_case: first_name -> first name
+  label = label.replace(/_/g, ' ')
+  // 处理kebab-case: first-name -> first name
+  label = label.replace(/-/g, ' ')
+  // 首字母大写，其余单词首字母大写
+  return label.replace(/\b\w/g, l => l.toUpperCase()).trim()
+}
+
+/**
+ * 将字符串转换为驼峰命名格式（第一个单词小写，后续单词首字母大写）。
+ *
+ * @category String
+ * @param str 要转换的字符串
+ * @returns 驼峰命名格式的字符串
+ * @example
+ * ```ts
+ * camelCase('First Name') // 'firstName'
+ * camelCase('first_name') // 'firstName'
+ * camelCase('first-name') // 'firstName'
+ * camelCase('XMLHttpRequest') // 'xmlHttpRequest'
+ * ```
+ */
+export function camelCase(str: string): string {
+  if (!str)
+    return ''
+
+  const wordList = words(str)
+  if (wordList.length === 0)
+    return ''
+
+  return wordList
+    .map((word, index) => {
+      const lower = word.toLowerCase()
+      if (index === 0)
+        return lower
+      return lower.charAt(0).toUpperCase() + lower.slice(1)
+    })
+    .join('')
+}
+
+/**
+ * 将字符串转换为短横线命名格式（kebab-case）。
+ *
+ * @category String
+ * @param str 要转换的字符串
+ * @returns 短横线命名格式的字符串
+ * @example
+ * ```ts
+ * kebabCase('firstName') // 'first-name'
+ * kebabCase('First Name') // 'first-name'
+ * kebabCase('first_name') // 'first-name'
+ * kebabCase('XMLHttpRequest') // 'xml-http-request'
+ * ```
+ */
+export function kebabCase(str: string): string {
+  if (!str)
+    return ''
+
+  const wordList = words(str)
+  return wordList.map(word => word.toLowerCase()).join('-')
+}
+
+/**
+ * 将字符串转换为下划线命名格式（snake_case）。
+ *
+ * @category String
+ * @param str 要转换的字符串
+ * @returns 下划线命名格式的字符串
+ * @example
+ * ```ts
+ * snakeCase('firstName') // 'first_name'
+ * snakeCase('First Name') // 'first_name'
+ * snakeCase('first-name') // 'first_name'
+ * snakeCase('XMLHttpRequest') // 'xml_http_request'
+ * ```
+ */
+export function snakeCase(str: string): string {
+  if (!str)
+    return ''
+
+  const wordList = words(str)
+  return wordList.map(word => word.toLowerCase()).join('_')
+}
+
+/**
+ * 将字符串转换为帕斯卡命名格式（PascalCase，每个单词首字母大写）。
+ *
+ * @category String
+ * @param str 要转换的字符串
+ * @returns 帕斯卡命名格式的字符串
+ * @example
+ * ```ts
+ * pascalCase('firstName') // 'FirstName'
+ * pascalCase('first_name') // 'FirstName'
+ * pascalCase('first-name') // 'FirstName'
+ * pascalCase('XMLHttpRequest') // 'XmlHttpRequest'
+ * ```
+ */
+export function pascalCase(str: string): string {
+  if (!str)
+    return ''
+
+  const wordList = words(str)
+  return wordList
+    .map((word) => {
+      const lower = word.toLowerCase()
+      return lower.charAt(0).toUpperCase() + lower.slice(1)
+    })
+    .join('')
+}
+
+/**
+ * 将字符串首字母大写，其余字母小写。
+ *
+ * @category String
+ * @param str 要转换的字符串
+ * @returns 首字母大写的字符串
+ * @example
+ * ```ts
+ * capitalize('hello') // 'Hello'
+ * capitalize('HELLO') // 'Hello'
+ * capitalize('hello world') // 'Hello world'
+ * ```
+ */
+export function capitalize(str: string): string {
+  if (!str)
+    return ''
+  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase()
+}
+
+/**
+ * 将字符串首字母大写，其余字母保持原样。
+ *
+ * @category String
+ * @param str 要转换的字符串
+ * @returns 首字母大写的字符串
+ * @example
+ * ```ts
+ * upperFirst('hello') // 'Hello'
+ * upperFirst('hELLO') // 'HELLO'
+ * upperFirst('hello world') // 'Hello world'
+ * ```
+ */
+export function upperFirst(str: string): string {
+  if (!str)
+    return ''
+  return str.charAt(0).toUpperCase() + str.slice(1)
+}
+
+/**
+ * 将字符串首字母小写，其余字母保持原样。
+ *
+ * @category String
+ * @param str 要转换的字符串
+ * @returns 首字母小写的字符串
+ * @example
+ * ```ts
+ * lowerFirst('Hello') // 'hello'
+ * lowerFirst('HELLO') // 'hELLO'
+ * lowerFirst('Hello World') // 'hello World'
+ * ```
+ */
+export function lowerFirst(str: string): string {
+  if (!str)
+    return ''
+  return str.charAt(0).toLowerCase() + str.slice(1)
+}
+
+/**
+ * 将字符串转换为大写格式，单词之间用空格分隔。
+ *
+ * @category String
+ * @param str 要转换的字符串
+ * @returns 大写格式的字符串
+ * @example
+ * ```ts
+ * upperCase('firstName') // 'FIRST NAME'
+ * upperCase('first_name') // 'FIRST NAME'
+ * upperCase('first-name') // 'FIRST NAME'
+ * upperCase('XMLHttpRequest') // 'XML HTTP REQUEST'
+ * ```
+ */
+export function upperCase(str: string): string {
+  if (!str)
+    return ''
+
+  const wordList = words(str)
+  return wordList.map(word => word.toUpperCase()).join(' ')
+}
+
+/**
+ * 将字符串转换为小写格式，单词之间用空格分隔。
+ *
+ * @category String
+ * @param str 要转换的字符串
+ * @returns 小写格式的字符串
+ * @example
+ * ```ts
+ * lowerCase('firstName') // 'first name'
+ * lowerCase('First_Name') // 'first name'
+ * lowerCase('FIRST-NAME') // 'first name'
+ * lowerCase('XMLHttpRequest') // 'xml http request'
+ * ```
+ */
+export function lowerCase(str: string): string {
+  if (!str)
+    return ''
+
+  const wordList = words(str)
+  return wordList.map(word => word.toLowerCase()).join(' ')
 }

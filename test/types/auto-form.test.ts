@@ -12,18 +12,31 @@ describe('auto-form typing', () => {
       mockTest: createAutoFormControl({ component: MockNumber, props: { aaa: 111 }, slots: {} }),
     } as const satisfies AutoFormControls
 
-    const afz = createAutoFormZ(customControls)
+    const { afz, objectOf } = createAutoFormZ<{ name: string, age: number, sex: string }>(customControls)
 
-    const _schema = afz.objectOf<{ name: string, age: number, sex: string }>()({
-      name: afz.z.string({
+    const _schema = objectOf()({
+      name: afz.string({
         component: MockNumber,
-        controlProps: { aaa: 1 },
-        controlSlots: {
-          bbb: () => '123',
+        props: { aaa: 1 },
+        slots: {
         },
+      }).meta({
+        label: 'name',
       }),
-      age: afz.z.number({ type: 'mockTest', controlProps: {}, controlSlots: {} }),
-      sex: afz.z.number({ label: 'sex', controlProps: { color: 'info' }, controlSlots: { decrement: () => [h('span', '123')] } }),
+      age: afz.number({
+        type: 'mockTest',
+        props: {
+          
+        }, slots: {
+
+        }
+      }),
+      sex: afz.number({
+        props: { color: 'info' },
+        slots: { decrement: () => [h('span', '123')] }
+      }).meta({
+        label: 'sex',
+      }),
     })
   })
 })
