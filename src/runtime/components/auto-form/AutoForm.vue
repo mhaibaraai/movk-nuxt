@@ -1,11 +1,13 @@
 <script setup lang="ts" generic="S extends z.ZodObject, T extends boolean = true">
+import type { AnyObject } from '@movk/core'
 import type { FormData, FormError, FormErrorEvent, FormFieldSlots, FormInputEvents, FormSubmitEvent, InferInput } from '@nuxt/ui'
 import type { z } from 'zod/v4'
 import type { AutoFormControls } from '../../types'
-import { isFunction } from '@movk/core'
-import { Fragment, h, isVNode, resolveDynamicComponent, watchEffect } from 'vue'
-import { getPath, setPath } from '../../core'
-import { introspectSchema, mergeControls, resolveControl } from '../../utils/auto-form'
+import defu from 'defu'
+import { computed, Fragment, h, isVNode, resolveDynamicComponent, watch } from 'vue'
+import { DEFAULT_CONTROLS } from '../../constants/auto-form'
+import { deepClone, getPath, setPath } from '../../core'
+import { introspectSchema, resolveControl } from '../../utils/auto-form'
 
 export interface AutoFormProps<S extends z.ZodObject, T extends boolean = true> {
   id?: string | number
@@ -65,34 +67,34 @@ export interface AutoFormSlots extends FormFieldSlots {
   [key: string]: ((props: any) => any) | undefined
 }
 
+type FormStateType = InferInput<S>
+
 const { schema, controls, size, ...props } = defineProps<AutoFormProps<S, T>>()
 const emit = defineEmits<AutoFormEmits<S, T>>()
 const _slots = defineSlots<AutoFormSlots>()
 
-const state = defineModel<Partial<InferInput<S>>>({ default: () => ({}) })
+const state = defineModel<FormStateType>({ default: () => ({} as FormStateType) })
 
-type Field = ReturnType<typeof useFieldTree>['fields'][number]
+type Field = ReturnType<typeof useFieldTree>['fields']['value'][number]
 
 function useFieldTree(schema: S | undefined, controls: AutoFormControls = {}) {
-  if (!schema) {
-    return {
-      fields: [],
-    }
-  }
-  const mapping = mergeControls(controls)
-  const entries = introspectSchema(schema)
-  // console.log(entries)
-  const fields = entries.map((entry) => {
-    return {
-      path: entry.path,
-      schema: entry.schema,
-      zodType: entry.zodType,
-      meta: entry.meta,
-      decorators: entry.decorators,
-      control: resolveControl(entry, mapping),
-    }
+  const fields = computed(() => {
+    if (!schema)
+      return [] as any[]
+    const mapping = defu(controls, DEFAULT_CONTROLS)
+    const entries = introspectSchema(schema)
+    console.log(entries)
+    return entries.map((entry) => {
+      return {
+        path: entry.path,
+        schema: entry.schema,
+        zodType: entry.zodType,
+        meta: entry.meta,
+        decorators: entry.decorators,
+        control: resolveControl(entry, mapping),
+      }
+    })
   })
-  console.log(fields)
   return {
     fields,
   }
@@ -100,12 +102,15 @@ function useFieldTree(schema: S | undefined, controls: AutoFormControls = {}) {
 
 const { fields } = useFieldTree(schema, controls)
 
-// 初始化默认值
-watchEffect(() => {
-  if (fields.length > 0 && schema) {
-    initializeDefaultValues(fields, state.value)
-  }
-})
+watch(
+  () => fields.value.length,
+  (next, prev) => {
+    if (next > 0 && (prev === 0 || prev === undefined) && schema) {
+      initializeDefaultValues(fields.value, state.value)
+    }
+  },
+  { immediate: true },
+)
 
 function buildSlotProps(field: Field) {
   return {
@@ -114,29 +119,23 @@ function buildSlotProps(field: Field) {
     meta: field.meta,
     path: field.path,
     schema: field.schema,
-    value: getPath(state.value as any, field.path),
-    setValue: (v: any) => setPath(state.value as any, field.path, v),
+    value: getPath(state.value, field.path),
+    setValue: (v: any) => setPath(state.value, field.path, v),
   }
 }
 
-// 解析函数字段，如果是函数则调用并传入state参数
-function resolveFunctionField<T>(field: T | ((state: any) => T), currentState: any): T {
-  return isFunction(field) ? (field as any)(currentState) : field
-}
-
-// 初始化默认值
 function initializeDefaultValues(fields: Field[], stateValue: any) {
   for (const field of fields) {
     if (field.decorators?.defaultValue !== undefined) {
       const currentValue = getPath(stateValue, field.path)
       if (currentValue === undefined) {
-        setPath(stateValue, field.path, field.decorators.defaultValue)
+        setPath(stateValue, field.path, deepClone(field.decorators.defaultValue))
       }
     }
   }
 }
 
-function enhanceEventProps(originalProps: Record<string, any>, ctx: any) {
+function enhanceEventProps(originalProps: AnyObject, ctx: any) {
   const next: Record<string, any> = {}
   for (const key of Object.keys(originalProps || {})) {
     const val = (originalProps as any)[key]
@@ -231,16 +230,16 @@ function VNodeRender(props: { node: unknown }) {
       <UFormField
         :as="field.meta?.as"
         :name="field.path"
-        :error-pattern="resolveFunctionField(field.meta?.errorPattern, state)"
-        :label="resolveFunctionField(field.meta?.label, state)"
-        :description="resolveFunctionField(field.meta?.description, state)"
-        :help="resolveFunctionField(field.meta?.help, state)"
-        :hint="resolveFunctionField(field.meta?.hint, state)"
-        :size="resolveFunctionField(field.meta?.size, state) ?? size"
-        :required="resolveFunctionField(field.meta?.required, state)"
-        :eager-validation="resolveFunctionField(field.meta?.eagerValidation, state)"
-        :validate-on-input-delay="resolveFunctionField(field.meta?.validateOnInputDelay, state)"
-        :class="resolveFunctionField(field.meta?.class, state)"
+        :error-pattern="field.meta?.errorPattern"
+        :label="field.meta?.label"
+        :description="field.meta?.description"
+        :help="field.meta?.help"
+        :hint="field.meta?.hint"
+        :size="field.meta?.size ?? size"
+        :required="field.meta?.required"
+        :eager-validation="field.meta?.eagerValidation"
+        :validate-on-input-delay="field.meta?.validateOnInputDelay"
+        :class="field.meta?.class"
         :ui="field.meta?.ui"
       >
         <template v-if="hasNamedSlot(field, 'label')" #label="{ label }">

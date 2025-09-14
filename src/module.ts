@@ -46,7 +46,7 @@ export default defineNuxtModule<ModuleOptions>({
       version: '>=13.9.0',
     },
     'nuxt-auth-utils': {
-      version: '>=0.5',
+      version: '>=0.5.24',
     },
     '@nuxt/eslint': {
       version: '>=1.9.0',
@@ -60,7 +60,7 @@ export default defineNuxtModule<ModuleOptions>({
       },
     },
     '@nuxtjs/i18n': {
-      version: '>=10.0.6',
+      version: '>=10.1.0',
       defaults: {
         strategy: 'no_prefix',
         defaultLocale: 'zh_cn',
@@ -77,7 +77,6 @@ export default defineNuxtModule<ModuleOptions>({
     nuxt.options.css.push(resolve('runtime/assets/css/main.css'))
 
     if (options.i18n) {
-      // @ts-expect-error i18n:registerModule is not a valid hook key
       nuxt.hook('i18n:registerModule', (register) => {
         register({
           langDir: resolve('./runtime/i18n/locales'),

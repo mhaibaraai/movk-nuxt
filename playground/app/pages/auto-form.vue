@@ -15,54 +15,58 @@ interface State {
     firstName: string
     lastName: string
     userAge: number
+    address: {
+      province: string
+      city: string
+      district: string
+    }
   }
 }
 
-const { afz, objectOf } = createAutoFormZ<State>()
+const { afz, scope } = createAutoFormZ()
 // const MockNumber = (_props: { aaa?: number }, _ctx: { slots?: { bbb?: () => void } }) => null
 
-// 测试所有zod配置功能
-const schema = objectOf()({
-  // nameValue: afz.string().describe('这是从zod.describe()来的描述'),
-
-  // dynamicLabel: afz.string().meta({
-  //   type: 'file',
-  //   label: state => `动态标签: ${state.nameValue}`,
-  //   description: '测试描述',
-  //   controlProps: {
-
+const state = ref<z.input<typeof schema>>({})
+const s = scope<State>()
+const schema = s.looseObject({
+  // nameValue: afz.string({
+  //   props: {
+  //     icon: 'i-mdi-account',
+  //     color: 'warning',
+  //     class: 'w-md',
   //   },
+  // }).meta({
+  //   label: '这是从zod.describe()来的描述',
+  //   description: '测试描述',
   // }).optional(),
-
-  // mixedDescription: z.number().describe('zod describe').meta({
-  //   description: 'meta description 优先级更高',
-  // }).optional(),
-
-  // requiredField: z.string(),
-  // optionalField: z.string().optional(),
-
-  // withDefault: z.boolean().default(true),
-  stringWithDefault: afz.string({
-
-  }).default(`默认字符串`).meta({
-    help: '111',
-  }),
-
-  // enumField: z.enum(['选项1', '选项2', '选项3']).meta({ label: '枚举选择' }),
-
-  // conditionalRequired: z.string().meta({
-  //   required: true,
-  //   label: '条件必填',
-  // }).optional(),
-
-  // nestedObject: z.object({
-  //   firstName: z.string().default('张'),
-  //   lastName: z.string().default('三'),
-  //   userAge: z.number().default(25),
-  // }).describe('用户信息'),
+  nestedObject: s.path('nestedObject').looseObject({
+    firstName: afz.string({
+      props: {
+        icon: 'i-mdi-account',
+        class: 'w-md',
+      },
+    }).meta({
+      label: '姓',
+      help: '111',
+      hint: '222',
+    }).default('张'),
+    lastName: afz.string({
+      props: {
+        icon: 'i-mdi-account',
+      },
+    }).default('三').meta({
+      label: '名',
+    }),
+    userAge: afz.number().default(25),
+    address: s.path('nestedObject', 'address').looseObject({
+      province: afz.string().default('北京'),
+      city: afz.string().default('北京'),
+      district: afz.string().default('朝阳区'),
+    }).optional(),
+  }).meta({
+    label: '用户信息',
+  }).optional(),
 })
-
-const state = ref<Partial<z.infer<typeof schema>>>({})
 </script>
 
 <template>

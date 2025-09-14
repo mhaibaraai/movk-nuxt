@@ -5,19 +5,19 @@ packages:
 catalog:
   '@antfu/eslint-config': ^5.3.0
   '@antfu/ni': ^25.0.0
-  '@iconify-json/lucide': ^1.2.66
-  '@iconify-json/simple-icons': ^1.2.50
+  '@iconify-json/lucide': ^1.2.67
+  '@iconify-json/simple-icons': ^1.2.51
   '@movk/core': ^0.0.5
   '@nuxt/devtools': ^2.6.3
   '@nuxt/eslint': ^1.9.0
   '@nuxt/image': ^1.11.0
-  '@nuxt/kit': ^4.1.1
+  '@nuxt/kit': ^4.1.2
   '@nuxt/module-builder': ^1.0.2
-  '@nuxt/schema': ^4.1.1
+  '@nuxt/schema': ^4.1.2
   '@nuxt/test-utils': ^3.19.2
   '@nuxt/ui': ^4.0.0-alpha.1
   '@nuxtjs/i18n': ^10.1.0
-  '@types/node': ^24.3.1
+  '@types/node': ^24.3.3
   '@vueuse/core': ^13.9.0
   '@vueuse/motion': ^3.0.3
   '@vueuse/nuxt': ^13.9.0
@@ -26,7 +26,7 @@ catalog:
   eslint-plugin-format: ^1.0.1
   fast-glob: ^3.3.3
   lru-cache: ^11.2.1
-  nuxt: https://pkg.pr.new/nuxt/nuxt@6a59b73
+  nuxt: ^4.1.2
   nuxt-auth-utils: ^0.5.24
   sass-embedded: ^1.92.1
   taze: ^19.6.0
@@ -34,8 +34,8 @@ catalog:
   typescript: ^5.9.2
   ufo: ^1.6.1
   vitest: 3.2.4
-  vue-tsc: ^3.0.6
-  zod: ^4.1.5
+  vue-tsc: ^3.0.7
+  zod: ^4.1.8
 
 onlyBuiltDependencies:
   - '@parcel/watcher'
