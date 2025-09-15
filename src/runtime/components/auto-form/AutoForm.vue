@@ -1,10 +1,11 @@
 <script setup lang="ts" generic="S extends z.ZodObject, T extends boolean = true">
 import type { AnyObject } from '@movk/core'
 import type { FormData, FormError, FormErrorEvent, FormFieldSlots, FormInputEvents, FormSubmitEvent, InferInput } from '@nuxt/ui'
+import type { ComputedRef, Ref } from 'vue'
 import type { z } from 'zod/v4'
 import type { AutoFormControls } from '../../types'
 import defu from 'defu'
-import { computed, Fragment, h, isVNode, resolveDynamicComponent, watch } from 'vue'
+import { computed, Fragment, h, isRef, isVNode, resolveDynamicComponent, unref, watch } from 'vue'
 import { DEFAULT_CONTROLS } from '../../constants/auto-form'
 import { deepClone, getPath, setPath } from '../../core'
 import { introspectSchema, resolveControl } from '../../utils/auto-form'
@@ -69,39 +70,88 @@ export interface AutoFormSlots extends FormFieldSlots {
 
 type FormStateType = InferInput<S>
 
+// 响应式值类型定义
+type ReactiveValue<T> = T | (() => T) | ComputedRef<T> | Ref<T>
+
 const { schema, controls, size, ...props } = defineProps<AutoFormProps<S, T>>()
 const emit = defineEmits<AutoFormEmits<S, T>>()
 const _slots = defineSlots<AutoFormSlots>()
 
 const state = defineModel<FormStateType>({ default: () => ({} as FormStateType) })
 
-type Field = ReturnType<typeof useFieldTree>['fields']['value'][number]
-
-function useFieldTree(schema: S | undefined, controls: AutoFormControls = {}) {
-  const fields = computed(() => {
-    if (!schema)
-      return [] as any[]
-    const mapping = defu(controls, DEFAULT_CONTROLS)
-    const entries = introspectSchema(schema)
-    console.log(entries)
-    return entries.map((entry) => {
-      return {
-        path: entry.path,
-        schema: entry.schema,
-        zodType: entry.zodType,
-        meta: entry.meta,
-        decorators: entry.decorators,
-        control: resolveControl(entry, mapping),
-      }
-    }).filter(field => field.control?.if !== false)
-  })
-  return {
-    fields,
+// 响应式值解析函数
+function resolveReactiveValue<T>(value: ReactiveValue<T>, _context?: any): T {
+  if (typeof value === 'function') {
+    return (value as () => T)()
   }
+  return unref(value)
 }
 
-const { fields } = useFieldTree(schema, controls)
+// 深度解析对象中的响应式属性
+function resolveReactiveObject<T extends Record<string, any>>(
+  obj: T,
+  context?: any,
+): T {
+  const result = { ...obj } as T
+  for (const [key, value] of Object.entries(obj)) {
+    if (typeof value === 'object' && value !== null && !isRef(value) && !isVNode(value)) {
+      (result as any)[key] = resolveReactiveObject(value, context)
+    }
+    else {
+      (result as any)[key] = resolveReactiveValue(value, context)
+    }
+  }
+  return result
+}
 
+const fields = computed(() => {
+  if (!schema)
+    return [] as any[]
+
+  // 支持computed schema
+  const resolvedSchema = unref(schema)
+  const mapping = defu(controls, DEFAULT_CONTROLS)
+  const entries = introspectSchema(resolvedSchema)
+
+  return entries.map((entry) => {
+    // 构建字段上下文
+    const fieldContext = {
+      state: state.value,
+      path: entry.path,
+      allFields: entries,
+      id: `${entry.path}-${Date.now()}`,
+    }
+
+    // 解析meta中的响应式属性
+    const resolvedMeta = resolveReactiveObject(entry.meta || {}, fieldContext)
+
+    // 解析控制器
+    const control = resolveControl(entry, mapping)
+    const resolvedControl = {
+      ...control,
+      show: resolveReactiveValue(control?.show, fieldContext),
+      props: resolveReactiveObject(control?.props || {}, fieldContext),
+      slots: resolveReactiveObject(control?.slots || {}, fieldContext),
+    }
+
+    return {
+      path: entry.path,
+      schema: entry.schema,
+      zodType: entry.zodType,
+      meta: resolvedMeta,
+      decorators: entry.decorators,
+      control: resolvedControl,
+      context: fieldContext,
+    }
+  }).filter((field) => {
+    // 动态解析if和show条件
+    const ifCondition = resolveReactiveValue(field.meta?.if, field.context)
+    const showCondition = resolveReactiveValue(field.control?.show, field.context)
+    return ifCondition !== false && showCondition !== false
+  })
+})
+
+// 优化默认值初始化逻辑
 watch(
   () => fields.value.length,
   (next, prev) => {
@@ -112,19 +162,42 @@ watch(
   { immediate: true },
 )
 
-function buildSlotProps(field: Field) {
+// 增强的插槽属性构建函数
+function buildSlotProps(field: any) {
   return {
+    // 基础信息
     state,
     zodType: field.zodType,
     meta: field.meta,
     path: field.path,
     schema: field.schema,
+    context: field.context,
+
+    // 值操作
     value: getPath(state.value, field.path),
     setValue: (v: any) => setPath(state.value, field.path, v),
+
+    // 增强的辅助函数
+    getFieldValue: (path: string) => getPath(state.value, path),
+    setFieldValue: (path: string, value: any) => setPath(state.value, path, value),
+
+    // 响应式解析器
+    resolve: (value: any) => resolveReactiveValue(value, field.context),
+
+    // 字段查找
+    findField: (path: string) => fields.value.find(f => f.path === path),
+
+    // 条件检查
+    isVisible: (path?: string) => {
+      const targetField = path ? fields.value.find(f => f.path === path) : field
+      return targetField
+        ? resolveReactiveValue(targetField.control?.show, targetField.context) !== false
+        : false
+    },
   }
 }
 
-function initializeDefaultValues(fields: Field[], stateValue: any) {
+function initializeDefaultValues(fields: any[], stateValue: any) {
   for (const field of fields) {
     if (field.decorators?.defaultValue !== undefined) {
       const currentValue = getPath(stateValue, field.path)
@@ -149,7 +222,14 @@ function enhanceEventProps(originalProps: AnyObject, ctx: any) {
   return next
 }
 
-function renderControl(field: Field) {
+// 字段可见性解析函数
+function resolveFieldVisibility(field: any): boolean {
+  const show = resolveReactiveValue(field.meta?.show, field.context)
+  const controlShow = resolveReactiveValue(field.control?.show, field.context)
+  return show !== false && controlShow !== false
+}
+
+function renderControl(field: any) {
   const control = field?.control
   const comp = control?.component as any
   if (!comp) {
@@ -158,18 +238,25 @@ function renderControl(field: Field) {
   if (isVNode(comp))
     return comp
   const component = resolveDynamicComponent(comp)
-  if (control?.props) {
-    for (const key of Object.keys(control.props)) {
-      if (/^on[A-Z].+/.test(key) && typeof (control.props as any)[key] !== 'function')
+
+  // 动态解析props
+  const dynamicProps = resolveReactiveObject(control?.props || {}, field.context)
+
+  // 验证事件属性
+  if (dynamicProps) {
+    for (const key of Object.keys(dynamicProps)) {
+      if (/^on[A-Z].+/.test(key) && typeof (dynamicProps as any)[key] !== 'function')
         console.warn(`[AutoForm] 事件属性应为函数: ${key} @ ${field.path}`)
     }
   }
-  const originalProps = (control?.props || {}) as Record<string, any>
-  const userOnUpdate = (originalProps as any)['onUpdate:modelValue']
-  const rest = { ...originalProps }
+
+  const userOnUpdate = (dynamicProps as any)?.['onUpdate:modelValue']
+  const rest = { ...dynamicProps }
   delete (rest as any)['onUpdate:modelValue']
+
   const ctx = buildSlotProps(field)
   const wrapped = enhanceEventProps(rest, ctx)
+
   return h(
     component as any,
     {
@@ -181,7 +268,8 @@ function renderControl(field: Field) {
       },
       'modelValue': getPath(state.value as any, field.path),
     },
-    control?.slots as any,
+    // 动态解析slots
+    resolveReactiveObject(control?.slots || {}, field.context),
   )
 }
 
@@ -189,7 +277,7 @@ function renderFieldSlot(fn?: (props?: any) => any, slotProps?: any) {
   return fn ? (fn as any)(slotProps) : null
 }
 
-function hasNamedSlot(field: Field, name: keyof FormFieldSlots) {
+function hasNamedSlot(field: any, name: keyof FormFieldSlots) {
   const keySpecific = `${name}:${field.path}`
   const s = _slots as any
   return Boolean(field.meta?.fieldSlots?.[name] || s?.[keySpecific] || s?.[name])
@@ -224,12 +312,12 @@ function VNodeRender(props: { node: unknown }) {
 </script>
 
 <template>
-  <UForm :state="state" :schema="schema" v-bind="props" @submit="emit('submit', $event)" @error="emit('error', $event)">
+  <UForm :state="state" :schema="unref(schema)" v-bind="props" @submit="emit('submit', $event)" @error="emit('error', $event)">
     <slot name="before-fields" :fields="fields" :state="state" />
     <template v-for="field in fields" :key="field.path">
       <Transition>
         <UFormField
-          v-show="field.control?.show !== false"
+          v-show="resolveFieldVisibility(field)"
           :as="field.meta?.as"
           :name="field.path"
           :error-pattern="field.meta?.errorPattern"

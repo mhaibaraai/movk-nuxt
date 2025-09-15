@@ -1,6 +1,5 @@
 <script lang="ts" setup>
 import type { AutoFormControls } from '#movk/types'
-import type { z } from 'zod/v4'
 import { UInputNumber } from '#components'
 
 interface State {
@@ -34,59 +33,33 @@ const customControls = {
 const { afz, scope } = createAutoFormZ(customControls)
 const isVisible = ref(true)
 
-const state = ref<z.input<typeof schema>>({})
+const state = ref<Partial<State>>({})
 const s = scope<State>()
-const schema = s.looseObject({
-  // nameValue: afz.string({
-  //   props: {
-  //     icon: 'i-mdi-account',
-  //     color: 'warning',
-  //     class: 'w-md',
-  //   },
-  // }).meta({
-  //   label: '这是从zod.describe()来的描述',
-  //   description: '测试描述',
-  // }).optional(),
-  // nestedObject: s.path('nestedObject').looseObject({
-  //   firstName: afz.string({
-  //     props: {
-  //       icon: 'i-mdi-account',
-  //       class: 'w-md',
-  //     },
-  //   }).meta({
-  //     label: '姓',
-  //     help: '111',
-  //     hint: '222',
-  //   }).default('张'),
-  //   lastName: afz.string({
-  //     props: {
-  //       icon: 'i-mdi-account',
-  //     },
-  //   }).default('三').meta({
-  //     label: '名',
-  //   }),
-  //   userAge: afz.number().default(25),
-  //   address: s.path('nestedObject', 'address').looseObject({
-  //     province: afz.string().default('北京'),
-  //     city: afz.string().default('北京'),
-  //     district: afz.string().default('朝阳区'),
-  //   }).optional(),
-  // }).meta({
-  //   label: '用户信息',
-  // }).optional(),
+
+// 使用computed包装schema以支持响应式
+const schema = computed(() => s.looseObject({
+  nameValue: afz.string({
+    props: {
+      icon: 'i-mdi-account',
+      color: 'warning',
+      class: 'w-md',
+    },
+  }).meta({
+    label: '这是从zod.describe()来的描述',
+    description: '测试描述',
+  }).default('默认值'),
+
   visibleTest: afz.number({
     type: 'test',
-    show: isVisible.value,
+    show: isVisible.value, // 现在这个会响应式更新
   }).meta({
     label: '显示的测试字段',
-  }),
-  hiddenTest: afz.number({
-    type: 'test',
-    if: false,
-  }).meta({
-    label: '隐藏的测试字段',
-  }),
-})
+  }).optional(),
+
+  hiddenTest: afz.number().meta({
+    label: state.value.nameValue || '默认标签', // 现在这个会响应式更新
+  }).optional(),
+}))
 
 function toggleVisible() {
   isVisible.value = !isVisible.value
