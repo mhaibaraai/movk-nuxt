@@ -1,63 +1,73 @@
+import type { OmitByKey, RequiredByKeys } from '@movk/core'
 import type { ComponentProps, ComponentSlots, IsComponent } from '../core'
 
-export interface AutoFormControl<C extends IsComponent> {
-  component: C
+/**
+ * 控件元数据（统一模型）
+ */
+export interface AutoFormControlsMeta<C extends IsComponent = IsComponent> {
+  /** 控件类型（注册键名） */
+  type: string
+  /** 控件组件（直传组件时使用） */
+  component?: C
+  /** 控件显示状态 */
+  show?: boolean
+  /** 控件条件 */
+  if?: boolean
+  /** 控件属性 */
   props?: ComponentProps<C>
-  slots?: ComponentSlots<C>
+  /** 控件插槽（调用侧可部分覆盖） */
+  slots?: Partial<ComponentSlots<C>>
 }
 
-export type AutoFormControls<TKey extends string = string> = {
-  [K in TKey]: AutoFormControl<IsComponent>
+export type AutoFormControl<C extends IsComponent = IsComponent> = RequiredByKeys<OmitByKey<AutoFormControlsMeta<C>, 'type'>, 'component'>
+
+export interface AutoFormControls {
+  [key: string]: AutoFormControl
 }
 
+/** 提取对象的“已知键”（剔除 string/number/symbol 索引） */
 type KnownKeys<T> = {
   [K in keyof T]-?: string extends K
-    ? never
-    : number extends K
-      ? never
-      : symbol extends K
-        ? never
-        : K
+  ? never
+  : number extends K
+  ? never
+  : symbol extends K
+  ? never
+  : K
 }[keyof T]
 
 type Suggest<T extends string> = T | (string & {})
 
-interface WithByComponent<C> {
-  props?: ComponentProps<C>
-  slots?: Partial<ComponentSlots<C>>
-}
+type OmitControlMeta<T extends IsComponent = IsComponent> = OmitByKey<AutoFormControlsMeta<T>, 'component' | 'type'>
 
-type WithByType<TControls, K extends keyof TControls>
-  = TControls[K] extends AutoFormControl<infer C>
-    ? { props?: ComponentProps<C>, slots?: Partial<ComponentSlots<C>> }
-    : object
+type MetaByType<TControls, K extends keyof TControls> =
+  TControls[K] extends AutoFormControl<infer C>
+  ? OmitControlMeta<C>
+  : OmitControlMeta
 
-type WithByZod<TControls, TZod extends string>
-  = TZod extends KnownKeys<TControls>
-    ? TControls[TZod] extends AutoFormControl<infer C>
-      ? { props?: ComponentProps<C>, slots?: Partial<ComponentSlots<C>> }
-      : { props?: object, slots?: object }
-    : { props?: object, slots?: object }
+type MetaByZod<TControls, TZod extends string> =
+  TZod extends KnownKeys<TControls>
+  ? TControls[TZod] extends AutoFormControl<infer C>
+  ? OmitControlMeta<C>
+  : OmitControlMeta
+  : OmitControlMeta
 
-export type FactoryMethod<
+
+export type AutoFormFactoryMethod<
   TControls,
   TZod extends string,
   TResult,
   TExtraParams extends any[] = [],
 > = {
-  // 无 type：按 zod 类型默认映射
-  (...args: [...TExtraParams, ({ component?: never, type?: never } & WithByZod<TControls, TZod>)?]): TResult
+  (...args: [...TExtraParams, ({ component?: never, type?: never } & MetaByZod<TControls, TZod>)?]): TResult
 } & {
-  // 精确键联合（有提示）：同时允许任意字符串输入（编辑期占位）
   <K extends KnownKeys<TControls> & keyof TControls & string>(
-    ...args: [...TExtraParams, ({ type: Suggest<K>, component?: never } & WithByType<TControls, K>)?]
+    ...args: [...TExtraParams, ({ type: Suggest<K>, component?: never } & MetaByType<TControls, K>)?]
   ): TResult
 } & {
-  // 传组件
   <C extends IsComponent>(
-    ...args: [...TExtraParams, ({ component: C, type?: never } & WithByComponent<C>)?]
+    ...args: [...TExtraParams, ({ component: C, type?: never } & OmitControlMeta<C>)?]
   ): TResult
 } & {
-  // 宽松回退：任意字符串可通过，但 props/slots 推断丢失（仅作兜底）
-  (...args: [...TExtraParams, ({ type: string, component?: never, props?: object, slots?: object })?]): TResult
+  (...args: [...TExtraParams, AutoFormControlsMeta?]): TResult
 }

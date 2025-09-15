@@ -33,7 +33,7 @@ describe('auto-form typing', () => {
       mockNumberTest: createAutoFormControl({ component: MockNumber, props: { aaa: 111 }, slots: {} }),
     } as const satisfies AutoFormControls
 
-    const { afz, scope } = createAutoFormZ<typeof customControls>(customControls)
+    const { afz, scope } = createAutoFormZ(customControls)
 
     z.string({
       error: 'error',
@@ -54,22 +54,20 @@ describe('auto-form typing', () => {
         province: afz.string({
           component: MockString,
           props: {
-            bbb: '111',
           },
           slots: {
             bbb: () => h('span', 'bbb'),
           },
         }),
       }),
+      age: afz.number({
+        type: 'mockNumberTest',
+        props: {
+          
+        }
+      }),
     })
 
-    // 类型断言：strip(object) 输入应保留字段提示（校验存在与类型，而非键集合完全相等）
-    const _state = ref<z.input<typeof _schema>>({
-      name: '',
-      address: {
-        city: '',
-        province: '',
-      },
-    })
+    const _state = ref<z.input<typeof _schema>>()
   })
 })

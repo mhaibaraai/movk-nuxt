@@ -1,6 +1,6 @@
 import type { DEFAULT_CONTROLS } from '../constants/auto-form'
-import type { ComponentProps, ComponentSlots, IsComponent } from '../core'
-import type { AutoFormControl, AutoFormControls, FactoryMethod } from '../types'
+import type { IsComponent } from '../core'
+import type { AutoFormControl, AutoFormControls, AutoFormFactoryMethod } from '../types'
 import { z } from 'zod/v4'
 
 function applyMeta<T extends z.ZodType, M = unknown>(
@@ -15,10 +15,10 @@ function applyMeta<T extends z.ZodType, M = unknown>(
 type KeysOf<T> = Extract<keyof T, string>
 
 interface TypedZodFactory<TControls> {
-  string: FactoryMethod<TControls, 'string', z.ZodString>
-  number: FactoryMethod<TControls, 'number', z.ZodNumber>
-  boolean: FactoryMethod<TControls, 'boolean', z.ZodBoolean>
-  date: FactoryMethod<TControls, 'date', z.ZodDate>
+  string: AutoFormFactoryMethod<TControls, 'string', z.ZodString>
+  number: AutoFormFactoryMethod<TControls, 'number', z.ZodNumber>
+  boolean: AutoFormFactoryMethod<TControls, 'boolean', z.ZodBoolean>
+  date: AutoFormFactoryMethod<TControls, 'date', z.ZodDate>
 }
 
 interface ScopedFactory<K> {
@@ -52,10 +52,6 @@ export function createAutoFormZ<TControls extends AutoFormControls = typeof DEFA
   }
 }
 
-export function createAutoFormControl<T extends IsComponent>(e: {
-  component: T
-  props?: ComponentProps<T>
-  slots?: ComponentSlots<T>
-}): AutoFormControl<T> {
-  return { component: e.component, props: e.props, slots: e.slots }
+export function createAutoFormControl<T extends IsComponent>(e: AutoFormControl<T>): AutoFormControl<T> {
+  return { ...e }
 }

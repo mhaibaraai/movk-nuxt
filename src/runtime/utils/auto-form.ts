@@ -157,11 +157,15 @@ export function resolveControl(entry: AutoFormIntrospectedField, mapping: AutoFo
 
   const props = defu(meta.props, mapped?.props)
   const slots = defu(meta.slots, mapped?.slots)
+  const show = meta.show ?? mapped?.show
+  const cond = meta.if ?? mapped?.if
 
   return {
     type: chosenType,
     component: chosenComponent,
     props,
     slots,
+    show,
+    if: cond,
   }
 }

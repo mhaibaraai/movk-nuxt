@@ -1,5 +1,5 @@
 export default defineNuxtConfig({
-  modules: ['../src/module', '@vueuse/motion/nuxt'],
+  modules: ['../src/module', '@vueuse/motion/nuxt', '@nuxtjs/i18n'],
   devtools: { enabled: true },
   css: ['~/assets/css/main.css'],
   runtimeConfig: {

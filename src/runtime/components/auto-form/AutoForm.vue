@@ -93,7 +93,7 @@ function useFieldTree(schema: S | undefined, controls: AutoFormControls = {}) {
         decorators: entry.decorators,
         control: resolveControl(entry, mapping),
       }
-    })
+    }).filter(field => field.control?.if !== false)
   })
   return {
     fields,
@@ -227,75 +227,78 @@ function VNodeRender(props: { node: unknown }) {
   <UForm :state="state" :schema="schema" v-bind="props" @submit="emit('submit', $event)" @error="emit('error', $event)">
     <slot name="before-fields" :fields="fields" :state="state" />
     <template v-for="field in fields" :key="field.path">
-      <UFormField
-        :as="field.meta?.as"
-        :name="field.path"
-        :error-pattern="field.meta?.errorPattern"
-        :label="field.meta?.label"
-        :description="field.meta?.description"
-        :help="field.meta?.help"
-        :hint="field.meta?.hint"
-        :size="field.meta?.size ?? size"
-        :required="field.meta?.required"
-        :eager-validation="field.meta?.eagerValidation"
-        :validate-on-input-delay="field.meta?.validateOnInputDelay"
-        :class="field.meta?.class"
-        :ui="field.meta?.ui"
-      >
-        <template v-if="hasNamedSlot(field, 'label')" #label="{ label }">
-          <slot :name="`label:${field.path}`" v-bind="{ label, ...buildSlotProps(field) }">
-            <slot name="label" v-bind="{ label, ...buildSlotProps(field) }">
-              <VNodeRender
-                :node="renderFieldSlot(field.meta?.fieldSlots?.label, { label, ...buildSlotProps(field) })"
-              />
+      <Transition>
+        <UFormField
+          v-show="field.control?.show !== false"
+          :as="field.meta?.as"
+          :name="field.path"
+          :error-pattern="field.meta?.errorPattern"
+          :label="field.meta?.label"
+          :description="field.meta?.description"
+          :help="field.meta?.help"
+          :hint="field.meta?.hint"
+          :size="field.meta?.size ?? size"
+          :required="field.meta?.required"
+          :eager-validation="field.meta?.eagerValidation"
+          :validate-on-input-delay="field.meta?.validateOnInputDelay"
+          :class="field.meta?.class"
+          :ui="field.meta?.ui"
+        >
+          <template v-if="hasNamedSlot(field, 'label')" #label="{ label }">
+            <slot :name="`label:${field.path}`" v-bind="{ label, ...buildSlotProps(field) }">
+              <slot name="label" v-bind="{ label, ...buildSlotProps(field) }">
+                <VNodeRender
+                  :node="renderFieldSlot(field.meta?.fieldSlots?.label, { label, ...buildSlotProps(field) })"
+                />
+              </slot>
             </slot>
-          </slot>
-        </template>
-        <template v-if="hasNamedSlot(field, 'hint')" #hint="{ hint }">
-          <slot :name="`hint:${field.path}`" v-bind="{ hint, ...buildSlotProps(field) }">
-            <slot name="hint" v-bind="{ hint, ...buildSlotProps(field) }">
-              <VNodeRender :node="renderFieldSlot(field.meta?.fieldSlots?.hint, { hint, ...buildSlotProps(field) })" />
+          </template>
+          <template v-if="hasNamedSlot(field, 'hint')" #hint="{ hint }">
+            <slot :name="`hint:${field.path}`" v-bind="{ hint, ...buildSlotProps(field) }">
+              <slot name="hint" v-bind="{ hint, ...buildSlotProps(field) }">
+                <VNodeRender :node="renderFieldSlot(field.meta?.fieldSlots?.hint, { hint, ...buildSlotProps(field) })" />
+              </slot>
             </slot>
-          </slot>
-        </template>
-        <template v-if="hasNamedSlot(field, 'description')" #description="{ description }">
-          <slot :name="`description:${field.path}`" v-bind="{ description, ...buildSlotProps(field) }">
-            <slot name="description" v-bind="{ description, ...buildSlotProps(field) }">
-              <VNodeRender
-                :node="renderFieldSlot(field.meta?.fieldSlots?.description, { description, ...buildSlotProps(field) })"
-              />
+          </template>
+          <template v-if="hasNamedSlot(field, 'description')" #description="{ description }">
+            <slot :name="`description:${field.path}`" v-bind="{ description, ...buildSlotProps(field) }">
+              <slot name="description" v-bind="{ description, ...buildSlotProps(field) }">
+                <VNodeRender
+                  :node="renderFieldSlot(field.meta?.fieldSlots?.description, { description, ...buildSlotProps(field) })"
+                />
+              </slot>
             </slot>
-          </slot>
-        </template>
-        <template v-if="hasNamedSlot(field, 'help')" #help="{ help }">
-          <slot :name="`help:${field.path}`" v-bind="{ help, ...buildSlotProps(field) }">
-            <slot name="help" v-bind="{ help, ...buildSlotProps(field) }">
-              <VNodeRender :node="renderFieldSlot(field.meta?.fieldSlots?.help, { help, ...buildSlotProps(field) })" />
+          </template>
+          <template v-if="hasNamedSlot(field, 'help')" #help="{ help }">
+            <slot :name="`help:${field.path}`" v-bind="{ help, ...buildSlotProps(field) }">
+              <slot name="help" v-bind="{ help, ...buildSlotProps(field) }">
+                <VNodeRender :node="renderFieldSlot(field.meta?.fieldSlots?.help, { help, ...buildSlotProps(field) })" />
+              </slot>
             </slot>
-          </slot>
-        </template>
-        <template v-if="hasNamedSlot(field, 'error')" #error="{ error }">
-          <slot :name="`error:${field.path}`" v-bind="{ error, ...buildSlotProps(field) }">
-            <slot name="error" v-bind="{ error, ...buildSlotProps(field) }">
-              <VNodeRender
-                :node="renderFieldSlot(field.meta?.fieldSlots?.error, { error, ...buildSlotProps(field) })"
-              />
+          </template>
+          <template v-if="hasNamedSlot(field, 'error')" #error="{ error }">
+            <slot :name="`error:${field.path}`" v-bind="{ error, ...buildSlotProps(field) }">
+              <slot name="error" v-bind="{ error, ...buildSlotProps(field) }">
+                <VNodeRender
+                  :node="renderFieldSlot(field.meta?.fieldSlots?.error, { error, ...buildSlotProps(field) })"
+                />
+              </slot>
             </slot>
-          </slot>
-        </template>
-        <template #default="{ error }">
-          <slot :name="`default:${field.path}`" v-bind="{ error, ...buildSlotProps(field) }">
-            <slot name="default" v-bind="{ error, ...buildSlotProps(field) }">
-              <VNodeRender
-                :node="renderFieldSlot(field.meta?.fieldSlots?.default, { error, ...buildSlotProps(field) })"
-              />
-              <template v-if="!field.meta?.fieldSlots || !field.meta?.fieldSlots.default">
-                <VNodeRender :node="renderControl(field)" />
-              </template>
+          </template>
+          <template #default="{ error }">
+            <slot :name="`default:${field.path}`" v-bind="{ error, ...buildSlotProps(field) }">
+              <slot name="default" v-bind="{ error, ...buildSlotProps(field) }">
+                <VNodeRender
+                  :node="renderFieldSlot(field.meta?.fieldSlots?.default, { error, ...buildSlotProps(field) })"
+                />
+                <template v-if="!field.meta?.fieldSlots || !field.meta?.fieldSlots.default">
+                  <VNodeRender :node="renderControl(field)" />
+                </template>
+              </slot>
             </slot>
-          </slot>
-        </template>
-      </UFormField>
+          </template>
+        </UFormField>
+      </Transition>
     </template>
     <slot name="after-fields" :fields="fields" :state="state" />
     <!-- <slot name="submit" :state="state" /> -->

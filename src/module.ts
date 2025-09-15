@@ -65,6 +65,7 @@ export default defineNuxtModule<ModuleOptions>({
         strategy: 'no_prefix',
         defaultLocale: 'zh_cn',
       },
+      optional: true,
     },
   },
   async setup(options, nuxt) {
