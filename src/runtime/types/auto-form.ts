@@ -11,7 +11,7 @@ export interface AutoFormControlsMeta<C extends IsComponent = IsComponent> {
   /** 控件组件（直传组件时使用） */
   component?: C
   /** 控件显示状态 */
-  show?: ReactiveValue<boolean>
+  hidden?: ReactiveValue<boolean>
   /** 控件条件 */
   if?: ReactiveValue<boolean>
   /** 控件属性 */

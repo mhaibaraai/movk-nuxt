@@ -5,12 +5,12 @@ import type { ComputedRef, Ref } from 'vue'
  * 字段上下文 - 精简至必要参数
  */
 export interface FieldContext {
-  /** 表单状态 */
-  state: any
+  /** 表单状态 - 使用 getter 确保获取最新值 */
+  readonly state: any
   /** 字段路径 */
-  path: string
-  /** 字段值 */
-  value: any
+  readonly path: string
+  /** 字段值 - 使用 getter 确保获取最新值 */
+  readonly value: any
   /** 设置字段值 */
   setValue: (value: any) => void
 }

@@ -1,7 +1,7 @@
 # 参考文档：
 
-  - [auto-form](https://www.shadcn-vue.com/docs/components/auto-form)
-  - [nuxt-auto-form](https://nuxt-auto-form.norbiros.dev/)
+- [auto-form](https://www.shadcn-vue.com/docs/components/auto-form)
+- [nuxt-auto-form](https://nuxt-auto-form.norbiros.dev/)
 
 # 重要
 
@@ -81,12 +81,12 @@ afz.string({
 })
 ```
 
-
 [已完成] type
 
 - meta.type -> formField.type
 - 优先级：meta.type > control.type
 - 组件初始化时自动设置
+
 ```ts
 z.object({
   nameValue: z.string().meta({
@@ -100,6 +100,7 @@ z.object({
 - meta.props -> formField.props
 - 优先级：meta.props > control.props
 - 组件初始化时自动设置
+
 ```ts
 z.object({
   nameValue: z.string({
@@ -120,7 +121,7 @@ const s = scope<State>()  // State 是你的类型约束
 
 // 三种对象工厂，行为差异：
 const schema = s.object({...})        // strip: 允许额外键，解析时剥离
-const schema = s.looseObject({...})   // loose: 允许额外键，解析时保留  
+const schema = s.looseObject({...})   // loose: 允许额外键，解析时保留
 const schema = s.strictObject({...})  // strict: 禁止额外键，解析时报错
 ```
 
@@ -179,19 +180,18 @@ type Input = z.input<typeof schema>  // 推荐使用，获得完整字段提示
 const state = ref<z.input<typeof schema>>({
   name: '',        // 有提示
   address: {
-    city: '',      // 有提示  
+    city: '',      // 有提示
     province: '',  // 有提示
   }
 })
 ```
 
-# 为字段添加以下属性
-
-- if: boolean
-
 # 优化 AutoFormSlots 的类型
 
 # 字对象 object 和数组 array 的组件处理方式
+
 # 添加 submit 插槽及功能
+
 # 思考如何动态控制字段是否渲染
+
 # 思考如何动态控制组件布局

@@ -3,26 +3,33 @@
 ## 问题修复
 
 ### 1. ✅ Required 属性类型错误
+
 **问题**: `required` 期望布尔值但收到字符串 "路径: dynamicField"
 **原因**: `introspectSchema` 中错误地将 `description` 的值赋给了 `required`
 **解决**: 修改 `introspectSchema` 函数，使用 `??` 运算符保留原始响应式值，不进行静态解析
 
 ### 2. ✅ 模板类型断言移除
+
 **问题**: 模板中大量使用 `as any` 类型断言
-**解决**: 
+**解决**:
+
 - 创建 `resolveFieldProp` 辅助函数处理属性解析
 - 创建 `getResolvedFieldSlots` 缓存函数处理 fieldSlots
 - 模板中完全移除 `as any`，保持类型安全
 
 ### 3. ✅ auto-form.ts 方法优化
+
 **改进内容**:
+
 - 简化 `iterateZodChain` 生成器函数
 - 优化 `extractSchemaInfo` 函数结构
 - 导出 `AutoFormIntrospectedField` 接口
 - 代码更加简洁清晰
 
 ### 4. ✅ Playground 增强
+
 **新增功能**:
+
 - 添加 computed schema 动态示例
 - 展示函数式 API 与 computed 的对比
 - 添加高级选项切换功能
@@ -31,16 +38,19 @@
 ## 代码质量提升
 
 ### 类型安全
+
 - 完全移除模板中的类型断言
 - 使用泛型函数确保类型推导
 - 引入 FieldContext 类型参数
 
 ### 性能优化
+
 - 使用 `useMemoize` 缓存重复计算
 - 优化 schema 遍历逻辑
 - 减少不必要的对象创建
 
 ### 可维护性
+
 - 函数职责更加单一
 - 代码结构更清晰
 - 注释更加准确

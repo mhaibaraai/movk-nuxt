@@ -63,8 +63,8 @@ describe('auto-form typing', () => {
       age: afz.number({
         type: 'mockNumberTest',
         props: {
-          
-        }
+
+        },
       }),
     })
 

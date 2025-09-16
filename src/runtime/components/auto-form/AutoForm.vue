@@ -3,9 +3,9 @@ import type { AnyObject } from '@movk/core'
 import type { FormData, FormError, FormErrorEvent, FormFieldSlots, FormInputEvents, FormSubmitEvent, InferInput } from '@nuxt/ui'
 import type { z } from 'zod/v4'
 import type { AutoFormControls, FieldContext, ReactiveValue } from '../../types'
-import { computedEager, useMemoize } from '@vueuse/core'
+import { computedEager } from '@vueuse/core'
 import defu from 'defu'
-import { Fragment, h, isRef, isVNode, markRaw, resolveDynamicComponent, shallowRef, unref, watch } from 'vue'
+import { Fragment, h, isRef, isVNode, markRaw, resolveDynamicComponent, unref, watch } from 'vue'
 import { DEFAULT_CONTROLS } from '../../constants/auto-form'
 import { deepClone, getPath, setPath } from '../../core'
 import { introspectSchema, resolveControl } from '../../utils/auto-form'
@@ -76,39 +76,40 @@ const _slots = defineSlots<AutoFormSlots>()
 
 const state = defineModel<FormStateType>({ default: () => ({} as FormStateType) })
 
-// 字段上下文缓存 - 基于 path 的稳定缓存
-const fieldContextCache = shallowRef(new Map<string, FieldContext>())
+// 仅保留必要的字段上下文缓存
+const fieldContextCache = new Map<string, FieldContext>()
 
-// 创建字段上下文
-const createFieldContext = useMemoize((path: string): FieldContext => {
-  const cached = fieldContextCache.value.get(path)
-  if (cached)
-    return cached
-
-  const context: FieldContext = {
-    state: state.value,
-    path,
-    value: getPath(state.value, path),
-    setValue: (v: any) => setPath(state.value, path, v),
+// 简化的字段上下文创建
+function createFieldContext(path: string): FieldContext {
+  if (!fieldContextCache.has(path)) {
+    fieldContextCache.set(path, {
+      get state() { return state.value },
+      path,
+      get value() { return getPath(state.value, path) },
+      setValue: (v: any) => setPath(state.value, path, v),
+    })
   }
+  return fieldContextCache.get(path)!
+}
 
-  fieldContextCache.value.set(path, context)
-  return context
-})
+// 监听 schema 变化，清理缓存
+watch(() => unref(schema), () => {
+  fieldContextCache.clear()
+}, { deep: false })
 
-// 响应式值解析函数 - 支持 context 注入
-const resolveReactiveValue = useMemoize((value: ReactiveValue<any, FieldContext>, context: FieldContext): any => {
+// 响应式值解析函数 - 直接解析，不缓存
+function resolveReactiveValue(value: ReactiveValue<any, FieldContext>, context: FieldContext): any {
   if (typeof value === 'function') {
     return (value as (ctx: FieldContext) => any)(context)
   }
   return unref(value)
-})
+}
 
-// 深度解析对象中的响应式属性 - 优化数组处理
-const resolveReactiveObject = useMemoize(<T extends Record<string, any>>(
+// 深度解析对象中的响应式属性 - 直接解析，不缓存
+function resolveReactiveObject<T extends Record<string, any>>(
   obj: T,
   context: FieldContext,
-): T => {
+): T {
   // 处理数组
   if (Array.isArray(obj)) {
     return obj.map((item) => {
@@ -130,7 +131,7 @@ const resolveReactiveObject = useMemoize(<T extends Record<string, any>>(
     }
   }
   return result
-})
+}
 
 // 简化 fields 计算属性 - 仅处理静态结构
 const fields = computedEager(() => {
@@ -138,11 +139,18 @@ const fields = computedEager(() => {
     return []
 
   const resolvedSchema = unref(schema)
-  const mapping = defu(controls, DEFAULT_CONTROLS)
+  // 使用 markRaw 确保控件映射中的组件不会被转换为响应式
+  const rawDefaultControls = markRaw(DEFAULT_CONTROLS)
+  const rawControls = controls ? markRaw(controls) : undefined
+  const mapping = defu(rawControls, rawDefaultControls)
   const entries = introspectSchema(resolvedSchema)
 
   return entries.map((entry) => {
     const control = resolveControl(entry, mapping)
+    // 确保控件组件使用 markRaw
+    if (control?.component && typeof control.component !== 'string') {
+      control.component = markRaw(control.component)
+    }
     return {
       path: entry.path,
       schema: entry.schema,
@@ -184,15 +192,15 @@ watch(
 )
 
 // 精简插槽属性 - 仅输出核心属性
-const buildSlotProps = useMemoize((field: any): any => {
+function buildSlotProps(field: any): any {
   const context = createFieldContext(field.path)
   return {
-    state: context.state,
+    get state() { return context.state },
     path: context.path,
-    value: context.value,
+    get value() { return context.value },
     setValue: context.setValue,
   }
-})
+}
 
 // 辅助函数：解析字段属性并返回正确类型
 function resolveFieldProp<T = any>(field: any, prop: string, defaultValue?: T): T | undefined {
@@ -200,9 +208,9 @@ function resolveFieldProp<T = any>(field: any, prop: string, defaultValue?: T): 
   if (value === undefined)
     return defaultValue
   const context = createFieldContext(field.path)
-  if (prop === 'required')
-    console.log('value', value, context, resolveReactiveValue(value, context))
-  return resolveReactiveValue(value, context)
+  const resolved = resolveReactiveValue(value, context)
+
+  return resolved
 }
 
 function enhanceEventProps(originalProps: AnyObject, ctx: any) {
@@ -219,8 +227,8 @@ function enhanceEventProps(originalProps: AnyObject, ctx: any) {
   return next
 }
 
-// 渲染控件 - 延迟解析动态属性
-const renderControl = useMemoize((field: any) => {
+// 简化后的渲染控件 - 无缓存
+function renderControl(field: any) {
   const control = field?.control
   const comp = control?.component as any
   if (!comp) {
@@ -228,12 +236,11 @@ const renderControl = useMemoize((field: any) => {
   }
   if (isVNode(comp))
     return comp
-  const safeComponent = markRaw(comp)
-  const component = resolveDynamicComponent(safeComponent)
 
+  const component = typeof comp === 'string' ? resolveDynamicComponent(comp) : comp
   const context = createFieldContext(field.path)
 
-  // 一次性解析所有动态属性
+  // 直接解析，不缓存
   const props = control?.props ? resolveReactiveObject(control.props, context) : {}
   const slots = control?.slots ? resolveReactiveObject(control.slots, context) : {}
 
@@ -257,19 +264,19 @@ const renderControl = useMemoize((field: any) => {
     },
     slots,
   )
-})
+}
 
 function renderFieldSlot(fn?: (props?: any) => any, slotProps?: any) {
   return fn ? (fn as any)(slotProps) : null
 }
 
 // 辅助函数：获取解析后的 fieldSlots
-const getResolvedFieldSlots = useMemoize((field: any) => {
+function getResolvedFieldSlots(field: any) {
   if (!field.meta?.fieldSlots)
     return undefined
   const context = createFieldContext(field.path)
   return resolveReactiveValue(field.meta.fieldSlots, context)
-})
+}
 
 function hasNamedSlot(field: any, name: keyof FormFieldSlots) {
   const keySpecific = `${name}:${field.path}`
@@ -311,7 +318,7 @@ function VNodeRender(props: { node: unknown }) {
     <slot name="before-fields" :fields="visibleFields" :state="state" />
     <template v-for="field in visibleFields" :key="field.path">
       <UFormField
-        v-show="resolveFieldProp(field, 'show')"
+        v-show="!resolveFieldProp(field, 'hidden')"
         :as="resolveFieldProp(field, 'as')"
         :name="field.path"
         :error-pattern="field.meta?.errorPattern"

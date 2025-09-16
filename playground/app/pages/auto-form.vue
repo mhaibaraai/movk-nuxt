@@ -79,7 +79,7 @@ const schema = s.looseObject({
 
   // visibleTest: afz.number({
   //   type: 'test',
-  //   show: () => isVisible.value, // 函数式响应式
+  //   hidden: () => !isVisible.value, // 函数式响应式
   // }).meta({
   //   label: '显示的测试字段',
   //   required: () => isVisible.value,
