@@ -1,11 +1,11 @@
 <script setup lang="ts" generic="S extends z.ZodObject, T extends boolean = true">
 import type { AnyObject } from '@movk/core'
 import type { FormData, FormError, FormErrorEvent, FormFieldSlots, FormInputEvents, FormSubmitEvent, InferInput } from '@nuxt/ui'
-import type { ComputedRef, Ref } from 'vue'
 import type { z } from 'zod/v4'
-import type { AutoFormControls } from '../../types'
+import type { AutoFormControls, FieldContext, ReactiveValue } from '../../types'
+import { computedEager, useMemoize } from '@vueuse/core'
 import defu from 'defu'
-import { computed, Fragment, h, isRef, isVNode, resolveDynamicComponent, unref, watch } from 'vue'
+import { Fragment, h, isRef, isVNode, markRaw, resolveDynamicComponent, shallowRef, unref, watch } from 'vue'
 import { DEFAULT_CONTROLS } from '../../constants/auto-form'
 import { deepClone, getPath, setPath } from '../../core'
 import { introspectSchema, resolveControl } from '../../utils/auto-form'
@@ -70,29 +70,57 @@ export interface AutoFormSlots extends FormFieldSlots {
 
 type FormStateType = InferInput<S>
 
-// 响应式值类型定义
-type ReactiveValue<T> = T | (() => T) | ComputedRef<T> | Ref<T>
-
-const { schema, controls, size, ...props } = defineProps<AutoFormProps<S, T>>()
+const { schema, controls, size, ...restProps } = defineProps<AutoFormProps<S, T>>()
 const emit = defineEmits<AutoFormEmits<S, T>>()
 const _slots = defineSlots<AutoFormSlots>()
 
 const state = defineModel<FormStateType>({ default: () => ({} as FormStateType) })
 
-// 响应式值解析函数
-function resolveReactiveValue<T>(value: ReactiveValue<T>, _context?: any): T {
+// 字段上下文缓存 - 基于 path 的稳定缓存
+const fieldContextCache = shallowRef(new Map<string, FieldContext>())
+
+// 创建字段上下文
+const createFieldContext = useMemoize((path: string): FieldContext => {
+  const cached = fieldContextCache.value.get(path)
+  if (cached)
+    return cached
+
+  const context: FieldContext = {
+    state: state.value,
+    path,
+    value: getPath(state.value, path),
+    setValue: (v: any) => setPath(state.value, path, v),
+  }
+
+  fieldContextCache.value.set(path, context)
+  return context
+})
+
+// 响应式值解析函数 - 支持 context 注入
+const resolveReactiveValue = useMemoize((value: ReactiveValue<any, FieldContext>, context: FieldContext): any => {
   if (typeof value === 'function') {
-    return (value as () => T)()
+    return (value as (ctx: FieldContext) => any)(context)
   }
   return unref(value)
-}
+})
 
-// 深度解析对象中的响应式属性
-function resolveReactiveObject<T extends Record<string, any>>(
+// 深度解析对象中的响应式属性 - 优化数组处理
+const resolveReactiveObject = useMemoize(<T extends Record<string, any>>(
   obj: T,
-  context?: any,
-): T {
-  const result = { ...obj } as T
+  context: FieldContext,
+): T => {
+  // 处理数组
+  if (Array.isArray(obj)) {
+    return obj.map((item) => {
+      if (typeof item === 'object' && item !== null && !isRef(item) && !isVNode(item)) {
+        return resolveReactiveObject(item, context)
+      }
+      return resolveReactiveValue(item, context)
+    }) as unknown as T
+  }
+
+  // 处理对象
+  const result = {} as T
   for (const [key, value] of Object.entries(obj)) {
     if (typeof value === 'object' && value !== null && !isRef(value) && !isVNode(value)) {
       (result as any)[key] = resolveReactiveObject(value, context)
@@ -102,110 +130,79 @@ function resolveReactiveObject<T extends Record<string, any>>(
     }
   }
   return result
-}
+})
 
-const fields = computed(() => {
+// 简化 fields 计算属性 - 仅处理静态结构
+const fields = computedEager(() => {
   if (!schema)
-    return [] as any[]
+    return []
 
-  // 支持computed schema
   const resolvedSchema = unref(schema)
   const mapping = defu(controls, DEFAULT_CONTROLS)
   const entries = introspectSchema(resolvedSchema)
 
   return entries.map((entry) => {
-    // 构建字段上下文
-    const fieldContext = {
-      state: state.value,
-      path: entry.path,
-      allFields: entries,
-      id: `${entry.path}-${Date.now()}`,
-    }
-
-    // 解析meta中的响应式属性
-    const resolvedMeta = resolveReactiveObject(entry.meta || {}, fieldContext)
-
-    // 解析控制器
     const control = resolveControl(entry, mapping)
-    const resolvedControl = {
-      ...control,
-      show: resolveReactiveValue(control?.show, fieldContext),
-      props: resolveReactiveObject(control?.props || {}, fieldContext),
-      slots: resolveReactiveObject(control?.slots || {}, fieldContext),
-    }
-
     return {
       path: entry.path,
       schema: entry.schema,
       zodType: entry.zodType,
-      meta: resolvedMeta,
+      meta: entry.meta,
       decorators: entry.decorators,
-      control: resolvedControl,
-      context: fieldContext,
+      control,
     }
-  }).filter((field) => {
-    // 动态解析if和show条件
-    const ifCondition = resolveReactiveValue(field.meta?.if, field.context)
-    const showCondition = resolveReactiveValue(field.control?.show, field.context)
-    return ifCondition !== false && showCondition !== false
   })
 })
 
-// 优化默认值初始化逻辑
+// 可见字段计算 - 统一可见性逻辑
+const visibleFields = computedEager(() => {
+  return fields.value.filter((field) => {
+    const context = createFieldContext(field.path)
+
+    // 统一可见性判断: control.if
+    const controlIf = field.control?.if ? resolveReactiveValue(field.control.if, context) : true
+    return controlIf !== false
+  })
+})
+
+// 优化默认值初始化 - 减少副作用
 watch(
-  () => fields.value.length,
-  (next, prev) => {
-    if (next > 0 && (prev === 0 || prev === undefined) && schema) {
-      initializeDefaultValues(fields.value, state.value)
+  fields,
+  (newFields) => {
+    if (newFields.length > 0) {
+      for (const field of newFields) {
+        if (field.decorators?.defaultValue !== undefined) {
+          const currentValue = getPath(state.value, field.path)
+          if (currentValue === undefined) {
+            setPath(state.value, field.path, deepClone(field.decorators.defaultValue))
+          }
+        }
+      }
     }
   },
   { immediate: true },
 )
 
-// 增强的插槽属性构建函数
-function buildSlotProps(field: any) {
+// 精简插槽属性 - 仅输出核心属性
+const buildSlotProps = useMemoize((field: any): any => {
+  const context = createFieldContext(field.path)
   return {
-    // 基础信息
-    state,
-    zodType: field.zodType,
-    meta: field.meta,
-    path: field.path,
-    schema: field.schema,
-    context: field.context,
-
-    // 值操作
-    value: getPath(state.value, field.path),
-    setValue: (v: any) => setPath(state.value, field.path, v),
-
-    // 增强的辅助函数
-    getFieldValue: (path: string) => getPath(state.value, path),
-    setFieldValue: (path: string, value: any) => setPath(state.value, path, value),
-
-    // 响应式解析器
-    resolve: (value: any) => resolveReactiveValue(value, field.context),
-
-    // 字段查找
-    findField: (path: string) => fields.value.find(f => f.path === path),
-
-    // 条件检查
-    isVisible: (path?: string) => {
-      const targetField = path ? fields.value.find(f => f.path === path) : field
-      return targetField
-        ? resolveReactiveValue(targetField.control?.show, targetField.context) !== false
-        : false
-    },
+    state: context.state,
+    path: context.path,
+    value: context.value,
+    setValue: context.setValue,
   }
-}
+})
 
-function initializeDefaultValues(fields: any[], stateValue: any) {
-  for (const field of fields) {
-    if (field.decorators?.defaultValue !== undefined) {
-      const currentValue = getPath(stateValue, field.path)
-      if (currentValue === undefined) {
-        setPath(stateValue, field.path, deepClone(field.decorators.defaultValue))
-      }
-    }
-  }
+// 辅助函数：解析字段属性并返回正确类型
+function resolveFieldProp<T = any>(field: any, prop: string, defaultValue?: T): T | undefined {
+  const value = field.meta?.[prop]
+  if (value === undefined)
+    return defaultValue
+  const context = createFieldContext(field.path)
+  if (prop === 'required')
+    console.log('value', value, context, resolveReactiveValue(value, context))
+  return resolveReactiveValue(value, context)
 }
 
 function enhanceEventProps(originalProps: AnyObject, ctx: any) {
@@ -222,14 +219,8 @@ function enhanceEventProps(originalProps: AnyObject, ctx: any) {
   return next
 }
 
-// 字段可见性解析函数
-function resolveFieldVisibility(field: any): boolean {
-  const show = resolveReactiveValue(field.meta?.show, field.context)
-  const controlShow = resolveReactiveValue(field.control?.show, field.context)
-  return show !== false && controlShow !== false
-}
-
-function renderControl(field: any) {
+// 渲染控件 - 延迟解析动态属性
+const renderControl = useMemoize((field: any) => {
   const control = field?.control
   const comp = control?.component as any
   if (!comp) {
@@ -237,50 +228,54 @@ function renderControl(field: any) {
   }
   if (isVNode(comp))
     return comp
-  const component = resolveDynamicComponent(comp)
+  const safeComponent = markRaw(comp)
+  const component = resolveDynamicComponent(safeComponent)
 
-  // 动态解析props
-  const dynamicProps = resolveReactiveObject(control?.props || {}, field.context)
+  const context = createFieldContext(field.path)
 
-  // 验证事件属性
-  if (dynamicProps) {
-    for (const key of Object.keys(dynamicProps)) {
-      if (/^on[A-Z].+/.test(key) && typeof (dynamicProps as any)[key] !== 'function')
-        console.warn(`[AutoForm] 事件属性应为函数: ${key} @ ${field.path}`)
-    }
-  }
+  // 一次性解析所有动态属性
+  const props = control?.props ? resolveReactiveObject(control.props, context) : {}
+  const slots = control?.slots ? resolveReactiveObject(control.slots, context) : {}
 
-  const userOnUpdate = (dynamicProps as any)?.['onUpdate:modelValue']
-  const rest = { ...dynamicProps }
-  delete (rest as any)['onUpdate:modelValue']
+  const userOnUpdate = props['onUpdate:modelValue']
+  const rest = { ...props }
+  delete rest['onUpdate:modelValue']
 
-  const ctx = buildSlotProps(field)
-  const wrapped = enhanceEventProps(rest, ctx)
+  const slotProps = buildSlotProps(field)
+  const wrapped = enhanceEventProps(rest, slotProps)
 
   return h(
     component as any,
     {
       ...wrapped,
       'onUpdate:modelValue': (v: any) => {
-        setPath(state.value as any, field.path, v)
+        context.setValue(v)
         if (typeof userOnUpdate === 'function')
-          userOnUpdate(v, ctx)
+          userOnUpdate(v, slotProps)
       },
-      'modelValue': getPath(state.value as any, field.path),
+      'modelValue': context.value,
     },
-    // 动态解析slots
-    resolveReactiveObject(control?.slots || {}, field.context),
+    slots,
   )
-}
+})
 
 function renderFieldSlot(fn?: (props?: any) => any, slotProps?: any) {
   return fn ? (fn as any)(slotProps) : null
 }
 
+// 辅助函数：获取解析后的 fieldSlots
+const getResolvedFieldSlots = useMemoize((field: any) => {
+  if (!field.meta?.fieldSlots)
+    return undefined
+  const context = createFieldContext(field.path)
+  return resolveReactiveValue(field.meta.fieldSlots, context)
+})
+
 function hasNamedSlot(field: any, name: keyof FormFieldSlots) {
   const keySpecific = `${name}:${field.path}`
   const s = _slots as any
-  return Boolean(field.meta?.fieldSlots?.[name] || s?.[keySpecific] || s?.[name])
+  const fieldSlots = getResolvedFieldSlots(field)
+  return Boolean(fieldSlots?.[name] || s?.[keySpecific] || s?.[name])
 }
 
 function normalize(node: any): any[] {
@@ -312,83 +307,81 @@ function VNodeRender(props: { node: unknown }) {
 </script>
 
 <template>
-  <UForm :state="state" :schema="unref(schema)" v-bind="props" @submit="emit('submit', $event)" @error="emit('error', $event)">
-    <slot name="before-fields" :fields="fields" :state="state" />
-    <template v-for="field in fields" :key="field.path">
-      <Transition>
-        <UFormField
-          v-show="resolveFieldVisibility(field)"
-          :as="field.meta?.as"
-          :name="field.path"
-          :error-pattern="field.meta?.errorPattern"
-          :label="field.meta?.label"
-          :description="field.meta?.description"
-          :help="field.meta?.help"
-          :hint="field.meta?.hint"
-          :size="field.meta?.size ?? size"
-          :required="field.meta?.required"
-          :eager-validation="field.meta?.eagerValidation"
-          :validate-on-input-delay="field.meta?.validateOnInputDelay"
-          :class="field.meta?.class"
-          :ui="field.meta?.ui"
-        >
-          <template v-if="hasNamedSlot(field, 'label')" #label="{ label }">
-            <slot :name="`label:${field.path}`" v-bind="{ label, ...buildSlotProps(field) }">
-              <slot name="label" v-bind="{ label, ...buildSlotProps(field) }">
-                <VNodeRender
-                  :node="renderFieldSlot(field.meta?.fieldSlots?.label, { label, ...buildSlotProps(field) })"
-                />
-              </slot>
+  <UForm :state="state" :schema="unref(schema)" v-bind="restProps" @submit="emit('submit', $event)" @error="emit('error', $event)">
+    <slot name="before-fields" :fields="visibleFields" :state="state" />
+    <template v-for="field in visibleFields" :key="field.path">
+      <UFormField
+        v-show="resolveFieldProp(field, 'show')"
+        :as="resolveFieldProp(field, 'as')"
+        :name="field.path"
+        :error-pattern="field.meta?.errorPattern"
+        :label="resolveFieldProp(field, 'label')"
+        :description="resolveFieldProp(field, 'description')"
+        :help="resolveFieldProp(field, 'help')"
+        :hint="resolveFieldProp(field, 'hint')"
+        :size="resolveFieldProp(field, 'size', size)"
+        :required="resolveFieldProp(field, 'required')"
+        :eager-validation="field.meta?.eagerValidation"
+        :validate-on-input-delay="field.meta?.validateOnInputDelay"
+        :class="resolveFieldProp(field, 'class')"
+        :ui="resolveFieldProp(field, 'ui')"
+      >
+        <template v-if="hasNamedSlot(field, 'label')" #label="{ label }">
+          <slot :name="`label:${field.path}`" v-bind="{ label, ...buildSlotProps(field) }">
+            <slot name="label" v-bind="{ label, ...buildSlotProps(field) }">
+              <VNodeRender
+                :node="renderFieldSlot(getResolvedFieldSlots(field)?.label, { label, ...buildSlotProps(field) })"
+              />
             </slot>
-          </template>
-          <template v-if="hasNamedSlot(field, 'hint')" #hint="{ hint }">
-            <slot :name="`hint:${field.path}`" v-bind="{ hint, ...buildSlotProps(field) }">
-              <slot name="hint" v-bind="{ hint, ...buildSlotProps(field) }">
-                <VNodeRender :node="renderFieldSlot(field.meta?.fieldSlots?.hint, { hint, ...buildSlotProps(field) })" />
-              </slot>
+          </slot>
+        </template>
+        <template v-if="hasNamedSlot(field, 'hint')" #hint="{ hint }">
+          <slot :name="`hint:${field.path}`" v-bind="{ hint, ...buildSlotProps(field) }">
+            <slot name="hint" v-bind="{ hint, ...buildSlotProps(field) }">
+              <VNodeRender :node="renderFieldSlot(getResolvedFieldSlots(field)?.hint, { hint, ...buildSlotProps(field) })" />
             </slot>
-          </template>
-          <template v-if="hasNamedSlot(field, 'description')" #description="{ description }">
-            <slot :name="`description:${field.path}`" v-bind="{ description, ...buildSlotProps(field) }">
-              <slot name="description" v-bind="{ description, ...buildSlotProps(field) }">
-                <VNodeRender
-                  :node="renderFieldSlot(field.meta?.fieldSlots?.description, { description, ...buildSlotProps(field) })"
-                />
-              </slot>
+          </slot>
+        </template>
+        <template v-if="hasNamedSlot(field, 'description')" #description="{ description }">
+          <slot :name="`description:${field.path}`" v-bind="{ description, ...buildSlotProps(field) }">
+            <slot name="description" v-bind="{ description, ...buildSlotProps(field) }">
+              <VNodeRender
+                :node="renderFieldSlot(getResolvedFieldSlots(field)?.description, { description, ...buildSlotProps(field) })"
+              />
             </slot>
-          </template>
-          <template v-if="hasNamedSlot(field, 'help')" #help="{ help }">
-            <slot :name="`help:${field.path}`" v-bind="{ help, ...buildSlotProps(field) }">
-              <slot name="help" v-bind="{ help, ...buildSlotProps(field) }">
-                <VNodeRender :node="renderFieldSlot(field.meta?.fieldSlots?.help, { help, ...buildSlotProps(field) })" />
-              </slot>
+          </slot>
+        </template>
+        <template v-if="hasNamedSlot(field, 'help')" #help="{ help }">
+          <slot :name="`help:${field.path}`" v-bind="{ help, ...buildSlotProps(field) }">
+            <slot name="help" v-bind="{ help, ...buildSlotProps(field) }">
+              <VNodeRender :node="renderFieldSlot(getResolvedFieldSlots(field)?.help, { help, ...buildSlotProps(field) })" />
             </slot>
-          </template>
-          <template v-if="hasNamedSlot(field, 'error')" #error="{ error }">
-            <slot :name="`error:${field.path}`" v-bind="{ error, ...buildSlotProps(field) }">
-              <slot name="error" v-bind="{ error, ...buildSlotProps(field) }">
-                <VNodeRender
-                  :node="renderFieldSlot(field.meta?.fieldSlots?.error, { error, ...buildSlotProps(field) })"
-                />
-              </slot>
+          </slot>
+        </template>
+        <template v-if="hasNamedSlot(field, 'error')" #error="{ error }">
+          <slot :name="`error:${field.path}`" v-bind="{ error, ...buildSlotProps(field) }">
+            <slot name="error" v-bind="{ error, ...buildSlotProps(field) }">
+              <VNodeRender
+                :node="renderFieldSlot(getResolvedFieldSlots(field)?.error, { error, ...buildSlotProps(field) })"
+              />
             </slot>
-          </template>
-          <template #default="{ error }">
-            <slot :name="`default:${field.path}`" v-bind="{ error, ...buildSlotProps(field) }">
-              <slot name="default" v-bind="{ error, ...buildSlotProps(field) }">
-                <VNodeRender
-                  :node="renderFieldSlot(field.meta?.fieldSlots?.default, { error, ...buildSlotProps(field) })"
-                />
-                <template v-if="!field.meta?.fieldSlots || !field.meta?.fieldSlots.default">
-                  <VNodeRender :node="renderControl(field)" />
-                </template>
-              </slot>
+          </slot>
+        </template>
+        <template #default="{ error }">
+          <slot :name="`default:${field.path}`" v-bind="{ error, ...buildSlotProps(field) }">
+            <slot name="default" v-bind="{ error, ...buildSlotProps(field) }">
+              <VNodeRender
+                :node="renderFieldSlot(getResolvedFieldSlots(field)?.default, { error, ...buildSlotProps(field) })"
+              />
+              <template v-if="!field.meta?.fieldSlots || !getResolvedFieldSlots(field)?.default">
+                <VNodeRender :node="renderControl(field)" />
+              </template>
             </slot>
-          </template>
-        </UFormField>
-      </Transition>
+          </slot>
+        </template>
+      </UFormField>
     </template>
-    <slot name="after-fields" :fields="fields" :state="state" />
+    <slot name="after-fields" :fields="visibleFields" :state="state" />
     <!-- <slot name="submit" :state="state" /> -->
   </UForm>
 </template>

@@ -1,4 +1,33 @@
 import type { FormFieldSlots } from '@nuxt/ui'
+import type { ComputedRef, Ref } from 'vue'
+
+/**
+ * 字段上下文 - 精简至必要参数
+ */
+export interface FieldContext {
+  /** 表单状态 */
+  state: any
+  /** 字段路径 */
+  path: string
+  /** 字段值 */
+  value: any
+  /** 设置字段值 */
+  setValue: (value: any) => void
+}
+
+/**
+ * 响应式值类型 - 支持静态值、函数、Ref、Computed
+ */
+export type ReactiveValue<T, C = FieldContext> = T | ((ctx: C) => T) | Ref<T> | ComputedRef<T>
+
+/**
+ * 深度响应式对象 - 递归应用 ReactiveValue
+ */
+export type DeepReactive<T, C = FieldContext> = T extends object
+  ? T extends (...args: any[]) => any
+    ? ReactiveValue<T, C>
+    : { [K in keyof T]: DeepReactive<T[K], C> }
+  : ReactiveValue<T, C>
 
 declare module 'zod/v4' {
   interface GlobalMeta extends GlobalAutoFormMeta { }
@@ -12,19 +41,19 @@ declare module 'zod/v4' {
     name?: string
     /** A regular expression to match form error names. */
     errorPattern?: RegExp
-    label?: string
-    description?: string
-    help?: string
-    error?: boolean | string
-    hint?: string
+    label?: ReactiveValue<string>
+    description?: ReactiveValue<string>
+    help?: ReactiveValue<string>
+    error?: ReactiveValue<boolean | string>
+    hint?: ReactiveValue<string>
     /**
      * @defaultValue 'md'
      */
-    size?: 'md' | 'xs' | 'sm' | 'lg' | 'xl'
+    size?: ReactiveValue<'md' | 'xs' | 'sm' | 'lg' | 'xl'>
     /**
      * @defaultValue true
      */
-    required?: boolean
+    required?: ReactiveValue<boolean>
     /** If true, validation on input will be active immediately instead of waiting for a blur event. */
     eagerValidation?: boolean
     /**
@@ -32,12 +61,12 @@ declare module 'zod/v4' {
      * @defaultValue `300`
      */
     validateOnInputDelay?: number
-    class?: any
-    ui?: { root?: string, wrapper?: string, labelWrapper?: string, label?: string, container?: string, description?: string, error?: string, hint?: string, help?: string }
+    class?: ReactiveValue<any>
+    ui?: ReactiveValue<{ root?: string, wrapper?: string, labelWrapper?: string, label?: string, container?: string, description?: string, error?: string, hint?: string, help?: string }>
     /**
      * @see https://ui4.nuxt.com/docs/components/form-field#slots
      */
-    fieldSlots?: Partial<FormFieldSlots>
+    fieldSlots?: ReactiveValue<Partial<FormFieldSlots>>
   }
 }
 

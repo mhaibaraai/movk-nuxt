@@ -260,3 +260,34 @@ const schema = s.looseObject({
 - 开发体验良好
 
 **结论**: AutoForm 响应式 schema 重构成功完成，为未来的函数式 API 奠定了坚实基础。
+
+
+[MODE: PLAN]
+
+基于研究阶段的发现，我制定以下实施计划来解决缓存错误和Vue响应式对象警告问题：
+
+## IMPLEMENTATION CHECKLIST:
+
+### 问题1：修复FieldContext缓存导致的动态值更新问题
+
+1. **修改 `createFieldContext` 函数**：在 `/Users/yixuanmiao/Projects/movk-nuxt/src/runtime/components/auto-form/AutoForm.vue` 第83-97行，将静态的 `value` 属性改为动态计算的 getter
+
+2. **更新 `FieldContext` 接口定义**：在 `/Users/yixuanmiao/Projects/movk-nuxt/src/runtime/types/auto-form.ts` 中修改 `FieldContext` 类型定义，使 `value` 变为 getter 属性
+
+3. **调整 `useMemoize` 缓存策略**：修改 `createFieldContext` 函数，确保缓存键包含状态版本或使用更精确的缓存失效机制
+
+### 问题2：解决Vue响应式对象警告
+
+4. **检查并修复组件响应式问题**：在 `/Users/yixuanmiao/Projects/movk-nuxt/src/runtime/components/auto-form/AutoForm.vue` 中排查所有可能被设为响应式的组件引用
+
+5. **加强 markRaw 使用**：确保所有动态组件引用都正确使用 `markRaw` 包装
+
+### 测试验证
+
+6. **移除调试代码**：删除第203-204行的 console.log 调试语句
+
+7. **测试动态字段功能**：验证 `dynamicField` 的 `help` 和 `required` 函数能正确响应输入变化
+
+8. **验证性能**：确保修复后不会引入新的性能问题
+
+具体实施细节将在执行阶段详细展开，每个步骤都将包含精确的代码修改和文件路径。
