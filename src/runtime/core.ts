@@ -9,6 +9,7 @@ import { isObject } from '@movk/core'
 
 /**
  * 合并两个对象类型，U 中的属性会覆盖 T 中的属性
+ *
  * @example
  * ```ts
  * type T = { a: number, c: string }
@@ -19,7 +20,32 @@ import { isObject } from '@movk/core'
 export type Merge<T, U> = Omit<T, keyof U> & U
 
 /**
- * 判断类型是否为纯对象：允许嵌套对象直接以字面量形式声明子 shape
+ * 提供字符串字面量提示的同时允许任意字符串
+ * 在 IDE 中提供 T 类型的自动补全提示，但不限制只能使用这些值
+ *
+ * @example
+ * ```ts
+ * type Color = Suggest<'red' | 'blue' | 'green'>
+ *
+ * // IDE 会提示 'red', 'blue', 'green'，但也可以使用其他字符串
+ * const color1: Color = 'red'    // 有提示
+ * const color2: Color = 'yellow' // 也可以，虽然没有提示
+ * ```
+ */
+export type Suggest<T extends string> = T | (string & {})
+
+/**
+ * 判断类型 T 是否为纯对象类型
+ * 纯对象是指普通的对象字面量，排除数组、函数、Date 等特殊对象类型
+ * @example
+ * ```ts
+ * type Test1 = IsPlainObject<{ a: number }> // true
+ * type Test2 = IsPlainObject<string[]>      // false
+ * type Test3 = IsPlainObject<() => void>    // false
+ * type Test4 = IsPlainObject<Date>          // false
+ * type Test5 = IsPlainObject<string>        // false
+ * type Test6 = IsPlainObject<null>          // false
+ * ```
  */
 export type IsPlainObject<T> = T extends object
   ? T extends any[]

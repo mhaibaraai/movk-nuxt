@@ -57,6 +57,7 @@ z.string().meta({
 # 配置 Controls ， 构造函数参数
 
 - if: boolean
+- hidden: boolean
 - type: string | keyof typeof DEFAULT_CONTROLS
 - component: IsComponent
 - props: ComponentProps<IsComponent>
@@ -186,7 +187,28 @@ const state = ref<z.input<typeof schema>>({
 })
 ```
 
-# 优化 AutoFormSlots 的类型
+# 优化 AuthFormSlots 的类型
+
+参考以下类型代码：
+
+```ts
+type DynamicFieldSlots<T, F, SlotProps = { field: F, state: T }> = Record<string, (props: SlotProps) => any> & Record<`${keyof T extends string ? keyof T : never}-field`, (props: SlotProps) => any>
+type DynamicFormFieldSlots<T> = Record<string, (props?: {}) => any> & Record<`${keyof T extends string ? keyof T : never}-${'label' | 'description' | 'hint' | 'help' | 'error'}`, (props?: {}) => any>
+export type AuthFormSlots<T extends object = object, F extends AuthFormField = AuthFormField> = {
+  header(props?: {}): any
+  leading(props?: {}): any
+  title(props?: {}): any
+  description(props?: {}): any
+  providers(props?: {}): any
+  validation(props?: {}): any
+  submit(props: { loading: boolean }): any
+  footer(props?: {}): any
+} & DynamicFieldSlots<T, F> & DynamicFormFieldSlots<T>
+```
+
+# field: any 的类型优化
+
+# buildSlotProps 的类型优化
 
 # 字对象 object 和数组 array 的组件处理方式
 
