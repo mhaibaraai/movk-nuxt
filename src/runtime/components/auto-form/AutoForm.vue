@@ -2,12 +2,11 @@
 import type { AnyObject } from '@movk/core'
 import type { FormData, FormError, FormErrorEvent, FormFieldSlots, FormInputEvents, FormSubmitEvent, InferInput } from '@nuxt/ui'
 import type { z } from 'zod/v4'
-import type { AutoFormControls, AutoFormField, AutoFormSlots, FieldContext, ReactiveValue } from '../../types'
-import { computedEager } from '@vueuse/core'
-import { h, isVNode, markRaw, resolveDynamicComponent, unref, watch } from 'vue'
+import type { AutoFormFieldContext as _AutoFormFieldContext, AutoFormControls, AutoFormField, AutoFormSlots, ReactiveValue } from '../../types'
+import { computed, h, isRef, isVNode, markRaw, resolveDynamicComponent, unref, watch } from 'vue'
 import { DEFAULT_CONTROLS } from '../../constants/auto-form'
 import { deepClone, getPath, setPath } from '../../core'
-import { introspectSchema, resolveControlMeta, resolveReactiveObject, resolveReactiveValue, VNodeRender } from '../../utils/auto-form'
+import { introspectSchema, resolveControlMeta, VNodeRender } from '../../utils/auto-form'
 
 export interface AutoFormProps<S extends z.ZodObject, T extends boolean = true> {
   id?: string | number
@@ -66,6 +65,7 @@ export interface AutoFormEmits<S extends z.ZodObject, T extends boolean = true> 
 export type AutoFormComponentSlots<S extends z.ZodObject> = AutoFormSlots<S>
 
 type FormStateType = InferInput<S>
+type AutoFormFieldContext = _AutoFormFieldContext<FormStateType>
 
 const { schema, controls, size, ...restProps } = defineProps<AutoFormProps<S, T>>()
 const emit = defineEmits<AutoFormEmits<S, T>>()
@@ -73,29 +73,8 @@ const _slots = defineSlots<AutoFormComponentSlots<S>>()
 
 const state = defineModel<FormStateType>({ default: () => ({} as FormStateType) })
 
-// 仅保留必要的字段上下文缓存
-const fieldContextCache = new Map<string, FieldContext>()
-
-// 简化的字段上下文创建
-function createFieldContext(path: string): FieldContext {
-  if (!fieldContextCache.has(path)) {
-    fieldContextCache.set(path, {
-      get state() { return state.value as FormStateType },
-      path,
-      get value() { return getPath(state.value, path) },
-      setValue: (v: any) => setPath(state.value, path, v),
-    })
-  }
-  return fieldContextCache.get(path)!
-}
-
-// 监听 schema 变化，清理缓存
-watch(() => unref(schema), () => {
-  fieldContextCache.clear()
-}, { deep: false })
-
 // 简化 fields 计算属性 - 仅处理静态结构
-const fields = computedEager((): AutoFormField[] => {
+const fields = computed((): AutoFormField[] => {
   if (!schema)
     return []
 
@@ -106,30 +85,47 @@ const fields = computedEager((): AutoFormField[] => {
   }
   const entries = introspectSchema(resolvedSchema)
 
-  console.log(entries)
-  return entries.map((entry): AutoFormField => {
-    const control = resolveControlMeta(entry, mapping)
+  entries.forEach((entry) => {
+    const controlMeta = resolveControlMeta(entry, mapping)
     // 确保控件组件使用 markRaw
-    if (control?.component && typeof control.component !== 'string') {
-      control.component = markRaw(control.component)
+    if (controlMeta?.component && typeof controlMeta.component !== 'string') {
+      controlMeta.component = markRaw(controlMeta.component)
     }
-    return {
-      path: entry.path,
-      schema: entry.schema,
-      originalSchema: entry.originalSchema,
-      meta: entry.meta,
-      control,
-    }
+    entry.controlMeta = controlMeta
   })
+  console.log(entries)
+  return entries
 })
 
-// 可见字段计算 - 统一可见性逻辑
-const visibleFields = computedEager((): AutoFormField[] => {
-  return fields.value.filter((field: AutoFormField) => {
-    const context = createFieldContext(field.path)
+// 仅保留必要的字段上下文缓存
+const fieldContextCache = new Map<string, AutoFormFieldContext>()
 
-    // 统一可见性判断: control.if
-    const controlIf = field.control?.if ? resolveReactiveValue(field.control.if, context) : true
+// 简化的字段上下文创建
+function createFieldContext(field: AutoFormField): AutoFormFieldContext {
+  const path = field.path
+  if (!fieldContextCache.has(path)) {
+    fieldContextCache.set(path, {
+      get state() { return state.value as FormStateType },
+      path,
+      field,
+      get value() { return getPath(state.value, path) as FormStateType[keyof FormStateType] },
+      setValue: (v: FormStateType[keyof FormStateType]) => setPath(state.value, path, v),
+    })
+  }
+  return fieldContextCache.get(path)!
+}
+
+// 监听 schema 变化，清理缓存
+watch(() => unref(schema), () => {
+  fieldContextCache.clear()
+}, { deep: false })
+
+// 可见字段计算 - 统一可见性逻辑
+const visibleFields = computed(() => {
+  return fields.value.filter((field) => {
+    const context = createFieldContext(field)
+
+    const controlIf = field.controlMeta?.if ? resolveReactiveValue(field.controlMeta.if, context) : true
     return controlIf !== false
   })
 })
@@ -152,30 +148,19 @@ watch(
   { immediate: true },
 )
 
-// 精简插槽属性 - 仅输出核心属性
-function buildSlotProps(field: AutoFormField) {
-  const context = createFieldContext(field.path)
-  return {
-    get state() { return context.state },
-    path: context.path,
-    get value() { return context.value },
-    setValue: context.setValue,
-    field,
-  }
-}
-
 // 辅助函数：解析字段属性并返回正确类型
 function resolveFieldProp<T = any>(field: AutoFormField, prop: string, defaultValue?: T): T | undefined {
   const value = field.meta?.[prop]
   if (value === undefined)
     return defaultValue
-  const context = createFieldContext(field.path)
+  const context = createFieldContext(field)
   const resolved = resolveReactiveValue(value, context)
 
   return resolved
 }
 
-function enhanceEventProps(originalProps: AnyObject, ctx: any) {
+// 增强事件属性函数 - 为Vue组件的事件处理函数注入表单字段上下文
+function enhanceEventProps(originalProps: AnyObject, ctx: AutoFormFieldContext) {
   const next: Record<string, any> = {}
   for (const key of Object.keys(originalProps || {})) {
     const val = (originalProps as any)[key]
@@ -191,8 +176,8 @@ function enhanceEventProps(originalProps: AnyObject, ctx: any) {
 
 // 简化后的渲染控件 - 无缓存
 function renderControl(field: AutoFormField) {
-  const control = field?.control
-  const comp = control?.component as any
+  const controlMeta = field?.controlMeta
+  const comp = controlMeta?.component as any
   if (!comp) {
     return h('div', { class: 'text-red-500' }, `[AutoForm] 控件未映射: ${field?.path ?? ''}`)
   }
@@ -200,24 +185,24 @@ function renderControl(field: AutoFormField) {
     return comp
 
   const component = typeof comp === 'string' ? resolveDynamicComponent(comp) : comp
-  const context = createFieldContext(field.path)
+  const context = createFieldContext(field)
 
   // 直接解析，不缓存
-  const props = control?.props ? resolveReactiveObject(control.props, context) : {}
-  const slots = control?.slots ? resolveReactiveObject(control.slots, context) : {}
+  const props = controlMeta?.props ? resolveReactiveObject(controlMeta.props, context) : {}
+  const slots = controlMeta?.slots ? resolveReactiveObject(controlMeta.slots, context) : {}
 
   const userOnUpdate = props['onUpdate:modelValue']
   const rest = { ...props }
   delete rest['onUpdate:modelValue']
 
-  const slotProps = buildSlotProps(field)
+  const slotProps = createFieldContext(field)
   const wrapped = enhanceEventProps(rest, slotProps)
 
   return h(
     component as any,
     {
       ...wrapped,
-      'onUpdate:modelValue': (v: any) => {
+      'onUpdate:modelValue': (v: FormStateType[keyof FormStateType]) => {
         context.setValue(v)
         if (typeof userOnUpdate === 'function')
           userOnUpdate(v, slotProps)
@@ -232,11 +217,46 @@ function renderFieldSlot(fn?: (props?: any) => any, slotProps?: any) {
   return fn ? (fn as any)(slotProps) : null
 }
 
+// 响应式值解析函数 - 直接解析，不缓存
+function resolveReactiveValue(value: ReactiveValue<any, AutoFormFieldContext>, context: AutoFormFieldContext): any {
+  if (typeof value === 'function') {
+    return (value as (ctx: AutoFormFieldContext) => any)(context)
+  }
+  return unref(value)
+}
+
+function resolveReactiveObject<T extends Record<string, any>>(
+  obj: T,
+  context: AutoFormFieldContext,
+): T {
+  // 处理数组
+  if (Array.isArray(obj)) {
+    return obj.map((item) => {
+      if (typeof item === 'object' && item !== null && !isRef(item) && !isVNode(item)) {
+        return resolveReactiveObject(item, context)
+      }
+      return resolveReactiveValue(item, context)
+    }) as unknown as T
+  }
+
+  // 处理对象
+  const result = {} as T
+  for (const [key, value] of Object.entries(obj)) {
+    if (typeof value === 'object' && value !== null && !isRef(value) && !isVNode(value)) {
+      (result as any)[key] = resolveReactiveObject(value, context)
+    }
+    else {
+      (result as any)[key] = resolveReactiveValue(value, context)
+    }
+  }
+  return result
+}
+
 // 辅助函数：获取解析后的 fieldSlots
 function getResolvedFieldSlots(field: AutoFormField) {
   if (!field.meta?.fieldSlots)
     return undefined
-  const context = createFieldContext(field.path)
+  const context = createFieldContext(field)
   return resolveReactiveValue(field.meta.fieldSlots, context)
 }
 
@@ -269,51 +289,51 @@ function hasNamedSlot(field: AutoFormField, name: keyof FormFieldSlots) {
         :ui="resolveFieldProp(field, 'ui')"
       >
         <template v-if="hasNamedSlot(field, 'label')" #label="{ label }">
-          <slot :name="`label:${field.path}`" v-bind="{ label: label || resolveFieldProp(field, 'label'), ...buildSlotProps(field) }">
-            <slot name="label" v-bind="{ label: label || resolveFieldProp(field, 'label'), ...buildSlotProps(field) }">
+          <slot :name="`label:${field.path}`" v-bind="{ label: label || resolveFieldProp(field, 'label'), ...createFieldContext(field) }">
+            <slot name="label" v-bind="{ label: label || resolveFieldProp(field, 'label'), ...createFieldContext(field) }">
               <VNodeRender
-                :node="renderFieldSlot(getResolvedFieldSlots(field)?.label, { label: label || resolveFieldProp(field, 'label'), ...buildSlotProps(field) })"
+                :node="renderFieldSlot(getResolvedFieldSlots(field)?.label, { label: label || resolveFieldProp(field, 'label'), ...createFieldContext(field) })"
               />
             </slot>
           </slot>
         </template>
         <template v-if="hasNamedSlot(field, 'hint')" #hint="{ hint }">
-          <slot :name="`hint:${field.path}`" v-bind="{ hint: hint || resolveFieldProp(field, 'hint'), ...buildSlotProps(field) }">
-            <slot name="hint" v-bind="{ hint: hint || resolveFieldProp(field, 'hint'), ...buildSlotProps(field) }">
-              <VNodeRender :node="renderFieldSlot(getResolvedFieldSlots(field)?.hint, { hint: hint || resolveFieldProp(field, 'hint'), ...buildSlotProps(field) })" />
+          <slot :name="`hint:${field.path}`" v-bind="{ hint: hint || resolveFieldProp(field, 'hint'), ...createFieldContext(field) }">
+            <slot name="hint" v-bind="{ hint: hint || resolveFieldProp(field, 'hint'), ...createFieldContext(field) }">
+              <VNodeRender :node="renderFieldSlot(getResolvedFieldSlots(field)?.hint, { hint: hint || resolveFieldProp(field, 'hint'), ...createFieldContext(field) })" />
             </slot>
           </slot>
         </template>
         <template v-if="hasNamedSlot(field, 'description')" #description="{ description }">
-          <slot :name="`description:${field.path}`" v-bind="{ description: description || resolveFieldProp(field, 'description'), ...buildSlotProps(field) }">
-            <slot name="description" v-bind="{ description: description || resolveFieldProp(field, 'description'), ...buildSlotProps(field) }">
+          <slot :name="`description:${field.path}`" v-bind="{ description: description || resolveFieldProp(field, 'description'), ...createFieldContext(field) }">
+            <slot name="description" v-bind="{ description: description || resolveFieldProp(field, 'description'), ...createFieldContext(field) }">
               <VNodeRender
-                :node="renderFieldSlot(getResolvedFieldSlots(field)?.description, { description: description || resolveFieldProp(field, 'description'), ...buildSlotProps(field) })"
+                :node="renderFieldSlot(getResolvedFieldSlots(field)?.description, { description: description || resolveFieldProp(field, 'description'), ...createFieldContext(field) })"
               />
             </slot>
           </slot>
         </template>
         <template v-if="hasNamedSlot(field, 'help')" #help="{ help }">
-          <slot :name="`help:${field.path}`" v-bind="{ help: help || resolveFieldProp(field, 'help'), ...buildSlotProps(field) }">
-            <slot name="help" v-bind="{ help: help || resolveFieldProp(field, 'help'), ...buildSlotProps(field) }">
-              <VNodeRender :node="renderFieldSlot(getResolvedFieldSlots(field)?.help, { help: help || resolveFieldProp(field, 'help'), ...buildSlotProps(field) })" />
+          <slot :name="`help:${field.path}`" v-bind="{ help: help || resolveFieldProp(field, 'help'), ...createFieldContext(field) }">
+            <slot name="help" v-bind="{ help: help || resolveFieldProp(field, 'help'), ...createFieldContext(field) }">
+              <VNodeRender :node="renderFieldSlot(getResolvedFieldSlots(field)?.help, { help: help || resolveFieldProp(field, 'help'), ...createFieldContext(field) })" />
             </slot>
           </slot>
         </template>
         <template v-if="hasNamedSlot(field, 'error')" #error="{ error }">
-          <slot :name="`error:${field.path}`" v-bind="{ error, ...buildSlotProps(field) }">
-            <slot name="error" v-bind="{ error, ...buildSlotProps(field) }">
+          <slot :name="`error:${field.path}`" v-bind="{ error, ...createFieldContext(field) }">
+            <slot name="error" v-bind="{ error, ...createFieldContext(field) }">
               <VNodeRender
-                :node="renderFieldSlot(getResolvedFieldSlots(field)?.error, { error, ...buildSlotProps(field) })"
+                :node="renderFieldSlot(getResolvedFieldSlots(field)?.error, { error, ...createFieldContext(field) })"
               />
             </slot>
           </slot>
         </template>
         <template #default="{ error }">
-          <slot :name="`default:${field.path}`" v-bind="{ error, ...buildSlotProps(field) }">
-            <slot name="default" v-bind="{ error, ...buildSlotProps(field) }">
+          <slot :name="`default:${field.path}`" v-bind="{ error, ...createFieldContext(field) }">
+            <slot name="default" v-bind="{ error, ...createFieldContext(field) }">
               <VNodeRender
-                :node="renderFieldSlot(getResolvedFieldSlots(field)?.default, { error, ...buildSlotProps(field) })"
+                :node="renderFieldSlot(getResolvedFieldSlots(field)?.default, { error, ...createFieldContext(field) })"
               />
               <template v-if="!field.meta?.fieldSlots || !getResolvedFieldSlots(field)?.default">
                 <VNodeRender :node="renderControl(field)" />

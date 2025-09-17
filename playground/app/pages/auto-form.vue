@@ -37,7 +37,10 @@ const state = ref({} as z.input<typeof schema>)
 const s = scope<State>()
 
 const schema = computed(() => s.looseObject({
-  test: afz.number(),
+  test: afz.number().optional(),
+  test2: afz.number().meta({
+    required: false,
+  }),
   visibleTest: afz.number({
     component: UInputNumber,
   }),
