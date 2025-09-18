@@ -1,80 +1,25 @@
-<script setup lang="ts" generic="S extends z.ZodObject, T extends boolean = true">
+<script setup lang="ts" generic="S extends z.ZodObject, T extends boolean = true, N extends boolean = false">
 import type { AnyObject } from '@movk/core'
-import type { FormData, FormError, FormErrorEvent, FormFieldSlots, FormInputEvents, FormSubmitEvent, InferInput } from '@nuxt/ui'
+import type { FormFieldSlots, InferInput } from '@nuxt/ui'
 import type { z } from 'zod/v4'
-import type { AutoFormFieldContext as _AutoFormFieldContext, AutoFormControls, AutoFormField, AutoFormSlots, ReactiveValue } from '../../types'
+import type { AutoFormFieldContext as _AutoFormFieldContext, AutoFormEmits, AutoFormField, AutoFormProps, AutoFormSlots, ReactiveValue } from '../../types/auto-form'
 import { computed, h, isRef, isVNode, markRaw, resolveDynamicComponent, unref, watch } from 'vue'
 import { DEFAULT_CONTROLS } from '../../constants/auto-form'
 import { deepClone, getPath, setPath } from '../../core'
 import { introspectSchema, resolveControlMeta, VNodeRender } from '../../utils/auto-form'
 
-export interface AutoFormProps<S extends z.ZodObject, T extends boolean = true> {
-  id?: string | number
-  /** Schema to validate the form state. Supports Standard Schema objects, Yup, Joi, and Superstructs. */
-  schema?: S
-  /**
-   * Custom validation function to validate the form state.
-   * @param state - The current state of the form.
-   * @returns A promise that resolves to an array of FormError objects, or an array of FormError objects directly.
-   */
-  validate?: (state: Partial<InferInput<S>>) => Promise<FormError[]> | FormError[]
-  /**
-   * The list of input events that trigger the form validation.
-   * @remarks The form always validates on submit.
-   * @defaultValue `['blur', 'change', 'input']`
-   */
-  validateOn?: FormInputEvents[]
-  /** Disable all inputs inside the form. */
-  disabled?: boolean
-  /**
-   * Delay in milliseconds before validating the form on input events.
-   * @defaultValue `300`
-   */
-  validateOnInputDelay?: number
-  /**
-   * If true, schema transformations will be applied to the state on submit.
-   * @defaultValue `true`
-   */
-  transform?: T
-
-  /**
-   * If true, this form will attach to its parent Form (if any) and validate at the same time.
-   * @defaultValue `true`
-   */
-  attach?: boolean
-
-  /**
-   * When `true`, all form elements will be disabled on `@submit` event.
-   * This will cause any focused input elements to lose their focus state.
-   * @defaultValue `true`
-   */
-  loadingAuto?: boolean
-  class?: any
-
-  // custom
-  onSubmit?: ((event: FormSubmitEvent<FormData<S, T>>) => void | Promise<void>) | (() => void | Promise<void>)
-  controls?: AutoFormControls
-  size?: 'md' | 'xs' | 'sm' | 'lg' | 'xl'
-}
-
-export interface AutoFormEmits<S extends z.ZodObject, T extends boolean = true> {
-  submit: [event: FormSubmitEvent<FormData<S, T>>]
-  error: [event: FormErrorEvent]
-}
-
-export type AutoFormComponentSlots<S extends z.ZodObject> = AutoFormSlots<S>
-
-type FormStateType = InferInput<S>
+type FormStateType = N extends false ? Partial<InferInput<S>> : never
 type AutoFormFieldContext = _AutoFormFieldContext<FormStateType>
 
-const { schema, controls, size, ...restProps } = defineProps<AutoFormProps<S, T>>()
-const emit = defineEmits<AutoFormEmits<S, T>>()
-const _slots = defineSlots<AutoFormComponentSlots<S>>()
+const { schema, controls, size, ...restProps } = defineProps<AutoFormProps<S, T, N>>()
 
-const state = defineModel<FormStateType>({ default: () => ({} as FormStateType) })
+const emit = defineEmits<AutoFormEmits<S, T>>()
+const _slots = defineSlots<AutoFormSlots<FormStateType, AutoFormFieldContext>>()
+
+const state = defineModel<FormStateType>({ default: () => ({}) })
 
 // 简化 fields 计算属性 - 仅处理静态结构
-const fields = computed((): AutoFormField[] => {
+const fields = computed(() => {
   if (!schema)
     return []
 
@@ -218,7 +163,7 @@ function renderFieldSlot(fn?: (props?: any) => any, slotProps?: any) {
 }
 
 // 响应式值解析函数 - 直接解析，不缓存
-function resolveReactiveValue(value: ReactiveValue<any, AutoFormFieldContext>, context: AutoFormFieldContext): any {
+function resolveReactiveValue(value: ReactiveValue<any>, context: AutoFormFieldContext): any {
   if (typeof value === 'function') {
     return (value as (ctx: AutoFormFieldContext) => any)(context)
   }

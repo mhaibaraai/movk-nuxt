@@ -1,3 +1,4 @@
+import type { ReactiveValue } from '#movk/types'
 import type { FormFieldSlots } from '@nuxt/ui'
 
 declare module 'zod/v4' {
@@ -12,11 +13,11 @@ declare module 'zod/v4' {
     name?: string
     /** A regular expression to match form error names. */
     errorPattern?: RegExp
-    label?: string
-    description?: string
-    help?: string
-    error?: boolean | string
-    hint?: string
+    label?: ReactiveValue<string>
+    description?: ReactiveValue<string>
+    help?: ReactiveValue<string>
+    error?: ReactiveValue<boolean | string>
+    hint?: ReactiveValue<string>
     /**
      * @defaultValue 'md'
      */
@@ -24,7 +25,7 @@ declare module 'zod/v4' {
     /**
      * @defaultValue true
      */
-    required?: boolean
+    required?: ReactiveValue<boolean>
     /** If true, validation on input will be active immediately instead of waiting for a blur event. */
     eagerValidation?: boolean
     /**
@@ -32,7 +33,7 @@ declare module 'zod/v4' {
      * @defaultValue `300`
      */
     validateOnInputDelay?: number
-    class?: any
+    class?: ReactiveValue<any>
     ui?: { root?: string, wrapper?: string, labelWrapper?: string, label?: string, container?: string, description?: string, error?: string, hint?: string, help?: string }
     /**
      * @see https://ui4.nuxt.com/docs/components/form-field#slots
