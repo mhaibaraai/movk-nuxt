@@ -1,14 +1,12 @@
 <script setup lang="ts" generic="S extends z.ZodObject, T extends boolean = true, N extends boolean = false">
-import type { AnyObject } from '@movk/core'
 import type { FormData, FormError, FormErrorEvent, FormInputEvents, FormSubmitEvent, InferInput } from '@nuxt/ui'
 import type { z } from 'zod/v4'
-import type { ReactiveValue } from '../../core'
 import type { AutoFormControls, AutoFormField, AutoFormFieldContext, DynamicFormSlots } from '../../types/auto-form'
-import { isFunction } from '@movk/core'
-import { computed, h, isRef, isVNode, markRaw, resolveDynamicComponent, unref, watch } from 'vue'
+import defu from 'defu'
+import { computed, h, isVNode, resolveDynamicComponent, unref, watch } from 'vue'
 import { DEFAULT_CONTROLS } from '../../constants/auto-form'
 import { deepClone, getPath, setPath } from '../../core'
-import { introspectSchema, resolveControlMeta, VNodeRender } from '../../utils/auto-form'
+import { enhanceEventProps, introspectSchema, resolveReactiveValue, VNodeRender } from '../../utils/auto-form'
 
 export interface AutoFormProps<S extends z.ZodObject, T extends boolean = true, N extends boolean = false> {
   id?: string | number
@@ -94,17 +92,7 @@ const fields = computed(() => {
     ...DEFAULT_CONTROLS,
     ...controls,
   }
-  const entries = introspectSchema(resolvedSchema)
-
-  entries.forEach((entry) => {
-    const controlMeta = resolveControlMeta(entry, mapping)
-    // 确保控件组件使用 markRaw
-    if (controlMeta?.component && typeof controlMeta.component !== 'string') {
-      controlMeta.component = markRaw(controlMeta.component)
-    }
-    entry.controlMeta = controlMeta
-  })
-  console.log(entries)
+  const entries = introspectSchema(resolvedSchema, mapping)
   return entries
 })
 
@@ -131,14 +119,7 @@ watch(() => unref(schema), () => {
 }, { deep: false })
 
 // 可见字段计算 - 统一可见性逻辑
-const visibleFields = computed(() => {
-  return fields.value.filter((field) => {
-    const context = createFieldContext(field)
-
-    const controlIf = field.controlMeta?.if ? resolveReactiveValue(field.controlMeta.if, context) : true
-    return controlIf !== false
-  })
-})
+const visibleFields = computed(() => fields.value.filter((field: AutoFormField) => resolveFieldProp(field, 'if', field.meta.mapped?.if) !== false))
 
 // 优化默认值初始化 - 减少副作用
 watch(
@@ -169,24 +150,9 @@ function resolveFieldProp<T = any>(field: AutoFormField, prop: string, defaultVa
   return resolved
 }
 
-// 增强事件属性函数 - 为Vue组件的事件处理函数注入表单字段上下文
-function enhanceEventProps(originalProps: AnyObject, ctx: AutoFormFieldContext) {
-  const next: Record<string, any> = {}
-  for (const key of Object.keys(originalProps || {})) {
-    const val = (originalProps as any)[key]
-    if (/^on[A-Z].+/.test(key) && typeof val === 'function') {
-      next[key] = (...args: any[]) => (val as any)(...args, ctx)
-    }
-    else {
-      next[key] = val
-    }
-  }
-  return next
-}
-
 // 简化后的渲染控件 - 无缓存
 function renderControl(field: AutoFormField) {
-  const controlMeta = field?.controlMeta
+  const controlMeta = field?.meta
   const comp = controlMeta?.component as any
   if (!comp) {
     return h('div', { class: 'text-red-500' }, `[AutoForm] 控件未映射: ${field?.path ?? ''}`)
@@ -197,9 +163,8 @@ function renderControl(field: AutoFormField) {
   const component = typeof comp === 'string' ? resolveDynamicComponent(comp) : comp
   const context = createFieldContext(field)
 
-  // 直接解析，不缓存
-  const props = controlMeta?.props ? resolveReactiveObject(controlMeta.props, context) : {}
-  const slots = controlMeta?.slots ? resolveReactiveObject(controlMeta.slots, context) : {}
+  const props = defu(controlMeta.controlProps ? resolveReactiveValue(controlMeta.controlProps, context) : {}, controlMeta?.mapped?.controlProps)
+  const slots = defu(controlMeta.controlSlots ? resolveReactiveValue(controlMeta.controlSlots, context) : {}, controlMeta?.mapped?.controlSlots)
 
   const userOnUpdate = props['onUpdate:modelValue']
   const rest = { ...props }
@@ -227,42 +192,6 @@ function renderFieldSlot(fn?: (props?: any) => any, slotProps?: any) {
   return fn ? (fn as any)(slotProps) : null
 }
 
-// 响应式值解析函数 - 直接解析，不缓存
-function resolveReactiveValue(value: ReactiveValue<any, any>, context: AutoFormFieldContext): any {
-  if (isFunction(value)) {
-    console.log('resolveReactiveValue', value, context)
-    return (value as (ctx: AutoFormFieldContext) => any)(context)
-  }
-  return unref(value)
-}
-
-function resolveReactiveObject<T extends Record<string, any>>(
-  obj: T,
-  context: AutoFormFieldContext,
-): T {
-  // 处理数组
-  if (Array.isArray(obj)) {
-    return obj.map((item) => {
-      if (typeof item === 'object' && item !== null && !isRef(item) && !isVNode(item)) {
-        return resolveReactiveObject(item, context)
-      }
-      return resolveReactiveValue(item, context)
-    }) as unknown as T
-  }
-
-  // 处理对象
-  const result = {} as T
-  for (const [key, value] of Object.entries(obj)) {
-    if (typeof value === 'object' && value !== null && !isRef(value) && !isVNode(value)) {
-      (result as any)[key] = resolveReactiveObject(value, context)
-    }
-    else {
-      (result as any)[key] = resolveReactiveValue(value, context)
-    }
-  }
-  return result
-}
-
 // 辅助函数：获取解析后的 fieldSlots
 function getResolvedFieldSlots(field: AutoFormField) {
   if (!field.meta?.fieldSlots)
@@ -287,10 +216,11 @@ function hasNamedSlot(field: AutoFormField, name: keyof AutoFormSlots<AutoFormSt
     @submit="emit('submit', $event)"
     @error="emit('error', $event)"
   >
+    {{ console.log(visibleFields) }}
     <slot name="before-fields" :fields="visibleFields" :state="state" />
     <template v-for="field in visibleFields" :key="field.path">
       <UFormField
-        v-show="!resolveFieldProp(field, 'hidden')"
+        v-show="!resolveFieldProp(field, 'hidden', field.meta?.mapped?.hidden)"
         :name="field.path"
         :as="resolveFieldProp(field, 'as')"
         :error-pattern="resolveFieldProp(field, 'errorPattern')"

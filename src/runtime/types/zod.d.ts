@@ -40,7 +40,7 @@ declare module 'zod/v4' {
     /**
      * @see https://ui4.nuxt.com/docs/components/form-field#slots
      */
-    fieldSlots?: ReactiveValue<Partial<FormFieldSlots>>
+    slots?: ReactiveValue<Partial<FormFieldSlots>>
   }
 }
 

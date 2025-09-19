@@ -65,7 +65,7 @@ export function createThemeManager<T extends ThemeConfig[]>(options: ThemeManage
   const syncDelayMs = Math.max(0, syncDebounce ?? 16)
 
   const appConfig = useAppConfig()
-  const flatSchema = buildFlatSchema(configItems as unknown as ThemeConfig[])
+  const flatSchema = buildFlatSchema(configItems)
 
   const extractFromAppConfig = (): AnyObject => {
     const config: AnyObject = {}
@@ -217,7 +217,7 @@ export function createThemeManager<T extends ThemeConfig[]>(options: ThemeManage
  * // }).partial()
  * ```
  */
-function buildFlatSchema(configItems: ThemeConfig[]) {
+function buildFlatSchema<T extends ThemeConfig[]>(configItems: T): z.ZodType<ThemeConfigFromItems<T>> {
   const schemaFields = configItems.reduce(
     (acc, item) => {
       acc[item.name] = item.schema
@@ -226,7 +226,7 @@ function buildFlatSchema(configItems: ThemeConfig[]) {
     {} as Record<string, z.ZodType>,
   )
 
-  return z.object(schemaFields).partial().strict()
+  return z.object(schemaFields).partial().strict() as unknown as z.ZodType<ThemeConfigFromItems<T>>
 }
 
 function handleConfigError(operation: string, error: unknown, fallback?: any): any {

@@ -41,16 +41,17 @@ const schema = computed(() => afz.looseObject<State>({
   }).meta({
     size: 'sm',
   }),
-  // visibleTest: afz.boolean(),
-  // dynamicLabel: afz.string({
-  //   if: !!formState.value.nameValue,
-  //   // hidden: ({ state }) => !state.visibleTest,
-  //   props: ({ state }) => ({
-  //     color: state.nameValue ? 'success' : 'error',
-  //   }),
-  // }).meta({
-  //   label: ({ state }) => `动态字段: ${state.nameValue}`,
-  // }).optional(),
+  visibleTest: afz.boolean(),
+  dynamicLabel: afz.string({
+    if: !!formState.value.visibleTest,
+    // hidden: ({ state }) => !state.visibleTest,
+    controlProps: ({ state }) => ({
+      icon: 'i-lucide-alarm-clock',
+      color: state.nameValue ? 'success' : 'error',
+    }),
+  }).meta({
+    label: ({ state }) => `动态字段: ${state.nameValue}`,
+  }).optional(),
   // nestedObject: afz.object<State['nestedObject']>({
   //   firstName: afz.string({
   //     props: ({ state }: AutoFormFieldContext<State['nestedObject']>) => ({

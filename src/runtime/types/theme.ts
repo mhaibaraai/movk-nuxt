@@ -9,7 +9,7 @@ export interface ThemeConfig {
 }
 
 export type ThemeConfigFromItems<T extends readonly ThemeConfig[]> = {
-  [Item in T[number]as Item['name']]: z.infer<Item['schema']>;
+  [Item in T[number]as Item['name']]: z.infer<Item['schema']>
 }
 
 export interface ThemeManagerOptions<T extends ThemeConfig[] = ThemeConfig[]>

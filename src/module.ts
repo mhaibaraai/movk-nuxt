@@ -78,6 +78,7 @@ export default defineNuxtModule<ModuleOptions>({
     nuxt.options.css.push(resolve('runtime/assets/css/main.css'))
 
     if (options.i18n) {
+      // @ts-expect-error i18n:registerModule is not a valid hook key
       nuxt.hook('i18n:registerModule', (register) => {
         register({
           langDir: resolve('./runtime/i18n/locales'),

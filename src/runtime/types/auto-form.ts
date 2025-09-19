@@ -1,4 +1,4 @@
-import type { OmitByKey, RequiredByKeys } from '@movk/core'
+import type { OmitByKey } from '@movk/core'
 import type { GlobalMeta, z } from 'zod/v4'
 import type { ComponentProps, ComponentSlots, IsComponent, ReactiveValue, Suggest } from '../core'
 
@@ -33,12 +33,18 @@ export interface AutoFormControlsMeta<C extends IsComponent = IsComponent> {
   /** 控件条件 */
   if?: ReactiveValue<boolean, AutoFormFieldContext>
   /** 控件属性 */
-  props?: ReactiveValue<ComponentProps<C>, AutoFormFieldContext>
+  controlProps?: ReactiveValue<ComponentProps<C>, AutoFormFieldContext>
   /** 控件插槽（调用侧可部分覆盖） */
-  slots?: ReactiveValue<Partial<ComponentSlots<C>>, AutoFormFieldContext>
+  controlSlots?: ReactiveValue<Partial<ComponentSlots<C>>, AutoFormFieldContext>
 }
 
-export type AutoFormControl<C extends IsComponent = IsComponent> = RequiredByKeys<OmitByKey<AutoFormControlsMeta<C>, 'type'>, 'component'>
+export interface AutoFormControl<C extends IsComponent = IsComponent> {
+  component: C
+  hidden?: boolean
+  if?: boolean
+  controlProps?: ComponentProps<C>
+  controlSlots?: Partial<ComponentSlots<C>>
+}
 
 export interface AutoFormControls {
   [key: string]: AutoFormControl
@@ -48,8 +54,7 @@ export interface AutoFormField {
   path: string
   schema: z.ZodType
   originalSchema: z.ZodType
-  meta: GlobalMeta & AutoFormControlsMeta
-  controlMeta: AutoFormControlsMeta
+  meta: GlobalMeta & AutoFormControlsMeta & { mapped?: AutoFormControl }
   decorators: {
     isOptional: boolean
     defaultValue?: any
