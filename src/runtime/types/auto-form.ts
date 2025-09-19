@@ -4,10 +4,8 @@ import type { ComponentProps, ComponentSlots, IsComponent, ReactiveValue, Sugges
 
 type DynamicFieldSlotKeys = 'default' | 'label' | 'description' | 'hint' | 'help' | 'error'
 
-export type DynamicFormSlots<T>
-  = Record<string, (props: AutoFormFieldContext<T>) => any>
-    & Record<`${DynamicFieldSlotKeys}`, (props: AutoFormFieldContext<T>) => any>
-    & Record<`${DynamicFieldSlotKeys}:${keyof T extends string ? keyof T : never}`, (props: AutoFormFieldContext<T>) => any>
+export type DynamicFormSlots<T> = Record<`${DynamicFieldSlotKeys}`, (props: AutoFormFieldContext<T>) => any>
+  & Record<`${DynamicFieldSlotKeys}:${keyof T extends string ? keyof T : never}`, (props: AutoFormFieldContext<T>) => any>
 
 export interface AutoFormFieldContext<S = any> {
   /** 表单数据 - 使用 getter 确保获取最新值 */

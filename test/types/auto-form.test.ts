@@ -39,7 +39,7 @@ describe('auto-form typing', () => {
       error: 'error',
     })
 
-    const _schema = afz.object<MockState>({
+    const _schema = afz.object<MockState>()({
       name: afz.string({
         controlProps({ state }: AutoFormFieldContext<MockState>) {
           return {
@@ -47,8 +47,14 @@ describe('auto-form typing', () => {
           }
         },
       }).meta({
+      }).default('default name').optional(),
+      age: afz.number({
+        type: 'mockNumberTest',
+        controlProps: {
+
+        },
       }),
-      address: afz.object({
+      address: afz.object()({
         city: afz.string(),
         province: afz.string({
           component: MockString,
@@ -57,14 +63,12 @@ describe('auto-form typing', () => {
           },
         }),
       }),
-      age: afz.number({
-        type: 'mockNumberTest',
-        controlProps: {
-
-        },
-      }),
     })
 
-    const _state = ref<z.input<typeof _schema>>()
+    type State = z.output<typeof _schema>
+
+    const _state = ref({
+
+    } as State)
   })
 })

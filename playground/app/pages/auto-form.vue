@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import type { AutoFormControls, AutoFormFieldContext } from '#movk/types'
-import type { InferInput } from '@nuxt/ui'
+import type { z } from 'zod/v4'
 import { UInputNumber } from '#components'
 
 interface State {
@@ -33,24 +33,21 @@ const customControls = {
 
 const { afz } = createAutoFormZ(customControls)
 
-const formState = ref({})
-
-const schema = computed(() => afz.looseObject<State>({
+const schema = afz.looseObject<State>()({
   nameValue: afz.string({
     if: true,
   }).meta({
     size: 'sm',
-  }),
+  }).optional(),
   visibleTest: afz.boolean(),
   dynamicLabel: afz.string({
-    if: !!formState.value.visibleTest,
     // hidden: ({ state }) => !state.visibleTest,
     controlProps: ({ state }) => ({
       icon: 'i-lucide-alarm-clock',
       color: state.nameValue ? 'success' : 'error',
     }),
   }).meta({
-    label: ({ state }) => `动态字段: ${state.nameValue}`,
+    label: ({ state }: AutoFormFieldContext<State>) => `动态字段: ${state.nameValue}`,
   }).optional(),
   // nestedObject: afz.object<State['nestedObject']>({
   //   firstName: afz.string({
@@ -62,26 +59,31 @@ const schema = computed(() => afz.looseObject<State>({
   //     label: ({ state }) => `动态字段: ${state.firstName}`,
   //   }),
   // }),
-}))
+})
+
+const formState = ref({
+
+} as z.output<typeof schema>)
 </script>
 
 <template>
   <div class="space-y-4">
     <UCard>
       <template #header>
-        <h3 class="text-lg font-semibold">
-          函数式 API
-        </h3>
+        {{ formState }}
       </template>
-      <MAutoForm v-model="formState" :schema="schema" class="space-y-4" :controls="customControls" />
-    </UCard>
-    <UCard>
-      <template #header>
-        <h2 class="text-lg font-semibold">
-          当前State值
-        </h2>
-      </template>
-      <pre class="text-sm">{{ JSON.stringify(formState, null, 2) }}</pre>
+      <MAutoForm v-model="formState" :schema="schema" class="space-y-4" :controls="customControls">
+        <template #hint>
+          <div>
+            <h3 class="text-lg font-semibold">
+              函数式 API
+            </h3>
+          </div>
+        </template>
+        <template #hint:nameValue>
+          nameValue hint
+        </template>
+      </MAutoForm>
     </UCard>
   </div>
 </template>

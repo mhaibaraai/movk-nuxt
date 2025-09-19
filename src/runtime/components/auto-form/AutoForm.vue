@@ -70,10 +70,10 @@ export interface AutoFormEmits<S extends z.ZodObject, T extends boolean = true> 
   error: [event: FormErrorEvent]
 }
 
-export type AutoFormSlots<T extends object> = DynamicFormSlots<T> & {
+export type AutoFormSlots<T extends object> = {
   'before-fields': (props: { fields: AutoFormField[], state: T }) => any
   'after-fields': (props: { fields: AutoFormField[], state: T }) => any
-}
+} & DynamicFormSlots<T>
 
 type AutoFormStateType = N extends false ? Partial<InferInput<S>> : never
 const { schema, controls, size, ...restProps } = defineProps<AutoFormProps<S, T, N>>()

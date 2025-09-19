@@ -21,9 +21,17 @@ interface TypedZodFactory<TC extends AutoFormControls> {
   boolean: AutoFormFactoryMethod<WithDefaultControls<TC>, 'boolean', z.ZodBoolean>
   date: AutoFormFactoryMethod<WithDefaultControls<TC>, 'date', z.ZodDate>
 
-  object: <T extends object, S extends Record<string, z.ZodType> = Record<string, z.ZodType>>(shape: S & Partial<Record<KeysOf<T>, unknown>>) => z.ZodObject<S, z.core.$strip>
-  looseObject: <T extends object, S extends Record<string, z.ZodType> = Record<string, z.ZodType>>(shape: S & Partial<Record<KeysOf<T>, unknown>>) => z.ZodObject<S, z.core.$loose>
-  strictObject: <T extends object, S extends Record<string, z.ZodType> = Record<string, z.ZodType>>(shape: S & Partial<Record<KeysOf<T>, unknown>>) => z.ZodObject<S, z.core.$strict>
+  object: <T extends object = any>() => <S extends Record<string, z.ZodType>>(
+    shape: S & Partial<Record<KeysOf<T>, any>>
+  ) => z.ZodObject<S, z.core.$strip>
+
+  looseObject: <T extends object = any>() => <S extends Record<string, z.ZodType>>(
+    shape: S & Partial<Record<KeysOf<T>, any>>
+  ) => z.ZodObject<S, z.core.$loose>
+
+  strictObject: <T extends object = any>() => <S extends Record<string, z.ZodType>>(
+    shape: S & Partial<Record<KeysOf<T>, any>>
+  ) => z.ZodObject<S, z.core.$strict>
 }
 
 export function createAutoFormZ<TControls extends AutoFormControls = typeof DEFAULT_CONTROLS>(_controls?: TControls) {
@@ -33,10 +41,17 @@ export function createAutoFormZ<TControls extends AutoFormControls = typeof DEFA
     boolean: (controlMeta?: any) => applyMeta(z.boolean(), controlMeta),
     date: (controlMeta?: any) => applyMeta(z.date(), controlMeta),
 
-    object: <T extends object, S extends Record<string, z.ZodType>>(shape: S & Partial<Record<KeysOf<T>, unknown>>) => z.object(shape),
-    looseObject: <T extends object, S extends Record<string, z.ZodType>>(shape: S & Partial<Record<KeysOf<T>, unknown>>) => z.looseObject(shape),
-    strictObject: <T extends object, S extends Record<string, z.ZodType>>(shape: S & Partial<Record<KeysOf<T>, unknown>>) => z.strictObject(shape),
+    object: <T extends object = any>() => <S extends Record<string, z.ZodType>>(
+      shape: S & Partial<Record<KeysOf<T>, any>>,
+    ) => z.object(shape),
 
+    looseObject: <T extends object = any>() => <S extends Record<string, z.ZodType>>(
+      shape: S & Partial<Record<KeysOf<T>, any>>,
+    ) => z.looseObject(shape),
+
+    strictObject: <T extends object = any>() => <S extends Record<string, z.ZodType>>(
+      shape: S & Partial<Record<KeysOf<T>, any>>,
+    ) => z.strictObject(shape),
   } as unknown as TypedZodFactory<TControls>
 
   return {
