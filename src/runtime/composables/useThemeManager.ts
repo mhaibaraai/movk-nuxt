@@ -217,7 +217,7 @@ export function createThemeManager<T extends ThemeConfig[]>(options: ThemeManage
  * // }).partial()
  * ```
  */
-function buildFlatSchema(configItems: ThemeConfig[]): z.ZodType<any> {
+function buildFlatSchema(configItems: ThemeConfig[]) {
   const schemaFields = configItems.reduce(
     (acc, item) => {
       acc[item.name] = item.schema

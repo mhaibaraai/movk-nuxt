@@ -1,6 +1,8 @@
-import type { ReactiveValue } from '#movk/types'
+import type { AutoFormFieldContext } from '#movk/types/auto-form'
 import type { FormFieldSlots } from '@nuxt/ui'
+import type { ComputedRef, Ref } from 'vue'
 
+type ReactiveValue<T, CTX = AutoFormFieldContext> = T | ((ctx: CTX) => T) | Ref<T> | ComputedRef<T>
 declare module 'zod/v4' {
   interface GlobalMeta extends GlobalAutoFormMeta { }
   interface GlobalAutoFormMeta {
@@ -8,11 +10,11 @@ declare module 'zod/v4' {
      * The element or component this component should render as.
      * @defaultValue 'div'
      */
-    as?: any
+    as?: ReactiveValue<any>
     /** The name of the FormField. Also used to match form errors. */
     name?: string
     /** A regular expression to match form error names. */
-    errorPattern?: RegExp
+    errorPattern?: ReactiveValue<RegExp>
     label?: ReactiveValue<string>
     description?: ReactiveValue<string>
     help?: ReactiveValue<string>
@@ -21,24 +23,24 @@ declare module 'zod/v4' {
     /**
      * @defaultValue 'md'
      */
-    size?: 'md' | 'xs' | 'sm' | 'lg' | 'xl'
+    size?: ReactiveValue<'md' | 'xs' | 'sm' | 'lg' | 'xl'>
     /**
      * @defaultValue true
      */
     required?: ReactiveValue<boolean>
     /** If true, validation on input will be active immediately instead of waiting for a blur event. */
-    eagerValidation?: boolean
+    eagerValidation?: ReactiveValue<boolean>
     /**
      * Delay in milliseconds before validating the form on input events.
      * @defaultValue `300`
      */
-    validateOnInputDelay?: number
+    validateOnInputDelay?: ReactiveValue<number>
     class?: ReactiveValue<any>
-    ui?: { root?: string, wrapper?: string, labelWrapper?: string, label?: string, container?: string, description?: string, error?: string, hint?: string, help?: string }
+    ui?: ReactiveValue<{ root?: string, wrapper?: string, labelWrapper?: string, label?: string, container?: string, description?: string, error?: string, hint?: string, help?: string }>
     /**
      * @see https://ui4.nuxt.com/docs/components/form-field#slots
      */
-    fieldSlots?: Partial<FormFieldSlots>
+    fieldSlots?: ReactiveValue<Partial<FormFieldSlots>>
   }
 }
 

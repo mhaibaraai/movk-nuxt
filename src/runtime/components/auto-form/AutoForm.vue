@@ -1,22 +1,88 @@
 <script setup lang="ts" generic="S extends z.ZodObject, T extends boolean = true, N extends boolean = false">
 import type { AnyObject } from '@movk/core'
-import type { FormFieldSlots, InferInput } from '@nuxt/ui'
+import type { FormData, FormError, FormErrorEvent, FormInputEvents, FormSubmitEvent, InferInput } from '@nuxt/ui'
 import type { z } from 'zod/v4'
-import type { AutoFormFieldContext as _AutoFormFieldContext, AutoFormEmits, AutoFormField, AutoFormProps, AutoFormSlots, ReactiveValue } from '../../types/auto-form'
+import type { ReactiveValue } from '../../core'
+import type { AutoFormControls, AutoFormField, AutoFormFieldContext, DynamicFormSlots } from '../../types/auto-form'
+import { isFunction } from '@movk/core'
 import { computed, h, isRef, isVNode, markRaw, resolveDynamicComponent, unref, watch } from 'vue'
 import { DEFAULT_CONTROLS } from '../../constants/auto-form'
 import { deepClone, getPath, setPath } from '../../core'
 import { introspectSchema, resolveControlMeta, VNodeRender } from '../../utils/auto-form'
 
-type FormStateType = N extends false ? Partial<InferInput<S>> : never
-type AutoFormFieldContext = _AutoFormFieldContext<FormStateType>
+export interface AutoFormProps<S extends z.ZodObject, T extends boolean = true, N extends boolean = false> {
+  id?: string | number
+  /** Schema to validate the form state. Supports Standard Schema objects, Yup, Joi, and Superstructs. */
+  schema?: S
+  /**
+   * Custom validation function to validate the form state.
+   * @param state - The current state of the form.
+   * @returns A promise that resolves to an array of FormError objects, or an array of FormError objects directly.
+   */
+  validate?: (state: Partial<InferInput<S>>) => Promise<FormError[]> | FormError[]
 
+  /**
+   * The list of input events that trigger the form validation.
+   * @remarks The form always validates on submit.
+   * @defaultValue `['blur', 'change', 'input']`
+   */
+  validateOn?: FormInputEvents[]
+
+  /** Disable all inputs inside the form. */
+  disabled?: boolean
+
+  /**
+   * Path of the form's state within it's parent form.
+   * Used for nesting forms. Only available if `nested` is true.
+   */
+  name?: N extends true ? string : never
+
+  /**
+   * Delay in milliseconds before validating the form on input events.
+   * @defaultValue `300`
+   */
+  validateOnInputDelay?: number
+  /**
+   * If true, applies schema transformations on submit.
+   * @defaultValue `true`
+   */
+  transform?: T
+
+  /**
+   * If true, this form will attach to its parent Form and validate at the same time.
+   * @defaultValue `false`
+   */
+  nested?: N
+
+  /**
+   * When `true`, all form elements will be disabled on `@submit` event.
+   * This will cause any focused input elements to lose their focus state.
+   * @defaultValue `true`
+   */
+  loadingAuto?: boolean
+  class?: any
+  onSubmit?: ((event: FormSubmitEvent<FormData<S, T>>) => void | Promise<void>) | (() => void | Promise<void>)
+
+  controls?: AutoFormControls
+  size?: 'md' | 'xs' | 'sm' | 'lg' | 'xl'
+}
+
+export interface AutoFormEmits<S extends z.ZodObject, T extends boolean = true> {
+  submit: [event: FormSubmitEvent<FormData<S, T>>]
+  error: [event: FormErrorEvent]
+}
+
+export type AutoFormSlots<T extends object> = DynamicFormSlots<T> & {
+  'before-fields': (props: { fields: AutoFormField[], state: T }) => any
+  'after-fields': (props: { fields: AutoFormField[], state: T }) => any
+}
+
+type AutoFormStateType = N extends false ? Partial<InferInput<S>> : never
 const { schema, controls, size, ...restProps } = defineProps<AutoFormProps<S, T, N>>()
-
 const emit = defineEmits<AutoFormEmits<S, T>>()
-const _slots = defineSlots<AutoFormSlots<FormStateType, AutoFormFieldContext>>()
+const _slots = defineSlots<AutoFormSlots<AutoFormStateType>>()
 
-const state = defineModel<FormStateType>({ default: () => ({}) })
+const state = defineModel<AutoFormStateType>({ default: () => ({}) })
 
 // 简化 fields 计算属性 - 仅处理静态结构
 const fields = computed(() => {
@@ -50,11 +116,10 @@ function createFieldContext(field: AutoFormField): AutoFormFieldContext {
   const path = field.path
   if (!fieldContextCache.has(path)) {
     fieldContextCache.set(path, {
-      get state() { return state.value as FormStateType },
+      get state() { return state.value as AutoFormStateType },
       path,
-      field,
-      get value() { return getPath(state.value, path) as FormStateType[keyof FormStateType] },
-      setValue: (v: FormStateType[keyof FormStateType]) => setPath(state.value, path, v),
+      get value() { return getPath(state.value, path) as AutoFormStateType[keyof AutoFormStateType] },
+      setValue: (v: AutoFormStateType[keyof AutoFormStateType]) => setPath(state.value, path, v),
     })
   }
   return fieldContextCache.get(path)!
@@ -147,7 +212,7 @@ function renderControl(field: AutoFormField) {
     component as any,
     {
       ...wrapped,
-      'onUpdate:modelValue': (v: FormStateType[keyof FormStateType]) => {
+      'onUpdate:modelValue': (v: AutoFormStateType[keyof AutoFormStateType]) => {
         context.setValue(v)
         if (typeof userOnUpdate === 'function')
           userOnUpdate(v, slotProps)
@@ -163,8 +228,9 @@ function renderFieldSlot(fn?: (props?: any) => any, slotProps?: any) {
 }
 
 // 响应式值解析函数 - 直接解析，不缓存
-function resolveReactiveValue(value: ReactiveValue<any>, context: AutoFormFieldContext): any {
-  if (typeof value === 'function') {
+function resolveReactiveValue(value: ReactiveValue<any, any>, context: AutoFormFieldContext): any {
+  if (isFunction(value)) {
+    console.log('resolveReactiveValue', value, context)
     return (value as (ctx: AutoFormFieldContext) => any)(context)
   }
   return unref(value)
@@ -205,7 +271,7 @@ function getResolvedFieldSlots(field: AutoFormField) {
   return resolveReactiveValue(field.meta.fieldSlots, context)
 }
 
-function hasNamedSlot(field: AutoFormField, name: keyof FormFieldSlots) {
+function hasNamedSlot(field: AutoFormField, name: keyof AutoFormSlots<AutoFormStateType>) {
   const keySpecific = `${name}:${field.path}`
   const s = _slots as any
   const fieldSlots = getResolvedFieldSlots(field)
@@ -214,28 +280,40 @@ function hasNamedSlot(field: AutoFormField, name: keyof FormFieldSlots) {
 </script>
 
 <template>
-  <UForm :state="state" :schema="unref(schema)" v-bind="restProps" @submit="emit('submit', $event)" @error="emit('error', $event)">
+  <UForm
+    :state="state"
+    :schema="unref(schema)"
+    v-bind="restProps"
+    @submit="emit('submit', $event)"
+    @error="emit('error', $event)"
+  >
     <slot name="before-fields" :fields="visibleFields" :state="state" />
     <template v-for="field in visibleFields" :key="field.path">
       <UFormField
         v-show="!resolveFieldProp(field, 'hidden')"
-        :as="resolveFieldProp(field, 'as')"
         :name="field.path"
-        :error-pattern="field.meta?.errorPattern"
+        :as="resolveFieldProp(field, 'as')"
+        :error-pattern="resolveFieldProp(field, 'errorPattern')"
         :label="resolveFieldProp(field, 'label')"
         :description="resolveFieldProp(field, 'description')"
         :help="resolveFieldProp(field, 'help')"
         :hint="resolveFieldProp(field, 'hint')"
         :size="resolveFieldProp(field, 'size', size)"
         :required="resolveFieldProp(field, 'required')"
-        :eager-validation="field.meta?.eagerValidation"
-        :validate-on-input-delay="field.meta?.validateOnInputDelay"
+        :eager-validation="resolveFieldProp(field, 'eagerValidation')"
+        :validate-on-input-delay="resolveFieldProp(field, 'validateOnInputDelay')"
         :class="resolveFieldProp(field, 'class')"
         :ui="resolveFieldProp(field, 'ui')"
       >
         <template v-if="hasNamedSlot(field, 'label')" #label="{ label }">
-          <slot :name="`label:${field.path}`" v-bind="{ label: label || resolveFieldProp(field, 'label'), ...createFieldContext(field) }">
-            <slot name="label" v-bind="{ label: label || resolveFieldProp(field, 'label'), ...createFieldContext(field) }">
+          <slot
+            :name="`label:${field.path}`"
+            v-bind="{ label: label || resolveFieldProp(field, 'label'), ...createFieldContext(field) }"
+          >
+            <slot
+              name="label"
+              v-bind="{ label: label || resolveFieldProp(field, 'label'), ...createFieldContext(field) }"
+            >
               <VNodeRender
                 :node="renderFieldSlot(getResolvedFieldSlots(field)?.label, { label: label || resolveFieldProp(field, 'label'), ...createFieldContext(field) })"
               />
@@ -243,15 +321,26 @@ function hasNamedSlot(field: AutoFormField, name: keyof FormFieldSlots) {
           </slot>
         </template>
         <template v-if="hasNamedSlot(field, 'hint')" #hint="{ hint }">
-          <slot :name="`hint:${field.path}`" v-bind="{ hint: hint || resolveFieldProp(field, 'hint'), ...createFieldContext(field) }">
+          <slot
+            :name="`hint:${field.path}`"
+            v-bind="{ hint: hint || resolveFieldProp(field, 'hint'), ...createFieldContext(field) }"
+          >
             <slot name="hint" v-bind="{ hint: hint || resolveFieldProp(field, 'hint'), ...createFieldContext(field) }">
-              <VNodeRender :node="renderFieldSlot(getResolvedFieldSlots(field)?.hint, { hint: hint || resolveFieldProp(field, 'hint'), ...createFieldContext(field) })" />
+              <VNodeRender
+                :node="renderFieldSlot(getResolvedFieldSlots(field)?.hint, { hint: hint || resolveFieldProp(field, 'hint'), ...createFieldContext(field) })"
+              />
             </slot>
           </slot>
         </template>
         <template v-if="hasNamedSlot(field, 'description')" #description="{ description }">
-          <slot :name="`description:${field.path}`" v-bind="{ description: description || resolveFieldProp(field, 'description'), ...createFieldContext(field) }">
-            <slot name="description" v-bind="{ description: description || resolveFieldProp(field, 'description'), ...createFieldContext(field) }">
+          <slot
+            :name="`description:${field.path}`"
+            v-bind="{ description: description || resolveFieldProp(field, 'description'), ...createFieldContext(field) }"
+          >
+            <slot
+              name="description"
+              v-bind="{ description: description || resolveFieldProp(field, 'description'), ...createFieldContext(field) }"
+            >
               <VNodeRender
                 :node="renderFieldSlot(getResolvedFieldSlots(field)?.description, { description: description || resolveFieldProp(field, 'description'), ...createFieldContext(field) })"
               />
@@ -259,9 +348,14 @@ function hasNamedSlot(field: AutoFormField, name: keyof FormFieldSlots) {
           </slot>
         </template>
         <template v-if="hasNamedSlot(field, 'help')" #help="{ help }">
-          <slot :name="`help:${field.path}`" v-bind="{ help: help || resolveFieldProp(field, 'help'), ...createFieldContext(field) }">
+          <slot
+            :name="`help:${field.path}`"
+            v-bind="{ help: help || resolveFieldProp(field, 'help'), ...createFieldContext(field) }"
+          >
             <slot name="help" v-bind="{ help: help || resolveFieldProp(field, 'help'), ...createFieldContext(field) }">
-              <VNodeRender :node="renderFieldSlot(getResolvedFieldSlots(field)?.help, { help: help || resolveFieldProp(field, 'help'), ...createFieldContext(field) })" />
+              <VNodeRender
+                :node="renderFieldSlot(getResolvedFieldSlots(field)?.help, { help: help || resolveFieldProp(field, 'help'), ...createFieldContext(field) })"
+              />
             </slot>
           </slot>
         </template>

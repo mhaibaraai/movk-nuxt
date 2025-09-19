@@ -1,4 +1,4 @@
-import type { AutoFormControls } from '../../src/runtime/types'
+import type { AutoFormControls, AutoFormFieldContext } from '../../src/runtime/types'
 import { describe, it, vi } from 'vitest'
 import { h, ref } from 'vue'
 import { z } from 'zod/v4'
@@ -33,28 +33,25 @@ describe('auto-form typing', () => {
       mockNumberTest: createAutoFormControl({ component: MockNumber, props: { aaa: 111 }, slots: {} }),
     } as const satisfies AutoFormControls
 
-    const { afz, scope } = createAutoFormZ(customControls)
+    const { afz } = createAutoFormZ(customControls)
 
     z.string({
       error: 'error',
     })
 
-    z.strictObject({}).meta()
-
-    const s = scope<MockState>()
-
-    const _schema = s.object({
+    const _schema = afz.object<MockState>({
       name: afz.string({
-        props: {
-          color: 'error',
+        props({ state }: AutoFormFieldContext<MockState>) {
+          return {
+            disabled: state.age > 18,
+          }
         },
+      }).meta({
       }),
-      address: s.path('address').object({
+      address: afz.object({
         city: afz.string(),
         province: afz.string({
           component: MockString,
-          props: {
-          },
           slots: {
             bbb: () => h('span', 'bbb'),
           },

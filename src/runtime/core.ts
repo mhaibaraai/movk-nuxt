@@ -4,7 +4,7 @@
  */
 
 import type { StringOrVNode } from '@movk/core'
-import type { Component, DefineComponent } from 'vue'
+import type { Component, ComputedRef, DefineComponent, Ref } from 'vue'
 import { isObject } from '@movk/core'
 
 /**
@@ -33,6 +33,35 @@ export type Merge<T, U> = Omit<T, keyof U> & U
  * ```
  */
 export type Suggest<T extends string> = T | (string & {})
+
+/**
+ * 响应式值类型 - 支持静态值、函数、Ref、Computed
+ *
+ * @example
+ * ```ts
+ * // 静态值
+ * const staticValue: ReactiveValue<string, any> = 'hello'
+ *
+ * // 函数（基于上下文动态计算）
+ * const dynamicValue: ReactiveValue<boolean, { value: string }> = (ctx) => ctx.value.length > 5
+ *
+ * // Ref 响应式引用
+ * const refValue: ReactiveValue<number, any> = ref(42)
+ *
+ * // Computed 计算属性
+ * const computedValue: ReactiveValue<string, any> = computed(() => `Count: ${count.value}`)
+ *
+ * // 在表单字段中的使用示例
+ * const fieldConfig = {
+ *   hidden: (ctx) => ctx.value === '', // 当值为空时隐藏
+ *   if: ref(true),                     // 使用 ref 控制显示
+ *   props: computed(() => ({
+ *     disabled: loading.value
+ *   }))                                // 使用 computed 动态属性
+ * }
+ * ```
+ */
+export type ReactiveValue<T, CTX> = T | ((ctx: CTX) => T) | Ref<T> | ComputedRef<T>
 
 /**
  * 判断类型 T 是否为纯对象类型

@@ -1,6 +1,6 @@
 <script lang="ts" setup>
-import type { AutoFormControls } from '#movk/types'
-import type { z } from 'zod/v4'
+import type { AutoFormControls, AutoFormFieldContext } from '#movk/types'
+import type { InferInput } from '@nuxt/ui'
 import { UInputNumber } from '#components'
 
 interface State {
@@ -31,31 +31,36 @@ const customControls = {
   test: createAutoFormControl({ component: UInputNumber }),
 } as const satisfies AutoFormControls
 
-const { afz, scope } = createAutoFormZ(customControls)
+const { afz } = createAutoFormZ(customControls)
 
-const state = ref({} as z.input<typeof schema>)
-const s = scope<State>()
+const formState = ref({})
 
-const schema = computed(() => s.looseObject({
-  test: afz.number().optional(),
-  test2: afz.number().meta({
-    required: false,
-  }),
-  visibleTest: afz.number({
-    component: UInputNumber,
-  }),
-  // nameValue: afz.string({
-  //   component: Login,
-  // }),
-  dynamicField: afz.string({
-    type: 'test',
-    if: ({ state }) => state.visibleTest > 3,
+const schema = computed(() => afz.looseObject<State>({
+  nameValue: afz.string({
+    if: true,
   }).meta({
-    label: '动态字段',
-    // description: ctx => `路径: ${ctx.path}`,
-    help: ({ value }) => `值长度: ${(value || '').length}`,
-    required: ({ value }) => ((value || '').length < 3),
+    size: 'sm',
   }),
+  // visibleTest: afz.boolean(),
+  // dynamicLabel: afz.string({
+  //   if: !!formState.value.nameValue,
+  //   // hidden: ({ state }) => !state.visibleTest,
+  //   props: ({ state }) => ({
+  //     color: state.nameValue ? 'success' : 'error',
+  //   }),
+  // }).meta({
+  //   label: ({ state }) => `动态字段: ${state.nameValue}`,
+  // }).optional(),
+  // nestedObject: afz.object<State['nestedObject']>({
+  //   firstName: afz.string({
+  //     props: ({ state }: AutoFormFieldContext<State['nestedObject']>) => ({
+  //       color: state.lastName ? 'primary' : 'error',
+  //     }),
+  //   }).default('default name').optional(),
+  //   lastName: afz.string().meta({
+  //     label: ({ state }) => `动态字段: ${state.firstName}`,
+  //   }),
+  // }),
 }))
 </script>
 
@@ -67,7 +72,7 @@ const schema = computed(() => s.looseObject({
           函数式 API
         </h3>
       </template>
-      <MAutoForm v-model="state" :schema="schema" class="space-y-4" :controls="customControls" />
+      <MAutoForm v-model="formState" :schema="schema" class="space-y-4" :controls="customControls" />
     </UCard>
     <UCard>
       <template #header>
@@ -75,7 +80,7 @@ const schema = computed(() => s.looseObject({
           当前State值
         </h2>
       </template>
-      <pre class="text-sm">{{ JSON.stringify(state, null, 2) }}</pre>
+      <pre class="text-sm">{{ JSON.stringify(formState, null, 2) }}</pre>
     </UCard>
   </div>
 </template>

@@ -187,7 +187,7 @@ const state = ref<z.input<typeof schema>>({
 })
 ```
 
-# 优化 AuthFormSlots 的类型
+# 优化 AuthFormSlots 的类型 ✔️
 
 参考以下类型代码：
 
@@ -206,9 +206,9 @@ export type AuthFormSlots<T extends object = object, F extends AuthFormField = A
 } & DynamicFieldSlots<T, F> & DynamicFormFieldSlots<T>
 ```
 
-# field: any 的类型优化
+# field: any 的类型优化 ✔️
 
-# buildSlotProps 的类型优化
+# buildSlotProps 的类型优化 ✔️
 
 # 字对象 object 和数组 array 的组件处理方式
 
