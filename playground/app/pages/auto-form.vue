@@ -33,7 +33,7 @@ const customControls = {
 
 const { afz } = createAutoFormZ(customControls)
 
-const schema = afz.looseObject<State>()({
+const schema = afz.object<State>()({
   nameValue: afz.string({
     if: true,
   }).meta({
@@ -69,16 +69,9 @@ const formState = ref({
 <template>
   <div class="space-y-4">
     <UCard>
-      <template #header>
-        {{ formState }}
-      </template>
       <MAutoForm v-model="formState" :schema="schema" class="space-y-4" :controls="customControls">
-        <template #hint>
-          <div>
-            <h3 class="text-lg font-semibold">
-              函数式 API
-            </h3>
-          </div>
+        <template #before-fields="{ state }">
+          <pre>{{ state }}</pre>
         </template>
         <template #hint:nameValue>
           nameValue hint

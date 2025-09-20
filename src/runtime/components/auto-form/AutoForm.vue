@@ -216,7 +216,6 @@ function hasNamedSlot(field: AutoFormField, name: keyof AutoFormSlots<AutoFormSt
     @submit="emit('submit', $event)"
     @error="emit('error', $event)"
   >
-    {{ console.log(visibleFields) }}
     <slot name="before-fields" :fields="visibleFields" :state="state" />
     <template v-for="field in visibleFields" :key="field.path">
       <UFormField
