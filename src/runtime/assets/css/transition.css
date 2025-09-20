@@ -1,0 +1,31 @@
+.auto-form-field-enter-active {
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+}
+
+.auto-form-field-leave-active {
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+}
+
+.auto-form-field-enter-from {
+  opacity: 0;
+  transform: translate3d(0, -8px, 0) scale(0.95);
+}
+
+.auto-form-field-leave-to {
+  opacity: 0;
+  transform: translate3d(0, 8px, 0) scale(0.98);
+}
+
+.auto-form-field-enter-to,
+.auto-form-field-leave-from {
+  opacity: 1;
+  transform: translate3d(0, 0, 0) scale(1);
+}
+
+.auto-form-field-move {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}

@@ -63,6 +63,11 @@ export interface AutoFormProps<S extends z.ZodObject, T extends boolean = true, 
 
   controls?: AutoFormControls
   size?: 'md' | 'xs' | 'sm' | 'lg' | 'xl'
+  /**
+   * Enable transition animation for field changes.
+   * @defaultValue `true`
+   */
+  enableTransition?: boolean
 }
 
 export interface AutoFormEmits<S extends z.ZodObject, T extends boolean = true> {
@@ -76,7 +81,13 @@ export type AutoFormSlots<T extends object> = {
 } & DynamicFormSlots<T>
 
 type AutoFormStateType = N extends false ? Partial<InferInput<S>> : never
-const { schema, controls, size, ...restProps } = defineProps<AutoFormProps<S, T, N>>()
+const {
+  schema,
+  controls,
+  size,
+  enableTransition = true,
+  ...restProps
+} = defineProps<AutoFormProps<S, T, N>>()
 const emit = defineEmits<AutoFormEmits<S, T>>()
 const _slots = defineSlots<AutoFormSlots<AutoFormStateType>>()
 
@@ -118,8 +129,14 @@ watch(() => unref(schema), () => {
   fieldContextCache.clear()
 }, { deep: false })
 
-// 可见字段计算 - 统一可见性逻辑
-const visibleFields = computed(() => fields.value.filter((field: AutoFormField) => resolveFieldProp(field, 'if', field.meta.mapped?.if) !== false))
+const visibleFields = computed(() => fields.value.filter((field: AutoFormField) => {
+  const hasIfCondition = field.meta?.if !== undefined || field.meta.mapped?.if !== undefined
+  const ifValue = resolveFieldProp(field, 'if', field.meta.mapped?.if)
+
+  if (!hasIfCondition)
+    return true
+  return ifValue === true
+}))
 
 // 优化默认值初始化 - 减少副作用
 watch(
@@ -217,100 +234,108 @@ function hasNamedSlot(field: AutoFormField, name: keyof AutoFormSlots<AutoFormSt
     @error="emit('error', $event)"
   >
     <slot name="before-fields" :fields="visibleFields" :state="state" />
-    <template v-for="field in visibleFields" :key="field.path">
-      <UFormField
-        v-show="!resolveFieldProp(field, 'hidden', field.meta?.mapped?.hidden)"
-        :name="field.path"
-        :as="resolveFieldProp(field, 'as')"
-        :error-pattern="resolveFieldProp(field, 'errorPattern')"
-        :label="resolveFieldProp(field, 'label')"
-        :description="resolveFieldProp(field, 'description')"
-        :help="resolveFieldProp(field, 'help')"
-        :hint="resolveFieldProp(field, 'hint')"
-        :size="resolveFieldProp(field, 'size', size)"
-        :required="resolveFieldProp(field, 'required')"
-        :eager-validation="resolveFieldProp(field, 'eagerValidation')"
-        :validate-on-input-delay="resolveFieldProp(field, 'validateOnInputDelay')"
-        :class="resolveFieldProp(field, 'class')"
-        :ui="resolveFieldProp(field, 'ui')"
-      >
-        <template v-if="hasNamedSlot(field, 'label')" #label="{ label }">
-          <slot
-            :name="`label:${field.path}`"
-            v-bind="{ label: label || resolveFieldProp(field, 'label'), ...createFieldContext(field) }"
-          >
+    <TransitionGroup :name="enableTransition ? 'auto-form-field' : ''" :duration="{ enter: 350, leave: 250 }">
+      <template v-for="field in visibleFields" :key="field.path">
+        <UFormField
+          v-show="!resolveFieldProp(field, 'hidden', field.meta?.mapped?.hidden)"
+          :name="field.path"
+          :as="resolveFieldProp(field, 'as')"
+          :error-pattern="resolveFieldProp(field, 'errorPattern')"
+          :label="resolveFieldProp(field, 'label')"
+          :description="resolveFieldProp(field, 'description')"
+          :help="resolveFieldProp(field, 'help')"
+          :hint="resolveFieldProp(field, 'hint')"
+          :size="resolveFieldProp(field, 'size', size)"
+          :required="resolveFieldProp(field, 'required')"
+          :eager-validation="resolveFieldProp(field, 'eagerValidation')"
+          :validate-on-input-delay="resolveFieldProp(field, 'validateOnInputDelay')"
+          :class="resolveFieldProp(field, 'class')"
+          :ui="resolveFieldProp(field, 'ui')"
+        >
+          <template v-if="hasNamedSlot(field, 'label')" #label="{ label }">
             <slot
-              name="label"
+              :name="`label:${field.path}`"
               v-bind="{ label: label || resolveFieldProp(field, 'label'), ...createFieldContext(field) }"
             >
-              <VNodeRender
-                :node="renderFieldSlot(getResolvedFieldSlots(field)?.label, { label: label || resolveFieldProp(field, 'label'), ...createFieldContext(field) })"
-              />
+              <slot
+                name="label"
+                v-bind="{ label: label || resolveFieldProp(field, 'label'), ...createFieldContext(field) }"
+              >
+                <VNodeRender
+                  :node="renderFieldSlot(getResolvedFieldSlots(field)?.label, { label: label || resolveFieldProp(field, 'label'), ...createFieldContext(field) })"
+                />
+              </slot>
             </slot>
-          </slot>
-        </template>
-        <template v-if="hasNamedSlot(field, 'hint')" #hint="{ hint }">
-          <slot
-            :name="`hint:${field.path}`"
-            v-bind="{ hint: hint || resolveFieldProp(field, 'hint'), ...createFieldContext(field) }"
-          >
-            <slot name="hint" v-bind="{ hint: hint || resolveFieldProp(field, 'hint'), ...createFieldContext(field) }">
-              <VNodeRender
-                :node="renderFieldSlot(getResolvedFieldSlots(field)?.hint, { hint: hint || resolveFieldProp(field, 'hint'), ...createFieldContext(field) })"
-              />
-            </slot>
-          </slot>
-        </template>
-        <template v-if="hasNamedSlot(field, 'description')" #description="{ description }">
-          <slot
-            :name="`description:${field.path}`"
-            v-bind="{ description: description || resolveFieldProp(field, 'description'), ...createFieldContext(field) }"
-          >
+          </template>
+          <template v-if="hasNamedSlot(field, 'hint')" #hint="{ hint }">
             <slot
-              name="description"
+              :name="`hint:${field.path}`"
+              v-bind="{ hint: hint || resolveFieldProp(field, 'hint'), ...createFieldContext(field) }"
+            >
+              <slot
+                name="hint"
+                v-bind="{ hint: hint || resolveFieldProp(field, 'hint'), ...createFieldContext(field) }"
+              >
+                <VNodeRender
+                  :node="renderFieldSlot(getResolvedFieldSlots(field)?.hint, { hint: hint || resolveFieldProp(field, 'hint'), ...createFieldContext(field) })"
+                />
+              </slot>
+            </slot>
+          </template>
+          <template v-if="hasNamedSlot(field, 'description')" #description="{ description }">
+            <slot
+              :name="`description:${field.path}`"
               v-bind="{ description: description || resolveFieldProp(field, 'description'), ...createFieldContext(field) }"
             >
-              <VNodeRender
-                :node="renderFieldSlot(getResolvedFieldSlots(field)?.description, { description: description || resolveFieldProp(field, 'description'), ...createFieldContext(field) })"
-              />
+              <slot
+                name="description"
+                v-bind="{ description: description || resolveFieldProp(field, 'description'), ...createFieldContext(field) }"
+              >
+                <VNodeRender
+                  :node="renderFieldSlot(getResolvedFieldSlots(field)?.description, { description: description || resolveFieldProp(field, 'description'), ...createFieldContext(field) })"
+                />
+              </slot>
             </slot>
-          </slot>
-        </template>
-        <template v-if="hasNamedSlot(field, 'help')" #help="{ help }">
-          <slot
-            :name="`help:${field.path}`"
-            v-bind="{ help: help || resolveFieldProp(field, 'help'), ...createFieldContext(field) }"
-          >
-            <slot name="help" v-bind="{ help: help || resolveFieldProp(field, 'help'), ...createFieldContext(field) }">
-              <VNodeRender
-                :node="renderFieldSlot(getResolvedFieldSlots(field)?.help, { help: help || resolveFieldProp(field, 'help'), ...createFieldContext(field) })"
-              />
+          </template>
+          <template v-if="hasNamedSlot(field, 'help')" #help="{ help }">
+            <slot
+              :name="`help:${field.path}`"
+              v-bind="{ help: help || resolveFieldProp(field, 'help'), ...createFieldContext(field) }"
+            >
+              <slot
+                name="help"
+                v-bind="{ help: help || resolveFieldProp(field, 'help'), ...createFieldContext(field) }"
+              >
+                <VNodeRender
+                  :node="renderFieldSlot(getResolvedFieldSlots(field)?.help, { help: help || resolveFieldProp(field, 'help'), ...createFieldContext(field) })"
+                />
+              </slot>
             </slot>
-          </slot>
-        </template>
-        <template v-if="hasNamedSlot(field, 'error')" #error="{ error }">
-          <slot :name="`error:${field.path}`" v-bind="{ error, ...createFieldContext(field) }">
-            <slot name="error" v-bind="{ error, ...createFieldContext(field) }">
-              <VNodeRender
-                :node="renderFieldSlot(getResolvedFieldSlots(field)?.error, { error, ...createFieldContext(field) })"
-              />
+          </template>
+          <template v-if="hasNamedSlot(field, 'error')" #error="{ error }">
+            <slot :name="`error:${field.path}`" v-bind="{ error, ...createFieldContext(field) }">
+              <slot name="error" v-bind="{ error, ...createFieldContext(field) }">
+                <VNodeRender
+                  :node="renderFieldSlot(getResolvedFieldSlots(field)?.error, { error, ...createFieldContext(field) })"
+                />
+              </slot>
             </slot>
-          </slot>
-        </template>
-        <template #default="{ error }">
-          <slot :name="`default:${field.path}`" v-bind="{ error, ...createFieldContext(field) }">
-            <slot name="default" v-bind="{ error, ...createFieldContext(field) }">
-              <VNodeRender
-                :node="renderFieldSlot(getResolvedFieldSlots(field)?.default, { error, ...createFieldContext(field) })"
-              />
-              <template v-if="!field.meta?.fieldSlots || !getResolvedFieldSlots(field)?.default">
-                <VNodeRender :node="renderControl(field)" />
-              </template>
+          </template>
+          <template #default="{ error }">
+            <slot :name="`default:${field.path}`" v-bind="{ error, ...createFieldContext(field) }">
+              <slot name="default" v-bind="{ error, ...createFieldContext(field) }">
+                <VNodeRender
+                  :node="renderFieldSlot(getResolvedFieldSlots(field)?.default, { error, ...createFieldContext(field) })"
+                />
+                <template v-if="!field.meta?.fieldSlots || !getResolvedFieldSlots(field)?.default">
+                  <VNodeRender :node="renderControl(field)" />
+                </template>
+              </slot>
             </slot>
-          </slot>
-        </template>
-      </UFormField>
-    </template>
+          </template>
+        </UFormField>
+      </template>
+    </TransitionGroup>
     <slot name="after-fields" :fields="visibleFields" :state="state" />
     <!-- <slot name="submit" :state="state" /> -->
   </UForm>

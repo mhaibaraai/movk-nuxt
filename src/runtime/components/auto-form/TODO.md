@@ -96,39 +96,39 @@ z.object({
 })
 ```
 
-[已完成] props、slots
+[已完成] controlProps、controlSlots
 
-- meta.props -> formField.props
-- 优先级：meta.props > control.props
+- meta.mapped 是对应后control的默认值属性
+- meta.controlProps -> meta.mapped.controlProps
+- 优先级：meta.controlProps > meta.mapped.controlProps
 - 组件初始化时自动设置
 
 ```ts
 z.object({
   nameValue: z.string({
-    props: {
+    controlProps: {
       class: 'w-md',
     },
   }),
 })
 ```
 
-# Scope API - 键约束的对象工厂
+# 柯里化 API - 键约束的对象工厂
 
 ## 基础用法
 
 ```ts
-const { afz, scope } = createAutoFormZ()
-const s = scope<State>()  // State 是你的类型约束
+const { afz } = createAutoFormZ()
 
 // 三种对象工厂，行为差异：
-const schema = s.object({...})        // strip: 允许额外键，解析时剥离
-const schema = s.looseObject({...})   // loose: 允许额外键，解析时保留
-const schema = s.strictObject({...})  // strict: 禁止额外键，解析时报错
+const schema = afz.object<State>()({...})        // strip: 允许额外键，解析时剥离
+const schema = afz.looseObject<State>()({...})   // loose: 允许额外键，解析时保留
+const schema = afz.strictObject<State>()({...})  // strict: 禁止额外键，解析时报错
 ```
 
 ## 键名提示与约束
 
-- **参数侧键名提示**：`s.object({ /* 此处有 State 的键名提示 */ })`
+- **参数侧键名提示**：`afz.object<State>()({ /* 此处有 State 的键名提示 */ })`
 - **提示性约束**：键约束作为智能提示，不阻止编译（避免 never）
 - **形状推断**：参数类型完全由实参推断，保留字段补全
 
@@ -143,26 +143,27 @@ interface State {
   }
 }
 
-const s = scope<State>()
-const schema = s.object({
+const afz = createAutoFormZ()
+const schema = afz.object<State>()({
   name: afz.string(),
-  address: s.path('address').object({  // 子作用域，有 city/province 提示
+  address: afz.object<State['address']>()({  // 子作用域，有 city/province 提示
     city: afz.string(),
     province: afz.string(),
   }),
 })
 
 // 深层嵌套
-const deep = s.path('address', 'geo', 'coordinates').object({...})
+const deep = afz.object<State['address']['geo']['coordinates']>()({...})
 ```
 
 ## 链式调用支持
 
 ```ts
-const schema = s.looseObject({
+const schema = afz.looseObject<State>()({
   name: afz.string(),
-  address: s.path('address').strictObject({
+  address: afz.object<State['address']>()({
     city: afz.string(),
+    province: afz.string(),
   }).optional(),
 }).meta({
   label: '用户信息'
@@ -174,11 +175,10 @@ const schema = s.looseObject({
 ## 类型推断与补全
 
 ```ts
-const schema = s.object({...})
-type Input = z.input<typeof schema>  // 推荐使用，获得完整字段提示
-// 避免使用 InferInput，在嵌套场景可能宽化为 Record<string, unknown>
+const schema = afz.object<State>()({...})
+type _State = z.output<typeof schema>  // 推荐使用，获得完整字段提示
 
-const state = ref<z.input<typeof schema>>({
+const state = ref<z.output<typeof schema>>({
   name: '',        // 有提示
   address: {
     city: '',      // 有提示
@@ -210,7 +210,41 @@ export type AuthFormSlots<T extends object = object, F extends AuthFormField = A
 
 # buildSlotProps 的类型优化 ✔️
 
+# v-if 和 v-show 添加过渡效果
+
+- 添加 enableTransition 属性
+
 # 字对象 object 和数组 array 的组件处理方式
+
+## object
+
+思考：外层使用 UCollapsible 包裹，内部逻辑不变，例如：
+
+```ts
+const schema = afz.object<State>()({
+  name: afz.string(),
+  address: afz.object<State['address']>()({  // 子作用域，有 city/province 提示
+    city: afz.string(),
+    province: afz.string(),
+  }),
+})
+```
+
+对应渲染结果大致如下：
+
+```html
+<UCollapsible>
+    <UFormField name="address"></UFormField>
+    <template #content>
+      <UFormField name="city">
+        <UInput />
+      </UFormField>
+      <UFormField name="province">
+        <UInput />
+      </UFormField>
+    </template>
+</UCollapsible>
+```
 
 # 添加 submit 插槽及功能
 

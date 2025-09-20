@@ -34,21 +34,25 @@ const customControls = {
 const { afz } = createAutoFormZ(customControls)
 
 const schema = afz.object<State>()({
+  dynamicLabel: afz.string({
+    if: ({ state }) => !state.visibleTest,
+  }),
   nameValue: afz.string({
-    if: true,
+    // if: ({ state }) => state.visibleTest,
+    // hidden: ({ state }) => !state.visibleTest,
   }).meta({
     size: 'sm',
   }).optional(),
   visibleTest: afz.boolean(),
-  dynamicLabel: afz.string({
-    // hidden: ({ state }) => !state.visibleTest,
-    controlProps: ({ state }) => ({
-      icon: 'i-lucide-alarm-clock',
-      color: state.nameValue ? 'success' : 'error',
-    }),
-  }).meta({
-    label: ({ state }: AutoFormFieldContext<State>) => `动态字段: ${state.nameValue}`,
-  }).optional(),
+  // dynamicLabel: afz.string({
+  //   // hidden: ({ state }) => !state.visibleTest,
+  //   controlProps: ({ state }) => ({
+  //     icon: 'i-lucide-alarm-clock',
+  //     color: state.nameValue ? 'success' : 'error',
+  //   }),
+  // }).meta({
+  //   label: ({ state }: AutoFormFieldContext<State>) => `动态字段: ${state.nameValue}`,
+  // }).optional(),
   // nestedObject: afz.object<State['nestedObject']>({
   //   firstName: afz.string({
   //     props: ({ state }: AutoFormFieldContext<State['nestedObject']>) => ({
@@ -70,11 +74,14 @@ const formState = ref({
   <div class="space-y-4">
     <UCard>
       <MAutoForm v-model="formState" :schema="schema" class="space-y-4" :controls="customControls">
-        <template #before-fields="{ state }">
+        <template #after-fields="{ state }">
           <pre>{{ state }}</pre>
         </template>
-        <template #hint:nameValue>
-          nameValue hint
+        <template #hint:nameValue="{ value, setValue }">
+          nameValue hint: {{ value }}
+          <UButton @click="setValue('test')">
+            setValue
+          </UButton>
         </template>
       </MAutoForm>
     </UCard>
