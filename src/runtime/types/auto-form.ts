@@ -51,15 +51,24 @@ export interface AutoFormControls {
 }
 
 export interface AutoFormField {
+  /** 字段路径 */
   path: string
+  /** 字段类型：容器或者叶子节点 */
+  // fieldType: 'leaf' | 'container'
+  /** 字段原始 schema */
   schema: z.ZodType
+  /** 字段原始 schema（未处理装饰器） */
   originalSchema: z.ZodType
+  /** 字段元数据 */
   meta: GlobalMeta & AutoFormControlsMeta & { mapped?: AutoFormControl }
+  /** 字段装饰器信息 */
   decorators: {
     isOptional: boolean
     defaultValue?: any
     description?: string
   }
+  /** 子字段（仅对象类型有效） */
+  children?: AutoFormField[]
 }
 
 /** 提取对象的“已知键”（剔除 string/number/symbol 索引） */

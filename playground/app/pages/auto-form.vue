@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import type { AutoFormControls, AutoFormFieldContext } from '#movk/types'
+import type { AutoFormControls } from '#movk/types'
 import type { z } from 'zod/v4'
 import { UInputNumber } from '#components'
 
@@ -34,15 +34,15 @@ const customControls = {
 const { afz } = createAutoFormZ(customControls)
 
 const schema = afz.object<State>()({
-  dynamicLabel: afz.string({
-    if: ({ state }) => !state.visibleTest,
-  }),
-  nameValue: afz.string({
-    // if: ({ state }) => state.visibleTest,
-    // hidden: ({ state }) => !state.visibleTest,
-  }).meta({
-    size: 'sm',
-  }).optional(),
+  // dynamicLabel: afz.string({
+  //   if: ({ state }) => !state.visibleTest,
+  // }),
+  // nameValue: afz.string({
+  //   // if: ({ state }) => state.visibleTest,
+  //   // hidden: ({ state }) => !state.visibleTest,
+  // }).meta({
+  //   size: 'sm',
+  // }).optional(),
   visibleTest: afz.boolean(),
   // dynamicLabel: afz.string({
   //   // hidden: ({ state }) => !state.visibleTest,
@@ -53,16 +53,12 @@ const schema = afz.object<State>()({
   // }).meta({
   //   label: ({ state }: AutoFormFieldContext<State>) => `动态字段: ${state.nameValue}`,
   // }).optional(),
-  // nestedObject: afz.object<State['nestedObject']>({
-  //   firstName: afz.string({
-  //     props: ({ state }: AutoFormFieldContext<State['nestedObject']>) => ({
-  //       color: state.lastName ? 'primary' : 'error',
-  //     }),
-  //   }).default('default name').optional(),
-  //   lastName: afz.string().meta({
-  //     label: ({ state }) => `动态字段: ${state.firstName}`,
-  //   }),
-  // }),
+  nestedObject: afz.object<State['nestedObject']>()({
+    firstName: afz.string({}).default('default name').optional(),
+    lastName: afz.string().meta({
+      label: ({ state }) => `动态字段: ${state.firstName}`,
+    }),
+  }),
 })
 
 const formState = ref({
@@ -71,19 +67,43 @@ const formState = ref({
 </script>
 
 <template>
-  <div class="space-y-4">
+  <div class="space-y-4 p-10">
     <UCard>
       <MAutoForm v-model="formState" :schema="schema" class="space-y-4" :controls="customControls">
         <template #after-fields="{ state }">
           <pre>{{ state }}</pre>
         </template>
-        <template #hint:nameValue="{ value, setValue }">
+        <template #description:visibleTest>
+          visibleTest description
+        </template>
+        <template #hint:visibleTest="{ value, setValue }">
           nameValue hint: {{ value }}
-          <UButton @click="setValue('test')">
+          <UButton @click="setValue(true)">
             setValue
           </UButton>
         </template>
       </MAutoForm>
     </UCard>
+    <!-- <UCard>
+      <UAccordion :items="[{ label: 'nestedObject', name: 'nestedObject', slot: 'nestedObject' }]">
+        <template #default="{ item }">
+          <UFormField
+            :label="item.label"
+            :name="item.name"
+            required
+            help="help"
+            hint="hint"
+          />
+        </template>
+        <template #nestedObject>
+          <UFormField label="province" name="province">
+            <UInput v-model="formState.province" />
+          </UFormField>
+          <UFormField label="district" name="district">
+            <UInput v-model="formState.district" />
+          </UFormField>
+        </template>
+      </UAccordion>
+    </UCard> -->
   </div>
 </template>

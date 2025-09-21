@@ -193,16 +193,16 @@ const state = ref<z.output<typeof schema>>({
 
 ```ts
 type DynamicFieldSlots<T, F, SlotProps = { field: F, state: T }> = Record<string, (props: SlotProps) => any> & Record<`${keyof T extends string ? keyof T : never}-field`, (props: SlotProps) => any>
-type DynamicFormFieldSlots<T> = Record<string, (props?: {}) => any> & Record<`${keyof T extends string ? keyof T : never}-${'label' | 'description' | 'hint' | 'help' | 'error'}`, (props?: {}) => any>
+type DynamicFormFieldSlots<T> = Record<string, (props?: object) => any> & Record<`${keyof T extends string ? keyof T : never}-${'label' | 'description' | 'hint' | 'help' | 'error'}`, (props?: object) => any>
 export type AuthFormSlots<T extends object = object, F extends AuthFormField = AuthFormField> = {
-  header(props?: {}): any
-  leading(props?: {}): any
-  title(props?: {}): any
-  description(props?: {}): any
-  providers(props?: {}): any
-  validation(props?: {}): any
-  submit(props: { loading: boolean }): any
-  footer(props?: {}): any
+  header: (props?: object) => any
+  leading: (props?: object) => any
+  title: (props?: object) => any
+  description: (props?: object) => any
+  providers: (props?: object) => any
+  validation: (props?: object) => any
+  submit: (props: { loading: boolean }) => any
+  footer: (props?: object) => any
 } & DynamicFieldSlots<T, F> & DynamicFormFieldSlots<T>
 ```
 
@@ -210,41 +210,11 @@ export type AuthFormSlots<T extends object = object, F extends AuthFormField = A
 
 # buildSlotProps 的类型优化 ✔️
 
-# v-if 和 v-show 添加过渡效果
+# v-if 和 v-show 添加过渡效果 ✔️
 
 - 添加 enableTransition 属性
 
-# 字对象 object 和数组 array 的组件处理方式
-
-## object
-
-思考：外层使用 UCollapsible 包裹，内部逻辑不变，例如：
-
-```ts
-const schema = afz.object<State>()({
-  name: afz.string(),
-  address: afz.object<State['address']>()({  // 子作用域，有 city/province 提示
-    city: afz.string(),
-    province: afz.string(),
-  }),
-})
-```
-
-对应渲染结果大致如下：
-
-```html
-<UCollapsible>
-    <UFormField name="address"></UFormField>
-    <template #content>
-      <UFormField name="city">
-        <UInput />
-      </UFormField>
-      <UFormField name="province">
-        <UInput />
-      </UFormField>
-    </template>
-</UCollapsible>
-```
+# object 字段的 UAccordion 包装功能
 
 # 添加 submit 插槽及功能
 
