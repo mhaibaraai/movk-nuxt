@@ -4,10 +4,23 @@ import type { ComponentProps, ComponentSlots, IsComponent, ReactiveValue, Sugges
 
 type DynamicFieldSlotKeys = 'default' | 'label' | 'description' | 'hint' | 'help' | 'error'
 
+/** 支持嵌套对象路径的插槽类型 */
+type NestedPathSlots<T> = T extends object
+  ? {
+      [K in keyof T as K extends string
+        ? `${DynamicFieldSlotKeys}:${K}` | (T[K] extends object
+          ? `${DynamicFieldSlotKeys}:${K}.${Extract<keyof T[K], string>}`
+          : never)
+        : never
+      ]: (props: AutoFormFieldContext<T>) => any
+    }
+  : {}
+
 export type DynamicFormSlots<T>
   = Record<string, (props: AutoFormFieldContext<T>) => any>
     & Record<`${DynamicFieldSlotKeys}`, (props: AutoFormFieldContext<T>) => any>
     & Record<`${DynamicFieldSlotKeys}:${keyof T extends string ? keyof T : never}`, (props: AutoFormFieldContext<T>) => any>
+    & NestedPathSlots<T>
 
 export interface AutoFormFieldContext<S = any> {
   /** 表单数据 - 使用 getter 确保获取最新值 */
@@ -28,10 +41,6 @@ export interface AutoFormControlsMeta<C extends IsComponent = IsComponent> {
   type?: string
   /** 控件组件（直传组件时使用） */
   component?: C
-  /** 控件显示状态 */
-  hidden?: ReactiveValue<boolean, AutoFormFieldContext>
-  /** 控件条件 */
-  if?: ReactiveValue<boolean, AutoFormFieldContext>
   /** 控件属性 */
   controlProps?: ReactiveValue<ComponentProps<C>, AutoFormFieldContext>
   /** 控件插槽（调用侧可部分覆盖） */
@@ -40,8 +49,6 @@ export interface AutoFormControlsMeta<C extends IsComponent = IsComponent> {
 
 export interface AutoFormControl<C extends IsComponent = IsComponent> {
   component: C
-  hidden?: boolean
-  if?: boolean
   controlProps?: ComponentProps<C>
   controlSlots?: Partial<ComponentSlots<C>>
 }
@@ -53,8 +60,6 @@ export interface AutoFormControls {
 export interface AutoFormField {
   /** 字段路径 */
   path: string
-  /** 字段类型：容器或者叶子节点 */
-  // fieldType: 'leaf' | 'container'
   /** 字段原始 schema */
   schema: z.ZodType
   /** 字段原始 schema（未处理装饰器） */

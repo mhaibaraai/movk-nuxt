@@ -41,6 +41,11 @@ declare module 'zod/v4' {
      * @see https://ui4.nuxt.com/docs/components/form-field#slots
      */
     slots?: ReactiveValue<Partial<FormFieldSlots>>
+
+    /** 是否隐藏 */
+    hidden?: ReactiveValue<boolean>
+    /** 显示条件 */
+    if?: ReactiveValue<boolean>
   }
 }
 

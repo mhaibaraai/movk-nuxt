@@ -4,9 +4,10 @@ import type { z } from 'zod/v4'
 import type { AccordionConfig, AutoFormControls, AutoFormField, DynamicFormSlots } from '../../types/auto-form'
 import { computed, unref } from 'vue'
 import { useAutoFormProvider } from '../../composables/useAutoFormContext'
+import { useFieldRenderer } from '../../composables/useFieldRenderer'
 import { DEFAULT_CONTROLS } from '../../constants/auto-form'
 import { deepClone, getPath, setPath } from '../../core'
-import { collectTopLevelObjectFields, flattenFields, generateAccordionItems, groupFieldsByType, introspectSchema, shouldEnableAccordion } from '../../utils/auto-form'
+import { collectTopLevelObjectFields, flattenFields, generateAccordionItems, groupFieldsByType, introspectSchema, shouldEnableAccordion, VNodeRender } from '../../utils/auto-form'
 import AutoFormFieldRenderer from './AutoFormFieldRenderer.vue'
 import AutoFormNestedRenderer from './AutoFormNestedRenderer.vue'
 
@@ -118,6 +119,7 @@ const fields = computed(() => {
 
   const resolvedSchema = unref(schema)
   const entries = introspectSchema(resolvedSchema, controlsMapping.value)
+  console.log('entries', entries)
 
   // 同步初始化默认值，确保 SSR 兼容性
   for (const { decorators, path } of entries) {
@@ -132,12 +134,12 @@ const fields = computed(() => {
 
 // 优化可见性计算 - 减少不必要的函数调用
 const visibleFields = computed(() => fields.value.filter((field: AutoFormField) => {
-  const hasIfCondition = field.meta?.if !== undefined || field.meta.mapped?.if !== undefined
+  const hasIfCondition = field.meta?.if !== undefined
   if (!hasIfCondition)
     return true
 
   // 直接处理简单的 if 条件，避免推迟到子组件
-  const ifValue = field.meta?.if !== undefined ? field.meta.if : field.meta.mapped?.if
+  const ifValue = field.meta.if
 
   // 对于函数类型的条件，创建字段上下文进行计算
   if (typeof ifValue === 'function') {
@@ -155,7 +157,7 @@ const visibleFields = computed(() => fields.value.filter((field: AutoFormField) 
 
 // UAccordion 相关计算属性
 const enableAccordionWrapper = computed(() =>
-  shouldEnableAccordion(visibleFields.value, accordion)
+  shouldEnableAccordion(visibleFields.value, accordion),
 )
 
 // 根据是否启用 UAccordion 决定字段处理方式
@@ -174,12 +176,29 @@ const processedFields = computed(() => {
   }
 })
 
-// 为 UAccordion 收集顶级对象字段（不包括嵌套的）
+// 为 UAccordion 收集顶级对象字段（不包括嵌套的），并过滤 hidden 字段
 const topLevelObjectFields = computed(() => {
   if (!enableAccordionWrapper.value) {
     return []
   }
-  return collectTopLevelObjectFields(visibleFields.value)
+  const fields = collectTopLevelObjectFields(visibleFields.value)
+
+  // 过滤掉 hidden 的对象字段，提升性能
+  return fields.filter((field) => {
+    const hiddenValue = field.meta?.hidden
+    if (hiddenValue === undefined) return true
+
+    // 创建字段上下文来计算 hidden 属性
+    const context = {
+      state: state.value,
+      path: field.path,
+      value: getPath(state.value, field.path),
+      setValue: (v: any) => setPath(state.value, field.path, v),
+    }
+
+    const isHidden = typeof hiddenValue === 'function' ? hiddenValue(context) : hiddenValue
+    return !isHidden
+  })
 })
 
 const accordionItems = computed(() => {
@@ -190,6 +209,36 @@ const accordionItems = computed(() => {
 })
 
 // 字段属性解析逻辑已移至 useFieldRenderer composable
+const { resolveFieldProp } = useFieldRenderer()
+
+// 创建插槽解析器
+function createSlotResolver(field: AutoFormField) {
+  const keyPrefix = field.path
+
+  return {
+    hasSlot(name: string): boolean {
+      const keySpecific = `${name}:${keyPrefix}`
+      return Boolean(
+        _slots?.[keySpecific]
+        || _slots?.[name]
+      )
+    },
+
+    renderSlot(name: string, slotProps: any) {
+      const keySpecific = `${name}:${keyPrefix}`
+
+      if (_slots?.[keySpecific]) {
+        return _slots[keySpecific](slotProps)
+      }
+
+      if (_slots?.[name]) {
+        return _slots[name](slotProps)
+      }
+
+      return null
+    }
+  }
+}
 </script>
 
 <template>
@@ -227,16 +276,91 @@ const accordionItems = computed(() => {
           :key="`content-${objectField.path}`"
           #[`content-${objectField.path}`]
         >
-          <!-- 使用嵌套渲染器处理对象字段的内容 -->
-          <AutoFormNestedRenderer
-            v-if="objectField.children"
-            :fields="objectField.children"
-            :schema="schema"
-            :name="name"
-            :size="size"
-            :enable-transition="enableTransition"
-            :accordion="accordion"
-          />
+          <!-- 在 UAccordion 内容中包装 UFormField，提供完整的字段功能 -->
+          <UFormField
+            v-show="!resolveFieldProp(objectField, 'hidden')"
+            :name="objectField.path"
+            :as="resolveFieldProp(objectField, 'as')"
+            :error-pattern="resolveFieldProp(objectField, 'errorPattern')"
+            :label="resolveFieldProp(objectField, 'label')"
+            :description="resolveFieldProp(objectField, 'description')"
+            :help="resolveFieldProp(objectField, 'help')"
+            :hint="resolveFieldProp(objectField, 'hint')"
+            :size="resolveFieldProp(objectField, 'size', size)"
+            :required="resolveFieldProp(objectField, 'required')"
+            :eager-validation="resolveFieldProp(objectField, 'eagerValidation')"
+            :validate-on-input-delay="resolveFieldProp(objectField, 'validateOnInputDelay')"
+            :class="resolveFieldProp(objectField, 'class')"
+            :ui="resolveFieldProp(objectField, 'ui')"
+          >
+            <!-- 对象字段的插槽支持 -->
+            <template v-if="createSlotResolver(objectField).hasSlot('label')" #label="{ label }">
+              <VNodeRender
+                :node="createSlotResolver(objectField).renderSlot('label', {
+                  label: label || resolveFieldProp(objectField, 'label'),
+                  state,
+                  path: objectField.path,
+                  value: getPath(state, objectField.path),
+                  setValue: (v: any) => setPath(state, objectField.path, v)
+                })"
+              />
+            </template>
+            <template v-if="createSlotResolver(objectField).hasSlot('hint')" #hint="{ hint }">
+              <VNodeRender
+                :node="createSlotResolver(objectField).renderSlot('hint', {
+                  hint: hint || resolveFieldProp(objectField, 'hint'),
+                  state,
+                  path: objectField.path,
+                  value: getPath(state, objectField.path),
+                  setValue: (v: any) => setPath(state, objectField.path, v)
+                })"
+              />
+            </template>
+            <template v-if="createSlotResolver(objectField).hasSlot('description')" #description="{ description }">
+              <VNodeRender
+                :node="createSlotResolver(objectField).renderSlot('description', {
+                  description: description || resolveFieldProp(objectField, 'description'),
+                  state,
+                  path: objectField.path,
+                  value: getPath(state, objectField.path),
+                  setValue: (v: any) => setPath(state, objectField.path, v)
+                })"
+              />
+            </template>
+            <template v-if="createSlotResolver(objectField).hasSlot('help')" #help="{ help }">
+              <VNodeRender
+                :node="createSlotResolver(objectField).renderSlot('help', {
+                  help: help || resolveFieldProp(objectField, 'help'),
+                  state,
+                  path: objectField.path,
+                  value: getPath(state, objectField.path),
+                  setValue: (v: any) => setPath(state, objectField.path, v)
+                })"
+              />
+            </template>
+            <template v-if="createSlotResolver(objectField).hasSlot('error')" #error="{ error }">
+              <VNodeRender
+                :node="createSlotResolver(objectField).renderSlot('error', {
+                  error,
+                  state,
+                  path: objectField.path,
+                  value: getPath(state, objectField.path),
+                  setValue: (v: any) => setPath(state, objectField.path, v)
+                })"
+              />
+            </template>
+
+            <!-- 使用嵌套渲染器处理对象字段的内容 -->
+            <AutoFormNestedRenderer
+              v-if="objectField.children"
+              :fields="objectField.children"
+              :schema="schema"
+              :name="name"
+              :size="size"
+              :enable-transition="enableTransition"
+              :accordion="accordion"
+            />
+          </UFormField>
         </template>
       </UAccordion>
     </template>

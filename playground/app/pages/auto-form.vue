@@ -38,17 +38,20 @@ const schema = afz.object<State>()({
   nestedObject: afz.object<State['nestedObject']>()({
     firstName: afz.string().default('default name').optional(),
     lastName: afz.string().meta({
-      label: ({ state }) => `动态字段: ${state.firstName}`,
+      label: ({ state }) => `动态字段: ${state.nestedObject?.firstName}`,
+      required: ({ state }) => state.visibleTest,
+      hidden: ({ state }) => state.visibleTest,
     }),
-    userAge: afz.number().optional(),
+    userAge: afz.number(),
     address: afz.object<State['nestedObject']['address']>()({
       province: afz.string(),
       city: afz.string(),
       district: afz.string(),
     }),
   }).optional().meta({
+    hidden: ({ state }) => state.visibleTest, // 不生效
     label: '用户信息',
-    icon: 'i-lucide-user',
+    description: '用户信息 description',
   }),
 })
 
@@ -113,7 +116,7 @@ const formState = ref({
     </UCard>
 
     <!-- 对比：不使用 UAccordion 的普通表单 -->
-    <UCard>
+    <!-- <UCard>
       <template #header>
         <h2 class="text-lg font-semibold">
           普通表单（无 UAccordion）
@@ -122,12 +125,7 @@ const formState = ref({
           相同的 schema 但未启用 accordion 配置
         </p>
       </template>
-      <MAutoForm
-        v-model="formState"
-        :schema="schema"
-        class="space-y-4"
-        :controls="customControls"
-      >
+      <MAutoForm v-model="formState" :schema="schema" class="space-y-4" :controls="customControls">
         <template #after-fields="{ state }">
           <UCard>
             <template #header>
@@ -137,6 +135,6 @@ const formState = ref({
           </UCard>
         </template>
       </MAutoForm>
-    </UCard>
+    </UCard> -->
   </div>
 </template>

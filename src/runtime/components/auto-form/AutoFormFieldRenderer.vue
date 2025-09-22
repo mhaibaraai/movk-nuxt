@@ -81,7 +81,7 @@ function createSlotProps(field: AutoFormField, extraProps: Record<string, any> =
 
 <template>
   <UFormField
-    v-show="!resolveFieldProp(field, 'hidden', field.meta?.mapped?.hidden)"
+    v-show="!resolveFieldProp(field, 'hidden')"
     :name="field.path"
     :as="resolveFieldProp(field, 'as')"
     :error-pattern="resolveFieldProp(field, 'errorPattern')"

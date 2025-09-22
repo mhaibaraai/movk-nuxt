@@ -377,3 +377,43 @@ const topLevelObjectFields = computed(() =>
 - ✅ **灵活配置**: 支持全局配置和字段级覆盖
 - ✅ **透传功能**: 保留 UAccordion 的所有原生功能
 - ✅ **自定义能力**: 支持自定义 item 生成逻辑
+
+## 功能修正
+
+UAccordion 的源码如下：
+
+```ts
+<AccordionHeader as="div" :class="ui.header({ class: [props.ui?.header, item.ui?.header] })">
+  <AccordionTrigger :class="ui.trigger({ class: [props.ui?.trigger, item.ui?.trigger], disabled: item.disabled })">
+    <slot name="leading" :item="item" :index="index" :open="open">
+      <UIcon v-if="item.icon" :name="item.icon" :class="ui.leadingIcon({ class: [props.ui?.leadingIcon, item?.ui?.leadingIcon] })" />
+    </slot>
+
+    <span v-if="get(item, props.labelKey as string) || !!slots.default" :class="ui.label({ class: [props.ui?.label, item.ui?.label] })">
+      <slot :item="item" :index="index" :open="open">{{ get(item, props.labelKey as string) }}</slot>
+    </span>
+
+    <slot name="trailing" :item="item" :index="index" :open="open">
+      <UIcon :name="item.trailingIcon || trailingIcon || appConfig.ui.icons.chevronDown" :class="ui.trailingIcon({ class: [props.ui?.trailingIcon, item.ui?.trailingIcon] })" />
+    </slot>
+  </AccordionTrigger>
+</AccordionHeader>
+```
+
+leading
+{ item: AccordionItem; index: number; open: boolean; }
+
+default
+{ item: AccordionItem; index: number; open: boolean; }
+
+trailing
+{ item: AccordionItem; index: number; open: boolean; }
+
+渲染为 UFormField 组件
+
+- afz.object({
+  a: afz.string()
+}).meta({
+  hidden: true,
+  ...其余属性,
+})
