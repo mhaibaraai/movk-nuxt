@@ -21,17 +21,38 @@ interface TypedZodFactory<TC extends AutoFormControls> {
   boolean: AutoFormFactoryMethod<WithDefaultControls<TC>, 'boolean', z.ZodBoolean>
   date: AutoFormFactoryMethod<WithDefaultControls<TC>, 'date', z.ZodDate>
 
-  object: <T extends object = any>() => <S extends Record<string, z.ZodType>>(
-    shape: S & Partial<Record<KeysOf<T>, any>>
-  ) => z.ZodObject<S, z.core.$strip>
+  // 函数重载：支持两种写法
+  object: {
+    // 1. 柯里化写法：afz.object<State>()({...}) - 类型约束和推断
+    <T extends object>(): <S extends Record<string, z.ZodType>>(
+      shape: S & Partial<Record<KeysOf<T>, any>>
+    ) => z.ZodObject<S, z.core.$strip>
 
-  looseObject: <T extends object = any>() => <S extends Record<string, z.ZodType>>(
-    shape: S & Partial<Record<KeysOf<T>, any>>
-  ) => z.ZodObject<S, z.core.$loose>
+    // 2. 直接写法：afz.object({...}) - 简化语法，保持类型推断
+    <S extends Record<string, z.ZodType>>(
+      shape: S
+    ): z.ZodObject<S, z.core.$strip>
+  }
 
-  strictObject: <T extends object = any>() => <S extends Record<string, z.ZodType>>(
-    shape: S & Partial<Record<KeysOf<T>, any>>
-  ) => z.ZodObject<S, z.core.$strict>
+  looseObject: {
+    <T extends object>(): <S extends Record<string, z.ZodType>>(
+      shape: S & Partial<Record<KeysOf<T>, any>>
+    ) => z.ZodObject<S, z.core.$loose>
+
+    <S extends Record<string, z.ZodType>>(
+      shape: S
+    ): z.ZodObject<S, z.core.$loose>
+  }
+
+  strictObject: {
+    <T extends object>(): <S extends Record<string, z.ZodType>>(
+      shape: S & Partial<Record<KeysOf<T>, any>>
+    ) => z.ZodObject<S, z.core.$strict>
+
+    <S extends Record<string, z.ZodType>>(
+      shape: S
+    ): z.ZodObject<S, z.core.$strict>
+  }
 }
 
 export function createAutoFormZ<TControls extends AutoFormControls = typeof DEFAULT_CONTROLS>(_controls?: TControls) {
@@ -41,17 +62,29 @@ export function createAutoFormZ<TControls extends AutoFormControls = typeof DEFA
     boolean: (controlMeta?: any) => applyMeta(z.boolean(), controlMeta),
     date: (controlMeta?: any) => applyMeta(z.date(), controlMeta),
 
-    object: <T extends object = any>() => <S extends Record<string, z.ZodType>>(
-      shape: S & Partial<Record<KeysOf<T>, any>>,
-    ) => z.object(shape),
+    // 直接实现符合接口的 object 函数
+    object: ((...args: any[]) => {
+      // 如果没有参数，返回柯里化函数
+      if (args.length === 0) {
+        return (shape: any) => z.object(shape)
+      }
+      // 如果有参数，直接处理
+      return z.object(args[0])
+    }) as TypedZodFactory<TControls>['object'],
 
-    looseObject: <T extends object = any>() => <S extends Record<string, z.ZodType>>(
-      shape: S & Partial<Record<KeysOf<T>, any>>,
-    ) => z.looseObject(shape),
+    looseObject: ((...args: any[]) => {
+      if (args.length === 0) {
+        return (shape: any) => z.looseObject(shape)
+      }
+      return z.looseObject(args[0])
+    }) as TypedZodFactory<TControls>['looseObject'],
 
-    strictObject: <T extends object = any>() => <S extends Record<string, z.ZodType>>(
-      shape: S & Partial<Record<KeysOf<T>, any>>,
-    ) => z.strictObject(shape),
+    strictObject: ((...args: any[]) => {
+      if (args.length === 0) {
+        return (shape: any) => z.strictObject(shape)
+      }
+      return z.strictObject(args[0])
+    }) as TypedZodFactory<TControls>['strictObject'],
   } as unknown as TypedZodFactory<TControls>
 
   return {

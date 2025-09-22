@@ -1,13 +1,14 @@
 <script setup lang="ts" generic="S extends z.ZodObject, T extends boolean = true, N extends boolean = false">
 import type { FormData, FormError, FormErrorEvent, FormInputEvents, FormSubmitEvent, InferInput } from '@nuxt/ui'
 import type { z } from 'zod/v4'
-import type { AutoFormControls, AutoFormField, DynamicFormSlots } from '../../types/auto-form'
+import type { AccordionConfig, AutoFormControls, AutoFormField, DynamicFormSlots } from '../../types/auto-form'
 import { computed, unref } from 'vue'
 import { useAutoFormProvider } from '../../composables/useAutoFormContext'
 import { DEFAULT_CONTROLS } from '../../constants/auto-form'
 import { deepClone, getPath, setPath } from '../../core'
-import { introspectSchema } from '../../utils/auto-form'
+import { collectTopLevelObjectFields, flattenFields, generateAccordionItems, groupFieldsByType, introspectSchema, shouldEnableAccordion } from '../../utils/auto-form'
 import AutoFormFieldRenderer from './AutoFormFieldRenderer.vue'
+import AutoFormNestedRenderer from './AutoFormNestedRenderer.vue'
 
 export interface AutoFormProps<S extends z.ZodObject, T extends boolean = true, N extends boolean = false> {
   id?: string | number
@@ -69,6 +70,12 @@ export interface AutoFormProps<S extends z.ZodObject, T extends boolean = true, 
    * @defaultValue `true`
    */
   enableTransition?: boolean
+
+  /**
+   * UAccordion 包装配置
+   * 用于控制对象字段的折叠展示
+   */
+  accordion?: AccordionConfig
 }
 
 export interface AutoFormEmits<S extends z.ZodObject, T extends boolean = true> {
@@ -87,6 +94,7 @@ const {
   controls,
   size,
   enableTransition = true,
+  accordion,
   ...restProps
 } = defineProps<AutoFormProps<S, T, N>>()
 const emit = defineEmits<AutoFormEmits<S, T>>()
@@ -145,6 +153,42 @@ const visibleFields = computed(() => fields.value.filter((field: AutoFormField) 
   return ifValue === true
 }))
 
+// UAccordion 相关计算属性
+const enableAccordionWrapper = computed(() =>
+  shouldEnableAccordion(visibleFields.value, accordion)
+)
+
+// 根据是否启用 UAccordion 决定字段处理方式
+const processedFields = computed(() => {
+  if (enableAccordionWrapper.value) {
+    // 使用 UAccordion 时，保持原有字段结构用于分组
+    return groupFieldsByType(visibleFields.value)
+  }
+  else {
+    // 不使用 UAccordion 时，展平所有字段，只显示叶子节点
+    const flattened = flattenFields(visibleFields.value)
+    return {
+      objectFields: [],
+      regularFields: flattened,
+    }
+  }
+})
+
+// 为 UAccordion 收集顶级对象字段（不包括嵌套的）
+const topLevelObjectFields = computed(() => {
+  if (!enableAccordionWrapper.value) {
+    return []
+  }
+  return collectTopLevelObjectFields(visibleFields.value)
+})
+
+const accordionItems = computed(() => {
+  if (!enableAccordionWrapper.value || topLevelObjectFields.value.length === 0) {
+    return []
+  }
+  return generateAccordionItems(topLevelObjectFields.value, accordion)
+})
+
 // 字段属性解析逻辑已移至 useFieldRenderer composable
 </script>
 
@@ -157,11 +201,55 @@ const visibleFields = computed(() => fields.value.filter((field: AutoFormField) 
     @error="emit('error', $event)"
   >
     <slot name="before-fields" :fields="visibleFields" :state="state" />
-    <TransitionGroup :name="enableTransition ? 'auto-form-field' : ''" :duration="{ enter: 350, leave: 250 }">
-      <template v-for="field in visibleFields" :key="field.path">
-        <AutoFormFieldRenderer :field="field" :schema="schema" :name="name" :size="size" />
-      </template>
-    </TransitionGroup>
+
+    <!-- 使用 UAccordion 包装的情况 -->
+    <template v-if="enableAccordionWrapper">
+      <!-- 渲染非对象字段 -->
+      <TransitionGroup
+        v-if="processedFields.regularFields.length > 0"
+        :name="enableTransition ? 'auto-form-field' : ''"
+        :duration="{ enter: 350, leave: 250 }"
+      >
+        <template v-for="field in processedFields.regularFields" :key="field.path">
+          <AutoFormFieldRenderer :field="field" :schema="schema" :name="name" :size="size" />
+        </template>
+      </TransitionGroup>
+
+      <!-- UAccordion 包装对象字段 -->
+      <UAccordion
+        v-if="accordionItems.length > 0"
+        :items="accordionItems"
+        v-bind="accordion?.props"
+      >
+        <!-- 为每个顶级对象字段创建对应的内容插槽 -->
+        <template
+          v-for="objectField in topLevelObjectFields"
+          :key="`content-${objectField.path}`"
+          #[`content-${objectField.path}`]
+        >
+          <!-- 使用嵌套渲染器处理对象字段的内容 -->
+          <AutoFormNestedRenderer
+            v-if="objectField.children"
+            :fields="objectField.children"
+            :schema="schema"
+            :name="name"
+            :size="size"
+            :enable-transition="enableTransition"
+            :accordion="accordion"
+          />
+        </template>
+      </UAccordion>
+    </template>
+
+    <!-- 不使用 UAccordion 包装的情况（原有逻辑） -->
+    <template v-else>
+      <TransitionGroup :name="enableTransition ? 'auto-form-field' : ''" :duration="{ enter: 350, leave: 250 }">
+        <template v-for="field in processedFields.regularFields" :key="field.path">
+          <AutoFormFieldRenderer :field="field" :schema="schema" :name="name" :size="size" />
+        </template>
+      </TransitionGroup>
+    </template>
+
     <slot name="after-fields" :fields="visibleFields" :state="state" />
     <!-- <slot name="submit" :state="state" /> -->
   </UForm>

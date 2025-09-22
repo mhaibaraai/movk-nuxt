@@ -112,3 +112,57 @@ export type AutoFormFactoryMethod<
     ...args: [...TExtraParams, ({ component: C, type?: never } & OmitControlMeta<C>)?]
   ): TResult
 }
+
+/**
+ * UAccordion 相关类型定义
+ */
+
+/** UAccordion 的 AccordionItem 接口 */
+export interface AccordionItem {
+  /** 折叠项标签 */
+  label?: string
+  /** 折叠项图标 */
+  icon?: string
+  /** 折叠项尾部图标 */
+  trailingIcon?: string
+  /** 折叠项内容 */
+  content?: string
+  /** 折叠项值 */
+  value?: string
+  /** 是否禁用 */
+  disabled?: boolean
+  /** 自定义插槽名称 */
+  slot?: string
+  /** UI 自定义配置 */
+  ui?: Record<string, any>
+}
+
+/** UAccordion 的基础属性接口 */
+export interface AccordionBaseProps {
+  /** 手风琴行为类型 */
+  type?: 'single' | 'multiple'
+  /** 是否可折叠 */
+  collapsible?: boolean
+  /** 尾部图标 */
+  trailingIcon?: string
+  /** 其他 UAccordion 原生属性 */
+  [key: string]: any
+}
+
+/** UAccordion 配置接口 */
+export interface AccordionConfig {
+  /** 是否启用 UAccordion 包装 */
+  enabled?: boolean
+
+  /** UAccordion 的默认属性 */
+  props?: AccordionBaseProps
+
+  /** 自定义 accordion item 生成函数 */
+  itemGenerator?: (field: AutoFormField) => AccordionItem
+
+  /** 字段级覆盖配置 */
+  fieldOverrides?: Record<string, Partial<AccordionItem>>
+
+  /** 是否只对包含对象字段的表单启用 */
+  onlyForObjectFields?: boolean
+}

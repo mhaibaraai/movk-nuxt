@@ -34,30 +34,21 @@ const customControls = {
 const { afz } = createAutoFormZ(customControls)
 
 const schema = afz.object<State>()({
-  // dynamicLabel: afz.string({
-  //   if: ({ state }) => !state.visibleTest,
-  // }),
-  // nameValue: afz.string({
-  //   // if: ({ state }) => state.visibleTest,
-  //   // hidden: ({ state }) => !state.visibleTest,
-  // }).meta({
-  //   size: 'sm',
-  // }).optional(),
   visibleTest: afz.boolean(),
-  // dynamicLabel: afz.string({
-  //   // hidden: ({ state }) => !state.visibleTest,
-  //   controlProps: ({ state }) => ({
-  //     icon: 'i-lucide-alarm-clock',
-  //     color: state.nameValue ? 'success' : 'error',
-  //   }),
-  // }).meta({
-  //   label: ({ state }: AutoFormFieldContext<State>) => `动态字段: ${state.nameValue}`,
-  // }).optional(),
   nestedObject: afz.object<State['nestedObject']>()({
-    firstName: afz.string({}).default('default name').optional(),
+    firstName: afz.string().default('default name').optional(),
     lastName: afz.string().meta({
       label: ({ state }) => `动态字段: ${state.firstName}`,
     }),
+    userAge: afz.number().optional(),
+    address: afz.object<State['nestedObject']['address']>()({
+      province: afz.string(),
+      city: afz.string(),
+      district: afz.string(),
+    }),
+  }).optional().meta({
+    label: '用户信息',
+    icon: 'i-lucide-user',
   }),
 })
 
@@ -69,9 +60,45 @@ const formState = ref({
 <template>
   <div class="space-y-4 p-10">
     <UCard>
-      <MAutoForm v-model="formState" :schema="schema" class="space-y-4" :controls="customControls">
+      <template #header>
+        <h2 class="text-lg font-semibold">
+          UAccordion 包装功能测试
+        </h2>
+        <p class="text-sm text-gray-600">
+          启用 accordion 配置后，对象字段会自动包装在折叠面板中
+        </p>
+      </template>
+      <MAutoForm
+        v-model="formState"
+        :schema="schema"
+        class="space-y-4"
+        :controls="customControls"
+        :accordion="{
+          enabled: true,
+          onlyForObjectFields: true,
+          props: {
+            type: 'multiple',
+            collapsible: true,
+          },
+          fieldOverrides: {
+            'nestedObject': {
+              label: '用户信息',
+              icon: 'i-lucide-user',
+            },
+            'nestedObject.address': {
+              label: '详细地址',
+              icon: 'i-lucide-map-pin',
+            },
+          },
+        }"
+      >
         <template #after-fields="{ state }">
-          <pre>{{ state }}</pre>
+          <UCard>
+            <template #header>
+              <h3>表单状态</h3>
+            </template>
+            <pre>{{ state }}</pre>
+          </UCard>
         </template>
         <template #description:visibleTest>
           visibleTest description
@@ -84,26 +111,32 @@ const formState = ref({
         </template>
       </MAutoForm>
     </UCard>
-    <!-- <UCard>
-      <UAccordion :items="[{ label: 'nestedObject', name: 'nestedObject', slot: 'nestedObject' }]">
-        <template #default="{ item }">
-          <UFormField
-            :label="item.label"
-            :name="item.name"
-            required
-            help="help"
-            hint="hint"
-          />
+
+    <!-- 对比：不使用 UAccordion 的普通表单 -->
+    <UCard>
+      <template #header>
+        <h2 class="text-lg font-semibold">
+          普通表单（无 UAccordion）
+        </h2>
+        <p class="text-sm text-gray-600">
+          相同的 schema 但未启用 accordion 配置
+        </p>
+      </template>
+      <MAutoForm
+        v-model="formState"
+        :schema="schema"
+        class="space-y-4"
+        :controls="customControls"
+      >
+        <template #after-fields="{ state }">
+          <UCard>
+            <template #header>
+              <h3>表单状态</h3>
+            </template>
+            <pre>{{ state }}</pre>
+          </UCard>
         </template>
-        <template #nestedObject>
-          <UFormField label="province" name="province">
-            <UInput v-model="formState.province" />
-          </UFormField>
-          <UFormField label="district" name="district">
-            <UInput v-model="formState.district" />
-          </UFormField>
-        </template>
-      </UAccordion>
-    </UCard> -->
+      </MAutoForm>
+    </UCard>
   </div>
 </template>

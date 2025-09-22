@@ -54,7 +54,7 @@ describe('auto-form typing', () => {
 
         },
       }),
-      address: afz.object()({
+      address: afz.object<MockState['address']>()({
         city: afz.string(),
         province: afz.string({
           component: MockString,
