@@ -1,82 +1,27 @@
-<script setup lang="ts" generic="S extends z.ZodObject, N extends boolean = false">
+<script setup lang="ts" generic="S extends z.ZodObject">
 import type { z } from 'zod/v4'
 import type { AutoFormField } from '../../types/auto-form'
-import { unref } from 'vue'
 import { useAutoFormInjector } from '../../composables/useAutoFormContext'
-import { useFieldRenderer } from '../../composables/useFieldRenderer'
-import { VNodeRender } from '../../utils/auto-form'
+import { VNodeRender } from '../../utils/rendering/vnode-utils'
 
-export interface AutoFormFieldProps<S extends z.ZodObject, N extends boolean = false> {
+export interface AutoFormFieldProps<S extends z.ZodObject> {
   field: AutoFormField
   schema?: S
-  name?: N extends true ? string : never
   size?: 'md' | 'xs' | 'sm' | 'lg' | 'xl'
 }
 
-const { field } = defineProps<AutoFormFieldProps<S, N>>()
+const { field, size } = defineProps<AutoFormFieldProps<S>>()
 
-// 使用字段渲染器 composable（通过注入获取状态）
+// 获取所有方法和上下文工厂
 const {
   resolveFieldProp,
-  renderFieldSlot,
-  getResolvedFieldSlots,
   renderControl,
-  createFieldContext,
-} = useFieldRenderer()
-
-// 从父组件注入插槽
-const { slots: parentSlots } = useAutoFormInjector()
-
-// 优化：预计算字段插槽解析器
-function createSlotResolver(field: AutoFormField) {
-  const keyPrefix = field.path
-  const fieldSlots = getResolvedFieldSlots(field)
-
-  return {
-    hasSlot(name: string): boolean {
-      const keySpecific = `${name}:${keyPrefix}`
-      return Boolean(
-        parentSlots?.[keySpecific]
-        || parentSlots?.[name]
-        || fieldSlots?.[name],
-      )
-    },
-
-    renderSlot(name: string, slotProps: any) {
-      const keySpecific = `${name}:${keyPrefix}`
-
-      // 优先级：路径特定 > 通用 > 字段级
-      if (parentSlots?.[keySpecific]) {
-        return parentSlots[keySpecific](slotProps)
-      }
-
-      if (parentSlots?.[name]) {
-        return parentSlots[name](slotProps)
-      }
-
-      if (fieldSlots?.[name]) {
-        return renderFieldSlot(fieldSlots[name], slotProps)
-      }
-
-      return null
-    },
-  }
-}
+  createSlotResolver,
+  createFormFieldSlots,
+} = useAutoFormInjector()
 
 // 为当前字段创建插槽解析器
 const slotResolver = createSlotResolver(field)
-
-// 优化：创建插槽 props 时解引用 computed 值
-function createSlotProps(field: AutoFormField, extraProps: Record<string, any> = {}) {
-  const context = createFieldContext(field)
-  return {
-    ...extraProps,
-    state: context.state,
-    path: context.path,
-    value: unref(context.value),
-    setValue: context.setValue,
-  }
-}
 </script>
 
 <template>
@@ -96,35 +41,20 @@ function createSlotProps(field: AutoFormField, extraProps: Record<string, any> =
     :class="resolveFieldProp(field, 'class')"
     :ui="resolveFieldProp(field, 'ui')"
   >
-    <template v-if="slotResolver.hasSlot('label')" #label="{ label }">
-      <VNodeRender
-        :node="slotResolver.renderSlot('label', createSlotProps(field, { label: label || resolveFieldProp(field, 'label') }))"
-      />
+    <!-- 使用统一的插槽渲染器，大幅简化代码 -->
+    <template
+      v-for="(slotComponent, slotName) in createFormFieldSlots(field, slotResolver)"
+      :key="slotName"
+      #[slotName]="slotData"
+    >
+      <VNodeRender :node="slotComponent(slotData)" />
     </template>
-    <template v-if="slotResolver.hasSlot('hint')" #hint="{ hint }">
-      <VNodeRender
-        :node="slotResolver.renderSlot('hint', createSlotProps(field, { hint: hint || resolveFieldProp(field, 'hint') }))"
-      />
-    </template>
-    <template v-if="slotResolver.hasSlot('description')" #description="{ description }">
-      <VNodeRender
-        :node="slotResolver.renderSlot('description', createSlotProps(field, { description: description || resolveFieldProp(field, 'description') }))"
-      />
-    </template>
-    <template v-if="slotResolver.hasSlot('help')" #help="{ help }">
-      <VNodeRender
-        :node="slotResolver.renderSlot('help', createSlotProps(field, { help: help || resolveFieldProp(field, 'help') }))"
-      />
-    </template>
-    <template v-if="slotResolver.hasSlot('error')" #error="{ error }">
-      <VNodeRender
-        :node="slotResolver.renderSlot('error', createSlotProps(field, { error }))"
-      />
-    </template>
+
+    <!-- 默认插槽处理 -->
     <template #default="{ error }">
       <template v-if="slotResolver.hasSlot('default')">
         <VNodeRender
-          :node="slotResolver.renderSlot('default', createSlotProps(field, { error }))"
+          :node="slotResolver.renderSlot('default', { error, state: undefined, path: field.path, value: undefined, setValue: () => {} })"
         />
       </template>
       <template v-else>

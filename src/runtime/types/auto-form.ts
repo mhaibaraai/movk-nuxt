@@ -1,4 +1,7 @@
+import type { GetItemKeys } from '#ui/types/utils'
 import type { OmitByKey } from '@movk/core'
+import type { IconProps } from '@nuxt/ui'
+import type { ClassNameValue } from 'tailwind-merge'
 import type { GlobalMeta, z } from 'zod/v4'
 import type { ComponentProps, ComponentSlots, IsComponent, ReactiveValue, Suggest } from '../core'
 
@@ -14,7 +17,7 @@ type NestedPathSlots<T> = T extends object
         : never
       ]: (props: AutoFormFieldContext<T>) => any
     }
-  : {}
+  : Record<string, never>
 
 export type DynamicFormSlots<T>
   = Record<string, (props: AutoFormFieldContext<T>) => any>
@@ -118,56 +121,72 @@ export type AutoFormFactoryMethod<
   ): TResult
 }
 
-/**
- * UAccordion 相关类型定义
- */
-
-/** UAccordion 的 AccordionItem 接口 */
-export interface AccordionItem {
-  /** 折叠项标签 */
+interface AccordionItem {
   label?: string
-  /** 折叠项图标 */
-  icon?: string
-  /** 折叠项尾部图标 */
-  trailingIcon?: string
-  /** 折叠项内容 */
-  content?: string
-  /** 折叠项值 */
-  value?: string
-  /** 是否禁用 */
-  disabled?: boolean
-  /** 自定义插槽名称 */
+  /**
+   * @IconifyIcon
+   */
+  icon?: IconProps['name']
+  /**
+   * @IconifyIcon
+   */
+  trailingIcon?: IconProps['name']
   slot?: string
-  /** UI 自定义配置 */
-  ui?: Record<string, any>
-}
-
-/** UAccordion 的基础属性接口 */
-export interface AccordionBaseProps {
-  /** 手风琴行为类型 */
-  type?: 'single' | 'multiple'
-  /** 是否可折叠 */
-  collapsible?: boolean
-  /** 尾部图标 */
-  trailingIcon?: string
-  /** 其他 UAccordion 原生属性 */
+  content?: string
+  /** A unique value for the accordion item. Defaults to the index. */
+  value?: string
+  disabled?: boolean
+  class?: any
+  ui?: { root?: ClassNameValue, item?: ClassNameValue, header?: ClassNameValue, trigger?: ClassNameValue, content?: ClassNameValue, body?: ClassNameValue, leadingIcon?: ClassNameValue, trailingIcon?: ClassNameValue, label?: ClassNameValue }
   [key: string]: any
 }
 
+export interface AccordionProps<T extends AccordionItem = AccordionItem> {
+  /**
+   * The element or component this component should render as.
+   * @defaultValue 'div'
+   */
+  as?: any
+  items?: T[]
+  /**
+   * The icon displayed on the right side of the trigger.
+   * @defaultValue appConfig.ui.icons.chevronDown
+   * @IconifyIcon
+   */
+  trailingIcon?: IconProps['name']
+  /**
+   * The key used to get the label from the item.
+   * @defaultValue 'label'
+   */
+  labelKey?: GetItemKeys<T>
+  class?: any
+}
+
 /** UAccordion 配置接口 */
-export interface AccordionConfig {
-  /** 是否启用 UAccordion 包装 */
+export interface AccordionConfig<S extends object = object, T extends AccordionItem = AccordionItem> {
+  /**
+   * 是否启用 UAccordion 包装
+   * @default false
+   */
   enabled?: boolean
-
-  /** UAccordion 的默认属性 */
-  props?: AccordionBaseProps
-
-  /** 自定义 accordion item 生成函数 */
-  itemGenerator?: (field: AutoFormField) => AccordionItem
-
-  /** 字段级覆盖配置 */
-  fieldOverrides?: Record<string, Partial<AccordionItem>>
-
-  /** 是否只对包含对象字段的表单启用 */
+  props?: AccordionProps<T>
+  /**
+   * 自定义 accordion item 生成函数
+   * @param field 字段
+   * @returns AccordionItem
+   */
+  itemGenerator?: (field: AutoFormField) => T
+  /**
+   * 字段级覆盖配置
+   */
+  fieldOverrides?: Record<keyof S, Partial<T>>
+  /**
+   * 是否只对包含对象字段的表单启用
+   * @default true
+   * @example
+   * // true: 只有包含 object/array 等嵌套字段时才启用折叠面板
+   * // false: 无论表单结构如何都启用折叠面板
+   * onlyForObjectFields: false
+   */
   onlyForObjectFields?: boolean
 }

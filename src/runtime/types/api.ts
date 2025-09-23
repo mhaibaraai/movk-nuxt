@@ -1,5 +1,5 @@
-import type { UseFetchOptions } from '#app'
 import type { ToastProps } from '@nuxt/ui'
+import type { UseFetchOptions } from 'nuxt/app'
 import { getRandomUUID } from '@movk/core'
 import { z } from 'zod/v4'
 

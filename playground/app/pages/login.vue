@@ -48,7 +48,7 @@ const fields = computed(() => [
 const schema = z.object({
   email: z.email(t('auth.validation.emailInvalid')),
   password: z.string(t('auth.validation.passwordInvalid')).min(8, t('auth.validation.passwordInvalid')),
-  rememberMe: z.boolean().default(false),
+  rememberMe: z.boolean().optional().default(false),
 })
 
 type Schema = z.infer<typeof schema>
@@ -64,8 +64,11 @@ const { execute } = useApiFetch('/auth/login', {
   body: state.value,
 })
 
-function onSubmit(payload: FormSubmitEvent<Schema>) {
-  state.value = payload.data
+function onSubmit(payload: FormSubmitEvent<{ email: string, password: string, rememberMe?: boolean }>) {
+  state.value = {
+    ...payload.data,
+    rememberMe: payload.data.rememberMe ?? false,
+  }
   execute()
 }
 </script>

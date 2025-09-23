@@ -1,5 +1,6 @@
 import type { AutoFormFieldContext } from '#movk/types/auto-form'
 import type { FormFieldSlots } from '@nuxt/ui'
+import type { ClassNameValue } from 'tailwind-merge'
 import type { ComputedRef, Ref } from 'vue'
 
 type ReactiveValue<T, CTX = AutoFormFieldContext> = T | ((ctx: CTX) => T) | Ref<T> | ComputedRef<T>
@@ -36,7 +37,7 @@ declare module 'zod/v4' {
      */
     validateOnInputDelay?: ReactiveValue<number>
     class?: ReactiveValue<any>
-    ui?: ReactiveValue<{ root?: string, wrapper?: string, labelWrapper?: string, label?: string, container?: string, description?: string, error?: string, hint?: string, help?: string }>
+    ui?: ReactiveValue<{ root?: ClassNameValue, wrapper?: ClassNameValue, labelWrapper?: ClassNameValue, label?: strClassNameValueing, container?: ClassNameValue, description?: ClassNameValue, error?: ClassNameValue, hint?: ClassNameValue, help?: ClassNameValue }>
     /**
      * @see https://ui4.nuxt.com/docs/components/form-field#slots
      */

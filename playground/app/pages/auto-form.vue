@@ -53,6 +53,9 @@ const schema = afz.object<State>()({
     label: '用户信息',
     description: '用户信息 description',
   }),
+  nameValue: afz.string().meta({
+    // if: ({ state }) => state.visibleTest,
+  }),
 })
 
 const formState = ref({
@@ -79,20 +82,6 @@ const formState = ref({
         :accordion="{
           enabled: true,
           onlyForObjectFields: true,
-          props: {
-            type: 'multiple',
-            collapsible: true,
-          },
-          fieldOverrides: {
-            'nestedObject': {
-              label: '用户信息',
-              icon: 'i-lucide-user',
-            },
-            'nestedObject.address': {
-              label: '详细地址',
-              icon: 'i-lucide-map-pin',
-            },
-          },
         }"
       >
         <template #after-fields="{ state }">
@@ -103,7 +92,7 @@ const formState = ref({
             <pre>{{ state }}</pre>
           </UCard>
         </template>
-        <template #description:visibleTest>
+        <!-- <template #description:visibleTest>
           visibleTest description
         </template>
         <template #hint:visibleTest="{ value, setValue }">
@@ -111,7 +100,7 @@ const formState = ref({
           <UButton @click="setValue(true)">
             setValue
           </UButton>
-        </template>
+        </template> -->
       </MAutoForm>
     </UCard>
 

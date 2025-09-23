@@ -1,4 +1,4 @@
-import type { UseFetchOptions } from '#app'
+import type { UseFetchOptions } from 'nuxt/app'
 import type { ApiFetchOptions, ApiProfile } from './runtime/types'
 import {
   addComponentsDir,
@@ -78,8 +78,7 @@ export default defineNuxtModule<ModuleOptions>({
     nuxt.options.css.push(resolve('runtime/assets/css/main.css'))
 
     if (options.i18n) {
-      // @ts-expect-error i18n:registerModule is not a valid hook key
-      nuxt.hook('i18n:registerModule', (register) => {
+      nuxt.hook('i18n:registerModule', (register: any) => {
         register({
           langDir: resolve('./runtime/i18n/locales'),
           locales: [

@@ -250,11 +250,11 @@ interface AccordionBaseProps {
 }
 
 interface AccordionConfig {
-  enabled?: boolean                           // 是否启用包装
-  props?: AccordionBaseProps                  // UAccordion 原生属性
-  itemGenerator?: (field: AutoFormField) => AccordionItem  // 自定义生成器
-  fieldOverrides?: Record<string, Partial<AccordionItem>>  // 字段级覆盖
-  onlyForObjectFields?: boolean               // 仅对包含对象字段的表单启用
+  enabled?: boolean // 是否启用包装
+  props?: AccordionBaseProps // UAccordion 原生属性
+  itemGenerator?: (field: AutoFormField) => AccordionItem // 自定义生成器
+  fieldOverrides?: Record<string, Partial<AccordionItem>> // 字段级覆盖
+  onlyForObjectFields?: boolean // 仅对包含对象字段的表单启用
 }
 
 // 扩展 AutoFormProps
@@ -262,6 +262,48 @@ interface AutoFormProps {
   accordion?: AccordionConfig
 }
 ```
+
+- onlyForObjectFields 的应用场景
+
+1. 简单表单优化
+- 当表单只包含基础字段（input、select、checkbox等）时，不启用折叠面板
+- 避免为简单表单增加不必要的 UI 复杂度
+
+2. 复杂表单增强
+- 当表单包含对象字段（即嵌套结构）时，自动启用折叠面板
+- 提供更好的层级展示和交互体验
+
+3. 智能切换
+- onlyForObjectFields: true（默认）：只在有对象字段时启用
+- onlyForObjectFields: false：无论表单结构如何都启用折叠面板
+
+实际示例
+
+```ts
+// 简单表单 - 不会启用折叠面板
+const simpleSchema = {
+  name: string(),
+  email: string(),
+  age: number()
+}
+
+// 复杂表单 - 会自动启用折叠面板
+const complexSchema = {
+  name: string(),
+  email: string(),
+  address: object({  // 对象字段
+    street: string(),
+    city: string()
+  }),
+  preferences: object({  // 对象字段
+    theme: string(),
+    language: string()
+  })
+}
+```
+
+这个设计让组件能够根据表单复杂度自动调整 UI
+展示方式，提供更好的用户体验。
 
 ### 2. 核心工具函数 (`utils/auto-form.ts`)
 
@@ -284,13 +326,15 @@ export function shouldEnableAccordion(fields: AutoFormField[], config?: Accordio
 ### 3. 组件架构重构
 
 #### 主组件 (`AutoForm.vue`)
+
 ```typescript
 // 智能字段处理逻辑
 const processedFields = computed(() => {
   if (enableAccordionWrapper.value) {
     // UAccordion 模式：保持字段结构用于分组
     return groupFieldsByType(visibleFields.value)
-  } else {
+  }
+  else {
     // 普通模式：展平所有字段，只显示叶子节点
     const flattened = flattenFields(visibleFields.value)
     return { objectFields: [], regularFields: flattened }
@@ -304,6 +348,7 @@ const topLevelObjectFields = computed(() =>
 ```
 
 #### 嵌套渲染器 (`AutoFormNestedRenderer.vue`)
+
 ```vue
 <!-- 专门处理嵌套对象字段的递归组件 -->
 <template>
@@ -329,15 +374,19 @@ const topLevelObjectFields = computed(() =>
 ## 解决的核心问题：
 
 ### 问题1: 嵌套对象处理
+
 **现象**: `nestedObject.address` 被错误地作为同级折叠面板显示
 **解决方案**:
+
 - 创建 `collectTopLevelObjectFields` 只收集顶级对象字段
 - 使用 `AutoFormNestedRenderer` 递归处理嵌套结构
 - 每层嵌套独立管理自己的 UAccordion
 
 ### 问题2: 普通表单对象字段渲染错误
+
 **现象**: `[AutoForm] 控件未映射: nestedObject` 错误
 **解决方案**:
+
 - 使用 `flattenFields` 递归展平对象字段
 - 区分容器字段（对象）和叶子字段（有控件）
 - 普通模式下只渲染叶子节点字段
@@ -413,7 +462,7 @@ trailing
 
 - afz.object({
   a: afz.string()
-}).meta({
+  }).meta({
   hidden: true,
   ...其余属性,
-})
+  })
