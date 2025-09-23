@@ -1,7 +1,7 @@
 import type { AnyObject } from '@movk/core'
 import type { InjectionKey, ModelRef } from 'vue'
 import type { ReactiveValue } from '../core'
-import type { AutoFormField, AutoFormFieldContext } from '../types/auto-form'
+import type { AutoFormAccordionSlots, AutoFormField, AutoFormFieldContext } from '../types/auto-form'
 import { isFunction } from '@movk/core'
 import defu from 'defu'
 import { computed, h, inject, isVNode, provide, resolveDynamicComponent, unref } from 'vue'
@@ -17,6 +17,7 @@ interface AutoFormContextFactory {
   renderControl: (field: AutoFormField) => any
   createSlotResolver: (field: AutoFormField) => { hasSlot: (name: string) => boolean, renderSlot: (name: string, slotProps: any) => any }
   createFormFieldSlots: (field: AutoFormField, slotResolver: { hasSlot: (name: string) => boolean, renderSlot: (name: string, slotProps: any) => any }) => Record<string, any>
+  createAccordionSlots: (field: AutoFormField, defaultImplementations: Partial<AutoFormAccordionSlots>) => Record<string, any>
   clearContextCache: () => void
 }
 
@@ -129,6 +130,10 @@ export function useAutoFormProvider<T extends Record<string, any>>(
   function renderControl(field: AutoFormField) {
     const controlMeta = field?.meta
     const comp = controlMeta?.component as any
+
+    // 排除 object
+    if (field.meta.type === 'object')
+      return null
 
     if (!comp) {
       return h('div', { class: 'text-red-500' }, `[AutoForm] 控件未映射: ${field?.path ?? ''}`)
@@ -255,6 +260,48 @@ export function useAutoFormProvider<T extends Record<string, any>>(
     return slots
   }
 
+  /**
+   * 为 UAccordion 生成类型化插槽配置
+   * 提供完整的插槽参数类型支持和默认实现
+   */
+  function createAccordionSlots(
+    field: AutoFormField,
+    defaultImplementations: Partial<AutoFormAccordionSlots>,
+  ) {
+    const slots: Record<string, any> = {}
+    const slotResolver = createSlotResolver(field)
+
+    // accordion 插槽名称映射
+    const accordionSlotNames = ['default', 'leading', 'trailing', 'content', 'body'] as const
+
+    accordionSlotNames.forEach((slotName) => {
+      // 检查具体插槽和通用插槽
+      const specificSlotName = `accordion-${slotName}:${field.path}`
+      const globalSlotName = `accordion-${slotName}`
+
+      if (slotResolver.hasSlot(specificSlotName) || slotResolver.hasSlot(globalSlotName)) {
+        slots[slotName] = (slotData: any) => {
+          // 合并插槽参数，确保类型完整性
+          const slotProps = {
+            field,
+            ...slotData,
+          }
+
+          // 优先使用具体插槽
+          if (slotResolver.hasSlot(specificSlotName)) {
+            return slotResolver.renderSlot(specificSlotName, slotProps)
+          }
+          return slotResolver.renderSlot(globalSlotName, slotProps)
+        }
+      }
+      else if (defaultImplementations[slotName]) {
+        // 使用提供的默认实现
+        slots[slotName] = defaultImplementations[slotName]
+      }
+    })
+    return slots
+  }
+
   // 创建完整的上下文工厂对象
   const contextFactory: AutoFormContextFactory = {
     createFieldContext,
@@ -265,6 +312,7 @@ export function useAutoFormProvider<T extends Record<string, any>>(
     renderControl,
     createSlotResolver,
     createFormFieldSlots,
+    createAccordionSlots,
     clearContextCache: () => contextCache.clear(),
   }
 

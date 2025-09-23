@@ -2,7 +2,7 @@
   "name": "@movk/nuxt",
   "type": "module",
   "version": "0.0.0",
-  "packageManager": "pnpm@10.17.0",
+  "packageManager": "pnpm@10.17.1",
   "description": "Movk Nuxt module",
   "license": "MIT",
   "repository": "movk/nuxt",

@@ -121,7 +121,7 @@ export type AutoFormFactoryMethod<
   ): TResult
 }
 
-interface AccordionItem {
+export interface AutoFormAccordionItem {
   label?: string
   /**
    * @IconifyIcon
@@ -138,10 +138,31 @@ interface AccordionItem {
   disabled?: boolean
   class?: any
   ui?: { root?: ClassNameValue, item?: ClassNameValue, header?: ClassNameValue, trigger?: ClassNameValue, content?: ClassNameValue, body?: ClassNameValue, leadingIcon?: ClassNameValue, trailingIcon?: ClassNameValue, label?: ClassNameValue }
+
+  field?: AutoFormField
   [key: string]: any
 }
 
-export interface AccordionProps<T extends AccordionItem = AccordionItem> {
+type AutoFormAccordionSlotProps<T extends AutoFormAccordionItem> = (props: {
+  /** 当前 item 数据 */
+  item: T
+  /** 当前 item 索引 */
+  index: number
+  /** 是否展开状态 */
+  open: boolean
+  /** 关联的表单字段（由 generateAccordionItems 注入） */
+  field?: AutoFormField
+}) => any
+
+export interface AutoFormAccordionSlots<T extends AutoFormAccordionItem = AutoFormAccordionItem> {
+  leading: AutoFormAccordionSlotProps<T>
+  default: AutoFormAccordionSlotProps<T>
+  trailing: AutoFormAccordionSlotProps<T>
+  content: AutoFormAccordionSlotProps<T>
+  body: AutoFormAccordionSlotProps<T>
+}
+
+export interface AutoFormAccordionProps<T extends AutoFormAccordionItem = AutoFormAccordionItem> {
   /**
    * The element or component this component should render as.
    * @defaultValue 'div'
@@ -163,17 +184,17 @@ export interface AccordionProps<T extends AccordionItem = AccordionItem> {
 }
 
 /** UAccordion 配置接口 */
-export interface AccordionConfig<S extends object = object, T extends AccordionItem = AccordionItem> {
+export interface AccordionConfig<S extends object = object, T extends AutoFormAccordionItem = AutoFormAccordionItem> {
   /**
    * 是否启用 UAccordion 包装
    * @default false
    */
   enabled?: boolean
-  props?: AccordionProps<T>
+  props?: AutoFormAccordionProps<T>
   /**
    * 自定义 accordion item 生成函数
    * @param field 字段
-   * @returns AccordionItem
+   * @returns AutoFormAccordionItem
    */
   itemGenerator?: (field: AutoFormField) => T
   /**

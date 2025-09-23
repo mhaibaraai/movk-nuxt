@@ -52,6 +52,8 @@ const schema = afz.object<State>()({
     hidden: ({ state }) => state.visibleTest, // 不生效
     label: '用户信息',
     description: '用户信息 description',
+    icon: 'i-lucide-user',
+    trailingIcon: 'i-lucide-accessibility',
   }),
   nameValue: afz.string().meta({
     // if: ({ state }) => state.visibleTest,
@@ -91,6 +93,9 @@ const formState = ref({
             </template>
             <pre>{{ state }}</pre>
           </UCard>
+        </template>
+        <template #default:nestedObject>
+          22
         </template>
         <!-- <template #description:visibleTest>
           visibleTest description

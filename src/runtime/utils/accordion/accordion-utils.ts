@@ -1,8 +1,4 @@
-import type { AccordionItem } from '@nuxt/ui'
-import type { AccordionConfig, AutoFormField, AutoFormFieldContext } from '../../types/auto-form'
-import { isFunction } from '@movk/core'
-import { unref } from 'vue'
-import { startCase } from '../../core'
+import type { AccordionConfig, AutoFormAccordionItem, AutoFormField } from '../../types/auto-form'
 
 /**
  * 检测字段是否为对象字段（容器字段）
@@ -22,13 +18,9 @@ export function isLeafField(field: AutoFormField): boolean {
   return !isObjectField(field)
 }
 
-/**
- * 检测字段列表中是否包含对象字段
- * @param fields 字段列表
- * @returns 是否包含对象字段
- */
-function hasObjectFields(fields: AutoFormField[]): boolean {
-  return fields.some(field => isObjectField(field))
+// 判断子字段类型的辅助函数
+export function getFieldType(field: AutoFormField): 'leaf' | 'nested' {
+  return isLeafField(field) ? 'leaf' : 'nested'
 }
 
 /**
@@ -54,122 +46,33 @@ export function flattenFields(fields: AutoFormField[]): AutoFormField[] {
 }
 
 /**
- * 将字段按类型分组
- * @param fields 字段列表
- * @returns 分组后的字段
- */
-export function groupFieldsByType(fields: AutoFormField[]) {
-  const objectFields: AutoFormField[] = []
-  const regularFields: AutoFormField[] = []
-
-  for (const field of fields) {
-    if (isObjectField(field)) {
-      objectFields.push(field)
-    }
-    else {
-      regularFields.push(field)
-    }
-  }
-
-  return {
-    objectFields,
-    regularFields,
-  }
-}
-
-/**
- * 递归收集所有对象字段（包括嵌套的）
- * @param fields 字段列表
- * @returns 所有对象字段的扁平列表
- */
-export function collectAllObjectFields(fields: AutoFormField[]): AutoFormField[] {
-  const result: AutoFormField[] = []
-
-  for (const field of fields) {
-    if (isObjectField(field)) {
-      result.push(field)
-      // 递归收集子字段中的对象字段
-      if (field.children) {
-        result.push(...collectAllObjectFields(field.children))
-      }
-    }
-  }
-
-  return result
-}
-
-/**
- * 只收集顶级对象字段（不包括嵌套的）
- * @param fields 字段列表
- * @returns 顶级对象字段列表
- */
-export function collectTopLevelObjectFields(fields: AutoFormField[]): AutoFormField[] {
-  return fields.filter(field => isObjectField(field))
-}
-
-/**
- * 生成 UAccordion 的 items 配置
- * @param objectFields 对象字段列表
+ * 生成 UAccordion 的 item 配置
+ * @param objectField 对象字段
  * @param config Accordion 配置
- * @returns AccordionItem 数组
+ * @returns AutoFormAccordionItem，包含字段信息
  */
 export function generateAccordionItems(
-  objectFields: AutoFormField[],
+  objectField: AutoFormField,
   config?: AccordionConfig,
-): AccordionItem[] {
-  return objectFields.map((field) => {
-    // 使用自定义生成器（如果提供）
-    if (config?.itemGenerator) {
-      return config.itemGenerator(field)
-    }
-
-    // 创建字段上下文来解析 ReactiveValue
-    const context: AutoFormFieldContext = {
-      state: {},
-      path: field.path,
-      value: undefined,
-      setValue: () => {},
-    }
-
-    // 解析标签
-    const label = field.meta.label
-    const resolvedLabel = isFunction(label) ? label(context) : (unref(label) || startCase(field.path))
-
-    // 默认生成逻辑
-    const defaultItem: AccordionItem = {
-      label: resolvedLabel,
-      value: field.path,
-      slot: `content-${field.path}`,
-    }
-
-    // 应用字段级覆盖配置
-    const fieldOverride = config?.fieldOverrides?.[field.path]
-    if (fieldOverride) {
-      return { ...defaultItem, ...fieldOverride }
-    }
-
-    return defaultItem
-  })
-}
-
-/**
- * 检查是否应该启用 UAccordion 包装
- * @param fields 字段列表
- * @param config Accordion 配置
- * @returns 是否应该启用
- */
-export function shouldEnableAccordion(
-  fields: AutoFormField[],
-  config?: AccordionConfig,
-): boolean {
-  if (!config?.enabled) {
-    return false
+): AutoFormAccordionItem {
+  // 使用自定义生成器（如果提供）
+  if (config?.itemGenerator) {
+    const customItem = config.itemGenerator(objectField)
+    // 确保包含 field 信息
+    return { ...customItem, objectField } as AutoFormAccordionItem
   }
 
-  // 如果配置了只对包含对象字段的表单启用
-  if (config.onlyForObjectFields !== false) {
-    return hasObjectFields(fields)
+  // 默认生成逻辑 - 包含 field 信息
+  const defaultItem: AutoFormAccordionItem = {
+    slot: `content-${objectField.path}`,
+    field: objectField, // 注入字段信息
   }
 
-  return true
+  // 应用字段级覆盖配置
+  const fieldOverride = config?.fieldOverrides?.[objectField.path as keyof typeof config.fieldOverrides] || {}
+  if (fieldOverride) {
+    return { ...defaultItem, ...fieldOverride, field: objectField } as AutoFormAccordionItem
+  }
+
+  return defaultItem
 }

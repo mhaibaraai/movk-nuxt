@@ -6,7 +6,7 @@ import { computed } from 'vue'
 import { useAutoFormProvider } from '../../composables/useAutoFormContext'
 import { DEFAULT_CONTROLS } from '../../constants/auto-form'
 import { deepClone, getPath, setPath } from '../../core'
-import { flattenFields, shouldEnableAccordion } from '../../utils/accordion/accordion-utils'
+import { flattenFields, getFieldType, isLeafField } from '../../utils/accordion/accordion-utils'
 // import { VNodeRender } from '../../utils/rendering/vnode-utils'
 // import { collectTopLevelObjectFields, flattenFields, groupFieldsByType } from '../../utils/accordion/accordion-utils'
 import { introspectSchema } from '../../utils/schema/introspection'
@@ -146,18 +146,18 @@ const visibleFields = computed(() =>
   fields.value.filter((field: AutoFormField) => resolveFieldProp<boolean | undefined>(field, 'if', true)),
 )
 
-// UAccordion 相关计算属性
-const enableAccordionWrapper = computed(() =>
-  shouldEnableAccordion(visibleFields.value, accordion),
-)
-
-// 按原始 schema 顺序处理字段，保持字段定义的原始顺序
-const topLevelFields = computed(() => {
-  // 只获取顶级字段（不包含嵌套字段）
-  return visibleFields.value.filter(field => !field.path.includes('.'))
+// 检查是否启用嵌套渲染模式（有对象字段且启用了accordion）
+const useNestedRendering = computed(() => {
+  return !!(
+    accordion?.enabled
+    && visibleFields.value.some(field => !isLeafField(field))
+  )
 })
 
-const flattenedFields = computed(() => flattenFields(visibleFields.value))
+// 扁平化字段（用于非嵌套模式）
+const flattenedFields = computed(() =>
+  useNestedRendering.value ? [] : flattenFields(visibleFields.value),
+)
 </script>
 
 <template>
@@ -171,43 +171,28 @@ const flattenedFields = computed(() => flattenFields(visibleFields.value))
     <slot name="before-fields" :fields="visibleFields" :state="state" />
     <!-- <TransitionGroup :name="enableTransition ? 'auto-form-field' : ''" :duration="{ enter: 350, leave: 250 }"> -->
 
-    <!-- 使用 UAccordion 包装的情况 -->
-    <template v-if="enableAccordionWrapper">
-      <!-- 按照原始 schema 顺序渲染所有顶级字段 -->
-      <template v-for="field in topLevelFields" :key="field.path">
-        <!-- 如果是对象字段且启用了 accordion -->
-        <template v-if="field.type === 'object' && field.children && field.children.length > 0">
-          <UAccordion
-            :items="[{
-              label: field.decorators?.label || field.path,
-              defaultOpen: accordion?.defaultOpen,
-              content: field.path
-            }]"
-            v-bind="accordion?.props"
-          >
-            <template #[`content-${field.path}`]>
-              <AutoFormNestedRenderer
-                :field="field"
-                :schema="schema"
-                :size="size"
-                :accordion="accordion"
-              />
-            </template>
-          </UAccordion>
-        </template>
-        <!-- 如果是普通字段 -->
-        <template v-else>
-          <AutoFormFieldRenderer :field="field" :schema="schema" :size="size" />
-        </template>
+    <!-- 嵌套渲染模式：按原始顺序渲染，保持字段位置关系 -->
+    <template v-if="useNestedRendering">
+      <template v-for="field in visibleFields" :key="field.path">
+        <!-- 叶子字段：直接渲染表单控件 -->
+        <AutoFormFieldRenderer v-if="getFieldType(field) === 'leaf'" :field="field" :schema="schema" :size="size" />
+
+        <!-- 对象字段：使用嵌套渲染器（每个对象字段独立的accordion） -->
+        <AutoFormNestedRenderer v-else :field="field" :schema="schema" :size="size" :accordion="accordion" />
       </template>
     </template>
 
-    <!-- 不使用 UAccordion 包装的情况（原有逻辑） -->
+    <!-- 扁平渲染模式：传统的扁平化字段渲染 -->
     <template v-else>
-      <template v-for="field in flattenedFields" :key="field.path">
-        <AutoFormFieldRenderer :field="field" :schema="schema" :size="size" />
-      </template>
+      <AutoFormFieldRenderer
+        v-for="field in flattenedFields"
+        :key="field.path"
+        :field="field"
+        :schema="schema"
+        :size="size"
+      />
     </template>
+
     <!-- </TransitionGroup> -->
 
     <slot name="after-fields" :fields="visibleFields" :state="state" />

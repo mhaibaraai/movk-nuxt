@@ -90,6 +90,7 @@ export function introspectSchema(
       decorators,
       meta: {
         ...mergedMeta,
+        type: 'object',
         label: finalLabel,
         description: finalDescription,
         required: finalRequired,

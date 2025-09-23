@@ -1,12 +1,14 @@
 <script setup lang="ts" generic="S extends z.ZodObject">
 import type { z } from 'zod/v4'
 import type { AccordionConfig, AutoFormField } from '../../types/auto-form'
-import { computed } from 'vue'
-import { generateAccordionItems, groupFieldsByType, isLeafField } from '../../utils/accordion/accordion-utils'
+import { computed, h } from 'vue'
+import { useAutoFormInjector } from '../../composables/useAutoFormContext'
+import { generateAccordionItems, getFieldType, isLeafField } from '../../utils/accordion/accordion-utils'
+import { VNodeRender } from '../../utils/rendering/vnode-utils'
 import AutoFormFieldRenderer from './AutoFormFieldRenderer.vue'
 
 export interface AutoFormNestedRendererProps<S extends z.ZodObject> {
-  /** 要渲染的字段列表 */
+  /** 要渲染的对象字段 */
   field: AutoFormField
   /** 表单 schema */
   schema?: S
@@ -23,61 +25,78 @@ const {
   accordion,
 } = defineProps<AutoFormNestedRendererProps<S>>()
 
-// 分析字段结构
-// const fieldGroups = computed(() => groupFieldsByType(fields))
+// 获取插槽系统
+const { createAccordionSlots } = useAutoFormInjector()
 
-// 分离叶子字段和对象字段
-const fieldGroups = computed(() => {
-  if (isLeafField(field) || !field.children || field.children.length === 0) {
-    return { objectFields: [], regularFields: [] }
+// 获取子字段列表
+const childrenFields = computed(() =>
+  !isLeafField(field) && field.children?.length ? field.children : [],
+)
+
+// 检查是否应该使用accordion包装并生成item
+const accordionData = computed(() => {
+  const hasChildren = childrenFields.value.length > 0
+  const enabled = accordion?.enabled && hasChildren
+
+  return {
+    enabled,
+    item: enabled ? generateAccordionItems(field, accordion) || null : null,
   }
-  return groupFieldsByType(field.children)
 })
 
-// 生成嵌套对象字段的 accordion items
-const nestedAccordionItems = computed(() => {
-  return generateAccordionItems(fieldGroups.value.objectFields, accordion)
-})
+// 为 UAccordion 创建动态插槽配置
+const accordionSlots = computed(() => {
+  if (!accordionData.value.enabled || !accordionData.value.item)
+    return {}
 
-// 判断是否应该为嵌套对象字段使用 UAccordion
-// const shouldUseNestedAccordion = computed(() => {
-//   return accordion?.enabled && nestedAccordionItems.value.length > 0
-// })
+  // 直接使用类型化插槽创建方法，传入默认实现
+  return createAccordionSlots(field, {
+    default: () => h(AutoFormFieldRenderer, { field, schema, size }),
+  })
+})
 </script>
 
 <template>
-  <template v-if="isLeafField(field)">
-    <!-- 渲染普通字段 -->
-    <AutoFormFieldRenderer :field="field" :schema="schema" :size="size" />
-  </template>
+  <!-- 如果启用accordion，将整个对象字段包装在accordion中 -->
+  <template v-if="accordionData.enabled && accordionData.item">
+    <UAccordion :items="[accordionData.item]" v-bind="accordion?.props">
+      <!-- 动态渲染 accordion 插槽 -->
+      <template v-for="(slotFunc, slotName) in accordionSlots" :key="slotName" #[slotName]="slotData">
+        <VNodeRender :node="slotFunc(slotData)" />
+      </template>
 
-  <!-- 渲染嵌套对象字段 -->
-  <template v-else>
-    <!-- 先渲染对象字段的 accordion -->
-    <UAccordion
-      v-if="fieldGroups.objectFields.length > 0"
-      :items="nestedAccordionItems"
-      v-bind="accordion?.props"
-    >
-      <!-- 只为对象字段创建对应的内容插槽 -->
-      <template
-        v-for="objectField in fieldGroups.objectFields"
-        :key="`content-${objectField.path}`"
-        #[`content-${objectField.path}`]
-      >
-        <!-- 递归渲染嵌套对象字段的内容 -->
-        <AutoFormNestedRenderer
-          :field="objectField"
-          :schema="schema"
-          :size="size"
-          :accordion="accordion"
-        />
+      <!-- content 插槽 - 渲染子字段 -->
+      <template #[`content-${field.path}`]>
+        <!-- 在accordion内部按原始顺序渲染子字段 -->
+        <template v-for="childField in childrenFields" :key="childField.path">
+          <!-- 叶子字段：直接渲染 -->
+          <AutoFormFieldRenderer
+            v-if="getFieldType(childField) === 'leaf'"
+            :field="childField"
+            :schema="schema"
+            :size="size"
+          />
+
+          <!-- 嵌套对象字段：递归渲染 -->
+          <AutoFormNestedRenderer v-else :field="childField" :schema="schema" :size="size" :accordion="accordion" />
+        </template>
       </template>
     </UAccordion>
+  </template>
 
-    <!-- 然后渲染当前层级的叶子字段 (Name, Value 等) -->
-    <template v-for="leafField in fieldGroups.regularFields" :key="leafField.path">
-      <AutoFormFieldRenderer :field="leafField" :schema="schema" :size="size" />
+  <!-- 不使用accordion：直接按顺序渲染子字段 -->
+  <template v-else>
+    <template v-for="childField in childrenFields" :key="childField.path">
+      <!-- 叶子字段：直接渲染 -->
+      <AutoFormFieldRenderer
+        v-if="getFieldType(childField) === 'leaf'"
+        :field="childField"
+        :schema="schema"
+        :size="size"
+      />
+
+      <!-- 嵌套对象字段：递归渲染 -->
+      <AutoFormNestedRenderer v-else :field="childField" :schema="schema" :size="size" :accordion="accordion" />
     </template>
   </template>
 </template>
