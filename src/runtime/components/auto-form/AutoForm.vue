@@ -68,10 +68,7 @@ export interface AutoFormProps<S extends z.ZodObject, T extends boolean = true> 
    * 自定义控件映射
    */
   controls?: AutoFormControls
-  /**
-   * all formfield default size
-   */
-  size?: 'md' | 'xs' | 'sm' | 'lg' | 'xl'
+
   /**
    * Enable transition animation for field changes.
    * @defaultValue `true`
@@ -99,7 +96,6 @@ type AutoFormStateType = Partial<InferInput<S>>
 const {
   schema,
   controls,
-  size,
   enableTransition = true,
   accordion,
   ...restProps
@@ -110,9 +106,7 @@ const _slots = defineSlots<AutoFormSlots<AutoFormStateType>>()
 const state = defineModel<AutoFormStateType>({ default: () => ({}) })
 
 // 使用统一的字段渲染器和插槽渲染器
-const {
-  resolveFieldProp,
-} = useAutoFormProvider(state, _slots)
+const { resolveFieldProp } = useAutoFormProvider(state, _slots)
 
 // 分离控件映射计算，避免重复创建对象
 const controlsMapping = computed(() => ({
@@ -171,8 +165,8 @@ const renderFields = computed(() =>
     <template v-if="useNestedRendering">
       <TransitionGroup :name="enableTransition ? 'auto-form-field' : ''" :duration="{ enter: 350, leave: 250 }">
         <template v-for="field in renderFields" :key="field.path">
-          <AutoFormFieldRenderer v-if="getFieldType(field) === 'leaf'" :field="field" :schema="schema" :size="size" />
-          <AutoFormNestedRenderer v-else :field="field" :schema="schema" :size="size" :accordion="accordion" />
+          <AutoFormFieldRenderer v-if="getFieldType(field) === 'leaf'" :field="field" :schema="schema" />
+          <AutoFormNestedRenderer v-else :field="field" :schema="schema" :accordion="accordion" />
         </template>
       </TransitionGroup>
     </template>
@@ -185,7 +179,6 @@ const renderFields = computed(() =>
           :key="field.path"
           :field="field"
           :schema="schema"
-          :size="size"
         />
       </TransitionGroup>
     </template>

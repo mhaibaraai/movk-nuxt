@@ -9,6 +9,7 @@ import { enhanceEventProps, resolveReactiveValue } from '../utils/auto-form/rend
 interface AutoFormContextFactory {
   createFieldContext: (field: AutoFormField) => AutoFormFieldContext
   slots: Record<string, any> // 插槽引用
+  createSlotProps: (field: AutoFormField, extraProps?: Record<string, any>) => AutoFormFieldContext
   resolveFieldProp: <T = any>(field: AutoFormField, prop: string, defaultValue?: T) => T | undefined
   renderFieldSlot: (fn?: (props?: any) => any, slotProps?: any) => any
   getResolvedFieldSlots: (field: AutoFormField) => any
@@ -273,6 +274,7 @@ export function useAutoFormProvider<T extends Record<string, any>>(
   const contextFactory: AutoFormContextFactory = {
     createFieldContext,
     slots,
+    createSlotProps,
     resolveFieldProp,
     renderFieldSlot,
     getResolvedFieldSlots,

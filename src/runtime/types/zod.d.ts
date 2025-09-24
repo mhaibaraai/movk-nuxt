@@ -1,4 +1,4 @@
-import type { AutoFormFieldContext } from '#movk/types/auto-form'
+import type { AutoFormAccordionItem, AutoFormFieldContext } from '#movk/types/auto-form'
 import type { FormFieldSlots } from '@nuxt/ui'
 import type { ClassNameValue } from 'tailwind-merge'
 import type { ComputedRef, Ref } from 'vue'
@@ -13,7 +13,7 @@ declare module 'zod/v4' {
      */
     as?: ReactiveValue<any>
     /** The name of the FormField. Also used to match form errors. */
-    name?: string
+    name?: ReactiveValue<string>
     /** A regular expression to match form error names. */
     errorPattern?: ReactiveValue<RegExp>
     label?: ReactiveValue<string>
@@ -47,6 +47,10 @@ declare module 'zod/v4' {
     hidden?: ReactiveValue<boolean>
     /** 显示条件 */
     if?: ReactiveValue<boolean>
+    /**
+     * object field accordion
+     */
+    accordion?: ReactiveValue<AutoFormAccordionItem>
   }
 }
 

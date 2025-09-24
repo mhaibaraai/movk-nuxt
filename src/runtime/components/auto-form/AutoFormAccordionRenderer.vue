@@ -8,14 +8,13 @@ import { useAutoFormInjector } from '../../composables/useAutoFormContext'
 import { generateAccordionItems, getFieldType, isLeafField, VNodeRender } from '../../utils/auto-form/rendering'
 import AutoFormFieldRenderer from './AutoFormFieldRenderer.vue'
 
-interface AutoFormNestedRendererProps<S extends z.ZodObject> extends Pick<AutoFormProps<S>, 'size' | 'schema' | 'accordion'> {
+interface AutoFormNestedRendererProps<S extends z.ZodObject> extends Pick<AutoFormProps<S>, 'schema' | 'accordion'> {
   field: AutoFormField
 }
 
 const {
   field,
   schema,
-  size,
   accordion,
 } = defineProps<AutoFormNestedRendererProps<S>>()
 
@@ -68,7 +67,7 @@ const accordionSlots = computed(() => {
     return {}
 
   return createAccordionSlots(field, {
-    default: () => h(AutoFormFieldRenderer, { field, schema, size }),
+    default: () => h(AutoFormFieldRenderer, { field, schema }),
   })
 })
 </script>
@@ -96,9 +95,8 @@ const accordionSlots = computed(() => {
               v-if="getFieldType(childField) === 'leaf'"
               :field="childField"
               :schema="schema"
-              :size="size"
             />
-            <AutoFormNestedRenderer v-else :field="childField" :schema="schema" :size="size" :accordion="accordion" />
+            <AutoFormNestedRenderer v-else :field="childField" :schema="schema" :accordion="accordion" />
           </template>
         </template>
       </UAccordion>
@@ -111,9 +109,8 @@ const accordionSlots = computed(() => {
           v-if="getFieldType(childField) === 'leaf'"
           :field="childField"
           :schema="schema"
-          :size="size"
         />
-        <AutoFormNestedRenderer v-else :field="childField" :schema="schema" :size="size" :accordion="accordion" />
+        <AutoFormNestedRenderer v-else :field="childField" :schema="schema" :accordion="accordion" />
       </template>
     </template>
   </template>

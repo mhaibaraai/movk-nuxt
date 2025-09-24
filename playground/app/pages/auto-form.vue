@@ -90,7 +90,7 @@ const formState = ref({
             <pre>{{ state }}</pre>
           </UCard>
         </template>
-        <template #default:nestedObject>
+        <template>
           22
         </template>
         <!-- <template #description:visibleTest>

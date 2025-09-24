@@ -5,11 +5,11 @@ import type { AutoFormProps } from './AutoForm.vue'
 import { useAutoFormInjector } from '../../composables/useAutoFormContext'
 import { VNodeRender } from '../../utils/auto-form/rendering'
 
-interface AutoFormFieldProps<S extends z.ZodObject> extends Pick<AutoFormProps<S>, 'size' | 'schema'> {
+interface AutoFormFieldProps<S extends z.ZodObject> extends Pick<AutoFormProps<S>, 'schema'> {
   field: AutoFormField
 }
 
-const { field, size } = defineProps<AutoFormFieldProps<S>>()
+const { field } = defineProps<AutoFormFieldProps<S>>()
 
 // 获取所有方法和上下文工厂
 const {
@@ -17,6 +17,7 @@ const {
   renderControl,
   createSlotResolver,
   createFormFieldSlots,
+  createSlotProps,
 } = useAutoFormInjector()
 
 // 为当前字段创建插槽解析器
@@ -26,14 +27,14 @@ const slotResolver = createSlotResolver(field)
 <template>
   <UFormField
     v-show="!resolveFieldProp(field, 'hidden')"
-    :name="field.path"
+    :name="resolveFieldProp(field, 'name', field.path)"
     :as="resolveFieldProp(field, 'as')"
     :error-pattern="resolveFieldProp(field, 'errorPattern')"
     :label="resolveFieldProp(field, 'label')"
     :description="resolveFieldProp(field, 'description')"
     :help="resolveFieldProp(field, 'help')"
     :hint="resolveFieldProp(field, 'hint')"
-    :size="resolveFieldProp(field, 'size', size)"
+    :size="resolveFieldProp(field, 'size')"
     :required="resolveFieldProp(field, 'required')"
     :eager-validation="resolveFieldProp(field, 'eagerValidation')"
     :validate-on-input-delay="resolveFieldProp(field, 'validateOnInputDelay')"
@@ -53,7 +54,7 @@ const slotResolver = createSlotResolver(field)
     <template #default="{ error }">
       <template v-if="slotResolver.hasSlot('default')">
         <VNodeRender
-          :node="slotResolver.renderSlot('default', { error, state: undefined, path: field.path, value: undefined, setValue: () => {} })"
+          :node="slotResolver.renderSlot('default', createSlotProps(field, { error }))"
         />
       </template>
       <template v-else>

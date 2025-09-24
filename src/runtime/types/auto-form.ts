@@ -4,20 +4,36 @@ import type { GetItemKeys } from '@nuxt/ui/runtime/types/utils.js'
 import type { AccordionRootProps } from 'reka-ui'
 import type { ClassNameValue } from 'tailwind-merge'
 import type { GlobalMeta, z } from 'zod/v4'
-import type { ComponentProps, ComponentSlots, IsComponent, NestedKeys, ReactiveValue, Suggest } from '../core'
+import type { ComponentProps, ComponentSlots, IsComponent, IsPlainObject, NestedKeys, ReactiveValue, Suggest } from '../core'
 
 type DynamicFieldSlotKeys = 'default' | 'label' | 'description' | 'hint' | 'help' | 'error'
 type AccordionSlotKeys = 'default' | 'leading' | 'trailing' | 'content' | 'body'
 
+/** 提取对象字段的所有路径（包括嵌套） */
+type ObjectFieldPaths<T, D extends number = 2> = [D] extends [never]
+  ? never
+  : {
+      [K in keyof T & string]: IsPlainObject<T[K]> extends true
+        ? K | `${K}.${ObjectFieldPaths<T[K], [never, 0, 1, 2, 3, 4][D]>}`
+        : never
+    }[keyof T & string]
+
+/** 提取非对象字段的所有路径（叶子节点） */
+type LeafFieldPaths<T, D extends number = 2> = [D] extends [never]
+  ? never
+  : {
+      [K in keyof T & string]: IsPlainObject<T[K]> extends true
+        ? `${K}.${LeafFieldPaths<T[K], [never, 0, 1, 2, 3, 4][D]>}`
+        : K
+    }[keyof T & string]
+
 export type DynamicFormSlots<T>
   = Record<string, (props: AutoFormFieldContext<T>) => any>
     & Record<`${DynamicFieldSlotKeys}`, (props: AutoFormFieldContext<T>) => any>
-    & Record<`${DynamicFieldSlotKeys}:${NestedKeys<T>}`, (props: AutoFormFieldContext<T>) => any>
-    // 新增：完全替换对象字段的插槽
-    & Record<`${NestedKeys<T>}`, (props: AutoFormFieldContext<T>) => any>
-    // 新增：UAccordion 插槽支持
+    & Record<`${DynamicFieldSlotKeys}:${LeafFieldPaths<T>}`, (props: AutoFormFieldContext<T>) => any>
+    // 新增：UAccordion 插槽支持 - 仅适用于对象字段
     & Record<`accordion-${AccordionSlotKeys}`, (props: { field: AutoFormField, item: any } & Record<string, any>) => any>
-    & Record<`accordion-${AccordionSlotKeys}:${NestedKeys<T>}`, (props: { field: AutoFormField, item: any } & Record<string, any>) => any>
+    & Record<`accordion-${AccordionSlotKeys}:${ObjectFieldPaths<T>}`, (props: { field: AutoFormField, item: any } & Record<string, any>) => any>
 
 export interface AutoFormFieldContext<S = any> {
   /** 表单数据 - 使用 getter 确保获取最新值 */
@@ -134,17 +150,21 @@ export interface AutoFormAccordionItem {
   disabled?: boolean
   class?: any
   ui?: { item?: ClassNameValue, header?: ClassNameValue, trigger?: ClassNameValue, leadingIcon?: ClassNameValue, label?: ClassNameValue, trailingIcon?: ClassNameValue, content?: ClassNameValue, body?: ClassNameValue }
-
-  field?: AutoFormField
   [key: string]: any
 }
 
 export interface AutoFormAccordionProps<T extends AutoFormAccordionItem = AutoFormAccordionItem> extends Pick<AccordionRootProps, 'collapsible' | 'defaultValue' | 'modelValue' | 'type' | 'disabled' | 'unmountOnHide'> {
   /**
+   * 是否启用 UAccordion 包装
+   * @default true
+   */
+  enabled?: boolean
+  /**
    * The element or component this component should render as.
    * @defaultValue 'div'
    */
   as?: any
+  items?: T[]
   /**
    * The icon displayed on the right side of the trigger.
    * @defaultValue appConfig.ui.icons.chevronDown
@@ -158,17 +178,4 @@ export interface AutoFormAccordionProps<T extends AutoFormAccordionItem = AutoFo
   labelKey?: GetItemKeys<T>
   class?: any
   ui?: { root?: ClassNameValue, item?: ClassNameValue, header?: ClassNameValue, trigger?: ClassNameValue, content?: ClassNameValue, body?: ClassNameValue, leadingIcon?: ClassNameValue, trailingIcon?: ClassNameValue, label?: ClassNameValue }
-
-  /**
-   * 自定义 accordion item 生成函数
-   * @param field 字段
-   * @returns AutoFormAccordionItem
-   */
-  itemGenerator?: (field: AutoFormField) => T
-
-  /**
-   * 是否启用 UAccordion 包装
-   * @default false
-   */
-  enabled?: boolean
 }
