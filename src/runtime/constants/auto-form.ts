@@ -1,5 +1,5 @@
 import type { AutoFormControls } from '../types'
-import { UAccordion, UCalendar, UInput, UInputNumber, USwitch } from '#components'
+import { UCalendar, UInput, UInputNumber, USwitch } from '#components'
 import { createAutoFormControl } from '../shared/auto-form'
 
 export const DEFAULT_CONTROLS = {

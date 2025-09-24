@@ -1,17 +1,15 @@
 <script setup lang="ts" generic="S extends z.ZodObject, T extends boolean = true">
 import type { FormData, FormError, FormErrorEvent, FormInputEvents, FormSubmitEvent, InferInput } from '@nuxt/ui'
 import type { z } from 'zod/v4'
-import type { AccordionConfig, AutoFormControls, AutoFormField, DynamicFormSlots } from '../../types/auto-form'
+import type { AutoFormAccordionProps, AutoFormControls, AutoFormField, DynamicFormSlots } from '../../types/auto-form'
 import { computed } from 'vue'
 import { useAutoFormProvider } from '../../composables/useAutoFormContext'
 import { DEFAULT_CONTROLS } from '../../constants/auto-form'
 import { deepClone, getPath, setPath } from '../../core'
-import { flattenFields, getFieldType, isLeafField } from '../../utils/accordion/accordion-utils'
-// import { VNodeRender } from '../../utils/rendering/vnode-utils'
-// import { collectTopLevelObjectFields, flattenFields, groupFieldsByType } from '../../utils/accordion/accordion-utils'
-import { introspectSchema } from '../../utils/schema/introspection'
+import { introspectSchema } from '../../utils/auto-form/introspection'
+import { flattenFields, getFieldType, isLeafField } from '../../utils/auto-form/rendering'
+import AutoFormNestedRenderer from './AutoFormAccordionRenderer.vue'
 import AutoFormFieldRenderer from './AutoFormFieldRenderer.vue'
-import AutoFormNestedRenderer from './AutoFormNestedRenderer.vue'
 
 export interface AutoFormProps<S extends z.ZodObject, T extends boolean = true> {
   id?: string | number
@@ -66,7 +64,13 @@ export interface AutoFormProps<S extends z.ZodObject, T extends boolean = true> 
   class?: any
   onSubmit?: ((event: FormSubmitEvent<FormData<S, T>>) => void | Promise<void>) | (() => void | Promise<void>)
 
+  /**
+   * 自定义控件映射
+   */
   controls?: AutoFormControls
+  /**
+   * all formfield default size
+   */
   size?: 'md' | 'xs' | 'sm' | 'lg' | 'xl'
   /**
    * Enable transition animation for field changes.
@@ -75,10 +79,9 @@ export interface AutoFormProps<S extends z.ZodObject, T extends boolean = true> 
   enableTransition?: boolean
 
   /**
-   * UAccordion 包装配置
    * 用于控制对象字段的折叠展示
    */
-  accordion?: AccordionConfig<InferInput<S>>
+  accordion?: AutoFormAccordionProps
 }
 
 export interface AutoFormEmits<S extends z.ZodObject, T extends boolean = true> {
@@ -97,7 +100,7 @@ const {
   schema,
   controls,
   size,
-  // enableTransition = true,
+  enableTransition = true,
   accordion,
   ...restProps
 } = defineProps<AutoFormProps<S, T>>()
@@ -109,9 +112,6 @@ const state = defineModel<AutoFormStateType>({ default: () => ({}) })
 // 使用统一的字段渲染器和插槽渲染器
 const {
   resolveFieldProp,
-  // createSlotResolver,
-  // createFormFieldSlots,
-  // createFieldContext,
 } = useAutoFormProvider(state, _slots)
 
 // 分离控件映射计算，避免重复创建对象
@@ -146,17 +146,14 @@ const visibleFields = computed(() =>
   fields.value.filter((field: AutoFormField) => resolveFieldProp<boolean | undefined>(field, 'if', true)),
 )
 
-// 检查是否启用嵌套渲染模式（有对象字段且启用了accordion）
-const useNestedRendering = computed(() => {
-  return !!(
-    accordion?.enabled
-    && visibleFields.value.some(field => !isLeafField(field))
-  )
-})
+// 检查是否启用嵌套渲染模式
+const useNestedRendering = computed(() =>
+  accordion?.enabled && visibleFields.value.some(field => !isLeafField(field)),
+)
 
-// 扁平化字段（用于非嵌套模式）
-const flattenedFields = computed(() =>
-  useNestedRendering.value ? [] : flattenFields(visibleFields.value),
+// 获取要渲染的字段
+const renderFields = computed(() =>
+  useNestedRendering.value ? visibleFields.value : flattenFields(visibleFields.value),
 )
 </script>
 
@@ -169,31 +166,29 @@ const flattenedFields = computed(() =>
     @error="emit('error', $event)"
   >
     <slot name="before-fields" :fields="visibleFields" :state="state" />
-    <!-- <TransitionGroup :name="enableTransition ? 'auto-form-field' : ''" :duration="{ enter: 350, leave: 250 }"> -->
 
     <!-- 嵌套渲染模式：按原始顺序渲染，保持字段位置关系 -->
     <template v-if="useNestedRendering">
-      <template v-for="field in visibleFields" :key="field.path">
-        <!-- 叶子字段：直接渲染表单控件 -->
-        <AutoFormFieldRenderer v-if="getFieldType(field) === 'leaf'" :field="field" :schema="schema" :size="size" />
-
-        <!-- 对象字段：使用嵌套渲染器（每个对象字段独立的accordion） -->
-        <AutoFormNestedRenderer v-else :field="field" :schema="schema" :size="size" :accordion="accordion" />
-      </template>
+      <TransitionGroup :name="enableTransition ? 'auto-form-field' : ''" :duration="{ enter: 350, leave: 250 }">
+        <template v-for="field in renderFields" :key="field.path">
+          <AutoFormFieldRenderer v-if="getFieldType(field) === 'leaf'" :field="field" :schema="schema" :size="size" />
+          <AutoFormNestedRenderer v-else :field="field" :schema="schema" :size="size" :accordion="accordion" />
+        </template>
+      </TransitionGroup>
     </template>
 
     <!-- 扁平渲染模式：传统的扁平化字段渲染 -->
     <template v-else>
-      <AutoFormFieldRenderer
-        v-for="field in flattenedFields"
-        :key="field.path"
-        :field="field"
-        :schema="schema"
-        :size="size"
-      />
+      <TransitionGroup :name="enableTransition ? 'auto-form-field' : ''" :duration="{ enter: 350, leave: 250 }">
+        <AutoFormFieldRenderer
+          v-for="field in renderFields"
+          :key="field.path"
+          :field="field"
+          :schema="schema"
+          :size="size"
+        />
+      </TransitionGroup>
     </template>
-
-    <!-- </TransitionGroup> -->
 
     <slot name="after-fields" :fields="visibleFields" :state="state" />
     <!-- <slot name="submit" :state="state" /> -->

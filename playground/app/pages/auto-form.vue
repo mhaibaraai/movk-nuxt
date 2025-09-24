@@ -51,9 +51,6 @@ const schema = afz.object<State>()({
   }).optional().meta({
     hidden: ({ state }) => state.visibleTest, // 不生效
     label: '用户信息',
-    description: '用户信息 description',
-    icon: 'i-lucide-user',
-    trailingIcon: 'i-lucide-accessibility',
   }),
   nameValue: afz.string().meta({
     // if: ({ state }) => state.visibleTest,
@@ -83,7 +80,6 @@ const formState = ref({
         :controls="customControls"
         :accordion="{
           enabled: true,
-          onlyForObjectFields: true,
         }"
       >
         <template #after-fields="{ state }">

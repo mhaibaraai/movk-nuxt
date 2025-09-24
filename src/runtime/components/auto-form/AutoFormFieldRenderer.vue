@@ -1,13 +1,12 @@
 <script setup lang="ts" generic="S extends z.ZodObject">
 import type { z } from 'zod/v4'
 import type { AutoFormField } from '../../types/auto-form'
+import type { AutoFormProps } from './AutoForm.vue'
 import { useAutoFormInjector } from '../../composables/useAutoFormContext'
-import { VNodeRender } from '../../utils/rendering/vnode-utils'
+import { VNodeRender } from '../../utils/auto-form/rendering'
 
-export interface AutoFormFieldProps<S extends z.ZodObject> {
+interface AutoFormFieldProps<S extends z.ZodObject> extends Pick<AutoFormProps<S>, 'size' | 'schema'> {
   field: AutoFormField
-  schema?: S
-  size?: 'md' | 'xs' | 'sm' | 'lg' | 'xl'
 }
 
 const { field, size } = defineProps<AutoFormFieldProps<S>>()

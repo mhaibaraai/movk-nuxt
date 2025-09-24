@@ -63,6 +63,8 @@ export type Suggest<T extends string> = T | (string & {})
  */
 export type ReactiveValue<T, CTX> = T | ((ctx: CTX) => T) | Ref<T> | ComputedRef<T>
 
+export type StripNullable<T> = T extends null | undefined ? never : T
+
 /**
  * 判断类型 T 是否为纯对象类型
  * 纯对象是指普通的对象字面量，排除数组、函数、Date 等特殊对象类型
@@ -76,15 +78,25 @@ export type ReactiveValue<T, CTX> = T | ((ctx: CTX) => T) | Ref<T> | ComputedRef
  * type Test6 = IsPlainObject<null>          // false
  * ```
  */
-export type IsPlainObject<T> = T extends object
-  ? T extends any[]
+export type IsPlainObject<T> = StripNullable<T> extends Record<string, any>
+  ? StripNullable<T> extends any[]
     ? false
-    : T extends (...args: any[]) => any
+    : StripNullable<T> extends (...args: any[]) => any
       ? false
-      : T extends Date
+      : StripNullable<T> extends Date
         ? false
         : true
   : false
+
+type Depth = [never, 0, 1, 2, 3, 4]
+
+export type NestedKeys<T, D extends number = 2> = [D] extends [never]
+  ? never
+  : {
+      [K in keyof T & string]: IsPlainObject<T[K]> extends true
+        ? K | `${K}.${NestedKeys<StripNullable<T[K]>, Depth[D]>}`
+        : K
+    }[keyof T & string]
 
 /**
  * vue-component-type-helpers

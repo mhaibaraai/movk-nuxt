@@ -1,11 +1,9 @@
-import type { AnyObject } from '@movk/core'
 import type { InjectionKey, ModelRef } from 'vue'
-import type { ReactiveValue } from '../core'
-import type { AutoFormAccordionSlots, AutoFormField, AutoFormFieldContext } from '../types/auto-form'
-import { isFunction } from '@movk/core'
+import type { AutoFormField, AutoFormFieldContext } from '../types/auto-form'
 import defu from 'defu'
 import { computed, h, inject, isVNode, provide, resolveDynamicComponent, unref } from 'vue'
 import { getPath, setPath } from '../core'
+import { enhanceEventProps, resolveReactiveValue } from '../utils/auto-form/rendering'
 
 // 字段上下文工厂类型
 interface AutoFormContextFactory {
@@ -17,44 +15,11 @@ interface AutoFormContextFactory {
   renderControl: (field: AutoFormField) => any
   createSlotResolver: (field: AutoFormField) => { hasSlot: (name: string) => boolean, renderSlot: (name: string, slotProps: any) => any }
   createFormFieldSlots: (field: AutoFormField, slotResolver: { hasSlot: (name: string) => boolean, renderSlot: (name: string, slotProps: any) => any }) => Record<string, any>
-  createAccordionSlots: (field: AutoFormField, defaultImplementations: Partial<AutoFormAccordionSlots>) => Record<string, any>
+  createAccordionSlots: (field: AutoFormField, defaultImplementations?: Record<string, any>) => Record<string, any>
   clearContextCache: () => void
 }
 
-/**
- * 解析响应式值的统一方法
- * @param value 待解析的值，可以是函数、ref、reactive或普通值
- * @param context 字段上下文
- * @returns 解析后的值
- */
-function resolveReactiveValue(value: ReactiveValue<any, any>, context: AutoFormFieldContext): any {
-  if (isFunction(value)) {
-    return (value as (ctx: AutoFormFieldContext) => any)(context)
-  }
-  return unref(value)
-}
-
-/**
- * 增强事件属性函数 - 为Vue组件的事件处理函数注入表单字段上下文
- * @param originalProps 原始属性对象
- * @param ctx 字段上下文
- * @returns 增强后的属性对象
- */
-function enhanceEventProps(originalProps: AnyObject, ctx: AutoFormFieldContext) {
-  const next: Record<string, any> = {}
-  for (const key of Object.keys(originalProps || {})) {
-    const val = (originalProps as any)[key]
-    if (/^on[A-Z].+/.test(key) && isFunction(val)) {
-      next[key] = (...args: any[]) => (val as any)(...args, ctx)
-    }
-    else {
-      next[key] = val
-    }
-  }
-  return next
-}
-
-export const AUTO_FORM_CONTEXT_KEY: InjectionKey<AutoFormContextFactory> = Symbol('AutoFormContext')
+const AUTO_FORM_CONTEXT_KEY: InjectionKey<AutoFormContextFactory> = Symbol('AutoFormContext')
 
 /**
  * 提供字段上下文管理的 composable（用于 AutoForm 组件）
@@ -266,7 +231,7 @@ export function useAutoFormProvider<T extends Record<string, any>>(
    */
   function createAccordionSlots(
     field: AutoFormField,
-    defaultImplementations: Partial<AutoFormAccordionSlots>,
+    defaultImplementations: Record<string, any> = {},
   ) {
     const slots: Record<string, any> = {}
     const slotResolver = createSlotResolver(field)
@@ -284,6 +249,7 @@ export function useAutoFormProvider<T extends Record<string, any>>(
           // 合并插槽参数，确保类型完整性
           const slotProps = {
             field,
+            item: slotData,
             ...slotData,
           }
 
@@ -294,11 +260,12 @@ export function useAutoFormProvider<T extends Record<string, any>>(
           return slotResolver.renderSlot(globalSlotName, slotProps)
         }
       }
+      // 如果有默认实现，使用默认实现
       else if (defaultImplementations[slotName]) {
-        // 使用提供的默认实现
         slots[slotName] = defaultImplementations[slotName]
       }
     })
+
     return slots
   }
 

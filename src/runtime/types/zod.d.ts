@@ -1,5 +1,5 @@
 import type { AutoFormFieldContext } from '#movk/types/auto-form'
-import type { FormFieldSlots, IconProps } from '@nuxt/ui'
+import type { FormFieldSlots } from '@nuxt/ui'
 import type { ClassNameValue } from 'tailwind-merge'
 import type { ComputedRef, Ref } from 'vue'
 
