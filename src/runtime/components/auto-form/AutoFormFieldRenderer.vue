@@ -1,17 +1,19 @@
 <script setup lang="ts" generic="S extends z.ZodObject">
+import type { AnyObject } from '@movk/core'
 import type { z } from 'zod/v4'
 import type { AutoFormField } from '../../types/auto-form'
 import type { AutoFormProps } from './AutoForm.vue'
+import { UFormField } from '#components'
 import { useAutoFormInjector } from '../../composables/useAutoFormContext'
-import { VNodeRender } from '../../utils/auto-form/rendering'
+import { VNodeRender } from '../../utils/auto-form'
 
 interface AutoFormFieldProps<S extends z.ZodObject> extends Pick<AutoFormProps<S>, 'schema'> {
   field: AutoFormField
+  extraProps?: AnyObject
 }
 
-const { field } = defineProps<AutoFormFieldProps<S>>()
+const { field, extraProps } = defineProps<AutoFormFieldProps<S>>()
 
-// 获取所有方法和上下文工厂
 const {
   resolveFieldProp,
   renderControl,
@@ -20,7 +22,6 @@ const {
   createSlotProps,
 } = useAutoFormInjector()
 
-// 为当前字段创建插槽解析器
 const slotResolver = createSlotResolver(field)
 </script>
 
@@ -41,25 +42,20 @@ const slotResolver = createSlotResolver(field)
     :class="resolveFieldProp(field, 'class')"
     :ui="resolveFieldProp(field, 'ui')"
   >
-    <!-- 使用统一的插槽渲染器，大幅简化代码 -->
     <template
-      v-for="(slotComponent, slotName) in createFormFieldSlots(field, slotResolver)"
+      v-for="(slotComponent, slotName) in createFormFieldSlots(field, slotResolver, extraProps)"
       :key="slotName"
       #[slotName]="slotData"
     >
       <VNodeRender :node="slotComponent(slotData)" />
     </template>
 
-    <!-- 默认插槽处理 -->
     <template #default="{ error }">
-      <template v-if="slotResolver.hasSlot('default')">
-        <VNodeRender
-          :node="slotResolver.renderSlot('default', createSlotProps(field, { error }))"
-        />
-      </template>
-      <template v-else>
-        <VNodeRender :node="renderControl(field)" />
-      </template>
+      <VNodeRender
+        v-if="slotResolver.hasSlot('default')"
+        :node="slotResolver.renderSlot('default', createSlotProps(field, { error, ...extraProps }))"
+      />
+      <VNodeRender v-else :node="renderControl(field)" />
     </template>
   </UFormField>
 </template>

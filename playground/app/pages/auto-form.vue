@@ -24,6 +24,10 @@ interface State {
       city: string
       district: string
     }
+    portify: {
+      name: string
+      age: number
+    }
   }
 }
 
@@ -40,21 +44,28 @@ const schema = afz.object<State>()({
     lastName: afz.string().meta({
       label: ({ state }) => `动态字段: ${state.nestedObject?.firstName}`,
       required: ({ state }) => state.visibleTest,
-      hidden: ({ state }) => state.visibleTest,
     }),
-    userAge: afz.number(),
-    address: afz.object<State['nestedObject']['address']>()({
-      province: afz.string(),
-      city: afz.string(),
-      district: afz.string(),
-    }),
+    // userAge: afz.number(),
+    // address: afz.object<State['nestedObject']['address']>()({
+    //   province: afz.string(),
+    //   city: afz.string(),
+    //   district: afz.string(),
+    // }).meta({
+    //   label: '地址',
+    //   icon: 'i-lucide-map-pin',
+    // }),
+    // portify: afz.object<State['nestedObject']['portify']>()({
+    //   name: afz.string(),
+    //   age: afz.number(),
+    // }),
   }).optional().meta({
-    hidden: ({ state }) => state.visibleTest, // 不生效
     label: '用户信息',
+    hidden: ({ state }) => state.visibleTest,
+    collapsible: {
+      // disabled: true,
+    },
   }),
-  nameValue: afz.string().meta({
-    // if: ({ state }) => state.visibleTest,
-  }),
+  // nameValue: afz.string(),
 })
 
 const formState = ref({
@@ -65,22 +76,11 @@ const formState = ref({
 <template>
   <div class="space-y-4 p-10">
     <UCard>
-      <template #header>
-        <h2 class="text-lg font-semibold">
-          UAccordion 包装功能测试
-        </h2>
-        <p class="text-sm text-gray-600">
-          启用 accordion 配置后，对象字段会自动包装在折叠面板中
-        </p>
-      </template>
       <MAutoForm
         v-model="formState"
         :schema="schema"
         class="space-y-4"
         :controls="customControls"
-        :accordion="{
-          enabled: true,
-        }"
       >
         <template #after-fields="{ state }">
           <UCard>
@@ -90,41 +90,10 @@ const formState = ref({
             <pre>{{ state }}</pre>
           </UCard>
         </template>
-        <template>
-          22
+        <template #default:nestedObject="{ open }">
+          {{ open }} 1
         </template>
-        <!-- <template #description:visibleTest>
-          visibleTest description
-        </template>
-        <template #hint:visibleTest="{ value, setValue }">
-          nameValue hint: {{ value }}
-          <UButton @click="setValue(true)">
-            setValue
-          </UButton>
-        </template> -->
       </MAutoForm>
     </UCard>
-
-    <!-- 对比：不使用 UAccordion 的普通表单 -->
-    <!-- <UCard>
-      <template #header>
-        <h2 class="text-lg font-semibold">
-          普通表单（无 UAccordion）
-        </h2>
-        <p class="text-sm text-gray-600">
-          相同的 schema 但未启用 accordion 配置
-        </p>
-      </template>
-      <MAutoForm v-model="formState" :schema="schema" class="space-y-4" :controls="customControls">
-        <template #after-fields="{ state }">
-          <UCard>
-            <template #header>
-              <h3>表单状态</h3>
-            </template>
-            <pre>{{ state }}</pre>
-          </UCard>
-        </template>
-      </MAutoForm>
-    </UCard> -->
   </div>
 </template>

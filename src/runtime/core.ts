@@ -88,8 +88,29 @@ export type IsPlainObject<T> = StripNullable<T> extends Record<string, any>
         : true
   : false
 
+/**
+ * 深度控制类型，用于限制类型递归的深度
+ * 防止类型计算超出 TypeScript 的递归限制
+ */
 type Depth = [never, 0, 1, 2, 3, 4]
 
+/**
+ * 提取对象的嵌套键，支持点语法路径
+ *
+ * @template T 源对象类型
+ * @template D 递归深度，默认为2
+ * @example
+ * ```ts
+ * type User = {
+ *   name: string
+ *   address: {
+ *     city: string
+ *     country: string
+ *   }
+ * }
+ * type Keys = NestedKeys<User> // 'name' | 'address' | 'address.city' | 'address.country'
+ * ```
+ */
 export type NestedKeys<T, D extends number = 2> = [D] extends [never]
   ? never
   : {
@@ -97,6 +118,54 @@ export type NestedKeys<T, D extends number = 2> = [D] extends [never]
         ? K | `${K}.${NestedKeys<StripNullable<T[K]>, Depth[D]>}`
         : K
     }[keyof T & string]
+
+/**
+ * 提取对象中所有纯对象字段的键（包括嵌套的），支持点语法路径
+ *
+ * @template T 源对象类型
+ * @template D 递归深度，默认为2
+ * @example
+ * ```ts
+ * type User = {
+ *   name: string
+ *   age: number
+ *   address: {
+ *     city: string
+ *     location: {
+ *       lat: number
+ *       lng: number
+ *     }
+ *   }
+ * }
+ * type ObjectKeys = ObjectFieldKeys<User> // 'address' | 'address.location'
+ * ```
+ */
+export type ObjectFieldKeys<T, D extends number = 2> = [D] extends [never]
+  ? never
+  : {
+      [K in keyof T & string]: IsPlainObject<T[K]> extends true
+        ? K | `${K}.${ObjectFieldKeys<StripNullable<T[K]>, Depth[D]>}`
+        : never
+    }[keyof T & string]
+
+/**
+ * 提取对象中所有非对象字段的键
+ * 排除纯对象字段，只保留原始类型字段的键
+ *
+ * @template T 源对象类型
+ * @example
+ * ```ts
+ * type User = {
+ *   name: string
+ *   age: number
+ *   address: {
+ *     city: string
+ *   }
+ * }
+ * type NonObjectKeys = NonObjectFieldKeys<User> // 'name' | 'age' | 'address.city'
+ * ```
+ */
+export type NonObjectFieldKeys<T> = Exclude<NestedKeys<T>, ObjectFieldKeys<T>>
 
 /**
  * vue-component-type-helpers

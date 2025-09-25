@@ -258,7 +258,6 @@ const schema = afz.object<State>()({
   ```
 
   对于 nestedObject 字段的渲染，默认使用 UAccordion 包装，UAccordion 的 default 插槽默认渲染 AutoFormFieldRenderer 组件（属性从 meta 中获取）, UAccordion 的 content 插槽默认渲染 AutoFormNestedRenderer 组件（遍历 children 字段）。
-  我想要用户可以自定义 UAccordion 的其他插槽，比如 leading、trailing、content 插槽。又想用户整个替换 UAccordion 的渲染，例如：
   <template #nestedObject>
     222
   </template>
@@ -272,14 +271,7 @@ const schema = afz.object<State>()({
     hidden: ({ state }) => state.visibleTest,
     label: '用户信息',
     accordion: {
-      enabled: true,
+      disabled: true,
     },
-  },
-  ```
-
-  如何全局配置 UAccordion 的属性，例如：
-  ```ts
-  accordion: {
-    enabled: true,
   },
   ```

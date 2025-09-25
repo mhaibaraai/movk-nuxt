@@ -3,20 +3,18 @@ import type { AutoFormField, AutoFormFieldContext } from '../types/auto-form'
 import defu from 'defu'
 import { computed, h, inject, isVNode, provide, resolveDynamicComponent, unref } from 'vue'
 import { getPath, setPath } from '../core'
-import { enhanceEventProps, resolveReactiveValue } from '../utils/auto-form/rendering'
+import { enhanceEventProps, resolveReactiveValue } from '../utils/auto-form'
 
 // 字段上下文工厂类型
 interface AutoFormContextFactory {
   createFieldContext: (field: AutoFormField) => AutoFormFieldContext
-  slots: Record<string, any> // 插槽引用
   createSlotProps: (field: AutoFormField, extraProps?: Record<string, any>) => AutoFormFieldContext
   resolveFieldProp: <T = any>(field: AutoFormField, prop: string, defaultValue?: T) => T | undefined
   renderFieldSlot: (fn?: (props?: any) => any, slotProps?: any) => any
   getResolvedFieldSlots: (field: AutoFormField) => any
   renderControl: (field: AutoFormField) => any
   createSlotResolver: (field: AutoFormField) => { hasSlot: (name: string) => boolean, renderSlot: (name: string, slotProps: any) => any }
-  createFormFieldSlots: (field: AutoFormField, slotResolver: { hasSlot: (name: string) => boolean, renderSlot: (name: string, slotProps: any) => any }) => Record<string, any>
-  createAccordionSlots: (field: AutoFormField, defaultImplementations?: Record<string, any>) => Record<string, any>
+  createFormFieldSlots: (field: AutoFormField, slotResolver: { hasSlot: (name: string) => boolean, renderSlot: (name: string, slotProps: any) => any }, extraProps?: Record<string, any>) => Record<string, any>
   clearContextCache: () => void
 }
 
@@ -206,7 +204,7 @@ export function useAutoFormProvider<T extends Record<string, any>>(
    * 为 UFormField 生成标准插槽模板
    * 标准化插槽渲染逻辑，减少重复代码
    */
-  function createFormFieldSlots(field: AutoFormField, slotResolver: ReturnType<typeof createSlotResolver>) {
+  function createFormFieldSlots(field: AutoFormField, slotResolver: ReturnType<typeof createSlotResolver>, extraProps?: Record<string, any>) {
     const slots: Record<string, any> = {}
 
     // 标准插槽名称列表
@@ -216,6 +214,7 @@ export function useAutoFormProvider<T extends Record<string, any>>(
       if (slotResolver.hasSlot(slotName)) {
         slots[slotName] = (slotData: any) => {
           const slotProps = createSlotProps(field, {
+            ...extraProps,
             [slotName]: slotData[slotName],
           })
           return slotResolver.renderSlot(slotName, slotProps)
@@ -226,54 +225,9 @@ export function useAutoFormProvider<T extends Record<string, any>>(
     return slots
   }
 
-  /**
-   * 为 UAccordion 生成类型化插槽配置
-   * 提供完整的插槽参数类型支持和默认实现
-   */
-  function createAccordionSlots(
-    field: AutoFormField,
-    defaultImplementations: Record<string, any> = {},
-  ) {
-    const slots: Record<string, any> = {}
-    const slotResolver = createSlotResolver(field)
-
-    // accordion 插槽名称映射
-    const accordionSlotNames = ['default', 'leading', 'trailing', 'content', 'body'] as const
-
-    accordionSlotNames.forEach((slotName) => {
-      // 检查具体插槽和通用插槽
-      const specificSlotName = `accordion-${slotName}:${field.path}`
-      const globalSlotName = `accordion-${slotName}`
-
-      if (slotResolver.hasSlot(specificSlotName) || slotResolver.hasSlot(globalSlotName)) {
-        slots[slotName] = (slotData: any) => {
-          // 合并插槽参数，确保类型完整性
-          const slotProps = {
-            field,
-            item: slotData,
-            ...slotData,
-          }
-
-          // 优先使用具体插槽
-          if (slotResolver.hasSlot(specificSlotName)) {
-            return slotResolver.renderSlot(specificSlotName, slotProps)
-          }
-          return slotResolver.renderSlot(globalSlotName, slotProps)
-        }
-      }
-      // 如果有默认实现，使用默认实现
-      else if (defaultImplementations[slotName]) {
-        slots[slotName] = defaultImplementations[slotName]
-      }
-    })
-
-    return slots
-  }
-
   // 创建完整的上下文工厂对象
   const contextFactory: AutoFormContextFactory = {
     createFieldContext,
-    slots,
     createSlotProps,
     resolveFieldProp,
     renderFieldSlot,
@@ -281,7 +235,6 @@ export function useAutoFormProvider<T extends Record<string, any>>(
     renderControl,
     createSlotResolver,
     createFormFieldSlots,
-    createAccordionSlots,
     clearContextCache: () => contextCache.clear(),
   }
 

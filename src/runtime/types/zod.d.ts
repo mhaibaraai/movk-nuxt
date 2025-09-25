@@ -1,9 +1,10 @@
-import type { AutoFormAccordionItem, AutoFormFieldContext } from '#movk/types/auto-form'
+import type { AutoFormFieldContext, AutoFormNestedCollapsible } from '#movk/types/auto-form'
 import type { FormFieldSlots } from '@nuxt/ui'
 import type { ClassNameValue } from 'tailwind-merge'
 import type { ComputedRef, Ref } from 'vue'
 
 type ReactiveValue<T, CTX = AutoFormFieldContext> = T | ((ctx: CTX) => T) | Ref<T> | ComputedRef<T>
+
 declare module 'zod/v4' {
   interface GlobalMeta extends GlobalAutoFormMeta { }
   interface GlobalAutoFormMeta {
@@ -48,9 +49,9 @@ declare module 'zod/v4' {
     /** 显示条件 */
     if?: ReactiveValue<boolean>
     /**
-     * object field accordion
+     * object field
      */
-    accordion?: ReactiveValue<AutoFormAccordionItem>
+    collapsible?: ReactiveValue<AutoFormNestedCollapsible>
   }
 }
 

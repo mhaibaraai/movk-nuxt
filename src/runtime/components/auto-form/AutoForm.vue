@@ -1,17 +1,17 @@
-<script setup lang="ts" generic="S extends z.ZodObject, T extends boolean = true">
+<script setup lang="ts" generic="S extends z.ZodObject, T extends boolean = true, N extends boolean = false">
 import type { FormData, FormError, FormErrorEvent, FormInputEvents, FormSubmitEvent, InferInput } from '@nuxt/ui'
 import type { z } from 'zod/v4'
-import type { AutoFormAccordionProps, AutoFormControls, AutoFormField, DynamicFormSlots } from '../../types/auto-form'
+import type { AutoFormControls, AutoFormField, DynamicFormSlots } from '../../types/auto-form'
+import { UForm } from '#components'
 import { computed } from 'vue'
 import { useAutoFormProvider } from '../../composables/useAutoFormContext'
 import { DEFAULT_CONTROLS } from '../../constants/auto-form'
 import { deepClone, getPath, setPath } from '../../core'
-import { introspectSchema } from '../../utils/auto-form/introspection'
-import { flattenFields, getFieldType, isLeafField } from '../../utils/auto-form/rendering'
-import AutoFormNestedRenderer from './AutoFormAccordionRenderer.vue'
+import { flattenFields, introspectSchema, isLeafField } from '../../utils/auto-form'
 import AutoFormFieldRenderer from './AutoFormFieldRenderer.vue'
+import AutoFormNestedRenderer from './AutoFormNestedRenderer.vue'
 
-export interface AutoFormProps<S extends z.ZodObject, T extends boolean = true> {
+export interface AutoFormProps<S extends z.ZodObject, T extends boolean = true, N extends boolean = false> {
   id?: string | number
   /** Schema to validate the form state. Supports Standard Schema objects, Yup, Joi, and Superstructs. */
   schema?: S
@@ -36,7 +36,7 @@ export interface AutoFormProps<S extends z.ZodObject, T extends boolean = true> 
    * Path of the form's state within it's parent form.
    * Used for nesting forms. Only available if `nested` is true.
    */
-  // name?: N extends true ? string : never
+  name?: N extends true ? string : never
 
   /**
    * Delay in milliseconds before validating the form on input events.
@@ -53,7 +53,7 @@ export interface AutoFormProps<S extends z.ZodObject, T extends boolean = true> 
    * If true, this form will attach to its parent Form and validate at the same time.
    * @defaultValue `false`
    */
-  // nested?: N
+  nested?: N
 
   /**
    * When `true`, all form elements will be disabled on `@submit` event.
@@ -74,11 +74,6 @@ export interface AutoFormProps<S extends z.ZodObject, T extends boolean = true> 
    * @defaultValue `true`
    */
   enableTransition?: boolean
-
-  /**
-   * 用于控制对象字段的折叠展示
-   */
-  accordion?: AutoFormAccordionProps
 }
 
 export interface AutoFormEmits<S extends z.ZodObject, T extends boolean = true> {
@@ -91,15 +86,12 @@ export type AutoFormSlots<T extends object> = {
   'after-fields': (props: { fields: AutoFormField[], state: T }) => any
 } & DynamicFormSlots<T>
 
-// type AutoFormStateType = N extends false ? Partial<InferInput<S>> : never
-type AutoFormStateType = Partial<InferInput<S>>
+type AutoFormStateType = N extends false ? Partial<InferInput<S>> : never
 const {
   schema,
   controls,
-  enableTransition = true,
-  accordion,
   ...restProps
-} = defineProps<AutoFormProps<S, T>>()
+} = defineProps<AutoFormProps<S, T, N>>()
 const emit = defineEmits<AutoFormEmits<S, T>>()
 const _slots = defineSlots<AutoFormSlots<AutoFormStateType>>()
 
@@ -129,25 +121,30 @@ const fields = computed(() => {
     }
   }
 
-  // dev
-  console.log('entries', entries)
-
   return entries
 })
 
-// 优化可见性计算 - 减少不必要的函数调用
 const visibleFields = computed(() =>
   fields.value.filter((field: AutoFormField) => resolveFieldProp<boolean | undefined>(field, 'if', true)),
 )
 
-// 检查是否启用嵌套渲染模式
-const useNestedRendering = computed(() =>
-  accordion?.enabled && visibleFields.value.some(field => !isLeafField(field)),
+const topLevelEntries = computed(() =>
+  visibleFields.value.map(field => ({ field, isLeaf: isLeafField(field) })),
 )
 
-// 获取要渲染的字段
-const renderFields = computed(() =>
-  useNestedRendering.value ? visibleFields.value : flattenFields(visibleFields.value),
+// 检查是否启用嵌套渲染模式
+const useNestedRendering = computed(() =>
+  topLevelEntries.value.some(entry => !entry.isLeaf),
+)
+
+// 嵌套模式下需要渲染的顶层字段序列（保留原始顺序）
+const nestedRenderEntries = computed(() =>
+  useNestedRendering.value ? topLevelEntries.value : [],
+)
+
+// 扁平模式下的渲染字段列表
+const flatRenderFields = computed(() =>
+  useNestedRendering.value ? [] : flattenFields(visibleFields.value),
 )
 </script>
 
@@ -161,26 +158,15 @@ const renderFields = computed(() =>
   >
     <slot name="before-fields" :fields="visibleFields" :state="state" />
 
-    <!-- 嵌套渲染模式：按原始顺序渲染，保持字段位置关系 -->
     <template v-if="useNestedRendering">
-      <TransitionGroup :name="enableTransition ? 'auto-form-field' : ''" :duration="{ enter: 350, leave: 250 }">
-        <template v-for="field in renderFields" :key="field.path">
-          <AutoFormFieldRenderer v-if="getFieldType(field) === 'leaf'" :field="field" :schema="schema" />
-          <AutoFormNestedRenderer v-else :field="field" :schema="schema" :accordion="accordion" />
-        </template>
-      </TransitionGroup>
+      <template v-for="entry in nestedRenderEntries" :key="entry.field.path">
+        <AutoFormFieldRenderer v-if="entry.isLeaf" :field="entry.field" :schema="schema" />
+        <AutoFormNestedRenderer v-else :field="entry.field" :schema="schema" />
+      </template>
     </template>
 
-    <!-- 扁平渲染模式：传统的扁平化字段渲染 -->
     <template v-else>
-      <TransitionGroup :name="enableTransition ? 'auto-form-field' : ''" :duration="{ enter: 350, leave: 250 }">
-        <AutoFormFieldRenderer
-          v-for="field in renderFields"
-          :key="field.path"
-          :field="field"
-          :schema="schema"
-        />
-      </TransitionGroup>
+      <AutoFormFieldRenderer v-for="field in flatRenderFields" :key="field.path" :field="field" :schema="schema" />
     </template>
 
     <slot name="after-fields" :fields="visibleFields" :state="state" />
