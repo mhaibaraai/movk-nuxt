@@ -97,10 +97,8 @@ const _slots = defineSlots<AutoFormSlots<AutoFormStateType>>()
 
 const state = defineModel<AutoFormStateType>({ default: () => ({}) })
 
-// 使用统一的字段渲染器和插槽渲染器
 const { resolveFieldProp } = useAutoFormProvider(state, _slots)
 
-// 分离控件映射计算，避免重复创建对象
 const controlsMapping = computed(() => ({
   ...DEFAULT_CONTROLS,
   ...controls,
@@ -132,17 +130,14 @@ const topLevelEntries = computed(() =>
   visibleFields.value.map(field => ({ field, isLeaf: isLeafField(field) })),
 )
 
-// 检查是否启用嵌套渲染模式
 const useNestedRendering = computed(() =>
   topLevelEntries.value.some(entry => !entry.isLeaf),
 )
 
-// 嵌套模式下需要渲染的顶层字段序列（保留原始顺序）
 const nestedRenderEntries = computed(() =>
   useNestedRendering.value ? topLevelEntries.value : [],
 )
 
-// 扁平模式下的渲染字段列表
 const flatRenderFields = computed(() =>
   useNestedRendering.value ? [] : flattenFields(visibleFields.value),
 )

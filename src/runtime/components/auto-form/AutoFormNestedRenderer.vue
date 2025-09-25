@@ -2,8 +2,9 @@
 import type { z } from 'zod/v4'
 import type { AutoFormField } from '../../types/auto-form'
 import type { AutoFormProps } from './AutoForm.vue'
-import { UCollapsible } from '#components'
-import { computed } from 'vue'
+import { UCollapsible, UIcon } from '#components'
+import defu from 'defu'
+import { computed, h } from 'vue'
 import { useAutoFormInjector } from '../../composables/useAutoFormContext'
 import { isLeafField, VNodeRender } from '../../utils/auto-form'
 import AutoFormFieldRenderer from './AutoFormFieldRenderer.vue'
@@ -40,12 +41,30 @@ const useCollapsible = computed(() => {
     return true
   return config.enabled === true
 })
+
+// 为折叠字段创建带图标的增强字段
+const enhancedField = computed<AutoFormField>(() => {
+  if (!useCollapsible.value) {
+    return field
+  }
+
+  return defu(field, {
+    meta: {
+      fieldSlots: {
+        hint: ({ open }: { open: boolean }) => h(UIcon, {
+          name: open ? 'i-lucide-chevron-down' : 'i-lucide-chevron-right',
+          class: 'shrink-0 size-5 ms-auto transition-transform duration-200',
+        }),
+      },
+    },
+  })
+})
 </script>
 
 <template>
   <UCollapsible v-show="!isHidden" v-if="useCollapsible" v-bind="collapsibleConfig">
     <template #default="{ open }">
-      <AutoFormFieldRenderer :field="field" :schema="schema" :extra-props="{ open }" />
+      <AutoFormFieldRenderer :field="enhancedField" :schema="schema" :extra-props="{ open }" />
     </template>
     <template #content>
       <VNodeRender

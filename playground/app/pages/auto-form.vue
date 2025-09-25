@@ -54,15 +54,18 @@ const schema = afz.object<State>()({
     //   label: '地址',
     //   icon: 'i-lucide-map-pin',
     // }),
-    // portify: afz.object<State['nestedObject']['portify']>()({
-    //   name: afz.string(),
-    //   age: afz.number(),
-    // }),
+    portify: afz.object<State['nestedObject']['portify']>()({
+      name: afz.string(),
+      age: afz.number(),
+    }),
   }).optional().meta({
     label: '用户信息',
     hidden: ({ state }) => state.visibleTest,
     collapsible: {
-      // disabled: true,
+      defaultOpen: true,
+      ui: {
+        content: 'space-y-4',
+      },
     },
   }),
   // nameValue: afz.string(),
@@ -76,12 +79,7 @@ const formState = ref({
 <template>
   <div class="space-y-4 p-10">
     <UCard>
-      <MAutoForm
-        v-model="formState"
-        :schema="schema"
-        class="space-y-4"
-        :controls="customControls"
-      >
+      <MAutoForm v-model="formState" :schema="schema" class="space-y-4" :controls="customControls">
         <template #after-fields="{ state }">
           <UCard>
             <template #header>
@@ -90,7 +88,10 @@ const formState = ref({
             <pre>{{ state }}</pre>
           </UCard>
         </template>
-        <template #default:nestedObject="{ open }">
+        <!-- <template #hint:nestedObject>
+          测试图标
+        </template> -->
+        <template #[`label:nestedObject.portify`]="{ open }">
           {{ open }} 1
         </template>
       </MAutoForm>
