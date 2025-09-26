@@ -1,9 +1,10 @@
 import type { AnyObject } from '@movk/core'
 import type z from 'zod/v4'
-import type { GlobalMeta } from 'zod/v4'
+import type { GlobalAutoFormMeta, GlobalMeta } from 'zod/v4'
 import type { IsComponent, ReactiveValue } from '../core'
 import type { AutoFormControl, AutoFormControls, AutoFormControlsMeta, AutoFormField, AutoFormFieldContext } from '../types/auto-form'
 import { isFunction, isObject } from '@movk/core'
+import defu from 'defu'
 import { Fragment, h, isRef, isVNode, markRaw, unref } from 'vue'
 import { joinPath, startCase, toPath } from '../core'
 
@@ -126,7 +127,7 @@ function* iterateZodChain(root: z.ZodType): Generator<any> {
 /**
  * 提取 schema 信息
  */
-function extractSchemaInfo(schema: z.ZodType) {
+function extractSchemaInfo(schema: z.ZodType, globalMeta?: GlobalAutoFormMeta) {
   const decorators = {
     isOptional: false,
     defaultValue: undefined as any,
@@ -157,7 +158,10 @@ function extractSchemaInfo(schema: z.ZodType) {
     coreSchema = node
   }
 
-  return { coreSchema, decorators, mergedMeta }
+  // 接收全局元数据，并在提取字段信息时作为默认配置参与合并
+  const finalMeta = defu(mergedMeta, globalMeta ?? {})
+
+  return { coreSchema, decorators, mergedMeta: finalMeta }
 }
 
 /**
@@ -167,9 +171,10 @@ export function introspectSchema(
   schema: z.ZodType,
   mapping: AutoFormControls,
   parentPath?: string,
+  globalMeta?: GlobalAutoFormMeta,
 ): AutoFormField[] {
   const result: AutoFormField[] = []
-  const { coreSchema, decorators, mergedMeta } = extractSchemaInfo(schema)
+  const { coreSchema, decorators, mergedMeta } = extractSchemaInfo(schema, globalMeta)
   const type = (coreSchema as any).type
 
   // 通用字段信息提取
@@ -185,7 +190,7 @@ export function introspectSchema(
     if (!parentPath) {
       for (const key of Object.keys(shape)) {
         const child = shape[key] as z.ZodType
-        result.push(...introspectSchema(child, mapping, key))
+        result.push(...introspectSchema(child, mapping, key, globalMeta))
       }
       return result
     }
@@ -209,7 +214,7 @@ export function introspectSchema(
     for (const key of Object.keys(shape)) {
       const child = shape[key] as z.ZodType
       const childPath = joinPath([...toPath(parentPath), key])
-      accordionItem.children!.push(...introspectSchema(child, mapping, childPath))
+      accordionItem.children!.push(...introspectSchema(child, mapping, childPath, globalMeta))
     }
 
     result.push(accordionItem)

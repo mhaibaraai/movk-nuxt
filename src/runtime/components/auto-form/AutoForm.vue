@@ -1,6 +1,6 @@
 <script setup lang="ts" generic="S extends z.ZodObject, T extends boolean = true, N extends boolean = false">
 import type { FormData, FormError, FormErrorEvent, FormInputEvents, FormSubmitEvent, InferInput } from '@nuxt/ui'
-import type { z } from 'zod/v4'
+import type { GlobalAutoFormMeta, z } from 'zod/v4'
 import type { AutoFormControls, AutoFormField, DynamicFormSlots } from '../../types/auto-form'
 import { UForm } from '#components'
 import { computed } from 'vue'
@@ -15,6 +15,10 @@ export interface AutoFormProps<S extends z.ZodObject, T extends boolean = true, 
   id?: string | number
   /** Schema to validate the form state. Supports Standard Schema objects, Yup, Joi, and Superstructs. */
   schema?: S
+  /**
+   * 全局字段元数据配置，作为 schema 元数据的默认值
+   */
+  globalMeta?: GlobalAutoFormMeta
   /**
    * Custom validation function to validate the form state.
    * @param state - The current state of the form.
@@ -90,6 +94,7 @@ type AutoFormStateType = N extends false ? Partial<InferInput<S>> : never
 const {
   schema,
   controls,
+  globalMeta,
   ...restProps
 } = defineProps<AutoFormProps<S, T, N>>()
 const emit = defineEmits<AutoFormEmits<S, T>>()
@@ -109,7 +114,7 @@ const fields = computed(() => {
   if (!schema)
     return []
 
-  const entries = introspectSchema(schema, controlsMapping.value)
+  const entries = introspectSchema(schema, controlsMapping.value, undefined, globalMeta)
 
   // 同步初始化默认值，确保 SSR 兼容性
   for (const { decorators, path } of entries) {

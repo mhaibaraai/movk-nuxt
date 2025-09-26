@@ -38,7 +38,9 @@ const customControls = {
 const { afz } = createAutoFormZ(customControls)
 
 const schema = afz.object<State>()({
-  visibleTest: afz.boolean(),
+  visibleTest: afz.boolean().meta({
+    size: 'lg',
+  }),
   nestedObject: afz.object<State['nestedObject']>()({
     firstName: afz.string().default('default name').optional(),
     lastName: afz.string().meta({
@@ -61,6 +63,7 @@ const schema = afz.object<State>()({
   }).optional().meta({
     label: '用户信息',
     hidden: ({ state }) => state.visibleTest,
+    hint: '测试图标',
     collapsible: {
       defaultOpen: true,
       ui: {
@@ -79,7 +82,15 @@ const formState = ref({
 <template>
   <div class="space-y-4 p-10">
     <UCard>
-      <MAutoForm v-model="formState" :schema="schema" class="space-y-4" :controls="customControls">
+      <MAutoForm
+        v-model="formState"
+        :global-meta="{
+          size: 'xs',
+        }"
+        :schema="schema"
+        class="space-y-4"
+        :controls="customControls"
+      >
         <template #after-fields="{ state }">
           <UCard>
             <template #header>

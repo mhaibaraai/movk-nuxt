@@ -11,7 +11,7 @@ export type DynamicFormSlots<T>
   = Record<string, (props: AutoFormFieldContext<T>) => any>
     & Record<`${DynamicFieldSlotKeys}`, (props: AutoFormFieldContext<T>) => any>
     & Record<`${DynamicFieldSlotKeys}:${NonObjectFieldKeys<T>}`, (props: AutoFormFieldContext<T>) => any>
-    & Record<`${DynamicFieldSlotKeys}:${ObjectFieldKeys<T>}`, (props: { open?: boolean } & AutoFormFieldContext<T>) => any>
+    & Record<`${DynamicFieldSlotKeys}:${ObjectFieldKeys<T>}`, (props: AutoFormFieldNestedContext<T>) => any>
     & Record<`${DynamicFieldNestedSlotKeys}:${ObjectFieldKeys<T>}`, (props: AutoFormFieldContext<T>) => any>
 
 export interface AutoFormFieldContext<S = any> {
@@ -23,7 +23,10 @@ export interface AutoFormFieldContext<S = any> {
   readonly value: S[keyof S]
   /** 设置字段值 */
   setValue: (value: S[keyof S]) => void
-  [key: string]: any
+}
+
+export type AutoFormFieldNestedContext<S = any> = AutoFormFieldContext<S> & {
+  open: boolean
 }
 
 /**

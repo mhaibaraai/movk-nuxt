@@ -1,6 +1,6 @@
 <script setup lang="ts" generic="S extends z.ZodObject">
 import type { z } from 'zod/v4'
-import type { AutoFormField } from '../../types/auto-form'
+import type { AutoFormField, AutoFormFieldNestedContext } from '../../types/auto-form'
 import type { AutoFormProps } from './AutoForm.vue'
 import { UCollapsible, UIcon } from '#components'
 import defu from 'defu'
@@ -44,14 +44,14 @@ const useCollapsible = computed(() => {
 
 // 为折叠字段创建带图标的增强字段
 const enhancedField = computed<AutoFormField>(() => {
-  if (!useCollapsible.value) {
+  if (!useCollapsible.value || field.meta.hint !== undefined) {
     return field
   }
 
   return defu(field, {
     meta: {
       fieldSlots: {
-        hint: ({ open }: { open: boolean }) => h(UIcon, {
+        hint: ({ open }: AutoFormFieldNestedContext) => h(UIcon, {
           name: open ? 'i-lucide-chevron-down' : 'i-lucide-chevron-right',
           class: 'shrink-0 size-5 ms-auto transition-transform duration-200',
         }),
