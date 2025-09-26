@@ -39,32 +39,9 @@ const customControls = {
 const { afz } = createAutoFormZ(customControls)
 
 const schema = afz.object<State>()({
-  // visibleTest: afz.boolean(),
   mixedDescription: afz.string({
-    // error: 'error',
-    controlProps: ({ state }) => ({
-      color: state.mixedDescription === '1' ? 'error' : 'success',
-    }),
-  }).readonly().meta({
-    // label(ctx) {
-    //   return `meta: ${ctx.state.mixedDescription}`
-    // },
+    error: 'error test',
   }),
-  // nestedObject: afz.object<State['nestedObject']>()({
-  //   firstName: afz.string().default('default name').optional(),
-  //   lastName: afz.string().meta({
-  //     label: ({ state }) => `动态字段: ${state.nestedObject?.firstName}`,
-  //     required: ({ state }) => state.visibleTest,
-  //   }),
-  //   // userAge: afz.number(),
-  //   portify: afz.object<State['nestedObject']['portify']>()({
-  //     name: afz.string(),
-  //     age: afz.number(),
-  //   }),
-  // }).optional().meta({
-  //   label: '用户信息',
-  // }),
-  // nameValue: z.string('Password is required').min(8, 'Must be at least 8 characters'),
 })
 
 type Schema = z.output<typeof schema>
@@ -94,15 +71,6 @@ function onError(event: FormErrorEvent) {
     <UCard>
       <MAutoForm
         v-model="formState"
-        :global-meta="{
-          size: 'xs',
-          required(ctx) {
-            return ctx.state.mixedDescription === '1'
-          },
-          label({ path }) {
-            return `动态字段: ${path}`
-          },
-        }"
         :schema="schema"
         :controls="customControls"
         @submit="onSubmit"

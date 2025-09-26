@@ -28,12 +28,13 @@ const slotResolver = createSlotResolver(field)
 <template>
   <UFormField
     v-show="!resolveFieldProp(field, 'hidden')"
-    :name="resolveFieldProp(field, 'name', field.path)"
     :as="resolveFieldProp(field, 'as')"
+    :name="resolveFieldProp(field, 'name', field.path)"
     :error-pattern="resolveFieldProp(field, 'errorPattern')"
     :label="resolveFieldProp(field, 'label')"
     :description="resolveFieldProp(field, 'description')"
     :help="resolveFieldProp(field, 'help')"
+    :error="resolveFieldProp(field, 'error')"
     :hint="resolveFieldProp(field, 'hint')"
     :size="resolveFieldProp(field, 'size')"
     :required="resolveFieldProp(field, 'required')"

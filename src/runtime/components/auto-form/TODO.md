@@ -272,4 +272,38 @@ const schema = afz.object<State>()({
   },
   ```
 
-# 处理 submit 事件
+# 处理 readonly 的逻辑 ✔️
+
+decorators.isReadonly -> controlProps.disabled
+
+```ts
+z.object({
+  nameValue: z.string().readonly(),
+})
+```
+
+# error 的逻辑
+
+以下方式设置 error 是无效的，会使用 zod 的默认错误：
+
+```ts
+const schema = afz.object<State>()({
+  mixedDescription: afz.string('error test'),
+})
+```
+
+[https://zod.dev/error-customization](https://zod.dev/error-customization)
+
+使用 zod 原生的 error 方式则有效：
+
+```ts
+import { z } from 'zod/v4'
+const schema = afz.object<State>()({
+  mixedDescription: z.string('error test'),
+})
+const schema2 = afz.object<State>()({
+  mixedDescription: z.string({
+    error: 'error test',
+  }),
+})
+```
