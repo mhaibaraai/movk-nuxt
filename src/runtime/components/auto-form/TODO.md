@@ -212,10 +212,6 @@ export type AuthFormSlots<T extends object = object, F extends AuthFormField = A
 
 # buildSlotProps 的类型优化 ✔️
 
-# v-if 和 v-show 添加过渡效果 ✔️
-
-- 添加 enableTransition 属性
-
 # object 字段的 UAccordion 包装功能
 
 - [UAccordion 源码](https://raw.githubusercontent.com/nuxt/ui/refs/heads/v4/src/runtime/components/Accordion.vue)
@@ -275,3 +271,5 @@ const schema = afz.object<State>()({
     },
   },
   ```
+
+# 处理 submit 事件

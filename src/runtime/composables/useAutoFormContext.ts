@@ -112,6 +112,10 @@ export function useAutoFormProvider<T extends Record<string, any>>(
     // 解析控件属性和插槽
     const props = defu(
       resolveValue(controlMeta.controlProps, field, {}),
+      // 处理 decorators.isReadonly -> controlProps.disabled
+      {
+        disabled: field.decorators?.isReadonly,
+      },
       controlMeta?.mapped?.controlProps,
     )
     const slots = defu(

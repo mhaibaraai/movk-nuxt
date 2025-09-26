@@ -16,10 +16,6 @@ export interface AutoFormProps<S extends z.ZodObject, T extends boolean = true, 
   /** Schema to validate the form state. Supports Standard Schema objects, Yup, Joi, and Superstructs. */
   schema?: S
   /**
-   * 全局字段元数据配置，作为 schema 元数据的默认值
-   */
-  globalMeta?: GlobalAutoFormMeta
-  /**
    * Custom validation function to validate the form state.
    * @param state - The current state of the form.
    * @returns A promise that resolves to an array of FormError objects, or an array of FormError objects directly.
@@ -72,12 +68,10 @@ export interface AutoFormProps<S extends z.ZodObject, T extends boolean = true, 
    * 自定义控件映射
    */
   controls?: AutoFormControls
-
   /**
-   * Enable transition animation for field changes.
-   * @defaultValue `true`
+   * 全局字段元数据配置，作为 schema 元数据的默认值
    */
-  enableTransition?: boolean
+  globalMeta?: GlobalAutoFormMeta
 }
 
 export interface AutoFormEmits<S extends z.ZodObject, T extends boolean = true> {
@@ -97,7 +91,8 @@ const {
   globalMeta,
   ...restProps
 } = defineProps<AutoFormProps<S, T, N>>()
-const emit = defineEmits<AutoFormEmits<S, T>>()
+
+defineEmits<AutoFormEmits<S, T>>()
 const _slots = defineSlots<AutoFormSlots<AutoFormStateType>>()
 
 const state = defineModel<AutoFormStateType>({ default: () => ({}) })
@@ -114,7 +109,7 @@ const fields = computed(() => {
   if (!schema)
     return []
 
-  const entries = introspectSchema(schema, controlsMapping.value, undefined, globalMeta)
+  const entries = introspectSchema(schema, controlsMapping.value, '', globalMeta)
 
   // 同步初始化默认值，确保 SSR 兼容性
   for (const { decorators, path } of entries) {
@@ -124,6 +119,7 @@ const fields = computed(() => {
     }
   }
 
+  console.log(entries)
   return entries
 })
 
@@ -153,8 +149,6 @@ const flatRenderFields = computed(() =>
     :state="state"
     :schema="schema"
     v-bind="restProps"
-    @submit="emit('submit', $event)"
-    @error="emit('error', $event)"
   >
     <slot name="before-fields" :fields="visibleFields" :state="state" />
 
@@ -170,6 +164,10 @@ const flatRenderFields = computed(() =>
     </template>
 
     <slot name="after-fields" :fields="visibleFields" :state="state" />
-    <!-- <slot name="submit" :state="state" /> -->
+    <UButton type="submit">
+      Submit
+    </UButton>
+    <!-- <slot name="submit" :state="state">
+    </slot> -->
   </UForm>
 </template>

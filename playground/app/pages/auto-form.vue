@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import type { AutoFormControls } from '#movk/types'
+import type { FormError, FormErrorEvent, FormSubmitEvent } from '@nuxt/ui'
 import type { z } from 'zod/v4'
 import { UInputNumber } from '#components'
 
@@ -38,45 +39,54 @@ const customControls = {
 const { afz } = createAutoFormZ(customControls)
 
 const schema = afz.object<State>()({
-  visibleTest: afz.boolean().meta({
-    size: 'lg',
-  }),
-  nestedObject: afz.object<State['nestedObject']>()({
-    firstName: afz.string().default('default name').optional(),
-    lastName: afz.string().meta({
-      label: ({ state }) => `动态字段: ${state.nestedObject?.firstName}`,
-      required: ({ state }) => state.visibleTest,
+  // visibleTest: afz.boolean(),
+  mixedDescription: afz.string({
+    // error: 'error',
+    controlProps: ({ state }) => ({
+      color: state.mixedDescription === '1' ? 'error' : 'success',
     }),
-    // userAge: afz.number(),
-    // address: afz.object<State['nestedObject']['address']>()({
-    //   province: afz.string(),
-    //   city: afz.string(),
-    //   district: afz.string(),
-    // }).meta({
-    //   label: '地址',
-    //   icon: 'i-lucide-map-pin',
-    // }),
-    portify: afz.object<State['nestedObject']['portify']>()({
-      name: afz.string(),
-      age: afz.number(),
-    }),
-  }).optional().meta({
-    label: '用户信息',
-    hidden: ({ state }) => state.visibleTest,
-    hint: '测试图标',
-    collapsible: {
-      defaultOpen: true,
-      ui: {
-        content: 'space-y-4',
-      },
-    },
+  }).readonly().meta({
+    // label(ctx) {
+    //   return `meta: ${ctx.state.mixedDescription}`
+    // },
   }),
-  // nameValue: afz.string(),
+  // nestedObject: afz.object<State['nestedObject']>()({
+  //   firstName: afz.string().default('default name').optional(),
+  //   lastName: afz.string().meta({
+  //     label: ({ state }) => `动态字段: ${state.nestedObject?.firstName}`,
+  //     required: ({ state }) => state.visibleTest,
+  //   }),
+  //   // userAge: afz.number(),
+  //   portify: afz.object<State['nestedObject']['portify']>()({
+  //     name: afz.string(),
+  //     age: afz.number(),
+  //   }),
+  // }).optional().meta({
+  //   label: '用户信息',
+  // }),
+  // nameValue: z.string('Password is required').min(8, 'Must be at least 8 characters'),
 })
+
+type Schema = z.output<typeof schema>
 
 const formState = ref({
 
-} as z.output<typeof schema>)
+} as Schema)
+
+// function validate(state: Partial<Schema>): FormError[] {
+//   const errors = []
+//   if (!state.mixedDescription)
+//     errors.push({ name: 'mixedDescription', message: '2222' })
+//   return errors
+// }
+
+function onSubmit(event: FormSubmitEvent<Schema>) {
+  console.log(event)
+}
+
+function onError(event: FormErrorEvent) {
+  console.log(event)
+}
 </script>
 
 <template>
@@ -86,10 +96,17 @@ const formState = ref({
         v-model="formState"
         :global-meta="{
           size: 'xs',
+          required(ctx) {
+            return ctx.state.mixedDescription === '1'
+          },
+          label({ path }) {
+            return `动态字段: ${path}`
+          },
         }"
         :schema="schema"
-        class="space-y-4"
         :controls="customControls"
+        @submit="onSubmit"
+        @error="onError"
       >
         <template #after-fields="{ state }">
           <UCard>
@@ -102,9 +119,9 @@ const formState = ref({
         <!-- <template #hint:nestedObject>
           测试图标
         </template> -->
-        <template #[`label:nestedObject.portify`]="{ open }">
+        <!-- <template #[`label:nestedObject.portify`]="{ open }">
           {{ open }} 1
-        </template>
+        </template> -->
       </MAutoForm>
     </UCard>
   </div>

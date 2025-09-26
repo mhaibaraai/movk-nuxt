@@ -58,13 +58,12 @@ export interface AutoFormField {
   path: string
   /** 字段原始 schema */
   schema: z.ZodType
-  /** 字段原始 schema（未处理装饰器） */
-  originalSchema: z.ZodType
   /** 字段元数据 */
   meta: GlobalMeta & AutoFormControlsMeta & { mapped?: AutoFormControl }
   /** 字段装饰器信息 */
   decorators: {
-    isOptional: boolean
+    isOptional?: boolean
+    isReadonly?: boolean
     defaultValue?: any
     description?: string
   }
