@@ -1,15 +1,15 @@
 import type { InjectionKey, ModelRef } from 'vue'
 import type { AutoFormField, AutoFormFieldContext } from '../types/auto-form'
-import { LRUCache } from 'lru-cache'
 import defu from 'defu'
+import { LRUCache } from 'lru-cache'
 import { computed, h, inject, isVNode, provide, resolveDynamicComponent, shallowRef, unref } from 'vue'
 import { getPath, setPath } from '../core'
 import { enhanceEventProps, resolveReactiveValue } from '../utils/auto-form-optimized'
 
 // 性能优化：使用 Symbol 作为缓存键以提高查找速度
-const CONTEXT_CACHE_KEY = Symbol('contextCache')
-const SLOT_KEY_CACHE_KEY = Symbol('slotKeyCache')
-const RESOLVED_PROPS_CACHE_KEY = Symbol('resolvedPropsCache')
+const _CONTEXT_CACHE_KEY = Symbol('contextCache')
+const _SLOT_KEY_CACHE_KEY = Symbol('slotKeyCache')
+const _RESOLVED_PROPS_CACHE_KEY = Symbol('resolvedPropsCache')
 
 // 字段上下文工厂类型
 interface AutoFormContextFactory {
@@ -94,7 +94,8 @@ export function useAutoFormProviderOptimized<T extends Record<string, any>>(
    * 优化：记忆化的值解析
    */
   function resolveValue<T = any>(value: any, field: AutoFormField, defaultValue?: T): T | undefined {
-    if (value === undefined) return defaultValue
+    if (value === undefined)
+      return defaultValue
 
     // 优化：为简单值类型跳过上下文创建
     if (typeof value !== 'function' && typeof value !== 'object') {
@@ -103,7 +104,8 @@ export function useAutoFormProviderOptimized<T extends Record<string, any>>(
 
     const cacheKey = `${field.path}_${typeof value}`
     const cached = resolvedPropsCache.get(cacheKey)
-    if (cached !== undefined) return cached
+    if (cached !== undefined)
+      return cached
 
     const context = createFieldContext(field)
     const result = resolveReactiveValue(value, context)
@@ -130,7 +132,8 @@ export function useAutoFormProviderOptimized<T extends Record<string, any>>(
    * 获取解析后的 fieldSlots
    */
   function getResolvedFieldSlots(field: AutoFormField) {
-    if (!field.meta?.fieldSlots) return undefined
+    if (!field.meta?.fieldSlots)
+      return undefined
     return resolveValue(field.meta.fieldSlots, field)
   }
 
@@ -148,13 +151,15 @@ export function useAutoFormProviderOptimized<T extends Record<string, any>>(
     const comp = controlMeta?.component as any
 
     // 快速返回：排除 object
-    if (field.meta.type === 'object') return null
+    if (field.meta.type === 'object')
+      return null
 
     if (!comp) {
       return h('div', { class: 'text-red-500' }, `[AutoForm] 控件未映射: ${field?.path ?? ''}`)
     }
 
-    if (isVNode(comp)) return comp
+    if (isVNode(comp))
+      return comp
 
     const component = typeof comp === 'string' ? resolveDynamicComponent(comp) : comp
     const context = createFieldContext(field)
@@ -167,7 +172,8 @@ export function useAutoFormProviderOptimized<T extends Record<string, any>>(
     if (isReadonly && Object.keys(resolvedControlProps).length === 0) {
       // 复用预创建的对象
       finalProps = controlPropsReusableObjects.disabledOnly
-    } else {
+    }
+    else {
       // 优化：使用浅层合并
       finalProps = isReadonly
         ? { ...resolvedControlProps, disabled: true }
@@ -229,9 +235,9 @@ export function useAutoFormProviderOptimized<T extends Record<string, any>>(
       hasSlot(name: string): boolean {
         const keySpecific = slotKeyMap.get(name) || getSlotKey(name, keyPrefix)
         return Boolean(
-          slots?.[keySpecific] ||
-          slots?.[name] ||
-          fieldSlots?.[name],
+          slots?.[keySpecific]
+          || slots?.[name]
+          || fieldSlots?.[name],
         )
       },
 
@@ -359,6 +365,6 @@ export function useAutoFormInjectorOptimized() {
 // 扩展字段上下文类型以支持清理
 declare module '../types/auto-form' {
   interface AutoFormFieldContext {
-    _cleanup?(): void
+    _cleanup?: () => void
   }
 }

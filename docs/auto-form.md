@@ -123,9 +123,9 @@ z.object({
 const { afz } = createAutoFormZ()
 
 // 三种对象工厂，行为差异：
-const schema = afz.object<State>()({...})        // strip: 允许额外键，解析时剥离
-const schema = afz.looseObject<State>()({...})   // loose: 允许额外键，解析时保留
-const schema = afz.strictObject<State>()({...})  // strict: 禁止额外键，解析时报错
+const schema = afz.object()({})        // strip: 允许额外键，解析时剥离
+const schema = afz.looseObject()({})   // loose: 允许额外键，解析时保留
+const schema = afz.strictObject()({})  // strict: 禁止额外键，解析时报错
 ```
 
 ## 键名提示与约束
@@ -155,7 +155,7 @@ const schema = afz.object<State>()({
 })
 
 // 深层嵌套
-const deep = afz.object<State['address']['geo']['coordinates']>()({...})
+const deep = afz.object()({})
 ```
 
 ## 链式调用支持
@@ -177,10 +177,10 @@ const schema = afz.looseObject<State>()({
 ## 类型推断与补全
 
 ```ts
-const schema = afz.object<State>()({...})
+const schema = afz.object()({})
 type _State = z.output<typeof schema>  // 推荐使用，获得完整字段提示
 
-const state = ref<z.output<typeof schema>>({
+const state = ref({
   name: '',        // 有提示
   address: {
     city: '',      // 有提示
