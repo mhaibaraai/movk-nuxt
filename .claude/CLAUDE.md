@@ -22,6 +22,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Zod** - 数据验证与类型推断
 - **@nuxtjs/i18n** - 国际化支持
 - **@vueuse/core** - Vue 组合函数库
+- **lru-cache** - 缓存库
 
 ### 核心依赖
 

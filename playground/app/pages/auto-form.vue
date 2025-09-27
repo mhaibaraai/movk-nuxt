@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import type { AutoFormControls } from '#movk/types'
-import type { FormError, FormErrorEvent, FormSubmitEvent } from '@nuxt/ui'
+import type { FormErrorEvent, FormSubmitEvent } from '@nuxt/ui'
 import type { z } from 'zod/v4'
 import { UInputNumber } from '#components'
 
@@ -39,9 +39,7 @@ const customControls = {
 const { afz } = createAutoFormZ(customControls)
 
 const schema = afz.object<State>()({
-  mixedDescription: afz.string({
-    error: 'error test',
-  }),
+  mixedDescription: afz.string('error test'),
 })
 
 type Schema = z.output<typeof schema>

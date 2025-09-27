@@ -41,6 +41,8 @@ export interface AutoFormControlsMeta<C extends IsComponent = IsComponent> {
   controlProps?: ReactiveValue<ComponentProps<C>, AutoFormFieldContext>
   /** 控件插槽（调用侧可部分覆盖） */
   controlSlots?: ReactiveValue<Partial<ComponentSlots<C>>, AutoFormFieldContext>
+  /** Zod 错误消息 */
+  error?: string
 }
 
 export interface AutoFormControl<C extends IsComponent = IsComponent> {

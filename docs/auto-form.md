@@ -248,20 +248,21 @@ const schema = afz.object<State>()({
 
   ```ts
   export type DynamicFormSlots<T>
-  = Record<string, (props: AutoFormFieldContext<T>) => any>
-    & Record<`${DynamicFieldSlotKeys}`, (props: AutoFormFieldContext<T>) => any>
-    & Record<`${DynamicFieldSlotKeys}:${NestedKeys<T>}`, (props: AutoFormFieldContext<T>) => any>
+    = Record<string, (props: AutoFormFieldContext<T>) => any>
+      & Record<`${DynamicFieldSlotKeys}`, (props: AutoFormFieldContext<T>) => any>
+      & Record<`${DynamicFieldSlotKeys}:${NestedKeys<T>}`, (props: AutoFormFieldContext<T>) => any>
   ```
 
   对于 nestedObject 字段的渲染，默认使用 UAccordion 包装，UAccordion 的 default 插槽默认渲染 AutoFormFieldRenderer 组件（属性从 meta 中获取）, UAccordion 的 content 插槽默认渲染 AutoFormNestedRenderer 组件（遍历 children 字段）。
   <template #nestedObject>
-    222
+  222
   </template>
   这种情况下，整个 nestedObject 字段会渲染成 222，而不是 UAccordion 的渲染。（如果该功能是合理的，DynamicFormSlots 中的 object 应该去除 DynamicFieldSlotKeys 的前缀？）
 
 - 属性的获取方式
 
   是否推荐在 meta 的属性中增加 UAccordion 的属性，例如：
+
   ```ts
   meta: {
     hidden: ({ state }) => state.visibleTest,
@@ -298,6 +299,7 @@ const schema = afz.object<State>()({
 
 ```ts
 import { z } from 'zod/v4'
+
 const schema = afz.object<State>()({
   mixedDescription: z.string('error test'),
 })

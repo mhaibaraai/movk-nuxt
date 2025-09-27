@@ -57,10 +57,49 @@ interface TypedZodFactory<TC extends AutoFormControls> {
 
 export function createAutoFormZ<TControls extends AutoFormControls = typeof DEFAULT_CONTROLS>(_controls?: TControls) {
   const typedZ = {
-    string: (controlMeta?: any) => applyMeta(z.string(), controlMeta),
-    number: (controlMeta?: any) => applyMeta(z.number(), controlMeta),
-    boolean: (controlMeta?: any) => applyMeta(z.boolean(), controlMeta),
-    date: (controlMeta?: any) => applyMeta(z.date(), controlMeta),
+    string: (controlMeta?: any) => {
+      // 如果 controlMeta 是字符串，直接作为错误消息传递给 z.string()
+      if (typeof controlMeta === 'string') {
+        return z.string(controlMeta)
+      }
+      // 如果 controlMeta 包含 error 属性，提取并传递给 z.string()
+      if (controlMeta && typeof controlMeta === 'object' && 'error' in controlMeta) {
+        const { error, ...meta } = controlMeta
+        return applyMeta(z.string(error), meta)
+      }
+      // 否则正常处理
+      return applyMeta(z.string(), controlMeta)
+    },
+    number: (controlMeta?: any) => {
+      if (typeof controlMeta === 'string') {
+        return z.number(controlMeta)
+      }
+      if (controlMeta && typeof controlMeta === 'object' && 'error' in controlMeta) {
+        const { error, ...meta } = controlMeta
+        return applyMeta(z.number(error), meta)
+      }
+      return applyMeta(z.number(), controlMeta)
+    },
+    boolean: (controlMeta?: any) => {
+      if (typeof controlMeta === 'string') {
+        return z.boolean(controlMeta)
+      }
+      if (controlMeta && typeof controlMeta === 'object' && 'error' in controlMeta) {
+        const { error, ...meta } = controlMeta
+        return applyMeta(z.boolean(error), meta)
+      }
+      return applyMeta(z.boolean(), controlMeta)
+    },
+    date: (controlMeta?: any) => {
+      if (typeof controlMeta === 'string') {
+        return z.date(controlMeta)
+      }
+      if (controlMeta && typeof controlMeta === 'object' && 'error' in controlMeta) {
+        const { error, ...meta } = controlMeta
+        return applyMeta(z.date(error), meta)
+      }
+      return applyMeta(z.date(), controlMeta)
+    },
 
     // 直接实现符合接口的 object 函数
     object: ((...args: any[]) => {
