@@ -39,7 +39,12 @@ const customControls = {
 const { afz } = createAutoFormZ(customControls)
 
 const schema = afz.object<State>()({
-  mixedDescription: afz.string('error test'),
+  nameValue: afz.string({
+    controlProps: {
+      color: 'error',
+      placeholder: '请输入姓名',
+    },
+  }).min(3).max(10).meta({ label: '姓名' }).default('张三'),
 })
 
 type Schema = z.output<typeof schema>
@@ -67,13 +72,7 @@ function onError(event: FormErrorEvent) {
 <template>
   <div class="space-y-4 p-10">
     <UCard>
-      <MAutoForm
-        v-model="formState"
-        :schema="schema"
-        :controls="customControls"
-        @submit="onSubmit"
-        @error="onError"
-      >
+      <MAutoForm v-model="formState" :schema="schema" :controls="customControls" @submit="onSubmit" @error="onError">
         <template #after-fields="{ state }">
           <UCard>
             <template #header>

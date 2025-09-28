@@ -105,12 +105,18 @@ export type AutoFormFactoryMethod<
   TResult,
   TExtraParams extends any[] = [],
 > = {
+  // 支持直接传入字符串作为错误消息
+  (...args: [...TExtraParams, string?]): TResult
+} & {
+  // 支持传入元数据对象
   (...args: [...TExtraParams, ({ component?: never, type?: never } & MetaByZod<TControls, TZod>)?]): TResult
 } & {
+  // 支持指定控件类型
   <K extends KnownKeys<TControls> & keyof TControls & string>(
     ...args: [...TExtraParams, ({ type: Suggest<K>, component?: never } & MetaByType<TControls, K>)?]
   ): TResult
 } & {
+  // 支持直接传入组件
   <C extends IsComponent>(
     ...args: [...TExtraParams, ({ component: C, type?: never } & OmitControlMeta<C>)?]
   ): TResult
