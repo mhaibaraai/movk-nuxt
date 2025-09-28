@@ -3,7 +3,7 @@ import type { FormData, FormError, FormErrorEvent, FormInputEvents, FormSubmitEv
 import type { GlobalAutoFormMeta, z } from 'zod/v4'
 import type { AutoFormControls, AutoFormField, DynamicFormSlots } from '../../types/auto-form'
 import { UForm } from '#components'
-import { computed } from 'vue'
+import { computed, onBeforeUnmount, shallowRef, watchEffect } from 'vue'
 import { useAutoFormProvider } from '../../composables/useAutoFormContext'
 import { DEFAULT_CONTROLS } from '../../constants/auto-form'
 import { deepClone, getPath, setPath } from '../../core'
@@ -97,12 +97,24 @@ const _slots = defineSlots<AutoFormSlots<AutoFormStateType>>()
 
 const state = defineModel<AutoFormStateType>({ default: () => ({}) })
 
-const { resolveFieldProp } = useAutoFormProvider(state, _slots)
+const { resolveFieldProp, clearContextCache } = useAutoFormProvider(state, _slots)
 
-const controlsMapping = computed(() => ({
+const controlsMapping = shallowRef({
   ...DEFAULT_CONTROLS,
   ...controls,
-}))
+})
+
+watchEffect(() => {
+  controlsMapping.value = {
+    ...DEFAULT_CONTROLS,
+    ...controls,
+  }
+  clearContextCache()
+})
+
+onBeforeUnmount(() => {
+  clearContextCache()
+})
 
 // 优化字段计算 - 仅在 schema 或映射真正变化时重新计算
 const fields = computed(() => {
@@ -111,49 +123,77 @@ const fields = computed(() => {
 
   const entries = introspectSchema(schema, controlsMapping.value, '', globalMeta)
 
-  // 同步初始化默认值，确保 SSR 兼容性
-  for (const { decorators, path } of entries) {
-    if (decorators?.defaultValue !== undefined
-      && getPath(state.value, path) === undefined) {
-      setPath(state.value, path, deepClone(decorators.defaultValue))
+  const updates: Array<{ path: string, value: any }> = []
+
+  for (let i = 0; i < entries.length; i++) {
+    const entry = entries[i]
+    if (entry && entry.decorators?.defaultValue !== undefined && getPath(state.value, entry.path) === undefined) {
+      updates.push({ path: entry.path, value: deepClone(entry.decorators.defaultValue) })
     }
   }
 
-  console.log(entries)
+  // 批量应用更新
+  for (let i = 0; i < updates.length; i++) {
+    const update = updates[i]
+    if (update) {
+      setPath(state.value, update.path, update.value)
+    }
+  }
+
   return entries
 })
 
-const visibleFields = computed(() =>
-  fields.value.filter((field: AutoFormField) => resolveFieldProp<boolean | undefined>(field, 'if', true)),
-)
+const visibleFields = computed(() => {
+  const result: AutoFormField[] = []
+  const fieldsArray = fields.value
 
-const topLevelEntries = computed(() =>
-  visibleFields.value.map(field => ({ field, isLeaf: isLeafField(field) })),
-)
+  for (let i = 0; i < fieldsArray.length; i++) {
+    const field = fieldsArray[i]
+    if (field && resolveFieldProp<boolean | undefined>(field, 'if', true)) {
+      result.push(field)
+    }
+  }
 
-const useNestedRendering = computed(() =>
-  topLevelEntries.value.some(entry => !entry.isLeaf),
-)
+  return result
+})
 
-const nestedRenderEntries = computed(() =>
-  useNestedRendering.value ? topLevelEntries.value : [],
-)
+// 预计算渲染策略 - 避免重复计算
+const renderStrategy = computed(() => {
+  const visibleFieldsArray = visibleFields.value
+  const entries: Array<{ field: AutoFormField, isLeaf: boolean }> = []
+  let hasNestedFields = false
 
-const flatRenderFields = computed(() =>
-  useNestedRendering.value ? [] : flattenFields(visibleFields.value),
-)
+  for (let i = 0; i < visibleFieldsArray.length; i++) {
+    const field = visibleFieldsArray[i]
+    if (field) {
+      const isLeaf = isLeafField(field)
+      entries.push({ field, isLeaf })
+
+      if (!isLeaf) {
+        hasNestedFields = true
+      }
+    }
+  }
+
+  return {
+    entries,
+    useNestedRendering: hasNestedFields,
+    flatFields: hasNestedFields ? [] : flattenFields(visibleFieldsArray),
+  }
+})
+
+// 从预计算的策略中提取值
+const topLevelEntries = computed(() => renderStrategy.value.entries)
+const useNestedRendering = computed(() => renderStrategy.value.useNestedRendering)
+const flatRenderFields = computed(() => renderStrategy.value.flatFields)
 </script>
 
 <template>
-  <UForm
-    :state="state"
-    :schema="schema"
-    v-bind="restProps"
-  >
+  <UForm :state="state" :schema="schema" v-bind="restProps">
     <slot name="before-fields" :fields="visibleFields" :state="state" />
 
     <template v-if="useNestedRendering">
-      <template v-for="entry in nestedRenderEntries" :key="entry.field.path">
+      <template v-for="entry in topLevelEntries" :key="entry.field.path">
         <AutoFormFieldRenderer v-if="entry.isLeaf" :field="entry.field" :schema="schema" />
         <AutoFormNestedRenderer v-else :field="entry.field" :schema="schema" />
       </template>

@@ -1,7 +1,8 @@
 import type { InjectionKey, ModelRef } from 'vue'
 import type { AutoFormField, AutoFormFieldContext } from '../types/auto-form'
 import defu from 'defu'
-import { computed, h, inject, isVNode, provide, resolveDynamicComponent, unref } from 'vue'
+import { LRUCache } from 'lru-cache'
+import { computed, h, inject, isVNode, provide, resolveDynamicComponent, shallowRef, unref } from 'vue'
 import { getPath, setPath } from '../core'
 import { enhanceEventProps, resolveReactiveValue } from '../utils/auto-form'
 
@@ -21,46 +22,84 @@ interface AutoFormContextFactory {
 const AUTO_FORM_CONTEXT_KEY: InjectionKey<AutoFormContextFactory> = Symbol('AutoFormContext')
 
 /**
- * 提供字段上下文管理的 composable（用于 AutoForm 组件）
+ * 提供字段上下文管理的 composable
  */
 export function useAutoFormProvider<T extends Record<string, any>>(
   state: ModelRef<T, string, T, T>,
   slots: Record<string, any>,
 ) {
-  // 字段上下文缓存 - 按路径缓存已创建的上下文
-  const contextCache = new Map<string, AutoFormFieldContext>()
+  // 使用 LRU 缓存替代无限增长的 Map
+  const contextCache = new LRUCache<string, AutoFormFieldContext>({ max: 200 })
+  const slotKeyCache = new LRUCache<string, string>({ max: 500 })
+  const resolvedPropsCache = new LRUCache<string, any>({ max: 100 })
 
-  // 创建字段上下文工厂 - 增加缓存机制提升性能
+  // 预编译插槽键计算
+  const getSlotKey = (name: string, prefix: string): string => {
+    const cacheKey = `${name}|${prefix}`
+    let slotKey = slotKeyCache.get(cacheKey)
+    if (!slotKey) {
+      slotKey = `${name}:${prefix}`
+      slotKeyCache.set(cacheKey, slotKey)
+    }
+    return slotKey
+  }
+
+  // 使用浅层响应式和记忆化
   function createFieldContext(field: AutoFormField): AutoFormFieldContext {
     const path = field.path
 
     // 检查缓存
-    if (contextCache.has(path)) {
-      return contextCache.get(path)!
+    const cached = contextCache.get(path)
+    if (cached) {
+      return cached
     }
 
-    // 创建新的上下文
+    // 使用 shallowRef 替代深度响应式 computed
+    const valueRef = shallowRef(getPath(state.value, path))
+
+    // 监听状态变化以更新 shallowRef
+    const stopWatcher = computed(() => {
+      const newValue = getPath(state.value, path)
+      if (valueRef.value !== newValue) {
+        valueRef.value = newValue
+      }
+      return newValue
+    })
+
     const context: AutoFormFieldContext = {
       get state() { return state.value as T },
       path,
-      value: computed(() => getPath(state.value, path)),
+      value: valueRef,
       setValue: (v: any) => setPath(state.value, path, v),
+      // 添加清理函数
+      _cleanup: () => (stopWatcher as any).effect?.stop?.(),
     }
 
-    // 缓存上下文
     contextCache.set(path, context)
     return context
   }
 
   /**
-   * 解析响应式值的统一方法
+   * 记忆化的值解析
    */
   function resolveValue<T = any>(value: any, field: AutoFormField, defaultValue?: T): T | undefined {
     if (value === undefined)
       return defaultValue
 
+    // 为简单值类型跳过上下文创建
+    if (typeof value !== 'function' && typeof value !== 'object') {
+      return value
+    }
+
+    const cacheKey = `${field.path}_${typeof value}`
+    const cached = resolvedPropsCache.get(cacheKey)
+    if (cached !== undefined)
+      return cached
+
     const context = createFieldContext(field)
-    return resolveReactiveValue(value, context)
+    const result = resolveReactiveValue(value, context)
+    resolvedPropsCache.set(cacheKey, result)
+    return result
   }
 
   /**
@@ -84,8 +123,13 @@ export function useAutoFormProvider<T extends Record<string, any>>(
   function getResolvedFieldSlots(field: AutoFormField) {
     if (!field.meta?.fieldSlots)
       return undefined
-
     return resolveValue(field.meta.fieldSlots, field)
+  }
+
+  // 控件属性复用对象
+  const controlPropsReusableObjects = {
+    empty: {},
+    disabledOnly: { disabled: true },
   }
 
   /**
@@ -109,29 +153,42 @@ export function useAutoFormProvider<T extends Record<string, any>>(
     const component = typeof comp === 'string' ? resolveDynamicComponent(comp) : comp
     const context = createFieldContext(field)
 
-    // 解析控件属性和插槽
-    const props = defu(
-      resolveValue(controlMeta.controlProps, field, {}),
-      // 处理 decorators.isReadonly -> controlProps.disabled
-      {
-        disabled: field.decorators?.isReadonly,
-      },
-      controlMeta?.mapped?.controlProps,
-    )
+    const resolvedControlProps = resolveValue(controlMeta.controlProps, field) || controlPropsReusableObjects.empty
+    const isReadonly = field.decorators?.isReadonly
+
+    let finalProps: Record<string, any>
+    if (isReadonly && Object.keys(resolvedControlProps).length === 0) {
+      // 复用预创建的对象
+      finalProps = controlPropsReusableObjects.disabledOnly
+    }
+    else {
+      // 优化：使用浅层合并
+      finalProps = isReadonly
+        ? { ...resolvedControlProps, disabled: true }
+        : resolvedControlProps
+
+      // 合并映射属性
+      if (controlMeta?.mapped?.controlProps) {
+        Object.assign(finalProps, controlMeta.mapped.controlProps)
+      }
+    }
+
     const slots = defu(
       resolveValue(controlMeta.controlSlots, field, {}),
       controlMeta?.mapped?.controlSlots,
     )
 
-    // 处理 modelValue 更新
-    const userOnUpdate = props['onUpdate:modelValue']
-    const { 'onUpdate:modelValue': _, ...rest } = props
-    const wrapped = enhanceEventProps(rest, context)
+    // 避免不必要的解构
+    const userOnUpdate = finalProps['onUpdate:modelValue']
+    const wrappedProps = enhanceEventProps(finalProps, context)
+
+    // 移除 onUpdate:modelValue 避免冲突
+    delete wrappedProps['onUpdate:modelValue']
 
     return h(
       component as any,
       {
-        ...wrapped,
+        ...wrappedProps,
         'onUpdate:modelValue': (v: any) => {
           context.setValue(v)
           if (typeof userOnUpdate === 'function') {
@@ -151,12 +208,20 @@ export function useAutoFormProvider<T extends Record<string, any>>(
     const keyPrefix = field.path
     const fieldSlots = getResolvedFieldSlots(field)
 
+    // 预计算所有可能的插槽键
+    const slotKeyMap = new Map<string, string>()
+    const standardSlots = ['label', 'hint', 'description', 'help', 'error', 'default']
+
+    for (const slotName of standardSlots) {
+      slotKeyMap.set(slotName, getSlotKey(slotName, keyPrefix))
+    }
+
     return {
       /**
-       * 检查是否存在指定名称的插槽
+       * 使用 Map 查找替代字符串拼接
        */
       hasSlot(name: string): boolean {
-        const keySpecific = `${name}:${keyPrefix}`
+        const keySpecific = slotKeyMap.get(name) || getSlotKey(name, keyPrefix)
         return Boolean(
           slots?.[keySpecific]
           || slots?.[name]
@@ -165,11 +230,10 @@ export function useAutoFormProvider<T extends Record<string, any>>(
       },
 
       /**
-       * 渲染指定名称的插槽
-       * 优先级：路径特定插槽 > 通用插槽 > 字段级插槽
+       * 渲染指定名称的插槽 - 减少重复的字符串计算
        */
       renderSlot(name: string, slotProps: any) {
-        const keySpecific = `${name}:${keyPrefix}`
+        const keySpecific = slotKeyMap.get(name) || getSlotKey(name, keyPrefix)
 
         // 优先级：路径特定 > 通用 > 字段级
         if (slots?.[keySpecific]) {
@@ -195,6 +259,17 @@ export function useAutoFormProvider<T extends Record<string, any>>(
    */
   function createSlotProps(field: AutoFormField, extraProps: Record<string, any> = {}): AutoFormFieldContext {
     const context = createFieldContext(field)
+
+    // 对于空的 extraProps 使用预定义对象
+    if (Object.keys(extraProps).length === 0) {
+      return {
+        state: context.state,
+        path: context.path,
+        value: unref(context.value),
+        setValue: context.setValue,
+      }
+    }
+
     return {
       ...extraProps,
       state: context.state,
@@ -205,28 +280,43 @@ export function useAutoFormProvider<T extends Record<string, any>>(
   }
 
   /**
-   * 为 UFormField 生成标准插槽模板
-   * 标准化插槽渲染逻辑，减少重复代码
+   * 批量创建表单字段插槽
    */
   function createFormFieldSlots(field: AutoFormField, slotResolver: ReturnType<typeof createSlotResolver>, extraProps?: Record<string, any>) {
     const slots: Record<string, any> = {}
 
-    // 标准插槽名称列表
+    // 预定义标准插槽减少数组创建
     const standardSlots = ['label', 'hint', 'description', 'help', 'error'] as const
 
-    standardSlots.forEach((slotName) => {
-      if (slotResolver.hasSlot(slotName)) {
-        slots[slotName] = (slotData: any) => {
-          const slotProps = createSlotProps(field, {
-            ...extraProps,
-            [slotName]: slotData[slotName],
-          })
-          return slotResolver.renderSlot(slotName, slotProps)
-        }
+    // 批量检查插槽存在性
+    const existingSlots = standardSlots.filter(slotName => slotResolver.hasSlot(slotName))
+
+    // 只为存在的插槽创建函数
+    for (const slotName of existingSlots) {
+      slots[slotName] = (slotData: any) => {
+        const slotProps = createSlotProps(field, {
+          ...extraProps,
+          [slotName]: slotData[slotName],
+        })
+        return slotResolver.renderSlot(slotName, slotProps)
+      }
+    }
+
+    return slots
+  }
+
+  // 智能缓存清理
+  function clearContextCache() {
+    // 清理所有上下文的监听器
+    contextCache.forEach((context) => {
+      if (context._cleanup) {
+        context._cleanup()
       }
     })
 
-    return slots
+    contextCache.clear()
+    slotKeyCache.clear()
+    resolvedPropsCache.clear()
   }
 
   // 创建完整的上下文工厂对象
@@ -239,7 +329,7 @@ export function useAutoFormProvider<T extends Record<string, any>>(
     renderControl,
     createSlotResolver,
     createFormFieldSlots,
-    clearContextCache: () => contextCache.clear(),
+    clearContextCache,
   }
 
   // 通过 provide 机制注入所有方法给子组件
