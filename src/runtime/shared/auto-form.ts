@@ -1,6 +1,8 @@
+import type { GlobalMeta } from 'zod/v4'
 import type { DEFAULT_CONTROLS } from '../constants/auto-form'
 import type { IsComponent } from '../core'
 import type { AutoFormControl, AutoFormControls, AutoFormFactoryMethod } from '../types/auto-form'
+import { isObject } from '@movk/core'
 import { z } from 'zod/v4'
 
 function applyMeta<T extends z.ZodType, M = unknown>(
@@ -8,8 +10,33 @@ function applyMeta<T extends z.ZodType, M = unknown>(
   meta?: M,
 ): T {
   return meta
-    ? (schema.meta(meta as import('zod/v4').GlobalMeta) as T)
+    ? (schema.meta(meta as GlobalMeta) as T)
     : schema
+}
+
+/**
+ * 通用的 Zod 工厂方法创建器 - DRY 原则优化
+ * @param zodFactory Zod 构造函数 (z.string, z.number 等)
+ * @returns 优化后的工厂方法
+ */
+function createZodFactoryMethod<T extends z.ZodType>(
+  zodFactory: (params?: any) => T,
+) {
+  return (controlMeta?: any): T => {
+    // 字符串直接作为错误消息
+    if (typeof controlMeta === 'string') {
+      return zodFactory(controlMeta)
+    }
+
+    // 对象且包含 error 属性
+    if (controlMeta && isObject(controlMeta) && 'error' in controlMeta) {
+      const { error, ...meta } = controlMeta
+      return applyMeta(zodFactory(error), meta)
+    }
+
+    // 正常处理
+    return applyMeta(zodFactory(), controlMeta)
+  }
 }
 
 type KeysOf<T> = Extract<keyof T, string>
@@ -55,80 +82,46 @@ interface TypedZodFactory<TC extends AutoFormControls> {
   }
 }
 
-export function createAutoFormZ<TControls extends AutoFormControls = typeof DEFAULT_CONTROLS>(_controls?: TControls) {
+/**
+ * 通用对象工厂创建器
+ */
+function createObjectFactory<T extends 'object' | 'looseObject' | 'strictObject'>(
+  method: T,
+) {
+  return ((...args: any[]) => {
+    if (args.length === 0) {
+      return (shape: any) => (z as any)[method](shape)
+    }
+    return (z as any)[method](args[0])
+  }) as any
+}
+
+// 缓存工厂实例，避免重复创建
+const factoryCache = new WeakMap<any, TypedZodFactory<any>>()
+
+export function createAutoFormZ<TControls extends AutoFormControls = typeof DEFAULT_CONTROLS>(
+  _controls?: TControls,
+): { afz: TypedZodFactory<TControls> } {
+  if (_controls && factoryCache.has(_controls)) {
+    return { afz: factoryCache.get(_controls)! }
+  }
+
   const typedZ = {
-    string: (controlMeta?: any) => {
-      // 如果 controlMeta 是字符串，直接作为错误消息传递给 z.string()
-      if (typeof controlMeta === 'string') {
-        return z.string(controlMeta)
-      }
-      // 如果 controlMeta 包含 error 属性，提取并传递给 z.string()
-      if (controlMeta && typeof controlMeta === 'object' && 'error' in controlMeta) {
-        const { error, ...meta } = controlMeta
-        return applyMeta(z.string(error), meta)
-      }
-      // 否则正常处理
-      return applyMeta(z.string(), controlMeta)
-    },
-    number: (controlMeta?: any) => {
-      if (typeof controlMeta === 'string') {
-        return z.number(controlMeta)
-      }
-      if (controlMeta && typeof controlMeta === 'object' && 'error' in controlMeta) {
-        const { error, ...meta } = controlMeta
-        return applyMeta(z.number(error), meta)
-      }
-      return applyMeta(z.number(), controlMeta)
-    },
-    boolean: (controlMeta?: any) => {
-      if (typeof controlMeta === 'string') {
-        return z.boolean(controlMeta)
-      }
-      if (controlMeta && typeof controlMeta === 'object' && 'error' in controlMeta) {
-        const { error, ...meta } = controlMeta
-        return applyMeta(z.boolean(error), meta)
-      }
-      return applyMeta(z.boolean(), controlMeta)
-    },
-    date: (controlMeta?: any) => {
-      if (typeof controlMeta === 'string') {
-        return z.date(controlMeta)
-      }
-      if (controlMeta && typeof controlMeta === 'object' && 'error' in controlMeta) {
-        const { error, ...meta } = controlMeta
-        return applyMeta(z.date(error), meta)
-      }
-      return applyMeta(z.date(), controlMeta)
-    },
+    string: createZodFactoryMethod(z.string),
+    number: createZodFactoryMethod(z.number),
+    boolean: createZodFactoryMethod(z.boolean),
+    date: createZodFactoryMethod(z.date),
 
-    // 直接实现符合接口的 object 函数
-    object: ((...args: any[]) => {
-      // 如果没有参数，返回柯里化函数
-      if (args.length === 0) {
-        return (shape: any) => z.object(shape)
-      }
-      // 如果有参数，直接处理
-      return z.object(args[0])
-    }) as TypedZodFactory<TControls>['object'],
-
-    looseObject: ((...args: any[]) => {
-      if (args.length === 0) {
-        return (shape: any) => z.looseObject(shape)
-      }
-      return z.looseObject(args[0])
-    }) as TypedZodFactory<TControls>['looseObject'],
-
-    strictObject: ((...args: any[]) => {
-      if (args.length === 0) {
-        return (shape: any) => z.strictObject(shape)
-      }
-      return z.strictObject(args[0])
-    }) as TypedZodFactory<TControls>['strictObject'],
+    object: createObjectFactory('object'),
+    looseObject: createObjectFactory('looseObject'),
+    strictObject: createObjectFactory('strictObject'),
   } as unknown as TypedZodFactory<TControls>
 
-  return {
-    afz: typedZ,
+  if (_controls) {
+    factoryCache.set(_controls, typedZ)
   }
+
+  return { afz: typedZ }
 }
 
 export function createAutoFormControl<T extends IsComponent>(e: AutoFormControl<T>): AutoFormControl<T> {
