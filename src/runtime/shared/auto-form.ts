@@ -3,6 +3,7 @@ import type { DEFAULT_CONTROLS } from '../constants/auto-form'
 import type { IsComponent } from '../core'
 import type { AutoFormControl, AutoFormControls, AutoFormFactoryMethod } from '../types/auto-form'
 import { isObject } from '@movk/core'
+import { LRUCache } from 'lru-cache'
 import { z } from 'zod/v4'
 
 function applyMeta<T extends z.ZodType, M = unknown>(
@@ -15,9 +16,9 @@ function applyMeta<T extends z.ZodType, M = unknown>(
 }
 
 /**
- * 通用的 Zod 工厂方法创建器 - DRY 原则优化
+ * 通用的 Zod 工厂方法创建器
  * @param zodFactory Zod 构造函数 (z.string, z.number 等)
- * @returns 优化后的工厂方法
+ * @returns 工厂方法
  */
 function createZodFactoryMethod<T extends z.ZodType>(
   zodFactory: (params?: any) => T,
@@ -97,15 +98,38 @@ function createObjectFactory<T extends 'object' | 'looseObject' | 'strictObject'
 }
 
 // 缓存工厂实例，避免重复创建
-const factoryCache = new WeakMap<any, TypedZodFactory<any>>()
+const autoFormZCache = new LRUCache<string, { afz: TypedZodFactory<any> }>({ max: 100 })
+
+function createCacheKey<T extends AutoFormControls>(controls?: T): string {
+  if (!controls)
+    return 'default'
+  try {
+    // 使用排序后的键来确保一致性
+    const sortedKeys = Object.keys(controls).sort()
+    const sortedControls = sortedKeys.reduce((acc, key) => {
+      acc[key] = controls[key]
+      return acc
+    }, {} as any)
+    return JSON.stringify(sortedControls)
+  }
+  catch {
+    // 如果序列化失败，返回唯一标识符
+    return `controls_${Date.now()}_${Math.random()}`
+  }
+}
 
 export function createAutoFormZ<TControls extends AutoFormControls = typeof DEFAULT_CONTROLS>(
   _controls?: TControls,
 ): { afz: TypedZodFactory<TControls> } {
-  if (_controls && factoryCache.has(_controls)) {
-    return { afz: factoryCache.get(_controls)! }
+  const cacheKey = createCacheKey(_controls)
+
+  // 检查缓存
+  const cached = autoFormZCache.get(cacheKey)
+  if (cached) {
+    return cached as { afz: TypedZodFactory<TControls> }
   }
 
+  // 创建新实例
   const typedZ = {
     string: createZodFactoryMethod(z.string),
     number: createZodFactoryMethod(z.number),
@@ -117,11 +141,12 @@ export function createAutoFormZ<TControls extends AutoFormControls = typeof DEFA
     strictObject: createObjectFactory('strictObject'),
   } as unknown as TypedZodFactory<TControls>
 
-  if (_controls) {
-    factoryCache.set(_controls, typedZ)
-  }
+  const result = { afz: typedZ }
 
-  return { afz: typedZ }
+  // 缓存结果
+  autoFormZCache.set(cacheKey, result)
+
+  return result
 }
 
 export function createAutoFormControl<T extends IsComponent>(e: AutoFormControl<T>): AutoFormControl<T> {
