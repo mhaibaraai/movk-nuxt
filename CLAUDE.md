@@ -9,25 +9,30 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## 开发命令
 
 ### 构建和打包
+
 - `pnpm build` - 构建模块
 - `pnpm prepack` - 预打包 (自动运行 build)
 
 ### 开发环境
+
 - `pnpm dev` - 启动开发模式 (包含 prepare 和 playground)
 - `pnpm dev:prepare` - 准备开发环境 (stub build + prepare playground)
 - `pnpm dev:build` - 构建 playground
 
 ### 代码质量
+
 - `pnpm lint` - 运行 ESLint 检查
 - `pnpm lint:fix` - 自动修复 ESLint 问题
 - `pnpm typecheck` - TypeScript 类型检查 (包含 playground)
 
 ### 测试
+
 - `pnpm test` - 运行测试套件
 - `pnpm test:watch` - 监听模式运行测试
 - `pnpm test:types` - 仅运行类型检查
 
 ### 工具命令
+
 - `pnpm clean` - 清理构建文件
 - `pnpm up` - 更新依赖
 - `pnpm release` - 发布新版本
@@ -35,6 +40,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## 项目架构
 
 ### 核心模块结构
+
 ```
 src/
 ├── module.ts              # 主模块定义，配置组件、插件、类型等
@@ -65,12 +71,15 @@ src/
    - 主题切换和管理功能
 
 ### 依赖关系
+
 - 基于 Nuxt 4.x 和 Vue 3
 - 核心依赖：`@nuxt/ui`、`@vueuse/core`、`zod/v4`、`@movk/core` 、 `lru-cache`
 - 可选依赖：`@nuxtjs/i18n` (当启用 i18n 选项时)
 
 ### 模块配置
+
 主模块通过 `movk` 配置键进行配置：
+
 - `prefix`: 组件前缀 (默认 'M')
 - `i18n`: 是否启用国际化支持
 

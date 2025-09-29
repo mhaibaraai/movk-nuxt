@@ -20,26 +20,36 @@ const {
 
 const { resolveFieldProp, createSlotResolver, createSlotProps } = useAutoFormInjector()
 
-const slotResolver = createSlotResolver(field)
-
+const slotResolver = computed(() => createSlotResolver(field))
 const isHidden = computed(() => resolveFieldProp<boolean | undefined>(field, 'hidden', false))
 
 const childEntries = computed(() => {
-  if (isLeafField(field) || !field.children?.length)
-    return []
+  if (isLeafField(field) || !field.children?.length) {
+    return { leafChildren: [], nestedChildren: [] }
+  }
 
-  return field.children.map(childField => ({
-    field: childField,
-    isLeaf: isLeafField(childField),
-  }))
+  const leafChildren: AutoFormField[] = []
+  const nestedChildren: AutoFormField[] = []
+
+  // 单次遍历完成分类
+  for (const childField of field.children) {
+    if (isLeafField(childField)) {
+      leafChildren.push(childField)
+    }
+    else {
+      nestedChildren.push(childField)
+    }
+  }
+
+  return { leafChildren, nestedChildren }
 })
 
 const collapsibleConfig = computed(() => resolveFieldProp(field, 'collapsible'))
 const useCollapsible = computed(() => {
-  const config = collapsibleConfig.value?.enabled
+  const config = collapsibleConfig.value
   if (!config)
     return true
-  return config.enabled === true
+  return config.enabled !== false
 })
 
 // 为折叠字段创建带图标的增强字段
@@ -48,7 +58,8 @@ const enhancedField = computed<AutoFormField>(() => {
     return field
   }
 
-  return defu(field, {
+  // 创建带图标的增强字段配置
+  const iconSlotConfig = {
     meta: {
       fieldSlots: {
         hint: ({ open }: AutoFormFieldNestedContext) => h(UIcon, {
@@ -57,8 +68,12 @@ const enhancedField = computed<AutoFormField>(() => {
         }),
       },
     },
-  })
+  }
+
+  return defu(iconSlotConfig, field)
 })
+
+const slotProps = computed(() => createSlotProps(field))
 </script>
 
 <template>
@@ -69,21 +84,39 @@ const enhancedField = computed<AutoFormField>(() => {
     <template #content>
       <VNodeRender
         v-if="slotResolver.hasSlot('content')"
-        :node="slotResolver.renderSlot('content', createSlotProps(field))"
+        :node="slotResolver.renderSlot('content', slotProps)"
       />
       <template v-else>
-        <template v-for="childEntry in childEntries" :key="childEntry.field.path">
-          <AutoFormFieldRenderer v-if="childEntry.isLeaf" :field="childEntry.field" :schema="schema" />
-          <AutoFormNestedRenderer v-else :field="childEntry.field" :schema="schema" />
-        </template>
+        <AutoFormFieldRenderer
+          v-for="childField in childEntries.leafChildren"
+          :key="childField.path"
+          :field="childField"
+          :schema="schema"
+        />
+
+        <AutoFormNestedRenderer
+          v-for="childField in childEntries.nestedChildren"
+          :key="childField.path"
+          :field="childField"
+          :schema="schema"
+        />
       </template>
     </template>
   </UCollapsible>
 
   <template v-else>
-    <template v-for="childEntry in childEntries" :key="childEntry.field.path">
-      <AutoFormFieldRenderer v-if="childEntry.isLeaf" :field="childEntry.field" :schema="schema" />
-      <AutoFormNestedRenderer v-else :field="childEntry.field" :schema="schema" />
-    </template>
+    <AutoFormFieldRenderer
+      v-for="childField in childEntries.leafChildren"
+      :key="childField.path"
+      :field="childField"
+      :schema="schema"
+    />
+
+    <AutoFormNestedRenderer
+      v-for="childField in childEntries.nestedChildren"
+      :key="childField.path"
+      :field="childField"
+      :schema="schema"
+    />
   </template>
 </template>

@@ -3,11 +3,11 @@ import type { FormData, FormError, FormErrorEvent, FormInputEvents, FormSubmitEv
 import type { GlobalAutoFormMeta, z } from 'zod/v4'
 import type { AutoFormControls, AutoFormField, DynamicFormSlots } from '../../types/auto-form'
 import { UForm } from '#components'
-import { computed, onBeforeUnmount, watchEffect } from 'vue'
+import { computed, watch } from 'vue'
 import { useAutoFormProvider } from '../../composables/useAutoFormContext'
 import { DEFAULT_CONTROLS } from '../../constants/auto-form'
 import { deepClone, getPath, setPath } from '../../core'
-import { flattenFields, introspectSchema, isLeafField } from '../../utils/auto-form'
+import { introspectSchema, isLeafField } from '../../utils/auto-form'
 import AutoFormFieldRenderer from './AutoFormFieldRenderer.vue'
 import AutoFormNestedRenderer from './AutoFormNestedRenderer.vue'
 
@@ -77,35 +77,50 @@ const _slots = defineSlots<AutoFormSlots<AutoFormStateType>>()
 
 const state = defineModel<AutoFormStateType>({ default: () => ({}) })
 
-const { resolveFieldProp, clearContextCache } = useAutoFormProvider(state, _slots)
+const { resolveFieldProp } = useAutoFormProvider(state, _slots)
 
 const controlsMapping = computed(() => ({
   ...DEFAULT_CONTROLS,
   ...controls,
 }))
 
-watchEffect(clearContextCache)
-
-onBeforeUnmount(clearContextCache)
-
 const fields = computed(() => {
   if (!schema)
     return []
 
-  const entries = introspectSchema(schema, controlsMapping.value, '', globalMeta)
-  const stateValue = state.value
-
-  entries.forEach((entry) => {
-    if (entry?.decorators?.defaultValue !== undefined && getPath(stateValue, entry.path) === undefined) {
-      setPath(stateValue, entry.path, deepClone(entry.decorators.defaultValue))
-    }
-  })
-
+  const _fields = introspectSchema(schema, controlsMapping.value, '', globalMeta)
   if (import.meta.client) {
-    console.log('AutoForm fields:', entries)
+    console.log(_fields)
+  }
+  return _fields
+  //  return introspectSchema(schema, controlsMapping.value, '', globalMeta)
+})
+
+watch([fields, state], ([currentFields, stateValue]) => {
+  if (!currentFields.length)
+    return
+
+  // 批量收集需要设置的默认值
+  const updates: Array<{ path: string, value: any }> = []
+
+  for (const field of currentFields) {
+    if (field?.decorators?.defaultValue !== undefined
+      && getPath(stateValue, field.path) === undefined) {
+      updates.push({
+        path: field.path,
+        value: deepClone(field.decorators.defaultValue),
+      })
+    }
   }
 
-  return entries
+  if (updates.length > 0) {
+    for (const { path, value } of updates) {
+      setPath(stateValue, path, value)
+    }
+  }
+}, {
+  immediate: true,
+  flush: 'post',
 })
 
 const visibleFields = computed(() =>
@@ -119,14 +134,15 @@ const renderData = computed(() => {
   const leafFields: AutoFormField[] = []
   const nestedFields: AutoFormField[] = []
 
-  visibleFieldsArray.forEach((field) => {
+  // 单次遍历完成分类
+  for (const field of visibleFieldsArray) {
     if (isLeafField(field)) {
       leafFields.push(field)
     }
     else {
       nestedFields.push(field)
     }
-  })
+  }
 
   const hasNestedFields = nestedFields.length > 0
 
@@ -134,7 +150,7 @@ const renderData = computed(() => {
     leafFields,
     nestedFields,
     hasNestedFields,
-    flatFields: hasNestedFields ? [] : flattenFields(visibleFieldsArray),
+    flatFields: hasNestedFields ? [] : leafFields,
     allFields: visibleFieldsArray,
   }
 })

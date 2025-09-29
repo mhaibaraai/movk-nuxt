@@ -40,11 +40,31 @@ const { afz } = createAutoFormZ(customControls)
 
 const schema = afz.object<State>()({
   nameValue: afz.string({
-    controlProps: {
-      color: 'error',
-      placeholder: '请输入姓名',
-    },
-  }).min(3).max(10).meta({ label: '姓名' }).default('张三'),
+    controlProps: ({ value }) => ({
+      placeholder: `请输入姓名${value}`,
+      class: 'w-100px',
+      icon: 'i-lucide-user',
+    }),
+  }).meta({
+    hidden: ({ state }) => state.visibleTest,
+    label: ({ value }) => `${value} 姓名`,
+  }),
+  // nestedObject: afz.object({
+  //   firstName: afz.string().meta({ label: '名字' }),
+  //   lastName: afz.string().meta({ label: '姓氏' }),
+  //   portify: afz.object({
+  //     name: afz.string().meta({ label: '姓名' }),
+  //     age: afz.number().meta({ label: '年龄' }),
+  //   }).meta({ label: '可折叠对象' }).optional(),
+  // }).meta({ label: '嵌套对象' }),
+  // visibleTest: afz.boolean().meta({ label: '可见字段' }),
+})
+
+onMounted(async () => {
+  // await sleep(5000)
+  // schema.value = afz.object({
+  //   test: afz.number().meta({ label: '测试自定义控件' }).default(123),
+  // })
 })
 
 type Schema = z.output<typeof schema>

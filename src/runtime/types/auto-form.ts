@@ -23,7 +23,6 @@ export interface AutoFormFieldContext<S = any> {
   readonly value: S[keyof S]
   /** 设置字段值 */
   setValue: (value: S[keyof S]) => void
-  _cleanup?: () => void
 }
 
 export type AutoFormFieldNestedContext<S = any> = AutoFormFieldContext<S> & {

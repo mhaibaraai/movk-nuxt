@@ -8,78 +8,121 @@ import defu from 'defu'
 import { Fragment, h, isRef, isVNode, markRaw, unref } from 'vue'
 import { joinPath, startCase, toPath } from '../core'
 
+// 基本限制常量
+const MAX_RECURSION_DEPTH = 50
+const MAX_ARRAY_LENGTH = 1000
+const MAX_OBJECT_PROPERTIES = 100
+
+// 事件属性检测的正则表达式（性能优化）
+const EVENT_PROP_REGEX = /^on[A-Z]/
+
+// 输入验证工具
+function validateContext(context: AutoFormFieldContext): asserts context is AutoFormFieldContext {
+  if (!context || typeof context !== 'object') {
+    throw new TypeError('AutoFormFieldContext must be a valid object')
+  }
+}
+
+function validateReactiveValue(value: unknown): value is ReactiveValue<any, any> {
+  return value !== null && value !== undefined
+}
+
 /**
- * 响应式值解析
+ * 安全的响应式值解析
+ * @param value - 响应式值
+ * @param context - 表单字段上下文
+ * @returns 解析后的值
  */
 export function resolveReactiveValue(value: ReactiveValue<any, any>, context: AutoFormFieldContext): any {
+  validateContext(context)
+
+  if (!validateReactiveValue(value)) {
+    return undefined
+  }
+
   if (isFunction(value)) {
     return (value as (ctx: AutoFormFieldContext) => any)(context)
   }
+
   return unref(value)
 }
 
 /**
- * 响应式对象解析 - 减少不必要的递归
+ * 响应式对象解析
+ * @param obj - 要解析的对象
+ * @param context - 表单字段上下文
+ * @param depth - 当前递归深度（防止无限递归）
+ * @returns 解析后的对象
  */
 export function resolveReactiveObject<T extends Record<string, any>>(
   obj: T,
   context: AutoFormFieldContext,
+  depth: number = 0,
 ): T {
+  validateContext(context)
+
+  // 递归深度保护
+  if (depth > MAX_RECURSION_DEPTH) {
+    return obj
+  }
+
   // 快速路径：原始类型直接返回
   if (obj === null || typeof obj !== 'object' || isRef(obj) || isVNode(obj)) {
     return resolveReactiveValue(obj, context) as T
   }
 
-  // 数组优化：使用 for 循环替代 map 减少内存分配
+  // 数组处理
   if (Array.isArray(obj)) {
-    const result: any[] = Array.from({ length: obj.length })
-    for (let i = 0; i < obj.length; i++) {
-      const item = obj[i]
-      result[i] = isObject(item) && item !== null && !isRef(item) && !isVNode(item)
-        ? resolveReactiveObject(item, context)
-        : resolveReactiveValue(item, context)
+    if (obj.length > MAX_ARRAY_LENGTH) {
+      return obj
     }
+
+    const result = obj.map(item =>
+      isObject(item) && item !== null && !isRef(item) && !isVNode(item)
+        ? resolveReactiveObject(item, context, depth + 1)
+        : resolveReactiveValue(item, context),
+    )
     return result as unknown as T
   }
 
-  // 对象优化：预分配结果对象
-  const result = {} as T
+  // 对象处理
   const entries = Object.entries(obj)
+  if (entries.length > MAX_OBJECT_PROPERTIES) {
+    return obj
+  }
 
-  for (let i = 0; i < entries.length; i++) {
-    const entry = entries[i]
-    if (entry) {
-      const [key, value] = entry
-        ; (result as any)[key] = isObject(value) && value !== null && !isRef(value) && !isVNode(value)
-        ? resolveReactiveObject(value, context)
-        : resolveReactiveValue(value, context)
-    }
+  const result = {} as T
+  for (const [key, value] of entries) {
+    ; (result as any)[key] = isObject(value) && value !== null && !isRef(value) && !isVNode(value)
+      ? resolveReactiveObject(value, context, depth + 1)
+      : resolveReactiveValue(value, context)
   }
 
   return result
 }
 
 /**
- * 事件属性增强
+ * 增强的事件属性处理 - 提升性能和安全性
+ * @param originalProps - 原始属性对象
+ * @param ctx - 表单字段上下文
+ * @returns 增强后的属性对象
  */
 export function enhanceEventProps(originalProps: AnyObject, ctx: AutoFormFieldContext): Record<string, any> {
-  if (!originalProps)
+  if (!originalProps || typeof originalProps !== 'object') {
     return {}
+  }
 
-  const propKeys = Object.keys(originalProps)
+  validateContext(ctx)
+
   const result: Record<string, any> = {}
 
-  for (let i = 0; i < propKeys.length; i++) {
-    const key = propKeys[i]
-    if (key) {
-      const val = originalProps[key]
-
-      if (key.length > 2 && key[0] === 'o' && key[1] === 'n' && key[2] && key[2] >= 'A' && key[2] <= 'Z' && isFunction(val)) {
-        result[key] = (...args: any[]) => (val as any)(...args, ctx)
-      }
-      else {
-        result[key] = val
-      }
+  for (const [key, val] of Object.entries(originalProps)) {
+    // 使用正则表达式优化事件属性检测
+    if (EVENT_PROP_REGEX.test(key) && isFunction(val)) {
+      result[key] = (...args: any[]) => (val as any)(...args, ctx)
+    }
+    else {
+      result[key] = val
     }
   }
 
@@ -88,24 +131,36 @@ export function enhanceEventProps(originalProps: AnyObject, ctx: AutoFormFieldCo
 
 /**
  * 节点标准化
+ * @param node - 要标准化的节点
+ * @param depth - 当前深度
+ * @returns 标准化后的节点数组
  */
-function normalize(node: any): any[] {
-  if (node == null || node === false)
+function normalize(node: any, depth: number = 0): any[] {
+  if (depth > MAX_RECURSION_DEPTH) {
     return []
-  if (isVNode(node))
+  }
+
+  if (node == null || node === false) {
+    return []
+  }
+
+  if (isVNode(node)) {
     return [node]
+  }
 
   const nodeType = typeof node
-  if (nodeType === 'string' || nodeType === 'number')
+  if (nodeType === 'string' || nodeType === 'number') {
     return [node]
+  }
 
   if (Array.isArray(node)) {
+    if (node.length > MAX_ARRAY_LENGTH) {
+      return []
+    }
+
     const result: any[] = []
-    for (let i = 0; i < node.length; i++) {
-      const normalized = normalize(node[i])
-      for (let j = 0; j < normalized.length; j++) {
-        result.push(normalized[j])
-      }
+    for (const item of node) {
+      result.push(...normalize(item, depth + 1))
     }
     return result
   }
@@ -120,87 +175,61 @@ export function VNodeRender(props: { node: unknown }) {
   const children = normalize(props.node as any)
   const childCount = children.length
 
-  if (childCount === 0)
+  if (childCount === 0) {
     return null as any
-  if (childCount === 1)
+  }
+  if (childCount === 1) {
     return children[0] as any
+  }
 
   return h(Fragment, null, children)
 }
 
 /**
- * Zod 链遍历器
+ * 按"外层 → 内层"依次遍历 zod 装饰器链
  */
-function iterateZodChain(root: z.ZodType): z.ZodType[] {
-  const chain: z.ZodType[] = []
+function* iterateZodChain(root: z.ZodType): Generator<any> {
   let cur: any = root
-
   while (cur) {
-    chain.push(cur)
+    yield cur
     cur = cur?.def?.innerType
   }
-
-  return chain
 }
 
 /**
- * 提取 schema 信息 - 拆分复杂函数
- */
-function extractDecorators(chain: z.ZodType[]): AutoFormField['decorators'] {
-  const decorators: AutoFormField['decorators'] = {}
-
-  for (let i = 0; i < chain.length; i++) {
-    const node = chain[i] as any
-    const defType = node?.def?.type
-
-    switch (defType) {
-      case 'optional':
-        decorators.isOptional = true
-        break
-      case 'readonly':
-        decorators.isReadonly = true
-        break
-      case 'default':
-        decorators.defaultValue = isFunction(node.def.defaultValue)
-          ? node.def.defaultValue()
-          : node.def.defaultValue
-        break
-    }
-
-    if (node?.description) {
-      decorators.description = node.description
-    }
-  }
-
-  return decorators
-}
-
-/**
- * 元数据合并
- */
-function extractMeta(chain: z.ZodType[]): GlobalMeta & AutoFormControlsMeta {
-  let mergedMeta: GlobalMeta & AutoFormControlsMeta = {}
-
-  for (let i = 0; i < chain.length; i++) {
-    const node = chain[i] as any
-    if (node?.meta && isFunction(node.meta)) {
-      mergedMeta = node.meta()
-      break // 找到第一个 meta 即可
-    }
-  }
-
-  return mergedMeta
-}
-
-/**
- * 重构的 Schema 信息提取 - 降低复杂度
+ * 提取 schema 信息
  */
 function extractSchemaInfo(schema: z.ZodType, globalMeta?: GlobalAutoFormMeta) {
-  const chain = iterateZodChain(schema)
-  const decorators = extractDecorators(chain)
-  const mergedMeta = extractMeta(chain)
-  const coreSchema = chain.length > 0 ? chain[chain.length - 1] : schema
+  const decorators: AutoFormField['decorators'] = {}
 
+  let mergedMeta: GlobalMeta & AutoFormControlsMeta = {}
+  let coreSchema: z.ZodType = schema
+
+  for (const node of iterateZodChain(schema)) {
+    // 收集 meta
+    if (node?.meta && isFunction(node.meta)) {
+      // const currentMeta = node.meta()
+      mergedMeta = { ...node.meta(), ...mergedMeta }
+    }
+
+    // 收集装饰器信息
+    const defType = node?.def?.type
+    if (defType === 'optional')
+      decorators.isOptional = true
+    if (defType === 'readonly')
+      decorators.isReadonly = true
+    if (defType === 'default') {
+      decorators.defaultValue = isFunction(node.def.defaultValue)
+        ? node.def.defaultValue()
+        : node.def.defaultValue
+    }
+    if (node?.description)
+      decorators.description = node.description
+
+    coreSchema = node
+  }
+
+  // 接收全局元数据，并在提取字段信息时作为默认配置参与合并
   const finalMeta = defu(mergedMeta, globalMeta ?? {}, {
     required: !decorators.isOptional,
     description: decorators.description,
@@ -210,7 +239,11 @@ function extractSchemaInfo(schema: z.ZodType, globalMeta?: GlobalAutoFormMeta) {
 }
 
 /**
- * 组件选择逻辑 - 提前返回
+ * 安全的组件选择逻辑
+ * @param mergedMeta - 合并后的元数据
+ * @param finalType - 最终类型
+ * @param mapping - 控件映射
+ * @returns 选择的组件和映射信息
  */
 function selectComponent(
   mergedMeta: GlobalMeta & AutoFormControlsMeta,
@@ -224,7 +257,7 @@ function selectComponent(
   if (mergedMeta.component) {
     chosenComponent = mergedMeta.component
   }
-  else if (finalType) {
+  else if (finalType && finalType in mapping) {
     mapped = mapping[finalType as keyof typeof mapping]
     chosenComponent = mapped?.component
   }
@@ -238,7 +271,14 @@ function selectComponent(
 }
 
 /**
- * 字段创建 - 减少对象展开
+ * 安全的字段创建
+ * @param path - 字段路径
+ * @param coreSchema - 核心 schema
+ * @param decorators - 装饰器
+ * @param mergedMeta - 合并后的元数据
+ * @param finalLabel - 最终标签
+ * @param finalType - 最终类型
+ * @returns 创建的字段
  */
 function createField(
   path: string,
@@ -260,40 +300,19 @@ function createField(
   }
 }
 
-const schemaIntrospectionCache = new WeakMap<z.ZodType, AutoFormField[]>()
-
 /**
- * Schema 内省 - 添加缓存和性能优化
+ * 内部 Schema 内省实现 - 增强错误处理
+ * @param schema - Zod schema
+ * @param mapping - 控件映射
+ * @param parentPath - 父路径
+ * @param globalMeta - 全局元数据
+ * @returns 字段数组
  */
 export function introspectSchema(
   schema: z.ZodType,
   mapping: AutoFormControls,
-  parentPath: string = '',
-  globalMeta: GlobalAutoFormMeta = {},
-): AutoFormField[] {
-  // 缓存检查（仅对根级别缓存，避免路径问题）
-  if (!parentPath && schemaIntrospectionCache.has(schema)) {
-    return schemaIntrospectionCache.get(schema)!
-  }
-
-  const result = introspectSchemaInternal(schema, mapping, parentPath, globalMeta)
-
-  // 缓存结果
-  if (!parentPath) {
-    schemaIntrospectionCache.set(schema, result)
-  }
-
-  return result
-}
-
-/**
- * 内部 Schema 内省实现 - 拆分后的核心逻辑
- */
-function introspectSchemaInternal(
-  schema: z.ZodType,
-  mapping: AutoFormControls,
   parentPath: string,
-  globalMeta: GlobalAutoFormMeta,
+  globalMeta: GlobalAutoFormMeta = {},
 ): AutoFormField[] {
   const result: AutoFormField[] = []
   const { coreSchema, decorators, mergedMeta } = extractSchemaInfo(schema, globalMeta)
@@ -302,19 +321,18 @@ function introspectSchemaInternal(
   // 字段基础信息计算
   const fieldName = parentPath.split('.').pop()
   const autoGeneratedLabel = fieldName ? startCase(fieldName) : ''
-  const finalLabelRaw = mergedMeta.label ?? autoGeneratedLabel
-  const finalLabel = typeof finalLabelRaw === 'string' ? finalLabelRaw : autoGeneratedLabel
-  const finalType = mergedMeta.component ? undefined : (mergedMeta.type ?? type)
+  const finalLabel = (mergedMeta as any).label ?? autoGeneratedLabel
+  const finalType = (mergedMeta as any).component ? undefined : ((mergedMeta as any).type ?? type)
 
   // 对象类型处理
   if (finalType === 'object' && coreSchema) {
-    return handleObjectField(coreSchema, mapping, parentPath, globalMeta, decorators, mergedMeta, finalLabel, finalType)
+    return handleObjectField(coreSchema, mapping, parentPath, globalMeta, decorators, mergedMeta as GlobalMeta & AutoFormControlsMeta, finalLabel, finalType)
   }
 
   // 叶子字段处理
   if (coreSchema) {
     const field = createField(parentPath, coreSchema, decorators, mergedMeta, finalLabel, finalType)
-    const { chosenComponent, mapped } = selectComponent(mergedMeta, finalType, mapping)
+    const { chosenComponent, mapped } = selectComponent(mergedMeta as GlobalMeta & AutoFormControlsMeta, finalType, mapping)
 
     field.meta.component = chosenComponent
     field.meta.mapped = mapped
@@ -326,7 +344,16 @@ function introspectSchemaInternal(
 }
 
 /**
- * 对象字段处理逻辑 - 从主函数中拆分
+ * 安全的对象字段处理逻辑
+ * @param coreSchema - 核心 schema
+ * @param mapping - 控件映射
+ * @param parentPath - 父路径
+ * @param globalMeta - 全局元数据
+ * @param decorators - 装饰器
+ * @param mergedMeta - 合并后的元数据
+ * @param finalLabel - 最终标签
+ * @param finalType - 最终类型
+ * @returns 字段数组
  */
 function handleObjectField(
   coreSchema: z.ZodType,
@@ -340,15 +367,23 @@ function handleObjectField(
 ): AutoFormField[] {
   const result: AutoFormField[] = []
   const shape = (coreSchema as any).shape
+
+  if (!shape || typeof shape !== 'object') {
+    return result
+  }
+
   const shapeKeys = Object.keys(shape)
+
+  if (shapeKeys.length > MAX_OBJECT_PROPERTIES) {
+    return result
+  }
 
   // 根级别优化：直接处理子字段
   if (!parentPath) {
-    for (let i = 0; i < shapeKeys.length; i++) {
-      const key = shapeKeys[i]
-      if (key) {
+    for (const key of shapeKeys) {
+      if (key in shape) {
         const child = shape[key] as z.ZodType
-        result.push(...introspectSchemaInternal(child, mapping, key, globalMeta))
+        result.push(...introspectSchema(child, mapping, key, globalMeta))
       }
     }
     return result
@@ -358,13 +393,12 @@ function handleObjectField(
   const field = createField(parentPath, coreSchema, decorators, mergedMeta, finalLabel, finalType)
   field.children = []
 
-  for (let i = 0; i < shapeKeys.length; i++) {
-    const key = shapeKeys[i]
-    if (key) {
+  for (const key of shapeKeys) {
+    if (key in shape) {
       const child = shape[key] as z.ZodType
       const pathSegments = toPath(parentPath)
       const childPath = joinPath([...pathSegments, key])
-      field.children.push(...introspectSchemaInternal(child, mapping, childPath, globalMeta))
+      field.children.push(...introspectSchema(child, mapping, childPath, globalMeta))
     }
   }
 
@@ -373,34 +407,19 @@ function handleObjectField(
 }
 
 /**
- * 字段类型检测 - 内联优化
+ * 优化的字段类型检测 - 增强类型安全
+ * @param field - 自动表单字段
+ * @returns 是否为叶子字段
  */
 export function isLeafField(field: AutoFormField): boolean {
-  return !(field.children && field.children.length > 0)
-}
-
-export function getFieldType(field: AutoFormField): 'leaf' | 'nested' {
-  return isLeafField(field) ? 'leaf' : 'nested'
+  return !(field?.children && Array.isArray(field.children) && field.children.length > 0)
 }
 
 /**
- * 优化的字段展平 - 尾递归优化
+ * 获取字段类型
+ * @param field - 自动表单字段
+ * @returns 字段类型
  */
-export function flattenFields(fields: AutoFormField[]): AutoFormField[] {
-  const result: AutoFormField[] = []
-  const stack: AutoFormField[] = [...fields]
-
-  while (stack.length > 0) {
-    const field = stack.pop()!
-
-    if (isLeafField(field)) {
-      result.push(field)
-    }
-    else if (field.children) {
-      // 将子字段添加到栈中，实现迭代而非递归
-      stack.push(...field.children)
-    }
-  }
-
-  return result
+export function getFieldType(field: AutoFormField): 'leaf' | 'nested' {
+  return isLeafField(field) ? 'leaf' : 'nested'
 }
