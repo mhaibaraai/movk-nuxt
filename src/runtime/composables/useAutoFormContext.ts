@@ -99,11 +99,11 @@ export function useAutoFormProvider<T extends Record<string, any>>(
     const context = createFieldContext(field)
 
     const resolvedControlProps = resolveFieldProp(field, 'controlProps') || {}
-    const isReadonly = field.decorators?.isReadonly
+    // const isReadonly = field.decorators?.isReadonly
 
     const finalProps = defu(
       resolvedControlProps,
-      isReadonly ? { disabled: true } : {},
+      // isReadonly ? { disabled: true } : {},
       controlMeta?.mapped?.controlProps || {},
     )
 

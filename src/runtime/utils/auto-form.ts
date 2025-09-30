@@ -1,12 +1,13 @@
 import type { AnyObject } from '@movk/core'
-import type z from 'zod/v4'
 import type { GlobalAutoFormMeta, GlobalMeta } from 'zod/v4'
+import type z from 'zod/v4'
 import type { IsComponent, ReactiveValue } from '../core'
 import type { AutoFormControl, AutoFormControls, AutoFormControlsMeta, AutoFormField, AutoFormFieldContext } from '../types/auto-form'
 import { isFunction, isObject } from '@movk/core'
 import defu from 'defu'
 import { Fragment, h, isRef, isVNode, markRaw, unref } from 'vue'
 import { joinPath, startCase, toPath } from '../core'
+import { getAutoFormMetadata } from '../shared/auto-form'
 
 // 基本限制常量
 const MAX_RECURSION_DEPTH = 50
@@ -28,7 +29,7 @@ function validateReactiveValue(value: unknown): value is ReactiveValue<any, any>
 }
 
 /**
- * 安全的响应式值解析
+ * 响应式值解析
  * @param value - 响应式值
  * @param context - 表单字段上下文
  * @returns 解析后的值
@@ -186,60 +187,70 @@ export function VNodeRender(props: { node: unknown }) {
 }
 
 /**
- * 按"外层 → 内层"依次遍历 zod 装饰器链
+ * 提取 schema 的 decorators 信息
  */
-function* iterateZodChain(root: z.ZodType): Generator<any> {
-  let cur: any = root
+function extractDecorators(schema: z.ZodType): AutoFormField['decorators'] {
+  const decorators: AutoFormField['decorators'] = {}
+  let cur: any = schema
+
   while (cur) {
-    yield cur
-    cur = cur?.def?.innerType
+    const defType = cur?.def
+    if (!defType)
+      break
+
+    switch (defType.type) {
+      case 'optional':
+        decorators.isOptional = true
+        break
+      case 'readonly':
+        decorators.isReadonly = true
+        break
+      case 'default':
+        decorators.defaultValue = isFunction(defType.defaultValue)
+          ? defType.defaultValue()
+          : defType.defaultValue
+        break
+    }
+
+    cur = defType?.innerType
   }
+
+  return decorators
 }
 
 /**
  * 提取 schema 信息
  */
 function extractSchemaInfo(schema: z.ZodType, globalMeta?: GlobalAutoFormMeta) {
-  const decorators: AutoFormField['decorators'] = {}
-
   let mergedMeta: GlobalMeta & AutoFormControlsMeta = {}
-  let coreSchema: z.ZodType = schema
 
-  for (const node of iterateZodChain(schema)) {
-    // 收集 meta
-    if (node?.meta && isFunction(node.meta)) {
-      // const currentMeta = node.meta()
-      mergedMeta = { ...node.meta(), ...mergedMeta }
-    }
-
-    // 收集装饰器信息
-    const defType = node?.def?.type
-    if (defType === 'optional')
-      decorators.isOptional = true
-    if (defType === 'readonly')
-      decorators.isReadonly = true
-    if (defType === 'default') {
-      decorators.defaultValue = isFunction(node.def.defaultValue)
-        ? node.def.defaultValue()
-        : node.def.defaultValue
-    }
-    if (node?.description)
-      decorators.description = node.description
-
-    coreSchema = node
+  // 1. 获取自定义元数据（已通过方法拦截自动传递到最外层）
+  const customMeta = getAutoFormMetadata(schema)
+  console.log('customMeta', customMeta)
+  if (Object.keys(customMeta).length > 0) {
+    mergedMeta = { ...mergedMeta, ...customMeta }
   }
 
-  // 接收全局元数据，并在提取字段信息时作为默认配置参与合并
+  // 2. 获取 Zod 原生元数据
+  // const zodMeta = (schema as any)._zod?.bag
+  // if (zodMeta && Object.keys(zodMeta).length > 0) {
+  //   mergedMeta = { ...mergedMeta, ...zodMeta }
+  // }
+
+  // 3. 提取 decorators 信息
+  const decorators = extractDecorators(schema)
+
+  // 4. 合并全局元数据
   const finalMeta = defu(mergedMeta, globalMeta ?? {}, {
     required: !decorators.isOptional,
     description: decorators.description,
   } as AutoFormField['meta'])
 
-  return { coreSchema, decorators, mergedMeta: finalMeta }
+  return { decorators, mergedMeta: finalMeta }
 }
 
 /**
- * 安全的组件选择逻辑
+ * 组件选择逻辑
  * @param mergedMeta - 合并后的元数据
  * @param finalType - 最终类型
  * @param mapping - 控件映射
@@ -271,14 +282,7 @@ function selectComponent(
 }
 
 /**
- * 安全的字段创建
- * @param path - 字段路径
- * @param coreSchema - 核心 schema
- * @param decorators - 装饰器
- * @param mergedMeta - 合并后的元数据
- * @param finalLabel - 最终标签
- * @param finalType - 最终类型
- * @returns 创建的字段
+ * 字段创建
  */
 function createField(
   path: string,
@@ -301,12 +305,7 @@ function createField(
 }
 
 /**
- * 内部 Schema 内省实现 - 增强错误处理
- * @param schema - Zod schema
- * @param mapping - 控件映射
- * @param parentPath - 父路径
- * @param globalMeta - 全局元数据
- * @returns 字段数组
+ * 内部 Schema 内省实现
  */
 export function introspectSchema(
   schema: z.ZodType,
@@ -315,8 +314,9 @@ export function introspectSchema(
   globalMeta: GlobalAutoFormMeta = {},
 ): AutoFormField[] {
   const result: AutoFormField[] = []
-  const { coreSchema, decorators, mergedMeta } = extractSchemaInfo(schema, globalMeta)
-  const type = (coreSchema as any).type
+  const { decorators, mergedMeta } = extractSchemaInfo(schema, globalMeta)
+  const coreSchema = (schema as any)._def?.innerType || schema
+  const type = coreSchema.type
 
   // 字段基础信息计算
   const fieldName = parentPath.split('.').pop()
@@ -344,16 +344,7 @@ export function introspectSchema(
 }
 
 /**
- * 安全的对象字段处理逻辑
- * @param coreSchema - 核心 schema
- * @param mapping - 控件映射
- * @param parentPath - 父路径
- * @param globalMeta - 全局元数据
- * @param decorators - 装饰器
- * @param mergedMeta - 合并后的元数据
- * @param finalLabel - 最终标签
- * @param finalType - 最终类型
- * @returns 字段数组
+ * 对象字段处理逻辑
  */
 function handleObjectField(
   coreSchema: z.ZodType,

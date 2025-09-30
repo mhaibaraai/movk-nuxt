@@ -1,4 +1,3 @@
-import type { GlobalMeta } from 'zod/v4'
 import type { DEFAULT_CONTROLS } from '../constants/auto-form'
 import type { IsComponent } from '../core'
 import type { AutoFormControl, AutoFormControls, AutoFormFactoryMethod } from '../types/auto-form'
@@ -6,13 +5,120 @@ import { isObject } from '@movk/core'
 import { LRUCache } from 'lru-cache'
 import { z } from 'zod/v4'
 
+// 特殊标记 Key，用于在 Zod schema 实例上存储自定义元数据
+const AUTOFORM_META_KEY = '__autoform_meta__'
+
+/**
+ * 需要拦截的 Zod 方法列表
+ * 这些方法会返回新的 schema 实例，需要自动传递元数据
+ */
+const CLONE_METHODS = [
+  'meta',
+  'optional',
+  'nullable',
+  'nullish',
+  'array',
+  'promise',
+  'or',
+  'and',
+  'transform',
+  'default',
+  'catch',
+  'pipe',
+  'readonly',
+  'describe',
+  'brand',
+  'min',
+  'max',
+  'length',
+  'nonempty',
+  'email',
+  'url',
+  'uuid',
+  'regex',
+  'trim',
+  'toLowerCase',
+  'toUpperCase',
+  'startsWith',
+  'endsWith',
+  'includes',
+  'datetime',
+  'ip',
+]
+
+/**
+ * 拦截 Zod Schema 的克隆方法，实现元数据自动传递
+ *
+ * Zod v4 采用不可变设计，每次调用 .meta()、.optional() 等方法都会返回新的 schema 实例。
+ * 通过方法拦截，在新实例创建时自动复制元数据，确保链式调用不会丢失元数据。
+ *
+ * @param schema - 需要拦截的 Zod schema 实例
+ * @param customMeta - 要传递的自定义元数据
+ * @returns 拦截后的 schema 实例
+ */
+function interceptCloneMethods<T extends z.ZodType>(schema: T, customMeta: Record<string, any>): T {
+  // 为每个克隆方法创建拦截器
+  for (const methodName of CLONE_METHODS) {
+    const originalMethod = (schema as any)[methodName]
+    if (!originalMethod || typeof originalMethod !== 'function') {
+      continue
+    }
+
+    // 替换原方法
+    ; (schema as any)[methodName] = function (...args: any[]) {
+      // 调用原始方法获取新 schema
+      const newSchema = originalMethod.apply(this, args)
+
+      // 特殊处理 .meta() 方法：合并新旧元数据
+      // let newMeta = customMeta
+      // if (methodName === 'meta' && args.length > 0 && args[0]) {
+      //   newMeta = { ...customMeta, ...args[0] }
+      // }
+
+      // 将元数据存储到新 schema
+      ; (newSchema as any)[AUTOFORM_META_KEY] = customMeta
+
+      // 递归拦截新 schema 的方法
+      interceptCloneMethods(newSchema, customMeta)
+
+      return newSchema
+    }
+  }
+
+  return schema
+}
+
+/**
+ * 应用元数据到 Zod schema
+ *
+ * @param schema - Zod schema 实例
+ * @param meta - 要应用的元数据
+ * @returns 应用元数据后的 schema 实例
+ */
 function applyMeta<T extends z.ZodType, M = unknown>(
   schema: T,
   meta?: M,
 ): T {
-  return meta
-    ? (schema.meta(meta as GlobalMeta) as T)
-    : schema
+  if (!meta) {
+    return schema
+
+    // 存储元数据到 schema 实例
+  } (schema as any)[AUTOFORM_META_KEY] = meta
+
+  // 拦截所有会克隆的方法，确保链式调用时元数据不丢失
+  interceptCloneMethods(schema, meta as Record<string, any>)
+
+  return schema
+}
+
+/**
+ * 从 Zod schema 中提取自定义元数据
+ *
+ * @param schema - Zod schema 实例
+ * @returns 元数据对象
+ */
+export function getAutoFormMetadata(schema: z.ZodType): Record<string, any> {
+  return (schema as any)[AUTOFORM_META_KEY] || {}
 }
 
 /**
