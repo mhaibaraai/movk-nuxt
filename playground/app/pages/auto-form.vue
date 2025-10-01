@@ -49,6 +49,23 @@ const schema = afz.object<State>()({
     hidden: ({ state }) => state.visibleTest,
     label: ({ value }) => `${value} 姓名`,
   }).nonempty().default('张三').optional(),
+  // nestedObject: afz.object({
+  //   firstName: afz.string().meta({ label: '名字' }).default('张'),
+  //   lastName: afz.string().meta({ label: '姓氏' }).default('三'),
+  //   userAge: afz.number().meta({ label: '年龄' }).min(0).max(150).default(18),
+  //   address: afz.object({
+  //     province: afz.string().meta({ label: '省份' }).default('广东省'),
+  //     city: afz.string().meta({ label: '城市' }).default('广州市'),
+  //     district: afz.string().meta({ label: '区县' }).default('天河区'),
+  //   }).meta({ label: '地址' }),
+  //   portify: afz.object({
+  //     name: afz.string().meta({ label: '姓名' }).default('李四'),
+  //     age: afz.number().meta({ label: '年龄' }).default(20),
+  //   }).meta({ label: '可折叠对象' }),
+  // }).meta({ label: '嵌套对象' }),
+  dynamicLabel: afz.string().meta({
+    label: ({ value }) => `动态标签: ${value}`,
+  }).default('11').optional(),
 })
 
 onMounted(async () => {
@@ -92,9 +109,6 @@ function onError(event: FormErrorEvent) {
             <pre>{{ state }}</pre>
           </UCard>
         </template>
-        <!-- <template #hint:nestedObject>
-          测试图标
-        </template> -->
         <!-- <template #[`label:nestedObject.portify`]="{ open }">
           {{ open }} 1
         </template> -->
