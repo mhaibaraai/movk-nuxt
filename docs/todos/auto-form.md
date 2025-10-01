@@ -10,11 +10,13 @@
 当前 AutoForm 组件基于以下核心架构：
 
 ### 核心组件
+
 - **AutoForm.vue**: 主入口，负责 Schema 内省、状态管理、字段分类渲染
 - **AutoFormFieldRenderer.vue**: 叶子字段渲染器，处理单个表单字段
 - **AutoFormNestedRenderer.vue**: 嵌套对象渲染器，支持 UCollapsible 折叠功能
 
 ### 工作流程
+
 1. **Schema 内省**: 通过 `introspectSchema` 解析 Zod schema 生成字段树
 2. **字段分类**: 区分叶子字段和嵌套对象字段进行不同渲染
 3. **控件映射**: 优先级 `component > type > zodType` 选择合适控件
@@ -22,6 +24,7 @@
 5. **插槽系统**: 支持全局、字段特定、路径特定多层级插槽
 
 ### 已实现功能
+
 - ✅ 基础类型控件映射 (string/UInput, number/UInputNumber, boolean/USwitch, date/UCalendar)
 - ✅ 响应式元数据 (label, description, required, hidden, if 等)
 - ✅ 嵌套对象支持 (UCollapsible 包装，可配置)
@@ -36,6 +39,7 @@
 ### P0 - 关键功能缺失
 
 #### 更多内置控件支持
+
 ```ts
 // 需要补充的控件类型
 const EXTENDED_CONTROLS = {
@@ -51,7 +55,9 @@ const EXTENDED_CONTROLS = {
 ```
 
 #### 数组字段支持
+
 当前不支持数组类型字段，需要实现：
+
 - 动态添加/删除数组项
 - 数组项排序
 - 嵌套数组支持
@@ -59,10 +65,58 @@ const EXTENDED_CONTROLS = {
 ## 性能优化
 
 - 事件监听器泄漏防护 [✅]
-
-### 文档和示例
-- 完整的 API 文档
-- 常用场景示例库
-- 最佳实践指南
+- 插槽系统优化 [✅]
+  - 移除冗余对象展开
+  - 修复 `createSlotProps` 未传递 `extraProps` 导致插槽无法获取 `errors` 和 `loading` 的问题
 
 > **注意**: 不需要考虑向后兼容性，可以进行破坏性变更以优化设计。
+
+## 插槽系统
+
+### 已实现功能 [✅]
+
+- **统一的插槽参数类型** (`AutoFormSlotProps`)
+  - `header`: 表单字段前的插槽
+  - `footer`: 表单字段后的插槽
+  - `submit`: 提交按钮插槽
+  - 所有插槽都接收 `{ errors, loading, fields, state }` 参数
+
+- **动态字段插槽** (DynamicFormSlots)
+  - 支持路径特定插槽：`field-default:username`
+  - 支持通用插槽：`field-default`
+  - 支持字段级插槽：通过 `fieldSlots` meta 配置
+  - 插槽类型：`default`, `label`, `description`, `hint`, `help`, `error`
+  - 嵌套对象插槽：`field-content:nestedObject.field`
+
+- **提交按钮控制**
+  - `submitButton` prop 控制是否显示默认提交按钮
+  - 默认值：`true`
+
+### 使用示例
+
+```vue
+<AutoForm v-model="data" :schema="schema">
+  <!-- 表单头部 -->
+  <template #header="{ errors, loading }">
+    <UAlert v-if="errors.length" title="表单验证失败" />
+  </template>
+
+  <!-- 字段级插槽 -->
+  <template #field-default:username="{ value, setValue }">
+    <UInput :model-value="value" @update:model-value="setValue" />
+  </template>
+
+  <!-- 嵌套对象内容插槽 -->
+  <template #field-content:address="{ state }">
+    <CustomAddressFields :data="state.address" />
+  </template>
+
+  <!-- 自定义提交区域 -->
+  <template #submit="{ loading }">
+    <UButton type="submit" :loading="loading">保存</UButton>
+  </template>
+</AutoForm>
+
+<!-- 或隐藏默认提交按钮 -->
+<AutoForm v-model="data" :schema="schema" :submit-button="false" />
+```
