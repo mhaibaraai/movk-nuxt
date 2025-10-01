@@ -35,6 +35,7 @@ const schema3 = schema2.meta({...})     // 返回新实例 C（不是 B）
 ```
 
 初始尝试使用直接属性存储元数据，但链式调用会丢失：
+
 - 实例 A 上存储的元数据无法传递到实例 B 和 C
 - 每次克隆都会创建新对象，原始属性不会被复制
 - 链式调用越多，元数据丢失越严重
@@ -51,11 +52,37 @@ const schema3 = schema2.meta({...})     // 返回新实例 C（不是 B）
 
 ```typescript
 const CLONE_METHODS = [
-  'meta', 'optional', 'nullable', 'nullish', 'array', 'promise',
-  'or', 'and', 'transform', 'default', 'catch', 'pipe', 'readonly',
-  'describe', 'brand', 'min', 'max', 'length', 'nonempty', 'email',
-  'url', 'uuid', 'regex', 'trim', 'toLowerCase', 'toUpperCase',
-  'startsWith', 'endsWith', 'includes', 'datetime', 'ip',
+  'meta',
+  'optional',
+  'nullable',
+  'nullish',
+  'array',
+  'promise',
+  'or',
+  'and',
+  'transform',
+  'default',
+  'catch',
+  'pipe',
+  'readonly',
+  'describe',
+  'brand',
+  'min',
+  'max',
+  'length',
+  'nonempty',
+  'email',
+  'url',
+  'uuid',
+  'regex',
+  'trim',
+  'toLowerCase',
+  'toUpperCase',
+  'startsWith',
+  'endsWith',
+  'includes',
+  'datetime',
+  'ip',
 ]
 ```
 
@@ -107,10 +134,12 @@ function applyMeta<T extends z.ZodType, M = unknown>(
   schema: T,
   meta?: M,
 ): T {
-  if (!meta) return schema
+  if (!meta) {
+    return schema
 
-  // 存储元数据到 schema 实例
-  (schema as any)[AUTOFORM_META_KEY] = meta
+    // 存储元数据到 schema 实例
+    (schema as any)[AUTOFORM_META_KEY] = meta
+  }
 
   // 拦截所有会克隆的方法，确保链式调用时元数据不丢失
   interceptCloneMethods(schema, meta as Record<string, any>)
@@ -180,6 +209,7 @@ const metadata = getAutoFormMetadata(schema)
 ```
 
 **优势：**
+
 - 简单直接，无需额外数据结构
 - 性能最优，直接属性访问
 - 代码更清晰，易于理解和维护
@@ -188,7 +218,7 @@ const metadata = getAutoFormMetadata(schema)
 
 ```typescript
 if (methodName === 'meta' && args.length > 0 && args[0]) {
-  newMeta = { ...customMeta, ...args[0] }  // 合并新旧元数据
+  newMeta = { ...customMeta, ...args[0] } // 合并新旧元数据
 }
 ```
 
@@ -207,6 +237,7 @@ interceptCloneMethods(newSchema, newMeta)
 ### 1. `src/runtime/shared/auto-form.ts`
 
 **核心修改：**
+
 - 新增 `AUTOFORM_META_KEY` 常量 - 元数据存储键名
 - 新增 `CLONE_METHODS` 数组 - 需要拦截的方法列表
 - 新增 `interceptCloneMethods()` 函数 - 方法拦截器实现
@@ -218,6 +249,7 @@ interceptCloneMethods(newSchema, newMeta)
 ### 2. `src/runtime/utils/auto-form.ts`
 
 **核心修改：**
+
 - 简化 `extractSchemaInfo()` 函数 - 直接内联读取元数据，无需遍历链
 - 新增 `extractChecks()` 函数 - 提取 Zod checks 信息
 
@@ -226,6 +258,7 @@ interceptCloneMethods(newSchema, newMeta)
 ### 代码简化总结
 
 通过优化实现，相比初始版本：
+
 - ❌ 删除 WeakMap 备用存储（~5 行）
 - ❌ 删除 collectAllMetadata 函数（~15 行）
 - ❌ 删除复杂的链式遍历逻辑（~20 行）
