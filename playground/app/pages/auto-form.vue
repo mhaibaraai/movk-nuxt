@@ -42,27 +42,19 @@ const schema = afz.object<State>()({
   nameValue: afz.string({
     controlProps: ({ value }) => ({
       placeholder: `请输入姓名${value}`,
-      class: 'w-100px',
       icon: 'i-lucide-user',
     }),
   }).min(2).meta({
     hidden: ({ state }) => state.visibleTest,
     label: ({ value }) => `${value} 姓名`,
   }).nonempty().default('张三').optional(),
-  // nestedObject: afz.object({
-  //   firstName: afz.string().meta({ label: '名字' }).default('张'),
-  //   lastName: afz.string().meta({ label: '姓氏' }).default('三'),
-  //   userAge: afz.number().meta({ label: '年龄' }).min(0).max(150).default(18),
-  //   address: afz.object({
-  //     province: afz.string().meta({ label: '省份' }).default('广东省'),
-  //     city: afz.string().meta({ label: '城市' }).default('广州市'),
-  //     district: afz.string().meta({ label: '区县' }).default('天河区'),
-  //   }).meta({ label: '地址' }),
-  //   portify: afz.object({
-  //     name: afz.string().meta({ label: '姓名' }).default('李四'),
-  //     age: afz.number().meta({ label: '年龄' }).default(20),
-  //   }).meta({ label: '可折叠对象' }),
-  // }).meta({ label: '嵌套对象' }),
+  nestedObject: afz.object({
+    firstName: afz.string().meta({ label: '名字' }).default('张'),
+    portify: afz.object({
+      name: afz.string().meta({ label: '姓名' }).default('李四'),
+      age: afz.number().meta({ label: '年龄' }).default(20),
+    }).meta({ label: '可折叠对象' }),
+  }).meta({ label: '嵌套对象' }),
   dynamicLabel: afz.string().meta({
     label: ({ value }) => `动态标签: ${value}`,
   }).default('11').optional(),
@@ -95,13 +87,26 @@ function onSubmit(event: FormSubmitEvent<Schema>) {
 function onError(event: FormErrorEvent) {
   console.log(event)
 }
+
+// const fields = ref<AuthFormField[]>([
+//   {
+//     name: 'email',
+//     type: 'text',
+//     label: 'Email',
+//   },
+//   {
+//     name: 'password',
+//     type: 'password',
+//     label: 'Password',
+//   },
+// ])
 </script>
 
 <template>
   <div class="space-y-4 p-10">
     <UCard>
       <MAutoForm v-model="formState" :schema="schema" :controls="customControls" @submit="onSubmit" @error="onError">
-        <template #after-fields="{ state }">
+        <template #footer="{ state }">
           <UCard>
             <template #header>
               <h3>表单状态</h3>
@@ -114,5 +119,13 @@ function onError(event: FormErrorEvent) {
         </template> -->
       </MAutoForm>
     </UCard>
+    <!-- <UAuthForm
+      title="Login"
+      description="Enter your credentials to access your account."
+      icon="i-lucide-user"
+      :fields="fields"
+      class="max-w-md"
+      loading
+    /> -->
   </div>
 </template>
