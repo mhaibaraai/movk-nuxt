@@ -70,16 +70,16 @@ function interceptCloneMethods<T extends z.ZodType>(schema: T, customMeta: Recor
       const newSchema = originalMethod.apply(this, args)
 
       // 特殊处理 .meta() 方法：合并新旧元数据
-      // let newMeta = customMeta
-      // if (methodName === 'meta' && args.length > 0 && args[0]) {
-      //   newMeta = { ...customMeta, ...args[0] }
-      // }
+      let newMeta = customMeta
+      if (methodName === 'meta' && args.length > 0 && args[0]) {
+        newMeta = { ...customMeta, ...args[0] }
+      }
 
       // 将元数据存储到新 schema
-      ; (newSchema as any)[AUTOFORM_META_KEY] = customMeta
+      ; (newSchema as any)[AUTOFORM_META_KEY] = newMeta
 
       // 递归拦截新 schema 的方法
-      interceptCloneMethods(newSchema, customMeta)
+      interceptCloneMethods(newSchema, newMeta)
 
       return newSchema
     }
@@ -101,7 +101,6 @@ function applyMeta<T extends z.ZodType, M = unknown>(
 ): T {
   if (!meta) {
     return schema
-
     // 存储元数据到 schema 实例
   } (schema as any)[AUTOFORM_META_KEY] = meta
 

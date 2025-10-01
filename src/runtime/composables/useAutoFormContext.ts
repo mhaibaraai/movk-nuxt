@@ -95,15 +95,14 @@ export function useAutoFormProvider<T extends Record<string, any>>(
       return comp
 
     const component = typeof comp === 'string' ? resolveDynamicComponent(comp) : comp
-
     const context = createFieldContext(field)
-
     const resolvedControlProps = resolveFieldProp(field, 'controlProps') || {}
-    // const isReadonly = field.decorators?.isReadonly
+    // 只读处理
+    const isReadonly = field.decorators?.isReadonly
 
     const finalProps = defu(
       resolvedControlProps,
-      // isReadonly ? { disabled: true } : {},
+      isReadonly ? { disabled: true } : {},
       controlMeta?.mapped?.controlProps || {},
     )
 

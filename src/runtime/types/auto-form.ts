@@ -55,13 +55,15 @@ export interface AutoFormControls {
   [key: string]: AutoFormControl
 }
 
+export type AutoFormMergeMeta = GlobalMeta & AutoFormControlsMeta & { mapped?: AutoFormControl }
+
 export interface AutoFormField {
   /** 字段路径 */
   path: string
   /** 字段原始 schema */
   schema: z.ZodType
   /** 字段元数据 */
-  meta: GlobalMeta & AutoFormControlsMeta & { mapped?: AutoFormControl }
+  meta: AutoFormMergeMeta
   /** 字段装饰器信息 */
   decorators: {
     isOptional?: boolean

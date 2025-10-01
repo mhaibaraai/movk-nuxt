@@ -55,20 +55,7 @@ const defaultSlotProps = computed(() =>
 <template>
   <UFormField
     v-show="!fieldProps.hidden"
-    :as="fieldProps.as"
-    :name="fieldProps.name"
-    :error-pattern="fieldProps.errorPattern"
-    :label="fieldProps.label"
-    :description="fieldProps.description"
-    :help="fieldProps.help"
-    :error="fieldProps.error"
-    :hint="fieldProps.hint"
-    :size="fieldProps.size"
-    :required="fieldProps.required"
-    :eager-validation="fieldProps.eagerValidation"
-    :validate-on-input-delay="fieldProps.validateOnInputDelay"
-    :class="fieldProps.class"
-    :ui="fieldProps.ui"
+    v-bind="fieldProps"
   >
     <template v-for="(slotComponent, slotName) in formFieldSlots" :key="slotName" #[slotName]="slotData">
       <VNodeRender :node="slotComponent(slotData)" />
