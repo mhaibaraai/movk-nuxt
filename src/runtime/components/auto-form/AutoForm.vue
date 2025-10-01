@@ -46,6 +46,11 @@ export interface AutoFormProps<S extends z.ZodObject, T extends boolean = true, 
    * @default true
    */
   loadingAuto?: boolean
+  /**
+   * 是否显示默认提交按钮
+   * @default true
+   */
+  submitButton?: boolean
   class?: any
   onSubmit?: ((event: FormSubmitEvent<FormData<S, T>>) => void | Promise<void>) | (() => void | Promise<void>)
   /** 自定义控件映射 */
@@ -59,9 +64,17 @@ export interface AutoFormEmits<S extends z.ZodObject, T extends boolean = true> 
   error: [event: FormErrorEvent]
 }
 
+export interface AutoFormSlotProps<T> {
+  errors: FormError[]
+  loading: boolean
+  fields: AutoFormField[]
+  state: T
+}
+
 export type AutoFormSlots<T extends object> = {
-  'before-fields': (props: { fields: AutoFormField[], state: T }) => any
-  'after-fields': (props: { fields: AutoFormField[], state: T }) => any
+  header: (props: AutoFormSlotProps<T>) => any
+  footer: (props: AutoFormSlotProps<T>) => any
+  submit: (props: AutoFormSlotProps<T>) => any
 } & DynamicFormSlots<T>
 
 type AutoFormStateType = N extends false ? Partial<InferInput<S>> : never
@@ -69,6 +82,7 @@ const {
   schema,
   controls,
   globalMeta,
+  submitButton = true,
   ...restProps
 } = defineProps<AutoFormProps<S, T, N>>()
 
@@ -158,22 +172,41 @@ const renderData = computed(() => {
 
 <template>
   <UForm :state="state" :schema="schema" v-bind="restProps">
-    <slot name="before-fields" :fields="visibleFields" :state="state" />
+    <template #default="{ errors, loading }">
+      <slot name="header" v-bind="{ errors, loading, fields: visibleFields, state }" />
 
-    <template v-if="renderData.hasNestedFields">
-      <template v-for="field in renderData.allFields" :key="field.path">
-        <AutoFormFieldRenderer v-if="renderData.leafFields.includes(field)" :field="field" :schema="schema" />
-        <AutoFormNestedRenderer v-else :field="field" :schema="schema" />
+      <template v-if="renderData.hasNestedFields">
+        <template v-for="field in renderData.allFields" :key="field.path">
+          <AutoFormFieldRenderer
+            v-if="renderData.leafFields.includes(field)"
+            :field="field"
+            :schema="schema"
+            :extra-props="{ errors, loading }"
+          />
+          <AutoFormNestedRenderer
+            v-else
+            :field="field"
+            :schema="schema"
+            :extra-props="{ errors, loading }"
+          />
+        </template>
       </template>
-    </template>
 
-    <template v-else>
-      <AutoFormFieldRenderer v-for="field in renderData.flatFields" :key="field.path" :field="field" :schema="schema" />
-    </template>
+      <template v-else>
+        <AutoFormFieldRenderer
+          v-for="field in renderData.flatFields"
+          :key="field.path"
+          :field="field"
+          :schema="schema"
+          :extra-props="{ errors, loading }"
+        />
+      </template>
 
-    <slot name="after-fields" :fields="visibleFields" :state="state" />
-    <UButton type="submit">
-      Submit
-    </UButton>
+      <slot name="footer" v-bind="{ errors, loading, fields: visibleFields, state }" />
+
+      <slot name="submit" v-bind="{ errors, loading, fields: visibleFields, state }">
+        <UButton v-if="submitButton" type="submit" :loading="loading" label="提交" block />
+      </slot>
+    </template>
   </UForm>
 </template>

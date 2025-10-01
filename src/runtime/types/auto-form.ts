@@ -9,10 +9,10 @@ type DynamicFieldNestedSlotKeys = 'content'
 
 export type DynamicFormSlots<T>
   = Record<string, (props: AutoFormFieldContext<T>) => any>
-    & Record<`${DynamicFieldSlotKeys}`, (props: AutoFormFieldContext<T>) => any>
-    & Record<`${DynamicFieldSlotKeys}:${NonObjectFieldKeys<T>}`, (props: AutoFormFieldContext<T>) => any>
-    & Record<`${DynamicFieldSlotKeys}:${ObjectFieldKeys<T>}`, (props: AutoFormFieldNestedContext<T>) => any>
-    & Record<`${DynamicFieldNestedSlotKeys}:${ObjectFieldKeys<T>}`, (props: AutoFormFieldContext<T>) => any>
+    & Record<`field-${DynamicFieldSlotKeys}`, (props: AutoFormFieldContext<T>) => any>
+    & Record<`field-${DynamicFieldSlotKeys}:${NonObjectFieldKeys<T>}`, (props: AutoFormFieldContext<T>) => any>
+    & Record<`field-${DynamicFieldSlotKeys}:${ObjectFieldKeys<T>}`, (props: AutoFormFieldNestedContext<T>) => any>
+    & Record<`field-${DynamicFieldNestedSlotKeys}:${ObjectFieldKeys<T>}`, (props: AutoFormFieldContext<T>) => any>
 
 export interface AutoFormFieldContext<S = any> {
   /** 表单数据 - 使用 getter 确保获取最新值 */
@@ -23,6 +23,10 @@ export interface AutoFormFieldContext<S = any> {
   readonly value: S[keyof S]
   /** 设置字段值 */
   setValue: (value: S[keyof S]) => void
+  /** 表单错误列表 */
+  readonly errors: any[]
+  /** 表单提交加载状态 */
+  readonly loading: boolean
 }
 
 export type AutoFormFieldNestedContext<S = any> = AutoFormFieldContext<S> & {

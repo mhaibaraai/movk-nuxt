@@ -48,7 +48,7 @@ const formFieldSlots = computed(() =>
 )
 const renderedControl = computed(() => renderControl(field))
 const defaultSlotProps = computed(() =>
-  createSlotProps(field, { ...extraProps }),
+  createSlotProps(field, extraProps),
 )
 </script>
 

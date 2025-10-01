@@ -27,7 +27,7 @@ export function useAutoFormProvider<T extends Record<string, any>>(
   slots: Record<string, any>,
 ) {
   // 字段上下文创建 - 直接创建，不使用缓存
-  function createFieldContext(field: AutoFormField): AutoFormFieldContext {
+  function createFieldContext(field: AutoFormField, extraProps?: Record<string, any>): AutoFormFieldContext {
     const path = field.path
 
     const context: AutoFormFieldContext = {
@@ -37,6 +37,8 @@ export function useAutoFormProvider<T extends Record<string, any>>(
       setValue: (v: any) => {
         setPath(state.value, path, v)
       },
+      get errors() { return extraProps?.errors ?? [] },
+      get loading() { return extraProps?.loading ?? false },
     }
 
     return context
@@ -142,24 +144,26 @@ export function useAutoFormProvider<T extends Record<string, any>>(
 
     return {
       hasSlot(name: string): boolean {
-        const keySpecific = `${name}:${keyPrefix}`
+        const keySpecific = `field-${name}:${keyPrefix}`
+        const keyGeneral = `field-${name}`
         return Boolean(
           slots?.[keySpecific]
-          || slots?.[name]
+          || slots?.[keyGeneral]
           || fieldSlots?.[name],
         )
       },
 
       renderSlot(name: string, slotProps: any) {
-        const keySpecific = `${name}:${keyPrefix}`
+        const keySpecific = `field-${name}:${keyPrefix}`
+        const keyGeneral = `field-${name}`
 
         // 优先级：路径特定 > 通用 > 字段级
         if (slots?.[keySpecific]) {
           return slots[keySpecific](slotProps)
         }
 
-        if (slots?.[name]) {
-          return slots[name](slotProps)
+        if (slots?.[keyGeneral]) {
+          return slots[keyGeneral](slotProps)
         }
 
         if (fieldSlots?.[name]) {
@@ -175,7 +179,7 @@ export function useAutoFormProvider<T extends Record<string, any>>(
    * 创建插槽属性对象
    */
   function createSlotProps(field: AutoFormField, extraProps: Record<string, any> = {}): AutoFormFieldContext {
-    const context = createFieldContext(field)
+    const context = createFieldContext(field, extraProps)
 
     return {
       ...extraProps,
@@ -183,6 +187,8 @@ export function useAutoFormProvider<T extends Record<string, any>>(
       path: context.path,
       value: unref(context.value),
       setValue: context.setValue,
+      errors: context.errors,
+      loading: context.loading,
     }
   }
 

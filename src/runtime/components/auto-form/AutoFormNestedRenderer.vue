@@ -1,4 +1,5 @@
 <script setup lang="ts" generic="S extends z.ZodObject">
+import type { AnyObject } from '@movk/core'
 import type { z } from 'zod/v4'
 import type { AutoFormField, AutoFormFieldNestedContext } from '../../types/auto-form'
 import type { AutoFormProps } from './AutoForm.vue'
@@ -11,11 +12,13 @@ import AutoFormFieldRenderer from './AutoFormFieldRenderer.vue'
 
 interface AutoFormNestedRendererProps<S extends z.ZodObject> extends Pick<AutoFormProps<S>, 'schema'> {
   field: AutoFormField
+  extraProps?: AnyObject
 }
 
 const {
   field,
   schema,
+  extraProps,
 } = defineProps<AutoFormNestedRendererProps<S>>()
 
 const { resolveFieldProp, createSlotResolver, createSlotProps } = useAutoFormInjector()
@@ -73,13 +76,13 @@ const enhancedField = computed<AutoFormField>(() => {
   return defu(iconSlotConfig, field)
 })
 
-const slotProps = computed(() => createSlotProps(field))
+const slotProps = computed(() => createSlotProps(field, extraProps))
 </script>
 
 <template>
   <UCollapsible v-show="!isHidden" v-if="useCollapsible" v-bind="collapsibleConfig">
     <template #default="{ open }">
-      <AutoFormFieldRenderer :field="enhancedField" :schema="schema" :extra-props="{ open }" />
+      <AutoFormFieldRenderer :field="enhancedField" :schema="schema" :extra-props="{ ...extraProps, open }" />
     </template>
     <template #content>
       <VNodeRender
@@ -92,6 +95,7 @@ const slotProps = computed(() => createSlotProps(field))
           :key="childField.path"
           :field="childField"
           :schema="schema"
+          :extra-props="extraProps"
         />
 
         <AutoFormNestedRenderer
@@ -99,6 +103,7 @@ const slotProps = computed(() => createSlotProps(field))
           :key="childField.path"
           :field="childField"
           :schema="schema"
+          :extra-props="extraProps"
         />
       </template>
     </template>
@@ -110,6 +115,7 @@ const slotProps = computed(() => createSlotProps(field))
       :key="childField.path"
       :field="childField"
       :schema="schema"
+      :extra-props="extraProps"
     />
 
     <AutoFormNestedRenderer
@@ -117,6 +123,7 @@ const slotProps = computed(() => createSlotProps(field))
       :key="childField.path"
       :field="childField"
       :schema="schema"
+      :extra-props="extraProps"
     />
   </template>
 </template>
