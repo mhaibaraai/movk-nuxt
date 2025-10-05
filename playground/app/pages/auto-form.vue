@@ -39,10 +39,11 @@ const customControls = {
 const { afz } = createAutoFormZ(customControls)
 
 const schema = afz.object<State>()({
-  tags: afz.array(afz.string().meta({ label: '' })).default(['2']).meta({ collapsible: {
-    // enabled: false,
-    defaultOpen: true,
-  } }), // 字符串数组
+  tags: afz.array(afz.string()).default(['2']).meta({
+    collapsible: {
+      defaultOpen: true,
+    },
+  }),
   scores: afz.array(afz.object({
     subject: afz.string().meta({ label: '科目' }).default(''),
     score: afz.number().meta({ label: '分数' }).default(0),
@@ -50,13 +51,13 @@ const schema = afz.object<State>()({
       name: afz.string().meta({ label: '名称' }).default(''),
       value: afz.number().meta({ label: '值' }).default(0),
     }).optional(),
-  })).meta({ label: '成绩列表', collapsible: { defaultOpen: true } }).default([{
+  })).meta({ label: '成绩列表', collapsible: { enabled: false, defaultOpen: true } }).default([{
     subject: '语文',
     score: 0,
   }, {
     subject: '数学',
     score: 0,
-  }]), // 对象数组
+  }]),
   // visibleTest: afz.boolean(),
   // nameValue: afz.string().meta({
   //   if: ({ state }) => state.visibleTest,
@@ -101,7 +102,13 @@ function onError(event: FormErrorEvent) {
 <template>
   <div class="space-y-4 p-10">
     <UCard>
-      <MAutoForm v-model="formState" :schema="schema" :controls="customControls" @submit="onSubmit" @error="onError">
+      <MAutoForm
+        v-model="formState"
+        :schema="schema"
+        :controls="customControls"
+        @submit="onSubmit"
+        @error="onError"
+      >
         <template #footer="{ state }">
           <UCard>
             <template #header>
