@@ -6,7 +6,7 @@ catalog:
   '@antfu/eslint-config': ^5.4.1
   '@antfu/ni': ^26.1.0
   '@iconify-json/lucide': ^1.2.68
-  '@iconify-json/simple-icons': ^1.2.53
+  '@iconify-json/simple-icons': ^1.2.54
   '@movk/core': ^0.0.5
   '@nuxt/devtools': ^2.6.5
   '@nuxt/eslint': ^1.9.0
@@ -18,7 +18,6 @@ catalog:
   '@nuxt/ui': ^4.0.1
   '@nuxtjs/i18n': ^10.1.0
   '@types/node': ^24.6.2
-  '@types/sortablejs': ^0.0.0
   '@vueuse/core': ^13.9.0
   '@vueuse/motion': ^3.0.3
   '@vueuse/nuxt': ^13.9.0
@@ -30,7 +29,7 @@ catalog:
   nuxt: ^4.1.2
   nuxt-auth-utils: ^0.5.25
   sass-embedded: ^1.93.2
-  sortablejs: ^0.0.0
+  sortablejs: ^1.15.6
   taze: ^19.7.0
   tsx: ^4.20.6
   typescript: ^5.9.3
