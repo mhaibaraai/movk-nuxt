@@ -3,31 +3,25 @@ import type { AnyObject } from '@movk/core'
 import type { z } from 'zod/v4'
 import type { AutoFormField } from '../../types/auto-form'
 import type { AutoFormProps } from './AutoForm.vue'
-import { UButton, UCollapsible } from '#components'
+import { UButton, UCollapsible, UIcon } from '#components'
 import { useSortable } from '@vueuse/integrations/useSortable'
-import { computed, ref, unref, useTemplateRef } from 'vue'
+import { computed, h, unref, useTemplateRef } from 'vue'
 import { useAutoFormInjector } from '../../composables/useAutoFormContext'
 import { joinPath } from '../../core'
-import { generateDefaultValue } from '../../utils/auto-form'
 import AutoFormFieldRenderer from './AutoFormFieldRenderer.vue'
 import AutoFormNestedRenderer from './AutoFormNestedRenderer.vue'
 
-interface AutoFormArrayRendererProps<S extends z.ZodObject> extends Pick<AutoFormProps<S>, 'schema' | 'enableTransition'> {
+interface AutoFormArrayRendererProps<S extends z.ZodObject> extends Pick<AutoFormProps<S>, 'schema'> {
   field: AutoFormField
   extraProps?: AnyObject
 }
 
-const {
-  field,
-  schema,
-  extraProps,
-} = defineProps<AutoFormArrayRendererProps<S>>()
+const props = defineProps<AutoFormArrayRendererProps<S>>()
 
 const { resolveFieldProp, createFieldContext, createCollapsibleEnhancer } = useAutoFormInjector()
+const context = createFieldContext(props.field)
 
-const context = createFieldContext(field)
-
-const elementTemplate = computed(() => field.arrayElement)
+const elementTemplate = computed(() => props.field.arrayElement)
 
 const isObjectElement = computed(() => {
   if (!elementTemplate.value)
@@ -40,7 +34,70 @@ const arrayValue = computed(() => {
   return Array.isArray(value) ? value : []
 })
 
-// 缓存生成的数组项字段，避免重复生成
+function createHintSlot(field: AutoFormField, path: string, open?: boolean, count?: number) {
+  const isNested = path.includes('.')
+  const isObject = field.meta?.type === 'object'
+
+  // 创建 Chevron 图标
+  const createChevron = () => h(UIcon, {
+    name: open ? 'i-lucide-chevron-down' : 'i-lucide-chevron-right',
+    class: 'shrink-0 size-5 transition-transform duration-200',
+  })
+
+  // 创建删除按钮
+  const createDeleteButton = () => h(UButton, {
+    icon: 'i-lucide-trash-2',
+    color: 'error',
+    variant: 'ghost',
+    size: 'sm',
+    square: true,
+    onClick: () => removeItem(count),
+  })
+
+  // 嵌套路径且为对象类型:仅显示 Chevron
+  if (isNested && isObject) {
+    return h('div', { class: 'flex items-center gap-2' }, [createChevron()])
+  }
+
+  // 嵌套路径但非对象类型:不显示任何内容
+  if (isNested) {
+    return undefined
+  }
+
+  // 非嵌套路径且非对象类型:仅显示删除按钮
+  if (!isObject) {
+    return createDeleteButton()
+  }
+
+  // 非嵌套路径且为对象类型:显示删除按钮和 Chevron
+  return h('div', { class: 'flex items-center gap-2' }, [
+    createDeleteButton(),
+    createChevron(),
+  ])
+}
+
+function updateFieldPaths(field: AutoFormField, oldBasePath: string, newBasePath: string): AutoFormField {
+  const updatedField = {
+    ...field,
+    path: field.path.replace(oldBasePath, newBasePath),
+    meta: {
+      fieldSlots: {
+        hint: ({ open, path, count }) => createHintSlot(field, path, open, count),
+        ...field.meta?.fieldSlots,
+      },
+      ...field.meta,
+    },
+  } as AutoFormField
+
+  if (field.children) {
+    updatedField.children = field.children.map(child =>
+      updateFieldPaths(child, oldBasePath, newBasePath),
+    )
+  }
+
+  return updatedField
+}
+
 const arrayItemFields = computed(() => {
   const template = unref(elementTemplate)
   const arr = arrayValue.value
@@ -48,10 +105,10 @@ const arrayItemFields = computed(() => {
   if (!template || !arr.length)
     return []
 
-  return arr.map((_, index) => ({
-    ...template,
-    path: joinPath([field.path, index]),
-  } as AutoFormField))
+  return arr.map((_, index) => {
+    const newBasePath = joinPath([props.field.path, index])
+    return updateFieldPaths(template, props.field.path, newBasePath)
+  })
 })
 
 function addItem() {
@@ -59,20 +116,17 @@ function addItem() {
   if (!template)
     return
 
-  const newItem = generateDefaultValue(template.schema)
-  const currentArray = arrayValue.value
-  const newArray = [...currentArray, newItem]
+  const newArray = [...arrayValue.value, undefined]
   context.setValue(newArray)
 }
 
-function removeItem(index: number) {
-  const currentArray = arrayValue.value
-  const newArray = currentArray.filter((_, i) => i !== index)
+function removeItem(count?: number) {
+  const newArray = arrayValue.value.filter((_, index) => index !== count)
   context.setValue(newArray)
 }
 
 const { collapsibleConfig, useCollapsible, isHidden, enhancedField } = createCollapsibleEnhancer(
-  field,
+  props.field,
   resolveFieldProp,
 )
 
@@ -80,8 +134,8 @@ const collapsibleRef = useTemplateRef('collapsibleRef')
 
 const contentEl = computed(() => {
   const rootEl = collapsibleRef.value?.$el
-  if (!rootEl) return null
-  // 查找 CollapsibleContent 元素（通过 id 模糊匹配）
+  if (!rootEl)
+    return null
   return rootEl.querySelector('[id*="reka-collapsible-content"]')
 })
 
@@ -91,43 +145,55 @@ useSortable(contentEl, arrayItemFields, {
 </script>
 
 <template>
-  <UCollapsible v-show="!isHidden" v-if="useCollapsible" v-bind="collapsibleConfig" ref="collapsibleRef">
+  <UCollapsible
+    v-show="!isHidden"
+    v-if="useCollapsible"
+    v-bind="collapsibleConfig"
+    ref="collapsibleRef"
+  >
     <template #default="{ open }">
       <AutoFormFieldRenderer :field="enhancedField" :schema="schema" :extra-props="{ ...extraProps, open }" />
     </template>
 
     <template v-if="elementTemplate" #content>
-      {{ console.log('22 d', arrayItemFields) }}
-      <template v-if="isObjectElement">
-        <AutoFormNestedRenderer
-          v-for="(_, count) in arrayValue"
-          :key="count"
-          :field="arrayItemFields[count]!"
-          :schema="schema"
-          :extra-props="extraProps"
-        />
-      </template>
-      <template v-else>
-        <div v-for="(_, count) in arrayValue" :key="count" class="flex items-center gap-2">
-          <AutoFormFieldRenderer
-            :field="arrayItemFields[count]!"
-            :schema="schema"
-            :extra-props="{ ...extraProps, index: count, remove: () => removeItem(count) }"
-            class="flex-1"
-          />
-          <UButton
-            icon="i-lucide-trash-2"
-            color="error"
-            variant="ghost"
-            size="sm"
-            square
-            @click="removeItem(count)"
-          />
-        </div>
-      </template>
-      <UButton icon="i-lucide-plus" color="primary" variant="outline" block @click="addItem">
-        添加项
+      <component
+        :is="isObjectElement ? AutoFormNestedRenderer : AutoFormFieldRenderer"
+        v-for="(_, count) in arrayValue"
+        :key="count"
+        :field="arrayItemFields[count]!"
+        :schema="schema"
+        :extra-props="{ ...extraProps, count }"
+      />
+      <UButton
+        icon="i-lucide-plus"
+        color="neutral"
+        variant="subtle"
+        block
+        size="sm"
+        @click="addItem"
+      >
+        添加
       </UButton>
     </template>
   </UCollapsible>
+  <template v-else-if="!useCollapsible">
+    <component
+      :is="isObjectElement ? AutoFormNestedRenderer : AutoFormFieldRenderer"
+      v-for="(_, count) in arrayValue"
+      :key="count"
+      :field="arrayItemFields[count]!"
+      :schema="schema"
+      :extra-props="{ ...extraProps, count }"
+    />
+    <UButton
+      icon="i-lucide-plus"
+      color="neutral"
+      variant="subtle"
+      block
+      size="sm"
+      @click="addItem"
+    >
+      添加
+    </UButton>
+  </template>
 </template>

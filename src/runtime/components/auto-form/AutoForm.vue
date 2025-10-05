@@ -52,11 +52,6 @@ export interface AutoFormProps<S extends z.ZodObject, T extends boolean = true, 
    * @default true
    */
   submitButton?: boolean
-  /**
-   * 是否启用字段过渡动画
-   * @default true
-   */
-  enableTransition?: boolean
   class?: any
   onSubmit?: ((event: FormSubmitEvent<FormData<S, T>>) => void | Promise<void>) | (() => void | Promise<void>)
   /** 自定义控件映射 */
@@ -89,7 +84,6 @@ const {
   controls,
   globalMeta,
   submitButton = true,
-  enableTransition = true,
   ...restProps
 } = defineProps<AutoFormProps<S, T, N>>()
 
@@ -189,43 +183,48 @@ const renderData = computed(() => {
       <slot name="header" v-bind="{ errors, loading, fields: visibleFields, state }" />
 
       <template v-if="renderData.hasNestedFields">
-        <TransitionGroup :name="enableTransition ? 'auto-form-field' : ''">
-          <template v-for="field in renderData.allFields" :key="field.path">
-            <AutoFormFieldRenderer
-              v-if="renderData.leafFields.includes(field)"
-              :field="field"
-              :schema="schema"
-              :extra-props="{ errors, loading }"
-            />
-            <AutoFormArrayRenderer
-              v-else-if="renderData.arrayFields.includes(field)"
-              :field="field"
-              :schema="schema"
-              :state="state"
-              :enable-transition="enableTransition"
-              :extra-props="{ errors, loading }"
-            />
-            <AutoFormNestedRenderer v-else :field="field" :schema="schema" :extra-props="{ errors, loading }" />
-          </template>
-        </TransitionGroup>
-      </template>
-
-      <template v-else>
-        <TransitionGroup :name="enableTransition ? 'auto-form-field' : ''">
+        <template v-for="field in renderData.allFields" :key="field.path">
           <AutoFormFieldRenderer
-            v-for="field in renderData.flatFields"
-            :key="field.path"
+            v-if="renderData.leafFields.includes(field)"
             :field="field"
             :schema="schema"
             :extra-props="{ errors, loading }"
           />
-        </TransitionGroup>
+          <AutoFormArrayRenderer
+            v-else-if="renderData.arrayFields.includes(field)"
+            :field="field"
+            :schema="schema"
+            :extra-props="{ errors, loading }"
+          />
+          <AutoFormNestedRenderer
+            v-else
+            :field="field"
+            :schema="schema"
+            :extra-props="{ errors, loading }"
+          />
+        </template>
+      </template>
+
+      <template v-else>
+        <AutoFormFieldRenderer
+          v-for="field in renderData.flatFields"
+          :key="field.path"
+          :field="field"
+          :schema="schema"
+          :extra-props="{ errors, loading }"
+        />
       </template>
 
       <slot name="footer" v-bind="{ errors, loading, fields: visibleFields, state }" />
 
       <slot name="submit" v-bind="{ errors, loading, fields: visibleFields, state }">
-        <UButton v-if="submitButton" type="submit" :loading="loading" label="提交" block />
+        <UButton
+          v-if="submitButton"
+          type="submit"
+          :loading="loading"
+          label="提交"
+          block
+        />
       </slot>
     </template>
   </UForm>

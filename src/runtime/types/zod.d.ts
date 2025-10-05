@@ -1,5 +1,4 @@
-import type { AutoFormFieldContext, AutoFormNestedCollapsible } from '#movk/types/auto-form'
-import type { FormFieldSlots } from '@nuxt/ui'
+import type { AutoFormFieldContext, AutoFormFieldSlots, AutoFormNestedCollapsible } from '#movk/types/auto-form'
 import type { ClassNameValue } from 'tailwind-merge'
 import type { ComputedRef, Ref } from 'vue'
 
@@ -42,7 +41,7 @@ declare module 'zod/v4' {
     /**
      * @see https://ui4.nuxt.com/docs/components/form-field#slots
      */
-    slots?: ReactiveValue<Partial<FormFieldSlots>>
+    fieldSlots?: ReactiveValue<Partial<AutoFormFieldSlots>>
 
     /** 是否隐藏 */
     hidden?: ReactiveValue<boolean>

@@ -4,14 +4,23 @@ import type { ClassNameValue } from 'tailwind-merge'
 import type { GlobalMeta, z } from 'zod/v4'
 import type { ComponentProps, ComponentSlots, IsComponent, NonObjectFieldKeys, ObjectFieldKeys, ReactiveValue, Suggest } from '../core'
 
-type DynamicFieldSlotKeys = 'default' | 'label' | 'description' | 'hint' | 'help' | 'error'
+export interface AutoFormFieldSlots {
+  label: (props: { label?: string } & AutoFormFieldContext) => any
+  hint: (props: { hint?: string } & AutoFormFieldContext) => any
+  description: (props: { description?: string } & AutoFormFieldContext) => any
+  help: (props: { help?: string } & AutoFormFieldContext) => any
+  error: (props: { error?: boolean | string } & AutoFormFieldContext) => any
+  default: (props: { error?: boolean | string } & AutoFormFieldContext) => any
+}
+
+type DynamicFieldSlotKeys = keyof AutoFormFieldSlots
 type DynamicFieldNestedSlotKeys = 'content'
 
 export type DynamicFormSlots<T>
   = Record<string, (props: AutoFormFieldContext<T>) => any>
     & Record<`field-${DynamicFieldSlotKeys}`, (props: AutoFormFieldContext<T>) => any>
     & Record<`field-${DynamicFieldSlotKeys}:${NonObjectFieldKeys<T>}`, (props: AutoFormFieldContext<T>) => any>
-    & Record<`field-${DynamicFieldSlotKeys}:${ObjectFieldKeys<T>}`, (props: AutoFormFieldCollapsibleContext<T>) => any>
+    & Record<`field-${DynamicFieldSlotKeys}:${ObjectFieldKeys<T>}`, (props: AutoFormFieldContext<T>) => any>
     & Record<`field-${DynamicFieldNestedSlotKeys}:${ObjectFieldKeys<T>}`, (props: AutoFormFieldContext<T>) => any>
 
 export interface AutoFormFieldContext<S = any> {
@@ -27,10 +36,9 @@ export interface AutoFormFieldContext<S = any> {
   readonly errors: any[]
   /** 表单提交加载状态 */
   readonly loading: boolean
-}
-
-export type AutoFormFieldCollapsibleContext<S = any> = AutoFormFieldContext<S> & {
-  open: boolean
+  /** 折叠状态（适用于嵌套字段和数组字段） */
+  readonly open?: boolean
+  count?: number
 }
 
 /**

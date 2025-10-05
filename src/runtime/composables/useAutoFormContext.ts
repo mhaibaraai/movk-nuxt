@@ -1,5 +1,5 @@
 import type { InjectionKey, ModelRef } from 'vue'
-import type { AutoFormField, AutoFormFieldCollapsibleContext, AutoFormFieldContext } from '../types/auto-form'
+import type { AutoFormField, AutoFormFieldContext } from '../types/auto-form'
 import { UIcon } from '#components'
 import defu from 'defu'
 import { computed, h, inject, isVNode, provide, resolveDynamicComponent, unref } from 'vue'
@@ -238,7 +238,7 @@ export function useAutoFormProvider<T extends Record<string, any>>(
       const iconSlotConfig = {
         meta: {
           fieldSlots: {
-            hint: ({ open }: AutoFormFieldCollapsibleContext) => h('div', { class: 'flex items-center gap-2' }, [
+            hint: ({ open }) => h('div', { class: 'flex items-center gap-2' }, [
               h(UIcon, {
                 name: open ? 'i-lucide-chevron-down' : 'i-lucide-chevron-right',
                 class: 'shrink-0 size-5 transition-transform duration-200',
@@ -246,9 +246,9 @@ export function useAutoFormProvider<T extends Record<string, any>>(
             ]),
           },
         },
-      }
+      } as AutoFormField
 
-      return defu(iconSlotConfig, field)
+      return defu(field, iconSlotConfig)
     })
     return {
       collapsibleConfig,
