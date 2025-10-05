@@ -5,7 +5,6 @@
 
 import type { StringOrVNode } from '@movk/core'
 import type { Component, ComputedRef, DefineComponent, Ref } from 'vue'
-import { isObject } from '@movk/core'
 
 /**
  * 合并两个对象类型，U 中的属性会覆盖 T 中的属性
@@ -202,6 +201,31 @@ export type ComponentExposed<T> = T extends new (...args: any) => infer E ? E
 type PathSegment = string | number
 type PathSegments = PathSegment[]
 type PathInput = string | PathSegments
+
+/**
+ * 检查值是否为有效的容器类型（对象或数组）
+ *
+ * - isObject: 仅检查纯对象，排除数组
+ * - isValidContainer: 检查所有可作为容器的类型（对象 + 数组）
+ *
+ * 支持 Vue 3 的 Proxy 对象和 Proxy 数组。
+ *
+ * @category Validator
+ * @param value - 待检查的值
+ * @returns 是否为有效容器（对象或数组）
+ * @example
+ * ```ts
+ * isValidContainer({})              // true
+ * isValidContainer([])              // true
+ * isValidContainer(new Proxy({}, {})) // true
+ * isValidContainer(null)            // false
+ * isValidContainer('string')        // false
+ * isValidContainer(123)             // false
+ * ```
+ */
+export function isValidContainer(value: any): boolean {
+  return value !== null && typeof value === 'object'
+}
 
 /**
  * 将路径字符串解析为片段数组。
@@ -421,23 +445,29 @@ export function setPath<T extends Record<string, any>>(object: T, path: PathInpu
   for (let i = 0; i < segments.length; i++) {
     const key = segments[i]
     const isLast = i === segments.length - 1
+
     if (isLast) {
       cur[key as any] = value
       break
     }
+
     const nextKey = segments[i + 1]
     let nextVal = cur[key as any]
+
     // 决定需要的容器类型
     const needArray = typeof nextKey === 'number'
-    if (!isObject(nextVal)) {
+    const isValidObject = isValidContainer(nextVal)
+
+    if (!isValidObject) {
       nextVal = needArray ? [] : {}
       cur[key as any] = nextVal
     }
     // 如果需要数组且当前不是数组，替换为数组
-    if (needArray && !Array.isArray(nextVal)) {
+    else if (needArray && !Array.isArray(nextVal)) {
       nextVal = []
       cur[key as any] = nextVal
     }
+
     // 如果是数组并且下一个 key 为数字索引，扩容（允许稀疏）
     if (needArray && Array.isArray(nextVal)) {
       const idxNum = Number(nextKey)
@@ -446,6 +476,7 @@ export function setPath<T extends Record<string, any>>(object: T, path: PathInpu
     }
     cur = nextVal
   }
+
   return object
 }
 

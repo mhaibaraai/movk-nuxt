@@ -75,11 +75,17 @@ function interceptCloneMethods<T extends z.ZodType>(schema: T, customMeta: Recor
         return newSchema
       }
 
+      // 特殊处理 .meta()：合并新旧元数据
+      let newMeta = customMeta
+      if (methodName === 'meta' && args.length > 0 && args[0]) {
+        newMeta = { ...customMeta, ...args[0] }
+      }
+
       // 将元数据存储到新 schema
-      ; (newSchema as any)[AUTOFORM_META_KEY] = customMeta
+      ; (newSchema as any)[AUTOFORM_META_KEY] = newMeta
 
       // 递归拦截新 schema 的方法
-      interceptCloneMethods(newSchema, customMeta)
+      interceptCloneMethods(newSchema, newMeta)
 
       return newSchema
     }
@@ -97,14 +103,10 @@ function interceptCloneMethods<T extends z.ZodType>(schema: T, customMeta: Recor
  */
 function applyMeta<T extends z.ZodType, M = unknown>(
   schema: T,
-  meta?: M,
+  meta = {} as M,
 ): T {
-  if (!meta) {
-    return schema
-  }
   // 存储元数据到 schema 实例
   (schema as any)[AUTOFORM_META_KEY] = meta
-
   // 拦截所有会克隆的方法，确保链式调用时元数据不丢失
   interceptCloneMethods(schema, meta as Record<string, any>)
 
@@ -118,7 +120,24 @@ function applyMeta<T extends z.ZodType, M = unknown>(
  * @returns 元数据对象
  */
 export function getAutoFormMetadata(schema: z.ZodType): Record<string, any> {
-  return (schema as any)[AUTOFORM_META_KEY] || {}
+  // 主要路径：直接读取当前 schema 的元数据
+  let meta = (schema as any)[AUTOFORM_META_KEY]
+
+  // 兜底路径：如果当前 schema 没有元数据，尝试从包装类型中 unwrap 查找
+  // 适用于 ZodOptional、ZodNullable、ZodDefault 等包装类型
+  if (!meta && 'unwrap' in schema && typeof (schema as any).unwrap === 'function') {
+    try {
+      const unwrapped = (schema as any).unwrap()
+      if (unwrapped && typeof unwrapped === 'object') {
+        meta = (unwrapped as any)[AUTOFORM_META_KEY]
+      }
+    }
+    catch {
+      // unwrap 失败或返回值无效，忽略错误
+    }
+  }
+
+  return meta || {}
 }
 
 /**
@@ -154,6 +173,9 @@ interface TypedZodFactory<TC extends AutoFormControls> {
   number: AutoFormFactoryMethod<WithDefaultControls<TC>, 'number', z.ZodNumber>
   boolean: AutoFormFactoryMethod<WithDefaultControls<TC>, 'boolean', z.ZodBoolean>
   date: AutoFormFactoryMethod<WithDefaultControls<TC>, 'date', z.ZodDate>
+
+  // 数组工厂方法
+  array: <T extends z.ZodType>(schema: T, meta?: any) => z.ZodArray<T>
 
   // 函数重载：支持两种写法
   object: {
@@ -241,6 +263,8 @@ export function createAutoFormZ<TControls extends AutoFormControls = typeof DEFA
     number: createZodFactoryMethod(z.number),
     boolean: createZodFactoryMethod(z.boolean),
     date: createZodFactoryMethod(z.date),
+
+    array: <T extends z.ZodType>(schema: T, meta?: any) => applyMeta(z.array(schema), meta),
 
     object: createObjectFactory('object'),
     looseObject: createObjectFactory('looseObject'),

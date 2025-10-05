@@ -11,7 +11,7 @@ export type DynamicFormSlots<T>
   = Record<string, (props: AutoFormFieldContext<T>) => any>
     & Record<`field-${DynamicFieldSlotKeys}`, (props: AutoFormFieldContext<T>) => any>
     & Record<`field-${DynamicFieldSlotKeys}:${NonObjectFieldKeys<T>}`, (props: AutoFormFieldContext<T>) => any>
-    & Record<`field-${DynamicFieldSlotKeys}:${ObjectFieldKeys<T>}`, (props: AutoFormFieldNestedContext<T>) => any>
+    & Record<`field-${DynamicFieldSlotKeys}:${ObjectFieldKeys<T>}`, (props: AutoFormFieldCollapsibleContext<T>) => any>
     & Record<`field-${DynamicFieldNestedSlotKeys}:${ObjectFieldKeys<T>}`, (props: AutoFormFieldContext<T>) => any>
 
 export interface AutoFormFieldContext<S = any> {
@@ -29,7 +29,7 @@ export interface AutoFormFieldContext<S = any> {
   readonly loading: boolean
 }
 
-export type AutoFormFieldNestedContext<S = any> = AutoFormFieldContext<S> & {
+export type AutoFormFieldCollapsibleContext<S = any> = AutoFormFieldContext<S> & {
   open: boolean
 }
 
@@ -77,6 +77,8 @@ export interface AutoFormField {
   }
   /** 子字段（仅对象类型有效） */
   children?: AutoFormField[]
+  /** 数组元素模板 */
+  arrayElement?: AutoFormField
 }
 
 /** 提取对象的“已知键”（剔除 string/number/symbol 索引） */

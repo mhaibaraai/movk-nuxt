@@ -1,11 +1,10 @@
 <script setup lang="ts" generic="S extends z.ZodObject">
 import type { AnyObject } from '@movk/core'
 import type { z } from 'zod/v4'
-import type { AutoFormField, AutoFormFieldNestedContext } from '../../types/auto-form'
+import type { AutoFormField } from '../../types/auto-form'
 import type { AutoFormProps } from './AutoForm.vue'
-import { UCollapsible, UIcon } from '#components'
-import defu from 'defu'
-import { computed, h } from 'vue'
+import { UCollapsible } from '#components'
+import { computed } from 'vue'
 import { useAutoFormInjector } from '../../composables/useAutoFormContext'
 import { isLeafField, VNodeRender } from '../../utils/auto-form'
 import AutoFormFieldRenderer from './AutoFormFieldRenderer.vue'
@@ -21,10 +20,9 @@ const {
   extraProps,
 } = defineProps<AutoFormNestedRendererProps<S>>()
 
-const { resolveFieldProp, createSlotResolver, createSlotProps } = useAutoFormInjector()
+const { resolveFieldProp, createSlotResolver, createSlotProps, createCollapsibleEnhancer } = useAutoFormInjector()
 
 const slotResolver = computed(() => createSlotResolver(field))
-const isHidden = computed(() => resolveFieldProp<boolean | undefined>(field, 'hidden', false))
 
 const childEntries = computed(() => {
   if (isLeafField(field) || !field.children?.length) {
@@ -47,35 +45,7 @@ const childEntries = computed(() => {
   return { leafChildren, nestedChildren }
 })
 
-const collapsibleConfig = computed(() => resolveFieldProp(field, 'collapsible'))
-const useCollapsible = computed(() => {
-  const config = collapsibleConfig.value
-  if (!config)
-    return true
-  return config.enabled !== false
-})
-
-// 为折叠字段创建带图标的增强字段
-const enhancedField = computed<AutoFormField>(() => {
-  if (!useCollapsible.value || field.meta.hint !== undefined) {
-    return field
-  }
-
-  // 创建带图标的增强字段配置
-  const iconSlotConfig = {
-    meta: {
-      fieldSlots: {
-        hint: ({ open }: AutoFormFieldNestedContext) => h(UIcon, {
-          name: open ? 'i-lucide-chevron-down' : 'i-lucide-chevron-right',
-          class: 'shrink-0 size-5 ms-auto transition-transform duration-200',
-        }),
-      },
-    },
-  }
-
-  return defu(iconSlotConfig, field)
-})
-
+const { collapsibleConfig, enhancedField, isHidden, useCollapsible } = createCollapsibleEnhancer(field, resolveFieldProp)
 const slotProps = computed(() => createSlotProps(field, extraProps))
 </script>
 
@@ -85,10 +55,7 @@ const slotProps = computed(() => createSlotProps(field, extraProps))
       <AutoFormFieldRenderer :field="enhancedField" :schema="schema" :extra-props="{ ...extraProps, open }" />
     </template>
     <template #content>
-      <VNodeRender
-        v-if="slotResolver.hasSlot('content')"
-        :node="slotResolver.renderSlot('content', slotProps)"
-      />
+      <VNodeRender v-if="slotResolver.hasSlot('content')" :node="slotResolver.renderSlot('content', slotProps)" />
       <template v-else>
         <AutoFormFieldRenderer
           v-for="childField in childEntries.leafChildren"

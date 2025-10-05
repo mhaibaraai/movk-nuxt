@@ -8,6 +8,7 @@ import { useAutoFormProvider } from '../../composables/useAutoFormContext'
 import { DEFAULT_CONTROLS } from '../../constants/auto-form'
 import { deepClone, getPath, setPath } from '../../core'
 import { introspectSchema, isLeafField } from '../../utils/auto-form'
+import AutoFormArrayRenderer from './AutoFormArrayRenderer.vue'
 import AutoFormFieldRenderer from './AutoFormFieldRenderer.vue'
 import AutoFormNestedRenderer from './AutoFormNestedRenderer.vue'
 
@@ -51,6 +52,11 @@ export interface AutoFormProps<S extends z.ZodObject, T extends boolean = true, 
    * @default true
    */
   submitButton?: boolean
+  /**
+   * 是否启用字段过渡动画
+   * @default true
+   */
+  enableTransition?: boolean
   class?: any
   onSubmit?: ((event: FormSubmitEvent<FormData<S, T>>) => void | Promise<void>) | (() => void | Promise<void>)
   /** 自定义控件映射 */
@@ -83,6 +89,7 @@ const {
   controls,
   globalMeta,
   submitButton = true,
+  enableTransition = true,
   ...restProps
 } = defineProps<AutoFormProps<S, T, N>>()
 
@@ -138,6 +145,7 @@ watch([fields, state], ([currentFields, stateValue]) => {
 })
 
 const visibleFields = computed(() =>
+  // Todo: if 为函数时，且值为undefined，返回false
   fields.value.filter(field =>
     field && resolveFieldProp<boolean | undefined>(field, 'if', true),
   ),
@@ -147,10 +155,14 @@ const renderData = computed(() => {
   const visibleFieldsArray = visibleFields.value
   const leafFields: AutoFormField[] = []
   const nestedFields: AutoFormField[] = []
+  const arrayFields: AutoFormField[] = []
 
   // 单次遍历完成分类
   for (const field of visibleFieldsArray) {
-    if (isLeafField(field)) {
+    if (field.meta.type === 'array') {
+      arrayFields.push(field)
+    }
+    else if (isLeafField(field)) {
       leafFields.push(field)
     }
     else {
@@ -158,11 +170,12 @@ const renderData = computed(() => {
     }
   }
 
-  const hasNestedFields = nestedFields.length > 0
+  const hasNestedFields = nestedFields.length > 0 || arrayFields.length > 0
 
   return {
     leafFields,
     nestedFields,
+    arrayFields,
     hasNestedFields,
     flatFields: hasNestedFields ? [] : leafFields,
     allFields: visibleFieldsArray,
@@ -176,30 +189,37 @@ const renderData = computed(() => {
       <slot name="header" v-bind="{ errors, loading, fields: visibleFields, state }" />
 
       <template v-if="renderData.hasNestedFields">
-        <template v-for="field in renderData.allFields" :key="field.path">
-          <AutoFormFieldRenderer
-            v-if="renderData.leafFields.includes(field)"
-            :field="field"
-            :schema="schema"
-            :extra-props="{ errors, loading }"
-          />
-          <AutoFormNestedRenderer
-            v-else
-            :field="field"
-            :schema="schema"
-            :extra-props="{ errors, loading }"
-          />
-        </template>
+        <TransitionGroup :name="enableTransition ? 'auto-form-field' : ''">
+          <template v-for="field in renderData.allFields" :key="field.path">
+            <AutoFormFieldRenderer
+              v-if="renderData.leafFields.includes(field)"
+              :field="field"
+              :schema="schema"
+              :extra-props="{ errors, loading }"
+            />
+            <AutoFormArrayRenderer
+              v-else-if="renderData.arrayFields.includes(field)"
+              :field="field"
+              :schema="schema"
+              :state="state"
+              :enable-transition="enableTransition"
+              :extra-props="{ errors, loading }"
+            />
+            <AutoFormNestedRenderer v-else :field="field" :schema="schema" :extra-props="{ errors, loading }" />
+          </template>
+        </TransitionGroup>
       </template>
 
       <template v-else>
-        <AutoFormFieldRenderer
-          v-for="field in renderData.flatFields"
-          :key="field.path"
-          :field="field"
-          :schema="schema"
-          :extra-props="{ errors, loading }"
-        />
+        <TransitionGroup :name="enableTransition ? 'auto-form-field' : ''">
+          <AutoFormFieldRenderer
+            v-for="field in renderData.flatFields"
+            :key="field.path"
+            :field="field"
+            :schema="schema"
+            :extra-props="{ errors, loading }"
+          />
+        </TransitionGroup>
       </template>
 
       <slot name="footer" v-bind="{ errors, loading, fields: visibleFields, state }" />

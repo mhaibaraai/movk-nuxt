@@ -120,3 +120,5 @@ const EXTENDED_CONTROLS = {
 <!-- 或隐藏默认提交按钮 -->
 <AutoForm v-model="data" :schema="schema" :submit-button="false" />
 ```
+
+## 数组字段支持 z.array()

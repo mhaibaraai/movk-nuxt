@@ -1,21 +1,13 @@
 import type { InjectionKey, ModelRef } from 'vue'
-import type { AutoFormField, AutoFormFieldContext } from '../types/auto-form'
+import type { AutoFormField, AutoFormFieldCollapsibleContext, AutoFormFieldContext } from '../types/auto-form'
+import { UIcon } from '#components'
 import defu from 'defu'
-import { h, inject, isVNode, provide, resolveDynamicComponent, unref } from 'vue'
+import { computed, h, inject, isVNode, provide, resolveDynamicComponent, unref } from 'vue'
 import { getPath, setPath } from '../core'
 import { enhanceEventProps, resolveReactiveValue } from '../utils/auto-form'
 
 // 字段上下文工厂类型
-interface AutoFormContextFactory {
-  createFieldContext: (field: AutoFormField) => AutoFormFieldContext
-  createSlotProps: (field: AutoFormField, extraProps?: Record<string, any>) => AutoFormFieldContext
-  resolveFieldProp: <T = any>(field: AutoFormField, prop: string, defaultValue?: T) => T | undefined
-  renderFieldSlot: (fn?: (props?: any) => any, slotProps?: any) => any
-  getResolvedFieldSlots: (field: AutoFormField) => any
-  renderControl: (field: AutoFormField) => any
-  createSlotResolver: (field: AutoFormField) => { hasSlot: (name: string) => boolean, renderSlot: (name: string, slotProps: any) => any }
-  createFormFieldSlots: (field: AutoFormField, slotResolver: { hasSlot: (name: string) => boolean, renderSlot: (name: string, slotProps: any) => any }, extraProps?: Record<string, any>) => Record<string, any>
-}
+type AutoFormContextFactory = ReturnType<typeof useAutoFormProvider>
 
 const AUTO_FORM_CONTEXT_KEY: InjectionKey<AutoFormContextFactory> = Symbol('AutoFormContext')
 
@@ -85,8 +77,8 @@ export function useAutoFormProvider<T extends Record<string, any>>(
     const controlMeta = field?.meta
     const comp = controlMeta?.component as any
 
-    // object 类型直接返回 null
-    if (field.meta.type === 'object')
+    // [object,array] 类型直接返回 null
+    if (field.meta.type === 'object' || field.meta.type === 'array')
       return null
 
     if (!comp) {
@@ -215,8 +207,59 @@ export function useAutoFormProvider<T extends Record<string, any>>(
     return slots
   }
 
+  /**
+   * 为数组字段创建增强配置
+   * @param field - 数组字段
+   * @param resolveFieldProp - 解析字段属性的函数
+   */
+  function createCollapsibleEnhancer(
+    field: AutoFormField,
+    resolveFieldProp: (field: AutoFormField, prop: string) => any,
+  ) {
+    const collapsibleConfig = computed(() => resolveFieldProp(field, 'collapsible'))
+
+    const useCollapsible = computed(() => {
+      const config = collapsibleConfig.value
+      if (!config)
+        return true
+      return config.enabled !== false
+    })
+
+    const isHidden = computed(() => resolveFieldProp(field, 'hidden'))
+
+    /**
+     * 为折叠字段创建带图标的增强字段
+     */
+    const enhancedField = computed<AutoFormField>(() => {
+      if (!useCollapsible.value || field.meta.hint !== undefined) {
+        return field
+      }
+
+      const iconSlotConfig = {
+        meta: {
+          fieldSlots: {
+            hint: ({ open }: AutoFormFieldCollapsibleContext) => h('div', { class: 'flex items-center gap-2' }, [
+              h(UIcon, {
+                name: open ? 'i-lucide-chevron-down' : 'i-lucide-chevron-right',
+                class: 'shrink-0 size-5 transition-transform duration-200',
+              }),
+            ]),
+          },
+        },
+      }
+
+      return defu(iconSlotConfig, field)
+    })
+    return {
+      collapsibleConfig,
+      useCollapsible,
+      isHidden,
+      enhancedField,
+    }
+  }
+
   // 创建完整的上下文工厂对象
-  const contextFactory: AutoFormContextFactory = {
+  const contextFactory = {
     createFieldContext,
     createSlotProps,
     resolveFieldProp,
@@ -225,6 +268,7 @@ export function useAutoFormProvider<T extends Record<string, any>>(
     renderControl,
     createSlotResolver,
     createFormFieldSlots,
+    createCollapsibleEnhancer,
   }
 
   // 通过 provide 机制注入所有方法给子组件

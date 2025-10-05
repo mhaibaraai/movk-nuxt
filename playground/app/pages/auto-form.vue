@@ -39,25 +39,34 @@ const customControls = {
 const { afz } = createAutoFormZ(customControls)
 
 const schema = afz.object<State>()({
-  nameValue: afz.string({
-    controlProps: ({ value }) => ({
-      placeholder: `请输入姓名${value}`,
-      icon: 'i-lucide-user',
-    }),
-  }).min(2).meta({
-    hidden: ({ state }) => state.visibleTest,
-    label: ({ value }) => `${value} 姓名`,
-  }).nonempty().default('张三').optional(),
-  nestedObject: afz.object({
-    firstName: afz.string().meta({ label: '名字' }).default('张'),
-    portify: afz.object({
-      name: afz.string().meta({ label: '姓名' }).default('李四'),
-      age: afz.number().meta({ label: '年龄' }).default(20),
-    }).meta({ label: '可折叠对象' }),
-  }).meta({ label: '嵌套对象' }),
-  dynamicLabel: afz.string().meta({
-    label: ({ value }) => `动态标签: ${value}`,
-  }).default('11').optional(),
+  tags: afz.array(afz.string().meta({ label: '' })).default(['2']).meta({ collapsible: {
+    // enabled: false,
+    defaultOpen: true,
+  } }), // 字符串数组
+  scores: afz.array(afz.object({
+    subject: afz.string().meta({ label: '科目' }).default(''),
+    score: afz.number().meta({ label: '分数' }).default(0),
+    objects: afz.object({
+      name: afz.string().meta({ label: '名称' }).default(''),
+      value: afz.number().meta({ label: '值' }).default(0),
+    }).optional(),
+  })).meta({ label: '成绩列表', collapsible: { defaultOpen: true } }).default([{
+    subject: '语文',
+    score: 0,
+  }, {
+    subject: '数学',
+    score: 0,
+  }]), // 对象数组
+  // visibleTest: afz.boolean(),
+  // nameValue: afz.string().meta({
+  //   if: ({ state }) => state.visibleTest,
+  //   label: '动态标签',
+  //   description: '标签根据输入值变化',
+  // }).default(''),
+  // nestedObject: afz.object({
+  //   firstName: afz.string().meta({ label: '名字' }).default(''),
+  //   lastName: afz.string().meta({ label: '姓氏' }).default(''),
+  // }),
 })
 
 onMounted(async () => {
@@ -87,19 +96,6 @@ function onSubmit(event: FormSubmitEvent<Schema>) {
 function onError(event: FormErrorEvent) {
   console.log(event)
 }
-
-// const fields = ref<AuthFormField[]>([
-//   {
-//     name: 'email',
-//     type: 'text',
-//     label: 'Email',
-//   },
-//   {
-//     name: 'password',
-//     type: 'password',
-//     label: 'Password',
-//   },
-// ])
 </script>
 
 <template>
@@ -119,13 +115,5 @@ function onError(event: FormErrorEvent) {
         </template> -->
       </MAutoForm>
     </UCard>
-    <!-- <UAuthForm
-      title="Login"
-      description="Enter your credentials to access your account."
-      icon="i-lucide-user"
-      :fields="fields"
-      class="max-w-md"
-      loading
-    /> -->
   </div>
 </template>
