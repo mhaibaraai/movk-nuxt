@@ -143,7 +143,12 @@ const enhancedField = computed<AutoFormField>(() => {
 
     <template #content>
       <div class="space-y-4 pt-2">
-        <TransitionGroup ref="sortableContainer" name="array-item" tag="div" class="space-y-3">
+        <TransitionGroup
+          ref="sortableContainer"
+          name="array-item"
+          tag="div"
+          class="space-y-3"
+        >
           <div
             v-for="(_item, index) in arrayValue"
             :key="`${field.path}[${index}]`"
@@ -205,7 +210,12 @@ const enhancedField = computed<AutoFormField>(() => {
   </UCollapsible>
 
   <div v-else class="space-y-4">
-    <TransitionGroup ref="sortableContainer" name="array-item" tag="div" class="space-y-3">
+    <TransitionGroup
+      ref="sortableContainer"
+      name="array-item"
+      tag="div"
+      class="space-y-3"
+    >
       <div
         v-for="(_item, index) in arrayValue"
         :key="`${field.path}[${index}]`"
