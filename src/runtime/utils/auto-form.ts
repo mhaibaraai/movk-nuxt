@@ -1,8 +1,10 @@
 import type { AnyObject } from '@movk/core'
+import type { VNode } from 'vue'
 import type { GlobalAutoFormMeta } from 'zod/v4'
 import type z from 'zod/v4'
 import type { IsComponent, ReactiveValue } from '../core'
 import type { AutoFormControl, AutoFormControls, AutoFormField, AutoFormFieldContext, AutoFormMergeMeta } from '../types/auto-form'
+import { UButton, UIcon } from '#components'
 import { isFunction, isObject } from '@movk/core'
 import { Fragment, h, isRef, isVNode, markRaw, unref } from 'vue'
 import { joinPath, startCase, toPath } from '../core'
@@ -433,4 +435,48 @@ export function isLeafField(field: AutoFormField): boolean {
  */
 export function getFieldType(field: AutoFormField): 'leaf' | 'nested' {
   return isLeafField(field) ? 'leaf' : 'nested'
+}
+
+export function createHintSlotFactory(removeCallback: (count?: number) => void) {
+  return (field: AutoFormField, path: string, open?: boolean, count?: number): VNode | undefined => {
+    const isNested = path.includes('.')
+    const isObject = field.meta?.type === 'object'
+
+    // 嵌套路径但非对象类型:不显示任何内容
+    if (isNested && !isObject) {
+      return undefined
+    }
+
+    // 创建 Chevron 图标
+    const chevronIcon = h(UIcon, {
+      name: open ? 'i-lucide-chevron-down' : 'i-lucide-chevron-right',
+      class: 'shrink-0 size-5 transition-transform duration-200',
+    })
+
+    // 嵌套路径且为对象类型:仅显示 Chevron
+    if (isNested) {
+      return chevronIcon
+    }
+
+    // 创建删除按钮
+    const deleteButton = h(UButton, {
+      icon: 'i-lucide-trash-2',
+      color: 'error',
+      variant: 'ghost',
+      size: 'sm',
+      square: true,
+      onClick: () => removeCallback(count),
+    })
+
+    // 非嵌套路径且非对象类型:仅显示删除按钮
+    if (!isObject) {
+      return deleteButton
+    }
+
+    // 非嵌套路径且为对象类型:显示删除按钮和 Chevron
+    return h('div', { class: 'flex items-center gap-2' }, [
+      deleteButton,
+      chevronIcon,
+    ])
+  }
 }

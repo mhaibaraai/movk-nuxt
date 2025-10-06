@@ -39,35 +39,30 @@ const customControls = {
 const { afz } = createAutoFormZ(customControls)
 
 const schema = afz.object<State>()({
-  tags: afz.array(afz.string()).default(['2']).meta({
-    collapsible: {
-      defaultOpen: true,
-    },
-  }),
-  scores: afz.array(afz.object({
-    subject: afz.string().meta({ label: '科目' }).default(''),
-    score: afz.number().meta({ label: '分数' }).default(0),
-    objects: afz.object({
-      name: afz.string().meta({ label: '名称' }).default(''),
-      value: afz.number().meta({ label: '值' }).default(0),
-    }).optional(),
-  })).meta({ label: '成绩列表', collapsible: { enabled: false, defaultOpen: true } }).default([{
-    subject: '语文',
-    score: 0,
-  }, {
-    subject: '数学',
-    score: 0,
-  }]),
+  // tags: afz.array(afz.string()).default(['2']).meta({
+  //   label: '',
+  //   collapsible: {
+  //     defaultOpen: true,
+  //   },
+  // }),
+  // scores: afz.array(afz.object({
+  //   subject: afz.string().meta({ label: '科目' }).default(''),
+  //   score: afz.number().meta({ label: '分数' }).default(0),
+  //   objects: afz.object({
+  //     name: afz.string().meta({ label: '名称' }).default(''),
+  //     value: afz.number().meta({ label: '值' }).default(0),
+  //   }).meta({ label: '对象' }),
+  // })).meta({ label: '成绩' }),
   // visibleTest: afz.boolean(),
   // nameValue: afz.string().meta({
   //   if: ({ state }) => state.visibleTest,
   //   label: '动态标签',
   //   description: '标签根据输入值变化',
   // }).default(''),
-  // nestedObject: afz.object({
-  //   firstName: afz.string().meta({ label: '名字' }).default(''),
-  //   lastName: afz.string().meta({ label: '姓氏' }).default(''),
-  // }),
+  nestedObject: afz.object({
+    firstName: afz.string().meta({ label: '名字' }).default(''),
+    lastName: afz.string().meta({ label: '姓氏' }).default(''),
+  }).meta({ label: '姓名' }).default({ firstName: '', lastName: '' }),
 })
 
 onMounted(async () => {

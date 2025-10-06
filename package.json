@@ -51,7 +51,6 @@
     "defu": "catalog:",
     "lru-cache": "catalog:",
     "nuxt-auth-utils": "catalog:",
-    "sortablejs": "catalog:",
     "ufo": "catalog:",
     "zod": "catalog:"
   },

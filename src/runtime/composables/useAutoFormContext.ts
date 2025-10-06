@@ -208,51 +208,39 @@ export function useAutoFormProvider<T extends Record<string, any>>(
   }
 
   /**
-   * 为数组字段创建增强配置
-   * @param field - 数组字段
-   * @param resolveFieldProp - 解析字段属性的函数
+   * 为数组字段创建折叠功能增强器
+   * @param field - 目标字段
    */
-  function createCollapsibleEnhancer(
-    field: AutoFormField,
-    resolveFieldProp: (field: AutoFormField, prop: string) => any,
-  ) {
+  function createCollapsibleEnhancer(field: AutoFormField) {
     const collapsibleConfig = computed(() => resolveFieldProp(field, 'collapsible'))
 
-    const useCollapsible = computed(() => {
+    const shouldShowCollapsible = computed(() => {
       const config = collapsibleConfig.value
-      if (!config)
-        return true
-      return config.enabled !== false
+      return !config || config.enabled !== false
     })
 
     const isHidden = computed(() => resolveFieldProp(field, 'hidden'))
 
-    /**
-     * 为折叠字段创建带图标的增强字段
-     */
     const enhancedField = computed<AutoFormField>(() => {
-      if (!useCollapsible.value || field.meta.hint !== undefined) {
+      if (!shouldShowCollapsible.value || field.meta.hint !== undefined) {
         return field
       }
 
-      const iconSlotConfig = {
+      return defu(field, {
         meta: {
           fieldSlots: {
-            hint: ({ open }) => h('div', { class: 'flex items-center gap-2' }, [
-              h(UIcon, {
-                name: open ? 'i-lucide-chevron-down' : 'i-lucide-chevron-right',
-                class: 'shrink-0 size-5 transition-transform duration-200',
-              }),
-            ]),
+            hint: ({ open }) => h(UIcon, {
+              name: open ? 'i-lucide-chevron-down' : 'i-lucide-chevron-right',
+              class: 'shrink-0 size-5 transition-transform duration-200',
+            }),
           },
         },
-      } as AutoFormField
-
-      return defu(field, iconSlotConfig)
+      } as AutoFormField)
     })
+
     return {
       collapsibleConfig,
-      useCollapsible,
+      shouldShowCollapsible,
       isHidden,
       enhancedField,
     }

@@ -84,9 +84,6 @@ catalogs:
     sass-embedded:
       specifier: ^1.93.2
       version: 1.93.2
-    sortablejs:
-      specifier: ^1.15.6
-      version: 1.15.6
     taze:
       specifier: ^19.7.0
       version: 19.7.0
@@ -146,9 +143,6 @@ importers:
       nuxt-auth-utils:
         specifier: 'catalog:'
         version: 0.5.25(magicast@0.3.5)
-      sortablejs:
-        specifier: 'catalog:'
-        version: 1.15.6
       ufo:
         specifier: 'catalog:'
         version: 1.6.1
@@ -12131,7 +12125,8 @@ snapshots:
 
   smob@1.5.0: {}
 
-  sortablejs@1.15.6: {}
+  sortablejs@1.15.6:
+    optional: true
 
   source-map-js@1.2.1: {}
 

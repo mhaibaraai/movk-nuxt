@@ -100,5 +100,6 @@
     "playground/app/assets/css/main.css": "playground/app/**",
     "src/runtime/assets/css/main.css": "src/runtime/**"
   },
-  "typescript.tsdk": "node_modules/typescript/lib"
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "commentTranslate.hover.enabled": true
 }

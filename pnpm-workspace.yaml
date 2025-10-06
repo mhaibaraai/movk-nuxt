@@ -29,7 +29,6 @@ catalog:
   nuxt: ^4.1.2
   nuxt-auth-utils: ^0.5.25
   sass-embedded: ^1.93.2
-  sortablejs: ^1.15.6
   taze: ^19.7.0
   tsx: ^4.20.6
   typescript: ^5.9.3
