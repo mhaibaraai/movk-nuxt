@@ -5,26 +5,31 @@ import type { z } from 'zod/v4'
 import type { AutoFormField } from '../../types/auto-form'
 import type { AutoFormProps } from './AutoForm.vue'
 import { UButton, UCollapsible } from '#components'
-import { computed, shallowRef, unref } from 'vue'
+import { computed, unref } from 'vue'
 import { useAutoFormInjector } from '../../composables/useAutoFormContext'
 import { joinPath } from '../../core'
-import { createHintSlotFactory } from '../../utils/auto-form'
+import { createHintSlotFactory, VNodeRender } from '../../utils/auto-form'
 import AutoFormFieldRenderer from './AutoFormFieldRenderer.vue'
 import AutoFormNestedRenderer from './AutoFormNestedRenderer.vue'
 
 interface AutoFormArrayRendererProps<S extends z.ZodObject> extends Pick<AutoFormProps<S>, 'schema'> {
   field: AutoFormField
   extraProps?: AnyObject
+  addButtonProps?: Partial<ButtonProps>
 }
 
 const {
   extraProps,
   field,
   schema,
+  addButtonProps: customAddButtonProps,
 } = defineProps<AutoFormArrayRendererProps<S>>()
 
-const { createCollapsibleEnhancer, createFieldContext } = useAutoFormInjector()
+const { createCollapsibleEnhancer, createFieldContext, createSlotResolver, createSlotProps } = useAutoFormInjector()
 const context = createFieldContext(field)
+
+const slotResolver = computed(() => createSlotResolver(field))
+const slotProps = computed(() => createSlotProps(field, extraProps))
 
 const elementTemplate = computed(() => field.arrayElement)
 
@@ -61,8 +66,6 @@ function updateFieldPaths(template: AutoFormField, oldBasePath: string, newBaseP
   return updatedField
 }
 
-const hintSlotFactory = shallowRef(createHintSlotFactory(removeItem))
-
 const arrayItemFields = computed(() => {
   const template = unref(elementTemplate)
   const arr = arrayValue.value
@@ -70,9 +73,11 @@ const arrayItemFields = computed(() => {
   if (!template || !arr.length)
     return []
 
+  const factory = createHintSlotFactory(removeItem)
+
   return arr.map((_, index) => {
     const newBasePath = joinPath([field.path, index])
-    return updateFieldPaths(template, field.path, newBasePath, hintSlotFactory.value)
+    return updateFieldPaths(template, field.path, newBasePath, factory)
   })
 })
 
@@ -101,25 +106,31 @@ function removeItem(count?: number) {
   if (count === undefined)
     return
 
-  const newArray = arrayValue.value.filter((_, index) => index !== count)
+  const arr = arrayValue.value
+  const newArray = [...arr.slice(0, count), ...arr.slice(count + 1)]
   context.setValue(newArray)
 }
 
 const { collapsibleConfig, shouldShowCollapsible, isHidden, enhancedField } = createCollapsibleEnhancer(field)
 
-const addButtonProps = {
+const DEFAULT_ADD_BUTTON_PROPS = {
   icon: 'i-lucide-plus',
   color: 'neutral',
   variant: 'subtle',
   block: true,
   size: 'sm',
-} as ButtonProps
+} satisfies ButtonProps
+
+const addButtonProps = computed(() => ({
+  ...DEFAULT_ADD_BUTTON_PROPS,
+  ...customAddButtonProps,
+}))
 </script>
 
 <template>
   <UCollapsible
-    v-show="!isHidden"
     v-if="shouldShowCollapsible"
+    v-show="!isHidden"
     v-bind="collapsibleConfig"
   >
     <template #default="{ open }">
@@ -127,35 +138,33 @@ const addButtonProps = {
     </template>
 
     <template v-if="elementTemplate" #content>
+      <VNodeRender v-if="slotResolver.hasSlot('content')" :node="slotResolver.renderSlot('content', slotProps)" />
+      <template v-else>
+        <template v-for="(_, count) in arrayValue" :key="count">
+          <component
+            :is="isObjectElement ? AutoFormNestedRenderer : AutoFormFieldRenderer"
+            :field="arrayItemFields[count]!"
+            :schema="schema"
+            :extra-props="{ ...extraProps, count }"
+          />
+        </template>
+        <UButton v-bind="addButtonProps" @click="addItem">
+          添加
+        </UButton>
+      </template>
+    </template>
+  </UCollapsible>
+
+  <template v-else-if="elementTemplate">
+    <template v-for="(_, count) in arrayValue" :key="count">
       <component
         :is="isObjectElement ? AutoFormNestedRenderer : AutoFormFieldRenderer"
-        v-for="(_, count) in arrayValue"
-        :key="count"
         :field="arrayItemFields[count]!"
         :schema="schema"
         :extra-props="{ ...extraProps, count }"
       />
-      <UButton
-        v-bind="addButtonProps"
-        @click="addItem"
-      >
-        添加
-      </UButton>
     </template>
-  </UCollapsible>
-  <template v-else-if="!shouldShowCollapsible && elementTemplate">
-    <component
-      :is="isObjectElement ? AutoFormNestedRenderer : AutoFormFieldRenderer"
-      v-for="(_, count) in arrayValue"
-      :key="count"
-      :field="arrayItemFields[count]!"
-      :schema="schema"
-      :extra-props="{ ...extraProps, count }"
-    />
-    <UButton
-      v-bind="addButtonProps"
-      @click="addItem"
-    >
+    <UButton v-bind="addButtonProps" @click="addItem">
       添加
     </UButton>
   </template>

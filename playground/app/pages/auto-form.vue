@@ -39,12 +39,12 @@ const customControls = {
 const { afz } = createAutoFormZ(customControls)
 
 const schema = afz.object<State>()({
-  // tags: afz.array(afz.string()).default(['2']).meta({
-  //   label: '',
-  //   collapsible: {
-  //     defaultOpen: true,
-  //   },
-  // }),
+  tags: afz.array(afz.string().meta({ label: ctx => `标签 ${JSON.stringify(ctx)}` })).default(['2']).meta({
+    // label: '',
+    // collapsible: {
+    //   defaultOpen: true,
+    // },
+  }),
   // scores: afz.array(afz.object({
   //   subject: afz.string().meta({ label: '科目' }).default(''),
   //   score: afz.number().meta({ label: '分数' }).default(0),
@@ -53,16 +53,19 @@ const schema = afz.object<State>()({
   //     value: afz.number().meta({ label: '值' }).default(0),
   //   }).meta({ label: '对象' }),
   // })).meta({ label: '成绩' }),
-  // visibleTest: afz.boolean(),
+  visibleTest: afz.boolean(),
   // nameValue: afz.string().meta({
   //   if: ({ state }) => state.visibleTest,
   //   label: '动态标签',
   //   description: '标签根据输入值变化',
   // }).default(''),
-  nestedObject: afz.object({
-    firstName: afz.string().meta({ label: '名字' }).default(''),
-    lastName: afz.string().meta({ label: '姓氏' }).default(''),
-  }).meta({ label: '姓名' }).default({ firstName: '', lastName: '' }),
+  // nestedObject: afz.object({
+  //   firstName: afz.string().meta({ label: '名字' }).default(''),
+  //   lastName: afz.string().meta({ label: '姓氏' }).default(''),
+  // }).meta({
+  //   hidden: ({ state }) => state.visibleTest,
+  //   label: '姓名',
+  // }).default({ firstName: '', lastName: '' }).optional(),
 })
 
 onMounted(async () => {
@@ -112,7 +115,7 @@ function onError(event: FormErrorEvent) {
             <pre>{{ state }}</pre>
           </UCard>
         </template>
-        <!-- <template #[`label:nestedObject.portify`]="{ open }">
+        <!-- <template #field-content:tags="{ open }">
           {{ open }} 1
         </template> -->
       </MAutoForm>

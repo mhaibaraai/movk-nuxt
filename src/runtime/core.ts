@@ -167,6 +167,34 @@ export type ObjectFieldKeys<T, D extends number = 2> = [D] extends [never]
 export type NonObjectFieldKeys<T> = Exclude<NestedKeys<T>, ObjectFieldKeys<T>>
 
 /**
+ * 提取对象中所有数组字段的键（包括嵌套的），支持点语法路径
+ *
+ * @template T 源对象类型
+ * @template D 递归深度，默认为2
+ * @example
+ * ```ts
+ * type User = {
+ *   name: string
+ *   tags: string[]
+ *   posts: Array<{ title: string }>
+ *   profile: {
+ *     hobbies: string[]
+ *   }
+ * }
+ * type ArrayKeys = ArrayFieldKeys<User> // 'tags' | 'posts' | 'profile.hobbies'
+ * ```
+ */
+export type ArrayFieldKeys<T, D extends number = 2> = [D] extends [never]
+  ? never
+  : {
+      [K in keyof T & string]: StripNullable<T[K]> extends any[]
+        ? K
+        : IsPlainObject<T[K]> extends true
+          ? `${K}.${ArrayFieldKeys<StripNullable<T[K]>, Depth[D]>}`
+          : never
+    }[keyof T & string]
+
+/**
  * vue-component-type-helpers
  * Copy from https://github.com/vuejs/language-tools/tree/master/packages/component-type-helpers
  */

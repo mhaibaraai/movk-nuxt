@@ -1,5 +1,5 @@
 <script setup lang="ts" generic="S extends z.ZodObject, T extends boolean = true, N extends boolean = false">
-import type { FormData, FormError, FormErrorEvent, FormInputEvents, FormSubmitEvent, InferInput } from '@nuxt/ui'
+import type { ButtonProps, FormData, FormError, FormErrorEvent, FormInputEvents, FormSubmitEvent, InferInput } from '@nuxt/ui'
 import type { GlobalAutoFormMeta, z } from 'zod/v4'
 import type { AutoFormControls, AutoFormField, DynamicFormSlots } from '../../types/auto-form'
 import { UForm } from '#components'
@@ -58,6 +58,8 @@ export interface AutoFormProps<S extends z.ZodObject, T extends boolean = true, 
   controls?: AutoFormControls
   /** 全局字段元数据配置 */
   globalMeta?: GlobalAutoFormMeta
+  /** 数组字段添加按钮属性 */
+  addButtonProps?: ButtonProps
 }
 
 export interface AutoFormEmits<S extends z.ZodObject, T extends boolean = true> {
@@ -84,6 +86,7 @@ const {
   controls,
   globalMeta,
   submitButton = true,
+  addButtonProps,
   ...restProps
 } = defineProps<AutoFormProps<S, T, N>>()
 
@@ -139,9 +142,8 @@ watch([fields, state], ([currentFields, stateValue]) => {
 })
 
 const visibleFields = computed(() =>
-  // Todo: if 为函数时，且值为undefined，返回false
   fields.value.filter(field =>
-    field && resolveFieldProp<boolean | undefined>(field, 'if', true),
+    field && (field.meta?.if === undefined || resolveFieldProp<boolean>(field, 'if') === true),
   ),
 )
 
@@ -195,6 +197,7 @@ const renderData = computed(() => {
             :field="field"
             :schema="schema"
             :extra-props="{ errors, loading }"
+            :add-button-props="addButtonProps"
           />
           <AutoFormNestedRenderer
             v-else

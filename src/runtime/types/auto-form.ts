@@ -2,7 +2,7 @@ import type { OmitByKey } from '@movk/core'
 import type { CollapsibleRootProps } from 'reka-ui'
 import type { ClassNameValue } from 'tailwind-merge'
 import type { GlobalMeta, z } from 'zod/v4'
-import type { ComponentProps, ComponentSlots, IsComponent, NonObjectFieldKeys, ObjectFieldKeys, ReactiveValue, Suggest } from '../core'
+import type { ArrayFieldKeys, ComponentProps, ComponentSlots, IsComponent, NonObjectFieldKeys, ObjectFieldKeys, ReactiveValue, Suggest } from '../core'
 
 export interface AutoFormFieldSlots {
   label: (props: { label?: string } & AutoFormFieldContext) => any
@@ -22,6 +22,7 @@ export type DynamicFormSlots<T>
     & Record<`field-${DynamicFieldSlotKeys}:${NonObjectFieldKeys<T>}`, (props: AutoFormFieldContext<T>) => any>
     & Record<`field-${DynamicFieldSlotKeys}:${ObjectFieldKeys<T>}`, (props: AutoFormFieldContext<T>) => any>
     & Record<`field-${DynamicFieldNestedSlotKeys}:${ObjectFieldKeys<T>}`, (props: AutoFormFieldContext<T>) => any>
+    & Record<`field-${DynamicFieldNestedSlotKeys}:${ArrayFieldKeys<T>}`, (props: AutoFormFieldContext<T>) => any>
 
 export interface AutoFormFieldContext<S = any> {
   /** 表单数据 - 使用 getter 确保获取最新值 */
