@@ -43,15 +43,15 @@ const childEntries = computed(() => {
   return { leafChildren, nestedChildren }
 })
 
-const slotResolver = computed(() => createSlotResolver(field))
+const slotResolver = computed(() => createSlotResolver(field, extraProps))
 
-const { collapsibleConfig, shouldShowCollapsible, isHidden, enhancedField } = createCollapsibleEnhancer(field)
+const { collapsibleConfig, shouldShowCollapsible, isHidden, enhancedField } = createCollapsibleEnhancer(field, extraProps)
 
 const slotProps = computed(() => createSlotProps(field, extraProps))
 </script>
 
 <template>
-  <UCollapsible v-show="!isHidden" v-if="shouldShowCollapsible" v-bind="collapsibleConfig">
+  <UCollapsible v-show="!isHidden" v-if="shouldShowCollapsible" v-bind="collapsibleConfig || {}">
     <template #default="{ open }">
       <AutoFormFieldRenderer :field="enhancedField" :schema="schema" :extra-props="{ ...extraProps, open }" />
     </template>

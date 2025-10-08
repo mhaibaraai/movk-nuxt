@@ -31,6 +31,8 @@ export function useAutoFormProvider<T extends Record<string, any>>(
       },
       get errors() { return extraProps?.errors ?? [] },
       get loading() { return extraProps?.loading ?? false },
+      get open() { return extraProps?.open },
+      count: extraProps?.count,
     }
 
     return context
@@ -39,7 +41,7 @@ export function useAutoFormProvider<T extends Record<string, any>>(
   /**
    * 解析字段属性
    */
-  function resolveFieldProp<T = any>(field: AutoFormField, prop: string, defaultValue?: T): T | undefined {
+  function resolveFieldProp<T = any>(field: AutoFormField, prop: string, defaultValue?: T, extraProps?: Record<string, any>): T | undefined {
     const value = field.meta?.[prop]
     if (value === undefined)
       return defaultValue
@@ -49,7 +51,7 @@ export function useAutoFormProvider<T extends Record<string, any>>(
       return value as T
     }
 
-    const context = createFieldContext(field)
+    const context = createFieldContext(field, extraProps)
     const result = resolveReactiveValue(value, context)
     return result ?? defaultValue
   }
@@ -64,16 +66,16 @@ export function useAutoFormProvider<T extends Record<string, any>>(
   /**
    * 获取解析后的 fieldSlots
    */
-  function getResolvedFieldSlots(field: AutoFormField) {
+  function getResolvedFieldSlots(field: AutoFormField, extraProps?: Record<string, any>) {
     if (!field.meta?.fieldSlots)
       return undefined
-    return resolveFieldProp(field, 'fieldSlots')
+    return resolveFieldProp(field, 'fieldSlots', undefined, extraProps)
   }
 
   /**
    * 渲染控件
    */
-  function renderControl(field: AutoFormField) {
+  function renderControl(field: AutoFormField, extraProps?: Record<string, any>) {
     const controlMeta = field?.meta
     const comp = controlMeta?.component as any
 
@@ -89,8 +91,8 @@ export function useAutoFormProvider<T extends Record<string, any>>(
       return comp
 
     const component = typeof comp === 'string' ? resolveDynamicComponent(comp) : comp
-    const context = createFieldContext(field)
-    const resolvedControlProps = resolveFieldProp(field, 'controlProps') || {}
+    const context = createFieldContext(field, extraProps)
+    const resolvedControlProps = resolveFieldProp(field, 'controlProps', undefined, extraProps) || {}
     // 只读处理
     const isReadonly = field.decorators?.isReadonly
 
@@ -101,11 +103,11 @@ export function useAutoFormProvider<T extends Record<string, any>>(
     )
 
     const slots = defu(
-      resolveFieldProp(field, 'controlSlots') || {},
+      resolveFieldProp(field, 'controlSlots', undefined, extraProps) || {},
       controlMeta?.mapped?.controlSlots,
     )
 
-    const userOnUpdate = finalProps['onUpdate:modelValue']
+    const userOnUpdate = (finalProps as any)['onUpdate:modelValue']
     const wrappedProps = enhanceEventProps(finalProps, context)
 
     // 移除 onUpdate:modelValue 避免冲突
@@ -130,9 +132,9 @@ export function useAutoFormProvider<T extends Record<string, any>>(
   /**
    * 为字段创建插槽解析器
    */
-  function createSlotResolver(field: AutoFormField) {
+  function createSlotResolver(field: AutoFormField, extraProps?: Record<string, any>) {
     const keyPrefix = field.path
-    const fieldSlots = getResolvedFieldSlots(field)
+    const fieldSlots = getResolvedFieldSlots(field, extraProps)
 
     return {
       hasSlot(name: string): boolean {
@@ -211,15 +213,15 @@ export function useAutoFormProvider<T extends Record<string, any>>(
    * 为数组字段创建折叠功能增强器
    * @param field - 目标字段
    */
-  function createCollapsibleEnhancer(field: AutoFormField) {
-    const collapsibleConfig = computed(() => resolveFieldProp(field, 'collapsible'))
+  function createCollapsibleEnhancer(field: AutoFormField, extraProps?: Record<string, any>) {
+    const collapsibleConfig = computed(() => resolveFieldProp(field, 'collapsible', undefined, extraProps))
 
     const shouldShowCollapsible = computed(() => {
       const config = collapsibleConfig.value
-      return !config || config.enabled !== false
+      return !config || (config as any).enabled !== false
     })
 
-    const isHidden = computed(() => resolveFieldProp(field, 'hidden'))
+    const isHidden = computed(() => resolveFieldProp(field, 'hidden', undefined, extraProps))
 
     const enhancedField = computed<AutoFormField>(() => {
       if (!shouldShowCollapsible.value || field.meta.hint !== undefined) {

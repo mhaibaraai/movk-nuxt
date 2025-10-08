@@ -28,7 +28,7 @@ const {
 const { createCollapsibleEnhancer, createFieldContext, createSlotResolver, createSlotProps } = useAutoFormInjector()
 const context = createFieldContext(field)
 
-const slotResolver = computed(() => createSlotResolver(field))
+const slotResolver = computed(() => createSlotResolver(field, extraProps))
 const slotProps = computed(() => createSlotProps(field, extraProps))
 
 const elementTemplate = computed(() => field.arrayElement)
@@ -111,7 +111,7 @@ function removeItem(count?: number) {
   context.setValue(newArray)
 }
 
-const { collapsibleConfig, shouldShowCollapsible, isHidden, enhancedField } = createCollapsibleEnhancer(field)
+const { collapsibleConfig, shouldShowCollapsible, isHidden, enhancedField } = createCollapsibleEnhancer(field, extraProps)
 
 const DEFAULT_ADD_BUTTON_PROPS = {
   icon: 'i-lucide-plus',
@@ -131,7 +131,7 @@ const addButtonProps = computed(() => ({
   <UCollapsible
     v-if="shouldShowCollapsible"
     v-show="!isHidden"
-    v-bind="collapsibleConfig"
+    v-bind="collapsibleConfig || {}"
   >
     <template #default="{ open }">
       <AutoFormFieldRenderer :field="enhancedField" :schema="schema" :extra-props="{ ...extraProps, open }" />
