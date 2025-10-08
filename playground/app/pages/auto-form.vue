@@ -39,7 +39,7 @@ const customControls = {
 const { afz } = createAutoFormZ(customControls)
 
 const schema = afz.object<State>()({
-  tags: afz.array(afz.string().meta({ label: ctx => `标签 ${JSON.stringify(ctx)}` })).default(['2']).meta({
+  tags: afz.array(afz.string().meta({ label: ({ count }) => `标签 ${count! + 1}` })).default(['2']).meta({
     // label: '',
     // collapsible: {
     //   defaultOpen: true,
@@ -53,7 +53,7 @@ const schema = afz.object<State>()({
   //     value: afz.number().meta({ label: '值' }).default(0),
   //   }).meta({ label: '对象' }),
   // })).meta({ label: '成绩' }),
-  visibleTest: afz.boolean(),
+  // visibleTest: afz.boolean(),
   // nameValue: afz.string().meta({
   //   if: ({ state }) => state.visibleTest,
   //   label: '动态标签',
@@ -63,7 +63,7 @@ const schema = afz.object<State>()({
   //   firstName: afz.string().meta({ label: '名字' }).default(''),
   //   lastName: afz.string().meta({ label: '姓氏' }).default(''),
   // }).meta({
-  //   hidden: ({ state }) => state.visibleTest,
+  //   if: ({ state }) => state.visibleTest,
   //   label: '姓名',
   // }).default({ firstName: '', lastName: '' }).optional(),
 })
@@ -115,9 +115,6 @@ function onError(event: FormErrorEvent) {
             <pre>{{ state }}</pre>
           </UCard>
         </template>
-        <!-- <template #field-content:tags="{ open }">
-          {{ open }} 1
-        </template> -->
       </MAutoForm>
     </UCard>
   </div>
