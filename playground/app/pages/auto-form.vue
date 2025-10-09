@@ -45,14 +45,14 @@ const schema = afz.object<State>()({
     //   defaultOpen: true,
     // },
   }),
-  // scores: afz.array(afz.object({
-  //   subject: afz.string().meta({ label: '科目' }).default(''),
-  //   score: afz.number().meta({ label: '分数' }).default(0),
-  //   objects: afz.object({
-  //     name: afz.string().meta({ label: '名称' }).default(''),
-  //     value: afz.number().meta({ label: '值' }).default(0),
-  //   }).meta({ label: '对象' }),
-  // })).meta({ label: '成绩' }),
+  scores: afz.array(afz.object({
+    subject: afz.string().meta({ label: '科目' }).default(''),
+    score: afz.number().meta({ label: '分数' }).default(0),
+    objects: afz.object({
+      name: afz.string().meta({ label: '名称' }).default(''),
+      value: afz.number().meta({ label: '值' }).default(0),
+    }).meta({ label: '对象' }),
+  })).meta({ label: '成绩' }),
   // visibleTest: afz.boolean(),
   // nameValue: afz.string().meta({
   //   if: ({ state }) => state.visibleTest,
@@ -104,6 +104,9 @@ function onError(event: FormErrorEvent) {
         v-model="formState"
         :schema="schema"
         :controls="customControls"
+        :add-button-props="{
+          color: 'primary',
+        }"
         @submit="onSubmit"
         @error="onError"
       >
