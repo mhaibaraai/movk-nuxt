@@ -54,14 +54,6 @@ const EXTENDED_CONTROLS = {
 }
 ```
 
-#### 数组字段支持
-
-当前不支持数组类型字段，需要实现：
-
-- 动态添加/删除数组项
-- 数组项排序
-- 嵌套数组支持
-
 ## 性能优化
 
 - 事件监听器泄漏防护 [✅]
@@ -122,3 +114,207 @@ const EXTENDED_CONTROLS = {
 ```
 
 ## 数组字段支持 z.array()
+
+### 已实现功能 [✅]
+
+#### 核心架构
+
+- **AutoFormArrayRenderer.vue**: 专用数组字段渲染器
+  - 支持原始类型数组（如 `z.array(z.string())`）
+  - 支持对象类型数组（如 `z.array(z.object({...}))`）
+  - 自动路径更新和字段克隆机制
+  - 响应式数组值管理
+
+#### 字段内省 (introspectSchema)
+
+- ✅ 数组类型自动识别（基于 `meta.type === 'array'`）
+- ✅ 数组元素 schema 提取（`arrayElement` 属性）
+- ✅ 嵌套数组支持（数组的元素可以是对象或数组）
+
+#### 渲染能力
+
+- ✅ 折叠功能支持（通过 `UCollapsible` 包装）
+- ✅ 动态添加/删除项
+  - 默认添加按钮（可通过 `addButtonProps` 自定义）
+  - 删除按钮（集成在 hint 插槽中）
+- ✅ 数组元素路径自动更新（`field.path` 包含索引）
+- ✅ 默认值初始化（支持通过 `.default([...])` 设置）
+
+#### 插槽系统
+
+- ✅ 支持数组级别插槽：`field-content:arrayField`
+- ✅ 支持数组元素插槽：
+  - 通过 `count` 参数标识元素索引
+  - 动态 label：`label: ({ count }) => `标签 ${count! + 1}``
+- ✅ Hint 插槽集成：
+  - 原始类型数组：仅显示删除按钮
+  - 对象类型数组：显示删除按钮 + Chevron 图标
+  - 嵌套对象内的数组：仅显示 Chevron 图标
+
+#### 类型定义
+
+```ts
+interface AutoFormField {
+  // ... 其他属性
+  /** 数组元素模板 */
+  arrayElement?: AutoFormField
+}
+
+type DynamicFormSlots<T> = {
+  // ... 其他插槽
+  // 数组字段内容插槽
+  [`field-content:${ArrayFieldKeys<T>}`]: (props: AutoFormFieldContext<T>) => any
+}
+```
+
+### 使用示例
+
+```ts
+import { createAutoFormZ } from '@movk/nuxt'
+
+const { afz } = createAutoFormZ()
+
+// 原始类型数组
+const schema1 = afz.object({
+  tags: afz.array(
+    afz.string().meta({ 
+      label: ({ count }) => `标签 ${count! + 1}` 
+    })
+  ).default(['tag1', 'tag2']).meta({
+    label: '标签列表',
+    collapsible: {
+      defaultOpen: true
+    }
+  })
+})
+
+// 对象类型数组
+const schema2 = afz.object({
+  scores: afz.array(
+    afz.object({
+      subject: afz.string().meta({ label: '科目' }).default(''),
+      score: afz.number().meta({ label: '分数' }).default(0),
+    })
+  ).meta({ 
+    label: '成绩',
+    description: '添加多个科目成绩'
+  })
+})
+
+// 嵌套数组（数组的元素包含对象）
+const schema3 = afz.object({
+  projects: afz.array(
+    afz.object({
+      name: afz.string().meta({ label: '项目名称' }),
+      members: afz.array(afz.string().meta({ 
+        label: ({ count }) => `成员 ${count! + 1}` 
+      }))
+    })
+  ).meta({ label: '项目列表' })
+})
+```
+
+```vue
+<template>
+  <AutoForm 
+    v-model="data" 
+    :schema="schema"
+    :add-button-props="{ 
+      icon: 'i-lucide-plus-circle', 
+      color: 'primary' 
+    }"
+  >
+    <!-- 自定义数组内容 -->
+    <template #field-content:tags="{ state, count }">
+      <CustomTagsRenderer :tags="state.tags" />
+    </template>
+  </AutoForm>
+</template>
+```
+
+### 实现细节
+
+#### 路径更新机制
+
+```ts
+// 自动将数组元素模板的路径更新为包含索引的路径
+// 例如: "scores" -> "scores.0", "scores.1", ...
+function updateFieldPaths(
+  template: AutoFormField, 
+  oldBasePath: string, 
+  newBasePath: string
+): AutoFormField {
+  return {
+    ...template,
+    path: template.path.replace(oldBasePath, newBasePath),
+    // 递归更新子字段路径
+    children: template.children?.map(child => 
+      updateFieldPaths(child, oldBasePath, newBasePath)
+    )
+  }
+}
+```
+
+#### 添加/删除逻辑
+
+```ts
+// 添加项：创建默认值并追加到数组
+function addItem() {
+  const newArray = [...arrayValue.value, createDefaultValue()]
+  context.setValue(newArray)
+}
+
+// 删除项：通过索引移除
+function removeItem(count?: number) {
+  const arr = arrayValue.value
+  const newArray = [...arr.slice(0, count), ...arr.slice(count + 1)]
+  context.setValue(newArray)
+}
+```
+
+#### Hint 插槽工厂
+
+```ts
+// 根据字段类型和路径生成不同的 hint 内容
+createHintSlotFactory(removeCallback) {
+  return (field, path, open, count) => {
+    const isNested = path.includes('.')
+    const isObject = field.meta?.type === 'object'
+    
+    // 嵌套路径但非对象：不显示内容
+    if (isNested && !isObject) return undefined
+    
+    // 嵌套路径且为对象：仅显示 Chevron
+    if (isNested) return chevronIcon
+    
+    // 非嵌套且非对象：仅显示删除按钮
+    if (!isObject) return deleteButton
+    
+    // 非嵌套且为对象：删除按钮 + Chevron
+    return [deleteButton, chevronIcon]
+  }
+}
+```
+
+### 已知限制
+
+1. **性能考虑**
+   - 大数组（>1000 项）可能影响性能
+   - 每次数组修改都会触发完整重渲染
+   
+2. **验证限制**
+   - 暂不支持数组级别的最小/最大长度验证提示
+   - 跨数组元素的复杂验证（如唯一性）需手动处理
+
+3. **UI 限制**
+   - 删除按钮样式固定（通过 hint 插槽控制）
+   - 拖拽排序功能暂未实现
+
+### 潜在优化方向
+
+- [ ] 虚拟滚动支持（大数组性能优化）
+- [ ] 拖拽排序功能（集成 @vueuse/gesture 或 dnd-kit）
+- [ ] 数组长度验证提示（`min/max` 元数据支持）
+- [ ] 批量操作（全部删除、批量添加）
+- [ ] 数组项展开/折叠状态持久化
+- [ ] 自定义添加按钮位置（顶部/底部/内联）
