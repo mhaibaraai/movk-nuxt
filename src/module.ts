@@ -1,12 +1,9 @@
-import type { UseFetchOptions } from 'nuxt/app'
-import type { ApiFetchOptions, ApiProfile } from './runtime/types'
 import {
   addComponentsDir,
   addImportsDir,
-  addPlugin,
   addTypeTemplate,
   createResolver,
-  defineNuxtModule,
+  defineNuxtModule
 } from '@nuxt/kit'
 import defu from 'defu'
 import { z } from 'zod/v4'
@@ -19,11 +16,10 @@ const moduleOptionsSchema = z.object({
    * 组件前缀
    * @default 'M'
    */
-  prefix: z.string().default('M'),
-  i18n: z.boolean().default(false),
+  prefix: z.string().default('M')
 })
 
-type ModuleOptions = z.input<typeof moduleOptionsSchema>
+export type ModuleOptions = z.input<typeof moduleOptionsSchema>
 
 export default defineNuxtModule<ModuleOptions>({
   meta: {
@@ -31,42 +27,17 @@ export default defineNuxtModule<ModuleOptions>({
     version,
     configKey: 'movk',
     compatibility: {
-      nuxt: '>=4.1.1',
-    },
+      nuxt: '>=4.2.0'
+    }
   },
   defaults: moduleOptionsSchema.parse({}),
   moduleDependencies: {
     '@nuxt/image': {
-      version: '>=1.11.0',
+      version: '>=1.11.0'
     },
     '@nuxt/ui': {
-      version: '>=4.0.0-alpha.1',
-    },
-    '@vueuse/nuxt': {
-      version: '>=13.9.0',
-    },
-    'nuxt-auth-utils': {
-      version: '>=0.5.24',
-    },
-    '@nuxt/eslint': {
-      version: '>=1.9.0',
-      defaults: {
-        config: {
-          standalone: false,
-          nuxt: {
-            sortConfigKeys: true,
-          },
-        },
-      },
-    },
-    '@nuxtjs/i18n': {
-      version: '>=10.1.0',
-      defaults: {
-        strategy: 'no_prefix',
-        defaultLocale: 'zh_cn',
-      },
-      optional: true,
-    },
+      version: '>=4.1.0'
+    }
   },
   async setup(options, nuxt) {
     const { resolve } = createResolver(import.meta.url)
@@ -77,58 +48,24 @@ export default defineNuxtModule<ModuleOptions>({
 
     nuxt.options.css.push(resolve('runtime/assets/css/main.css'))
 
-    if (options.i18n) {
-      nuxt.hook('i18n:registerModule', (register: any) => {
-        register({
-          langDir: resolve('./runtime/i18n/locales'),
-          locales: [
-            { code: 'zh_cn', file: 'zh_cn.json' },
-            { code: 'en', file: 'en.json' },
-          ],
-        })
-      })
-    }
-
-    addPlugin({ src: resolve('runtime/plugins/api.factory.ts') })
-
-    addTypeTemplate({
-      filename: 'runtime/types/auto-form-zod.d.ts',
-      src: resolve('runtime/types/zod.d.ts'),
-    })
-
     addComponentsDir({
       path: resolve('runtime/components'),
       prefix: options.prefix,
       pathPrefix: false,
+      ignore: ['auto-form-renderer/**']
     })
 
-    addImportsDir(resolve('runtime/composables'))
     addImportsDir(resolve('runtime/shared'))
-  },
+
+    addTypeTemplate({
+      filename: 'runtime/types/auto-form-zod.d.ts',
+      src: resolve('runtime/types/zod.d.ts')
+    })
+  }
 })
 
-declare module 'nuxt/app' {
-  interface NuxtApp {
-    $createApiFetcher: <DataT>(apiProfile: ApiFetchOptions<DataT>) => {
-      $api: typeof $fetch
-      /**
-       * API 配置
-       */
-      apiProfile: ApiProfile
-      /**
-       * 请求配置
-       */
-      fetchOptions: Omit<UseFetchOptions<DataT>, '$fetch'>
-    }
-  }
-}
-
-declare module '@nuxt/schema' {
+declare module 'nuxt/schema' {
   interface NuxtOptions {
     ['movk']: ModuleOptions
-  }
-  interface RuntimeConfig { }
-  interface PublicRuntimeConfig {
-    apiBase?: string
   }
 }

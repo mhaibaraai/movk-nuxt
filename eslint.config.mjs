@@ -1,25 +1,16 @@
-// @ts-check
-import antfu from '@antfu/eslint-config'
-import withNuxt from './.nuxt/eslint.config.mjs'
+import { createConfigForNuxt } from '@nuxt/eslint-config/flat'
 
-// https://eslint.nuxt.com/packages/module#custom-config-presets
-export default withNuxt(
-  antfu({
-    pnpm: true,
-    formatters: true,
-  }),
-  {
-    rules: {
-      'no-console': 'off',
-    },
-  },
-  {
-    files: ['**/*.vue'],
-    rules: {
-      'vue/max-attributes-per-line': ['error', {
-        singleline: 3,
-        multiline: 1,
-      }],
-    },
-  },
-)
+export default createConfigForNuxt({
+  features: {
+    tooling: true,
+    stylistic: {
+      commaDangle: 'never',
+      braceStyle: '1tbs'
+    }
+  }
+}).overrideRules({
+  'vue/multi-word-component-names': 'off',
+  'vue/max-attributes-per-line': ['error', { singleline: 3, multiline: 1 }],
+  '@typescript-eslint/no-explicit-any': 'off',
+  '@typescript-eslint/no-empty-object-type': 'off'
+})

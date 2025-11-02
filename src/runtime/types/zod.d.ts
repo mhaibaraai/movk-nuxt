@@ -5,8 +5,7 @@ import type { ComputedRef, Ref } from 'vue'
 type ReactiveValue<T, CTX = AutoFormFieldContext> = T | ((ctx: CTX) => T) | Ref<T> | ComputedRef<T>
 
 declare module 'zod/v4' {
-  interface GlobalMeta extends GlobalAutoFormMeta { }
-  interface GlobalAutoFormMeta {
+  interface GlobalMeta {
     /**
      * The element or component this component should render as.
      * @defaultValue 'div'

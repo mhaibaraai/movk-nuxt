@@ -12,8 +12,8 @@
 ### 核心组件
 
 - **AutoForm.vue**: 主入口，负责 Schema 内省、状态管理、字段分类渲染
-- **AutoFormFieldRenderer.vue**: 叶子字段渲染器，处理单个表单字段
-- **AutoFormNestedRenderer.vue**: 嵌套对象渲染器，支持 UCollapsible 折叠功能
+- **AutoFormRendererField.vue**: 叶子字段渲染器，处理单个表单字段
+- **AutoFormRendererNested.vue**: 嵌套对象渲染器，支持 UCollapsible 折叠功能
 
 ### 工作流程
 
@@ -119,7 +119,7 @@ const EXTENDED_CONTROLS = {
 
 #### 核心架构
 
-- **AutoFormArrayRenderer.vue**: 专用数组字段渲染器
+- **AutoFormRendererArray.vue**: 专用数组字段渲染器
   - 支持原始类型数组（如 `z.array(z.string())`）
   - 支持对象类型数组（如 `z.array(z.object({...}))`）
   - 自动路径更新和字段克隆机制

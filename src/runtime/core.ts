@@ -201,30 +201,29 @@ export type ArrayFieldKeys<T, D extends number = 2> = [D] extends [never]
 
 export type IsComponent = StringOrVNode | Component | DefineComponent | ((...args: any[]) => any)
 
-export type ComponentType<T> = T extends new (...args: any) => object ? 1
+export type ComponentType<T> = T extends new (...args: any) => {} ? 1
   : T extends (...args: any) => any ? 2
     : 0
 
 export type ComponentProps<T> = T extends new (...args: any) => { $props: infer P } ? NonNullable<P>
   : T extends (props: infer P, ...args: any) => any ? P
-    : object
+    : {}
 
 export type ComponentSlots<T> = T extends new (...args: any) => { $slots: infer S } ? NonNullable<S>
-  : T extends new (...args: any) => { $scopedSlots: infer S } ? NonNullable<S> // Vue 2
-    : T extends (props: any, ctx: { slots: infer S, attrs: any, emit: any }, ...args: any) => any ? NonNullable<S>
-      : object
+  : T extends (props: any, ctx: { slots: infer S, attrs: any, emit: any }, ...args: any) => any ? NonNullable<S>
+    : {}
 
 export type ComponentAttrs<T> = T extends new (...args: any) => { $attrs: infer A } ? NonNullable<A>
   : T extends (props: any, ctx: { slots: any, attrs: infer A, emit: any }, ...args: any) => any ? NonNullable<A>
-    : object
+    : {}
 
 export type ComponentEmit<T> = T extends new (...args: any) => { $emit: infer E } ? NonNullable<E>
   : T extends (props: any, ctx: { slots: any, attrs: any, emit: infer E }, ...args: any) => any ? NonNullable<E>
-    : object
+    : {}
 
 export type ComponentExposed<T> = T extends new (...args: any) => infer E ? E
   : T extends (props: any, ctx: any, expose: (exposed: infer E) => any, ...args: any) => any ? NonNullable<E>
-    : object
+    : {}
 
 type PathSegment = string | number
 type PathSegments = PathSegment[]
@@ -489,9 +488,7 @@ export function setPath<T extends Record<string, any>>(object: T, path: PathInpu
     if (!isValidObject) {
       nextVal = needArray ? [] : {}
       cur[key as any] = nextVal
-    }
-    // 如果需要数组且当前不是数组，替换为数组
-    else if (needArray && !Array.isArray(nextVal)) {
+    } else if (needArray && !Array.isArray(nextVal)) {
       nextVal = []
       cur[key as any] = nextVal
     }
@@ -862,8 +859,9 @@ export function deepClone<T>(obj: T, cache = new WeakMap<object, any>()): T {
     const sc = (globalThis as any).structuredClone
     if (typeof sc === 'function')
       return sc(obj)
+  } catch (e) {
+    console.error('Error occurred while cloning:', e)
   }
-  catch {}
 
   const asObj = obj as unknown as object
   const hit = cache.get(asObj)
@@ -934,7 +932,7 @@ export function deepClone<T>(obj: T, cache = new WeakMap<object, any>()): T {
 
   const keys = [
     ...Object.getOwnPropertyNames(obj),
-    ...Object.getOwnPropertySymbols(obj) as any,
+    ...Object.getOwnPropertySymbols(obj) as any
   ]
 
   for (const key of keys) {
