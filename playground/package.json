@@ -9,10 +9,10 @@
     "typecheck": "nuxi typecheck"
   },
   "dependencies": {
-    "@vueuse/motion": "^3.0.3"
+    "@movk/nuxt": "workspace:*"
   },
   "devDependencies": {
-    "nuxt": "^4.1.3",
-    "sass-embedded": "^1.93.2"
+    "nuxt": "^4.2.0",
+    "sass-embedded": "^1.93.3"
   }
 }

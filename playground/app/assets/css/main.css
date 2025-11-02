@@ -1,9 +1,2 @@
-@import 'tailwindcss';
-
-@theme static {
-  --container-8xl: 100rem;
-}
-
-:root {
-  --ui-container: var(--container-8xl);
-}
+@import "tailwindcss" theme(static) source("../../../..");
+@import "@nuxt/ui";

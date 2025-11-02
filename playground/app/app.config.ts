@@ -1,26 +1,23 @@
 export default defineAppConfig({
   toaster: {
-    position: 'top-center' as const,
-    duration: 3000,
+    position: 'bottom-right' as const,
+    duration: 5000,
+    max: 5,
+    expand: true,
+    disableSwipe: false
   },
   ui: {
     colors: {
       primary: 'sky',
-      neutral: 'zinc',
+      neutral: 'zinc'
     },
     collapsible: {
       slots: {
-        content: 'space-y-4',
-      },
+        content: 'space-y-4'
+      }
     },
     form: {
-      base: 'space-y-4',
-    },
-  },
-  theme: {
-    prefix: 'movk',
-    key: 'admin-theme',
-    radius: 0.25,
-    blackAsPrimary: false,
-  },
+      base: 'space-y-4'
+    }
+  }
 })
