@@ -42,7 +42,7 @@ const CLONE_METHODS = [
   'endsWith',
   'includes',
   'datetime',
-  'ip',
+  'ip'
 ]
 
 /**
@@ -80,7 +80,7 @@ function interceptCloneMethods<T extends z.ZodType>(schema: T, customMeta: Recor
  */
 function applyMeta<T extends z.ZodType, M = unknown>(
   schema: T,
-  meta = {} as M,
+  meta = {} as M
 ): T {
   (schema as any)[AUTOFORM_META_KEY] = meta
   interceptCloneMethods(schema, meta as Record<string, any>)
@@ -100,8 +100,7 @@ export function getAutoFormMetadata(schema: z.ZodType): Record<string, any> {
     try {
       const unwrapped = (schema as any).unwrap()
       return unwrapped?.[AUTOFORM_META_KEY] || {}
-    }
-    catch {
+    } catch {
       // unwrap 失败，忽略
     }
   }
@@ -113,7 +112,7 @@ export function getAutoFormMetadata(schema: z.ZodType): Record<string, any> {
  * 通用的 Zod 工厂方法创建器
  */
 function createZodFactoryMethod<T extends z.ZodType>(
-  zodFactory: (params?: any) => T,
+  zodFactory: (params?: any) => T
 ) {
   return (controlMeta?: any): T => {
     // 字符串直接作为错误消息
@@ -188,7 +187,7 @@ interface TypedZodFactory<TC extends AutoFormControls> {
  * 对象工厂创建器，支持柯里化和直接调用
  */
 function createObjectFactory<T extends 'object' | 'looseObject' | 'strictObject'>(
-  method: T,
+  method: T
 ) {
   return ((...args: any[]) => {
     // 柯里化写法: afz.object<State>()({...})
@@ -203,7 +202,7 @@ function createObjectFactory<T extends 'object' | 'looseObject' | 'strictObject'
 }
 
 export function createAutoFormZ<TControls extends AutoFormControls = typeof DEFAULT_CONTROLS>(
-  _controls?: TControls,
+  _controls?: TControls
 ): { afz: TypedZodFactory<TControls> } {
   return {
     afz: {
@@ -216,11 +215,11 @@ export function createAutoFormZ<TControls extends AutoFormControls = typeof DEFA
 
       object: createObjectFactory('object'),
       looseObject: createObjectFactory('looseObject'),
-      strictObject: createObjectFactory('strictObject'),
-    } as unknown as TypedZodFactory<TControls>,
+      strictObject: createObjectFactory('strictObject')
+    } as unknown as TypedZodFactory<TControls>
   }
 }
 
-export function createAutoFormControl<T extends IsComponent>(e: AutoFormControl<T>): AutoFormControl<T> {
+export function createAutoFormControl<C extends IsComponent>(e: AutoFormControl<C>): AutoFormControl<C> {
   return e
 }

@@ -1,4 +1,4 @@
-import type { InjectionKey, ModelRef } from 'vue'
+import type { InjectionKey, Ref } from 'vue'
 import type { AutoFormField, AutoFormFieldContext } from '../types/auto-form'
 import { UIcon } from '#components'
 import defu from 'defu'
@@ -15,8 +15,8 @@ const AUTO_FORM_CONTEXT_KEY: InjectionKey<AutoFormContextFactory> = Symbol('Auto
  * 提供字段上下文管理的 composable
  */
 export function useAutoFormProvider<T extends Record<string, any>>(
-  state: ModelRef<T, string, T, T>,
-  slots: Record<string, any>,
+  state: Ref<T>,
+  slots: Record<string, any>
 ) {
   // 字段上下文创建 - 直接创建，不使用缓存
   function createFieldContext(field: AutoFormField, extraProps?: Record<string, any>): AutoFormFieldContext {
@@ -32,7 +32,7 @@ export function useAutoFormProvider<T extends Record<string, any>>(
       get errors() { return extraProps?.errors ?? [] },
       get loading() { return extraProps?.loading ?? false },
       get open() { return extraProps?.open },
-      count: extraProps?.count,
+      count: extraProps?.count
     }
 
     return context
@@ -99,12 +99,12 @@ export function useAutoFormProvider<T extends Record<string, any>>(
     const finalProps = defu(
       resolvedControlProps,
       isReadonly ? { disabled: true } : {},
-      controlMeta?.mapped?.controlProps || {},
+      controlMeta?.mapped?.controlProps || {}
     )
 
     const slots = defu(
       resolveFieldProp(field, 'controlSlots', undefined, extraProps) || {},
-      controlMeta?.mapped?.controlSlots,
+      controlMeta?.mapped?.controlSlots
     )
 
     const userOnUpdate = (finalProps as any)['onUpdate:modelValue']
@@ -123,9 +123,9 @@ export function useAutoFormProvider<T extends Record<string, any>>(
             userOnUpdate(v, context)
           }
         },
-        'modelValue': unref(context.value),
+        'modelValue': unref(context.value)
       },
-      slots,
+      slots
     )
   }
 
@@ -143,7 +143,7 @@ export function useAutoFormProvider<T extends Record<string, any>>(
         return Boolean(
           slots?.[keySpecific]
           || slots?.[keyGeneral]
-          || fieldSlots?.[name],
+          || fieldSlots?.[name]
         )
       },
 
@@ -165,7 +165,7 @@ export function useAutoFormProvider<T extends Record<string, any>>(
         }
 
         return null
-      },
+      }
     }
   }
 
@@ -182,7 +182,7 @@ export function useAutoFormProvider<T extends Record<string, any>>(
       value: unref(context.value),
       setValue: context.setValue,
       errors: context.errors,
-      loading: context.loading,
+      loading: context.loading
     }
   }
 
@@ -199,7 +199,7 @@ export function useAutoFormProvider<T extends Record<string, any>>(
         slots[slotName] = (slotData: any) => {
           const slotProps = createSlotProps(field, {
             ...extraProps,
-            [slotName]: slotData[slotName],
+            [slotName]: slotData[slotName]
           })
           return slotResolver.renderSlot(slotName, slotProps)
         }
@@ -233,10 +233,10 @@ export function useAutoFormProvider<T extends Record<string, any>>(
           fieldSlots: {
             hint: ({ open }) => h(UIcon, {
               name: open ? 'i-lucide-chevron-down' : 'i-lucide-chevron-right',
-              class: 'shrink-0 size-5 transition-transform duration-200',
-            }),
-          },
-        },
+              class: 'shrink-0 size-5 transition-transform duration-200'
+            })
+          }
+        }
       } as AutoFormField)
     })
 
@@ -244,7 +244,7 @@ export function useAutoFormProvider<T extends Record<string, any>>(
       collapsibleConfig,
       shouldShowCollapsible,
       isHidden,
-      enhancedField,
+      enhancedField
     }
   }
 
@@ -258,7 +258,7 @@ export function useAutoFormProvider<T extends Record<string, any>>(
     renderControl,
     createSlotResolver,
     createFormFieldSlots,
-    createCollapsibleEnhancer,
+    createCollapsibleEnhancer
   }
 
   // 通过 provide 机制注入所有方法给子组件

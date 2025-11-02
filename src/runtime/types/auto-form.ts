@@ -3,6 +3,7 @@ import type { CollapsibleRootProps } from 'reka-ui'
 import type { ClassNameValue } from 'tailwind-merge'
 import type { GlobalMeta, z } from 'zod/v4'
 import type { ArrayFieldKeys, ComponentProps, ComponentSlots, IsComponent, NonObjectFieldKeys, ObjectFieldKeys, ReactiveValue, Suggest } from '../core'
+import type { FormError } from '@nuxt/ui'
 
 export interface AutoFormFieldSlots {
   label: (props: { label?: string } & AutoFormFieldContext) => any
@@ -23,6 +24,13 @@ export type DynamicFormSlots<T>
     & Record<`field-${DynamicFieldSlotKeys}:${ObjectFieldKeys<T>}`, (props: AutoFormFieldContext<T>) => any>
     & Record<`field-${DynamicFieldNestedSlotKeys}:${ObjectFieldKeys<T>}`, (props: AutoFormFieldContext<T>) => any>
     & Record<`field-${DynamicFieldNestedSlotKeys}:${ArrayFieldKeys<T>}`, (props: AutoFormFieldContext<T>) => any>
+
+export interface AutoFormSlotProps<T extends object> {
+  errors: FormError[]
+  loading: boolean
+  fields: AutoFormField[]
+  state: T
+}
 
 export interface AutoFormFieldContext<S = any> {
   /** 表单数据 - 使用 getter 确保获取最新值 */
@@ -51,9 +59,9 @@ export interface AutoFormControlsMeta<C extends IsComponent = IsComponent> {
   /** 控件组件（直传组件时使用） */
   component?: C
   /** 控件属性 */
-  controlProps?: ReactiveValue<ComponentProps<C>, AutoFormFieldContext>
+  controlProps?: ReactiveValue<ComponentProps<C>, AutoFormFieldContext> | Record<string, any>
   /** 控件插槽（调用侧可部分覆盖） */
-  controlSlots?: ReactiveValue<Partial<ComponentSlots<C>>, AutoFormFieldContext>
+  controlSlots?: ReactiveValue<Partial<ComponentSlots<C>>, AutoFormFieldContext> | Record<string, any>
   /** Zod 错误消息 */
   error?: string
 }
@@ -119,7 +127,7 @@ export type AutoFormFactoryMethod<
   TControls,
   TZod extends string,
   TResult,
-  TExtraParams extends any[] = [],
+  TExtraParams extends any[] = []
 > = {
   // 支持直接传入字符串作为错误消息
   (...args: [...TExtraParams, string?]): TResult
