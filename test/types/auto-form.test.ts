@@ -19,10 +19,10 @@ describe('auto-form typing', () => {
         extra: z.object({
           geo: z.object({
             lat: z.number(),
-            lng: z.number(),
-          }),
-        }),
-      }),
+            lng: z.number()
+          })
+        })
+      })
     })
     type MockState = z.infer<typeof _mockSchema>
     const MockNumber = (_props: { aaa?: number }, _ctx: { slots?: { aaa?: () => void } }) => null
@@ -30,39 +30,39 @@ describe('auto-form typing', () => {
 
     const customControls = {
       mockStringTest: createAutoFormControl({ component: MockString, controlProps: {}, controlSlots: { bbb: () => h('span', 'bbb') } }),
-      mockNumberTest: createAutoFormControl({ component: MockNumber, controlProps: { aaa: 111 }, controlSlots: {} }),
+      mockNumberTest: createAutoFormControl({ component: MockNumber, controlProps: { aaa: 111 }, controlSlots: {} })
     } as const satisfies AutoFormControls
 
     const { afz } = createAutoFormZ(customControls)
 
     z.string({
-      error: 'error',
+      error: 'error'
     })
 
     const _schema = afz.object<MockState>()({
       name: afz.string({
         controlProps({ state }: AutoFormFieldContext<MockState>) {
           return {
-            disabled: state.age > 18,
+            disabled: state.age > 18
           }
-        },
+        }
       }).meta({
       }).default('default name').optional(),
       age: afz.number({
         type: 'mockNumberTest',
         controlProps: {
 
-        },
+        }
       }),
       address: afz.object<MockState['address']>()({
         city: afz.string(),
         province: afz.string({
           component: MockString,
           controlSlots: {
-            bbb: () => h('span', 'bbb'),
-          },
-        }),
-      }),
+            bbb: () => h('span', 'bbb')
+          }
+        })
+      })
     })
 
     type State = z.output<typeof _schema>
