@@ -37,6 +37,9 @@ export default defineNuxtModule<ModuleOptions>({
     },
     '@nuxt/ui': {
       version: '>=4.1.0'
+    },
+    '@vueuse/nuxt': {
+      version: '>=14.0.0'
     }
   },
   async setup(options, nuxt) {
