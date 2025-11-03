@@ -10,12 +10,13 @@ interface WithClearProps extends /** @vue-ignore */ OmitByKey<InputProps, 'model
 type WithClearEmits = InputEmits & {
   clear: []
 }
-type WithClearSlots = Omit<InputSlots, 'trailing'>
+type WithClearSlots = OmitByKey<InputSlots, 'trailing'>
 
 const { buttonProps } = defineProps<WithClearProps>()
-
 const emit = defineEmits<WithClearEmits>()
 const slots = defineSlots<WithClearSlots>()
+
+defineOptions({ inheritAttrs: false })
 
 const modelValue = defineModel<InputProps['modelValue']>()
 
@@ -28,6 +29,7 @@ function handleClear() {
 <template>
   <UInput
     v-model="modelValue"
+    :ui="{ trailing: 'pe-1' }"
     v-bind="$attrs"
     @blur="emit('blur', $event)"
     @change="emit('change', $event)"

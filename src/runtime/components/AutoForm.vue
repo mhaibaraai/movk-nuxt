@@ -49,6 +49,7 @@ const {
 
 defineEmits<AutoFormEmits<S, T>>()
 const _slots = defineSlots<AutoFormSlots<AutoFormStateType>>()
+defineOptions({ inheritAttrs: false })
 
 const state = ref(_state || {}) as Ref<AutoFormStateType>
 

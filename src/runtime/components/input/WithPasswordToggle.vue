@@ -1,40 +1,37 @@
 <script setup lang="ts">
 import { UInput, UButton } from '#components'
-import { ref } from 'vue'
 import type { OmitByKey } from '@movk/core'
-import type { InputEmits, InputProps, InputSlots } from '@nuxt/ui'
+import type { ButtonProps, InputEmits, InputProps, InputSlots } from '@nuxt/ui'
+import { useToggle } from '@vueuse/core'
 
-interface WithPasswordToggleProps extends /** @vue-ignore */ OmitByKey<InputProps, 'type'> {}
-
+interface WithPasswordToggleProps extends /** @vue-ignore */ OmitByKey<InputProps, 'type' | 'modelValue'> {
+  buttonProps?: ButtonProps
+}
 type WithPasswordToggleEmits = InputEmits
+type WithPasswordToggleSlots = OmitByKey<InputSlots, 'trailing'>
 
-type WithPasswordToggleSlots = Omit<InputSlots, 'trailing'>
-
-defineProps<WithPasswordToggleProps>()
+const { buttonProps } = defineProps<WithPasswordToggleProps>()
 const emit = defineEmits<WithPasswordToggleEmits>()
 const slots = defineSlots<WithPasswordToggleSlots>()
 
+defineOptions({ inheritAttrs: false })
+
 const modelValue = defineModel<InputProps['modelValue']>()
 
-// 密码显示状态
-const show = ref(false)
+const [value, toggle] = useToggle()
 </script>
 
 <template>
   <UInput
     v-model="modelValue"
-    :type="show ? 'text' : 'password'"
+    :type="value ? 'text' : 'password'"
     :ui="{ trailing: 'pe-1' }"
     v-bind="$attrs"
     @blur="emit('blur', $event)"
     @change="emit('change', $event)"
   >
-    <template
-      v-for="(_, slotName) in slots"
-      :key="slotName"
-      #[slotName]="slotProps"
-    >
-      <slot :name="(slotName as keyof WithPasswordToggleSlots)" v-bind="slotProps ?? {}" />
+    <template v-for="(_, slotName) in slots" :key="slotName" #[slotName]="slotProps">
+      <slot :name="slotName" v-bind="slotProps ?? {}" />
     </template>
 
     <template #trailing>
@@ -42,10 +39,11 @@ const show = ref(false)
         color="neutral"
         variant="link"
         size="sm"
-        :icon="show ? 'i-lucide-eye-off' : 'i-lucide-eye'"
-        :aria-label="show ? 'Hide password' : 'Show password'"
-        :aria-pressed="show"
-        @click="show = !show"
+        :icon="value ? 'i-lucide-eye-off' : 'i-lucide-eye'"
+        :aria-label="value ? 'Hide password' : 'Show password'"
+        :aria-pressed="value"
+        v-bind="buttonProps"
+        @click="toggle()"
       />
     </template>
   </UInput>
