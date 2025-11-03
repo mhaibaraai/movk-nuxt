@@ -10,7 +10,11 @@ const schema = z.object({
     .default('123456')
     .meta({ label: '密码切换' }),
   withCopy: afz.string({ type: 'withCopy' }).default('Copy me!').meta({ label: '复制输入框' }),
-  withCharacterLimit: afz.string({ type: 'withCharacterLimit' }).default('Character limit...').meta({ label: '字符限制输入框' })
+  withCharacterLimit: afz.string({ type: 'withCharacterLimit' }).default('Character limit...').meta({ label: '字符限制输入框' }),
+  age: afz.number().min(0, { message: '年龄必须大于等于0' })
+    .max(150, { message: '年龄必须小于等于150' })
+    .meta({ label: '年龄(可选)' })
+    .optional()
 })
 
 type Schema = z.output<typeof schema>
