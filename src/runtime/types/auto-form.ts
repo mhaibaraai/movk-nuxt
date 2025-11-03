@@ -51,6 +51,16 @@ export interface AutoFormFieldContext<S = any> {
 }
 
 /**
+ * 布局分组配置
+ */
+export interface AutoFormLayoutGroupConfig {
+  /** 容器元素类型 */
+  as?: string
+  /** 容器样式类 */
+  class?: string
+}
+
+/**
  * 控件元数据（统一模型）- 支持响应式
  */
 export interface AutoFormControlsMeta<C extends IsComponent = IsComponent> {
@@ -59,11 +69,15 @@ export interface AutoFormControlsMeta<C extends IsComponent = IsComponent> {
   /** 控件组件（直传组件时使用） */
   component?: C
   /** 控件属性 */
-  controlProps?: ReactiveValue<ComponentProps<C>, AutoFormFieldContext> | Record<string, any>
+  controlProps?: ReactiveValue<ComponentProps<C>, AutoFormFieldContext>
   /** 控件插槽（调用侧可部分覆盖） */
   controlSlots?: ReactiveValue<Partial<ComponentSlots<C>>, AutoFormFieldContext> | Record<string, any>
   /** Zod 错误消息 */
   error?: string
+  /** 布局分组配置（仅 layoutGroup 类型使用） */
+  layoutGroup?: AutoFormLayoutGroupConfig
+  /** 内部标记：是否为布局分组 */
+  __isLayoutGroup__?: boolean
 }
 
 export interface AutoFormControl<C extends IsComponent = IsComponent> {

@@ -12,6 +12,7 @@ import { introspectSchema, isLeafField } from '../utils/auto-form'
 import AutoFormRendererArray from './auto-form-renderer/AutoFormRendererArray.vue'
 import AutoFormRendererField from './auto-form-renderer/AutoFormRendererField.vue'
 import AutoFormRendererNested from './auto-form-renderer/AutoFormRendererNested.vue'
+import AutoFormRendererLayoutGroup from './auto-form-renderer/AutoFormRendererLayoutGroup.vue'
 
 export interface AutoFormProps<S extends z.ZodObject, T extends boolean = true, N extends boolean = false> extends FormProps<S, T, N> {
   /**
@@ -102,10 +103,13 @@ const renderData = computed(() => {
   const leafFields: AutoFormField[] = []
   const nestedFields: AutoFormField[] = []
   const arrayFields: AutoFormField[] = []
+  const layoutGroupFields: AutoFormField[] = []
 
   // 单次遍历完成分类
   for (const field of visibleFieldsArray) {
-    if (field.meta.type === 'array') {
+    if (field.meta.type === 'layoutGroup') {
+      layoutGroupFields.push(field)
+    } else if (field.meta.type === 'array') {
       arrayFields.push(field)
     } else if (isLeafField(field)) {
       leafFields.push(field)
@@ -114,12 +118,13 @@ const renderData = computed(() => {
     }
   }
 
-  const hasNestedFields = nestedFields.length > 0 || arrayFields.length > 0
+  const hasNestedFields = nestedFields.length > 0 || arrayFields.length > 0 || layoutGroupFields.length > 0
 
   return {
     leafFields,
     nestedFields,
     arrayFields,
+    layoutGroupFields,
     hasNestedFields,
     flatFields: hasNestedFields ? [] : leafFields,
     allFields: visibleFieldsArray
@@ -150,6 +155,12 @@ onMounted(() => {
             :schema="schema"
             :extra-props="{ errors, loading }"
             :add-button-props="addButtonProps"
+          />
+          <AutoFormRendererLayoutGroup
+            v-else-if="renderData.layoutGroupFields.includes(field)"
+            :field="field"
+            :schema="schema"
+            :extra-props="{ errors, loading }"
           />
           <AutoFormRendererNested
             v-else
