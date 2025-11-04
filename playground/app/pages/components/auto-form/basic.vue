@@ -6,20 +6,13 @@ const { afz } = createAutoFormZ()
 const schema = z.object({
   username: afz.string({ controlProps: { icon: 'i-lucide-user' } }).min(2, { message: '用户名至少需要2个字符' }).meta({ hint: '用户名' }),
 
-  // 使用 group() 创建布局分组 - 不会在 state 中产生对应字段
-  // 子字段会直接展平到根级别，但会被包裹在自定义容器中渲染
-  __inputEnhancements: afz.group({
-    withClear: afz.string({ type: 'withClear' }).default('Type here...').meta({ label: '清除输入框' }),
-    withPasswordToggle: afz.string({ type: 'withPasswordToggle' })
-      .min(6, { message: '密码至少需要6个字符' })
-      .default('123456')
-      .meta({ label: '密码切换' }),
-    withCopy: afz.string({ type: 'withCopy' }).default('Copy me!').meta({ label: '复制输入框' }),
-    withCharacterLimit: afz.string({ type: 'withCharacterLimit' }).default('Character limit...').meta({ label: '字符限制输入框' })
-  }, {
-    as: 'div',
-    class: 'flex flex-col gap-4 p-4 bg-gray-50 dark:bg-gray-900 rounded-lg'
-  }),
+  withClear: afz.string({ type: 'withClear' }).default('Type here...').meta({ label: '清除输入框' }),
+  withPasswordToggle: afz.string({ type: 'withPasswordToggle' })
+    .min(6, { message: '密码至少需要6个字符' })
+    .default('123456')
+    .meta({ label: '密码切换' }),
+  withCopy: afz.string({ type: 'withCopy' }).default('Copy me!').meta({ label: '复制输入框' }),
+  withCharacterLimit: afz.string({ type: 'withCharacterLimit' }).default('Character limit...').meta({ label: '字符限制输入框' }),
 
   favoriteNumber: afz.number().min(0).max(10)
     .meta({ label: '最喜欢的数字(可选)', description: '您最喜欢的 1 到 10 之间的数字。' })

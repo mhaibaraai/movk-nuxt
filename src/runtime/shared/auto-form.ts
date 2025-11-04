@@ -135,16 +135,6 @@ function createZodFactoryMethod<T extends z.ZodType>(
 type KeysOf<T> = Extract<keyof T, string>
 type WithDefaultControls<TControls> = TControls & typeof DEFAULT_CONTROLS
 
-/**
- * 布局分组配置
- */
-export interface AutoFormLayoutGroupConfig {
-  /** 容器元素类型 */
-  as?: string
-  /** 容器样式类 */
-  class?: string
-}
-
 interface TypedZodFactory<TC extends AutoFormControls> {
   string: AutoFormFactoryMethod<WithDefaultControls<TC>, 'string', z.ZodString>
   number: AutoFormFactoryMethod<WithDefaultControls<TC>, 'number', z.ZodNumber>
@@ -153,12 +143,6 @@ interface TypedZodFactory<TC extends AutoFormControls> {
 
   // 数组工厂方法
   array: <T extends z.ZodType>(schema: T, meta?: any) => z.ZodArray<T>
-
-  // 布局分组方法 - 不产生 state 字段的容器
-  group: <S extends Record<string, z.ZodType>>(
-    shape: S,
-    config?: AutoFormLayoutGroupConfig
-  ) => z.ZodObject<S, z.core.$strip>
 
   // 函数重载：支持两种写法
   object: {
@@ -229,18 +213,6 @@ export function createAutoFormZ<TControls extends AutoFormControls = typeof DEFA
       date: createZodFactoryMethod(z.date),
 
       array: <T extends z.ZodType>(schema: T, meta?: any) => applyMeta(z.array(schema), meta),
-
-      // 布局分组 - 特殊的对象类型，不产生 state 字段
-      group: <S extends Record<string, z.ZodType>>(
-        shape: S,
-        config?: AutoFormLayoutGroupConfig
-      ) => {
-        const schema = z.object(shape)
-        return applyMeta(schema, {
-          __isLayoutGroup__: true,
-          layoutGroup: config || {}
-        })
-      },
 
       object: createObjectFactory('object'),
       looseObject: createObjectFactory('looseObject'),
