@@ -1,10 +1,11 @@
 import type { AutoFormControls } from '../types'
-import { UCalendar, UInput, UInputNumber, UCheckbox, USwitch, UTextarea } from '#components'
+import { UInput, UInputNumber, UCheckbox, USwitch, UTextarea } from '#components'
 import { createAutoFormControl } from '../shared/auto-form'
 import WithClear from '../components/input/WithClear.vue'
 import WithPasswordToggle from '../components/input/WithPasswordToggle.vue'
 import WithCopy from '../components/input/WithCopy.vue'
 import WithCharacterLimit from '../components/input/WithCharacterLimit.vue'
+import DatePicker from '../components/calendar/DatePicker.vue'
 
 const DEFAULT_CONTROL_PROPS = { class: 'w-full' } as const
 
@@ -13,7 +14,7 @@ export const DEFAULT_CONTROLS = {
   string: createAutoFormControl({ component: UInput, controlProps: DEFAULT_CONTROL_PROPS }),
   number: createAutoFormControl({ component: UInputNumber, controlProps: DEFAULT_CONTROL_PROPS }),
   boolean: createAutoFormControl({ component: UCheckbox, controlProps: DEFAULT_CONTROL_PROPS }),
-  date: createAutoFormControl({ component: UCalendar, controlProps: DEFAULT_CONTROL_PROPS }),
+  date: createAutoFormControl({ component: DatePicker, controlProps: DEFAULT_CONTROL_PROPS }),
   switch: createAutoFormControl({ component: USwitch, controlProps: DEFAULT_CONTROL_PROPS }),
   textarea: createAutoFormControl({ component: UTextarea, controlProps: DEFAULT_CONTROL_PROPS }),
 
