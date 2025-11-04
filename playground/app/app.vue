@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { zh_cn } from '@nuxt/ui/locale'
+
 const route = useRoute()
 const appConfig = useAppConfig()
 useHead({
@@ -15,7 +17,7 @@ provide('components', components)
 </script>
 
 <template>
-  <UApp :toaster="appConfig.toaster">
+  <UApp :toaster="appConfig.toaster" :locale="zh_cn">
     <NuxtLoadingIndicator color="var(--ui-primary)" :height="2" />
 
     <UDashboardGroup unit="rem">

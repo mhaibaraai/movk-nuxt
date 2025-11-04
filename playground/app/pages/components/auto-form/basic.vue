@@ -5,7 +5,7 @@ const { afz } = createAutoFormZ()
 
 const schema = z.object({
   layout: afz.layout({
-    class: 'grid grid-cols-3 gap-4',
+    class: 'grid grid-cols-4 gap-4',
     fields: {
       username: afz.string({ controlProps: { icon: 'i-lucide-user' } }).min(2, { message: '用户名至少需要2个字符' }).meta({ hint: '用户名' }),
       withClear: afz.string({ type: 'withClear' }).default('Type here...').meta({ label: '清除输入框' }),
@@ -17,7 +17,7 @@ const schema = z.object({
       withCharacterLimit: afz.string({ type: 'withCharacterLimit' }).default('Character limit...').meta({ label: '字符限制输入框' }),
 
       favoriteNumber: afz.number().min(0).max(10)
-        .meta({ label: '最喜欢的数字(可选)', description: '您最喜欢的 1 到 10 之间的数字。' })
+        .meta({ label: '最喜欢的数字(可选)', hint: '1 至 10' })
         .optional(),
       acceptTerms: afz.boolean({
         controlProps: { label: '接受条款和条件', required: true },
@@ -35,9 +35,12 @@ const schema = z.object({
         .default(false)
         .meta({ label: '' }),
       birthdate: afz.date().meta({ label: '出生日期' }).optional(),
-      bio: afz.string({ type: 'textarea' }).max(200, { message: '简介不能超过200个字符' }).meta({ label: '个人简介' }).optional()
+      datarange: afz.date({
+        controlProps: { range: true, numberOfMonths: 2, class: 'w-full' }
+      }).meta({ label: '日期范围', class: 'col-span-2' })
     }
-  })
+  }),
+  bio: afz.string({ type: 'textarea' }).max(200, { message: '简介不能超过200个字符' }).meta({ label: '个人简介' }).optional()
 })
 
 type Schema = z.output<typeof schema>
