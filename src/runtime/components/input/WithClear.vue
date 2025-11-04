@@ -1,13 +1,13 @@
-<script setup lang="ts">
+<script setup lang="ts" generic="T extends InputValue">
 import { UInput, UButton } from '#components'
 import { isEmpty } from '@movk/core'
 import type { OmitByKey } from '@movk/core'
-import type { ButtonProps, InputEmits, InputProps, InputSlots } from '@nuxt/ui'
+import type { ButtonProps, InputEmits, InputProps, InputSlots, InputValue } from '@nuxt/ui'
 
-interface WithClearProps extends /** @vue-ignore */ OmitByKey<InputProps, 'modelValue'> {
+interface WithClearProps extends /** @vue-ignore */ OmitByKey<InputProps<T>, 'modelValue'> {
   buttonProps?: ButtonProps
 }
-type WithClearEmits = InputEmits & {
+type WithClearEmits = InputEmits<T> & {
   clear: []
 }
 type WithClearSlots = OmitByKey<InputSlots, 'trailing'>
@@ -18,10 +18,10 @@ const slots = defineSlots<WithClearSlots>()
 
 defineOptions({ inheritAttrs: false })
 
-const modelValue = defineModel<InputProps['modelValue']>()
+const modelValue = defineModel<InputProps<T>['modelValue']>()
 
 function handleClear() {
-  modelValue.value = ''
+  modelValue.value = undefined
   emit('clear')
 }
 </script>

@@ -1,13 +1,13 @@
-<script setup lang="ts">
+<script setup lang="ts" generic="T extends InputValue">
 import { UInput, UButton } from '#components'
 import type { OmitByKey } from '@movk/core'
-import type { ButtonProps, InputEmits, InputProps, InputSlots } from '@nuxt/ui'
+import type { ButtonProps, InputEmits, InputProps, InputSlots, InputValue } from '@nuxt/ui'
 import { useToggle } from '@vueuse/core'
 
-interface WithPasswordToggleProps extends /** @vue-ignore */ OmitByKey<InputProps, 'type' | 'modelValue'> {
+interface WithPasswordToggleProps extends /** @vue-ignore */ OmitByKey<InputProps<T>, 'type' | 'modelValue'> {
   buttonProps?: ButtonProps
 }
-type WithPasswordToggleEmits = InputEmits
+type WithPasswordToggleEmits = InputEmits<T>
 type WithPasswordToggleSlots = OmitByKey<InputSlots, 'trailing'>
 
 const { buttonProps } = defineProps<WithPasswordToggleProps>()

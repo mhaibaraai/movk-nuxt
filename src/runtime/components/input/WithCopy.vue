@@ -1,15 +1,15 @@
-<script setup lang="ts">
+<script setup lang="ts" generic="T extends InputValue">
 import { UInput, UButton, UTooltip } from '#components'
 import { useClipboard } from '@vueuse/core'
 import { isEmpty } from '@movk/core'
 import type { OmitByKey } from '@movk/core'
-import type { ButtonProps, InputEmits, InputProps, InputSlots, TooltipProps } from '@nuxt/ui'
+import type { ButtonProps, InputEmits, InputProps, InputSlots, InputValue, TooltipProps } from '@nuxt/ui'
 
-interface WithCopyProps extends /** @vue-ignore */ OmitByKey<InputProps, 'modelValue'> {
+interface WithCopyProps extends /** @vue-ignore */ OmitByKey<InputProps<T>, 'modelValue'> {
   buttonProps?: ButtonProps
   tooltipProps?: TooltipProps
 }
-type WithCopyEmits = InputEmits & {
+type WithCopyEmits = InputEmits<T> & {
   copy: [value: string]
 }
 type WithCopySlots = OmitByKey<InputSlots, 'trailing'>

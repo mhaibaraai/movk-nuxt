@@ -1,14 +1,14 @@
-<script setup lang="ts">
+<script setup lang="ts" generic="T extends InputValue">
 import { UInput } from '#components'
 import { computed } from 'vue'
 import type { OmitByKey } from '@movk/core'
-import type { InputEmits, InputProps, InputSlots } from '@nuxt/ui'
+import type { InputEmits, InputProps, InputSlots, InputValue } from '@nuxt/ui'
 
-interface WithCharacterLimitProps extends /** @vue-ignore */ OmitByKey<InputProps, 'modelValue'> {
+interface WithCharacterLimitProps extends /** @vue-ignore */ OmitByKey<InputProps<T>, 'modelValue'> {
   maxLength?: number
   counterClass?: string
 }
-type WithCharacterLimitEmits = InputEmits
+type WithCharacterLimitEmits = InputEmits<T>
 type WithCharacterLimitSlots = OmitByKey<InputSlots, 'trailing'>
 
 const { maxLength = 50, counterClass = '' } = defineProps<WithCharacterLimitProps>()
