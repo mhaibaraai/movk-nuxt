@@ -78,6 +78,19 @@ export interface AutoFormControls {
 
 export type AutoFormMergeMeta = GlobalMeta & AutoFormControlsMeta & { mapped?: AutoFormControl }
 
+export interface AutoFormLayoutConfig<C extends IsComponent = IsComponent> {
+  /** 布局组件 */
+  component?: C
+  /** 布局组件属性 - 根据组件类型自动推断 */
+  props?: ComponentProps<C>
+  /** 布局组件 class */
+  class?: ClassNameValue
+  /** 布局组件插槽 - 根据组件类型自动推断 */
+  slots?: Partial<ComponentSlots<C>>
+  /** 布局内的字段 - 使用对象形式，类似 z.object() 的 shape */
+  fields: Record<string, z.ZodType>
+}
+
 export interface AutoFormField {
   /** 字段路径 */
   path: string
@@ -96,6 +109,8 @@ export interface AutoFormField {
   children?: AutoFormField[]
   /** 数组元素模板 */
   arrayElement?: AutoFormField
+  /** 布局配置（仅布局字段有效） */
+  layoutConfig?: AutoFormLayoutConfig
 }
 
 /** 提取对象的“已知键”（剔除 string/number/symbol 索引） */

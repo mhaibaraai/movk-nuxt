@@ -8,9 +8,10 @@ import { computed, onMounted, ref } from 'vue'
 import { useAutoFormProvider } from '../composables/useAutoFormContext'
 import { DEFAULT_CONTROLS } from '../constants/auto-form'
 import { deepClone, getPath, setPath } from '../core'
-import { introspectSchema, isLeafField } from '../utils/auto-form'
+import { classifyFields, introspectSchema } from '../utils/auto-form'
 import AutoFormRendererArray from './auto-form-renderer/AutoFormRendererArray.vue'
 import AutoFormRendererField from './auto-form-renderer/AutoFormRendererField.vue'
+import AutoFormRendererLayout from './auto-form-renderer/AutoFormRendererLayout.vue'
 import AutoFormRendererNested from './auto-form-renderer/AutoFormRendererNested.vue'
 
 export interface AutoFormProps<S extends z.ZodObject, T extends boolean = true, N extends boolean = false> extends FormProps<S, T, N> {
@@ -98,31 +99,12 @@ const visibleFields = computed(() =>
 )
 
 const renderData = computed(() => {
-  const visibleFieldsArray = visibleFields.value
-  const leafFields: AutoFormField[] = []
-  const nestedFields: AutoFormField[] = []
-  const arrayFields: AutoFormField[] = []
-
-  // 单次遍历完成分类
-  for (const field of visibleFieldsArray) {
-    if (field.meta.type === 'array') {
-      arrayFields.push(field)
-    } else if (isLeafField(field)) {
-      leafFields.push(field)
-    } else {
-      nestedFields.push(field)
-    }
-  }
-
-  const hasNestedFields = nestedFields.length > 0 || arrayFields.length > 0
+  const classified = classifyFields(visibleFields.value)
 
   return {
-    leafFields,
-    nestedFields,
-    arrayFields,
-    hasNestedFields,
-    flatFields: hasNestedFields ? [] : leafFields,
-    allFields: visibleFieldsArray
+    ...classified,
+    flatFields: classified.hasComplexFields ? [] : classified.leafFields,
+    allFields: visibleFields.value
   }
 })
 
@@ -136,7 +118,7 @@ onMounted(() => {
     <template #default="{ errors, loading }">
       <slot name="header" v-bind="{ errors, loading, fields: visibleFields, state }" />
 
-      <template v-if="renderData.hasNestedFields">
+      <template v-if="renderData.hasComplexFields">
         <template v-for="field in renderData.allFields" :key="field.path">
           <AutoFormRendererField
             v-if="renderData.leafFields.includes(field)"
@@ -150,6 +132,12 @@ onMounted(() => {
             :schema="schema"
             :extra-props="{ errors, loading }"
             :add-button-props="addButtonProps"
+          />
+          <AutoFormRendererLayout
+            v-else-if="renderData.layoutFields.includes(field)"
+            :field="field"
+            :schema="schema"
+            :extra-props="{ errors, loading }"
           />
           <AutoFormRendererNested
             v-else

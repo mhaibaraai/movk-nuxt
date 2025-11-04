@@ -1,11 +1,13 @@
 import type { DEFAULT_CONTROLS } from '../constants/auto-form'
 import type { IsComponent } from '../core'
-import type { AutoFormControl, AutoFormControls, AutoFormFactoryMethod } from '../types/auto-form'
+import type { AutoFormControl, AutoFormControls, AutoFormFactoryMethod, AutoFormLayoutConfig } from '../types/auto-form'
 import { isObject } from '@movk/core'
 import { z } from 'zod/v4'
 
 // 特殊标记 Key，用于在 Zod schema 实例上存储自定义元数据
 const AUTOFORM_META_KEY = '__autoform_meta__'
+// 布局配置标记 Key
+const AUTOFORM_LAYOUT_KEY = '__autoform_layout__'
 
 /**
  * 需要拦截的 Zod 方法列表
@@ -110,6 +112,13 @@ export function getAutoFormMetadata(schema: z.ZodType): Record<string, any> {
 }
 
 /**
+ * 从 Zod schema 中提取布局配置
+ */
+export function getAutoFormLayout(schema: z.ZodType): AutoFormLayoutConfig | undefined {
+  return (schema as any)[AUTOFORM_LAYOUT_KEY]
+}
+
+/**
  * 通用的 Zod 工厂方法创建器
  */
 function createZodFactoryMethod<T extends z.ZodType>(
@@ -143,6 +152,9 @@ interface TypedZodFactory<TC extends AutoFormControls> {
 
   // 数组工厂方法
   array: <T extends z.ZodType>(schema: T, meta?: any) => z.ZodArray<T>
+
+  // 布局方法 - 不产生 state 字段，支持组件类型推断
+  layout: <C extends IsComponent = IsComponent>(config: AutoFormLayoutConfig<C>) => z.ZodType
 
   // 函数重载：支持两种写法
   object: {
@@ -202,6 +214,22 @@ function createObjectFactory<T extends 'object' | 'looseObject' | 'strictObject'
   }) as any
 }
 
+/**
+ * 布局工厂 - 创建虚拟字段容器
+ */
+function createLayoutFactory() {
+  return <C extends IsComponent = IsComponent>(config: AutoFormLayoutConfig<C>): z.ZodType => {
+    const schema = z.any()
+
+    const meta = { virtual: true, type: 'layout' }
+    applyMeta(schema, meta)
+
+    ; (schema as any)[AUTOFORM_LAYOUT_KEY] = config
+
+    return schema
+  }
+}
+
 export function createAutoFormZ<TControls extends AutoFormControls = typeof DEFAULT_CONTROLS>(
   _controls?: TControls
 ): { afz: TypedZodFactory<TControls> } {
@@ -213,6 +241,8 @@ export function createAutoFormZ<TControls extends AutoFormControls = typeof DEFA
       date: createZodFactoryMethod(z.date),
 
       array: <T extends z.ZodType>(schema: T, meta?: any) => applyMeta(z.array(schema), meta),
+
+      layout: createLayoutFactory(),
 
       object: createObjectFactory('object'),
       looseObject: createObjectFactory('looseObject'),

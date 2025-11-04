@@ -296,25 +296,49 @@ createHintSlotFactory(removeCallback) {
 }
 ```
 
-### 已知限制
+## 布局分组方法 - 不产生 state 字段的容器 [✅]
 
-1. **性能考虑**
-   - 大数组（>1000 项）可能影响性能
-   - 每次数组修改都会触发完整重渲染
-   
-2. **验证限制**
-   - 暂不支持数组级别的最小/最大长度验证提示
-   - 跨数组元素的复杂验证（如唯一性）需手动处理
+### 核心功能
 
-3. **UI 限制**
-   - 删除按钮样式固定（通过 hint 插槽控制）
-   - 拖拽排序功能暂未实现
+- ✅ `afz.layout()` 工厂方法
+- ✅ 虚拟字段机制（不产生 state）
+- ✅ 路径自动处理（移除布局段）
+- ✅ 四种字段类型统一分类和渲染
+- ✅ `AutoFormRendererLayout` 组件
+- ✅ 嵌套布局支持
+- ✅ 循环依赖通过 `defineAsyncComponent` 解决
 
-### 潜在优化方向
+### 类型定义
 
-- [ ] 虚拟滚动支持（大数组性能优化）
-- [ ] 拖拽排序功能（集成 @vueuse/gesture 或 dnd-kit）
-- [ ] 数组长度验证提示（`min/max` 元数据支持）
-- [ ] 批量操作（全部删除、批量添加）
-- [ ] 数组项展开/折叠状态持久化
-- [ ] 自定义添加按钮位置（顶部/底部/内联）
+```ts
+interface AutoFormLayoutConfig {
+  component: IsComponent
+  props?: any
+  class?: any
+  slots?: Record<string, any>
+  fields: Record<string, z.ZodType>  // Record 而非数组
+}
+```
+
+### 使用示例
+
+```ts
+const schema = afz.object({
+  firstName: afz.string(),
+  
+  layoutBasicInfo: afz.layout({
+    component: UCard,
+    props: { ui: { body: { padding: 'p-4' } } },
+    fields: {
+      middleName: afz.string().optional(),  // 路径: "middleName"
+      age: afz.number().optional()          // 路径: "age"
+    }
+  }),
+  
+  lastName: afz.string()
+})
+```
+
+### 示例页面
+
+查看 `playground/app/pages/components/auto-form/layout.vue`

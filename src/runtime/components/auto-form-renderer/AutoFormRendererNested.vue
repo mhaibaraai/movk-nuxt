@@ -4,10 +4,15 @@ import type { z } from 'zod/v4'
 import type { AutoFormField } from '../../types/auto-form'
 import type { AutoFormProps } from '../AutoForm.vue'
 import { UCollapsible } from '#components'
-import { computed } from 'vue'
+import { computed, defineAsyncComponent } from 'vue'
 import { useAutoFormInjector } from '../../composables/useAutoFormContext'
-import { isLeafField, VNodeRender } from '../../utils/auto-form'
+import { classifyFields, isLeafField, VNodeRender } from '../../utils/auto-form'
+import AutoFormRendererArray from './AutoFormRendererArray.vue'
 import AutoFormRendererField from './AutoFormRendererField.vue'
+
+const AutoFormRendererLayout = defineAsyncComponent(() =>
+  import('./AutoFormRendererLayout.vue')
+)
 
 interface AutoFormRendererNestedProps<S extends z.ZodObject> extends Pick<AutoFormProps<S>, 'schema'> {
   field: AutoFormField
@@ -24,22 +29,16 @@ const { createSlotResolver, createSlotProps, createCollapsibleEnhancer } = useAu
 
 const childEntries = computed(() => {
   if (isLeafField(field) || !field.children?.length) {
-    return { leafChildren: [], nestedChildren: [] }
-  }
-
-  const leafChildren: AutoFormField[] = []
-  const nestedChildren: AutoFormField[] = []
-
-  // 单次遍历完成分类
-  for (const childField of field.children) {
-    if (isLeafField(childField)) {
-      leafChildren.push(childField)
-    } else {
-      nestedChildren.push(childField)
+    return {
+      leafFields: [],
+      nestedFields: [],
+      arrayFields: [],
+      layoutFields: [],
+      hasComplexFields: false
     }
   }
 
-  return { leafChildren, nestedChildren }
+  return classifyFields(field.children)
 })
 
 const slotResolver = computed(() => createSlotResolver(field, extraProps))
@@ -58,7 +57,23 @@ const slotProps = computed(() => createSlotProps(field, extraProps))
       <VNodeRender v-if="slotResolver.hasSlot('content')" :node="slotResolver.renderSlot('content', slotProps)" />
       <template v-else>
         <AutoFormRendererField
-          v-for="childField in childEntries.leafChildren"
+          v-for="childField in childEntries.leafFields"
+          :key="childField.path"
+          :field="childField"
+          :schema="schema"
+          :extra-props="extraProps"
+        />
+
+        <AutoFormRendererArray
+          v-for="childField in childEntries.arrayFields"
+          :key="childField.path"
+          :field="childField"
+          :schema="schema"
+          :extra-props="extraProps"
+        />
+
+        <AutoFormRendererLayout
+          v-for="childField in childEntries.layoutFields"
           :key="childField.path"
           :field="childField"
           :schema="schema"
@@ -66,7 +81,7 @@ const slotProps = computed(() => createSlotProps(field, extraProps))
         />
 
         <AutoFormRendererNested
-          v-for="childField in childEntries.nestedChildren"
+          v-for="childField in childEntries.nestedFields"
           :key="childField.path"
           :field="childField"
           :schema="schema"
@@ -78,7 +93,23 @@ const slotProps = computed(() => createSlotProps(field, extraProps))
 
   <template v-else>
     <AutoFormRendererField
-      v-for="childField in childEntries.leafChildren"
+      v-for="childField in childEntries.leafFields"
+      :key="childField.path"
+      :field="childField"
+      :schema="schema"
+      :extra-props="extraProps"
+    />
+
+    <AutoFormRendererArray
+      v-for="childField in childEntries.arrayFields"
+      :key="childField.path"
+      :field="childField"
+      :schema="schema"
+      :extra-props="extraProps"
+    />
+
+    <AutoFormRendererLayout
+      v-for="childField in childEntries.layoutFields"
       :key="childField.path"
       :field="childField"
       :schema="schema"
@@ -86,7 +117,7 @@ const slotProps = computed(() => createSlotProps(field, extraProps))
     />
 
     <AutoFormRendererNested
-      v-for="childField in childEntries.nestedChildren"
+      v-for="childField in childEntries.nestedFields"
       :key="childField.path"
       :field="childField"
       :schema="schema"
