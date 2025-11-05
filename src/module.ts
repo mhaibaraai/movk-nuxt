@@ -58,6 +58,7 @@ export default defineNuxtModule<ModuleOptions>({
       ignore: ['auto-form-renderer/**']
     })
 
+    addImportsDir(resolve('runtime/composables'))
     addImportsDir(resolve('runtime/shared'))
 
     addTypeTemplate({

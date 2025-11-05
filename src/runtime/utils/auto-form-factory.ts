@@ -1,8 +1,10 @@
-import type { DEFAULT_CONTROLS } from '../constants/auto-form'
+import { useAutoForm } from '../composables/useAutoForm'
 import type { IsComponent } from '../core'
-import type { AutoFormControl, AutoFormControls, AutoFormFactoryMethod, AutoFormLayoutConfig } from '../types/auto-form'
+import type { AutoFormControls, AutoFormFactoryMethod, AutoFormLayoutConfig } from '../types/auto-form'
 import { isObject } from '@movk/core'
 import { z } from 'zod/v4'
+
+const { DEFAULT_CONTROLS: _DEFAULT_CONTROLS } = useAutoForm()
 
 // 特殊标记 Key，用于在 Zod schema 实例上存储自定义元数据
 const AUTOFORM_META_KEY = '__autoform_meta__'
@@ -81,7 +83,7 @@ function interceptCloneMethods<T extends z.ZodType>(schema: T, customMeta: Recor
 /**
  * 应用元数据到 Zod schema
  */
-function applyMeta<T extends z.ZodType, M = unknown>(
+export function applyMeta<T extends z.ZodType, M = unknown>(
   schema: T,
   meta = {} as M
 ): T {
@@ -121,7 +123,7 @@ export function getAutoFormLayout(schema: z.ZodType): AutoFormLayoutConfig | und
 /**
  * 通用的 Zod 工厂方法创建器
  */
-function createZodFactoryMethod<T extends z.ZodType>(
+export function createZodFactoryMethod<T extends z.ZodType>(
   zodFactory: (params?: any) => T
 ) {
   return (controlMeta?: any): T => {
@@ -142,9 +144,9 @@ function createZodFactoryMethod<T extends z.ZodType>(
 }
 
 type KeysOf<T> = Extract<keyof T, string>
-type WithDefaultControls<TControls> = TControls & typeof DEFAULT_CONTROLS
+type WithDefaultControls<TControls> = TControls & typeof _DEFAULT_CONTROLS
 
-interface TypedZodFactory<TC extends AutoFormControls> {
+export interface TypedZodFactory<TC extends AutoFormControls> {
   string: AutoFormFactoryMethod<WithDefaultControls<TC>, 'string', z.ZodString>
   number: AutoFormFactoryMethod<WithDefaultControls<TC>, 'number', z.ZodNumber>
   boolean: AutoFormFactoryMethod<WithDefaultControls<TC>, 'boolean', z.ZodBoolean>
@@ -199,7 +201,7 @@ interface TypedZodFactory<TC extends AutoFormControls> {
 /**
  * 对象工厂创建器，支持柯里化和直接调用
  */
-function createObjectFactory<T extends 'object' | 'looseObject' | 'strictObject'>(
+export function createObjectFactory<T extends 'object' | 'looseObject' | 'strictObject'>(
   method: T
 ) {
   return ((...args: any[]) => {
@@ -217,7 +219,7 @@ function createObjectFactory<T extends 'object' | 'looseObject' | 'strictObject'
 /**
  * 布局工厂 - 创建虚拟字段容器
  */
-function createLayoutFactory() {
+export function createLayoutFactory() {
   return <C extends IsComponent = IsComponent>(config: AutoFormLayoutConfig<C>): z.ZodType => {
     const schema = z.any()
 
@@ -228,29 +230,4 @@ function createLayoutFactory() {
 
     return schema
   }
-}
-
-export function createAutoFormZ<TControls extends AutoFormControls = typeof DEFAULT_CONTROLS>(
-  _controls?: TControls
-): { afz: TypedZodFactory<TControls> } {
-  return {
-    afz: {
-      string: createZodFactoryMethod(z.string),
-      number: createZodFactoryMethod(z.number),
-      boolean: createZodFactoryMethod(z.boolean),
-      date: createZodFactoryMethod(z.date),
-
-      array: <T extends z.ZodType>(schema: T, meta?: any) => applyMeta(z.array(schema), meta),
-
-      layout: createLayoutFactory(),
-
-      object: createObjectFactory('object'),
-      looseObject: createObjectFactory('looseObject'),
-      strictObject: createObjectFactory('strictObject')
-    } as unknown as TypedZodFactory<TControls>
-  }
-}
-
-export function createAutoFormControl<C extends IsComponent>(e: AutoFormControl<C>): AutoFormControl<C> {
-  return e
 }

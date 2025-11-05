@@ -20,7 +20,7 @@
 1. **Schema 内省**: 通过 `introspectSchema` 解析 Zod schema 生成字段树
 2. **字段分类**: 区分叶子字段和嵌套对象字段进行不同渲染
 3. **控件映射**: 优先级 `component > type > zodType` 选择合适控件
-4. **响应式处理**: 通过 `useAutoFormProvider` 管理字段上下文和状态更新
+4. **响应式处理**: 通过 `useAutoForm` 管理字段上下文和状态更新
 5. **插槽系统**: 支持全局、字段特定、路径特定多层级插槽
 
 ### 已实现功能

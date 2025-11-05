@@ -5,7 +5,7 @@ import type { AutoFormField } from '../../types/auto-form'
 import type { AutoFormProps } from '../AutoForm.vue'
 import { UFormField } from '#components'
 import { computed } from 'vue'
-import { useAutoFormInjector } from '../../composables/useAutoFormContext'
+import { useAutoFormInjector } from '../../internal/useAutoFormProvider'
 import { VNodeRender } from '../../utils/auto-form'
 
 interface AutoFormFieldProps<S extends z.ZodObject> extends Pick<AutoFormProps<S>, 'schema'> {

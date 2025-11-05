@@ -5,14 +5,14 @@ import type { AutoFormControls, AutoFormField, AutoFormSlotProps, DynamicFormSlo
 import { UForm } from '#components'
 import type { Ref } from 'vue'
 import { computed, onMounted, ref } from 'vue'
-import { useAutoFormProvider } from '../composables/useAutoFormContext'
-import { DEFAULT_CONTROLS } from '../constants/auto-form'
+import { useAutoFormProvider } from '../internal/useAutoFormProvider'
 import { deepClone, getPath, setPath } from '../core'
 import { classifyFields, introspectSchema } from '../utils/auto-form'
 import AutoFormRendererArray from './auto-form-renderer/AutoFormRendererArray.vue'
 import AutoFormRendererField from './auto-form-renderer/AutoFormRendererField.vue'
 import AutoFormRendererLayout from './auto-form-renderer/AutoFormRendererLayout.vue'
 import AutoFormRendererNested from './auto-form-renderer/AutoFormRendererNested.vue'
+import { useAutoForm } from '../composables/useAutoForm'
 
 export interface AutoFormProps<S extends z.ZodObject, T extends boolean = true, N extends boolean = false> extends FormProps<S, T, N> {
   /**
@@ -54,6 +54,7 @@ defineOptions({ inheritAttrs: false })
 
 const state = ref(_state || {}) as Ref<AutoFormStateType>
 
+const { DEFAULT_CONTROLS } = useAutoForm()
 const { resolveFieldProp } = useAutoFormProvider(state, _slots)
 
 const controlsMapping = computed(() => ({

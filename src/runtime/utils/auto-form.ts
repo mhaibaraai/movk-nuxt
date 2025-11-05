@@ -8,7 +8,7 @@ import { UButton, UIcon } from '#components'
 import { isFunction, isObject } from '@movk/core'
 import { Fragment, h, isRef, isVNode, markRaw, unref } from 'vue'
 import { joinPath, startCase, toPath } from '../core'
-import { getAutoFormLayout, getAutoFormMetadata } from '../shared/auto-form'
+import { getAutoFormLayout, getAutoFormMetadata } from './auto-form-factory'
 
 const MAX_RECURSION_DEPTH = 50
 const MAX_ARRAY_LENGTH = 1000

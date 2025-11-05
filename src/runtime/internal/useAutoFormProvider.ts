@@ -6,14 +6,10 @@ import { computed, h, inject, isVNode, provide, resolveDynamicComponent, unref }
 import { getPath, setPath } from '../core'
 import { enhanceEventProps, resolveReactiveValue } from '../utils/auto-form'
 
-// 字段上下文工厂类型
-type AutoFormContextFactory = ReturnType<typeof useAutoFormProvider>
+type AutoFormProvider = ReturnType<typeof useAutoFormProvider>
 
-const AUTO_FORM_CONTEXT_KEY: InjectionKey<AutoFormContextFactory> = Symbol('AutoFormContext')
+const AUTO_FORM_CONTEXT_KEY: InjectionKey<AutoFormProvider> = Symbol('AUTO_FORM_CONTEXT_KEY')
 
-/**
- * 提供字段上下文管理的 composable
- */
 export function useAutoFormProvider<T extends Record<string, any>>(
   state: Ref<T>,
   slots: Record<string, any>
@@ -267,9 +263,6 @@ export function useAutoFormProvider<T extends Record<string, any>>(
   return contextFactory
 }
 
-/**
- * 注入字段上下文管理的 composable（用于子组件）
- */
 export function useAutoFormInjector() {
   const contextFactory = inject(AUTO_FORM_CONTEXT_KEY)
 

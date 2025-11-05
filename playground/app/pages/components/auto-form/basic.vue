@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { z } from 'zod/v4'
 
-const { afz } = createAutoFormZ()
+const { afz } = useAutoForm()
 
 const schema = z.object({
   layout: afz.layout({
