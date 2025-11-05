@@ -175,3 +175,85 @@ export interface AutoFormNestedCollapsible extends Pick<CollapsibleRootProps, 'd
   class?: any
   ui?: { root?: ClassNameValue, content?: ClassNameValue }
 }
+
+type KeysOf<T> = Extract<keyof T, string>
+type WithDefaultControls<TControls> = TControls & typeof _DEFAULT_CONTROLS
+
+interface LayoutFieldMarker<Fields extends Record<string, z.ZodType>> {
+  __brand: 'LayoutMarker'
+  class?: string
+  component?: any
+  props?: any
+  slots?: any
+  fields: Fields
+}
+
+/**
+ * 类型体操: 过滤布局标记并展开其 fields
+ *
+ * 1. 移除所有 LayoutFieldMarker 类型的键
+ * 2. 合并所有布局的 fields
+ */
+type FilterLayoutMarkers<S extends Record<string, any>> = {
+  [K in keyof S as S[K] extends LayoutFieldMarker<any> ? never : K]: S[K]
+}
+
+type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends ((k: infer I) => void) ? I : never
+
+type ExtractAllLayoutFields<S extends Record<string, any>> = UnionToIntersection<
+  {
+    [K in keyof S]: S[K] extends LayoutFieldMarker<infer Fields> ? Fields : {}
+  }[keyof S]
+>
+
+type ExtractLayoutShape<S extends Record<string, any>>
+  = FilterLayoutMarkers<S> & ExtractAllLayoutFields<S>
+
+export interface TypedZodFactory<TC extends AutoFormControls> {
+  string: AutoFormFactoryMethod<WithDefaultControls<TC>, 'string', z.ZodString>
+  number: AutoFormFactoryMethod<WithDefaultControls<TC>, 'number', z.ZodNumber>
+  boolean: AutoFormFactoryMethod<WithDefaultControls<TC>, 'boolean', z.ZodBoolean>
+  date: AutoFormFactoryMethod<WithDefaultControls<TC>, 'date', z.ZodDate>
+
+  array: <T extends z.ZodType>(schema: T, meta?: any) => z.ZodArray<T>
+
+  layout: <C extends IsComponent = IsComponent, Fields extends Record<string, z.ZodType> = Record<string, z.ZodType>>(
+    config: Omit<AutoFormLayoutConfig<C>, 'fields'> & { fields: Fields }
+  ) => LayoutFieldMarker<Fields>
+
+  object: {
+    <T extends object>(): <S extends Record<string, any>>(
+      shape: S & Partial<Record<KeysOf<T>, any>>,
+      meta?: any
+    ) => z.ZodObject<ExtractLayoutShape<S>, z.core.$strip>
+
+    <S extends Record<string, any>>(
+      shape: S,
+      meta?: any
+    ): z.ZodObject<ExtractLayoutShape<S>, z.core.$strip>
+  }
+
+  looseObject: {
+    <T extends object>(): <S extends Record<string, any>>(
+      shape: S & Partial<Record<KeysOf<T>, any>>,
+      meta?: any
+    ) => z.ZodObject<ExtractLayoutShape<S>, z.core.$loose>
+
+    <S extends Record<string, any>>(
+      shape: S,
+      meta?: any
+    ): z.ZodObject<ExtractLayoutShape<S>, z.core.$loose>
+  }
+
+  strictObject: {
+    <T extends object>(): <S extends Record<string, any>>(
+      shape: S & Partial<Record<KeysOf<T>, any>>,
+      meta?: any
+    ) => z.ZodObject<ExtractLayoutShape<S>, z.core.$strict>
+
+    <S extends Record<string, any>>(
+      shape: S,
+      meta?: any
+    ): z.ZodObject<ExtractLayoutShape<S>, z.core.$strict>
+  }
+}

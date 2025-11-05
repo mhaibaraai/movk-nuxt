@@ -8,12 +8,11 @@ import { UButton, UIcon } from '#components'
 import { isFunction, isObject } from '@movk/core'
 import { Fragment, h, isRef, isVNode, markRaw, unref } from 'vue'
 import { joinPath, startCase, toPath } from '../core'
-import { getAutoFormLayout, getAutoFormMetadata } from './auto-form-factory'
+import { getAutoFormFieldOrder, getAutoFormLayout, getAutoFormMetadata } from '../utils/auto-form-factory'
 
 const MAX_RECURSION_DEPTH = 50
 const MAX_ARRAY_LENGTH = 1000
 const MAX_OBJECT_PROPERTIES = 500
-
 const EVENT_PROP_REGEX = /^on[A-Z]/
 
 function validateContext(context: AutoFormFieldContext): asserts context is AutoFormFieldContext {
@@ -26,9 +25,6 @@ function validateReactiveValue(value: unknown): value is ReactiveValue<any, any>
   return value !== null && value !== undefined
 }
 
-/**
- * 字段分类工具：将字段数组分类为四种类型
- */
 export function classifyFields(fields: AutoFormField[]) {
   const leafFields: AutoFormField[] = []
   const nestedFields: AutoFormField[] = []
@@ -56,12 +52,6 @@ export function classifyFields(fields: AutoFormField[]) {
   }
 }
 
-/**
- * 响应式值解析
- * @param value - 响应式值
- * @param context - 表单字段上下文
- * @returns 解析后的值
- */
 export function resolveReactiveValue(value: ReactiveValue<any, any>, context: AutoFormFieldContext): any {
   validateContext(context)
 
@@ -76,13 +66,6 @@ export function resolveReactiveValue(value: ReactiveValue<any, any>, context: Au
   return unref(value)
 }
 
-/**
- * 响应式对象解析
- * @param obj - 要解析的对象
- * @param context - 表单字段上下文
- * @param depth - 当前递归深度（防止无限递归）
- * @returns 解析后的对象
- */
 export function resolveReactiveObject<T extends Record<string, any>>(
   obj: T,
   context: AutoFormFieldContext,
@@ -215,6 +198,7 @@ function extractDecorators(schema: z.ZodType): {
   const decorators: AutoFormField['decorators'] = {}
   let cur: any = schema
   let coreSchema: z.ZodType = schema
+
   while (cur) {
     const def = cur?.def
     if (!def?.type)
@@ -256,6 +240,8 @@ function extractSchemaInfo(schema: z.ZodType, globalMeta: GlobalMeta, autoGenera
 
   const { decorators, coreSchema } = extractDecorators(schema)
 
+  const computedType = customMeta?.component ? undefined : (customMeta?.type ?? (coreSchema as any)?.type)
+
   const mergedMeta = {
     ...{
       required: !decorators.isOptional,
@@ -264,7 +250,7 @@ function extractSchemaInfo(schema: z.ZodType, globalMeta: GlobalMeta, autoGenera
     } as AutoFormField['meta'],
     ...globalMeta,
     ...customMeta,
-    type: customMeta?.component ? undefined : (customMeta?.type ?? coreSchema?.type)
+    type: computedType
   } as AutoFormMergeMeta
 
   return { decorators, mergedMeta, coreSchema }
@@ -327,9 +313,13 @@ export function introspectSchema(
 ): AutoFormField[] {
   const result: AutoFormField[] = []
 
-  const layoutConfig = getAutoFormLayout(schema)
-  if (layoutConfig) {
-    return handleLayoutField(layoutConfig, mapping, parentPath, globalMeta)
+  // 检查是否有布局配置
+  const layoutConfigs = getAutoFormLayout(schema)
+
+  // 只有根对象（parentPath 为空）才直接使用布局渲染
+  // 嵌套对象即使有布局，也要先创建对象字段，保留其元数据
+  if (layoutConfigs && !parentPath) {
+    return handleLayoutFields(schema, layoutConfigs, mapping, parentPath, globalMeta)
   }
 
   const fieldName = parentPath.split('.').pop()
@@ -342,7 +332,11 @@ export function introspectSchema(
   }
 
   if (finalType === 'object' && coreSchema) {
-    return handleObjectField(coreSchema, mapping, parentPath, globalMeta, decorators, mergedMeta)
+    // 嵌套对象：检查是否有布局配置
+    // 如果有，将布局配置传递给 handleObjectField
+    const coreLayoutConfigs = layoutConfigs || getAutoFormLayout(coreSchema)
+
+    return handleObjectField(coreSchema, mapping, parentPath, globalMeta, decorators, mergedMeta, coreLayoutConfigs)
   }
 
   if (coreSchema) {
@@ -359,9 +353,68 @@ export function introspectSchema(
 }
 
 /**
+ * 处理多个布局配置
+ * 按照原始定义顺序渲染：布局标记和独立字段交错出现
+ *
+ * 策略：
+ * 1. 从 schema 中获取 fieldOrder（记录了原始定义顺序）
+ * 2. 遍历 fieldOrder，按顺序渲染布局和字段
+ * 3. 如果是布局类型（type: 'layout'），渲染整个布局
+ * 4. 如果是字段类型（type: 'field'），直接渲染字段
+ */
+function handleLayoutFields(
+  schema: z.ZodType,
+  layoutConfigs: AutoFormLayoutConfig[],
+  mapping: AutoFormControls,
+  parentPath: string,
+  globalMeta: GlobalMeta
+): AutoFormField[] {
+  const result: AutoFormField[] = []
+  const { coreSchema } = extractDecorators(schema)
+
+  // 获取字段渲染顺序
+  const fieldOrder = getAutoFormFieldOrder(coreSchema)
+  if (!fieldOrder || fieldOrder.length === 0) {
+    // 降级：如果没有 fieldOrder，直接渲染所有布局
+    for (const layoutConfig of layoutConfigs) {
+      const layoutField = handleLayoutField(schema, layoutConfig, mapping, parentPath, globalMeta)
+      result.push(...layoutField)
+    }
+    return result
+  }
+
+  // 获取处理后的 shape
+  const processedShape = (coreSchema as any).shape || {}
+
+  // 按照 fieldOrder 顺序渲染
+  for (const item of fieldOrder) {
+    if (item.type === 'layout') {
+      // 渲染布局
+      const layoutConfig = layoutConfigs[item.layoutIndex!]
+      if (layoutConfig) {
+        const layoutField = handleLayoutField(schema, layoutConfig, mapping, parentPath, globalMeta)
+        result.push(...layoutField)
+      }
+    } else if (item.type === 'field') {
+      // 渲染独立字段
+      const fieldSchema = processedShape[item.key]
+      if (fieldSchema) {
+        const childFields = introspectSchema(fieldSchema, mapping, item.key, globalMeta)
+        result.push(...childFields)
+      }
+    }
+  }
+
+  return result
+}
+
+/**
  * 布局字段处理逻辑
+ *
+ * 策略：只处理 layoutConfig.fields 中的字段
  */
 function handleLayoutField(
+  schema: z.ZodType,
   layoutConfig: AutoFormLayoutConfig | undefined,
   mapping: AutoFormControls,
   parentPath: string,
@@ -371,8 +424,9 @@ function handleLayoutField(
     return []
   }
 
+  const layoutPath = parentPath ? `${parentPath}.__layout` : '__root_layout'
   const layoutField: AutoFormField = {
-    path: `${parentPath}.__layout`,
+    path: layoutPath,
     schema: {} as z.ZodType,
     meta: {
       type: 'layout',
@@ -384,16 +438,15 @@ function handleLayoutField(
     children: []
   }
 
-  const pathSegments = toPath(parentPath)
-  const actualParentPath = pathSegments.slice(0, -1).join('.')
-
-  const fieldKeys = Object.keys(layoutConfig.fields)
-
-  for (const key of fieldKeys) {
+  // 只处理布局配置中的字段
+  for (const key of Object.keys(layoutConfig.fields)) {
     const fieldSchema = layoutConfig.fields[key]
     if (!fieldSchema) continue
 
-    const childPath = actualParentPath ? `${actualParentPath}.${key}` : key
+    const childPath = parentPath
+      ? `${toPath(parentPath).slice(0, -1).join('.')}.${key}`.replace(/^\./, '')
+      : key
+
     const childFields = introspectSchema(fieldSchema, mapping, childPath, globalMeta)
     layoutField.children!.push(...childFields)
   }
@@ -425,6 +478,7 @@ function handleArrayField(
 
 /**
  * 对象字段处理逻辑
+ * 支持可选的布局配置数组，用于嵌套对象内部的布局渲染
  */
 function handleObjectField(
   coreSchema: z.ZodType,
@@ -432,7 +486,8 @@ function handleObjectField(
   parentPath: string,
   globalMeta: GlobalMeta,
   decorators: AutoFormField['decorators'],
-  mergedMeta: AutoFormMergeMeta
+  mergedMeta: AutoFormMergeMeta,
+  layoutConfigs?: AutoFormLayoutConfig[]
 ): AutoFormField[] {
   const result: AutoFormField[] = []
   const shape = (coreSchema as any).shape
@@ -447,7 +502,14 @@ function handleObjectField(
     return result
   }
 
+  // 根对象（无 parentPath）：直接展开子字段
   if (!parentPath) {
+    // 如果有布局配置，使用布局渲染（支持多个布局）
+    if (layoutConfigs && layoutConfigs.length > 0) {
+      return handleLayoutFields(coreSchema, layoutConfigs, mapping, parentPath, globalMeta)
+    }
+
+    // 否则直接展开
     for (const key of shapeKeys) {
       if (key in shape) {
         const child = shape[key] as z.ZodType
@@ -457,15 +519,23 @@ function handleObjectField(
     return result
   }
 
+  // 嵌套对象：创建对象字段
   const field = createField(parentPath, coreSchema, decorators, mergedMeta)
   field.children = []
 
-  for (const key of shapeKeys) {
-    if (key in shape) {
-      const child = shape[key] as z.ZodType
-      const pathSegments = toPath(parentPath)
-      const childPath = joinPath([...pathSegments, key])
-      field.children.push(...introspectSchema(child, mapping, childPath, globalMeta))
+  // 如果有布局配置，使用布局渲染子字段（支持多个布局）
+  if (layoutConfigs && layoutConfigs.length > 0) {
+    const layoutFields = handleLayoutFields(coreSchema, layoutConfigs, mapping, parentPath, globalMeta)
+    field.children.push(...layoutFields)
+  } else {
+    // 否则正常展开子字段
+    for (const key of shapeKeys) {
+      if (key in shape) {
+        const child = shape[key] as z.ZodType
+        const pathSegments = toPath(parentPath)
+        const childPath = joinPath([...pathSegments, key])
+        field.children.push(...introspectSchema(child, mapping, childPath, globalMeta))
+      }
     }
   }
 
