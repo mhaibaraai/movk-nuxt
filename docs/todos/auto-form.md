@@ -338,7 +338,3 @@ const schema = afz.object({
   lastName: afz.string()
 })
 ```
-
-### 示例页面
-
-查看 `playground/app/pages/components/auto-form/layout.vue`
