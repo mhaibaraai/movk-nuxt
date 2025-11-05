@@ -10,6 +10,8 @@ const { DEFAULT_CONTROLS: _DEFAULT_CONTROLS } = useAutoForm()
 const AUTOFORM_META_KEY = '__autoform_meta__'
 // 布局配置标记 Key
 const AUTOFORM_LAYOUT_KEY = '__autoform_layout__'
+// 布局来源标记 Key - 用于追踪字段属于哪个布局组
+const LAYOUT_SOURCE_KEY = '__layout_source__'
 
 /**
  * 需要拦截的 Zod 方法列表
@@ -146,6 +148,28 @@ export function createZodFactoryMethod<T extends z.ZodType>(
 type KeysOf<T> = Extract<keyof T, string>
 type WithDefaultControls<TControls> = TControls & typeof _DEFAULT_CONTROLS
 
+/**
+ * 布局字段标记类型
+ */
+interface LayoutFieldMarker<Fields extends Record<string, z.ZodType>> {
+  __brand: 'LayoutMarker'
+  class?: string
+  component?: any
+  props?: any
+  slots?: any
+  fields: Fields
+}
+
+/**
+ * 提取布局字段 - 类型体操
+ * 如果 shape 中有 $layout 字段,展开其 fields 并排除 $layout
+ */
+type ExtractLayoutShape<S extends Record<string, any>> = S extends {
+  $layout: LayoutFieldMarker<infer Fields>
+}
+  ? Omit<S, '$layout'> & Fields
+  : S
+
 export interface TypedZodFactory<TC extends AutoFormControls> {
   string: AutoFormFactoryMethod<WithDefaultControls<TC>, 'string', z.ZodString>
   number: AutoFormFactoryMethod<WithDefaultControls<TC>, 'number', z.ZodNumber>
@@ -155,51 +179,54 @@ export interface TypedZodFactory<TC extends AutoFormControls> {
   // 数组工厂方法
   array: <T extends z.ZodType>(schema: T, meta?: any) => z.ZodArray<T>
 
-  // 布局方法 - 不产生 state 字段，支持组件类型推断
-  layout: <C extends IsComponent = IsComponent>(config: AutoFormLayoutConfig<C>) => z.ZodType
+  // 布局标记方法 - 返回布局字段标记,配合 afz.object({ $layout: ... }) 使用
+  layout: <C extends IsComponent = IsComponent, Fields extends Record<string, z.ZodType> = Record<string, z.ZodType>>(
+    config: Omit<AutoFormLayoutConfig<C>, 'fields'> & { fields: Fields }
+  ) => LayoutFieldMarker<Fields>
 
-  // 函数重载：支持两种写法
+  // 函数重载：支持两种写法,自动处理 $layout 字段
   object: {
     // 1. 柯里化写法：afz.object<State>()({...}, meta?) - 类型约束和推断
-    <T extends object>(): <S extends Record<string, z.ZodType>>(
+    <T extends object>(): <S extends Record<string, any>>(
       shape: S & Partial<Record<KeysOf<T>, any>>,
       meta?: any
-    ) => z.ZodObject<S, z.core.$strip>
+    ) => z.ZodObject<ExtractLayoutShape<S>, z.core.$strip>
 
     // 2. 直接写法：afz.object({...}, meta?) - 简化语法，保持类型推断
-    <S extends Record<string, z.ZodType>>(
+    <S extends Record<string, any>>(
       shape: S,
       meta?: any
-    ): z.ZodObject<S, z.core.$strip>
+    ): z.ZodObject<ExtractLayoutShape<S>, z.core.$strip>
   }
 
   looseObject: {
-    <T extends object>(): <S extends Record<string, z.ZodType>>(
+    <T extends object>(): <S extends Record<string, any>>(
       shape: S & Partial<Record<KeysOf<T>, any>>,
       meta?: any
-    ) => z.ZodObject<S, z.core.$loose>
+    ) => z.ZodObject<ExtractLayoutShape<S>, z.core.$loose>
 
-    <S extends Record<string, z.ZodType>>(
+    <S extends Record<string, any>>(
       shape: S,
       meta?: any
-    ): z.ZodObject<S, z.core.$loose>
+    ): z.ZodObject<ExtractLayoutShape<S>, z.core.$loose>
   }
 
   strictObject: {
-    <T extends object>(): <S extends Record<string, z.ZodType>>(
+    <T extends object>(): <S extends Record<string, any>>(
       shape: S & Partial<Record<KeysOf<T>, any>>,
       meta?: any
-    ) => z.ZodObject<S, z.core.$strict>
+    ) => z.ZodObject<ExtractLayoutShape<S>, z.core.$strict>
 
-    <S extends Record<string, z.ZodType>>(
+    <S extends Record<string, any>>(
       shape: S,
       meta?: any
-    ): z.ZodObject<S, z.core.$strict>
+    ): z.ZodObject<ExtractLayoutShape<S>, z.core.$strict>
   }
 }
 
 /**
- * 对象工厂创建器，支持柯里化和直接调用
+ * 对象工厂创建器,支持柯里化和直接调用
+ * 自动处理 $layout 字段的展开
  */
 export function createObjectFactory<T extends 'object' | 'looseObject' | 'strictObject'>(
   method: T
@@ -207,27 +234,88 @@ export function createObjectFactory<T extends 'object' | 'looseObject' | 'strict
   return ((...args: any[]) => {
     // 柯里化写法: afz.object<State>()({...})
     if (args.length === 0) {
-      return (shape: any, meta?: any) => applyMeta((z as any)[method](shape), meta || {})
+      return (shape: any, meta?: any) => {
+        const processedShape = processLayoutShape(shape)
+        return applyMeta((z as any)[method](processedShape.shape), meta || {})
+      }
     }
 
     // 直接写法: afz.object({...}) 或 afz.object({...}, meta)
     const [shape, meta] = args
-    return applyMeta((z as any)[method](shape), meta || {})
+    const processedShape = processLayoutShape(shape)
+    return applyMeta((z as any)[method](processedShape.shape), meta || {})
   }) as any
 }
 
 /**
- * 布局工厂 - 创建虚拟字段容器
+ * 处理包含 $layout 的 shape
+ * 展开 $layout.fields 到顶层,并保存布局配置
+ */
+function processLayoutShape(shape: Record<string, any>): {
+  shape: Record<string, z.ZodType>
+  layouts: AutoFormLayoutConfig[]
+} {
+  if (!shape || typeof shape !== 'object') {
+    return { shape, layouts: [] }
+  }
+
+  const layouts: AutoFormLayoutConfig[] = []
+  const resultShape: Record<string, z.ZodType> = {}
+
+  for (const [key, value] of Object.entries(shape)) {
+    if (key === '$layout' && value && typeof value === 'object' && '__brand' in value) {
+      // 这是一个布局标记
+      const layoutMarker = value as LayoutFieldMarker<any>
+      const layoutConfig: AutoFormLayoutConfig = {
+        class: layoutMarker.class,
+        component: layoutMarker.component,
+        props: layoutMarker.props,
+        slots: layoutMarker.slots,
+        fields: layoutMarker.fields
+      }
+      layouts.push(layoutConfig)
+
+      // 展开 fields 到顶层
+      for (const [fieldKey, fieldSchema] of Object.entries(layoutMarker.fields)) {
+        resultShape[fieldKey] = fieldSchema as z.ZodType
+        // 标记字段来源
+        const layoutId = `layout_${layouts.length}`
+        ; (fieldSchema as any)[LAYOUT_SOURCE_KEY] = {
+          id: layoutId,
+          config: layoutConfig
+        }
+      }
+    } else {
+      // 普通字段
+      resultShape[key] = value
+    }
+  }
+
+  return { shape: resultShape, layouts }
+}
+
+/**
+ * 布局标记工厂 - 创建布局字段标记
+ * 用于 afz.object({ $layout: afz.layout({...}) })
  */
 export function createLayoutFactory() {
-  return <C extends IsComponent = IsComponent>(config: AutoFormLayoutConfig<C>): z.ZodType => {
-    const schema = z.any()
-
-    const meta = { virtual: true, type: 'layout' }
-    applyMeta(schema, meta)
-
-    ; (schema as any)[AUTOFORM_LAYOUT_KEY] = config
-
-    return schema
+  return <C extends IsComponent = IsComponent, Fields extends Record<string, z.ZodType> = Record<string, z.ZodType>>(
+    config: Omit<AutoFormLayoutConfig<C>, 'fields'> & { fields: Fields }
+  ): LayoutFieldMarker<Fields> => {
+    return {
+      __brand: 'LayoutMarker',
+      class: config.class as any,
+      component: config.component,
+      props: config.props,
+      slots: config.slots,
+      fields: config.fields
+    }
   }
+}
+
+/**
+ * 获取字段的布局来源
+ */
+export function getFieldLayoutSource(field: z.ZodType): { id: string, config: AutoFormLayoutConfig } | undefined {
+  return (field as any)[LAYOUT_SOURCE_KEY]
 }
