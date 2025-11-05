@@ -1,10 +1,10 @@
 <script lang="ts" setup>
-import { z } from 'zod/v4'
+import type { z } from 'zod/v4'
 
 const { afz } = useAutoForm()
 
-const schema = z.object({
-  layout: afz.layout({
+const schema = afz.object({
+  $layout: afz.layout({
     class: 'grid grid-cols-4 gap-4',
     fields: {
       username: afz.string({ controlProps: { icon: 'i-lucide-user' } }).min(2, { message: '用户名至少需要2个字符' }).meta({ hint: '用户名' }),
