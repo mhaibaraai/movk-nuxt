@@ -1,28 +1,28 @@
 <script setup lang="ts" generic="R extends boolean, M extends boolean, P extends 'click' | 'hover' = 'click'">
 import { UPopover, UButton, UCalendar } from '#components'
-import type { ButtonProps, PopoverProps, CalendarProps, PopoverEmits, CalendarEmits } from '@nuxt/ui'
-import { DateFormatter, getLocalTimeZone } from '@internationalized/date'
+import type { ButtonProps, PopoverProps, CalendarProps, CalendarEmits, PopoverEmits } from '@nuxt/ui'
 import type { DateValue } from '@internationalized/date'
 import { computed } from 'vue'
+import { useDateFormatter } from '../../composables/useDateFormatter'
+import type { DateFormatterOptions } from '../../composables/useDateFormatter'
 import type { OmitByKey } from '@movk/core'
 
-interface DatePickerProps extends /** @vue-ignore */ OmitByKey<CalendarProps<R, M>, 'modelValue'> {
+type LabelFormat = 'iso' | 'formatted' | 'date' | 'timestamp' | 'unix'
+const LABEL_FORMATS: LabelFormat[] = ['iso', 'formatted', 'date', 'timestamp', 'unix']
+
+interface DatePickerProps extends /** @vue-ignore */ OmitByKey<CalendarProps<R, M>, 'modelValue'>, DateFormatterOptions {
   buttonProps?: ButtonProps
   popoverProps?: PopoverProps<P>
   /**
-   * 日期格式化选项
-   * @see https://react-spectrum.adobe.com/internationalized/date/index.html
+   * 标签格式化器
+   * - 函数: 自定义格式化逻辑
+   * - 'iso': ISO 8601 格式
+   * - 'formatted': 本地化格式
+   * - 'date': Date 对象的字符串表示
+   * - 'timestamp': 时间戳（毫秒）
+   * - 'unix': Unix 时间戳（秒）
    */
-  dateFormatOptions?: Intl.DateTimeFormatOptions
-  /**
-   * 日期格式化的语言区域
-   */
-  locale?: string
-  /**
-   * 按钮标签
-   * 可以是字符串或函数 (df, modelValue) => string
-   */
-  label?: string | ((df: DateFormatter, modelValue: CalendarProps<R, M>['modelValue']) => string)
+  labelFormat?: LabelFormat | ((formatter: ReturnType<typeof useDateFormatter>, modelValue: CalendarProps<R, M>['modelValue']) => string)
   placeholderLabel?: string
 }
 
@@ -31,9 +31,9 @@ type DatePickerEmits = PopoverEmits & CalendarEmits<R, M>
 const {
   buttonProps,
   popoverProps,
-  dateFormatOptions = { dateStyle: 'medium' } as Intl.DateTimeFormatOptions,
-  locale = 'zh-CN',
-  label,
+  formatOptions = { dateStyle: 'medium' },
+  locale,
+  labelFormat = 'formatted',
   placeholderLabel = '选择日期'
 } = defineProps<DatePickerProps>()
 
@@ -43,40 +43,45 @@ defineOptions({ inheritAttrs: false })
 
 const modelValue = defineModel<CalendarProps<R, M>['modelValue']>()
 
-const df = new DateFormatter(locale, dateFormatOptions)
+const formatter = useDateFormatter({ locale, formatOptions })
 
-const formattedDate = computed(() => {
-  if (typeof label === 'function') {
-    return label(df, modelValue.value)
+const formatConverters: Record<LabelFormat, (date: DateValue) => string> = {
+  iso: date => formatter.toISO(date),
+  timestamp: date => String(formatter.toTimestamp(date)),
+  unix: date => String(formatter.toUnixTimestamp(date)),
+  date: date => formatter.toDate(date)?.toLocaleDateString() ?? '',
+  formatted: date => formatter.format(date)
+}
+
+const convertSingle = (date: DateValue, format: LabelFormat) => formatConverters[format](date)
+
+const convertArray = (dates: DateValue[], format: LabelFormat) =>
+  dates.map(d => convertSingle(d, format)).join(', ')
+
+const convertRange = (range: { start?: DateValue | null, end?: DateValue | null }, format: LabelFormat) => {
+  if (!range.start || !range.end) return placeholderLabel
+  return `${convertSingle(range.start, format)} - ${convertSingle(range.end, format)}`
+}
+
+const convertToLabel = (value: CalendarProps<R, M>['modelValue']): string => {
+  if (!value) return placeholderLabel
+
+  const format = LABEL_FORMATS.includes(labelFormat as LabelFormat) ? labelFormat as LabelFormat : 'formatted'
+
+  if (Array.isArray(value)) {
+    return value.length > 0 ? convertArray(value, format) : placeholderLabel
   }
 
-  if (typeof label === 'string') {
-    return label
+  if (typeof value === 'object' && 'start' in value && 'end' in value) {
+    return convertRange(value, format)
   }
 
-  if (!modelValue.value) {
-    return placeholderLabel
-  }
+  return convertSingle(value as DateValue, format)
+}
 
-  if (Array.isArray(modelValue.value)) {
-    if (modelValue.value.length === 0) {
-      return placeholderLabel
-    }
-    return modelValue.value
-      .map(date => df.format(date.toDate(getLocalTimeZone())))
-      .join(', ')
-  }
-
-  if (typeof modelValue.value === 'object' && 'start' in modelValue.value && 'end' in modelValue.value) {
-    const range = modelValue.value as { start: DateValue | undefined, end: DateValue | undefined }
-    if (!range.start || !range.end) {
-      return placeholderLabel
-    }
-    return `${df.format(range.start.toDate(getLocalTimeZone()))} - ${df.format(range.end.toDate(getLocalTimeZone()))}`
-  }
-
-  const singleDate = modelValue.value as DateValue
-  return df.format(singleDate.toDate(getLocalTimeZone()))
+const formattedDate = computed<string>(() => {
+  if (typeof labelFormat === 'function') return labelFormat(formatter, modelValue.value)
+  return convertToLabel(modelValue.value)
 })
 </script>
 
