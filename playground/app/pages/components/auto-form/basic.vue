@@ -40,7 +40,19 @@ const schema = afz.object({
       }).meta({ label: '日期范围', class: 'col-span-2' })
     }
   }),
-  bio: afz.string({ type: 'textarea' }).max(200, { message: '简介不能超过200个字符' }).meta({ label: '个人简介' }).optional()
+  bio: afz.string({ type: 'textarea' }).max(200, { message: '简介不能超过200个字符' }).meta({ label: '个人简介' }).optional(),
+  areas: afz.array(
+    afz.object({
+      $layout: afz.layout({
+        class: 'grid grid-cols-3 gap-4',
+        fields: {
+          areaName: afz.string().meta({ label: '区域名称' }),
+          areaCode: afz.string().meta({ label: '区域代码' }),
+          isActive: afz.boolean({ type: 'switch', controlProps: { label: '是否激活' } }).default(true).meta({ label: '' })
+        }
+      })
+    }).meta({ label: '区域' })
+  ).min(1, { message: '至少需要一个区域' }).max(3, { message: '最多只能有三个区域' }).meta({ label: '管理区域' })
 })
 
 type Schema = z.output<typeof schema>
