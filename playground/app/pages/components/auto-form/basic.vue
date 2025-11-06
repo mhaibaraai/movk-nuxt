@@ -32,12 +32,15 @@ const schema = afz.object({
         .refine(val => val === true, { message: '您必须接受条款和条件' })
         .meta({ label: '' }),
       sendNewsletter: afz.boolean({ type: 'switch', controlProps: { label: '订阅新闻通讯' } })
-        .default(false)
+        .default(true)
         .meta({ label: '' }),
       birthdate: afz.date().meta({ label: '出生日期' }).optional(),
       datarange: afz.date({
         controlProps: { range: true, numberOfMonths: 2, class: 'w-full' }
-      }).meta({ label: '日期范围', class: 'col-span-2' })
+      }).meta({ label: '日期范围', class: 'col-span-2' }),
+      slider: afz.number({ type: 'slider', controlProps: { min: 0, max: 100, step: 1 } })
+        .default(50)
+        .meta({ label: '滑块输入框' })
     }
   }),
   bio: afz.string({ type: 'textarea' }).max(200, { message: '简介不能超过200个字符' }).meta({ label: '个人简介' }).optional(),
@@ -46,7 +49,7 @@ const schema = afz.object({
       $layout: afz.layout({
         class: 'grid grid-cols-3 gap-4',
         fields: {
-          areaName: afz.string().meta({ label: '区域名称' }),
+          areaName: afz.string().meta({ label: '区域名称' }).default('浙江省'),
           areaCode: afz.string().meta({ label: '区域代码' }),
           isActive: afz.boolean({ type: 'switch', controlProps: { label: '是否激活' } }).default(true).meta({ label: '' })
         }
