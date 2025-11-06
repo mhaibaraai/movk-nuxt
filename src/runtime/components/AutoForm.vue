@@ -66,7 +66,12 @@ const fields = computed(() => {
   if (!schema)
     return []
 
-  return introspectSchema(schema, controlsMapping.value, '', globalMeta)
+  // return introspectSchema(schema, controlsMapping.value, '', globalMeta)
+  const fields = introspectSchema(schema, controlsMapping.value, '', globalMeta)
+  if (import.meta.client) {
+    console.log('AutoForm fields:', fields)
+  }
+  return fields
 })
 
 function resolveDefaultValue(fields: AutoFormField[], stateValue: AutoFormStateType) {

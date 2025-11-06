@@ -38,14 +38,14 @@ const childEntries = computed(() => {
 })
 
 const layoutComponent = computed(() => {
-  if (!field.layoutConfig?.component) {
+  if (!field.meta?.layout?.component) {
     return 'div'
   }
-  return resolveDynamicComponent(field.layoutConfig.component)
+  return resolveDynamicComponent(field.meta.layout.component)
 })
 
 const layoutProps = computed(() => {
-  const config = field.layoutConfig
+  const config = field.meta.layout
   if (!config) return {}
 
   const props: Record<string, any> = {}
@@ -62,7 +62,7 @@ const layoutProps = computed(() => {
 })
 
 const layoutSlots = computed(() => {
-  const config = field.layoutConfig
+  const config = field.meta.layout
   if (!config?.slots) return {}
 
   const slots: Record<string, any> = {}

@@ -8,10 +8,8 @@ import WithCharacterLimit from '../components/input/WithCharacterLimit.vue'
 import DatePicker from '../components/calendar/DatePicker.vue'
 import { UInput, UInputNumber, UCheckbox, USwitch, UTextarea } from '#components'
 import { isObject } from '@movk/core'
+import { AUTOFORM_META } from '../constants/auto-form'
 
-const AUTOFORM_META_KEY = '__autoform_meta__'
-const AUTOFORM_LAYOUT_KEY = '__autoform_layout__'
-const AUTOFORM_FIELD_ORDER_KEY = '__autoform_field_order__'
 const CLONE_METHODS = [
   'meta', 'optional', 'nullable', 'nullish', 'array', 'promise', 'or', 'and',
   'transform', 'default', 'catch', 'pipe', 'readonly', 'refine', 'describe',
@@ -20,20 +18,11 @@ const CLONE_METHODS = [
   'datetime', 'ip'
 ]
 
-function isLayoutMarker(value: any): value is LayoutFieldMarker<any> {
-  return value && typeof value === 'object' && '__brand' in value && value.__brand === 'LayoutMarker'
-}
-
 /**
- * 拦截 Zod 克隆方法以传递元数据和布局配置
- * Zod v4 不可变设计要求方法拦截确保链式调用时数据不丢失
+ * 拦截 Zod Schema 的克隆方法，实现元数据自动传递
+ * Zod v4 不可变设计，通过方法拦截确保链式调用时元数据不丢失
  */
-function interceptCloneMethods<T extends z.ZodType>(
-  schema: T,
-  customMeta: Record<string, any>,
-  layoutConfig?: AutoFormLayoutConfig[],
-  fieldOrder?: Array<{ key: string, type: 'layout' | 'field', layoutIndex?: number }>
-): T {
+function interceptCloneMethods<T extends z.ZodType>(schema: T, customMeta: Record<string, any>): T {
   for (const methodName of CLONE_METHODS) {
     const originalMethod = (schema as any)[methodName]
     if (typeof originalMethod !== 'function')
@@ -42,112 +31,67 @@ function interceptCloneMethods<T extends z.ZodType>(
     (schema as any)[methodName] = function (...args: any[]) {
       const newSchema = originalMethod.apply(this, args)
 
+      // meta() 无参数调用返回元数据对象，不是 schema
       if (!newSchema?._def)
         return newSchema
 
+      // .meta() 方法合并新旧元数据
       const newMeta = methodName === 'meta' && args[0]
         ? { ...customMeta, ...args[0] }
         : customMeta
 
-      newSchema[AUTOFORM_META_KEY] = newMeta
-
-      if (layoutConfig) {
-        newSchema[AUTOFORM_LAYOUT_KEY] = layoutConfig
-      }
-
-      if (fieldOrder) {
-        newSchema[AUTOFORM_FIELD_ORDER_KEY] = fieldOrder
-      }
-
-      return interceptCloneMethods(newSchema, newMeta, layoutConfig, fieldOrder)
+      newSchema[AUTOFORM_META.KEY] = newMeta
+      return interceptCloneMethods(newSchema, newMeta)
     }
   }
 
-  return schema
-}
-
-function applyMeta<T extends z.ZodType, M = unknown>(
-  schema: T,
-  meta = {} as M,
-  layoutConfig?: AutoFormLayoutConfig[],
-  fieldOrder?: Array<{ key: string, type: 'layout' | 'field', layoutIndex?: number }>
-): T {
-  (schema as any)[AUTOFORM_META_KEY] = meta
-  if (layoutConfig) {
-    (schema as any)[AUTOFORM_LAYOUT_KEY] = layoutConfig
-  }
-  if (fieldOrder) {
-    (schema as any)[AUTOFORM_FIELD_ORDER_KEY] = fieldOrder
-  }
-  interceptCloneMethods(schema, meta as Record<string, any>, layoutConfig, fieldOrder)
   return schema
 }
 
 /**
- * 处理布局标记: 收集布局配置，展开布局字段到 shape
- *
- * 策略：
- * 1. 遍历 shape，检测布局标记（通过 __brand 识别）
- * 2. 收集布局配置和字段顺序信息
- * 3. 展开布局字段到 shape（供 Zod 验证）
- * 4. 移除布局标记本身（不是数据字段）
- * 5. 保留非布局普通字段
+ * 应用元数据到 Zod schema
  */
-function processLayoutShape(shape: Record<string, any>): {
-  shape: Record<string, z.ZodType>
-  layouts: Array<AutoFormLayoutConfig & { __originalKey: string }>
-  fieldOrder: Array<{ key: string, type: 'layout' | 'field', layoutIndex?: number }>
-} {
-  if (!shape || typeof shape !== 'object') {
-    return { shape, layouts: [], fieldOrder: [] }
-  }
+function applyMeta<T extends z.ZodType, M = unknown>(
+  schema: T,
+  meta = {} as M
+): T {
+  (schema as any)[AUTOFORM_META.KEY] = meta
+  interceptCloneMethods(schema, meta as Record<string, any>)
+  return schema
+}
 
-  const layouts: Array<AutoFormLayoutConfig & { __originalKey: string }> = []
-  const resultShape: Record<string, z.ZodType> = {}
-  const fieldOrder: Array<{ key: string, type: 'layout' | 'field', layoutIndex?: number }> = []
+/**
+ * 从 Zod schema 中提取自定义元数据
+ */
+function getAutoFormMetadata(schema: z.ZodType): Record<string, any> {
+  const meta = (schema as any)[AUTOFORM_META.KEY]
+  if (meta)
+    return meta
 
-  // 遍历原始 shape，记录顺序
-  for (const [key, value] of Object.entries(shape)) {
-    if (isLayoutMarker(value)) {
-      // 这是布局标记：收集配置，展开字段
-      const layoutIndex = layouts.length
-      const layoutConfig: AutoFormLayoutConfig & { __originalKey: string } = {
-        class: value.class,
-        component: value.component,
-        props: value.props,
-        slots: value.slots,
-        fields: value.fields,
-        __originalKey: key
-      }
-      layouts.push(layoutConfig)
-
-      // 记录布局标记的位置
-      fieldOrder.push({ key, type: 'layout', layoutIndex })
-
-      // 展开布局中的字段到 resultShape
-      for (const [fieldKey, fieldSchema] of Object.entries(value.fields)) {
-        if (!resultShape[fieldKey]) {
-          resultShape[fieldKey] = fieldSchema as z.ZodType
-        }
-      }
-    } else {
-      // 这是普通字段：直接添加并记录位置
-      resultShape[key] = value
-      fieldOrder.push({ key, type: 'field' })
+  // 从包装类型中 unwrap 查找元数据 (ZodOptional、ZodNullable、ZodDefault 等)
+  if ('unwrap' in schema && typeof (schema as any).unwrap === 'function') {
+    try {
+      const unwrapped = (schema as any).unwrap()
+      return unwrapped?.[AUTOFORM_META.KEY] || {}
+    } catch {
+      // unwrap 失败，忽略
     }
   }
 
-  return { shape: resultShape, layouts, fieldOrder }
+  return {}
 }
 
+/** 基础字段 */
 function createZodFactoryMethod<T extends z.ZodType>(
   zodFactory: (params?: any) => T
 ) {
   return (controlMeta?: any): T => {
+    // 字符串直接作为错误消息
     if (typeof controlMeta === 'string') {
       return zodFactory(controlMeta)
     }
 
+    // 对象且包含 error 属性
     if (controlMeta && isObject(controlMeta) && 'error' in controlMeta) {
       const { error, ...meta } = controlMeta
       return applyMeta(zodFactory(error), meta)
@@ -157,45 +101,35 @@ function createZodFactoryMethod<T extends z.ZodType>(
   }
 }
 
+/**
+ * 对象工厂创建器，支持柯里化和直接调用
+ */
 function createObjectFactory<T extends 'object' | 'looseObject' | 'strictObject'>(
   method: T
 ) {
   return ((...args: any[]) => {
+    // 柯里化写法: afz.object<State>()({...})
     if (args.length === 0) {
-      return (shape: any, meta?: any) => {
-        const processedShape = processLayoutShape(shape)
-        return applyMeta(
-          (z as any)[method](processedShape.shape),
-          meta || {},
-          processedShape.layouts.length > 0 ? processedShape.layouts : undefined,
-          processedShape.fieldOrder.length > 0 ? processedShape.fieldOrder : undefined
-        )
-      }
+      return (shape: any, meta?: any) => applyMeta((z as any)[method](shape), meta || {})
     }
 
+    // 直接写法: afz.object({...}) 或 afz.object({...}, meta)
     const [shape, meta] = args
-    const processedShape = processLayoutShape(shape)
-    return applyMeta(
-      (z as any)[method](processedShape.shape),
-      meta || {},
-      processedShape.layouts.length > 0 ? processedShape.layouts : undefined,
-      processedShape.fieldOrder.length > 0 ? processedShape.fieldOrder : undefined
-    )
+    return applyMeta((z as any)[method](shape), meta || {})
   }) as any
 }
 
+// 布局字段
 function createLayoutFactory() {
-  return <C extends IsComponent = IsComponent, Fields extends Record<string, z.ZodType> = Record<string, z.ZodType>>(
-    config: Omit<AutoFormLayoutConfig<C>, 'fields'> & { fields: Fields }
-  ): LayoutFieldMarker<Fields> => {
-    return {
-      __brand: 'LayoutMarker',
-      class: config.class as any,
-      component: config.component,
-      props: config.props,
-      slots: config.slots,
-      fields: config.fields
-    }
+  return <C extends IsComponent = IsComponent>(
+    config: AutoFormLayoutConfig<C>
+  ) => {
+    const schema = z.custom<AutoFormLayoutConfig<C>>()
+
+    return applyMeta(schema, {
+      type: AUTOFORM_META.LAYOUT_KEY,
+      layout: config
+    })
   }
 }
 
@@ -204,54 +138,6 @@ export function useAutoForm() {
   AutoFormControl<C> {
     return e
   }
-
-  function getAutoFormMetadata(schema: z.ZodType): Record<string, any> {
-    const meta = (schema as any)[AUTOFORM_META_KEY]
-    if (meta)
-      return meta
-
-    if ('unwrap' in schema && typeof (schema as any).unwrap === 'function') {
-      try {
-        const unwrapped = (schema as any).unwrap()
-        return unwrapped?.[AUTOFORM_META_KEY] || {}
-      } catch {
-        // ignore unwrap errors
-      }
-    }
-
-    return {}
-  }
-
-  function getAutoFormLayout(schema: z.ZodType): AutoFormLayoutConfig[] | undefined {
-    const layouts = (schema as any)[AUTOFORM_LAYOUT_KEY]
-    return Array.isArray(layouts) && layouts.length > 0 ? layouts : undefined
-  }
-
-  function getAutoFormFieldOrder(schema: z.ZodType): Array<{ key: string, type: 'layout' | 'field', layoutIndex?: number }> | undefined {
-    const fieldOrder = (schema as any)[AUTOFORM_FIELD_ORDER_KEY]
-    return Array.isArray(fieldOrder) && fieldOrder.length > 0 ? fieldOrder : undefined
-  }
-
-  function createZodFactory<TControls extends AutoFormControls = typeof DEFAULT_CONTROLS>(
-    _controls?: TControls
-  ): TypedZodFactory<TControls> {
-    return {
-      string: createZodFactoryMethod(z.string),
-      number: createZodFactoryMethod(z.number),
-      boolean: createZodFactoryMethod(z.boolean),
-      date: createZodFactoryMethod(z.date),
-
-      array: <T extends z.ZodType>(schema: T, meta?: any) => applyMeta(z.array(schema), meta),
-
-      layout: createLayoutFactory(),
-
-      object: createObjectFactory('object'),
-      looseObject: createObjectFactory('looseObject'),
-      strictObject: createObjectFactory('strictObject')
-    } as unknown as TypedZodFactory<TControls>
-  }
-
-  const afz = createZodFactory()
 
   const DEFAULT_CONTROL_PROPS = { class: 'w-full' } as const
 
@@ -271,7 +157,31 @@ export function useAutoForm() {
     withCharacterLimit: defineControl({ component: WithCharacterLimit, controlProps: DEFAULT_CONTROL_PROPS })
   } as const satisfies AutoFormControls
 
+  function createZodFactory<TControls extends AutoFormControls = typeof DEFAULT_CONTROLS>(
+    _controls?: TControls
+  ) {
+    return {
+      string: createZodFactoryMethod(z.string),
+      number: createZodFactoryMethod(z.number),
+      boolean: createZodFactoryMethod(z.boolean),
+      date: createZodFactoryMethod(z.date),
+
+      array: <T extends z.ZodType>(schema: T, meta?: any) => applyMeta(z.array(schema), meta),
+
+      layout: createLayoutFactory(),
+
+      object: createObjectFactory('object'),
+      looseObject: createObjectFactory('looseObject'),
+      strictObject: createObjectFactory('strictObject')
+    }
+  }
+
+  const afz = createZodFactory()
+
   return {
-    defineControl, afz, DEFAULT_CONTROLS
+    defineControl,
+    afz,
+    DEFAULT_CONTROLS,
+    getAutoFormMetadata
   }
 }
