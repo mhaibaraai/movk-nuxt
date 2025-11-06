@@ -6,17 +6,9 @@ import WithPasswordToggle from '../components/input/WithPasswordToggle.vue'
 import WithCopy from '../components/input/WithCopy.vue'
 import WithCharacterLimit from '../components/input/WithCharacterLimit.vue'
 import DatePicker from '../components/calendar/DatePicker.vue'
-import { UInput, UInputNumber, UCheckbox, USwitch, UTextarea } from '#components'
+import { UInput, UInputNumber, UCheckbox, USwitch, UTextarea, USlider } from '#components'
 import { isObject } from '@movk/core'
-import { AUTOFORM_META } from '../constants/auto-form'
-
-const CLONE_METHODS = [
-  'meta', 'optional', 'nullable', 'nullish', 'array', 'promise', 'or', 'and',
-  'transform', 'default', 'catch', 'pipe', 'readonly', 'refine', 'describe',
-  'brand', 'min', 'max', 'length', 'nonempty', 'email', 'url', 'uuid', 'regex',
-  'trim', 'toLowerCase', 'toUpperCase', 'startsWith', 'endsWith', 'includes',
-  'datetime', 'ip'
-]
+import { AUTOFORM_META, CLONE_METHODS } from '../constants/auto-form'
 
 /**
  * 拦截 Zod Schema 的克隆方法，实现元数据自动传递
@@ -149,6 +141,7 @@ export function useAutoForm() {
     date: defineControl({ component: DatePicker, controlProps: DEFAULT_CONTROL_PROPS }),
     switch: defineControl({ component: USwitch, controlProps: DEFAULT_CONTROL_PROPS }),
     textarea: defineControl({ component: UTextarea, controlProps: DEFAULT_CONTROL_PROPS }),
+    slider: defineControl({ component: USlider, controlProps: DEFAULT_CONTROL_PROPS }),
 
     // 增强型输入组件
     withClear: defineControl({ component: WithClear, controlProps: DEFAULT_CONTROL_PROPS }),
