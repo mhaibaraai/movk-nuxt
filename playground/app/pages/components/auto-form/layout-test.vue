@@ -3,58 +3,6 @@ import type { z } from 'zod/v4'
 
 const { afz } = useAutoForm()
 
-// // 测试 1: 基本布局
-// const basicSchema = afz.object({
-//   myLayout: afz.layout({
-//     class: 'grid grid-cols-2 gap-4',
-//     fields: {
-//       firstName: afz.string().meta({ label: '名字' }),
-//       lastName: afz.string().meta({ label: '姓氏' })
-//     }
-//   }),
-//   bio: afz.string({ type: 'textarea' }).meta({ label: '个人简介' }).optional()
-// })
-
-// // 测试 2: 复杂嵌套 - 多层嵌套 + 布局组合
-// const complexSchema = afz.object({
-//   rootLayout: afz.layout({
-//     class: 'grid grid-cols-4 gap-4',
-//     fields: {
-//       title: afz.string().meta({ label: '标题', class: 'col-span-2' }),
-//       status: afz.string().meta({ label: '状态' }),
-//       priority: afz.number().meta({ label: '优先级' })
-//     }
-//   }),
-//   settings: afz.object({
-//     settingsLayout: afz.layout({
-//       class: 'grid grid-cols-2 gap-3',
-//       fields: {
-//         notifications: afz.boolean().meta({ label: '启用通知' }),
-//         autoSave: afz.boolean().meta({ label: '自动保存' })
-//       }
-//     }),
-//     advanced: afz.object({
-//       advancedLayout: afz.layout({
-//         class: 'flex flex-col gap-2',
-//         fields: {
-//           debugMode: afz.boolean().meta({ label: '调试模式' }),
-//           logLevel: afz.string().meta({ label: '日志级别' })
-//         }
-//       }),
-//       cache: afz.object({
-//         enabled: afz.boolean().meta({ label: '启用缓存' }),
-//         ttl: afz.number().meta({ label: '缓存时间(秒)' })
-//       }).meta({ label: '缓存配置' }).optional()
-//     }).meta({ label: '高级设置' }).optional()
-//   }).meta({ label: '设置' }).optional(),
-//   metadata: afz.object({
-//     author: afz.string().meta({ label: '作者' }),
-//     tags: afz.array(afz.string()).meta({ label: '标签' }).optional(),
-//     publishedAt: afz.date().meta({ label: '发布时间' }).optional()
-//   }).meta({ label: '元数据' }).optional()
-// })
-
-// 测试 3: 多布局 - 同一对象中多个布局
 const customSchema = afz.object({
   userName: afz.string().meta({ label: '用户名' }),
   nameLayout: afz.layout({
@@ -96,12 +44,8 @@ const customSchema = afz.object({
   }).meta({ label: '设置' }).optional()
 })
 
-// type BasicSchema = z.output<typeof basicSchema>
-// type ComplexSchema = z.output<typeof complexSchema>
 type CustomSchema = z.output<typeof customSchema>
 
-// const basicState = ref<Partial<BasicSchema>>({})
-// const complexState = ref<Partial<ComplexSchema>>({})
 const customState = ref<Partial<CustomSchema>>({})
 </script>
 

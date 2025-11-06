@@ -1,5 +1,5 @@
 import type { IsComponent } from '../core'
-import type { AutoFormControl, AutoFormControls, AutoFormLayoutConfig } from '../types/auto-form'
+import type { AutoFormControl, AutoFormControls, AutoFormLayoutConfig, TypedZodFactory } from '../types/auto-form'
 import { z } from 'zod/v4'
 import WithClear from '../components/input/WithClear.vue'
 import WithPasswordToggle from '../components/input/WithPasswordToggle.vue'
@@ -173,7 +173,7 @@ export function useAutoForm() {
       object: createObjectFactory('object'),
       looseObject: createObjectFactory('looseObject'),
       strictObject: createObjectFactory('strictObject')
-    }
+    } as unknown as TypedZodFactory<TControls, typeof DEFAULT_CONTROLS>
   }
 
   const afz = createZodFactory()
