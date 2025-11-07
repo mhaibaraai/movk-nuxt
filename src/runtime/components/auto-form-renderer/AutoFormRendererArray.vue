@@ -5,10 +5,10 @@ import type { z } from 'zod/v4'
 import type { AutoFormField } from '../../types/auto-form'
 import type { AutoFormProps } from '../AutoForm.vue'
 import { UButton, UCollapsible } from '#components'
-import { computed, unref } from 'vue'
+import { computed, ref, unref } from 'vue'
 import { useAutoFormInjector } from '../../internal/useAutoFormProvider'
-import { deepClone, joinPath, setPath } from '../../core'
-import { createHintSlotFactory, VNodeRender } from '../../utils/auto-form'
+import { joinPath } from '../../core'
+import { collectFieldDefaults, createHintSlotFactory, VNodeRender } from '../../utils/auto-form'
 import AutoFormRendererField from './AutoFormRendererField.vue'
 import AutoFormRendererNested from './AutoFormRendererNested.vue'
 
@@ -44,15 +44,21 @@ const arrayValue = computed<unknown[]>(() => {
   return Array.isArray(value) ? value : []
 })
 
-// 为数组项生成稳定的唯一标识
-const itemIdMap = new WeakMap<any, string>()
+// 为每个数组项维护稳定的唯一标识
+const itemIds = ref<string[]>([])
 let idCounter = 0
 
-function getItemId(item: any): string {
-  if (!itemIdMap.has(item)) {
-    itemIdMap.set(item, `${field.path}-${idCounter++}`)
+function ensureItemIds() {
+  const arr = arrayValue.value
+  // 确保 ID 数组长度与值数组一致
+  while (itemIds.value.length < arr.length) {
+    itemIds.value.push(`${field.path}-${idCounter++}`)
   }
-  return itemIdMap.get(item)!
+}
+
+function getItemId(_item: any, index: number): string {
+  ensureItemIds()
+  return itemIds.value[index]!
 }
 
 function updateFieldPaths(template: AutoFormField, oldBasePath: string, newBasePath: string, hintSlotFactory: ReturnType<typeof createHintSlotFactory>): AutoFormField {
@@ -92,31 +98,6 @@ const arrayItemFields = computed(() => {
   })
 })
 
-function collectFieldDefaults(field: AutoFormField) {
-  if (field.meta?.type === 'object') {
-    const result: Record<string, any> = {}
-    const basePath = field.path
-
-    function collect(currentField: AutoFormField) {
-      if (currentField.decorators?.defaultValue !== undefined) {
-        const relativePath = currentField.path.replace(`${basePath}.`, '')
-        setPath(result, relativePath, deepClone(currentField.decorators.defaultValue))
-      }
-
-      if (currentField.children?.length) {
-        currentField.children.forEach(collect)
-      }
-    }
-
-    collect(field)
-    return result
-  }
-
-  return field.decorators?.defaultValue !== undefined
-    ? deepClone(field.decorators.defaultValue)
-    : undefined
-}
-
 function createDefaultValue() {
   const template = unref(elementTemplate)
   return template ? collectFieldDefaults(template) : undefined
@@ -137,6 +118,10 @@ function removeItem(count?: number) {
 
   const arr = arrayValue.value
   const newArray = [...arr.slice(0, count), ...arr.slice(count + 1)]
+
+  // 同步删除原始值类型的 ID
+  itemIds.value = [...itemIds.value.slice(0, count), ...itemIds.value.slice(count + 1)]
+
   context.setValue(newArray)
 }
 
@@ -165,7 +150,7 @@ const addButtonProps = computed(() => ({
     <template v-if="elementTemplate" #content>
       <VNodeRender v-if="slotResolver.hasSlot('content')" :node="slotResolver.renderSlot('content', slotProps)" />
       <template v-else>
-        <template v-for="(item, count) in arrayValue" :key="getItemId(item)">
+        <template v-for="(item, count) in arrayValue" :key="getItemId(item, count)">
           <component
             :is="isObjectElement ? AutoFormRendererNested : AutoFormRendererField"
             v-if="arrayItemFields[count]"
@@ -182,7 +167,7 @@ const addButtonProps = computed(() => ({
   </UCollapsible>
 
   <template v-else-if="elementTemplate">
-    <template v-for="(item, count) in arrayValue" :key="getItemId(item)">
+    <template v-for="(item, count) in arrayValue" :key="getItemId(item, count)">
       <component
         :is="isObjectElement ? AutoFormRendererNested : AutoFormRendererField"
         v-if="arrayItemFields[count]"
