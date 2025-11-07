@@ -89,7 +89,7 @@ export interface AutoFormLayoutConfig<C extends IsComponent = IsComponent> {
 
 export type AutoFormMergeMeta = GlobalMeta
   & AutoFormControlsMeta
-  & { mapped?: AutoFormControl, layout?: AutoFormLayoutConfig }
+  & { mapped?: AutoFormControl, layout?: AutoFormLayoutConfig, overwrite?: AutoFormControlsMeta }
 
 export interface AutoFormField {
   /** 字段路径 */
@@ -213,13 +213,27 @@ export interface TypedZodFactory<TC extends AutoFormControls, DFTC extends AutoF
     // 传入控件类型字符串
     <T extends z.ZodType, K extends KnownKeys<WithDefaultControls<TC, DFTC>> & keyof WithDefaultControls<TC, DFTC> & string>(
       element: T,
-      controlMeta?: { type: Suggest<K>, component?: never } & MetaByType<WithDefaultControls<TC, DFTC>, K>
+      overwrite?: { type: Suggest<K>, component?: never } & MetaByType<WithDefaultControls<TC, DFTC>, K>
     ): z.ZodArray<T>
     // 传入控件组件
     <T extends z.ZodType, C extends IsComponent>(
       element: T,
-      controlMeta?: { component: C, type?: never } & OmitControlMeta<C>
+      overwrite?: { component: C, type?: never } & OmitControlMeta<C>
     ): z.ZodArray<T>
+  }
+
+  // 元组工厂方法 - 第二个参数用于指定元组级控件配置
+  tuple: {
+    // 传入控件类型字符串
+    <T extends readonly [z.ZodType, ...z.ZodType[]], K extends KnownKeys<WithDefaultControls<TC, DFTC>> & keyof WithDefaultControls<TC, DFTC> & string>(
+      schemas: T,
+      overwrite?: { type: Suggest<K>, component?: never } & MetaByType<WithDefaultControls<TC, DFTC>, K>
+    ): z.ZodTuple<T>
+    // 传入控件组件
+    <T extends readonly [z.ZodType, ...z.ZodType[]], C extends IsComponent>(
+      schemas: T,
+      overwrite?: { component: C, type?: never } & OmitControlMeta<C>
+    ): z.ZodTuple<T>
   }
 
   // 布局方法 - 返回布局标记类型（仅用于类型层面，运行时返回 ZodCustom）

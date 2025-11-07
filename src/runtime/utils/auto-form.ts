@@ -264,7 +264,9 @@ function extractSchemaInfo(schema: z.ZodType, globalMeta: GlobalMeta, autoGenera
     } as AutoFormField['meta'],
     ...globalMeta,
     ...customMeta,
-    type: computedType
+    type: computedType,
+    // 如果有 overwrite,则进行合并
+    ...(customMeta?.overwrite && isObject(customMeta.overwrite) ? customMeta.overwrite : {})
   } as AutoFormMergeMeta
 
   return { decorators, mergedMeta, coreSchema }
@@ -339,7 +341,14 @@ export function introspectSchema(
     return handleLayoutField({ schema: coreSchema, path, meta: mergedMeta, mapping, globalMeta })
   }
 
-  if (fieldType === 'array' || coreSchema.type === 'array') {
+  /**
+   * 如果 coreSchema 本身是数组类型，且没有被 overwrite 覆盖，则按数组处理
+   * @example
+   * z.array(z.number()) -> 数组字段
+   * z.number().array() -> 数组字段
+   * z.array(z.number(), {type: 'pinInput'}) -> 按照 pinInput 处理，pinInput 本身返回数字数组
+   */
+  if (fieldType === 'array' || (coreSchema.type === 'array' && !mergedMeta.overwrite)) {
     return handleArrayField({ schema: coreSchema, path, decorators, meta: mergedMeta, mapping, globalMeta })
   }
 
@@ -375,6 +384,7 @@ function handleArrayField(params: {
   }
 
   const field = createField(path, schema, decorators, { ...meta, type: 'array' })
+
   const [arrayElement] = introspectSchema(elementSchema, mapping, path, globalMeta)
 
   if (arrayElement) {

@@ -6,7 +6,7 @@ import WithPasswordToggle from '../components/input/WithPasswordToggle.vue'
 import WithCopy from '../components/input/WithCopy.vue'
 import WithCharacterLimit from '../components/input/WithCharacterLimit.vue'
 import DatePicker from '../components/calendar/DatePicker.vue'
-import { UInput, UInputNumber, UCheckbox, USwitch, UTextarea, USlider } from '#components'
+import { UInput, UInputNumber, UCheckbox, USwitch, UTextarea, USlider, UPinInput } from '#components'
 import { isObject } from '@movk/core'
 import { AUTOFORM_META, CLONE_METHODS } from '../constants/auto-form'
 
@@ -126,6 +126,30 @@ function createLayoutFactory() {
   }
 }
 
+// 数组字段
+function createArrayFactory(
+  zodFactory: <T extends z.ZodType>(element: T) => z.ZodArray<T>
+) {
+  return <T extends z.ZodType, K extends string>(
+    element: T,
+    overwrite?: { type: K, component?: never } | { component: IsComponent, type?: never }
+  ): z.ZodArray<T> => {
+    return applyMeta(zodFactory(element), overwrite && isObject(overwrite) ? { overwrite } : {})
+  }
+}
+
+// 元组字段
+function createTupleFactory(
+  zodFactory: <T extends readonly [z.ZodType, ...z.ZodType[]]>(schemas: T) => z.ZodTuple<T>
+) {
+  return <T extends readonly [z.ZodType, ...z.ZodType[]]>(
+    schemas: T,
+    overwrite?: { type: string, component?: never } | { component: IsComponent, type?: never }
+  ): z.ZodTuple<T> => {
+    return applyMeta(zodFactory(schemas), overwrite && isObject(overwrite) ? { overwrite } : {})
+  }
+}
+
 export function useAutoForm() {
   function defineControl<C extends IsComponent>(e: AutoFormControl<C>):
   AutoFormControl<C> {
@@ -143,6 +167,7 @@ export function useAutoForm() {
     switch: defineControl({ component: USwitch, controlProps: DEFAULT_CONTROL_PROPS }),
     textarea: defineControl({ component: UTextarea, controlProps: DEFAULT_CONTROL_PROPS }),
     slider: defineControl({ component: USlider, controlProps: DEFAULT_CONTROL_PROPS }),
+    pinInput: defineControl({ component: UPinInput, controlProps: DEFAULT_CONTROL_PROPS }),
 
     // 增强型输入组件
     withClear: defineControl({ component: WithClear, controlProps: DEFAULT_CONTROL_PROPS }),
@@ -160,13 +185,15 @@ export function useAutoForm() {
       boolean: createZodFactoryMethod(z.boolean),
       date: createZodFactoryMethod(z.date),
 
-      array: <T extends z.ZodType>(schema: T, meta?: any) => applyMeta(z.array(schema), meta),
+      array: createArrayFactory(z.array),
+      tuple: createTupleFactory(z.tuple),
 
       layout: createLayoutFactory(),
 
       object: createObjectFactory('object'),
       looseObject: createObjectFactory('looseObject'),
       strictObject: createObjectFactory('strictObject')
+
     } as unknown as TypedZodFactory<TControls, typeof DEFAULT_CONTROLS>
   }
 
