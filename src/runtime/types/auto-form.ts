@@ -208,8 +208,19 @@ export interface TypedZodFactory<TC extends AutoFormControls, DFTC extends AutoF
   boolean: AutoFormFactoryMethod<WithDefaultControls<TC, DFTC>, 'boolean', z.ZodBoolean>
   date: AutoFormFactoryMethod<WithDefaultControls<TC, DFTC>, 'date', z.ZodDate>
 
-  // 数组工厂方法
-  array: <T extends z.ZodType>(schema: T, meta?: any) => z.ZodArray<T>
+  // 数组工厂方法 - 第二个参数用于指定数组级控件配置
+  array: {
+    // 传入控件类型字符串
+    <T extends z.ZodType, K extends KnownKeys<WithDefaultControls<TC, DFTC>> & keyof WithDefaultControls<TC, DFTC> & string>(
+      element: T,
+      controlMeta?: { type: Suggest<K>, component?: never } & MetaByType<WithDefaultControls<TC, DFTC>, K>
+    ): z.ZodArray<T>
+    // 传入控件组件
+    <T extends z.ZodType, C extends IsComponent>(
+      element: T,
+      controlMeta?: { component: C, type?: never } & OmitControlMeta<C>
+    ): z.ZodArray<T>
+  }
 
   // 布局方法 - 返回布局标记类型（仅用于类型层面，运行时返回 ZodCustom）
   layout: <C extends IsComponent = IsComponent, Fields extends Record<string, z.ZodType> = Record<string, z.ZodType>>(
