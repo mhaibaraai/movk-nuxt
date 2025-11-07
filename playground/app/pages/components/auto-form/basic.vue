@@ -60,8 +60,14 @@ const schema = afz.object({
   //   areaCode: '027',
   //   isActive: false
   // }]),
-
-  pin: afz.array(afz.number())
+  testT: afz.tuple([
+    afz.string(),
+    afz.number()
+  ], { type: 'pinInput', controlProps: { color: 'error' } }),
+  pin: afz.array(afz.tuple([
+    afz.string(),
+    afz.number()
+  ], { type: 'pinInput', controlProps: { color: 'error' } }))
     .meta({ label: 'PIN 输入框' })
     .length(4, { message: 'PIN 必须是4位数字' }),
 
@@ -70,8 +76,7 @@ const schema = afz.object({
   //     min: 0
   //   }
   // })).meta({ label: '数字列表' }),
-  // test: afz.string().describe('测试描述信息'),
-  // strings: afz.array(afz.string().describe('字符')).meta({ label: '字符串列表' }),
+  // test: afz.string({ type: 'withCharacterLimit', controlProps: { icon: 'i-lucide-edit' } }).describe('测试描述信息').meta({ label: '带有字符限制的输入框' }),
   choices: afz.boolean({ type: 'switch' }).meta({ label: '选择项' }).array()
 })
 

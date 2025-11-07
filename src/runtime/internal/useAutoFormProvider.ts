@@ -80,7 +80,7 @@ export function useAutoFormProvider<T extends Record<string, any>>(
       return null
 
     if (!comp) {
-      return h('div', { class: 'text-red-500' }, `[AutoForm] 控件未映射: ${field?.path ?? ''}`)
+      return h('div', { class: 'text-red-500' }, `[AutoForm] 控件未映射: ${field?.path ?? ''} - 类型: ${field?.meta?.type ?? 'unknown'}`)
     }
 
     if (isVNode(comp))
