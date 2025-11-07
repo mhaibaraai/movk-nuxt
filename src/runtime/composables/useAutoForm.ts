@@ -17,6 +17,7 @@ import { AUTOFORM_META, CLONE_METHODS } from '../constants/auto-form'
 function interceptCloneMethods<T extends z.ZodType>(schema: T, customMeta: Record<string, any>): T {
   for (const methodName of CLONE_METHODS) {
     const originalMethod = (schema as any)[methodName]
+
     if (typeof originalMethod !== 'function')
       continue
 

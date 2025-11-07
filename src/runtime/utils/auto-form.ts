@@ -7,7 +7,7 @@ import type { AutoFormControl, AutoFormControls, AutoFormField, AutoFormFieldCon
 import { UButton, UIcon } from '#components'
 import { isFunction, isObject } from '@movk/core'
 import { Fragment, h, isRef, isVNode, markRaw, unref } from 'vue'
-import { joinPath, startCase, toPath } from '../core'
+import { deepClone, joinPath, setPath, startCase, toPath } from '../core'
 import { useAutoForm } from '../composables/useAutoForm'
 import { AUTOFORM_LIMITS, AUTOFORM_META, AUTOFORM_PATTERNS } from '../constants/auto-form'
 
@@ -227,16 +227,20 @@ function extractDecorators(schema: z.ZodType): {
         break
     }
 
-    if (def.description) {
-      decorators.description = def.description
-    }
-
     const next = def?.innerType
     if (!next)
       break
 
     cur = next
     coreSchema = next
+  }
+
+  /**
+   * @deprecated z.describe() 已废弃，建议使用 z.meta({ description: '...' }) 代替
+   * @see https://zod.dev/metadata?id=describe
+   */
+  if (coreSchema.description) {
+    decorators.description = coreSchema.description
   }
 
   return { decorators, coreSchema }
@@ -335,7 +339,7 @@ export function introspectSchema(
     return handleLayoutField({ schema: coreSchema, path, meta: mergedMeta, mapping, globalMeta })
   }
 
-  if (fieldType === 'array') {
+  if (fieldType === 'array' || coreSchema.type === 'array') {
     return handleArrayField({ schema: coreSchema, path, decorators, meta: mergedMeta, mapping, globalMeta })
   }
 
@@ -370,7 +374,7 @@ function handleArrayField(params: {
     return []
   }
 
-  const field = createField(path, schema, decorators, meta)
+  const field = createField(path, schema, decorators, { ...meta, type: 'array' })
   const [arrayElement] = introspectSchema(elementSchema, mapping, path, globalMeta)
 
   if (arrayElement) {
@@ -467,6 +471,31 @@ export function isLeafField(field: AutoFormField): boolean {
  */
 export function getFieldType(field: AutoFormField): 'leaf' | 'nested' {
   return isLeafField(field) ? 'leaf' : 'nested'
+}
+
+export function collectFieldDefaults(field: AutoFormField) {
+  if (field.meta?.type === 'object') {
+    const result: Record<string, any> = {}
+    const basePath = field.path
+
+    function collect(currentField: AutoFormField) {
+      if (currentField.decorators?.defaultValue !== undefined) {
+        const relativePath = currentField.path.replace(`${basePath}.`, '')
+        setPath(result, relativePath, deepClone(currentField.decorators.defaultValue))
+      }
+
+      if (currentField.children?.length) {
+        currentField.children.forEach(collect)
+      }
+    }
+
+    collect(field)
+    return result
+  }
+
+  return field.decorators?.defaultValue !== undefined
+    ? deepClone(field.decorators.defaultValue)
+    : undefined
 }
 
 /** 创建提示插槽工厂 */
