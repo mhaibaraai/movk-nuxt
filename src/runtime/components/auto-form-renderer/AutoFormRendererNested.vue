@@ -49,7 +49,7 @@ const slotProps = computed(() => createSlotProps(field, extraProps))
 </script>
 
 <template>
-  <UCollapsible v-show="!isHidden" v-if="shouldShowCollapsible" v-bind="collapsibleConfig || {}">
+  <UCollapsible v-if="shouldShowCollapsible" v-show="!isHidden" v-bind="collapsibleConfig || {}">
     <template #default="{ open }">
       <AutoFormRendererField :field="enhancedField" :schema="schema" :extra-props="{ ...extraProps, open }" />
     </template>

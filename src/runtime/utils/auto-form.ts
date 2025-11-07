@@ -469,6 +469,7 @@ export function getFieldType(field: AutoFormField): 'leaf' | 'nested' {
   return isLeafField(field) ? 'leaf' : 'nested'
 }
 
+/** 创建提示插槽工厂 */
 export function createHintSlotFactory(removeCallback: (count?: number) => void) {
   return (field: AutoFormField, path: string, open?: boolean, count?: number): VNode | undefined => {
     const isNested = path.includes('.')
@@ -493,7 +494,10 @@ export function createHintSlotFactory(removeCallback: (count?: number) => void) 
       variant: 'ghost',
       size: 'sm',
       square: true,
-      onClick: () => removeCallback(count)
+      onClick: (event) => {
+        event?.stopPropagation()
+        removeCallback(count)
+      }
     })
 
     if (!isObject) {

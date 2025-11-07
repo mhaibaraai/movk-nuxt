@@ -7,7 +7,7 @@ import type { AutoFormProps } from '../AutoForm.vue'
 import { UButton, UCollapsible } from '#components'
 import { computed, unref } from 'vue'
 import { useAutoFormInjector } from '../../internal/useAutoFormProvider'
-import { joinPath } from '../../core'
+import { deepClone, joinPath, setPath } from '../../core'
 import { createHintSlotFactory, VNodeRender } from '../../utils/auto-form'
 import AutoFormRendererField from './AutoFormRendererField.vue'
 import AutoFormRendererNested from './AutoFormRendererNested.vue'
@@ -43,6 +43,17 @@ const arrayValue = computed<unknown[]>(() => {
   const value = context.value
   return Array.isArray(value) ? value : []
 })
+
+// 为数组项生成稳定的唯一标识
+const itemIdMap = new WeakMap<any, string>()
+let idCounter = 0
+
+function getItemId(item: any): string {
+  if (!itemIdMap.has(item)) {
+    itemIdMap.set(item, `${field.path}-${idCounter++}`)
+  }
+  return itemIdMap.get(item)!
+}
 
 function updateFieldPaths(template: AutoFormField, oldBasePath: string, newBasePath: string, hintSlotFactory: ReturnType<typeof createHintSlotFactory>): AutoFormField {
   const updatedField: AutoFormField = {
@@ -81,16 +92,34 @@ const arrayItemFields = computed(() => {
   })
 })
 
-function createDefaultValue() {
-  const template = unref(elementTemplate)
-  if (!template)
-    return undefined
+function collectFieldDefaults(field: AutoFormField) {
+  if (field.meta?.type === 'object') {
+    const result: Record<string, any> = {}
+    const basePath = field.path
 
-  if (template.meta?.type === 'object') {
-    return {}
+    function collect(currentField: AutoFormField) {
+      if (currentField.decorators?.defaultValue !== undefined) {
+        const relativePath = currentField.path.replace(`${basePath}.`, '')
+        setPath(result, relativePath, deepClone(currentField.decorators.defaultValue))
+      }
+
+      if (currentField.children?.length) {
+        currentField.children.forEach(collect)
+      }
+    }
+
+    collect(field)
+    return result
   }
 
-  return undefined
+  return field.decorators?.defaultValue !== undefined
+    ? deepClone(field.decorators.defaultValue)
+    : undefined
+}
+
+function createDefaultValue() {
+  const template = unref(elementTemplate)
+  return template ? collectFieldDefaults(template) : undefined
 }
 
 function addItem() {
@@ -128,11 +157,7 @@ const addButtonProps = computed(() => ({
 </script>
 
 <template>
-  <UCollapsible
-    v-if="shouldShowCollapsible"
-    v-show="!isHidden"
-    v-bind="collapsibleConfig || {}"
-  >
+  <UCollapsible v-if="shouldShowCollapsible" v-show="!isHidden" v-bind="collapsibleConfig || {}">
     <template #default="{ open }">
       <AutoFormRendererField :field="enhancedField" :schema="schema" :extra-props="{ ...extraProps, open }" />
     </template>
@@ -140,10 +165,11 @@ const addButtonProps = computed(() => ({
     <template v-if="elementTemplate" #content>
       <VNodeRender v-if="slotResolver.hasSlot('content')" :node="slotResolver.renderSlot('content', slotProps)" />
       <template v-else>
-        <template v-for="(_, count) in arrayValue" :key="count">
+        <template v-for="(item, count) in arrayValue" :key="getItemId(item)">
           <component
             :is="isObjectElement ? AutoFormRendererNested : AutoFormRendererField"
-            :field="arrayItemFields[count]!"
+            v-if="arrayItemFields[count]"
+            :field="arrayItemFields[count]"
             :schema="schema"
             :extra-props="{ ...extraProps, count }"
           />
@@ -156,10 +182,11 @@ const addButtonProps = computed(() => ({
   </UCollapsible>
 
   <template v-else-if="elementTemplate">
-    <template v-for="(_, count) in arrayValue" :key="count">
+    <template v-for="(item, count) in arrayValue" :key="getItemId(item)">
       <component
         :is="isObjectElement ? AutoFormRendererNested : AutoFormRendererField"
-        :field="arrayItemFields[count]!"
+        v-if="arrayItemFields[count]"
+        :field="arrayItemFields[count]"
         :schema="schema"
         :extra-props="{ ...extraProps, count }"
       />

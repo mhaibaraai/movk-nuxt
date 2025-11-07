@@ -55,7 +55,11 @@ const schema = afz.object({
         }
       })
     }).meta({ label: '区域' })
-  ).min(1, { message: '至少需要一个区域' }).max(3, { message: '最多只能有三个区域' }).meta({ label: '管理区域' })
+  ).default([{
+    areaName: '湖北省',
+    areaCode: '027',
+    isActive: false
+  }])
 })
 
 type Schema = z.output<typeof schema>

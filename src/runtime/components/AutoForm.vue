@@ -74,12 +74,10 @@ function resolveDefaultValue(fields: AutoFormField[], stateValue: AutoFormStateT
   if (!fields.length)
     return
 
-  // 批量收集需要设置的默认值
   const updates: Array<{ path: string, value: any }> = []
 
   function collectDefaultValues(fieldList: AutoFormField[]) {
     for (const field of fieldList) {
-      // 处理当前字段的默认值
       if (field?.decorators?.defaultValue !== undefined
         && getPath(stateValue, field.path) === undefined) {
         updates.push({
@@ -88,7 +86,6 @@ function resolveDefaultValue(fields: AutoFormField[], stateValue: AutoFormStateT
         })
       }
 
-      // 递归处理 children 中的字段
       if (field?.children && Array.isArray(field.children) && field.children.length > 0) {
         collectDefaultValues(field.children)
       }
