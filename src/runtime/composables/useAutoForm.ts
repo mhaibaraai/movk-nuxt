@@ -5,7 +5,8 @@ import WithClear from '../components/input/WithClear.vue'
 import WithPasswordToggle from '../components/input/WithPasswordToggle.vue'
 import WithCopy from '../components/input/WithCopy.vue'
 import WithCharacterLimit from '../components/input/WithCharacterLimit.vue'
-import DatePicker from '../components/calendar/DatePicker.vue'
+import DatePicker from '../components/DatePicker.vue'
+import ColorChooser from '../components/ColorChooser.vue'
 import { UInput, UInputNumber, UCheckbox, USwitch, UTextarea, USlider, UPinInput } from '#components'
 import { isObject } from '@movk/core'
 import { AUTOFORM_META, CLONE_METHODS } from '../constants/auto-form'
@@ -163,17 +164,18 @@ export function useAutoForm() {
     string: defineControl({ component: UInput, controlProps: DEFAULT_CONTROL_PROPS }),
     number: defineControl({ component: UInputNumber, controlProps: DEFAULT_CONTROL_PROPS }),
     boolean: defineControl({ component: UCheckbox, controlProps: DEFAULT_CONTROL_PROPS }),
-    date: defineControl({ component: DatePicker, controlProps: DEFAULT_CONTROL_PROPS }),
     switch: defineControl({ component: USwitch, controlProps: DEFAULT_CONTROL_PROPS }),
     textarea: defineControl({ component: UTextarea, controlProps: DEFAULT_CONTROL_PROPS }),
     slider: defineControl({ component: USlider, controlProps: DEFAULT_CONTROL_PROPS }),
     pinInput: defineControl({ component: UPinInput, controlProps: DEFAULT_CONTROL_PROPS }),
 
-    // 增强型输入组件
+    // 自定义增强型组件
+    date: defineControl({ component: DatePicker, controlProps: DEFAULT_CONTROL_PROPS }),
     withClear: defineControl({ component: WithClear, controlProps: DEFAULT_CONTROL_PROPS }),
     withPasswordToggle: defineControl({ component: WithPasswordToggle, controlProps: DEFAULT_CONTROL_PROPS }),
     withCopy: defineControl({ component: WithCopy, controlProps: DEFAULT_CONTROL_PROPS }),
-    withCharacterLimit: defineControl({ component: WithCharacterLimit, controlProps: DEFAULT_CONTROL_PROPS })
+    withCharacterLimit: defineControl({ component: WithCharacterLimit, controlProps: DEFAULT_CONTROL_PROPS }),
+    colorChooser: defineControl({ component: ColorChooser, controlProps: DEFAULT_CONTROL_PROPS })
   } as const satisfies AutoFormControls
 
   function createZodFactory<TControls extends AutoFormControls = typeof DEFAULT_CONTROLS>(

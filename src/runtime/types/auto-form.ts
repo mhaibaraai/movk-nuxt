@@ -4,7 +4,25 @@ import type { ClassNameValue } from 'tailwind-merge'
 import type { GlobalMeta, z } from 'zod/v4'
 import type { ArrayFieldKeys, ComponentProps, ComponentSlots, IsComponent, NonObjectFieldKeys, ObjectFieldKeys, ReactiveValue, Suggest } from '../core'
 import type { FormError } from '@nuxt/ui'
+import type { AUTOFORM_META } from '../constants/auto-form'
 
+export interface AutoFormFieldContext<S = any> {
+  /** 表单数据 - 使用 getter 确保获取最新值 */
+  readonly state: S
+  /** 字段路径 */
+  readonly path: string
+  /** 字段值 - 使用 getter 确保获取最新值 */
+  readonly value: S[keyof S]
+  /** 设置字段值 */
+  setValue: (value: S[keyof S]) => void
+  /** 表单错误列表 */
+  readonly errors: any[]
+  /** 表单提交加载状态 */
+  readonly loading: boolean
+  /** 折叠状态（适用于嵌套字段和数组字段） */
+  readonly open?: boolean
+  readonly count?: number
+}
 export interface AutoFormFieldSlots {
   label: (props: { label?: string } & AutoFormFieldContext) => any
   hint: (props: { hint?: string } & AutoFormFieldContext) => any
@@ -30,24 +48,6 @@ export interface AutoFormSlotProps<T extends object> {
   loading: boolean
   fields: AutoFormField[]
   state: T
-}
-
-export interface AutoFormFieldContext<S = any> {
-  /** 表单数据 - 使用 getter 确保获取最新值 */
-  readonly state: S
-  /** 字段路径 */
-  readonly path: string
-  /** 字段值 - 使用 getter 确保获取最新值 */
-  readonly value: S[keyof S]
-  /** 设置字段值 */
-  setValue: (value: S[keyof S]) => void
-  /** 表单错误列表 */
-  readonly errors: any[]
-  /** 表单提交加载状态 */
-  readonly loading: boolean
-  /** 折叠状态（适用于嵌套字段和数组字段） */
-  readonly open?: boolean
-  count?: number
 }
 
 /**
@@ -179,7 +179,7 @@ type WithDefaultControls<TControls, DFTC> = TControls & DFTC
 
 /** 布局标记类型 - 用于类型层面识别 */
 interface LayoutFieldMarker<Fields extends Record<string, z.ZodType>> {
-  __brand: 'LayoutMarker'
+  __brand: typeof AUTOFORM_META.LAYOUT_KEY
   fields: Fields
 }
 
