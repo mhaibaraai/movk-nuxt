@@ -22,30 +22,24 @@ import {
   parseZonedDateTime
 } from '@internationalized/date'
 import type { DateValue } from '@internationalized/date'
-import type { MaybeRefOrGetter } from 'vue'
-import { computed, toValue } from 'vue'
+import type { DateRange } from 'reka-ui'
 
 export interface DateFormatterOptions {
   /**
    * 语言区域
    * @default 'zh-CN'
    */
-  locale?: MaybeRefOrGetter<string>
+  locale?: string
   /**
    * 日期格式化选项
    * @see https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Intl/DateTimeFormat/DateTimeFormat
    */
-  formatOptions?: MaybeRefOrGetter<Intl.DateTimeFormatOptions>
+  formatOptions?: Intl.DateTimeFormatOptions
   /**
    * 时区标识符，默认使用本地时区
    * @see https://react-spectrum.adobe.com/internationalized/date/index.html#timezones
    */
-  timeZone?: MaybeRefOrGetter<string>
-}
-
-interface DateRange {
-  start: DateValue | undefined | null
-  end: DateValue | undefined | null
+  timeZone?: string
 }
 
 const DEFAULT_LOCALE = 'zh-CN' as const
@@ -89,11 +83,11 @@ function isDateRange(value: unknown): value is DateRange {
  * ```
  */
 export function useDateFormatter(options: DateFormatterOptions = {}) {
-  const locale = computed(() => toValue(options.locale) ?? DEFAULT_LOCALE)
-  const formatOptions = computed(() => toValue(options.formatOptions) ?? DEFAULT_FORMAT_OPTIONS)
-  const timeZone = computed(() => toValue(options.timeZone) ?? getLocalTimeZone())
+  const locale = options.locale ?? DEFAULT_LOCALE
+  const formatOptions = options.formatOptions ?? DEFAULT_FORMAT_OPTIONS
+  const timeZone = options.timeZone ?? getLocalTimeZone()
 
-  const formatter = computed(() => new DateFormatter(locale.value, formatOptions.value))
+  const formatter = new DateFormatter(locale, formatOptions)
 
   // ==================== 格式化方法 ====================
 
@@ -103,7 +97,7 @@ export function useDateFormatter(options: DateFormatterOptions = {}) {
   const format = (date: DateValue | undefined | null): string => {
     if (!date) return ''
     try {
-      return formatter.value.format(date.toDate(timeZone.value))
+      return formatter.format(date.toDate(timeZone))
     } catch (error) {
       console.error('[useDateFormatter] Format error:', error)
       return ''
@@ -154,7 +148,7 @@ export function useDateFormatter(options: DateFormatterOptions = {}) {
   const toDate = (date: DateValue | undefined | null): Date | null => {
     if (!date) return null
     try {
-      return date.toDate(timeZone.value)
+      return date.toDate(timeZone)
     } catch (error) {
       console.error('[useDateFormatter] toDate error:', error)
       return null
@@ -182,12 +176,12 @@ export function useDateFormatter(options: DateFormatterOptions = {}) {
   /**
    * 获取今天的日期
    */
-  const getToday = () => today(timeZone.value)
+  const getToday = () => today(timeZone)
 
   /**
    * 获取当前日期时间
    */
-  const getNow = () => now(timeZone.value)
+  const getNow = () => now(timeZone)
 
   /**
    * 解析 ISO 8601 日期字符串
@@ -207,12 +201,12 @@ export function useDateFormatter(options: DateFormatterOptions = {}) {
   /**
    * 获取一周的开始日期
    */
-  const getStartOfWeek = (date: DateValue) => startOfWeek(date, locale.value)
+  const getStartOfWeek = (date: DateValue) => startOfWeek(date, locale)
 
   /**
    * 获取一周的结束日期
    */
-  const getEndOfWeek = (date: DateValue) => endOfWeek(date, locale.value)
+  const getEndOfWeek = (date: DateValue) => endOfWeek(date, locale)
 
   /**
    * 获取一月的开始日期
@@ -237,22 +231,22 @@ export function useDateFormatter(options: DateFormatterOptions = {}) {
   /**
    * 获取星期几 (0-6，0 为本地化的一周第一天)
    */
-  const getDayOfWeekNumber = (date: DateValue) => getDayOfWeek(date, locale.value)
+  const getDayOfWeekNumber = (date: DateValue) => getDayOfWeek(date, locale)
 
   /**
    * 获取本月的周数
    */
-  const getWeeksInMonthNumber = (date: DateValue) => getWeeksInMonth(date, locale.value)
+  const getWeeksInMonthNumber = (date: DateValue) => getWeeksInMonth(date, locale)
 
   /**
    * 判断是否为工作日
    */
-  const checkIsWeekday = (date: DateValue) => isWeekday(date, locale.value)
+  const checkIsWeekday = (date: DateValue) => isWeekday(date, locale)
 
   /**
    * 判断是否为周末
    */
-  const checkIsWeekend = (date: DateValue) => isWeekend(date, locale.value)
+  const checkIsWeekend = (date: DateValue) => isWeekend(date, locale)
 
   /**
    * 判断是否为同一天
@@ -272,7 +266,7 @@ export function useDateFormatter(options: DateFormatterOptions = {}) {
   /**
    * 判断是否为今天
    */
-  const checkIsToday = (date: DateValue) => isToday(date, timeZone.value)
+  const checkIsToday = (date: DateValue) => isToday(date, timeZone)
 
   // ==================== 批量转换方法 ====================
 

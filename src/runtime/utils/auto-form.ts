@@ -7,7 +7,7 @@ import type { AutoFormControl, AutoFormControls, AutoFormField, AutoFormFieldCon
 import { UButton, UIcon } from '#components'
 import { isFunction, isObject } from '@movk/core'
 import { Fragment, h, isRef, isVNode, markRaw, unref } from 'vue'
-import { deepClone, joinPath, setPath, startCase, toPath } from '../core'
+import { joinPath, setPath, startCase, toPath } from '../core'
 import { useAutoForm } from '../composables/useAutoForm'
 import { AUTOFORM_LIMITS, AUTOFORM_META, AUTOFORM_PATTERNS } from '../constants/auto-form'
 
@@ -491,7 +491,7 @@ export function collectFieldDefaults(field: AutoFormField) {
     function collect(currentField: AutoFormField) {
       if (currentField.decorators?.defaultValue !== undefined) {
         const relativePath = currentField.path.replace(`${basePath}.`, '')
-        setPath(result, relativePath, deepClone(currentField.decorators.defaultValue))
+        setPath(result, relativePath, currentField.decorators.defaultValue)
       }
 
       if (currentField.children?.length) {
@@ -504,7 +504,7 @@ export function collectFieldDefaults(field: AutoFormField) {
   }
 
   return field.decorators?.defaultValue !== undefined
-    ? deepClone(field.decorators.defaultValue)
+    ? field.decorators.defaultValue
     : undefined
 }
 
