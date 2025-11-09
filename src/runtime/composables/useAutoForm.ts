@@ -7,9 +7,10 @@ import WithCopy from '../components/input/WithCopy.vue'
 import WithCharacterLimit from '../components/input/WithCharacterLimit.vue'
 import DatePicker from '../components/DatePicker.vue'
 import ColorChooser from '../components/ColorChooser.vue'
-import { UInput, UInputNumber, UCheckbox, USwitch, UTextarea, USlider, UPinInput } from '#components'
+import { UInput, UInputNumber, UCheckbox, USwitch, UTextarea, USlider, UPinInput, UInputTags } from '#components'
 import { isObject } from '@movk/core'
 import { AUTOFORM_META, CLONE_METHODS } from '../constants/auto-form'
+import type { CalendarDate } from '@internationalized/date'
 
 /**
  * 拦截 Zod Schema 的克隆方法，实现元数据自动传递
@@ -95,6 +96,24 @@ function createZodFactoryMethod<T extends z.ZodType>(
   }
 }
 
+/** 日期字段工厂（支持泛型覆盖类型） */
+function createDateFactory() {
+  return <T = CalendarDate>(controlMeta?: any): z.ZodType<T> => {
+    const schema = typeof controlMeta === 'string'
+      ? z.date(controlMeta)
+      : z.date()
+
+    const meta = controlMeta && isObject(controlMeta) && 'error' in controlMeta
+      ? (() => {
+          const { error, ...rest } = controlMeta
+          return rest
+        })()
+      : controlMeta
+
+    return applyMeta(schema, meta || {}) as unknown as z.ZodType<T>
+  }
+}
+
 /**
  * 对象工厂创建器，支持柯里化和直接调用
  */
@@ -168,6 +187,7 @@ export function useAutoForm() {
     textarea: defineControl({ component: UTextarea, controlProps: DEFAULT_CONTROL_PROPS }),
     slider: defineControl({ component: USlider, controlProps: DEFAULT_CONTROL_PROPS }),
     pinInput: defineControl({ component: UPinInput, controlProps: DEFAULT_CONTROL_PROPS }),
+    inputTags: defineControl({ component: UInputTags, controlProps: DEFAULT_CONTROL_PROPS }),
 
     // 自定义增强型组件
     date: defineControl({ component: DatePicker, controlProps: DEFAULT_CONTROL_PROPS }),
@@ -185,7 +205,7 @@ export function useAutoForm() {
       string: createZodFactoryMethod(z.string),
       number: createZodFactoryMethod(z.number),
       boolean: createZodFactoryMethod(z.boolean),
-      date: createZodFactoryMethod(z.date),
+      date: createDateFactory(),
 
       array: createArrayFactory(z.array),
       tuple: createTupleFactory(z.tuple),

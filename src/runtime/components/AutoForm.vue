@@ -6,7 +6,7 @@ import { UForm } from '#components'
 import type { Ref } from 'vue'
 import { computed, onMounted, ref } from 'vue'
 import { useAutoFormProvider } from '../internal/useAutoFormProvider'
-import { deepClone, getPath, setPath } from '../core'
+import { getPath, setPath } from '../core'
 import { classifyFields, introspectSchema } from '../utils/auto-form'
 import AutoFormRendererArray from './auto-form-renderer/AutoFormRendererArray.vue'
 import AutoFormRendererField from './auto-form-renderer/AutoFormRendererField.vue'
@@ -82,7 +82,7 @@ function resolveDefaultValue(fields: AutoFormField[], stateValue: AutoFormStateT
         && getPath(stateValue, field.path) === undefined) {
         updates.push({
           path: field.path,
-          value: deepClone(field.decorators.defaultValue)
+          value: field.decorators.defaultValue
         })
       }
 

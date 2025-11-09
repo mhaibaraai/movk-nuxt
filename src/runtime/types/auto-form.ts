@@ -5,6 +5,7 @@ import type { GlobalMeta, z } from 'zod/v4'
 import type { ArrayFieldKeys, ComponentProps, ComponentSlots, IsComponent, NonObjectFieldKeys, ObjectFieldKeys, ReactiveValue, Suggest } from '../core'
 import type { FormError } from '@nuxt/ui'
 import type { AUTOFORM_META } from '../constants/auto-form'
+import type { CalendarDate } from '@internationalized/date'
 
 export interface AutoFormFieldContext<S = any> {
   /** 表单数据 - 使用 getter 确保获取最新值 */
@@ -206,7 +207,8 @@ export interface TypedZodFactory<TC extends AutoFormControls, DFTC extends AutoF
   string: AutoFormFactoryMethod<WithDefaultControls<TC, DFTC>, 'string', z.ZodString>
   number: AutoFormFactoryMethod<WithDefaultControls<TC, DFTC>, 'number', z.ZodNumber>
   boolean: AutoFormFactoryMethod<WithDefaultControls<TC, DFTC>, 'boolean', z.ZodBoolean>
-  date: AutoFormFactoryMethod<WithDefaultControls<TC, DFTC>, 'date', z.ZodDate>
+
+  date: <T = CalendarDate>(meta?: any) => z.ZodType<T>
 
   // 数组工厂方法 - 第二个参数用于指定数组级控件配置
   array: {

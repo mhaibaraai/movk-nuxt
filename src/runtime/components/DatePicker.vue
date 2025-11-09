@@ -1,6 +1,6 @@
 <script setup lang="ts" generic="R extends boolean, M extends boolean, P extends 'click' | 'hover' = 'click'">
 import { UPopover, UButton, UCalendar } from '#components'
-import type { ButtonProps, PopoverProps, CalendarProps, CalendarEmits, PopoverEmits } from '@nuxt/ui'
+import type { ButtonProps, PopoverProps, CalendarProps, PopoverEmits, CalendarEmits } from '@nuxt/ui'
 import type { DateValue } from '@internationalized/date'
 import { computed } from 'vue'
 import { useDateFormatter } from '../composables/useDateFormatter'
@@ -9,6 +9,7 @@ import type { OmitByKey } from '@movk/core'
 
 type LabelFormat = 'iso' | 'formatted' | 'date' | 'timestamp' | 'unix'
 const LABEL_FORMATS: LabelFormat[] = ['iso', 'formatted', 'date', 'timestamp', 'unix']
+type ValueType = CalendarProps<R, M>['modelValue']
 
 interface DatePickerProps extends /** @vue-ignore */ OmitByKey<CalendarProps<R, M>, 'modelValue'>, DateFormatterOptions {
   buttonProps?: ButtonProps
@@ -22,7 +23,7 @@ interface DatePickerProps extends /** @vue-ignore */ OmitByKey<CalendarProps<R, 
    * - 'timestamp': 时间戳（毫秒）
    * - 'unix': Unix 时间戳（秒）
    */
-  labelFormat?: LabelFormat | ((formatter: ReturnType<typeof useDateFormatter>, modelValue: CalendarProps<R, M>['modelValue']) => string)
+  labelFormat?: LabelFormat | ((formatter: ReturnType<typeof useDateFormatter>, modelValue: ValueType) => string)
 }
 
 type DatePickerEmits = PopoverEmits & CalendarEmits<R, M>
@@ -39,7 +40,7 @@ const emit = defineEmits<DatePickerEmits>()
 
 defineOptions({ inheritAttrs: false })
 
-const modelValue = defineModel<CalendarProps<R, M>['modelValue']>()
+const modelValue = defineModel<ValueType>()
 
 const formatter = useDateFormatter({ locale, formatOptions })
 
@@ -61,7 +62,7 @@ const convertRange = (range: { start?: DateValue | null, end?: DateValue | null 
   return `${convertSingle(range.start, format)} - ${convertSingle(range.end, format)}`
 }
 
-const convertToLabel = (value: CalendarProps<R, M>['modelValue']): string => {
+const convertToLabel = (value: ValueType): string => {
   if (!value) return buttonProps.label || ''
 
   const format = LABEL_FORMATS.includes(labelFormat as LabelFormat) ? labelFormat as LabelFormat : 'formatted'
@@ -88,13 +89,13 @@ const formattedDate = computed<string>(() => {
     <template #default="defaultSlotProps">
       <slot v-bind="defaultSlotProps">
         <UButton
-          :label="formattedDate"
           color="neutral"
           variant="subtle"
           icon="i-lucide-calendar"
           class="w-full"
           v-bind="buttonProps"
         >
+          {{ formattedDate }}
           <template v-if="$slots.leading" #leading="leading">
             <slot name="leading" v-bind="leading" />
           </template>

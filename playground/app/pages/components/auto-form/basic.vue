@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import { CalendarDate } from '@internationalized/date'
 import type { z } from 'zod/v4'
 
 const { afz } = useAutoForm()
@@ -34,7 +35,13 @@ const schema = afz.object({
       sendNewsletter: afz.boolean({ type: 'switch', controlProps: { label: '订阅新闻通讯' } })
         .default(true)
         .meta({ label: '' }),
-      birthdate: afz.date().meta({ label: '出生日期' }).optional(),
+      birthdates: afz.array(afz.date(), { type: 'date', controlProps: { multiple: true } })
+        .default(() => [
+          new CalendarDate(2022, 2, 4),
+          new CalendarDate(2022, 2, 6),
+          new CalendarDate(2022, 2, 8)
+        ])
+        .meta({ label: '日期合集', class: 'col-span-2' }),
       datarange: afz.date({
         controlProps: { range: true, numberOfMonths: 2, class: 'w-full' }
       }).meta({ label: '日期范围', class: 'col-span-2' }),
@@ -45,8 +52,16 @@ const schema = afz.object({
   }),
 
   bio: afz.string({ type: 'textarea' }).max(200, { message: '简介不能超过200个字符' }).meta({ label: '个人简介' }).optional(),
-  pinsNum: afz.array(afz.number(), { type: 'pinInput' }).meta({ label: '邮政编码列表' }).optional(),
-  favoriteColor: afz.string({ type: 'colorChooser' }).meta({ label: '喜欢的颜色' }).optional()
+  pinsNum: afz.array(afz.number()).meta({ label: '邮政编码列表' }).optional(),
+  $layout2: afz.layout({
+    class: 'grid grid-cols-2 gap-4',
+    fields: {
+      tags: afz.array(afz.string(), { type: 'inputTags', controlProps: { placeholder: '添加标签' } })
+        .meta({ label: '标签输入框' })
+        .default(['标签1', '标签2']),
+      favoriteColor: afz.string({ type: 'colorChooser' }).meta({ label: '喜欢的颜色' }).optional()
+    }
+  })
 })
 
 type Schema = z.output<typeof schema>
@@ -56,7 +71,7 @@ const state = ref<Partial<Schema>>({})
 
 <template>
   <Navbar />
-  <pre class="text-xs bg-gray-100 p-2 rounded mb-4">{{ state }}</pre>
+  <!-- <pre class="text-xs bg-gray-100 p-2 rounded mb-4">{{ state }}</pre> -->
   <UCard class="w-full overflow-y-auto">
     <MAutoForm :schema="schema" :state="state" />
   </UCard>
