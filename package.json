@@ -2,7 +2,7 @@
   "name": "@movk/nuxt",
   "type": "module",
   "version": "0.0.0",
-  "packageManager": "pnpm@10.20.0",
+  "packageManager": "pnpm@10.21.0",
   "description": "Movk Nuxt module",
   "license": "MIT",
   "repository": "movk/nuxt",
@@ -41,7 +41,7 @@
     "test:types": "vue-tsc --noEmit && cd playground && vue-tsc --noEmit"
   },
   "dependencies": {
-    "@iconify-json/lucide": "^1.2.72",
+    "@iconify-json/lucide": "^1.2.73",
     "@internationalized/date": "^3.10.0",
     "@movk/core": "^0.0.5",
     "@nuxt/image": "^2.0.0",
@@ -53,7 +53,7 @@
   },
   "devDependencies": {
     "@antfu/ni": "^27.0.1",
-    "@nuxt/devtools": "^3.0.1",
+    "@nuxt/devtools": "^3.1.0",
     "@nuxt/eslint": "^1.10.0",
     "@nuxt/kit": "^4.2.1",
     "@nuxt/module-builder": "^1.0.2",

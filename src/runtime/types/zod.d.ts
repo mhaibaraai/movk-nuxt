@@ -44,8 +44,6 @@ declare module 'zod/v4' {
 
     /** 是否隐藏 */
     hidden?: ReactiveValue<boolean>
-    /** 显示条件 */
-    if?: ReactiveValue<boolean>
     /**
      * object field
      */

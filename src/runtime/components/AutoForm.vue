@@ -55,7 +55,7 @@ defineOptions({ inheritAttrs: false })
 const state = ref(_state || {}) as Ref<AutoFormStateType>
 
 const { DEFAULT_CONTROLS } = useAutoForm()
-const { resolveFieldProp } = useAutoFormProvider(state, _slots)
+useAutoFormProvider(state, _slots)
 
 const controlsMapping = computed(() => ({
   ...DEFAULT_CONTROLS,
@@ -101,19 +101,15 @@ function resolveDefaultValue(fields: AutoFormField[], stateValue: AutoFormStateT
   }
 }
 
-const visibleFields = computed(() =>
-  fields.value.filter(field =>
-    field && (field.meta?.if === undefined || resolveFieldProp<boolean>(field, 'if') === true)
-  )
-)
-
 const renderData = computed(() => {
-  const classified = classifyFields(visibleFields.value)
+  if (!fields.value.length) return null
+
+  const classified = classifyFields(fields.value)
 
   return {
     ...classified,
     flatFields: classified.hasComplexFields ? [] : classified.leafFields,
-    allFields: visibleFields.value
+    allFields: fields.value
   }
 })
 
@@ -123,9 +119,14 @@ onMounted(() => {
 </script>
 
 <template>
-  <UForm :state="state" :schema="schema" v-bind="restProps">
+  <UForm
+    v-if="renderData"
+    :state="state"
+    :schema="schema"
+    v-bind="restProps"
+  >
     <template #default="{ errors, loading }">
-      <slot name="header" v-bind="{ errors, loading, fields: visibleFields, state }" />
+      <slot name="header" v-bind="{ errors, loading, fields, state }" />
 
       <template v-if="renderData.hasComplexFields">
         <template v-for="field in renderData.allFields" :key="field.path">
@@ -167,9 +168,9 @@ onMounted(() => {
         />
       </template>
 
-      <slot name="footer" v-bind="{ errors, loading, fields: visibleFields, state }" />
+      <slot name="footer" v-bind="{ errors, loading, fields, state }" />
 
-      <slot name="submit" v-bind="{ errors, loading, fields: visibleFields, state }">
+      <slot name="submit" v-bind="{ errors, loading, fields, state }">
         <UButton
           v-if="submitButton"
           type="submit"

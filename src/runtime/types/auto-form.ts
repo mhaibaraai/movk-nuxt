@@ -24,6 +24,7 @@ export interface AutoFormFieldContext<S = any> {
   readonly open?: boolean
   readonly count?: number
 }
+
 export interface AutoFormFieldSlots {
   label: (props: { label?: string } & AutoFormFieldContext) => any
   hint: (props: { hint?: string } & AutoFormFieldContext) => any
@@ -112,7 +113,7 @@ export interface AutoFormField {
   arrayElement?: AutoFormField
 }
 
-/** 提取对象的“已知键”（剔除 string/number/symbol 索引） */
+/** 提取对象的"已知键"（剔除 string/number/symbol 索引） */
 type KnownKeys<T> = {
   [K in keyof T]-?: string extends K
     ? never
@@ -123,13 +124,16 @@ type KnownKeys<T> = {
         : K
 }[keyof T]
 
+/** 排除 component 和 type 的控件元数据 */
 type OmitControlMeta<T extends IsComponent> = OmitByKey<AutoFormControlsMeta<T>, 'component' | 'type'>
 
+/** 根据控件类型键获取对应的元数据类型 */
 type MetaByType<TControls, K extends keyof TControls>
   = TControls[K] extends AutoFormControl<infer C>
     ? OmitControlMeta<C>
     : OmitControlMeta<IsComponent>
 
+/** 根据 Zod 类型字符串获取对应的元数据类型 */
 type MetaByZod<TControls, TZod extends string>
   = TZod extends KnownKeys<TControls>
     ? TControls[TZod] extends AutoFormControl<infer C>
@@ -137,26 +141,46 @@ type MetaByZod<TControls, TZod extends string>
       : OmitControlMeta<IsComponent>
     : OmitControlMeta<IsComponent>
 
+/** 提取控件类型键的简化类型（减少重复） */
+type ControlTypeKey<TControls> = KnownKeys<TControls> & keyof TControls & string
+
+/**
+ * 基础工厂方法类型（用于 string/number/boolean/file）
+ * 支持四种调用方式：
+ * 1. 传入错误消息字符串
+ * 2. 传入基础元数据对象
+ * 3. 传入带 type 的元数据（指定控件类型）
+ * 4. 传入带 component 的元数据（直接指定组件）
+ */
 export type AutoFormFactoryMethod<
   TControls,
   TZod extends string,
   TResult,
   TExtraParams extends any[] = []
 > = {
-  // 支持直接传入字符串作为错误消息
   (...args: [...TExtraParams, string?]): TResult
-} & {
-  // 支持传入元数据对象
   (...args: [...TExtraParams, ({ component?: never, type?: never } & MetaByZod<TControls, TZod>)?]): TResult
-} & {
-  // 支持指定控件类型
-  <K extends KnownKeys<TControls> & keyof TControls & string>(
+  <K extends ControlTypeKey<TControls>>(
     ...args: [...TExtraParams, ({ type: Suggest<K>, component?: never } & MetaByType<TControls, K>)?]
   ): TResult
-} & {
-  // 支持直接传入组件
   <C extends IsComponent>(
     ...args: [...TExtraParams, ({ component: C, type?: never } & OmitControlMeta<C>)?]
+  ): TResult
+}
+
+/**
+ * 复杂类型工厂方法（用于 array/tuple/enum）
+ * 支持在第二个参数传入 overwrite 配置
+ */
+type ComplexFactoryMethod<TControls, TParams, TResult> = {
+  (params: TParams, overwrite?: never): TResult
+  <K extends ControlTypeKey<TControls>>(
+    params: TParams,
+    overwrite?: { type: Suggest<K>, component?: never } & MetaByType<TControls, K>
+  ): TResult
+  <C extends IsComponent>(
+    params: TParams,
+    overwrite?: { component: C, type?: never } & OmitControlMeta<C>
   ): TResult
 }
 
@@ -207,36 +231,29 @@ export interface TypedZodFactory<TC extends AutoFormControls, DFTC extends AutoF
   string: AutoFormFactoryMethod<WithDefaultControls<TC, DFTC>, 'string', z.ZodString>
   number: AutoFormFactoryMethod<WithDefaultControls<TC, DFTC>, 'number', z.ZodNumber>
   boolean: AutoFormFactoryMethod<WithDefaultControls<TC, DFTC>, 'boolean', z.ZodBoolean>
+  file: AutoFormFactoryMethod<WithDefaultControls<TC, DFTC>, 'file', z.ZodType<File>>
+
+  /** 枚举工厂方法 - 支持字符串数组或枚举对象 */
+  enum: {
+    <const T extends readonly string[]>(values: T, overwrite?: never): z.ZodEnum<z.core.util.ToEnum<T[number]>>
+    <const T extends readonly string[], K extends ControlTypeKey<WithDefaultControls<TC, DFTC>>>(
+      values: T, overwrite?: { type: Suggest<K>, component?: never } & MetaByType<WithDefaultControls<TC, DFTC>, K>
+    ): z.ZodEnum<z.core.util.ToEnum<T[number]>>
+    <const T extends readonly string[], C extends IsComponent>(
+      values: T, overwrite?: { component: C, type?: never } & OmitControlMeta<C>
+    ): z.ZodEnum<z.core.util.ToEnum<T[number]>>
+    <const T extends z.core.util.EnumLike>(values: T, overwrite?: never): z.ZodEnum<T>
+    <const T extends z.core.util.EnumLike, K extends ControlTypeKey<WithDefaultControls<TC, DFTC>>>(
+      values: T, overwrite?: { type: Suggest<K>, component?: never } & MetaByType<WithDefaultControls<TC, DFTC>, K>
+    ): z.ZodEnum<T>
+    <const T extends z.core.util.EnumLike, C extends IsComponent>(
+      values: T, overwrite?: { component: C, type?: never } & OmitControlMeta<C>
+    ): z.ZodEnum<T>
+  }
 
   date: <T = CalendarDate>(meta?: any) => z.ZodType<T>
-
-  // 数组工厂方法 - 第二个参数用于指定数组级控件配置
-  array: {
-    // 传入控件类型字符串
-    <T extends z.ZodType, K extends KnownKeys<WithDefaultControls<TC, DFTC>> & keyof WithDefaultControls<TC, DFTC> & string>(
-      element: T,
-      overwrite?: { type: Suggest<K>, component?: never } & MetaByType<WithDefaultControls<TC, DFTC>, K>
-    ): z.ZodArray<T>
-    // 传入控件组件
-    <T extends z.ZodType, C extends IsComponent>(
-      element: T,
-      overwrite?: { component: C, type?: never } & OmitControlMeta<C>
-    ): z.ZodArray<T>
-  }
-
-  // 元组工厂方法 - 第二个参数用于指定元组级控件配置
-  tuple: {
-    // 传入控件类型字符串
-    <T extends readonly [z.ZodType, ...z.ZodType[]], K extends KnownKeys<WithDefaultControls<TC, DFTC>> & keyof WithDefaultControls<TC, DFTC> & string>(
-      schemas: T,
-      overwrite?: { type: Suggest<K>, component?: never } & MetaByType<WithDefaultControls<TC, DFTC>, K>
-    ): z.ZodTuple<T>
-    // 传入控件组件
-    <T extends readonly [z.ZodType, ...z.ZodType[]], C extends IsComponent>(
-      schemas: T,
-      overwrite?: { component: C, type?: never } & OmitControlMeta<C>
-    ): z.ZodTuple<T>
-  }
+  array: ComplexFactoryMethod<WithDefaultControls<TC, DFTC>, z.ZodType, z.ZodArray<any>>
+  tuple: ComplexFactoryMethod<WithDefaultControls<TC, DFTC>, readonly [z.ZodType, ...z.ZodType[]], z.ZodTuple<any>>
 
   // 布局方法 - 返回布局标记类型（仅用于类型层面，运行时返回 ZodCustom）
   layout: <C extends IsComponent = IsComponent, Fields extends Record<string, z.ZodType> = Record<string, z.ZodType>>(

@@ -7,7 +7,7 @@ import WithCopy from '../components/input/WithCopy.vue'
 import WithCharacterLimit from '../components/input/WithCharacterLimit.vue'
 import DatePicker from '../components/DatePicker.vue'
 import ColorChooser from '../components/ColorChooser.vue'
-import { UInput, UInputNumber, UCheckbox, USwitch, UTextarea, USlider, UPinInput, UInputTags } from '#components'
+import { UInput, UInputNumber, UCheckbox, USwitch, UTextarea, USlider, UPinInput, UInputTags, UFileUpload, USelect, USelectMenu } from '#components'
 import { isObject } from '@movk/core'
 import { AUTOFORM_META, CLONE_METHODS } from '../constants/auto-form'
 import type { CalendarDate } from '@internationalized/date'
@@ -76,69 +76,84 @@ function getAutoFormMetadata(schema: z.ZodType): Record<string, any> {
   return {}
 }
 
-/** 基础字段 */
-function createZodFactoryMethod<T extends z.ZodType>(
+/**
+ * 提取错误消息和元数据
+ * @param controlMeta - 控件元数据或错误消息字符串
+ * @returns [errorMessage, metadata]
+ */
+function extractErrorAndMeta(controlMeta?: any): [string | undefined, any] {
+  if (typeof controlMeta === 'string') {
+    return [controlMeta, undefined]
+  }
+
+  if (controlMeta && isObject(controlMeta) && 'error' in controlMeta) {
+    const { error, ...meta } = controlMeta
+    return [error, meta]
+  }
+
+  return [undefined, controlMeta]
+}
+
+/**
+ * 基础字段工厂方法创建器
+ * @param zodFactory - Zod 原生工厂函数
+ * @returns 增强的工厂方法
+ */
+function createBasicFactory<T extends z.ZodType>(
   zodFactory: (params?: any) => T
 ) {
   return (controlMeta?: any): T => {
-    // 字符串直接作为错误消息
-    if (typeof controlMeta === 'string') {
-      return zodFactory(controlMeta)
-    }
-
-    // 对象且包含 error 属性
-    if (controlMeta && isObject(controlMeta) && 'error' in controlMeta) {
-      const { error, ...meta } = controlMeta
-      return applyMeta(zodFactory(error), meta)
-    }
-
-    return applyMeta(zodFactory(), controlMeta)
+    const [error, meta] = extractErrorAndMeta(controlMeta)
+    const schema = zodFactory(error)
+    return meta ? applyMeta(schema, meta) : schema
   }
 }
 
-/** 日期字段工厂（支持泛型覆盖类型） */
+/**
+ * 日期字段工厂（支持泛型覆盖类型）
+ */
 function createDateFactory() {
   return <T = CalendarDate>(controlMeta?: any): z.ZodType<T> => {
-    const schema = typeof controlMeta === 'string'
-      ? z.date(controlMeta)
-      : z.date()
-
-    const meta = controlMeta && isObject(controlMeta) && 'error' in controlMeta
-      ? (() => {
-          const { error, ...rest } = controlMeta
-          return rest
-        })()
-      : controlMeta
-
+    const [error, meta] = extractErrorAndMeta(controlMeta)
+    const schema = z.date(error)
     return applyMeta(schema, meta || {}) as unknown as z.ZodType<T>
   }
 }
 
 /**
- * 对象工厂创建器，支持柯里化和直接调用
+ * 应用 overwrite 元数据到 schema
+ * @param schema - Zod schema
+ * @param overwrite - overwrite 配置
+ * @returns 应用元数据后的 schema
  */
-function createObjectFactory<T extends 'object' | 'looseObject' | 'strictObject'>(
-  method: T
-) {
-  return ((...args: any[]) => {
+function applyOverwrite<T extends z.ZodType>(schema: T, overwrite?: any): T {
+  return overwrite && isObject(overwrite) ? applyMeta(schema, { overwrite }) : applyMeta(schema, {})
+}
+
+/**
+ * 对象工厂创建器，支持柯里化和直接调用
+ * @param method - z.object 的方法名（object/looseObject/strictObject）
+ */
+function createObjectFactory(method: 'object' | 'looseObject' | 'strictObject') {
+  return (shapeOrNothing?: any, meta?: any) => {
     // 柯里化写法: afz.object<State>()({...})
-    if (args.length === 0) {
-      return (shape: any, meta?: any) => applyMeta((z as any)[method](shape), meta || {})
+    if (shapeOrNothing === undefined) {
+      return (shape: any, innerMeta?: any) => applyMeta((z as any)[method](shape), innerMeta || {})
     }
 
     // 直接写法: afz.object({...}) 或 afz.object({...}, meta)
-    const [shape, meta] = args
-    return applyMeta((z as any)[method](shape), meta || {})
-  }) as any
+    return applyMeta((z as any)[method](shapeOrNothing), meta || {})
+  }
 }
 
-// 布局字段
+/**
+ * 布局字段工厂
+ */
 function createLayoutFactory() {
   return <C extends IsComponent = IsComponent>(
     config: AutoFormLayoutConfig<C>
   ) => {
     const schema = z.custom<AutoFormLayoutConfig<C>>()
-
     return applyMeta(schema, {
       type: AUTOFORM_META.LAYOUT_KEY,
       layout: config
@@ -146,27 +161,17 @@ function createLayoutFactory() {
   }
 }
 
-// 数组字段
-function createArrayFactory(
-  zodFactory: <T extends z.ZodType>(element: T) => z.ZodArray<T>
+/**
+ * 复杂类型工厂创建器（用于 array/tuple/enum）
+ * @param zodFactory - Zod 原生工厂函数
+ * @returns 增强的工厂方法
+ */
+function createComplexFactory<TFactory extends (...args: any[]) => z.ZodType>(
+  zodFactory: TFactory
 ) {
-  return <T extends z.ZodType, K extends string>(
-    element: T,
-    overwrite?: { type: K, component?: never } | { component: IsComponent, type?: never }
-  ): z.ZodArray<T> => {
-    return applyMeta(zodFactory(element), overwrite && isObject(overwrite) ? { overwrite } : {})
-  }
-}
-
-// 元组字段
-function createTupleFactory(
-  zodFactory: <T extends readonly [z.ZodType, ...z.ZodType[]]>(schemas: T) => z.ZodTuple<T>
-) {
-  return <T extends readonly [z.ZodType, ...z.ZodType[]]>(
-    schemas: T,
-    overwrite?: { type: string, component?: never } | { component: IsComponent, type?: never }
-  ): z.ZodTuple<T> => {
-    return applyMeta(zodFactory(schemas), overwrite && isObject(overwrite) ? { overwrite } : {})
+  return (params: Parameters<TFactory>[0], overwrite?: any) => {
+    const schema = zodFactory(params)
+    return applyOverwrite(schema, overwrite)
   }
 }
 
@@ -188,6 +193,10 @@ export function useAutoForm() {
     slider: defineControl({ component: USlider, controlProps: DEFAULT_CONTROL_PROPS }),
     pinInput: defineControl({ component: UPinInput, controlProps: DEFAULT_CONTROL_PROPS }),
     inputTags: defineControl({ component: UInputTags, controlProps: DEFAULT_CONTROL_PROPS }),
+    file: defineControl({ component: UFileUpload, controlProps: DEFAULT_CONTROL_PROPS }),
+    enum: defineControl({ component: USelect, controlProps: DEFAULT_CONTROL_PROPS }),
+    select: defineControl({ component: USelect, controlProps: DEFAULT_CONTROL_PROPS }),
+    selectMenu: defineControl({ component: USelectMenu, controlProps: DEFAULT_CONTROL_PROPS }),
 
     // 自定义增强型组件
     date: defineControl({ component: DatePicker, controlProps: DEFAULT_CONTROL_PROPS }),
@@ -198,17 +207,24 @@ export function useAutoForm() {
     colorChooser: defineControl({ component: ColorChooser, controlProps: DEFAULT_CONTROL_PROPS })
   } as const satisfies AutoFormControls
 
+  /**
+   * 创建类型化的 Zod 工厂对象
+   * @param _controls - 可选的自定义控件映射（用于类型推断）
+   * @returns 类型化的 Zod 工厂对象
+   */
   function createZodFactory<TControls extends AutoFormControls = typeof DEFAULT_CONTROLS>(
     _controls?: TControls
   ) {
     return {
-      string: createZodFactoryMethod(z.string),
-      number: createZodFactoryMethod(z.number),
-      boolean: createZodFactoryMethod(z.boolean),
+      string: createBasicFactory(z.string),
+      number: createBasicFactory(z.number),
+      boolean: createBasicFactory(z.boolean),
+      file: createBasicFactory(z.file),
       date: createDateFactory(),
 
-      array: createArrayFactory(z.array),
-      tuple: createTupleFactory(z.tuple),
+      array: createComplexFactory(z.array),
+      tuple: createComplexFactory(z.tuple),
+      enum: createComplexFactory(z.enum),
 
       layout: createLayoutFactory(),
 

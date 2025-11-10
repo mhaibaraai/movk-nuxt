@@ -19,9 +19,8 @@ export const AUTOFORM_PATTERNS = {
 
 /** zod 克隆方法 */
 export const CLONE_METHODS = [
-  'meta', 'optional', 'nullable', 'nullish', 'array', 'promise', 'or', 'and',
-  'transform', 'default', 'catch', 'pipe', 'readonly', 'refine', 'describe',
-  'brand', 'min', 'max', 'length', 'nonempty', 'email', 'url', 'uuid', 'regex',
-  'trim', 'toLowerCase', 'toUpperCase', 'startsWith', 'endsWith', 'includes',
-  'datetime', 'ip'
+  'meta',
+  'max', 'min', 'length', 'regex', 'startsWith', 'endsWith', 'includes', 'uppercase', 'lowercase',
+  'optional', 'nullable', 'nullish', 'describe', 'refine', 'superRefine', 'check', 'transform', 'default',
+  'mime', 'readonly', 'exclude', 'extract'
 ] as const

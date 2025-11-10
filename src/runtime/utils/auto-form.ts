@@ -319,6 +319,27 @@ function createField(
 }
 
 /**
+ * 提取 Zod enum 的枚举值
+ * @param schema - Zod enum schema
+ * @returns 枚举值数组
+ */
+function extractEnumValues(schema: z.ZodType): Array<string | number> | undefined {
+  // 方法 1: 通过 .enum 属性获取（z.enum() 会暴露）
+  if ((schema as any).enum && typeof (schema as any).enum === 'object') {
+    return Object.values((schema as any).enum)
+  }
+
+  // 方法 2: 通过 _def.values 获取（Zod 内部结构）
+  const def = (schema as any)._def
+  if (def?.values) {
+    // values 可能是 Set 或 Array
+    return Array.isArray(def.values) ? def.values : Array.from(def.values)
+  }
+
+  return undefined
+}
+
+/**
  * Schema 内省 - 递归解析 Zod Schema 为表单字段结构
  */
 export function introspectSchema(
@@ -361,6 +382,20 @@ export function introspectSchema(
 
   field.meta.component = chosenComponent
   field.meta.mapped = mapped
+
+  // 枚举类型特殊处理：自动提取枚举值并注入到 controlProps.items
+  if (fieldType === 'enum' && mapped) {
+    const enumValues = extractEnumValues(coreSchema)
+    if (enumValues && enumValues.length > 0) {
+      field.meta.mapped = {
+        ...mapped,
+        controlProps: {
+          ...mapped.controlProps,
+          items: enumValues
+        }
+      }
+    }
+  }
 
   return [field]
 }

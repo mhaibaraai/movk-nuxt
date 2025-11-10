@@ -49,10 +49,7 @@ const defaultSlotProps = computed(() => createSlotProps(field, extraProps))
 </script>
 
 <template>
-  <UFormField
-    v-show="!fieldProps.hidden"
-    v-bind="fieldProps"
-  >
+  <UFormField v-show="!fieldProps.hidden" v-bind="fieldProps">
     <template v-for="(slotComponent, slotName) in formFieldSlots" :key="slotName" #[slotName]="slotData">
       <VNodeRender :node="slotComponent(slotData)" />
     </template>

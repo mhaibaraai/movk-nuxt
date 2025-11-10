@@ -23,18 +23,16 @@ const {
   extraProps
 } = defineProps<AutoFormRendererLayoutProps<S>>()
 
-const childEntries = computed(() => {
+const renderData = computed(() => {
   if (!field.children?.length) {
-    return {
-      leafFields: [],
-      nestedFields: [],
-      arrayFields: [],
-      layoutFields: [],
-      hasComplexFields: false
-    }
+    return null
   }
 
-  return classifyFields(field.children)
+  const classified = classifyFields(field.children)
+  return {
+    ...classified,
+    allFields: field.children
+  }
 })
 
 const layoutComponent = computed(() => {
@@ -78,41 +76,36 @@ const layoutSlots = computed(() => {
 </script>
 
 <template>
-  <component :is="layoutComponent" v-bind="layoutProps">
+  <component :is="layoutComponent" v-bind="layoutProps" v-if="renderData">
     <template v-for="(slotFn, slotName) in layoutSlots" :key="slotName" #[slotName]>
       <component :is="slotFn" />
     </template>
 
-    <AutoFormRendererField
-      v-for="childField in childEntries.leafFields"
-      :key="childField.path"
-      :field="childField"
-      :schema="schema"
-      :extra-props="extraProps"
-    />
-
-    <AutoFormRendererArray
-      v-for="childField in childEntries.arrayFields"
-      :key="childField.path"
-      :field="childField"
-      :schema="schema"
-      :extra-props="extraProps"
-    />
-
-    <AutoFormRendererLayout
-      v-for="childField in childEntries.layoutFields"
-      :key="childField.path"
-      :field="childField"
-      :schema="schema"
-      :extra-props="extraProps"
-    />
-
-    <AutoFormRendererNested
-      v-for="childField in childEntries.nestedFields"
-      :key="childField.path"
-      :field="childField"
-      :schema="schema"
-      :extra-props="extraProps"
-    />
+    <template v-for="childField in renderData.allFields" :key="childField.path">
+      <AutoFormRendererField
+        v-if="renderData.leafFields.includes(childField)"
+        :field="childField"
+        :schema="schema"
+        :extra-props="extraProps"
+      />
+      <AutoFormRendererArray
+        v-else-if="renderData.arrayFields.includes(childField)"
+        :field="childField"
+        :schema="schema"
+        :extra-props="extraProps"
+      />
+      <AutoFormRendererLayout
+        v-else-if="renderData.layoutFields.includes(childField)"
+        :field="childField"
+        :schema="schema"
+        :extra-props="extraProps"
+      />
+      <AutoFormRendererNested
+        v-else
+        :field="childField"
+        :schema="schema"
+        :extra-props="extraProps"
+      />
+    </template>
   </component>
 </template>
