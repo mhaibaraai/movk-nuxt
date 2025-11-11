@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import { UIcon } from '#components'
 import { CalendarDate } from '@internationalized/date'
 import type { z } from 'zod/v4'
 
@@ -115,14 +116,29 @@ const schema = afz.object({
       })
         .meta({ label: '选择用户' })
         .default(users.value?.[0]?.value || ''),
-      countries: afz.array(afz.string(), {
+      countrie: afz.string({
         type: 'selectMenu',
-        controlProps: {
-          multiple: true,
-          items: countries.value,
-          loading: status.value === 'pending',
-          labelKey: 'name',
-          searchInput: { icon: 'i-lucide-search' }
+        controlProps: computed(() => ({
+          'items': countries.value,
+          'loading': status.value === 'pending',
+          'labelKey': 'name',
+          'searchInput': { icon: 'i-lucide-search' },
+          'onUpdate:open': () => {
+            if (!countries.value?.length && status.value !== 'pending') {
+              execute()
+            }
+          }
+        })),
+        controlSlots: {
+          'leading': ({ modelValue, ui }) => {
+            if (modelValue) {
+              return h('span', { class: 'size-5 text-center' }, modelValue?.emoji)
+            }
+            return h(UIcon, { name: 'i-lucide-earth', class: ui.leadingIcon() })
+          },
+          'item-leading': ({ item }) => {
+            return h('span', { class: 'size-5 text-center' }, (item as any)?.emoji)
+          }
         }
       })
         .meta({ label: '选择国家列表' })
@@ -138,7 +154,6 @@ const form = ref<Partial<Schema>>({})
 
 <template>
   <Navbar />
-  {{ countries?.length }}
   <UCard class="w-full overflow-y-auto">
     <MAutoForm :schema="schema" :state="form" />
   </UCard>
