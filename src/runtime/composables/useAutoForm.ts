@@ -7,7 +7,22 @@ import WithCopy from '../components/input/WithCopy.vue'
 import WithCharacterLimit from '../components/input/WithCharacterLimit.vue'
 import DatePicker from '../components/DatePicker.vue'
 import ColorChooser from '../components/ColorChooser.vue'
-import { UInput, UInputNumber, UCheckbox, USwitch, UTextarea, USlider, UPinInput, UInputTags, UFileUpload, USelect, USelectMenu } from '#components'
+import {
+  UInput,
+  UInputNumber,
+  UCheckbox,
+  USwitch,
+  UTextarea,
+  USlider,
+  UPinInput,
+  UInputTags,
+  UFileUpload,
+  USelect,
+  USelectMenu,
+  UInputMenu,
+  UCheckboxGroup,
+  URadioGroup
+} from '#components'
 import { isObject } from '@movk/core'
 import { AUTOFORM_META, CLONE_METHODS } from '../constants/auto-form'
 import type { CalendarDate } from '@internationalized/date'
@@ -187,15 +202,17 @@ export function useAutoForm() {
     string: defineControl({ component: UInput, controlProps: DEFAULT_CONTROL_PROPS }),
     number: defineControl({ component: UInputNumber, controlProps: DEFAULT_CONTROL_PROPS }),
     boolean: defineControl({ component: UCheckbox, controlProps: DEFAULT_CONTROL_PROPS }),
+    enum: defineControl({ component: USelect, controlProps: DEFAULT_CONTROL_PROPS }),
+    file: defineControl({ component: UFileUpload, controlProps: DEFAULT_CONTROL_PROPS }),
     switch: defineControl({ component: USwitch, controlProps: DEFAULT_CONTROL_PROPS }),
     textarea: defineControl({ component: UTextarea, controlProps: DEFAULT_CONTROL_PROPS }),
     slider: defineControl({ component: USlider, controlProps: DEFAULT_CONTROL_PROPS }),
     pinInput: defineControl({ component: UPinInput, controlProps: DEFAULT_CONTROL_PROPS }),
     inputTags: defineControl({ component: UInputTags, controlProps: DEFAULT_CONTROL_PROPS }),
-    file: defineControl({ component: UFileUpload, controlProps: DEFAULT_CONTROL_PROPS }),
-    enum: defineControl({ component: USelect, controlProps: DEFAULT_CONTROL_PROPS }),
-    select: defineControl({ component: USelect, controlProps: DEFAULT_CONTROL_PROPS }),
     selectMenu: defineControl({ component: USelectMenu, controlProps: DEFAULT_CONTROL_PROPS }),
+    inputMenu: defineControl({ component: UInputMenu, controlProps: DEFAULT_CONTROL_PROPS }),
+    checkboxGroup: defineControl({ component: UCheckboxGroup, controlProps: DEFAULT_CONTROL_PROPS }),
+    radioGroup: defineControl({ component: URadioGroup, controlProps: DEFAULT_CONTROL_PROPS }),
 
     // 自定义增强型组件
     date: defineControl({ component: DatePicker, controlProps: DEFAULT_CONTROL_PROPS }),

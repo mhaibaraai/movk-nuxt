@@ -186,30 +186,21 @@ export interface AutoFormNestedCollapsible extends Pick<CollapsibleRootProps, 'd
 type KeysOf<T> = Extract<keyof T, string>
 type WithDefaultControls<TControls, DFTC> = TControls & DFTC
 
-/** 布局标记类型 - 用于类型层面识别 */
-interface LayoutFieldMarker<Fields extends Record<string, z.ZodType>> {
+/** 布局标记类型 - 用于类型层面识别,同时兼容 ZodType */
+interface LayoutFieldMarker<Fields extends Record<string, z.ZodType>> extends z.ZodType<AutoFormLayoutConfig<any>, any, any> {
   __brand: typeof AUTOFORM_META.LAYOUT_KEY
   fields: Fields
-}
-
-/** 移除所有布局标记字段 */
-type FilterLayoutMarkers<S extends Record<string, any>> = {
-  [K in keyof S as S[K] extends LayoutFieldMarker<any> ? never : K]: S[K]
 }
 
 /** 联合类型转交叉类型 */
 type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends ((k: infer I) => void) ? I : never
 
-/** 提取所有布局的 fields 并合并 */
-type ExtractAllLayoutFields<S extends Record<string, any>> = UnionToIntersection<
-  {
-    [K in keyof S]: S[K] extends LayoutFieldMarker<infer Fields> ? Fields : {}
-  }[keyof S]
+/** 递归展开布局字段 - 移除布局标记并合并 fields */
+type ExtractLayoutShape<S extends Record<string, any>> = {
+  [K in keyof S as S[K] extends LayoutFieldMarker<any> ? never : K]: S[K]
+} & UnionToIntersection<
+  { [K in keyof S]: S[K] extends LayoutFieldMarker<infer F> ? ExtractLayoutShape<F> : {} }[keyof S]
 >
-
-/** 最终 shape = 普通字段 + 所有布局字段 */
-type ExtractLayoutShape<S extends Record<string, any>>
-  = FilterLayoutMarkers<S> & ExtractAllLayoutFields<S>
 
 export interface TypedZodFactory<TC extends AutoFormControls, DFTC extends AutoFormControls> {
   string: AutoFormFactoryMethod<WithDefaultControls<TC, DFTC>, 'string', z.ZodString>

@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import { UIcon } from '#components'
 import { CalendarDate } from '@internationalized/date'
+import type { InputMenuItem } from '@nuxt/ui'
 import type { z } from 'zod/v4'
 
 const { afz } = useAutoForm()
@@ -23,6 +24,25 @@ const { data: countries, status, execute } = await useLazyFetch<{
 }[]>('https://ui.nuxt.com/api/countries.json', {
   immediate: false
 })
+
+const fruitsItems = ref([
+  {
+    type: 'label',
+    label: 'Fruits'
+  },
+  'Apple',
+  'Banana',
+  'Pineapple',
+  {
+    type: 'separator'
+  },
+  {
+    type: 'label',
+    label: 'Vegetables'
+  },
+  'Aubergine',
+  'Leek'
+] satisfies InputMenuItem[])
 
 const schema = afz.object({
   $layout: afz.layout({
@@ -64,10 +84,7 @@ const schema = afz.object({
         .meta({ label: '日期合集', class: 'col-span-2' }),
       datarange: afz.date({
         controlProps: { range: true, numberOfMonths: 2, class: 'w-full' }
-      }).meta({ label: '日期范围', class: 'col-span-2' }),
-      slider: afz.number({ type: 'slider', controlProps: { min: 0, max: 100, step: 1 } })
-        .default(50)
-        .meta({ label: '滑块输入框' })
+      }).meta({ label: '日期范围', class: 'col-span-2' })
     }
   }),
 
@@ -79,7 +96,29 @@ const schema = afz.object({
       }).meta({ label: '上传头像', hidden: ({ state }) => !!state.username }),
       bio: afz.string({ type: 'textarea', controlProps: { rows: 4 } })
         .max(200, { message: '简介不能超过200个字符' })
-        .meta({ class: 'col-span-5', label: '个人简介' }).optional()
+        .meta({ class: 'col-span-2', label: '个人简介' }).optional(),
+      $layout: afz.layout({
+        class: 'flex flex-col gap-4 col-span-3',
+        fields: {
+          fruits: afz.array(afz.string(), {
+            type: 'inputMenu',
+            controlProps: ({ value }) => ({
+              multiple: true,
+              items: fruitsItems.value,
+              createItem: true,
+              onCreate: (item: string) => {
+                fruitsItems.value.push(item)
+                value.push(item)
+              }
+            })
+          })
+            .meta({ label: '选择水果', class: 'col-span-2' })
+            .default(['Apple', 'Aubergine']),
+          slider: afz.number({ type: 'slider', controlProps: { min: 0, max: 100, step: 1 } })
+            .default(50)
+            .meta({ label: '滑块输入框' })
+        }
+      })
     }
   }),
 
@@ -105,7 +144,7 @@ const schema = afz.object({
         .default('active')
         .meta({ label: '状态选择' }),
       selectUser: afz.string({
-        type: 'select',
+        type: 'enum',
         controlProps: ({ value }) => {
           const avatarUser = users.value?.find(u => u.value === value)
           return {
@@ -143,6 +182,39 @@ const schema = afz.object({
       })
         .meta({ label: '选择国家列表' })
         .optional()
+    }
+  }),
+
+  $layout4: afz.layout({
+    class: 'grid grid-cols-3 gap-4',
+    fields: {
+      themes: afz.string({
+        type: 'radioGroup',
+        controlProps: {
+          variant: 'card',
+          color: 'warning',
+          items: [
+            { label: '系统默认', value: 'system' },
+            { label: '浅色模式', value: 'light' },
+            { label: '深色模式', value: 'dark' }
+          ]
+        }
+      })
+        .default('system')
+        .meta({ label: '选择主题' }),
+      contactMethods: afz.array(afz.string(), {
+        type: 'checkboxGroup',
+        controlProps: {
+          variant: 'table',
+          items: [
+            { label: '电子邮件', value: 'email' },
+            { label: '短信', value: 'sms' },
+            { label: '电话', value: 'phone' }
+          ]
+        }
+      })
+        .default(['email', 'phone'])
+        .meta({ label: '联系方式' })
     }
   })
 })
