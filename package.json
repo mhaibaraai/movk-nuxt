@@ -13,13 +13,7 @@
     }
   },
   "main": "./dist/module.mjs",
-  "typesVersions": {
-    "*": {
-      ".": [
-        "./dist/types.d.mts"
-      ]
-    }
-  },
+  "types": "./dist/types.d.mts",
   "files": [
     "dist"
   ],
@@ -28,17 +22,16 @@
     "prepack": "nr build",
     "build": "nuxt-module-build build",
     "dev": "nuxt dev playground",
-    "dev:prepare": "nuxt-module-build build --stub && nuxt-module-build prepare && nuxi prepare playground",
+    "dev:prepare": "nuxt-module-build build --stub && nuxt-module-build prepare && nuxt prepare playground && nuxt prepare docs",
     "dev:build": "nuxt build playground",
-    "release": "release-it --verbose",
+    "docs": "nuxt dev docs",
+    "docs:build": "nuxt build docs",
+    "release": "release-it",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "typecheck": "vue-tsc --noEmit && nuxt typecheck playground",
-    "up": "taze major -wIr",
+    "typecheck": "vue-tsc --noEmit && nuxt typecheck playground && nuxt typecheck docs",
     "clean": "tsx scripts/rm.ts",
-    "test": "vitest run",
-    "test:watch": "vitest watch",
-    "test:types": "vue-tsc --noEmit && cd playground && vue-tsc --noEmit"
+    "test": "vitest"
   },
   "dependencies": {
     "@iconify-json/lucide": "^1.2.73",
@@ -63,7 +56,6 @@
     "eslint": "9.38.0",
     "fast-glob": "^3.3.3",
     "nuxt": "^4.2.1",
-    "taze": "^19.9.0",
     "tsx": "^4.20.6",
     "typescript": "^5.9.3",
     "vitest": "3.2.4",

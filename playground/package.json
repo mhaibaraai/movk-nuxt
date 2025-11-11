@@ -8,9 +8,6 @@
     "generate": "nuxi generate",
     "typecheck": "nuxi typecheck"
   },
-  "dependencies": {
-    "@movk/nuxt": "workspace:*"
-  },
   "devDependencies": {
     "nuxt": "^4.2.1",
     "sass-embedded": "^1.93.3"

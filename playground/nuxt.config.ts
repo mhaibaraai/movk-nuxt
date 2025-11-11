@@ -1,5 +1,5 @@
 export default defineNuxtConfig({
-  modules: ['@movk/nuxt'],
+  modules: ['../src/module'],
   devtools: { enabled: true },
   css: ['~/assets/css/main.css'],
   compatibilityDate: 'latest'
