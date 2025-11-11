@@ -1,12 +1,12 @@
 import type { AnyObject } from '@movk/core'
 import type { VNode } from 'vue'
-import type { GlobalMeta } from 'zod/v4'
-import type z from 'zod/v4'
+import type { GlobalMeta, z } from 'zod/v4'
 import type { IsComponent, ReactiveValue } from '../core'
 import type { AutoFormControl, AutoFormControls, AutoFormField, AutoFormFieldContext, AutoFormMergeMeta } from '../types/auto-form'
 import { UButton, UIcon } from '#components'
 import { isFunction, isObject } from '@movk/core'
 import { Fragment, h, isRef, isVNode, markRaw, unref } from 'vue'
+import { z as zod } from 'zod/v4'
 import { joinPath, setPath, startCase, toPath } from '../core'
 import { useAutoForm } from '../composables/useAutoForm'
 import { AUTOFORM_LIMITS, AUTOFORM_META, AUTOFORM_PATTERNS } from '../constants/auto-form'
@@ -583,4 +583,70 @@ export function createHintSlotFactory(removeCallback: (count?: number) => void) 
       chevronIcon
     ])
   }
+}
+
+/**
+ * 判断是否为布局标记字段
+ */
+function isLayoutMarker(schema: z.ZodType): boolean {
+  const { getAutoFormMetadata } = useAutoForm()
+  const meta = getAutoFormMetadata(schema)
+  return meta?.type === AUTOFORM_META.LAYOUT_KEY
+}
+
+/**
+ * 处理包含布局标记的 schema shape，提取纯净的数据 schema
+ * @param shape - 原始 shape 对象
+ * @returns 处理后的纯净 shape（展开所有布局字段）
+ */
+function processLayoutShape(shape: Record<string, z.ZodType>): Record<string, z.ZodType> {
+  const resultShape: Record<string, z.ZodType> = {}
+
+  for (const [key, fieldSchema] of Object.entries(shape)) {
+    if (isLayoutMarker(fieldSchema)) {
+      // 布局字段：展开其 fields 到 resultShape
+      const { getAutoFormMetadata } = useAutoForm()
+      const meta = getAutoFormMetadata(fieldSchema)
+      const layoutFields = meta?.layout?.fields
+
+      if (layoutFields && isObject(layoutFields)) {
+        // 递归处理嵌套布局
+        Object.assign(resultShape, processLayoutShape(layoutFields))
+      }
+    } else {
+      // 普通字段：直接保留
+      resultShape[key] = fieldSchema
+    }
+  }
+
+  return resultShape
+}
+
+/**
+ * 提取纯净的数据 schema（去除所有布局标记）
+ * @param schema - 包含布局标记的 ZodObject
+ * @returns 纯净的 ZodObject，只包含数据字段
+ */
+export function extractPureSchema<T extends z.ZodObject<any, any>>(schema: T): z.ZodObject<any, any> {
+  const shape = (schema as any).shape
+
+  if (!shape || typeof shape !== 'object') {
+    return schema
+  }
+
+  // 检查是否包含布局标记
+  const hasLayoutMarker = Object.values(shape).some(fieldSchema =>
+    isLayoutMarker(fieldSchema as z.ZodType)
+  )
+
+  // 没有布局标记，直接返回原 schema
+  if (!hasLayoutMarker) {
+    return schema
+  }
+
+  // 处理 shape，提取纯净字段
+  const pureShape = processLayoutShape(shape)
+
+  // 创建新的 ZodObject
+  return zod.object(pureShape) as z.ZodObject<any, any>
 }

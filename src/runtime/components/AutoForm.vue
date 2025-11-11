@@ -7,7 +7,7 @@ import type { Ref } from 'vue'
 import { computed, onMounted, ref } from 'vue'
 import { useAutoFormProvider } from '../internal/useAutoFormProvider'
 import { getPath, setPath } from '../core'
-import { classifyFields, introspectSchema } from '../utils/auto-form'
+import { classifyFields, extractPureSchema, introspectSchema } from '../utils/auto-form'
 import AutoFormRendererArray from './auto-form-renderer/AutoFormRendererArray.vue'
 import AutoFormRendererField from './auto-form-renderer/AutoFormRendererField.vue'
 import AutoFormRendererLayout from './auto-form-renderer/AutoFormRendererLayout.vue'
@@ -56,6 +56,9 @@ const state = ref(_state || {}) as Ref<AutoFormStateType>
 
 const { DEFAULT_CONTROLS } = useAutoForm()
 useAutoFormProvider(state, _slots)
+
+// 提取纯净的数据 schema（去除所有布局标记）
+const pureSchema = computed(() => schema ? extractPureSchema(schema) as S : schema)
 
 const controlsMapping = computed(() => ({
   ...DEFAULT_CONTROLS,
@@ -122,7 +125,7 @@ onMounted(() => {
   <UForm
     v-if="renderData"
     :state="state"
-    :schema="schema"
+    :schema="pureSchema"
     v-bind="restProps"
   >
     <template #default="{ errors, loading }">
