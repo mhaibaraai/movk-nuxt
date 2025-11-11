@@ -121,27 +121,22 @@ function createDateFactory() {
 }
 
 /**
- * 应用 overwrite 元数据到 schema
- * @param schema - Zod schema
- * @param overwrite - overwrite 配置
- * @returns 应用元数据后的 schema
+ * 应用 overwrite 元数据
  */
 function applyOverwrite<T extends z.ZodType>(schema: T, overwrite?: any): T {
-  return overwrite && isObject(overwrite) ? applyMeta(schema, { overwrite }) : applyMeta(schema, {})
+  return overwrite && isObject(overwrite)
+    ? applyMeta(schema, { overwrite })
+    : applyMeta(schema, {})
 }
 
 /**
  * 对象工厂创建器，支持柯里化和直接调用
- * @param method - z.object 的方法名（object/looseObject/strictObject）
  */
 function createObjectFactory(method: 'object' | 'looseObject' | 'strictObject') {
   return (shapeOrNothing?: any, meta?: any) => {
-    // 柯里化写法: afz.object<State>()({...})
     if (shapeOrNothing === undefined) {
       return (shape: any, innerMeta?: any) => applyMeta((z as any)[method](shape), innerMeta || {})
     }
-
-    // 直接写法: afz.object({...}) 或 afz.object({...}, meta)
     return applyMeta((z as any)[method](shapeOrNothing), meta || {})
   }
 }
@@ -150,11 +145,8 @@ function createObjectFactory(method: 'object' | 'looseObject' | 'strictObject') 
  * 布局字段工厂
  */
 function createLayoutFactory() {
-  return <C extends IsComponent = IsComponent>(
-    config: AutoFormLayoutConfig<C>
-  ) => {
-    const schema = z.custom<AutoFormLayoutConfig<C>>()
-    return applyMeta(schema, {
+  return <C extends IsComponent = IsComponent>(config: AutoFormLayoutConfig<C>) => {
+    return applyMeta(z.custom<AutoFormLayoutConfig<C>>(), {
       type: AUTOFORM_META.LAYOUT_KEY,
       layout: config
     })
@@ -162,17 +154,24 @@ function createLayoutFactory() {
 }
 
 /**
- * 复杂类型工厂创建器（用于 array/tuple/enum）
- * @param zodFactory - Zod 原生工厂函数
- * @returns 增强的工厂方法
+ * 数组工厂
  */
-function createComplexFactory<TFactory extends (...args: any[]) => z.ZodType>(
-  zodFactory: TFactory
-) {
-  return (params: Parameters<TFactory>[0], overwrite?: any) => {
-    const schema = zodFactory(params)
-    return applyOverwrite(schema, overwrite)
-  }
+function createArrayFactory() {
+  return (schema: z.ZodType, overwrite?: any) => applyOverwrite(z.array(schema), overwrite)
+}
+
+/**
+ * 元组工厂
+ */
+function createTupleFactory() {
+  return (schemas: readonly [z.ZodType, ...z.ZodType[]], overwrite?: any) => applyOverwrite(z.tuple(schemas), overwrite)
+}
+
+/**
+ * 枚举工厂
+ */
+function createEnumFactory() {
+  return (values: any, overwrite?: any) => applyOverwrite(z.enum(values), overwrite)
 }
 
 export function useAutoForm() {
@@ -222,9 +221,9 @@ export function useAutoForm() {
       file: createBasicFactory(z.file),
       date: createDateFactory(),
 
-      array: createComplexFactory(z.array),
-      tuple: createComplexFactory(z.tuple),
-      enum: createComplexFactory(z.enum),
+      array: createArrayFactory(),
+      tuple: createTupleFactory(),
+      enum: createEnumFactory(),
 
       layout: createLayoutFactory(),
 

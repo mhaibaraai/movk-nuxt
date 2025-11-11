@@ -168,22 +168,6 @@ export type AutoFormFactoryMethod<
   ): TResult
 }
 
-/**
- * 复杂类型工厂方法（用于 array/tuple/enum）
- * 支持在第二个参数传入 overwrite 配置
- */
-type ComplexFactoryMethod<TControls, TParams, TResult> = {
-  (params: TParams, overwrite?: never): TResult
-  <K extends ControlTypeKey<TControls>>(
-    params: TParams,
-    overwrite?: { type: Suggest<K>, component?: never } & MetaByType<TControls, K>
-  ): TResult
-  <C extends IsComponent>(
-    params: TParams,
-    overwrite?: { component: C, type?: never } & OmitControlMeta<C>
-  ): TResult
-}
-
 export interface AutoFormNestedCollapsible extends Pick<CollapsibleRootProps, 'defaultOpen' | 'open' | 'disabled' | 'unmountOnHide'> {
   /**
    * 是否启用折叠功能，当设置为 false 时将直接渲染内容不使用折叠组件
@@ -252,8 +236,28 @@ export interface TypedZodFactory<TC extends AutoFormControls, DFTC extends AutoF
   }
 
   date: <T = CalendarDate>(meta?: any) => z.ZodType<T>
-  array: ComplexFactoryMethod<WithDefaultControls<TC, DFTC>, z.ZodType, z.ZodArray<any>>
-  tuple: ComplexFactoryMethod<WithDefaultControls<TC, DFTC>, readonly [z.ZodType, ...z.ZodType[]], z.ZodTuple<any>>
+
+  /** 数组工厂方法 */
+  array: {
+    <T extends z.ZodType>(schema: T, overwrite?: never): z.ZodArray<T>
+    <T extends z.ZodType, K extends ControlTypeKey<WithDefaultControls<TC, DFTC>>>(
+      schema: T, overwrite?: { type: Suggest<K>, component?: never } & MetaByType<WithDefaultControls<TC, DFTC>, K>
+    ): z.ZodArray<T>
+    <T extends z.ZodType, C extends IsComponent>(
+      schema: T, overwrite?: { component: C, type?: never } & OmitControlMeta<C>
+    ): z.ZodArray<T>
+  }
+
+  /** 元组工厂方法 */
+  tuple: {
+    <T extends readonly [z.ZodType, ...z.ZodType[]]>(schemas: T, overwrite?: never): z.ZodTuple<T>
+    <T extends readonly [z.ZodType, ...z.ZodType[]], K extends ControlTypeKey<WithDefaultControls<TC, DFTC>>>(
+      schemas: T, overwrite?: { type: Suggest<K>, component?: never } & MetaByType<WithDefaultControls<TC, DFTC>, K>
+    ): z.ZodTuple<T>
+    <T extends readonly [z.ZodType, ...z.ZodType[]], C extends IsComponent>(
+      schemas: T, overwrite?: { component: C, type?: never } & OmitControlMeta<C>
+    ): z.ZodTuple<T>
+  }
 
   // 布局方法 - 返回布局标记类型（仅用于类型层面，运行时返回 ZodCustom）
   layout: <C extends IsComponent = IsComponent, Fields extends Record<string, z.ZodType> = Record<string, z.ZodType>>(
