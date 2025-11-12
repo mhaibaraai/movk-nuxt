@@ -26,6 +26,7 @@ import {
 import { isObject } from '@movk/core'
 import { AUTOFORM_META, CLONE_METHODS } from '../constants/auto-form'
 import type { CalendarDate } from '@internationalized/date'
+import { useDateFormatter } from './useDateFormatter'
 
 /**
  * 拦截 Zod Schema 的克隆方法，实现元数据自动传递
@@ -128,10 +129,31 @@ function createBasicFactory<T extends z.ZodType>(
  * 日期字段工厂（支持泛型覆盖类型）
  */
 function createDateFactory() {
+  const { isDateValue, isDateRange } = useDateFormatter()
   return <T = CalendarDate>(controlMeta?: any): z.ZodType<T> => {
     const [error, meta] = extractErrorAndMeta(controlMeta)
-    const schema = z.date(error)
-    return applyMeta(schema, meta || {}) as unknown as z.ZodType<T>
+
+    const schema = z.custom<T>().refine(
+      (val: unknown) => {
+        if (isDateValue(val)) {
+          return true
+        }
+        if (val instanceof Date && !Number.isNaN(val.getTime())) {
+          return true
+        }
+        if (isDateRange(val)) {
+          const range = val as any
+          return isDateValue(range.start) && isDateValue(range.end)
+        }
+        if (Array.isArray(val)) {
+          return val.length > 0 && val.every((item: unknown) => isDateValue(item))
+        }
+        return false
+      },
+      { message: error || '无效的日期格式' }
+    )
+
+    return applyMeta(schema, { ...meta, type: 'date' }) as unknown as z.ZodType<T>
   }
 }
 
@@ -232,18 +254,27 @@ export function useAutoForm() {
     _controls?: TControls
   ) {
     return {
+      // 基础类型
       string: createBasicFactory(z.string),
       number: createBasicFactory(z.number),
       boolean: createBasicFactory(z.boolean),
       file: createBasicFactory(z.file),
       date: createDateFactory(),
 
+      // Zod v4 专用验证函数
+      email: createBasicFactory(z.email),
+      url: createBasicFactory(z.url),
+      uuid: createBasicFactory(z.uuid),
+
+      // 集合类型
       array: createArrayFactory(),
       tuple: createTupleFactory(),
       enum: createEnumFactory(),
 
+      // 布局系统
       layout: createLayoutFactory(),
 
+      // 对象类型
       object: createObjectFactory('object'),
       looseObject: createObjectFactory('looseObject'),
       strictObject: createObjectFactory('strictObject')

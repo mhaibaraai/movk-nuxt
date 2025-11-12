@@ -208,25 +208,51 @@ export interface TypedZodFactory<TC extends AutoFormControls, DFTC extends AutoF
   boolean: AutoFormFactoryMethod<WithDefaultControls<TC, DFTC>, 'boolean', z.ZodBoolean>
   file: AutoFormFactoryMethod<WithDefaultControls<TC, DFTC>, 'file', z.ZodType<File>>
 
+  /** Zod v4 专用验证函数 */
+  email: AutoFormFactoryMethod<WithDefaultControls<TC, DFTC>, 'string', z.ZodString>
+  url: AutoFormFactoryMethod<WithDefaultControls<TC, DFTC>, 'string', z.ZodString>
+  uuid: AutoFormFactoryMethod<WithDefaultControls<TC, DFTC>, 'string', z.ZodString>
+
   /** 枚举工厂方法 - 支持字符串数组或枚举对象 */
   enum: {
-    <const T extends readonly string[]>(values: T, overwrite?: never): z.ZodEnum<z.core.util.ToEnum<T[number]>>
-    <const T extends readonly string[], K extends ControlTypeKey<WithDefaultControls<TC, DFTC>>>(
-      values: T, overwrite?: { type: Suggest<K>, component?: never } & MetaByType<WithDefaultControls<TC, DFTC>, K>
+    // 字符串数组重载（优先匹配）
+    <const T extends ReadonlyArray<string>>(
+      values: T,
+      overwrite?: MetaByZod<WithDefaultControls<TC, DFTC>, 'enum'>
     ): z.ZodEnum<z.core.util.ToEnum<T[number]>>
-    <const T extends readonly string[], C extends IsComponent>(
-      values: T, overwrite?: { component: C, type?: never } & OmitControlMeta<C>
+    <const T extends ReadonlyArray<string>, K extends ControlTypeKey<WithDefaultControls<TC, DFTC>>>(
+      values: T,
+      overwrite?: { type: Suggest<K>, component?: never } & MetaByType<WithDefaultControls<TC, DFTC>, K>
     ): z.ZodEnum<z.core.util.ToEnum<T[number]>>
-    <const T extends z.core.util.EnumLike>(values: T, overwrite?: never): z.ZodEnum<T>
+    <const T extends ReadonlyArray<string>, C extends IsComponent>(
+      values: T,
+      overwrite?: { component: C, type?: never } & OmitControlMeta<C>
+    ): z.ZodEnum<z.core.util.ToEnum<T[number]>>
+    // 枚举对象重载
+    <const T extends z.core.util.EnumLike>(
+      values: T,
+      overwrite?: MetaByZod<WithDefaultControls<TC, DFTC>, 'enum'>
+    ): z.ZodEnum<T>
     <const T extends z.core.util.EnumLike, K extends ControlTypeKey<WithDefaultControls<TC, DFTC>>>(
-      values: T, overwrite?: { type: Suggest<K>, component?: never } & MetaByType<WithDefaultControls<TC, DFTC>, K>
+      values: T,
+      overwrite?: { type: Suggest<K>, component?: never } & MetaByType<WithDefaultControls<TC, DFTC>, K>
     ): z.ZodEnum<T>
     <const T extends z.core.util.EnumLike, C extends IsComponent>(
-      values: T, overwrite?: { component: C, type?: never } & OmitControlMeta<C>
+      values: T,
+      overwrite?: { component: C, type?: never } & OmitControlMeta<C>
     ): z.ZodEnum<T>
   }
 
-  date: <T = CalendarDate>(meta?: any) => z.ZodType<T>
+  /** 日期工厂方法 - 支持多种调用方式 */
+  date: {
+    <T = CalendarDate>(meta?: ({ component?: never, type?: never } & MetaByZod<WithDefaultControls<TC, DFTC>, 'date'>)): z.ZodType<T>
+    <K extends ControlTypeKey<WithDefaultControls<TC, DFTC>>, T = CalendarDate>(
+      meta?: { type: Suggest<K>, component?: never } & MetaByType<WithDefaultControls<TC, DFTC>, K>
+    ): z.ZodType<T>
+    <C extends IsComponent, T = CalendarDate>(
+      meta?: { component: C, type?: never } & OmitControlMeta<C>
+    ): z.ZodType<T>
+  }
 
   /** 数组工厂方法 */
   array: {

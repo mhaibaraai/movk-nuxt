@@ -360,6 +360,8 @@ export function useDateFormatter(options: DateFormatterOptions = {}) {
     isSameMonth: checkIsSameMonth,
     isSameYear: checkIsSameYear,
     isToday: checkIsToday,
+    isDateValue,
+    isDateRange,
 
     // 批量转换
     convertToISO,
