@@ -1,6 +1,6 @@
 export default defineAppConfig({
   toaster: {
-    position: 'bottom-right' as const,
+    position: 'top-center' as const,
     duration: 5000,
     max: 5,
     expand: true,
@@ -17,7 +17,7 @@ export default defineAppConfig({
       }
     },
     form: {
-      base: 'space-y-4'
+      base: 'space-y-4 min-w-md'
     }
   }
 })

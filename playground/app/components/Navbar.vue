@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { useRoute, useRouter } from '#imports'
 import type { NavigationMenuItem } from '@nuxt/ui'
 import { upperName } from '../utils'
 
@@ -11,20 +10,63 @@ defineProps<{
 }>()
 
 const name = computed(() => route.path.split('/').pop() as string)
-const pName = computed(() => route.path.split('/').slice(-2, -1)[0])
 const title = computed(() => upperName(name.value))
 
 const components = inject<NavigationMenuItem[]>('components')
 
-const index = computed(() => components?.find(c => c.label?.toLowerCase() === pName.value)?.children?.findIndex(ch => ch.to === route.path) ?? -1)
+function flattenNavigationItems(items: NavigationMenuItem[]): NavigationMenuItem[] {
+  if (!items) return []
 
-function navigate(index: number) {
-  router.push(components?.[index]?.to as string)
+  const result: NavigationMenuItem[] = []
+
+  for (const item of items) {
+    if (item.children) {
+      result.push(...item.children)
+
+      for (const child of item.children) {
+        if (child.children) {
+          result.push(...child.children)
+        }
+      }
+    }
+  }
+
+  return result
+}
+
+const flattenedNavItems = computed(() => flattenNavigationItems(components || []))
+
+const currentIndex = computed(() => {
+  return flattenedNavItems.value.findIndex(item => item.to === route.path) ?? -1
+})
+
+const navigationCache = computed(() => {
+  const current = currentIndex.value
+  const items = flattenedNavItems.value
+
+  return {
+    prev: current > 0 ? items[current - 1] : null,
+    next: current < items.length - 1 ? items[current + 1] : null
+  }
+})
+
+function navigate(direction: 'prev' | 'next' | number): void {
+  let targetRoute: NavigationMenuItem | null = null
+
+  if (typeof direction === 'number') {
+    targetRoute = flattenedNavItems.value[direction] ?? null
+  } else {
+    targetRoute = navigationCache.value[direction] ?? null
+  }
+
+  if (targetRoute?.to) {
+    router.push(targetRoute.to)
+  }
 }
 
 defineShortcuts({
-  j: () => navigate(index.value + 1),
-  k: () => navigate(index.value - 1)
+  j: () => navigate('next'),
+  k: () => navigate('prev')
 })
 </script>
 
@@ -41,19 +83,19 @@ defineShortcuts({
           icon="i-lucide-chevron-left"
           color="neutral"
           variant="outline"
-          :disabled="index === 0"
+          :disabled="!navigationCache.prev"
           class="ring-default"
           aria-label="Previous component"
-          @click="navigate(index - 1)"
+          @click="navigate('prev')"
         />
         <UButton
           icon="i-lucide-chevron-right"
           color="neutral"
           variant="outline"
-          :disabled="index === (components?.length ?? 0) - 1"
+          :disabled="!navigationCache.next"
           class="ring-default"
           aria-label="Next component"
-          @click="navigate(index + 1)"
+          @click="navigate('next')"
         />
       </UFieldGroup>
     </template>
