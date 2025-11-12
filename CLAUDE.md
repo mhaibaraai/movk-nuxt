@@ -6,6 +6,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 这是一个名为 `@movk/nuxt` 的 Nuxt 模块，提供基于 Zod Schema 的自动表单生成功能。项目使用 TypeScript 开发，构建在 Nuxt 4 和 Nuxt UI 之上。
 
+**扩展规划**：
+- 当前核心功能：AutoForm 自动表单系统
+- 计划扩展：AutoTable 自动表格组件、UseApi 等常用 composables
+- 模块化架构：支持多组件和工具函数的灵活扩展
+
 ## 开发命令
 
 ### 核心开发命令
@@ -101,3 +106,59 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### 清理脚本
 - `scripts/rm.ts` - 智能清理脚本，可删除 node_modules、.nuxt、dist 等构建文件
 - 支持批处理操作和错误处理
+
+## Zod v4 规范
+
+### 必须使用的新 API
+
+使用专用函数替代旧的字符串验证方法:
+
+**✅ 正确写法 (Zod v4)**
+```typescript
+// Email 验证
+const emailSchema = z.email()
+
+// URL 验证
+const urlSchema = z.url()
+
+// UUID 验证
+const uuidSchema = z.uuid()
+
+// ISO datetime 验证
+const datetimeSchema = z.iso.datetime()
+
+// ISO date 验证
+const dateSchema = z.iso.date()
+
+// ISO time 验证
+const timeSchema = z.iso.time()
+
+// IP 地址验证
+const ipSchema = z.ip()
+
+// JWT 验证
+const jwtSchema = z.jwt()
+```
+
+**❌ 禁止写法 (已弃用)**
+```typescript
+// 不要使用 string().email()
+const emailSchema = z.string().email()
+
+// 不要使用 string().url()
+const urlSchema = z.string().url()
+
+// 不要使用 string().uuid()
+const uuidSchema = z.string().uuid()
+```
+
+### 其他 v4 变更
+
+- 枚举类型:使用 `z.enum(nativeEnum)` 替代 `z.nativeEnum()`
+- Promise 类型:已弃用 `z.promise()`,直接 `await` 后再验证
+- Record 类型:使用 `z.enum` 作为 key 时会进行完整性检查
+- 函数验证:`z.function()` 不再返回 Zod schema,使用 `.implement()` 方法
+
+### 参考文档
+
+- 官方文档: https://zod.dev/api
