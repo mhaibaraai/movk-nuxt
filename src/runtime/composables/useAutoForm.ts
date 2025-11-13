@@ -49,8 +49,8 @@ function interceptCloneMethods<T extends z.ZodType>(schema: T, customMeta: Recor
 
       // .meta() 方法合并新旧元数据
       const newMeta = methodName === 'meta' && args[0]
-        ? { ...customMeta, ...args[0] }
-        : customMeta
+        ? { ...(customMeta || {}), ...(args[0] || {}) }
+        : customMeta || {}
 
       newSchema[AUTOFORM_META.KEY] = newMeta
       return interceptCloneMethods(newSchema, newMeta)
@@ -122,7 +122,7 @@ function createBasicFactory<T extends z.ZodType>(
   return (controlMeta?: any): T => {
     const [error, meta] = extractErrorAndMeta(controlMeta)
     const schema = zodFactory(error)
-    return meta ? applyMeta(schema, meta) : schema
+    return applyMeta(schema, meta || {})
   }
 }
 
@@ -154,7 +154,7 @@ function createDateFactory() {
       { message: error || '无效的日期格式' }
     )
 
-    return applyMeta(schema, { ...meta, type: 'date' }) as unknown as z.ZodType<T>
+    return applyMeta(schema, { ...(meta || {}), type: 'date' }) as unknown as z.ZodType<T>
   }
 }
 
