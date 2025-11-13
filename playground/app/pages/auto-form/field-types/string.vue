@@ -6,7 +6,7 @@ const { afz } = useAutoForm()
 const toast = useToast()
 
 const schema = afz.object({
-  text: afz.string().min(1).max(100),
+  text: afz.string().meta({ label: '文本', hint: '请输入1到5个字符' }),
   textWithClear: afz.string({ type: 'withClear' }).default('可清除的文本'),
   password: afz.string({ type: 'withPasswordToggle' }),
   textToCopy: afz.string({ type: 'withCopy' }).default('复制这段文本'),

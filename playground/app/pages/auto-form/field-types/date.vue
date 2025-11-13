@@ -8,13 +8,15 @@ const toast = useToast()
 const formatter = useDateFormatter()
 
 const schema = afz.object({
-  birthDate: afz.date({ controlProps: { labelFormat: 'iso' } }).transform(date => formatter.toISO(date)),
+  birthDate: afz.date({ controlProps: { labelFormat: 'iso' } })
+    .transform(date => formatter.toISO(date))
+    .meta({ description: '请选择您的出生日期' }),
   appointmentDate: afz.date().refine(
     date => date > new CalendarDate(2025, 1, 1),
     { message: '日期必须在 2025 年之后' }
   )
     .transform(date => formatter.toTimestamp(date))
-    .meta({ description: '请选择一个在 2025 年之后的日期' }),
+    .meta({ label: '预约日期', description: '请选择一个在 2025 年之后的日期' }),
   vacationDate: afz.date({
     controlProps: {
       labelFormat: 'iso',
