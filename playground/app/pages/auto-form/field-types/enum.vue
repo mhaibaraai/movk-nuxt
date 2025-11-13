@@ -14,10 +14,11 @@ const schema = afz.object({
     controlProps: { placeholder: '选择水果' }
   }),
 
-  selectMenu: afz.enum(['apple', 'banana', 'orange'], {
+  selectMenuAuto: afz.enum([], {
     type: 'selectMenu',
     controlProps: {
       placeholder: '选择水果',
+      valueKey: 'value',
       items: [
         { label: '苹果', value: 'apple' },
         { label: '香蕉', value: 'banana' },
@@ -26,16 +27,35 @@ const schema = afz.object({
     }
   }),
 
-  radioGroup: afz.enum(['small', 'medium', 'large'], {
-    type: 'radioGroup',
+  selectMenuNested: afz.enum([], {
+    type: 'selectMenu',
     controlProps: {
+      placeholder: '选择选项',
+      valueKey: 'value',
       items: [
-        { label: '小', value: 'small' },
-        { label: '中', value: 'medium' },
-        { label: '大', value: 'large' }
+        [
+          { label: '分组 1 - 选项 1', value: 'group1-opt1' },
+          { label: '分组 1 - 选项 2', value: 'group1-opt2' }
+        ],
+        [
+          { label: '分组 2 - 选项 1', value: 'group2-opt1' },
+          { label: '分组 2 - 选项 2', value: 'group2-opt2' }
+        ]
       ]
     }
-  }).default('medium')
+  }),
+
+  radioGroup: afz.enum([], {
+    type: 'radioGroup',
+    controlProps: {
+      valueKey: 'id',
+      items: [
+        { label: 'System', description: 'This is the first option.', id: 'system' },
+        { label: 'Light', description: 'This is the second option.', id: 'light' },
+        { label: 'Dark', description: 'This is the third option.', id: 'dark' }
+      ]
+    }
+  }).default('system')
 })
 
 type Schema = z.output<typeof schema>

@@ -27,6 +27,7 @@ import { isObject } from '@movk/core'
 import { AUTOFORM_META, CLONE_METHODS } from '../constants/auto-form'
 import type { CalendarDate } from '@internationalized/date'
 import { useDateFormatter } from './useDateFormatter'
+import { extractEnumValuesFromItems } from '../utils/auto-form'
 
 /**
  * 拦截 Zod Schema 的克隆方法，实现元数据自动传递
@@ -168,13 +169,41 @@ function applyOverwrite<T extends z.ZodType>(schema: T, overwrite?: any): T {
 
 /**
  * 对象工厂创建器，支持柯里化和直接调用
+ * 当第一个参数为 undefined 且传入控件属性时，返回被覆盖后的控件类型
+ */
+/**
+ * 对象工厂 - 支持两种模式
+ * 1. 普通对象: afz.object({ name: afz.string() })
+ * 2. 双参数控件覆盖: afz.object({}, { type: 'enum', controlProps: {...} })
+ * 3. 柯里化: afz.object<T>()({}, { type, controlProps })
  */
 function createObjectFactory(method: 'object' | 'looseObject' | 'strictObject') {
-  return (shapeOrNothing?: any, meta?: any) => {
-    if (shapeOrNothing === undefined) {
-      return (shape: any, innerMeta?: any) => applyMeta((z as any)[method](shape), innerMeta || {})
+  return (shapeOrMeta?: any, meta?: any) => {
+    const hasControlProps = (m: any) => {
+      if (!m) return false
+      return m.type || m.component || m.controlProps || m.controlSlots
     }
-    return applyMeta((z as any)[method](shapeOrNothing), meta || {})
+
+    // 柯里化模式
+    if (arguments.length === 0 || (shapeOrMeta === undefined && meta === undefined)) {
+      return (shape: any, innerMeta?: any) => {
+        if (hasControlProps(innerMeta)) {
+          return applyOverwrite(z.custom(), innerMeta)
+        }
+        return applyMeta((z as any)[method](shape || {}), innerMeta || {})
+      }
+    }
+
+    // 单参数：仅支持普通 shape
+    if (arguments.length === 1) {
+      return applyMeta((z as any)[method](shapeOrMeta), {})
+    }
+
+    // 双参数：(shape, meta)
+    if (hasControlProps(meta)) {
+      return applyOverwrite((z as any)[method](shapeOrMeta || {}), meta)
+    }
+    return applyMeta((z as any)[method](shapeOrMeta), meta || {})
   }
 }
 
@@ -208,7 +237,25 @@ function createTupleFactory() {
  * 枚举工厂
  */
 function createEnumFactory() {
-  return (values: any, overwrite?: any) => applyOverwrite(z.enum(values), overwrite)
+  return (values: any, overwrite?: any) => {
+    let enumValues = values
+    if ((!values || (Array.isArray(values) && values.length === 0)) && overwrite?.controlProps?.items) {
+      const valueKey = overwrite.controlProps.valueKey
+      const extractedValues = extractEnumValuesFromItems(overwrite.controlProps.items, valueKey)
+
+      if (extractedValues.length > 0) {
+        enumValues = extractedValues
+      } else {
+        enumValues = []
+      }
+    }
+
+    if (!enumValues || (Array.isArray(enumValues) && enumValues.length === 0)) {
+      return applyOverwrite(z.string(), overwrite)
+    }
+
+    return applyOverwrite(z.enum(enumValues), overwrite)
+  }
 }
 
 export function useAutoForm() {

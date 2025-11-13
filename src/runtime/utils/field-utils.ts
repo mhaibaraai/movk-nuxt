@@ -81,6 +81,41 @@ export function collectFieldDefaults(field: AutoFormField) {
     : undefined
 }
 
+/**
+ * 从 SelectMenuItem 数组中提取枚举值
+ */
+export function extractEnumValuesFromItems(items: any, valueKey?: string): string[] {
+  if (!items || !Array.isArray(items)) {
+    return []
+  }
+
+  const flatItems = items.flat()
+
+  return flatItems
+    .filter((item: any) => {
+      if (item && typeof item === 'object' && (item.type === 'separator' || item.type === 'label')) {
+        return false
+      }
+      return true
+    })
+    .map((item: any) => {
+      if (item && typeof item === 'object') {
+        if (valueKey && valueKey in item) {
+          return item[valueKey]
+        }
+        if ('value' in item) {
+          return item.value
+        }
+        if ('label' in item) {
+          return item.label
+        }
+        return String(item)
+      }
+      return item
+    })
+    .filter((value: any) => value !== undefined && value !== null) as string[]
+}
+
 /** 创建提示插槽工厂 */
 export function createHintSlotFactory(removeCallback: (count?: number) => void) {
   return (field: AutoFormField, path: string, open?: boolean, count?: number): VNode | undefined => {

@@ -26,6 +26,8 @@ const autoFormNav: NavigationMenuItem = {
         { label: 'Enum', to: '/auto-form/field-types/enum' },
         { label: 'File', to: '/auto-form/field-types/file' },
         { label: 'Array', to: '/auto-form/field-types/array' },
+        { label: 'Object', to: '/auto-form/field-types/object' },
+        { label: 'Typed Object', to: '/auto-form/field-types/typed-object' },
         { label: 'Nested', to: '/auto-form/field-types/nested' }
       ]
     },

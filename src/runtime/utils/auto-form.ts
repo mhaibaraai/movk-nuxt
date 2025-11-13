@@ -18,5 +18,6 @@ export {
   isLeafField,
   getFieldType,
   collectFieldDefaults,
-  createHintSlotFactory
+  createHintSlotFactory,
+  extractEnumValuesFromItems
 } from './field-utils'
