@@ -2,35 +2,29 @@
 import type { FormSubmitEvent } from '@nuxt/ui'
 import type { z } from 'zod/v4'
 
-const { afz, _ } = useAutoForm()
+const { afz } = useAutoForm()
 const toast = useToast()
 
-// 基础对象示例 - 不使用类型约束
+const { data: users } = await useFetch('https://jsonplaceholder.typicode.com/users', {
+  key: 'typicode-users',
+  transform: (data: { id: number, name: string }[]) => {
+    return data?.map(user => ({
+      label: user.name,
+      value: String(user.id),
+      avatar: { src: `https://i.pravatar.cc/120?img=${user.id}` }
+    }))
+  }
+})
+
 const schema = afz.object({
   name: afz.string().min(1, '请输入姓名'),
   age: afz.number().min(1).max(150),
   email: afz.email('请输入有效的邮箱地址'),
-  user: afz.object(_, {
-    type: 'enum',
+  user: afz.object({}, {
+    type: 'selectMenu',
     controlProps: {
-      items: [
-        {
-          label: 'benjamincanac',
-          value: 'benjamincanac',
-          avatar: {
-            src: 'https://github.com/benjamincanac.png',
-            alt: 'benjamincanac'
-          }
-        },
-        {
-          label: 'romhml',
-          value: 'romhml',
-          avatar: {
-            src: 'https://github.com/romhml.png',
-            alt: 'romhml'
-          }
-        }
-      ]
+      placeholder: '请选择用户',
+      items: users.value || []
     }
   })
 })
