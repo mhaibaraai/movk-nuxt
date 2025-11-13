@@ -238,6 +238,8 @@ type KnownKeys<T> = {
         : K
 }[keyof T]
 
+type KeysOf<T> = Extract<keyof T, string>
+
 /**
  * 提取控件类型键的简化类型
  * @template TControls - 控件注册表类型
@@ -318,6 +320,73 @@ type ExtractLayoutShape<
 type WithDefaultControls<TControls, DFTC> = TControls & DFTC
 
 // ============================================================================
+// 对象工厂辅助类型
+// ============================================================================
+
+/**
+ * 对象工厂元数据类型 - 基础元数据
+ */
+type ObjectMetaBase<TC extends AutoFormControls, DFTC extends AutoFormControls>
+  = { component?: never, type?: never } & MetaByZod<WithDefaultControls<TC, DFTC>, 'object'>
+
+/**
+ * 对象工厂元数据类型 - 带 type
+ */
+type ObjectMetaWithType<TC extends AutoFormControls, DFTC extends AutoFormControls, K extends ControlTypeKey<WithDefaultControls<TC, DFTC>>>
+  = { type: Suggest<K>, component?: never } & MetaByType<WithDefaultControls<TC, DFTC>, K>
+
+/**
+ * 对象工厂元数据类型 - 带 component
+ */
+type ObjectMetaWithComponent<C extends IsComponent>
+  = { component: C, type?: never } & OmitControlMeta<C>
+
+/**
+ * 对象工厂柯里化签名
+ */
+type ObjectFactoryCurried<
+  TC extends AutoFormControls,
+  DFTC extends AutoFormControls,
+  T extends object,
+  Mode extends z.core.$strip | z.core.$loose | z.core.$strict
+> = {
+  <S extends Record<string, any>>(
+    shape: S & Partial<Record<KeysOf<T>, any>>,
+    meta?: ObjectMetaBase<TC, DFTC>
+  ): z.ZodObject<ExtractLayoutShape<S>, Mode>
+  <S extends Record<string, any>, K extends ControlTypeKey<WithDefaultControls<TC, DFTC>>>(
+    shape: S & Partial<Record<KeysOf<T>, any>>,
+    meta?: ObjectMetaWithType<TC, DFTC, K>
+  ): z.ZodObject<ExtractLayoutShape<S>, Mode>
+  <S extends Record<string, any>, C extends IsComponent>(
+    shape: S & Partial<Record<KeysOf<T>, any>>,
+    meta?: ObjectMetaWithComponent<C>
+  ): z.ZodObject<ExtractLayoutShape<S>, Mode>
+}
+
+/**
+ * 对象工厂直接调用签名
+ */
+type ObjectFactoryDirect<
+  TC extends AutoFormControls,
+  DFTC extends AutoFormControls,
+  Mode extends z.core.$strip | z.core.$loose | z.core.$strict
+> = {
+  <S extends Record<string, any>>(
+    shape: S,
+    meta?: ObjectMetaBase<TC, DFTC>
+  ): z.ZodObject<ExtractLayoutShape<S>, Mode>
+  <S extends Record<string, any>, K extends ControlTypeKey<WithDefaultControls<TC, DFTC>>>(
+    shape: S,
+    meta?: ObjectMetaWithType<TC, DFTC, K>
+  ): z.ZodObject<ExtractLayoutShape<S>, Mode>
+  <S extends Record<string, any>, C extends IsComponent>(
+    shape: S,
+    meta?: ObjectMetaWithComponent<C>
+  ): z.ZodObject<ExtractLayoutShape<S>, Mode>
+}
+
+// ============================================================================
 // 工厂方法类型
 // ============================================================================
 
@@ -355,52 +424,6 @@ export type AutoFormFactoryMethod<
   <C extends IsComponent>(
     ...args: [...TExtraParams, ({ component: C, type?: never } & OmitControlMeta<C>)?]
   ): TResult
-}
-
-/**
- * 对象工厂类型 - 支持普通对象定义和控件覆盖
- * @example
- * afz.object({ name: afz.string() })                  // 普通对象
- * afz.object({}, { type: 'enum', controlProps: ... }) // 双参数控件覆盖（有类型提示）
- * afz.object<T>()({}, { type: 'enum', ... })          // 柯里化 + 类型约束
- */
-type AutoFormObjectFactory<TControls extends AutoFormControls, TConfig extends z.core.$ZodObjectConfig> = {
-  // 柯里化模式
-  <T>(): {
-    <K extends ControlTypeKey<TControls>>(
-      shape: {},
-      meta: { type: Suggest<K>, component?: never } & MetaByType<TControls, K>
-    ): z.ZodType<T>
-    <C extends IsComponent>(
-      shape: {},
-      meta: { component: C, type?: never } & OmitControlMeta<C>
-    ): z.ZodType<T>
-    (shape: {}, meta?: Omit<AutoFormControlsMeta, 'type' | 'component'>): z.ZodObject<{}, TConfig>
-  }
-
-  // 双参数 + type（必须在普通对象之前，确保优先匹配）
-  <K extends ControlTypeKey<TControls>>(
-    shape: {},
-    meta: { type: Suggest<K>, component?: never } & MetaByType<TControls, K>
-  ): z.ZodObject<{}, TConfig>
-
-  // 双参数 + component
-  <C extends IsComponent>(
-    shape: {},
-    meta: { component: C, type?: never } & OmitControlMeta<C>
-  ): z.ZodObject<{}, TConfig>
-
-  // 双参数 + 普通 meta（空对象场景）
-  (
-    shape: {},
-    meta?: Omit<AutoFormControlsMeta, 'type' | 'component'>
-  ): z.ZodObject<{}, TConfig>
-
-  // 普通对象（有字段的 shape，放在最后以降低优先级）
-  <S extends Record<string, any>>(
-    shape: S,
-    meta?: AutoFormControlsMeta
-  ): z.ZodObject<ExtractLayoutShape<S>, TConfig>
 }
 
 // ============================================================================
@@ -562,17 +585,53 @@ export interface TypedZodFactory<TC extends AutoFormControls, DFTC extends AutoF
   ) => LayoutFieldMarker<Fields>
 
   /**
-   * 对象工厂（strip 模式） - 默认剔除未定义的键
+   * 对象工厂 - 支持柯里化和直接调用
+   * @description
+   * - 柯里化: afz.object<State>()({ name: afz.string() }, { type: 'input' })
+   * - 直接调用: afz.object({ name: afz.string() }, { type: 'input' })
    */
-  object: AutoFormObjectFactory<WithDefaultControls<TC, DFTC>, z.core.$strip>
+  object: {
+    <T extends object>(): ObjectFactoryCurried<TC, DFTC, T, z.core.$strip>
+    <S extends Record<string, any>>(shape: S, meta?: ObjectMetaBase<TC, DFTC>): z.ZodObject<ExtractLayoutShape<S>, z.core.$strip>
+    <S extends Record<string, any>, K extends ControlTypeKey<WithDefaultControls<TC, DFTC>>>(
+      shape: S,
+      meta?: ObjectMetaWithType<TC, DFTC, K>
+    ): z.ZodObject<ExtractLayoutShape<S>, z.core.$strip>
+    <S extends Record<string, any>, C extends IsComponent>(
+      shape: S,
+      meta?: ObjectMetaWithComponent<C>
+    ): z.ZodObject<ExtractLayoutShape<S>, z.core.$strip>
+  } & ObjectFactoryDirect<TC, DFTC, z.core.$strip>
 
   /**
-   * 对象工厂（loose 模式） - 保留未定义的键
+   * 松散对象工厂 - 允许额外属性
    */
-  looseObject: AutoFormObjectFactory<WithDefaultControls<TC, DFTC>, z.core.$loose>
+  looseObject: {
+    <T extends object>(): ObjectFactoryCurried<TC, DFTC, T, z.core.$loose>
+    <S extends Record<string, any>>(shape: S, meta?: ObjectMetaBase<TC, DFTC>): z.ZodObject<ExtractLayoutShape<S>, z.core.$loose>
+    <S extends Record<string, any>, K extends ControlTypeKey<WithDefaultControls<TC, DFTC>>>(
+      shape: S,
+      meta?: ObjectMetaWithType<TC, DFTC, K>
+    ): z.ZodObject<ExtractLayoutShape<S>, z.core.$loose>
+    <S extends Record<string, any>, C extends IsComponent>(
+      shape: S,
+      meta?: ObjectMetaWithComponent<C>
+    ): z.ZodObject<ExtractLayoutShape<S>, z.core.$loose>
+  } & ObjectFactoryDirect<TC, DFTC, z.core.$loose>
 
   /**
-   * 对象工厂（strict 模式） - 未定义的键会导致验证失败
+   * 严格对象工厂 - 禁止额外属性
    */
-  strictObject: AutoFormObjectFactory<WithDefaultControls<TC, DFTC>, z.core.$strict>
+  strictObject: {
+    <T extends object>(): ObjectFactoryCurried<TC, DFTC, T, z.core.$strict>
+    <S extends Record<string, any>>(shape: S, meta?: ObjectMetaBase<TC, DFTC>): z.ZodObject<ExtractLayoutShape<S>, z.core.$strict>
+    <S extends Record<string, any>, K extends ControlTypeKey<WithDefaultControls<TC, DFTC>>>(
+      shape: S,
+      meta?: ObjectMetaWithType<TC, DFTC, K>
+    ): z.ZodObject<ExtractLayoutShape<S>, z.core.$strict>
+    <S extends Record<string, any>, C extends IsComponent>(
+      shape: S,
+      meta?: ObjectMetaWithComponent<C>
+    ): z.ZodObject<ExtractLayoutShape<S>, z.core.$strict>
+  } & ObjectFactoryDirect<TC, DFTC, z.core.$strict>
 }

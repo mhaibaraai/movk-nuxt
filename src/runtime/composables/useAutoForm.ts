@@ -169,7 +169,6 @@ function applyOverwrite<T extends z.ZodType>(schema: T, overwrite?: any): T {
 
 /**
  * 对象工厂创建器，支持柯里化和直接调用
- * 当第一个参数为 undefined 且传入控件属性时，返回被覆盖后的控件类型
  */
 /**
  * 对象工厂 - 支持两种模式
@@ -178,32 +177,11 @@ function applyOverwrite<T extends z.ZodType>(schema: T, overwrite?: any): T {
  * 3. 柯里化: afz.object<T>()({}, { type, controlProps })
  */
 function createObjectFactory(method: 'object' | 'looseObject' | 'strictObject') {
-  return (shapeOrMeta?: any, meta?: any) => {
-    const hasControlProps = (m: any) => {
-      if (!m) return false
-      return m.type || m.component || m.controlProps || m.controlSlots
+  return (shapeOrNothing?: any, meta?: any) => {
+    if (shapeOrNothing === undefined) {
+      return (shape: any, innerMeta?: any) => applyMeta((z as any)[method](shape), innerMeta || {})
     }
-
-    // 柯里化模式
-    if (arguments.length === 0 || (shapeOrMeta === undefined && meta === undefined)) {
-      return (shape: any, innerMeta?: any) => {
-        if (hasControlProps(innerMeta)) {
-          return applyOverwrite(z.custom(), innerMeta)
-        }
-        return applyMeta((z as any)[method](shape || {}), innerMeta || {})
-      }
-    }
-
-    // 单参数：仅支持普通 shape
-    if (arguments.length === 1) {
-      return applyMeta((z as any)[method](shapeOrMeta), {})
-    }
-
-    // 双参数：(shape, meta)
-    if (hasControlProps(meta)) {
-      return applyOverwrite((z as any)[method](shapeOrMeta || {}), meta)
-    }
-    return applyMeta((z as any)[method](shapeOrMeta), meta || {})
+    return applyMeta((z as any)[method](shapeOrNothing), meta || {})
   }
 }
 
