@@ -1,9 +1,26 @@
 <script lang="ts" setup>
+import type { ComponentProps } from '#movk/core'
 import type { FormSubmitEvent, InputMenuItem } from '@nuxt/ui'
 import type { z } from 'zod/v4'
+import { UAvatar, type UInputMenu } from '#components'
 
 const { afz } = useAutoForm()
 const toast = useToast()
+
+const searchTerm = ref('')
+const searchTermDebounced = refDebounced(searchTerm, 200)
+
+const { data: users, pending } = await useFetch('https://jsonplaceholder.typicode.com/users', {
+  params: { q: searchTermDebounced },
+  transform: (data: { id: number, name: string }[]) => {
+    return data?.map(user => ({
+      label: user.name,
+      value: String(user.id),
+      avatar: { src: `https://i.pravatar.cc/120?img=${user.id}` }
+    }))
+  },
+  lazy: true
+})
 
 const items = ref([
   { type: 'label', label: '水果' },
@@ -17,25 +34,50 @@ const items = ref([
 ] satisfies InputMenuItem[])
 
 const schema = afz.object({
-  food: afz.string({
+  food: afz.array(afz.string(), {
     type: 'inputMenu',
     controlProps: ({ value }) => ({
       items: items.value,
       createItem: true,
+      multiple: true,
       onCreate: (item: string) => {
         items.value.push(item)
         value.push(item)
       }
     })
-  }),
+  }).default(['Apple']).meta({ label: '选择食物', hint: '可创建新选项' }),
 
-  multipleFoods: afz.array(afz.string(), {
+  multipleFoods: afz.object({
+    label: afz.string(),
+    value: afz.string(),
+    avatar: afz.object({
+      src: afz.string().optional()
+    })
+  }, {
     type: 'inputMenu',
-    controlProps: {
-      items: items.value,
-      multiple: true
+    controlProps: computed(() => ({
+      'items': users.value,
+      'loading': pending.value,
+      'ignoreFilter': true,
+      'icon': 'i-lucide-user',
+      'placeholder': '搜索用户...',
+      'searchTerm': searchTerm.value,
+      'onUpdate:searchTerm': (term: string) => {
+        searchTerm.value = term
+      }
+    } as ComponentProps<typeof UInputMenu>)),
+    controlSlots: {
+      leading: ({ modelValue, ui }) => {
+        if (modelValue) {
+          return h(UAvatar, {
+            ...modelValue.avatar,
+            class: ui.leadingAvatar(),
+            size: ui.leadingAvatarSize()
+          })
+        }
+      }
     }
-  }).default(['Apple'])
+  }).meta({ label: '选择用户', hint: '' })
 })
 
 type Schema = z.output<typeof schema>
@@ -55,5 +97,8 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
   <Navbar />
   <UCard>
     <MAutoForm :schema="schema" :state="form" @submit="onSubmit" />
+    <template #footer>
+      <pre class="text-xs">{{ form }}</pre>
+    </template>
   </UCard>
 </template>

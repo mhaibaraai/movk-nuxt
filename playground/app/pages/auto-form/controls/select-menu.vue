@@ -1,34 +1,51 @@
 <script lang="ts" setup>
+import { UIcon } from '#components'
 import type { FormSubmitEvent } from '@nuxt/ui'
 import type { z } from 'zod/v4'
 
 const { afz } = useAutoForm()
 const toast = useToast()
 
-const { data: countries } = await useFetch('https://restcountries.com/v3.1/all', {
-  transform: (data: any[]) => data.slice(0, 50).map(c => ({
-    label: c.name.common,
-    value: c.cca2,
-    flag: c.flag
-  }))
+type Country = {
+  name: string
+  code: string
+  emoji: string
+}
+
+const { data: countries, execute, pending } = await useLazyFetch<Country[]>('https://ui.nuxt.com/api/countries.json', {
+  immediate: false
 })
 
 const schema = afz.object({
-  country: afz.string({
+  countrie: afz.object({
+    name: afz.string(),
+    code: afz.string(),
+    emoji: afz.string()
+  }, {
     type: 'selectMenu',
     controlProps: computed(() => ({
-      items: countries.value || [],
-      searchInput: { icon: 'i-lucide-search' }
-    }))
-  }),
-
-  multipleCountries: afz.array(afz.string(), {
-    type: 'selectMenu',
-    controlProps: computed(() => ({
-      items: countries.value || [],
-      multiple: true
-    }))
-  }).optional()
+      'items': countries.value,
+      'loading': pending.value,
+      'labelKey': 'name',
+      'searchInput': { icon: 'i-lucide-search' },
+      'onUpdate:open': () => {
+        if (!countries.value?.length) {
+          execute()
+        }
+      }
+    })),
+    controlSlots: {
+      'leading': ({ modelValue, ui }) => {
+        if (modelValue) {
+          return h('span', { class: 'size-5 text-center' }, modelValue?.emoji)
+        }
+        return h(UIcon, { name: 'i-lucide-earth', class: ui.leadingIcon() })
+      },
+      'item-leading': ({ item }: { item: Country }) => {
+        return h('span', { class: 'size-5 text-center' }, item?.emoji)
+      }
+    }
+  }).meta({ label: '选择国家', hint: '下拉加载选项' })
 })
 
 type Schema = z.output<typeof schema>
@@ -48,5 +65,8 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
   <Navbar />
   <UCard>
     <MAutoForm :schema="schema" :state="form" @submit="onSubmit" />
+    <template #footer>
+      <pre class="text-xs">{{ form }}</pre>
+    </template>
   </UCard>
 </template>

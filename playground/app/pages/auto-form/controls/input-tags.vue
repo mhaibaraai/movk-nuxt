@@ -8,17 +8,24 @@ const toast = useToast()
 const schema = afz.object({
   skills: afz.array(afz.string(), {
     type: 'inputTags',
-    controlProps: { placeholder: '添加技能标签' }
+    controlProps: {
+      placeholder: '添加技能标签',
+      deleteIcon: 'i-lucide-trash',
+      avatar: {
+        src: 'https://github.com/vuejs.png'
+      }
+    }
   }).default(['Vue', 'TypeScript']),
 
   interests: afz.array(afz.string(), {
     type: 'inputTags',
-    controlProps: { placeholder: '添加兴趣' }
+    controlProps: { placeholder: '添加兴趣', loading: true }
   }).min(1),
 
   keywords: afz.array(afz.string(), {
-    type: 'inputTags'
-  }).max(5).optional()
+    type: 'inputTags',
+    controlProps: { disabled: true }
+  }).default(['Nuxt', 'AutoForm'])
 })
 
 type Schema = z.output<typeof schema>
@@ -38,5 +45,8 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
   <Navbar />
   <UCard>
     <MAutoForm :schema="schema" :state="form" @submit="onSubmit" />
+    <template #footer>
+      <pre class="text-xs">{{ form }}</pre>
+    </template>
   </UCard>
 </template>

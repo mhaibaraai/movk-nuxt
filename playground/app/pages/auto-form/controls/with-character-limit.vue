@@ -8,17 +8,18 @@ const toast = useToast()
 const schema = afz.object({
   bio: afz.string({
     type: 'withCharacterLimit',
-    controlProps: { maxlength: 100 }
-  }).max(100).default(''),
+    controlProps: { maxLength: 100 }
+  }).max(100).default('')
+    .meta({ hint: '最多100个字符' }),
 
   tweet: afz.string({
     type: 'withCharacterLimit',
-    controlProps: { maxlength: 280 }
-  }).max(280).optional(),
+    controlProps: { maxLength: 280 }
+  }).max(280).optional().meta({ hint: '最多280个字符' }),
 
   description: afz.string({
     type: 'textarea'
-  }).max(500).optional()
+  }).max(500).optional().meta({ hint: '最多500个字符' })
 })
 
 type Schema = z.output<typeof schema>
@@ -38,5 +39,8 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
   <Navbar />
   <UCard>
     <MAutoForm :schema="schema" :state="form" @submit="onSubmit" />
+    <template #footer>
+      <pre class="text-xs">{{ form }}</pre>
+    </template>
   </UCard>
 </template>

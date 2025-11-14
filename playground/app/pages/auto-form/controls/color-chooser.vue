@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import { UIcon } from '#components'
 import type { FormSubmitEvent } from '@nuxt/ui'
 import type { z } from 'zod/v4'
 
@@ -8,7 +9,18 @@ const toast = useToast()
 const schema = afz.object({
   primaryColor: afz.string({ type: 'colorChooser' }).default('#3b82f6'),
   secondaryColor: afz.string({ type: 'colorChooser' }).default('#10b981'),
-  backgroundColor: afz.string({ type: 'colorChooser' }).optional()
+  customColor: afz.string({
+    type: 'colorChooser',
+    controlProps: {
+      buttonProps: {
+        color: 'primary',
+        label: '自定义 button'
+      }
+    },
+    controlSlots: {
+      leading: () => h(UIcon, { name: 'i-lucide-loader', class: 'animate-spin' })
+    }
+  }).optional()
 })
 
 type Schema = z.output<typeof schema>
@@ -28,5 +40,8 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
   <Navbar />
   <UCard>
     <MAutoForm :schema="schema" :state="form" @submit="onSubmit" />
+    <template #footer>
+      <pre class="text-xs">{{ form }}</pre>
+    </template>
   </UCard>
 </template>

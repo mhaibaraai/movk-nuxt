@@ -8,10 +8,7 @@ const toast = useToast()
 const schema = afz.object({
   apiKey: afz.string({ type: 'withCopy' }).default('sk-1234567890abcdef'),
   token: afz.string({ type: 'withCopy' }).default('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9'),
-  websiteUrl: afz.url({
-    type: 'withCopy',
-    controlProps: { placeholder: '输入要复制的URL' }
-  }).default('https://example.com')
+  websiteUrl: afz.url({ type: 'withCopy' }).default('https://example.com').meta({ description: '输入要复制的URL' })
 })
 
 type Schema = z.output<typeof schema>
@@ -31,5 +28,8 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
   <Navbar />
   <UCard>
     <MAutoForm :schema="schema" :state="form" @submit="onSubmit" />
+    <template #footer>
+      <pre class="text-xs">{{ form }}</pre>
+    </template>
   </UCard>
 </template>

@@ -10,9 +10,9 @@ const schema = afz.object({
     type: 'radioGroup',
     controlProps: {
       items: [
-        { label: '浅色', value: 'light' },
-        { label: '深色', value: 'dark' },
-        { label: '系统', value: 'system' }
+        { label: '浅色', value: 'light', description: '适合明亮环境' },
+        { label: '深色', value: 'dark', description: '适合昏暗环境' },
+        { label: '系统', value: 'system', description: '跟随系统设置' }
       ]
     }
   }).default('system'),
@@ -47,5 +47,8 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
   <Navbar />
   <UCard>
     <MAutoForm :schema="schema" :state="form" @submit="onSubmit" />
+    <template #footer>
+      <pre class="text-xs">{{ form }}</pre>
+    </template>
   </UCard>
 </template>
