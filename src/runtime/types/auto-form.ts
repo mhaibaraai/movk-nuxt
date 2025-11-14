@@ -15,7 +15,7 @@ import type { CalendarDate } from '@internationalized/date'
  * 表单字段上下文 - 提供字段级别的运行时信息
  * @template S - 表单 State 类型
  */
-export interface AutoFormFieldContext<S = unknown> {
+export interface AutoFormFieldContext<S = any> {
   /** 表单数据 - 使用 getter 确保获取最新值 */
   readonly state: S
   /** 字段路径（点分隔符格式，如 "user.profile.name"） */

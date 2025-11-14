@@ -11,7 +11,7 @@ interface ColorChooserProps extends /** @vue-ignore */ ColorPickerProps {
 type ColorChooserEmits = PopoverEmits
 
 const {
-  buttonProps = { label: '选择颜色' },
+  buttonProps,
   popoverProps
 } = defineProps<ColorChooserProps>()
 
@@ -20,6 +20,10 @@ const emit = defineEmits<ColorChooserEmits>()
 defineOptions({ inheritAttrs: false })
 
 const modelValue = defineModel<string>()
+
+const label = computed(() => {
+  return modelValue.value || buttonProps?.label || '选择颜色'
+})
 
 const chipStyle = computed(() => ({
   backgroundColor: modelValue.value || ''
@@ -31,11 +35,11 @@ const chipStyle = computed(() => ({
     <template #default="defaultSlotProps">
       <slot v-bind="defaultSlotProps">
         <UButton
-          :label="modelValue"
           color="neutral"
           variant="subtle"
           class="w-full"
           v-bind="buttonProps"
+          :label="label"
         >
           <template #leading="leading">
             <slot name="leading" v-bind="leading">

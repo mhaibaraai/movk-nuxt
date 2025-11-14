@@ -4,7 +4,7 @@
  */
 
 import type { StringOrVNode } from '@movk/core'
-import type { Component, ComputedRef, DefineComponent, Ref } from 'vue'
+import type { Component, DefineComponent, MaybeRefOrGetter } from 'vue'
 
 /**
  * 合并两个对象类型，U 中的属性会覆盖 T 中的属性
@@ -34,33 +34,22 @@ export type Merge<T, U> = Omit<T, keyof U> & U
 export type Suggest<T extends string> = T | (string & {})
 
 /**
- * 响应式值类型 - 支持静态值、函数、Ref、Computed
+ * 响应式值类型 - 基于 Vue 的 `MaybeRefOrGetter` 扩展，额外支持上下文回调
+ *
+ * @template T - 值类型
+ * @template CTX - 上下文类型（用于回调函数）
  *
  * @example
  * ```ts
- * // 静态值
- * const staticValue: ReactiveValue<string, any> = 'hello'
- *
- * // 函数（基于上下文动态计算）
- * const dynamicValue: ReactiveValue<boolean, { value: string }> = (ctx) => ctx.value.length > 5
- *
- * // Ref 响应式引用
- * const refValue: ReactiveValue<number, any> = ref(42)
- *
- * // Computed 计算属性
- * const computedValue: ReactiveValue<string, any> = computed(() => `Count: ${count.value}`)
- *
- * // 在表单字段中的使用示例
- * const fieldConfig = {
- *   hidden: (ctx) => ctx.value === '', // 当值为空时隐藏
- *   if: ref(true),                     // 使用 ref 控制显示
- *   props: computed(() => ({
- *     disabled: loading.value
- *   }))                                // 使用 computed 动态属性
- * }
+ * const value: ReactiveValue<boolean> = ref(false)
+ * const getter: ReactiveValue<string> = () => name.value
+ * const computed: ReactiveValue<number> = computed(() => count.value)
+ * const withContext: ReactiveValue<boolean, Context> = (ctx) => ctx.value > 0
  * ```
  */
-export type ReactiveValue<T, CTX> = T | ((ctx: CTX) => T) | Ref<T> | ComputedRef<T>
+export type ReactiveValue<T, CTX = never> = [CTX] extends [never]
+  ? MaybeRefOrGetter<T>
+  : MaybeRefOrGetter<T> | ((ctx: CTX) => T)
 
 export type StripNullable<T> = T extends null | undefined ? never : T
 
