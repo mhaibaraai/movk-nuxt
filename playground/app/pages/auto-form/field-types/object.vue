@@ -22,10 +22,11 @@ const schema = afz.object({
   email: afz.email('请输入有效的邮箱地址'),
   user: afz.object({}, {
     type: 'selectMenu',
-    controlProps: {
+    controlProps: ({ value }: { value: { avatar: { src: string } } }) => ({
       placeholder: '请选择用户',
-      items: users.value || []
-    }
+      items: users.value,
+      avatar: value?.avatar
+    })
   })
 })
 

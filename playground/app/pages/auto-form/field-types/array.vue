@@ -10,14 +10,17 @@ const schema = afz.object({
     type: 'inputTags'
   }).default(['tag1', 'tag2']),
 
-  numbers: afz.array(afz.number()).min(1).max(5),
+  numbers: afz.array(afz.number().meta({ label: '数字' }))
+    .min(1).max(3)
+    .meta({ label: '数字列表 (最少1个，最多3个)' }),
 
   objectArray: afz.array(
     afz.object({
       name: afz.string(),
       age: afz.number().int().min(0)
-    })
-  ).default([{ name: 'Alice', age: 25 }]),
+    }).meta({ label: '用户' })
+  ).default([{ name: 'Alice', age: 25 }])
+    .meta({ label: '用户合集' }),
 
   checkboxGroup: afz.array(afz.string(), {
     type: 'checkboxGroup',
@@ -46,8 +49,20 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 
 <template>
   <Navbar />
-  <UCard>
-    <MAutoForm :schema="schema" :state="form" @submit="onSubmit" />
+  <UCard
+    :ui="{
+      body: 'max-h-[500px] overflow-y-auto',
+      footer: 'max-h-48 overflow-y-auto'
+    }"
+  >
+    <MAutoForm
+      :schema="schema"
+      :state="form"
+      :global-meta="{
+        collapsible: { defaultOpen: true }
+      }"
+      @submit="onSubmit"
+    />
     <template #footer>
       <pre class="text-xs">{{ form }}</pre>
     </template>
