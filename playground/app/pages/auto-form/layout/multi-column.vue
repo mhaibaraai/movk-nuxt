@@ -9,11 +9,11 @@ const schema = afz.object({
   $layout: afz.layout({
     class: 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4',
     fields: {
-      title: afz.string().meta({ class: 'col-span-full' }),
-      firstName: afz.string(),
-      lastName: afz.string(),
-      email: afz.email(),
-      description: afz.string({ type: 'textarea' }).meta({ class: 'col-span-full' })
+      title: afz.string().meta({ class: 'col-span-full', hint: '标题' }),
+      firstName: afz.string().meta({ hint: '名字' }),
+      lastName: afz.string().meta({ hint: '姓氏' }),
+      email: afz.email().meta({ hint: '邮箱地址' }),
+      description: afz.string({ type: 'textarea' }).meta({ class: 'col-span-full', hint: '描述', description: '此字段占据全部列宽，支持多行文本' })
     }
   })
 })
@@ -35,5 +35,8 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
   <Navbar />
   <UCard>
     <MAutoForm :schema="schema" :state="form" @submit="onSubmit" />
+    <template #footer>
+      <pre class="text-xs">{{ form }}</pre>
+    </template>
   </UCard>
 </template>

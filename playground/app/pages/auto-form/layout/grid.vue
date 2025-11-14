@@ -9,11 +9,11 @@ const schema = afz.object({
   $layout: afz.layout({
     class: 'grid grid-cols-2 gap-4',
     fields: {
-      firstName: afz.string(),
-      lastName: afz.string(),
-      email: afz.email().meta({ class: 'col-span-2' }),
-      phone: afz.string(),
-      age: afz.number().int().min(0)
+      firstName: afz.string().meta({ label: '名字' }),
+      lastName: afz.string().meta({ label: '姓氏' }),
+      email: afz.email().meta({ class: 'col-span-2', hint: '邮箱地址', description: '此字段占据两列布局宽度' }),
+      phone: afz.string().meta({ label: '电话' }),
+      age: afz.number().int().min(0).meta({ label: '年龄' })
     }
   })
 })
@@ -35,5 +35,8 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
   <Navbar />
   <UCard>
     <MAutoForm :schema="schema" :state="form" @submit="onSubmit" />
+    <template #footer>
+      <pre class="text-xs">{{ form }}</pre>
+    </template>
   </UCard>
 </template>

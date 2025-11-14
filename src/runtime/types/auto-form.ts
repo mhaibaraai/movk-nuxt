@@ -135,14 +135,18 @@ export type AutoFormControls = Record<string, AutoFormControl>
 export interface AutoFormLayoutConfig<C extends IsComponent = IsComponent> {
   /** 布局容器组件 */
   component?: C
-  /** 布局组件属性（根据组件类型自动推断） */
-  props?: ComponentProps<C>
-  /** 布局组件 CSS 类名 */
-  class?: ClassNameValue
-  /** 布局组件插槽（根据组件类型自动推断） */
-  slots?: Partial<ComponentSlots<C>>
+  /** 布局组件属性（根据组件类型自动推断，支持响应式） */
+  props?: ReactiveValue<ComponentProps<C>, AutoFormFieldContext>
+  /** 布局组件 CSS 类名（支持响应式） */
+  class?: ReactiveValue<ClassNameValue, AutoFormFieldContext>
+  /** 布局组件插槽（根据组件类型自动推断，支持响应式） */
+  slots?: ReactiveValue<Partial<ComponentSlots<C>>, AutoFormFieldContext>
   /** 布局内的字段定义（类似 z.object() 的 shape） */
   fields: Record<string, z.ZodType>
+  /** 所有字段统一渲染到的插槽名称（支持响应式） */
+  fieldSlot?: ReactiveValue<keyof ComponentSlots<C> & string, AutoFormFieldContext>
+  /** 字段到插槽的映射关系（支持响应式，优先级高于 fieldSlot） */
+  fieldSlots?: ReactiveValue<Partial<Record<string, keyof ComponentSlots<C> & string>>, AutoFormFieldContext>
 }
 
 /**

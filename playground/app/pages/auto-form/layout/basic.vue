@@ -33,5 +33,8 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
   <Navbar />
   <UCard>
     <MAutoForm :schema="schema" :state="form" @submit="onSubmit" />
+    <template #footer>
+      <pre class="text-xs">{{ form }}</pre>
+    </template>
   </UCard>
 </template>

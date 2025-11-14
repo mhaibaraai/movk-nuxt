@@ -7,7 +7,6 @@ const autoFormNav: NavigationMenuItem = {
   children: [
     {
       label: 'Getting Started',
-      defaultOpen: true,
       children: [
         { label: 'Basic', to: '/auto-form/getting-started/basic' },
         { label: 'Validation', to: '/auto-form/getting-started/validation' },
@@ -17,7 +16,6 @@ const autoFormNav: NavigationMenuItem = {
     },
     {
       label: 'Field Types',
-      defaultOpen: true,
       children: [
         { label: 'String', to: '/auto-form/field-types/string' },
         { label: 'Number', to: '/auto-form/field-types/number' },
@@ -33,7 +31,6 @@ const autoFormNav: NavigationMenuItem = {
     },
     {
       label: 'Controls',
-      defaultOpen: true,
       children: [
         { label: 'WithClear', to: '/auto-form/controls/with-clear' },
         { label: 'WithPasswordToggle', to: '/auto-form/controls/with-password-toggle' },
@@ -49,7 +46,6 @@ const autoFormNav: NavigationMenuItem = {
     },
     {
       label: 'Layout',
-      defaultOpen: true,
       children: [
         { label: 'Basic', to: '/auto-form/layout/basic' },
         { label: 'Grid', to: '/auto-form/layout/grid' },
@@ -60,7 +56,6 @@ const autoFormNav: NavigationMenuItem = {
     },
     {
       label: 'Advanced',
-      defaultOpen: true,
       children: [
         { label: 'Conditional', to: '/auto-form/advanced/conditional' },
         { label: 'Dynamic Arrays', to: '/auto-form/advanced/dynamic-arrays' },
@@ -74,7 +69,6 @@ const autoFormNav: NavigationMenuItem = {
     },
     {
       label: 'Examples',
-      defaultOpen: true,
       children: [
         { label: 'Login', to: '/auto-form/examples/login' },
         { label: 'Registration', to: '/auto-form/examples/registration' },
@@ -86,7 +80,6 @@ const autoFormNav: NavigationMenuItem = {
     },
     {
       label: 'Showcase',
-      defaultOpen: true,
       children: [
         { label: 'All Features', to: '/auto-form/showcase/all-features' }
       ]
