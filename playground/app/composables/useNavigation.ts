@@ -51,7 +51,9 @@ const autoFormNav: NavigationMenuItem = {
         { label: 'Grid', to: '/auto-form/layout/grid' },
         { label: 'Nested', to: '/auto-form/layout/nested' },
         { label: 'Multi-column', to: '/auto-form/layout/multi-column' },
-        { label: 'Tabs', to: '/auto-form/layout/tabs' }
+        { label: 'Accordion', to: '/auto-form/layout/accordion' },
+        { label: 'Tabs', to: '/auto-form/layout/tabs' },
+        { label: 'FieldSlot', to: '/auto-form/layout/field-slot' }
       ]
     },
     {

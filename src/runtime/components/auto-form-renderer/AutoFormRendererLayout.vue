@@ -1,13 +1,14 @@
 <script setup lang="ts" generic="S extends z.ZodObject">
 import type { AnyObject } from '@movk/core'
 import type { z } from 'zod/v4'
-import type { AutoFormField, AutoFormFieldContext } from '../../types/auto-form'
+import type { AutoFormField } from '../../types/auto-form'
 import type { AutoFormProps } from '../AutoForm.vue'
-import { computed, defineAsyncComponent, inject, resolveDynamicComponent } from 'vue'
+import { computed, defineAsyncComponent, resolveDynamicComponent } from 'vue'
 import { classifyFields } from '../../utils/auto-form'
 import { resolveReactiveValue } from '../../utils/reactive-utils'
 import AutoFormRendererArray from './AutoFormRendererArray.vue'
 import AutoFormRendererField from './AutoFormRendererField.vue'
+import { useAutoFormInjector } from '../../internal/useAutoFormProvider'
 
 const AutoFormRendererNested = defineAsyncComponent(() =>
   import('./AutoFormRendererNested.vue')
@@ -24,18 +25,25 @@ const {
   extraProps
 } = defineProps<AutoFormRendererLayoutProps<S>>()
 
-const getFieldContext = inject<(path: string) => AutoFormFieldContext>('getFieldContext', () => ({} as AutoFormFieldContext))
-const getFieldName = (field: AutoFormField) => field.path.split('.').pop() || field.path
+const { createFieldContext, resolveFieldProp } = useAutoFormInjector()
 
-const fieldContext = computed(() => getFieldContext(field.path))
+const context = createFieldContext(field)
+
+function getFieldName(field: AutoFormField) {
+  return field.path.split('.').pop() || field.path
+}
 
 const renderData = computed(() => {
   if (!field.children?.length) return null
 
-  const classified = classifyFields(field.children)
+  const visibleFields = field.children.filter(f =>
+    f && (f.meta?.if === undefined || resolveFieldProp<boolean>(f, 'if') === true)
+  )
+
+  const classified = classifyFields(visibleFields)
   return {
     ...classified,
-    allFields: field.children
+    allFields: visibleFields
   }
 })
 
@@ -50,10 +58,9 @@ const layoutProps = computed(() => {
   const config = field.meta.layout
   if (!config) return {}
 
-  const ctx = fieldContext.value
   return {
-    ...resolveReactiveValue(config.props, ctx),
-    ...(config.class && { class: resolveReactiveValue(config.class, ctx) })
+    ...resolveReactiveValue(config.props, context),
+    ...(config.class && { class: resolveReactiveValue(config.class, context) })
   }
 })
 
@@ -61,8 +68,7 @@ const layoutSlots = computed(() => {
   const config = field.meta.layout
   if (!config?.slots) return {}
 
-  const ctx = fieldContext.value
-  const resolvedSlots = resolveReactiveValue(config.slots, ctx)
+  const resolvedSlots = resolveReactiveValue(config.slots, context)
 
   return Object.entries(resolvedSlots).reduce((acc, [name, fn]) => {
     if (typeof fn === 'function') acc[name] = fn
@@ -74,11 +80,10 @@ const fieldSlotMapping = computed(() => {
   const config = field.meta.layout
   if (!config || !renderData.value) return new Map<string, string>()
 
-  const ctx = fieldContext.value
   const mapping = new Map<string, string>()
 
   if (config.fieldSlots) {
-    const resolved = resolveReactiveValue(config.fieldSlots, ctx)
+    const resolved = resolveReactiveValue(config.fieldSlots, context)
     Object.entries(resolved).forEach(([name, slot]) => {
       if (slot && typeof slot === 'string') mapping.set(name, slot)
     })
@@ -86,7 +91,7 @@ const fieldSlotMapping = computed(() => {
   }
 
   if (config.fieldSlot) {
-    const slot = resolveReactiveValue(config.fieldSlot, ctx)
+    const slot = resolveReactiveValue(config.fieldSlot, context)
     if (slot && typeof slot === 'string') {
       renderData.value.allFields.forEach((f) => {
         mapping.set(getFieldName(f), slot)

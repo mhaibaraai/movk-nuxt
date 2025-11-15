@@ -62,7 +62,7 @@ function getItemId(_item: any, index: number): string {
 }
 
 function updateFieldPaths(template: AutoFormField, oldBasePath: string, newBasePath: string, hintSlotFactory: ReturnType<typeof createHintSlotFactory>): AutoFormField {
-  const updatedField: AutoFormField = {
+  const updatedField = {
     ...template,
     path: template.path.replace(oldBasePath, newBasePath),
     meta: {
@@ -72,7 +72,7 @@ function updateFieldPaths(template: AutoFormField, oldBasePath: string, newBaseP
         hint: ({ open, path, count }) => hintSlotFactory(template, path, open, count)
       }
     }
-  }
+  } as AutoFormField
 
   if (template.children) {
     updatedField.children = template.children.map(child =>

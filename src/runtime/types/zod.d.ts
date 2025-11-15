@@ -42,6 +42,8 @@ declare module 'zod/v4' {
      */
     fieldSlots?: ReactiveValue<Partial<AutoFormFieldSlots>>
 
+    /** 显示条件 */
+    if?: ReactiveValue<boolean>
     /** 是否隐藏 */
     hidden?: ReactiveValue<boolean>
     /**

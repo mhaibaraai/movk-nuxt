@@ -25,17 +25,20 @@ const {
   extraProps
 } = defineProps<AutoFormRendererNestedProps<S>>()
 
-const { createSlotResolver, createSlotProps, createCollapsibleEnhancer } = useAutoFormInjector()
+const { createSlotResolver, createSlotProps, createCollapsibleEnhancer, resolveFieldProp } = useAutoFormInjector()
 
 const renderData = computed(() => {
   if (isLeafField(field) || !field.children?.length) {
     return null
   }
+  const visibleFields = field.children.filter(f =>
+    f && (f.meta?.if === undefined || resolveFieldProp<boolean>(f, 'if') === true)
+  )
 
-  const classified = classifyFields(field.children)
+  const classified = classifyFields(visibleFields)
   return {
     ...classified,
-    allFields: field.children
+    allFields: visibleFields
   }
 })
 
