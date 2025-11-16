@@ -66,8 +66,20 @@ const autoFormNav: NavigationMenuItem = {
         { label: 'Async Validation', to: '/auto-form/advanced/async-validation' },
         { label: 'Dependencies', to: '/auto-form/advanced/dependencies' },
         { label: 'Collapsible', to: '/auto-form/advanced/collapsible' },
-        { label: 'Slots', to: '/auto-form/advanced/slots' },
-        { label: 'Reactive Props', to: '/auto-form/advanced/reactive-props' }
+        { label: 'Reactive Props', to: '/auto-form/advanced/reactive-props' },
+        { label: 'Global Meta', to: '/auto-form/advanced/global-meta' }
+      ]
+    },
+    {
+      label: 'Slots',
+      children: [
+        { label: 'Basic', to: '/auto-form/slots/basic' },
+        { label: 'Field Slots', to: '/auto-form/slots/field-slots' },
+        { label: 'Generic Slots', to: '/auto-form/slots/generic-slots' },
+        { label: 'Nested Content', to: '/auto-form/slots/nested-content' },
+        { label: 'Array Content', to: '/auto-form/slots/array-content' },
+        { label: 'Custom Controls', to: '/auto-form/slots/custom-controls' },
+        { label: 'Mixed Slots', to: '/auto-form/slots/mixed-slots' }
       ]
     },
     {
