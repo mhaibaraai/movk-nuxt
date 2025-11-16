@@ -14,6 +14,9 @@ import type { CalendarDate } from '@internationalized/date'
 /**
  * 表单字段上下文 - 提供字段级别的运行时信息
  * @template S - 表单 State 类型
+ * @description
+ * - open: 折叠状态，仅在嵌套字段（object/array）中存在
+ * - count: 数组元素计数，仅在数组字段中存在
  */
 export interface AutoFormFieldContext<S = any> {
   /** 表单数据 - 使用 getter 确保获取最新值 */
@@ -54,19 +57,44 @@ type DynamicFieldSlotKeys = keyof AutoFormFieldSlots
 type DynamicFieldNestedSlotKeys = 'content'
 
 /**
+ * 根据插槽类型提取对应的额外参数
+ * @template SlotType - 插槽类型键
+ */
+type SlotTypeExtraProps<SlotType extends DynamicFieldSlotKeys>
+  = SlotType extends 'label' ? { label?: string }
+    : SlotType extends 'hint' ? { hint?: string }
+      : SlotType extends 'description' ? { description?: string }
+        : SlotType extends 'help' ? { help?: string }
+          : SlotType extends 'error' ? { error?: boolean | string }
+            : SlotType extends 'default' ? { error?: boolean | string }
+              : {}
+
+/**
  * 动态表单插槽类型 - 支持字段级插槽自定义
  * @template T - 表单数据类型
  *
  * 支持三种插槽命名模式：
  * 1. 通用插槽：任意字符串键
- * 2. 字段类型插槽：`field-{slotType}` 或 `field-{slotType}:{fieldKey}`
+ * 2. 字段类型插槽：`field-{slotType}` 或 `field-{slotType}:{fieldKey}` - 根据 slotType 自动添加额外参数
  * 3. 嵌套内容插槽：`field-content:{objectKey}` 或 `field-content:{arrayKey}`
  */
 export type DynamicFormSlots<T>
   = Record<string, (props: AutoFormFieldContext<T>) => unknown>
-    & Record<`field-${DynamicFieldSlotKeys}`, (props: AutoFormFieldContext<T>) => unknown>
-    & Record<`field-${DynamicFieldSlotKeys}:${NonObjectFieldKeys<T>}`, (props: AutoFormFieldContext<T>) => unknown>
-    & Record<`field-${DynamicFieldSlotKeys}:${ObjectFieldKeys<T>}`, (props: AutoFormFieldContext<T>) => unknown>
+    & {
+      [K in DynamicFieldSlotKeys as `field-${K}`]: (
+        props: SlotTypeExtraProps<K> & AutoFormFieldContext<T>
+      ) => unknown
+    }
+    & {
+      [K in DynamicFieldSlotKeys as `field-${K}:${NonObjectFieldKeys<T>}`]: (
+        props: SlotTypeExtraProps<K> & AutoFormFieldContext<T>
+      ) => unknown
+    }
+    & {
+      [K in DynamicFieldSlotKeys as `field-${K}:${ObjectFieldKeys<T>}`]: (
+        props: SlotTypeExtraProps<K> & AutoFormFieldContext<T>
+      ) => unknown
+    }
     & Record<`field-${DynamicFieldNestedSlotKeys}:${ObjectFieldKeys<T>}`, (props: AutoFormFieldContext<T>) => unknown>
     & Record<`field-${DynamicFieldNestedSlotKeys}:${ArrayFieldKeys<T>}`, (props: AutoFormFieldContext<T>) => unknown>
 
