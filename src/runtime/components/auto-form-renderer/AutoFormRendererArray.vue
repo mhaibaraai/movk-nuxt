@@ -62,15 +62,24 @@ function getItemId(_item: any, index: number): string {
 }
 
 function updateFieldPaths(template: AutoFormField, oldBasePath: string, newBasePath: string, hintSlotFactory: ReturnType<typeof createHintSlotFactory>): AutoFormField {
+  const path = template.path.replace(oldBasePath, newBasePath)
+
+  const isNested = path.includes('.')
+  const isObject = template.meta?.type === 'object'
+
   const updatedField = {
     ...template,
-    path: template.path.replace(oldBasePath, newBasePath),
+    path,
     meta: {
       ...template.meta,
-      fieldSlots: {
-        ...template.meta?.fieldSlots,
-        hint: ({ open, path, count }) => hintSlotFactory(template, path, open, count)
-      }
+      fieldSlots: (isNested && !isObject)
+        ? {
+            ...template.meta?.fieldSlots
+          }
+        : {
+            hint: ({ open, path, count }) => hintSlotFactory(template, path, open, count),
+            ...template.meta?.fieldSlots
+          }
     }
   } as AutoFormField
 

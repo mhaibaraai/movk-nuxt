@@ -62,6 +62,7 @@ const autoFormNav: NavigationMenuItem = {
         { label: 'Conditional', to: '/auto-form/advanced/conditional' },
         { label: 'Dynamic Arrays', to: '/auto-form/advanced/dynamic-arrays' },
         { label: 'Custom Controls', to: '/auto-form/advanced/custom-controls' },
+        { label: 'Direct Component', to: '/auto-form/advanced/direct-component' },
         { label: 'Async Validation', to: '/auto-form/advanced/async-validation' },
         { label: 'Dependencies', to: '/auto-form/advanced/dependencies' },
         { label: 'Collapsible', to: '/auto-form/advanced/collapsible' },

@@ -1,4 +1,8 @@
 <script lang="ts" setup>
+import type { FormSubmitEvent } from '@nuxt/ui'
+import type { z } from 'zod/v4'
+
+const toast = useToast()
 const { afz } = useAutoForm()
 
 const schema = afz.object({
@@ -6,17 +10,23 @@ const schema = afz.object({
   email: afz.email()
 })
 
-const form = ref({})
+type Schema = z.output<typeof schema>
 
-function handleSubmit() {
-  alert('Form submitted!')
+const form = ref<Partial<Schema>>({})
+
+async function onSubmit(event: FormSubmitEvent<Schema>) {
+  toast.add({
+    title: 'Success',
+    color: 'success',
+    description: JSON.stringify(event.data, null, 2)
+  })
 }
 </script>
 
 <template>
   <Navbar />
   <UCard class="mt-6">
-    <MAutoForm :schema="schema" :state="form" @submit="handleSubmit">
+    <MAutoForm :schema="schema" :state="form" @submit="onSubmit">
       <template #header>
         <div class="mb-4 p-4 bg-primary-50 dark:bg-primary-900/20 rounded">
           <p class="text-sm">
@@ -32,7 +42,7 @@ function handleSubmit() {
       </template>
     </MAutoForm>
     <template #footer>
-      <pre class="text-xs">{{ form }}</pre>
+      <FormDataViewer :data="form" />
     </template>
   </UCard>
 </template>

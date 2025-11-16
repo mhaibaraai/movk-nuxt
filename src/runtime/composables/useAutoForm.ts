@@ -236,40 +236,39 @@ function createEnumFactory() {
   }
 }
 
-export function useAutoForm() {
-  function defineControl<C extends IsComponent>(e: AutoFormControl<C>):
-  AutoFormControl<C> {
-    return e
-  }
+const DEFAULT_CONTROL_PROPS = { class: 'w-full' } as const
 
-  const DEFAULT_CONTROL_PROPS = { class: 'w-full' } as const
+function defineControl<C extends IsComponent>(e: AutoFormControl<C>): AutoFormControl<C> {
+  return e
+}
 
-  const DEFAULT_CONTROLS = {
-    // 基础类型
-    string: defineControl({ component: UInput, controlProps: DEFAULT_CONTROL_PROPS }),
-    number: defineControl({ component: UInputNumber, controlProps: DEFAULT_CONTROL_PROPS }),
-    boolean: defineControl({ component: UCheckbox, controlProps: DEFAULT_CONTROL_PROPS }),
-    enum: defineControl({ component: USelect, controlProps: DEFAULT_CONTROL_PROPS }),
-    file: defineControl({ component: UFileUpload, controlProps: DEFAULT_CONTROL_PROPS }),
-    switch: defineControl({ component: USwitch, controlProps: DEFAULT_CONTROL_PROPS }),
-    textarea: defineControl({ component: UTextarea, controlProps: DEFAULT_CONTROL_PROPS }),
-    slider: defineControl({ component: USlider, controlProps: DEFAULT_CONTROL_PROPS }),
-    pinInput: defineControl({ component: UPinInput, controlProps: DEFAULT_CONTROL_PROPS }),
-    inputTags: defineControl({ component: UInputTags, controlProps: DEFAULT_CONTROL_PROPS }),
-    selectMenu: defineControl({ component: USelectMenu, controlProps: DEFAULT_CONTROL_PROPS }),
-    inputMenu: defineControl({ component: UInputMenu, controlProps: DEFAULT_CONTROL_PROPS }),
-    checkboxGroup: defineControl({ component: UCheckboxGroup, controlProps: DEFAULT_CONTROL_PROPS }),
-    radioGroup: defineControl({ component: URadioGroup, controlProps: DEFAULT_CONTROL_PROPS }),
+const DEFAULT_CONTROLS = {
+  // 基础类型
+  string: defineControl({ component: UInput, controlProps: DEFAULT_CONTROL_PROPS }),
+  number: defineControl({ component: UInputNumber, controlProps: DEFAULT_CONTROL_PROPS }),
+  boolean: defineControl({ component: UCheckbox, controlProps: DEFAULT_CONTROL_PROPS }),
+  enum: defineControl({ component: USelect, controlProps: DEFAULT_CONTROL_PROPS }),
+  file: defineControl({ component: UFileUpload, controlProps: DEFAULT_CONTROL_PROPS }),
+  switch: defineControl({ component: USwitch, controlProps: DEFAULT_CONTROL_PROPS }),
+  textarea: defineControl({ component: UTextarea, controlProps: DEFAULT_CONTROL_PROPS }),
+  slider: defineControl({ component: USlider, controlProps: DEFAULT_CONTROL_PROPS }),
+  pinInput: defineControl({ component: UPinInput, controlProps: DEFAULT_CONTROL_PROPS }),
+  inputTags: defineControl({ component: UInputTags, controlProps: DEFAULT_CONTROL_PROPS }),
+  selectMenu: defineControl({ component: USelectMenu, controlProps: DEFAULT_CONTROL_PROPS }),
+  inputMenu: defineControl({ component: UInputMenu, controlProps: DEFAULT_CONTROL_PROPS }),
+  checkboxGroup: defineControl({ component: UCheckboxGroup, controlProps: DEFAULT_CONTROL_PROPS }),
+  radioGroup: defineControl({ component: URadioGroup, controlProps: DEFAULT_CONTROL_PROPS }),
 
-    // 自定义增强型组件
-    date: defineControl({ component: DatePicker, controlProps: DEFAULT_CONTROL_PROPS }),
-    withClear: defineControl({ component: WithClear, controlProps: DEFAULT_CONTROL_PROPS }),
-    withPasswordToggle: defineControl({ component: WithPasswordToggle, controlProps: DEFAULT_CONTROL_PROPS }),
-    withCopy: defineControl({ component: WithCopy, controlProps: DEFAULT_CONTROL_PROPS }),
-    withCharacterLimit: defineControl({ component: WithCharacterLimit, controlProps: DEFAULT_CONTROL_PROPS }),
-    colorChooser: defineControl({ component: ColorChooser, controlProps: DEFAULT_CONTROL_PROPS })
-  } as const satisfies AutoFormControls
+  // 自定义增强型组件
+  date: defineControl({ component: DatePicker, controlProps: DEFAULT_CONTROL_PROPS }),
+  withClear: defineControl({ component: WithClear, controlProps: DEFAULT_CONTROL_PROPS }),
+  withPasswordToggle: defineControl({ component: WithPasswordToggle, controlProps: DEFAULT_CONTROL_PROPS }),
+  withCopy: defineControl({ component: WithCopy, controlProps: DEFAULT_CONTROL_PROPS }),
+  withCharacterLimit: defineControl({ component: WithCharacterLimit, controlProps: DEFAULT_CONTROL_PROPS }),
+  colorChooser: defineControl({ component: ColorChooser, controlProps: DEFAULT_CONTROL_PROPS })
+} as const satisfies AutoFormControls
 
+export function useAutoForm<TControls extends AutoFormControls = typeof DEFAULT_CONTROLS>(controls?: TControls) {
   /**
    * 创建类型化的 Zod 工厂对象
    * @param _controls - 可选的自定义控件映射（用于类型推断）
@@ -307,12 +306,22 @@ export function useAutoForm() {
     } as unknown as TypedZodFactory<TControls, typeof DEFAULT_CONTROLS>
   }
 
-  const afz = createZodFactory()
+  const builtControls = controls
+    ? (Object.fromEntries(
+        Object.entries(controls).map(([key, control]) => [
+          key,
+          defineControl(control as AutoFormControl<IsComponent>)
+        ])
+      ) as TControls)
+    : undefined
+
+  const afz = createZodFactory(builtControls as TControls)
 
   return {
     defineControl,
     afz,
     DEFAULT_CONTROLS,
+    controls,
     getAutoFormMetadata
   }
 }

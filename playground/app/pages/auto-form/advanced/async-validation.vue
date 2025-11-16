@@ -1,7 +1,10 @@
 <script lang="ts" setup>
+import type { FormSubmitEvent } from '@nuxt/ui'
+import type { z } from 'zod/v4'
+
+const toast = useToast()
 const { afz } = useAutoForm()
 
-// 模拟异步验证（检查用户名是否已存在）
 const checkUsernameAvailable = async (username: string): Promise<boolean> => {
   await new Promise(resolve => setTimeout(resolve, 500))
   const taken = ['admin', 'user', 'test']
@@ -9,8 +12,10 @@ const checkUsernameAvailable = async (username: string): Promise<boolean> => {
 }
 
 const schema = afz.object({
-  username: afz.string().min(3),
-  email: afz.email()
+  username: afz.string({
+    controlProps: { placeholder: '用户名不能与已存在的用户重复' }
+  }).min(3).meta({ hint: 'admin, user, test' }),
+  email: afz.email().default('test@example.com')
 }).refine(
   async (data) => {
     if (!data.username) return true
@@ -22,21 +27,25 @@ const schema = afz.object({
   }
 )
 
-const form = ref({})
+type Schema = z.output<typeof schema>
+
+const form = ref<Partial<Schema>>({})
+
+async function onSubmit(event: FormSubmitEvent<Schema>) {
+  toast.add({
+    title: 'Success',
+    color: 'success',
+    description: JSON.stringify(event.data, null, 2)
+  })
+}
 </script>
 
 <template>
   <Navbar />
   <UCard class="mt-6">
-    <div class="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded">
-      <p class="text-sm text-blue-800 dark:text-blue-200">
-        尝试输入 "admin"、"user" 或 "test" 作为用户名，将触发验证失败。
-      </p>
-    </div>
-
-    <MAutoForm :schema="schema" :state="form" />
+    <MAutoForm :schema="schema" :state="form" @submit="onSubmit" />
     <template #footer>
-      <pre class="text-xs">{{ form }}</pre>
+      <FormDataViewer :data="form" />
     </template>
   </UCard>
 </template>

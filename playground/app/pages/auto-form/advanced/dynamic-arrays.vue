@@ -8,11 +8,12 @@ const toast = useToast()
 const schema = afz.object({
   items: afz.array(
     afz.object({
-      name: afz.string(),
-      quantity: afz.number().int().min(1).default(1),
-      price: afz.number().min(0)
-    })
-  ).default([{ name: '', quantity: 1, price: 0 }])
+      name: afz.string().meta({ label: '商品名称' }),
+      quantity: afz.number().int().default(1).meta({ label: '商品数量', hint: '默认数量 1' }),
+      price: afz.number().min(0).meta({ label: '商品价格' })
+    }).meta({ label: '商品', hint: '请填写商品信息' })
+  ).default([{ name: '水果', quantity: 1, price: 0 }])
+    .meta({ label: '商品列表' })
 })
 
 type Schema = z.output<typeof schema>
@@ -30,7 +31,27 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 
 <template>
   <Navbar />
-  <UCard>
-    <MAutoForm :schema="schema" :state="form" @submit="onSubmit" />
+  <UCard
+    :ui="{
+      body: 'max-h-[500px] overflow-y-auto',
+      footer: 'max-h-48 overflow-y-auto'
+    }"
+  >
+    <MAutoForm
+      :schema="schema"
+      :state="form"
+      :global-meta="{
+        collapsible: { defaultOpen: true }
+      }"
+      :add-button-props="{
+        color: 'info',
+        variant: 'soft',
+        block: false
+      }"
+      @submit="onSubmit"
+    />
+    <template #footer>
+      <FormDataViewer :data="form" />
+    </template>
   </UCard>
 </template>

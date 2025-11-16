@@ -51,12 +51,7 @@ async function onSubmit(event: FormSubmitEvent<AccordionSchema>) {
   <UCard>
     <MAutoForm :schema="accordionSchema" :state="form" @submit="onSubmit" />
     <template #footer>
-      <details>
-        <summary class="cursor-pointer text-sm font-medium mb-2">
-          查看表单数据
-        </summary>
-        <pre class="text-xs">{{ form }}</pre>
-      </details>
+      <FormDataViewer :data="form" />
     </template>
   </UCard>
 </template>

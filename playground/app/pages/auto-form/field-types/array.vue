@@ -64,7 +64,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       @submit="onSubmit"
     />
     <template #footer>
-      <pre class="text-xs">{{ form }}</pre>
+      <FormDataViewer :data="form" />
     </template>
   </UCard>
 </template>

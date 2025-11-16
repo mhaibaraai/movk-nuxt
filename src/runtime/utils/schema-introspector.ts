@@ -294,7 +294,7 @@ export function introspectSchema(
   field.meta.mapped = mapped
 
   // 枚举类型特殊处理：自动提取枚举值并注入到 controlProps.items
-  if (fieldType === 'enum' && mapped) {
+  if (coreSchema.type === 'enum' && mapped) {
     const enumValues = extractEnumValues(coreSchema)
     if (enumValues && enumValues.length > 0) {
       field.meta.mapped = {

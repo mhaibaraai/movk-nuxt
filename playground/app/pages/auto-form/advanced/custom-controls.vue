@@ -1,21 +1,24 @@
 <script lang="ts" setup>
 import type { FormSubmitEvent } from '@nuxt/ui'
 import type { z } from 'zod/v4'
+import StarRating from '~/components/StarRating.vue'
 
-// 自定义星级评分组件示例
-const { afz } = useAutoForm()
 const toast = useToast()
 
-// TODO: 创建自定义星级评分控件
-// 这里展示如何注册和使用自定义控件
+const { afz, controls } = useAutoForm({
+  rating: { component: StarRating, controlProps: { class: 'w-full' } }
+})
 
 const schema = afz.object({
-  rating: afz.number()
-    .int()
-    .min(1)
-    .max(5)
-    .default(3),
+  rating: afz.number({ type: 'rating' }).int().min(1).max(5).default(3)
+    .meta({ label: '评分', description: '请为您的体验打分' }),
+  tags: afz.array(afz.string(), { type: 'inputTags' })
+    .meta({ label: '标签', description: '添加一些标签来描述您的体验' })
+    .default(['优秀', '易用']),
   review: afz.string({ type: 'textarea' }).optional()
+    .meta({ label: '评价内容', placeholder: '分享您的使用体验...' }),
+  wouldRecommend: afz.boolean().default(true)
+    .meta({ label: '是否推荐', hint: '您会推荐给朋友吗?' })
 })
 
 type Schema = z.output<typeof schema>
@@ -34,12 +37,14 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 <template>
   <Navbar />
   <UCard>
-    <div class="mb-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded">
-      <p class="text-sm text-yellow-800 dark:text-yellow-200">
-        此示例展示自定义控件的概念。需要先创建自定义组件并注册到 controls。
-      </p>
-    </div>
-
-    <MAutoForm :schema="schema" :state="form" @submit="onSubmit" />
+    <MAutoForm
+      :schema="schema"
+      :controls="controls"
+      :state="form"
+      @submit="onSubmit"
+    />
+    <template #footer>
+      <FormDataViewer :data="form" />
+    </template>
   </UCard>
 </template>

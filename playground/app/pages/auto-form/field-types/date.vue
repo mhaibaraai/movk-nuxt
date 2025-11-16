@@ -54,5 +54,8 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       </p>
     </template>
     <MAutoForm :schema="schema" :state="form" @submit="onSubmit" />
+    <template #footer>
+      <FormDataViewer :data="form" />
+    </template>
   </UCard>
 </template>
