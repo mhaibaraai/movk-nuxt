@@ -8,7 +8,7 @@ const { afz } = useAutoForm()
 const schema = afz.object({
   // 字符串字段
   username: afz.string().min(3),
-  password: afz.string().min(8, { type: 'with-password-toggle' }),
+  password: afz.string({ type: 'withPasswordToggle' }).min(8),
 
   // 数字字段
   age: afz.number().min(18),
@@ -56,18 +56,8 @@ const progress = computed(() => Math.round((completedFields.value / totalFields)
 
 <template>
   <Navbar />
-  <UCard class="mt-6">
-    <template #header>
-      <h2 class="text-xl font-bold">
-        混合插槽示例
-      </h2>
-      <p class="text-sm text-gray-500 mt-1">
-        组合使用多种插槽类型创建复杂的表单界面
-      </p>
-    </template>
-
+  <UCard>
     <MAutoForm :schema="schema" :state="form" @submit="onSubmit">
-      <!-- Header 插槽 -->
       <template #header="{ loading }">
         <div class="mb-6 space-y-4">
           <UAlert
@@ -84,7 +74,6 @@ const progress = computed(() => Math.round((completedFields.value / totalFields)
             </template>
           </UAlert>
 
-          <!-- 进度指示器 -->
           <UCard>
             <div class="flex items-center justify-between text-sm mb-2">
               <span class="text-gray-600 dark:text-gray-400">完成进度</span>
@@ -97,19 +86,34 @@ const progress = computed(() => Math.round((completedFields.value / totalFields)
         </div>
       </template>
 
-      <!-- 特定字段的 label 自定义 -->
       <template #field-label:username="{ label }">
-        <UBadge icon="i-lucide-user" :label="label" color="primary" variant="subtle" size="xs" />
-        <UBadge color="error" variant="subtle" size="xs" class="ml-2">
+        <UBadge
+          icon="i-lucide-user"
+          :label="label"
+          color="primary"
+          variant="subtle"
+          size="xs"
+        />
+        <UBadge
+          color="error"
+          variant="subtle"
+          size="xs"
+          class="ml-2"
+        >
           必填
         </UBadge>
       </template>
 
       <template #field-label:password="{ label }">
-        <UBadge icon="i-lucide-lock" :label="label" color="success" variant="subtle" size="xs" />
+        <UBadge
+          icon="i-lucide-lock"
+          :label="label"
+          color="success"
+          variant="subtle"
+          size="xs"
+        />
       </template>
 
-      <!-- Password 帮助信息 -->
       <template #field-help:password>
         <UAlert
           color="warning"
@@ -126,8 +130,6 @@ const progress = computed(() => Math.round((completedFields.value / totalFields)
         </UAlert>
       </template>
 
-      <!-- Profile 对象内容自定义 -->
-            <!-- Profile 对象内容自定义 -->
       <template #field-content:profile>
         <div class="space-y-4">
           <UDivider icon="i-lucide-user-circle" label="个人资料" />
@@ -135,7 +137,6 @@ const progress = computed(() => Math.round((completedFields.value / totalFields)
         </div>
       </template>
 
-      <!-- Tags 数组内容自定义 -->
       <template #field-content:tags="{ count }">
         <div class="space-y-3">
           <span class="inline-flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
@@ -146,25 +147,23 @@ const progress = computed(() => Math.round((completedFields.value / totalFields)
         </div>
       </template>
 
-      <!-- Footer 插槽 -->
       <template #footer="{ errors }">
         <div class="mt-6 space-y-4">
-          <!-- 错误汇总 -->
           <UAlert
             v-if="errors.length > 0"
             color="error"
             variant="subtle"
             icon="i-lucide-alert-circle"
             :title="`发现 ${errors.length} 个错误`"
+            description="请修正以下错误后重新提交"
           >
-            <ul class="space-y-1 text-sm list-disc list-inside">
+            <ul class="space-y-1 text-sm list-disc list-inside mt-2">
               <li v-for="(error, i) in errors" :key="i">
                 {{ typeof error === 'string' ? error : JSON.stringify(error) }}
               </li>
             </ul>
           </UAlert>
 
-          <!-- 提交说明 -->
           <UAlert
             color="neutral"
             variant="subtle"

@@ -75,7 +75,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       </template>
 
       <template #field-error:bio="{ error }">
-        <span v-if="error" class="text-xs text-red-700 dark:text-red-300 bg-red-50 p-2 rounded block">
+        <span v-if="error" class="text-xs text-red-700 dark:text-red-300 bg-red-50 p-2 rounded w-full">
           <UIcon name="i-lucide-frown" class="text-red-500" />
           {{ error }}
         </span>

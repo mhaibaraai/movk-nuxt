@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import { setPath } from '#movk/core'
 import type { FormSubmitEvent } from '@nuxt/ui'
 import type { z } from 'zod/v4'
 
@@ -9,12 +10,17 @@ const schema = afz.object({
   profile: afz.object({
     name: afz.string().min(2),
     email: afz.email(),
-    age: afz.number().min(18)
-  }).meta({ label: '个人资料' }),
-  settings: afz.object({
-    theme: afz.enum(['light', 'dark', 'auto']),
-    notifications: afz.boolean()
-  }).meta({ label: '设置' })
+    bio: afz.string().optional()
+  }),
+  contact: afz.object({
+    $layout: afz.layout({
+      class: 'grid grid-cols-2 gap-4',
+      fields: {
+        phone: afz.string().optional(),
+        website: afz.url().optional()
+      }
+    })
+  })
 })
 
 type Schema = z.output<typeof schema>
@@ -32,41 +38,67 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 
 <template>
   <Navbar />
-  <UCard class="mt-6">
+  <UCard>
     <MAutoForm
       :schema="schema"
       :state="form"
-      :global-meta="{
-        collapsible: { defaultOpen: true }
-      }"
+      :global-meta="{ collapsible: { defaultOpen: true } }"
       @submit="onSubmit"
     >
-      <template #field-content:profile>
-        <div class="space-y-4">
-          <UAlert
-            color="primary"
-            variant="subtle"
-            icon="i-lucide-user"
-            title="个人信息"
-            description="这些信息将显示在您的公开资料中"
-          />
+      <template #field-content:profile="{ path, state }">
+        <UAlert
+          color="primary"
+          variant="subtle"
+          icon="i-lucide-user"
+          title="个人资料"
+          description="完善您的个人信息"
+        />
 
-          <slot />
+        <div class="grid grid-cols-2 gap-4">
+          <UFormField label="姓名" :name="`${path}.name`" required>
+            <UInput
+              :model-value="state.profile?.name"
+              placeholder="请输入您的姓名"
+              icon="i-lucide-user"
+              class="w-full"
+              @update:model-value="setPath(state, `${path}.name`, $event)"
+            />
+          </UFormField>
+          <UFormField label="电子邮箱" :name="`${path}.email`" required>
+            <UInput
+              :model-value="state.profile?.email"
+              placeholder="请输入您的电子邮箱"
+              icon="i-lucide-mail"
+              type="email"
+              class="w-full"
+              @update:model-value="setPath(state, `${path}.email`, $event)"
+            />
+          </UFormField>
         </div>
+        <UFormField label="简介" :name="`${path}.bio`" hint="可选">
+          <UTextarea
+            :model-value="state.profile?.bio"
+            placeholder="请输入您的个人简介"
+            :rows="3"
+            resize
+            class="w-full"
+            @update:model-value="setPath(state, `${path}.bio`, $event)"
+          />
+        </UFormField>
       </template>
 
-      <template #field-content:settings>
-        <div class="space-y-4">
-          <UAlert
-            color="info"
-            variant="subtle"
-            icon="i-lucide-settings"
-            title="偏好设置"
-            description="自定义您的应用体验"
-          />
+      <template #field-before:contact="{ value, path }">
+        <UAlert
+          color="neutral"
+          variant="subtle"
+          icon="i-lucide-book-user"
+          title="联系方式"
+          description="提供您的联系信息，方便其他人与您交流"
+        />
 
-          <slot />
-        </div>
+        <p class="text-gray-600 dark:text-gray-400 text-xs">
+          {{ path }} 数据 ：{{ value }}
+        </p>
       </template>
     </MAutoForm>
 

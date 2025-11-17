@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import { setPath } from '#movk/core'
 import type { FormSubmitEvent } from '@nuxt/ui'
 import type { z } from 'zod/v4'
 
@@ -22,11 +23,7 @@ const schema = afz.object({
 
 type Schema = z.output<typeof schema>
 
-const form = ref<Partial<Schema>>({
-  preferences: [
-    { category: 'news', frequency: 'daily' }
-  ]
-})
+const form = ref<Partial<Schema>>({})
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
   toast.add({
@@ -39,39 +36,34 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 
 <template>
   <Navbar />
-  <UCard class="mt-6">
-    <template #header>
-      <h2 class="text-xl font-bold">
-        自定义控件插槽
-      </h2>
-      <p class="text-sm text-gray-500 mt-1">
-        使用 default 插槽完全自定义字段的控件渲染
-      </p>
-    </template>
-
-    <MAutoForm :schema="schema" :state="form" @submit="onSubmit">
-      <!-- 自定义 email 输入控件 -->
-      <template #field-default:email="{ value, setValue, error }">
+  <UCard>
+    <MAutoForm
+      :schema="schema"
+      :state="form"
+      :global-meta="{ collapsible: { defaultOpen: true } }"
+      @submit="onSubmit"
+    >
+      <template #field-default:email="{ state, error }">
         <UInput
-          :model-value="value"
+          :model-value="state?.email"
           type="email"
           placeholder="your@email.com"
           icon="i-lucide-mail"
-          :trailing-icon="value ? 'i-lucide-check-circle' : undefined"
+          class="w-full"
+          :trailing-icon="state?.email ? 'i-lucide-circle-check' : undefined"
           :color="error ? 'error' : 'primary'"
-          @update:model-value="setValue"
+          @update:model-value="setPath(state, 'email', $event)"
         />
       </template>
 
-      <!-- 自定义通知开关组 -->
-      <template #field-default:notifications="{ value, setValue }">
+      <template #field-content:notifications="{ state, path }">
         <UCard>
           <div class="space-y-3">
             <div
               v-for="key in ['email', 'sms', 'push']"
               :key="key"
               class="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors cursor-pointer"
-              @click="setValue({ ...value, [key]: !(value?.[key as keyof typeof value]) })"
+              @click="setPath(state, `${path}.${key}`, !state?.notifications?.[key as keyof typeof state.notifications])"
             >
               <div class="flex items-center gap-3">
                 <UIcon
@@ -87,36 +79,29 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
                   </p>
                 </div>
               </div>
-              <UToggle
-                :model-value="value?.[key as keyof typeof value] || false"
-                @click.stop
-                @update:model-value="setValue({ ...value, [key]: $event })"
+              <UCheckbox
+                disabled
+                :model-value="Boolean(state?.notifications?.[key as keyof typeof state.notifications])"
               />
             </div>
           </div>
         </UCard>
       </template>
 
-      <!-- 自定义数组项渲染 -->
-      <template #field-content:preferences="{ count }">
-        <div class="space-y-4">
-          <UAlert
-            color="info"
-            variant="subtle"
-            icon="i-lucide-sliders"
-            title="偏好设置"
-          >
-            <template #actions>
-              <UBadge color="info" variant="subtle">
-                {{ count || 0 }} 项
-              </UBadge>
-            </template>
-          </UAlert>
-
-          <div class="space-y-3">
-            <slot />
-          </div>
-        </div>
+      <template #field-before:preferences="{ state }">
+        <UAlert
+          color="info"
+          variant="subtle"
+          icon="i-lucide-sliders"
+          title="偏好设置"
+          description="管理您的通知偏好"
+        >
+          <template #actions>
+            <UBadge color="info" variant="subtle">
+              {{ state.preferences?.length || 0 }} 项
+            </UBadge>
+          </template>
+        </UAlert>
       </template>
     </MAutoForm>
 
@@ -125,14 +110,3 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     </template>
   </UCard>
 </template>
-
-<style scoped>
-input {
-  background-color: white;
-}
-
-.dark input {
-  background-color: rgb(17 24 39);
-  color: white;
-}
-</style>

@@ -55,6 +55,7 @@ const slotProps = computed(() => createSlotProps(field, extraProps))
       <AutoFormRendererField :field="enhancedField" :schema="schema" :extra-props="{ ...extraProps, open }" />
     </template>
     <template #content>
+      <VNodeRender v-if="slotResolver.hasSlot('before')" :node="slotResolver.renderSlot('before', slotProps)" />
       <VNodeRender v-if="slotResolver.hasSlot('content')" :node="slotResolver.renderSlot('content', slotProps)" />
       <template v-else>
         <template v-for="childField in renderData.allFields" :key="childField.path">
@@ -84,6 +85,7 @@ const slotProps = computed(() => createSlotProps(field, extraProps))
           />
         </template>
       </template>
+      <VNodeRender v-if="slotResolver.hasSlot('after')" :node="slotResolver.renderSlot('after', slotProps)" />
     </template>
   </UCollapsible>
 

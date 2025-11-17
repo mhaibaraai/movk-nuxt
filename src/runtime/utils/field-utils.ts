@@ -139,9 +139,9 @@ export function createHintSlotFactory(removeCallback: (count?: number) => void) 
       icon: 'i-lucide-trash-2',
       color: 'error',
       variant: 'ghost',
-      size: 'sm',
+      size: 'xs',
       square: true,
-      onClick: (event) => {
+      onClick: (event: Event) => {
         event?.stopPropagation()
         removeCallback(count)
       }

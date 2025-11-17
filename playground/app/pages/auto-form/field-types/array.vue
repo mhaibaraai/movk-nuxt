@@ -50,9 +50,9 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 <template>
   <Navbar />
   <UCard
+    class="w-lg"
     :ui="{
-      body: 'max-h-[500px] overflow-y-auto',
-      footer: 'max-h-48 overflow-y-auto'
+      body: 'max-h-[600px] overflow-y-auto'
     }"
   >
     <MAutoForm

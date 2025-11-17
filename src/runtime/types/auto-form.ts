@@ -54,7 +54,7 @@ export interface AutoFormFieldSlots {
 // ============================================================================
 
 type DynamicFieldSlotKeys = keyof AutoFormFieldSlots
-type DynamicFieldNestedSlotKeys = 'content'
+type DynamicFieldNestedSlotKeys = 'content' | 'before' | 'after'
 
 /**
  * 根据插槽类型提取对应的额外参数

@@ -157,6 +157,7 @@ const addButtonProps = computed(() => ({
     </template>
 
     <template v-if="elementTemplate" #content>
+      <VNodeRender v-if="slotResolver.hasSlot('before')" :node="slotResolver.renderSlot('before', slotProps)" />
       <VNodeRender v-if="slotResolver.hasSlot('content')" :node="slotResolver.renderSlot('content', slotProps)" />
       <template v-else>
         <template v-for="(item, count) in arrayValue" :key="getItemId(item, count)">
@@ -168,10 +169,11 @@ const addButtonProps = computed(() => ({
             :extra-props="{ ...extraProps, count }"
           />
         </template>
-        <UButton v-bind="addButtonProps" @click="addItem">
-          添加
-        </UButton>
       </template>
+      <UButton v-bind="addButtonProps" @click="addItem">
+        添加
+      </UButton>
+      <VNodeRender v-if="slotResolver.hasSlot('after')" :node="slotResolver.renderSlot('after', slotProps)" />
     </template>
   </UCollapsible>
 
