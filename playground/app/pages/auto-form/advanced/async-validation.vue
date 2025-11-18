@@ -42,7 +42,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 
 <template>
   <Navbar />
-  <UCard class="mt-6">
+  <UCard>
     <MAutoForm :schema="schema" :state="form" @submit="onSubmit" />
     <template #footer>
       <FormDataViewer :data="form" />

@@ -69,46 +69,12 @@ async function click() {
   <Navbar />
   <UCard>
     <template #header>
-      <div class="space-y-4">
-        <div>
-          <h3 class="text-lg font-semibold">
-            Typed Object 类型约束对象
-          </h3>
-          <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            使用 TypeScript 接口约束对象结构，对比三种模式的区别
-          </p>
-        </div>
-
-        <div class="flex items-center gap-2">
-          <span class="text-sm font-medium">当前模式:</span>
-          <UTabs v-model="currentType" size="xs" :items="items" />
-        </div>
-
-        <UAlert
-          v-if="currentType === 'normal'"
-          icon="i-lucide-info"
-          color="info"
-          variant="soft"
-          title="Normal Object"
-          description="默认模式，TypeScript 确保字段与接口匹配"
-        />
-        <UAlert
-          v-if="currentType === 'loose'"
-          icon="i-lucide-check"
-          color="success"
-          variant="soft"
-          title="Loose Object"
-          description="宽松模式，运行时允许额外字段，类型层面保证必需字段存在"
-        />
-        <UAlert
-          v-if="currentType === 'strict'"
-          icon="i-lucide-shield-alert"
-          color="warning"
-          variant="soft"
-          title="Strict Object"
-          description="严格模式，运行时和类型层面都禁止额外字段"
-        />
-      </div>
+      选择对象类型：
+      <USelect
+        v-model="currentType"
+        :items="items"
+        outlined
+      />
     </template>
 
     <MAutoForm :schema="schema" :state="form" :submit-button="false">

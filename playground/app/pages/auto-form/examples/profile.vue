@@ -44,12 +44,6 @@ const form = ref<Partial<Schema>>({})
 <template>
   <Navbar />
   <UCard>
-    <template #header>
-      <h2 class="text-xl font-semibold">
-        个人设置
-      </h2>
-    </template>
-
     <MAutoForm :schema="schema" :state="form" />
   </UCard>
 </template>

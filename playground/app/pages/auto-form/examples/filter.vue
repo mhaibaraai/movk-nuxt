@@ -26,12 +26,6 @@ const form = ref<Partial<Schema>>({})
 <template>
   <Navbar />
   <UCard>
-    <template #header>
-      <h2 class="text-xl font-semibold">
-        商品筛选
-      </h2>
-    </template>
-
     <MAutoForm :schema="schema" :state="form" :submit-button="false" />
   </UCard>
 </template>

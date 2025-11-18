@@ -45,14 +45,6 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 <template>
   <Navbar />
   <UCard>
-    <template #header>
-      <h2 class="text-lg font-medium">
-        日期字段转换示例 useDateFormatter
-      </h2>
-      <p class="text-sm text-gray-500">
-        使用 Zod 的 .transform() 方法在提交时自动转换日期字段
-      </p>
-    </template>
     <MAutoForm :schema="schema" :state="form" @submit="onSubmit" />
     <template #footer>
       <FormDataViewer :data="form" />

@@ -43,12 +43,6 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 <template>
   <Navbar />
   <UCard>
-    <template #header>
-      <h2 class="text-xl font-semibold">
-        用户调查
-      </h2>
-    </template>
-
     <MAutoForm :schema="schema" :state="form" @submit="onSubmit" />
   </UCard>
 </template>
