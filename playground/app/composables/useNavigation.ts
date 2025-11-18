@@ -79,7 +79,8 @@ const autoFormNav: NavigationMenuItem = {
         { label: 'Nested Content', to: '/auto-form/slots/nested-content' },
         { label: 'Array Content', to: '/auto-form/slots/array-content' },
         { label: 'Custom Controls', to: '/auto-form/slots/custom-controls' },
-        { label: 'Mixed Slots', to: '/auto-form/slots/mixed-slots' }
+        { label: 'Mixed Slots', to: '/auto-form/slots/mixed-slots' },
+        { label: 'Submit Slot', to: '/auto-form/slots/submit' }
       ]
     },
     {
