@@ -1,8 +1,10 @@
 <script lang="ts" setup>
+import type { z } from 'zod/v4'
+
 const { afz } = useAutoForm()
 
 const schema = afz.object({
-  username: afz.string().min(3).max(20).regex(/^\w+$/),
+  username: afz.string('请填写用户名').min(3).max(20).regex(/^\w+$/),
   email: afz.email(),
   password: afz.string({ type: 'withPasswordToggle' })
     .min(8)
@@ -21,12 +23,14 @@ const schema = afz.object({
   { message: '必须同意条款', path: ['acceptTerms'] }
 )
 
-const form = ref({})
+type Schema = z.output<typeof schema>
+
+const form = ref<Partial<Schema>>({})
 </script>
 
 <template>
   <Navbar />
-  <UCard class="mt-6">
+  <UCard>
     <template #header>
       <h2 class="text-xl font-semibold">
         注册新账号

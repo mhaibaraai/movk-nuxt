@@ -16,7 +16,7 @@ const schema = afz.object({
   }).default([]),
   images: afz.array(afz.file(), {
     type: 'file',
-    controlProps: { accept: 'image/*', multiple: true }
+    controlProps: { accept: 'image/*', multiple: true, layout: 'list' }
   }).optional(),
   available: afz.boolean({ type: 'switch' }).default(true)
 })

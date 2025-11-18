@@ -21,10 +21,6 @@ const schema = afz.object({
 type Schema = z.output<typeof schema>
 
 const form = ref<Partial<Schema>>({})
-
-watchEffect(() => {
-  console.log('Filter changed:', form.value)
-})
 </script>
 
 <template>

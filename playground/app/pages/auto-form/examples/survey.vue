@@ -11,6 +11,7 @@ const schema = afz.object({
   interests: afz.array(afz.string(), {
     type: 'checkboxGroup',
     controlProps: {
+      orientation: 'horizontal',
       items: [
         { label: '科技', value: 'tech' },
         { label: '运动', value: 'sports' },

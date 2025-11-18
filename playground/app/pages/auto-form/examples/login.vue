@@ -1,27 +1,35 @@
 <script lang="ts" setup>
-const { afz } = useAutoForm()
+import type { z } from 'zod/v4'
 
-interface LoginForm {
-  email: string
-  password: string
-}
+const { afz } = useAutoForm()
+const toast = useToast()
 
 const schema = afz.object({
-  email: afz.email(),
+  email: afz.email({
+    controlProps: {
+      leadingIcon: 'i-tabler-mail',
+      placeholder: '请输入您的邮箱'
+    }
+  }).meta({ hint: '邮箱' }),
   password: afz.string({ type: 'withPasswordToggle' }).min(6)
 })
 
-const form = ref<LoginForm>({} as LoginForm)
+type Schema = z.output<typeof schema>
+
+const form = ref<Partial<Schema>>({})
 
 function handleSubmit() {
-  console.log('Login:', form.value)
-  alert(`登录成功！\n邮箱: ${form.value.email}`)
+  toast.add({
+    title: '登录成功',
+    color: 'success',
+    description: JSON.stringify(form.value, null, 2)
+  })
 }
 </script>
 
 <template>
   <Navbar />
-  <UCard class="mt-6">
+  <UCard>
     <template #header>
       <h2 class="text-xl font-semibold">
         登录

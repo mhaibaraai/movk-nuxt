@@ -1,4 +1,6 @@
 <script lang="ts" setup>
+import type { z } from 'zod/v4'
+
 const { afz } = useAutoForm()
 
 const schema = afz.object({
@@ -20,6 +22,7 @@ const schema = afz.object({
       notifications: afz.array(afz.string(), {
         type: 'checkboxGroup',
         controlProps: {
+          orientation: 'horizontal',
           items: [
             { label: '邮件', value: 'email' },
             { label: '短信', value: 'sms' },
@@ -33,12 +36,14 @@ const schema = afz.object({
   })
 })
 
-const form = ref({})
+type Schema = z.output<typeof schema>
+
+const form = ref<Partial<Schema>>({})
 </script>
 
 <template>
   <Navbar />
-  <UCard class="mt-6">
+  <UCard>
     <template #header>
       <h2 class="text-xl font-semibold">
         个人设置
