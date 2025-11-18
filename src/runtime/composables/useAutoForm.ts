@@ -7,6 +7,7 @@ import WithCopy from '../components/input/WithCopy.vue'
 import WithCharacterLimit from '../components/input/WithCharacterLimit.vue'
 import DatePicker from '../components/DatePicker.vue'
 import ColorChooser from '../components/ColorChooser.vue'
+import StarRating from '../components/StarRating.vue'
 import {
   UInput,
   UInputNumber,
@@ -265,7 +266,8 @@ const DEFAULT_CONTROLS = {
   withPasswordToggle: defineControl({ component: WithPasswordToggle, controlProps: DEFAULT_CONTROL_PROPS }),
   withCopy: defineControl({ component: WithCopy, controlProps: DEFAULT_CONTROL_PROPS }),
   withCharacterLimit: defineControl({ component: WithCharacterLimit, controlProps: DEFAULT_CONTROL_PROPS }),
-  colorChooser: defineControl({ component: ColorChooser, controlProps: DEFAULT_CONTROL_PROPS })
+  colorChooser: defineControl({ component: ColorChooser, controlProps: DEFAULT_CONTROL_PROPS }),
+  starRating: defineControl({ component: StarRating, controlProps: DEFAULT_CONTROL_PROPS })
 } as const satisfies AutoFormControls
 
 export function useAutoForm<TControls extends AutoFormControls = typeof DEFAULT_CONTROLS>(controls?: TControls) {
