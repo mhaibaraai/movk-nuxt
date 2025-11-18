@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-import { setPath } from '#movk/core'
 import type { FormSubmitEvent } from '@nuxt/ui'
 import type { z } from 'zod/v4'
 
@@ -36,34 +35,38 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 
 <template>
   <Navbar />
-  <UCard>
+  <UCard
+    :ui="{
+      body: 'max-h-[700px] overflow-y-auto'
+    }"
+  >
     <MAutoForm
       :schema="schema"
       :state="form"
       :global-meta="{ collapsible: { defaultOpen: true } }"
       @submit="onSubmit"
     >
-      <template #field-default:email="{ state, error }">
+      <template #field-default:email="{ value, error, setValue }">
         <UInput
-          :model-value="state?.email"
+          :model-value="value"
           type="email"
           placeholder="your@email.com"
           icon="i-lucide-mail"
           class="w-full"
-          :trailing-icon="state?.email ? 'i-lucide-circle-check' : undefined"
+          :trailing-icon="value ? 'i-lucide-circle-check' : undefined"
           :color="error ? 'error' : 'primary'"
-          @update:model-value="setPath(state, 'email', $event)"
+          @update:model-value="setValue"
         />
       </template>
 
-      <template #field-content:notifications="{ state, path }">
+      <template #field-content:notifications="{ value, setValue }">
         <UCard>
           <div class="space-y-3">
             <div
               v-for="key in ['email', 'sms', 'push']"
               :key="key"
               class="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors cursor-pointer"
-              @click="setPath(state, `${path}.${key}`, !state?.notifications?.[key as keyof typeof state.notifications])"
+              @click="setValue(key, !value?.[key as keyof typeof value])"
             >
               <div class="flex items-center gap-3">
                 <UIcon
@@ -81,14 +84,14 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
               </div>
               <UCheckbox
                 disabled
-                :model-value="Boolean(state?.notifications?.[key as keyof typeof state.notifications])"
+                :model-value="value?.[key as keyof typeof value]"
               />
             </div>
           </div>
         </UCard>
       </template>
 
-      <template #field-before:preferences="{ state }">
+      <template #field-before:preferences="{ value }">
         <UAlert
           color="info"
           variant="subtle"
@@ -98,7 +101,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
         >
           <template #actions>
             <UBadge color="info" variant="subtle">
-              {{ state.preferences?.length || 0 }} 项
+              {{ value?.length || 0 }} 项
             </UBadge>
           </template>
         </UAlert>

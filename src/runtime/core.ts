@@ -184,6 +184,20 @@ export type ArrayFieldKeys<T, D extends number = 2> = [D] extends [never]
     }[keyof T & string]
 
 /**
+ * 根据路径字符串提取对象属性的类型，支持点语法和嵌套对象
+ * @example GetFieldValue<User, 'tags'> // string[]
+ * @example GetFieldValue<User, 'profile.bio'> // string
+ */
+export type GetFieldValue<T, P extends string>
+  = P extends keyof T
+    ? T[P]
+    : P extends `${infer K}.${infer Rest}`
+      ? K extends keyof T
+        ? T[K] extends undefined ? undefined : GetFieldValue<NonNullable<T[K]>, Rest>
+        : unknown
+      : unknown
+
+/**
  * vue-component-type-helpers
  * Copy from https://github.com/vuejs/language-tools/tree/master/packages/component-type-helpers
  */

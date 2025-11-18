@@ -14,7 +14,7 @@ export function useAutoFormProvider<T extends Record<string, any>>(
   state: Ref<T>,
   slots: Record<string, any>
 ) {
-  // 字段上下文创建 - 直接创建，不使用缓存
+  // 字段上下文创建
   function createFieldContext(field: AutoFormField, extraProps?: Record<string, any>): AutoFormFieldContext {
     const path = field.path
 
@@ -22,8 +22,28 @@ export function useAutoFormProvider<T extends Record<string, any>>(
       get state() { return state.value as T },
       path,
       get value() { return getPath(state.value, path) },
-      setValue: (v: any) => {
-        setPath(state.value, path, v)
+      setValue: (pathOrValue: any, value?: any) => {
+        if (value === undefined) {
+          setPath(state.value, path, pathOrValue)
+        }
+        else {
+          const relativePath = String(pathOrValue)
+
+          // 如果相对路径以 [ 开头，说明是数组索引，直接拼接
+          // 否则，如果当前路径存在且相对路径不为空，用点号连接
+          let fullPath: string
+          if (relativePath.startsWith('[')) {
+            fullPath = path ? `${path}${relativePath}` : relativePath
+          }
+          else if (path && relativePath) {
+            fullPath = `${path}.${relativePath}`
+          }
+          else {
+            fullPath = relativePath || path
+          }
+
+          setPath(state.value, fullPath, value)
+        }
       },
       get errors() { return extraProps?.errors ?? [] },
       get loading() { return extraProps?.loading ?? false },

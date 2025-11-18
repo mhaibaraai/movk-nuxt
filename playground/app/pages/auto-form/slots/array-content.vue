@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-import { setPath } from '#movk/core'
 import type { FormSubmitEvent } from '@nuxt/ui'
 import type { z } from 'zod/v4'
 
@@ -67,25 +66,25 @@ function getPriorityText(priority: string) {
       :global-meta="{ collapsible: { defaultOpen: true } }"
       @submit="onSubmit"
     >
-      <template #field-content:tasks="{ path, state }">
+      <template #field-content:tasks="{ path, value, setValue, state }">
         <div class="space-y-4">
           <UAlert
             color="success"
             variant="subtle"
             icon="i-lucide-list-checks"
             title="任务列表"
-            description="管理您的任务列表"
+            description="管理您的任务列表 - 使用 setValue 简化数组操作"
           >
             <template #actions>
-              <UBadge :color="state.tasks && state.tasks.length > 0 ? 'success' : 'neutral'" variant="subtle" size="lg">
-                {{ state.tasks ? state.tasks.length : 0 }} 项
+              <UBadge :color="!!value?.length ? 'success' : 'neutral'" variant="subtle" size="lg">
+                {{ value?.length || 0 }} 项
               </UBadge>
             </template>
           </UAlert>
 
-          <div class="space-y-3">
+          <div v-if="value" class="space-y-3">
             <div
-              v-for="(task, index) in state.tasks"
+              v-for="(task, index) in value"
               :key="index"
               class="relative p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors group"
             >
@@ -95,7 +94,7 @@ function getPriorityText(priority: string) {
                   color="error"
                   variant="ghost"
                   size="xs"
-                  @click="setPath(state, path, state.tasks?.filter((_, i) => i !== index) || [])"
+                  @click="setValue(value.filter((_, i) => i !== index))"
                 />
               </div>
 
@@ -105,7 +104,7 @@ function getPriorityText(priority: string) {
                     :model-value="task?.title"
                     placeholder="请输入任务标题"
                     icon="i-lucide-pencil-line"
-                    @update:model-value="setPath(state, `${path}[${index}].title`, $event)"
+                    @update:model-value="setValue(`[${index}].title`, $event)"
                   />
                 </UFormField>
 
@@ -118,7 +117,7 @@ function getPriorityText(priority: string) {
                       { value: 'medium', label: '中优先级' },
                       { value: 'high', label: '高优先级' }
                     ]"
-                    @update:model-value="setPath(state, `${path}[${index}].priority`, $event)"
+                    @update:model-value="setValue(`[${index}].priority`, $event)"
                   >
                     <template #leading="{ modelValue }">
                       <UBadge
@@ -139,7 +138,7 @@ function getPriorityText(priority: string) {
                     unchecked-icon="i-lucide-x"
                     checked-icon="i-lucide-check"
                     :label="task?.completed ? '已完成' : '进行中'"
-                    @update:model-value="setPath(state, `${path}[${index}].completed`, $event)"
+                    @update:model-value="setValue(`[${index}].completed`, $event)"
                   />
                 </UFormField>
               </div>

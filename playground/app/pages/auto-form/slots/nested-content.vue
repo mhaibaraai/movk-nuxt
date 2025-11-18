@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-import { setPath } from '#movk/core'
 import type { FormSubmitEvent } from '@nuxt/ui'
 import type { z } from 'zod/v4'
 
@@ -45,7 +44,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       :global-meta="{ collapsible: { defaultOpen: true } }"
       @submit="onSubmit"
     >
-      <template #field-content:profile="{ path, state }">
+      <template #field-content:profile="{ path, value, setValue }">
         <UAlert
           color="primary"
           variant="subtle"
@@ -57,32 +56,32 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
         <div class="grid grid-cols-2 gap-4">
           <UFormField label="姓名" :name="`${path}.name`" required>
             <UInput
-              :model-value="state.profile?.name"
+              :model-value="value?.name"
               placeholder="请输入您的姓名"
               icon="i-lucide-user"
               class="w-full"
-              @update:model-value="setPath(state, `${path}.name`, $event)"
+              @update:model-value="setValue('name', $event)"
             />
           </UFormField>
           <UFormField label="电子邮箱" :name="`${path}.email`" required>
             <UInput
-              :model-value="state.profile?.email"
+              :model-value="value?.email"
               placeholder="请输入您的电子邮箱"
               icon="i-lucide-mail"
               type="email"
               class="w-full"
-              @update:model-value="setPath(state, `${path}.email`, $event)"
+              @update:model-value="setValue('email', $event)"
             />
           </UFormField>
         </div>
         <UFormField label="简介" :name="`${path}.bio`" hint="可选">
           <UTextarea
-            :model-value="state.profile?.bio"
+            :model-value="value?.bio"
             placeholder="请输入您的个人简介"
             :rows="3"
             resize
             class="w-full"
-            @update:model-value="setPath(state, `${path}.bio`, $event)"
+            @update:model-value="setValue('bio', $event)"
           />
         </UFormField>
       </template>

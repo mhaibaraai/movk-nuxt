@@ -6,27 +6,16 @@ const toast = useToast()
 const { afz } = useAutoForm()
 
 const schema = afz.object({
-  // 字符串字段
-  username: afz.string().min(3),
+  username: afz.string({ type: 'withClear' }).min(3),
   password: afz.string({ type: 'withPasswordToggle' }).min(8),
-
-  // 数字字段
   age: afz.number().min(18),
-
-  // 布尔字段
-  subscribe: afz.boolean(),
-
-  // 枚举字段
+  subscribe: afz.boolean({ controlProps: { label: '订阅我们的新闻通讯' } }),
   plan: afz.enum(['free', 'pro', 'enterprise']),
-
-  // 嵌套对象
   profile: afz.object({
     bio: afz.string({ type: 'textarea' }),
     website: afz.url()
-  }),
-
-  // 数组字段
-  tags: afz.array(afz.string(), { type: 'input-tags' })
+  }).meta({ label: '个人资料', collapsible: { defaultOpen: true } }),
+  tags: afz.array(afz.string(), { type: 'inputTags' }).default(['标签一'])
 })
 
 type Schema = z.output<typeof schema>
@@ -56,7 +45,11 @@ const progress = computed(() => Math.round((completedFields.value / totalFields)
 
 <template>
   <Navbar />
-  <UCard>
+  <UCard
+    :ui="{
+      body: 'max-h-[700px] overflow-y-auto'
+    }"
+  >
     <MAutoForm :schema="schema" :state="form" @submit="onSubmit">
       <template #header="{ loading }">
         <div class="mb-6 space-y-4">
@@ -114,37 +107,32 @@ const progress = computed(() => Math.round((completedFields.value / totalFields)
         />
       </template>
 
-      <template #field-help:password>
+      <template #field-description:password>
         <UAlert
           color="warning"
           variant="subtle"
           icon="i-lucide-shield-check"
           title="密码强度建议"
-          class="mt-2"
+          class="my-2"
         >
-          <ul class="space-y-1 text-xs list-disc list-inside">
-            <li>至少 8 个字符</li>
-            <li>包含大小写字母</li>
-            <li>包含数字</li>
-          </ul>
+          <template #actions>
+            <ul class="space-y-1 text-xs list-disc list-inside">
+              <li>至少 8 个字符</li>
+              <li>包含大小写字母</li>
+              <li>包含数字</li>
+            </ul>
+          </template>
         </UAlert>
       </template>
 
-      <template #field-content:profile>
-        <div class="space-y-4">
-          <UDivider icon="i-lucide-user-circle" label="个人资料" />
-          <slot />
-        </div>
+      <template #field-before:profile>
+        <USeparator icon="i-lucide-circle-user" />
       </template>
 
-      <template #field-content:tags="{ count }">
-        <div class="space-y-3">
-          <span class="inline-flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-            <UIcon name="i-lucide-tags" class="size-4" />
-            <span>已添加 {{ count || 0 }} 个标签</span>
-          </span>
-          <slot />
-        </div>
+      <template #field-hint:tags="{ value }">
+        <UBadge icon="i-lucide-tags" color="info" variant="subtle">
+          您已添加 {{ value?.length || 0 }} 个标签
+        </UBadge>
       </template>
 
       <template #footer="{ errors }">
@@ -157,11 +145,13 @@ const progress = computed(() => Math.round((completedFields.value / totalFields)
             :title="`发现 ${errors.length} 个错误`"
             description="请修正以下错误后重新提交"
           >
-            <ul class="space-y-1 text-sm list-disc list-inside mt-2">
-              <li v-for="(error, i) in errors" :key="i">
-                {{ typeof error === 'string' ? error : JSON.stringify(error) }}
-              </li>
-            </ul>
+            <template #actions>
+              <ul class="space-y-1 text-sm list-disc list-inside">
+                <li v-for="(error, index) in errors" :key="index">
+                  {{ error.message }}
+                </li>
+              </ul>
+            </template>
           </UAlert>
 
           <UAlert

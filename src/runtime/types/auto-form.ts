@@ -2,7 +2,7 @@ import type { OmitByKey } from '@movk/core'
 import type { CollapsibleRootProps } from 'reka-ui'
 import type { ClassNameValue } from 'tailwind-merge'
 import type { GlobalMeta, z } from 'zod/v4'
-import type { ArrayFieldKeys, ComponentProps, ComponentSlots, IsComponent, NonObjectFieldKeys, ObjectFieldKeys, ReactiveValue, Suggest } from '../core'
+import type { ArrayFieldKeys, ComponentProps, ComponentSlots, GetFieldValue, IsComponent, NonObjectFieldKeys, ObjectFieldKeys, ReactiveValue, Suggest } from '../core'
 import type { FormError } from '@nuxt/ui'
 import type { AUTOFORM_META } from '../constants/auto-form'
 import type { CalendarDate } from '@internationalized/date'
@@ -11,29 +11,74 @@ import type { CalendarDate } from '@internationalized/date'
 // 基础上下文类型
 // ============================================================================
 
+// 提取字段值类型
+type FieldValueType<S, P extends string> = P extends string
+  ? (string extends P ? S[keyof S] : GetFieldValue<S, P>)
+  : S[keyof S]
+
+// 排除 undefined 后的类型
+type NonUndefinedFieldValue<S, P extends string> = Exclude<FieldValueType<S, P>, undefined>
+
 /**
- * 表单字段上下文 - 提供字段级别的运行时信息
- * @template S - 表单 State 类型
+ * 相对路径类型 - 根据字段值类型自动推断可用路径
+ * @template T - 字段值类型
  * @description
- * - open: 折叠状态，仅在嵌套字段（object/array）中存在
- * - count: 数组元素计数，仅在数组字段中存在
+ * - 对象类型：返回对象的键（'name' | 'email' | 'bio'）
+ * - 数组类型：返回 string（支持任意索引路径如 '[0].title'）
  */
-export interface AutoFormFieldContext<S = any> {
-  /** 表单数据 - 使用 getter 确保获取最新值 */
+type RelativePath<T> = T extends readonly any[]
+  ? string
+  : T extends Record<string, any>
+    ? Extract<keyof T, string>
+    : string
+
+/**
+ * 表单字段上下文
+ * @template S - 表单数据类型
+ * @template P - 字段路径
+ */
+export interface AutoFormFieldContext<S = any, P extends string = string> {
+  /** 表单数据 */
   readonly state: S
-  /** 字段路径（点分隔符格式，如 "user.profile.name"） */
-  readonly path: string
-  /** 字段当前值 - 使用 getter 确保获取最新值 */
-  readonly value: S[keyof S]
-  /** 设置字段值的回调函数 */
-  setValue: (value: S[keyof S]) => void
-  /** 表单错误列表（包含字段级和表单级错误） */
+  /** 字段路径 */
+  readonly path: P
+  /** 字段值（可能为 undefined） */
+  readonly value: FieldValueType<S, P>
+  /**
+   * 设置字段值的回调函数
+   * @description 支持多种调用方式：
+   * 1. setValue(value) - 设置当前字段的整个值
+   * 2. setValue(key, value) - 设置子字段值（对象）或元素属性（数组）
+   * 3. setValue(path, value) - 设置任意路径的值（字符串回退）
+   * @example
+   * // 对象字段 profile: { name, email, bio }
+   * setValue({ name: '张三', email: 'test@example.com' })  // 设置整个对象
+   * setValue('name', '张三')  // key 自动推断为 'name' | 'email' | 'bio'
+   *
+   * // 数组字段 tasks: [{ title, priority, completed }]
+   * setValue([...tasks, newTask])  // 设置整个数组
+   * setValue('[0].title', '新标题')  // 使用索引路径字符串
+   *
+   * // 或者在遍历中直接使用属性名（推荐）
+   * v-for="(task, index) in tasks"
+   * setValue(`[${index}].title`, value)  // 动态索引
+   */
+  setValue: {
+    (value: FieldValueType<S, P>): void
+    <K extends RelativePath<NonUndefinedFieldValue<S, P>>>(
+      relativePath: K extends never ? string : K,
+      value: any
+    ): void
+    (relativePath: string, value: any): void
+  }
+
+  /** 字段错误列表 */
   readonly errors: unknown[]
   /** 表单提交加载状态 */
   readonly loading: boolean
-  /** 折叠状态（仅适用于嵌套字段和数组字段） */
+  /** 字段折叠状态 */
   readonly open?: boolean
-  /** 数组元素计数（仅适用于数组字段） */
+  /** 数组元素下标 */
   readonly count?: number
 }
 
@@ -54,12 +99,7 @@ export interface AutoFormFieldSlots {
 // ============================================================================
 
 type DynamicFieldSlotKeys = keyof AutoFormFieldSlots
-type DynamicFieldNestedSlotKeys = 'content' | 'before' | 'after'
 
-/**
- * 根据插槽类型提取对应的额外参数
- * @template SlotType - 插槽类型键
- */
 type SlotTypeExtraProps<SlotType extends DynamicFieldSlotKeys>
   = SlotType extends 'label' ? { label?: string }
     : SlotType extends 'hint' ? { hint?: string }
@@ -69,34 +109,42 @@ type SlotTypeExtraProps<SlotType extends DynamicFieldSlotKeys>
             : SlotType extends 'default' ? { error?: boolean | string }
               : {}
 
+type FieldSlotFunction<T, K extends DynamicFieldSlotKeys, P extends string>
+  = (props: SlotTypeExtraProps<K> & AutoFormFieldContext<T, P>) => unknown
+
+type FieldSlotsMapping<T, K extends DynamicFieldSlotKeys, P extends string> = {
+  [Path in P as `field-${K}:${Path}`]: FieldSlotFunction<T, K, Path>
+}
+
 /**
- * 动态表单插槽类型 - 支持字段级插槽自定义
+ * 动态表单插槽类型
  * @template T - 表单数据类型
  *
- * 支持三种插槽命名模式：
- * 1. 通用插槽：任意字符串键
- * 2. 字段类型插槽：`field-{slotType}` 或 `field-{slotType}:{fieldKey}` - 根据 slotType 自动添加额外参数
- * 3. 嵌套内容插槽：`field-content:{objectKey}` 或 `field-content:{arrayKey}`
+ * 插槽命名：
+ * - 通用：`field-{slotType}`
+ * - 字段：`field-{slotType}:{fieldKey}` - 精确推导字段类型
+ * - 嵌套：`field-{content|before|after}:{objectKey|arrayKey}`
  */
 export type DynamicFormSlots<T>
   = Record<string, (props: AutoFormFieldContext<T>) => unknown>
     & {
-      [K in DynamicFieldSlotKeys as `field-${K}`]: (
-        props: SlotTypeExtraProps<K> & AutoFormFieldContext<T>
-      ) => unknown
+      [K in DynamicFieldSlotKeys as `field-${K}`]: (props: SlotTypeExtraProps<K> & AutoFormFieldContext<T>) => unknown
     }
+    & FieldSlotsMapping<T, 'label', NonObjectFieldKeys<T>>
+    & FieldSlotsMapping<T, 'hint', NonObjectFieldKeys<T>>
+    & FieldSlotsMapping<T, 'description', NonObjectFieldKeys<T>>
+    & FieldSlotsMapping<T, 'help', NonObjectFieldKeys<T>>
+    & FieldSlotsMapping<T, 'error', NonObjectFieldKeys<T>>
+    & FieldSlotsMapping<T, 'default', NonObjectFieldKeys<T>>
+    & FieldSlotsMapping<T, 'label', ObjectFieldKeys<T>>
+    & FieldSlotsMapping<T, 'hint', ObjectFieldKeys<T>>
+    & FieldSlotsMapping<T, 'description', ObjectFieldKeys<T>>
+    & FieldSlotsMapping<T, 'help', ObjectFieldKeys<T>>
+    & FieldSlotsMapping<T, 'error', ObjectFieldKeys<T>>
+    & FieldSlotsMapping<T, 'default', ObjectFieldKeys<T>>
     & {
-      [K in DynamicFieldSlotKeys as `field-${K}:${NonObjectFieldKeys<T>}`]: (
-        props: SlotTypeExtraProps<K> & AutoFormFieldContext<T>
-      ) => unknown
+      [P in ObjectFieldKeys<T> | ArrayFieldKeys<T> as `field-${'content' | 'before' | 'after'}:${P}`]: (props: AutoFormFieldContext<T, P>) => unknown
     }
-    & {
-      [K in DynamicFieldSlotKeys as `field-${K}:${ObjectFieldKeys<T>}`]: (
-        props: SlotTypeExtraProps<K> & AutoFormFieldContext<T>
-      ) => unknown
-    }
-    & Record<`field-${DynamicFieldNestedSlotKeys}:${ObjectFieldKeys<T>}`, (props: AutoFormFieldContext<T>) => unknown>
-    & Record<`field-${DynamicFieldNestedSlotKeys}:${ArrayFieldKeys<T>}`, (props: AutoFormFieldContext<T>) => unknown>
 
 /**
  * 表单级插槽属性
