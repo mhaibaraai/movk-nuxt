@@ -97,7 +97,23 @@ const autoFormNav: NavigationMenuItem = {
   ]
 }
 
-const components: NavigationMenuItem[] = [autoFormNav]
+const components: NavigationMenuItem[] = [
+  autoFormNav,
+  {
+    label: 'Components',
+    icon: 'i-lucide-box',
+    defaultOpen: true,
+    children: [
+      { label: 'ColorChooser', to: '/components/ColorChooser' },
+      { label: 'DatePicker', to: '/components/DatePicker' },
+      { label: 'StarRating', to: '/components/StarRating' },
+      { label: 'WithClear', to: '/components/WithClear' },
+      { label: 'WithPasswordToggle', to: '/components/WithPasswordToggle' },
+      { label: 'WithCopy', to: '/components/WithCopy' },
+      { label: 'WithCharacterLimit', to: '/components/WithCharacterLimit' }
+    ]
+  }
+]
 
 export const useNavigation = () => {
   const items = [{ label: 'Home', icon: 'i-lucide-house', to: '/' }]
