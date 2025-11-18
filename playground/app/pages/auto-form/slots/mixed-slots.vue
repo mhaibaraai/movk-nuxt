@@ -141,7 +141,7 @@ const progress = computed(() => Math.round((completedFields.value / totalFields)
             v-if="errors.length > 0"
             color="error"
             variant="subtle"
-            icon="i-lucide-alert-circle"
+            icon="i-lucide-circle-alert"
             :title="`发现 ${errors.length} 个错误`"
             description="请修正以下错误后重新提交"
           >

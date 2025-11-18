@@ -4,7 +4,7 @@ import type { GlobalMeta, z } from 'zod/v4'
 import type { AutoFormControls, AutoFormField, AutoFormSlotProps, DynamicFormSlots } from '../types/auto-form'
 import { UForm } from '#components'
 import type { Ref } from 'vue'
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, useTemplateRef } from 'vue'
 import { useAutoFormProvider } from '../internal/useAutoFormProvider'
 import { getPath, setPath } from '../core'
 import { classifyFields, extractPureSchema, introspectSchema } from '../utils/auto-form'
@@ -54,6 +54,7 @@ defineOptions({ inheritAttrs: false })
 
 const state = ref(_state || {}) as Ref<AutoFormStateType>
 
+const formRef = useTemplateRef('formRef')
 const { DEFAULT_CONTROLS } = useAutoForm()
 const { resolveFieldProp } = useAutoFormProvider(state, _slots)
 
@@ -125,11 +126,48 @@ const renderData = computed(() => {
 onMounted(() => {
   resolveDefaultValue(fields.value, state.value)
 })
+
+/**
+ * 重置表单到初始状态（包含默认值）
+ */
+function reset() {
+  // 清空现有数据
+  Object.keys(state.value).forEach((key) => {
+    // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+    delete state.value[key as keyof AutoFormStateType]
+  })
+
+  if (_state) {
+    Object.assign(state.value, _state)
+  }
+  resolveDefaultValue(fields.value, state.value)
+
+  formRef.value?.clear()
+}
+
+/**
+ * 清空表单所有字段
+ */
+function clear() {
+  Object.keys(state.value).forEach((key) => {
+    // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+    delete state.value[key as keyof AutoFormStateType]
+  })
+
+  formRef.value?.clear()
+}
+
+defineExpose({
+  formRef,
+  reset,
+  clear
+})
 </script>
 
 <template>
   <UForm
     v-if="renderData"
+    ref="formRef"
     :state="state"
     :schema="pureSchema"
     v-bind="restProps"
