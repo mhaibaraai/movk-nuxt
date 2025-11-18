@@ -93,12 +93,6 @@ const autoFormNav: NavigationMenuItem = {
         { label: 'Survey', to: '/auto-form/examples/survey' },
         { label: 'Filter', to: '/auto-form/examples/filter' }
       ]
-    },
-    {
-      label: 'Showcase',
-      children: [
-        { label: 'All Features', to: '/auto-form/showcase/all-features' }
-      ]
     }
   ]
 }
