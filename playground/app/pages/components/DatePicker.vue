@@ -27,7 +27,7 @@ const customFormatDate = shallowRef(new CalendarDate(2025, 11, 18))
 
 <template>
   <Navbar />
-  <UCard :ui="{ body: 'space-y-6' }">
+  <Matrix>
     <div class="grid gap-6 md:grid-cols-2">
       <UFormField label="单个日期">
         <MDatePicker v-model="singleDate" :button-props="{ label: '选择日期', class: 'w-full' }" />
@@ -115,5 +115,5 @@ const customFormatDate = shallowRef(new CalendarDate(2025, 11, 18))
         </div>
       </UFormField>
     </div>
-  </UCard>
+  </Matrix>
 </template>
