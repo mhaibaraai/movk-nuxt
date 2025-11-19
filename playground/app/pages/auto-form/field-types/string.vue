@@ -33,7 +33,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 
 <template>
   <Navbar />
-  <Matrix :form="form">
+  <Matrix :form="form" title="字符串字段类型" description="演示各种字符串输入控件，如密码、带清除/复制按钮的输入框等。">
     <MAutoForm :schema="schema" :state="form" @submit="onSubmit" />
   </Matrix>
 </template>

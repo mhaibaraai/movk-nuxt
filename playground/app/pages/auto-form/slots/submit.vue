@@ -46,7 +46,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 
 <template>
   <Navbar />
-  <Matrix :form="form">
+  <Matrix :form="form" title="自定义提交区域" description="使用 `submit` 插槽完全控制提交按钮及其周围的逻辑和 UI。">
     <MAutoForm
       ref="autoForm"
       :schema="schema"
@@ -79,7 +79,8 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
             </div>
 
             <div class="text-xs text-gray-500 dark:text-gray-400">
-              已填写 {{ Object.keys(state).filter(k => state[k as keyof Schema] !== undefined && state[k as keyof Schema] !== '').length }} / {{ fields.length }} 字段
+              已填写 {{ Object.keys(state).filter(k => state[k as keyof Schema] !== undefined && state[k as keyof Schema]
+                !== '').length }} / {{ fields.length }} 字段
             </div>
           </div>
 

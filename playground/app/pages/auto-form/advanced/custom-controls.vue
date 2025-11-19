@@ -36,7 +36,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 
 <template>
   <Navbar />
-  <Matrix :form="form">
+  <Matrix :form="form" title="自定义控件" description="演示如何使用自定义 Vue 组件作为表单字段的渲染控件。">
     <MAutoForm
       :schema="schema"
       :controls="controls"

@@ -69,7 +69,7 @@ const form = ref({})
 
 <template>
   <Navbar />
-  <Matrix :form="form">
+  <Matrix :form="form" title="条件字段" description="演示如何根据其他字段的值动态显示或隐藏表单字段。">
     <MAutoForm :schema="schema" :state="form" />
   </Matrix>
 </template>

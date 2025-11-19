@@ -32,7 +32,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 
 <template>
   <Navbar />
-  <Matrix :form="form">
+  <Matrix :form="form" title="嵌套对象字段" description="演示如何处理嵌套的对象结构，并支持折叠。">
     <MAutoForm :schema="schema" :state="form" @submit="onSubmit" />
   </Matrix>
 </template>

@@ -39,7 +39,7 @@ async function onSubmit(event: FormSubmitEvent<SimpleSchema>) {
 
 <template>
   <Navbar />
-  <Matrix :form="form">
+  <Matrix :form="form" title="字段插槽布局" description="使用 `fieldSlot` 将所有字段渲染到布局组件的单个插槽中。">
     <MAutoForm :schema="simpleSchema" :state="form" @submit="onSubmit" />
   </Matrix>
 </template>

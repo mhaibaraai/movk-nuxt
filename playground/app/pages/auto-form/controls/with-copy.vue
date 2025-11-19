@@ -26,7 +26,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 
 <template>
   <Navbar />
-  <Matrix :form="form">
+  <Matrix :form="form" title="带复制按钮的输入框" description="使用 `withCopy` 类型为输入框添加一个复制内容的按钮。">
     <MAutoForm :schema="schema" :state="form" @submit="onSubmit" />
   </Matrix>
 </template>

@@ -45,7 +45,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 
 <template>
   <Navbar />
-  <Matrix :form="form">
+  <Matrix :form="form" title="单选框组" description="使用 `radioGroup` 类型来渲染一组单选按钮，支持 `default` 和 `card` 两种变体。">
     <MAutoForm :schema="schema" :state="form" @submit="onSubmit" />
   </Matrix>
 </template>

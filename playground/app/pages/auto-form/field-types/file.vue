@@ -32,7 +32,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 
 <template>
   <Navbar />
-  <Matrix :form="form">
+  <Matrix :form="form" title="文件字段类型" description="演示文件上传字段，支持单文件和多文件上传。">
     <MAutoForm :schema="schema" :state="form" @submit="onSubmit" />
   </Matrix>
 </template>

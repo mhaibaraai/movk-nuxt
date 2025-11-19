@@ -72,7 +72,7 @@ async function onSubmit(event: FormSubmitEvent<TabsSchema>) {
 
 <template>
   <Navbar />
-  <Matrix :form="form">
+  <Matrix :form="form" title="标签页布局" description="使用 `UTabs` 组件将表单字段组织在不同的标签页中。">
     <MAutoForm :schema="tabsSchema" :state="form" @submit="onSubmit" />
   </Matrix>
 </template>

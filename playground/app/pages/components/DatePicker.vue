@@ -27,7 +27,7 @@ const customFormatDate = shallowRef(new CalendarDate(2025, 11, 18))
 
 <template>
   <Navbar />
-  <Matrix>
+  <Matrix title="日期选择器组件" description="`MDatePicker` 组件的多种用法，包括单选、范围、多选和禁用等。">
     <div class="grid gap-6 md:grid-cols-2">
       <UFormField label="单个日期">
         <MDatePicker v-model="singleDate" :button-props="{ label: '选择日期', class: 'w-full' }" />
@@ -77,11 +77,7 @@ const customFormatDate = shallowRef(new CalendarDate(2025, 11, 18))
 
     <div class="grid gap-6 lg:grid-cols-2">
       <UFormField label="显示多个月份" hint="同时显示 3 个月的日历">
-        <MDatePicker
-          v-model="singleDate"
-          :button-props="{ label: '显示 3 个月', class: 'w-full' }"
-          :number-of-months="3"
-        />
+        <MDatePicker v-model="singleDate" :button-props="{ label: '显示 3 个月', class: 'w-full' }" :number-of-months="3" />
       </UFormField>
 
       <UFormField label="格式化方式">

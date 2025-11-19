@@ -42,7 +42,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 
 <template>
   <Navbar />
-  <Matrix :form="form">
+  <Matrix :form="form" title="全局元数据" description="演示如何使用全局元数据来配置和影响表单中所有字段的行为或外观。">
     <MAutoForm
       :schema="schema"
       :state="form"

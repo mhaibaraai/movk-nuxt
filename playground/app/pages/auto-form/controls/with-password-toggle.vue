@@ -35,7 +35,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 
 <template>
   <Navbar />
-  <Matrix :form="form">
+  <Matrix :form="form" title="带密码切换的输入框" description="使用 `withPasswordToggle` 类型为密码输入框添加显示/隐藏密码的功能。">
     <MAutoForm :schema="schema" :state="form" @submit="onSubmit" />
   </Matrix>
 </template>

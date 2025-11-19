@@ -31,7 +31,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 
 <template>
   <Navbar />
-  <Matrix :form="form">
+  <Matrix :form="form" title="可折叠字段" description="演示如何使用 collapsible 选项来将表单字段组织成可折叠的部分，提高表单的整洁性。">
     <MAutoForm :schema="schema" :state="form" @submit="onSubmit" />
   </Matrix>
 </template>

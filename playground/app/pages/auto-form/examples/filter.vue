@@ -25,7 +25,7 @@ const form = ref<Partial<Schema>>({})
 
 <template>
   <Navbar />
-  <Matrix :form="form">
+  <Matrix :form="form" title="筛选表示例" description="构建一个筛选表单，通常用于数据表格或列表的搜索和过滤。">
     <MAutoForm :schema="schema" :state="form" :submit-button="false" />
   </Matrix>
 </template>

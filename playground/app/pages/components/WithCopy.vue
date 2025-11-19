@@ -4,7 +4,7 @@ const apiKey = ref('sk-1234567890abcdef')
 
 <template>
   <Navbar />
-  <Matrix>
+  <Matrix title="带复制按钮的输入组件" description="`MWithCopy` 组件的独立使用示例。">
     <UFormField label="apiKey" hint="API 密钥">
       <MWithCopy
         v-model="apiKey"

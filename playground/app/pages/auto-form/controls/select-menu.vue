@@ -63,7 +63,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 
 <template>
   <Navbar />
-  <Matrix :form="form">
+  <Matrix :form="form" title="选择菜单" description="使用 `selectMenu` 类型来渲染一个功能丰富的选择菜单，支持搜索和异步加载。">
     <MAutoForm :schema="schema" :state="form" @submit="onSubmit" />
   </Matrix>
 </template>

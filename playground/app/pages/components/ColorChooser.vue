@@ -5,7 +5,7 @@ const formatColor = ref('')
 
 <template>
   <Navbar />
-  <Matrix>
+  <Matrix title="颜色选择器组件" description="`MColorChooser` 组件的基础用法和格式化选项。">
     <div class="grid gap-6 md:grid-cols-2">
       <UFormField label="基础">
         <MColorChooser v-model="color" />

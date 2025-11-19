@@ -48,7 +48,7 @@ async function onSubmit(event: FormSubmitEvent<AccordionSchema>) {
 
 <template>
   <Navbar />
-  <Matrix :form="form">
+  <Matrix :form="form" title="手风琴布局" description="使用 `UAccordion` 组件将表单字段组织在手风琴布局中。">
     <MAutoForm :schema="accordionSchema" :state="form" @submit="onSubmit" />
   </Matrix>
 </template>

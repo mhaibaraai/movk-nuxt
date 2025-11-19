@@ -37,7 +37,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 
 <template>
   <Navbar />
-  <Matrix :form="form">
+  <Matrix :form="form" title="自定义嵌套内容" description="使用 `field-content` 插槽自定义嵌套对象字段的渲染逻辑。">
     <MAutoForm
       :schema="schema"
       :state="form"

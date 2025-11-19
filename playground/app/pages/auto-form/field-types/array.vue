@@ -49,7 +49,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 
 <template>
   <Navbar />
-  <Matrix :form="form">
+  <Matrix :form="form" title="数组字段类型" description="演示如何定义和使用不同类型的数组字段，例如标签、数字列表和对象数组。">
     <MAutoForm
       :schema="schema"
       :state="form"

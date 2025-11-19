@@ -55,7 +55,7 @@ function getPriorityText(priority: string) {
 
 <template>
   <Navbar />
-  <Matrix :form="form">
+  <Matrix :form="form" title="自定义数组内容" description="使用 `field-content` 插槽完全自定义数组字段的渲染逻辑。">
     <MAutoForm
       :schema="schema"
       :state="form"

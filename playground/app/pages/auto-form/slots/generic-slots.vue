@@ -27,7 +27,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 
 <template>
   <Navbar />
-  <Matrix :form="form">
+  <Matrix :form="form" title="通用字段插槽" description="使用通用的 `field-*` 插槽为表单中的所有字段应用统一的自定义样式。">
     <MAutoForm :schema="schema" :state="form" @submit="onSubmit">
       <template #field-label="{ label, path }">
         <UBadge

@@ -45,7 +45,11 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 
 <template>
   <Navbar />
-  <Matrix :form="form">
+  <Matrix
+    :form="form"
+    title="对象字段类型"
+    description="演示如何使用 `afz.object({}, { type: '...' })` 来处理通用对象类型，通常与 `selectMenu` 结合使用。"
+  >
     <MAutoForm :schema="schema" :state="form" @submit="onSubmit" />
   </Matrix>
 </template>

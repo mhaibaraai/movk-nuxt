@@ -43,7 +43,7 @@ const form = ref<Partial<Schema>>({})
 
 <template>
   <Navbar />
-  <Matrix :form="form">
+  <Matrix :form="form" title="个人资料表示例" description="一个用于编辑用户个人资料的表单，包含多个字段分组。">
     <MAutoForm :schema="schema" :state="form" />
   </Matrix>
 </template>

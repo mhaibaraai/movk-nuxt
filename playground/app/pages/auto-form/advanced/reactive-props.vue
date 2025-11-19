@@ -36,7 +36,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 
 <template>
   <Navbar />
-  <Matrix :form="form">
+  <Matrix :form="form" title="响应式属性" description="演示如何使用响应式属性来动态绑定和更新表单字段的配置。">
     <template #header>
       <div class="mb-4 space-y-4">
         <UFormField label="最小长度">

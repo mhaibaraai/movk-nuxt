@@ -7,7 +7,7 @@ const halfRating = ref(2.5)
 
 <template>
   <Navbar />
-  <Matrix>
+  <Matrix title="星级评分组件" description="`MStarRating` 组件的基础用法，支持只读、半星等模式。">
     <div class="grid gap-6 md:grid-cols-2">
       <UFormField label="基础评分" hint="5 星评分系统">
         <MStarRating v-model="rating" />

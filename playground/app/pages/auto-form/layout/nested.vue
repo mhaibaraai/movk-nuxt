@@ -44,7 +44,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 
 <template>
   <Navbar />
-  <Matrix :form="form">
+  <Matrix :form="form" title="嵌套布局" description="演示如何在 `afz.layout` 中嵌套另一个 `afz.layout` 来创建更复杂的结构。">
     <MAutoForm :schema="schema" :state="form" @submit="onSubmit" />
   </Matrix>
 </template>

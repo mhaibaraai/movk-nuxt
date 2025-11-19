@@ -27,7 +27,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 
 <template>
   <Navbar />
-  <Matrix :form="form">
+  <Matrix :form="form" title="字段插槽" description="使用 `field-label`, `field-hint`, `field-error` 等插槽微调字段的各个部分。">
     <MAutoForm
       :schema="schema"
       :state="form"

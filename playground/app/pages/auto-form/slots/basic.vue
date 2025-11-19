@@ -26,7 +26,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 
 <template>
   <Navbar />
-  <Matrix :form="form">
+  <Matrix :form="form" title="基础插槽" description="使用 `header` 和 `footer` 插槽在表单的顶部和底部添加自定义内容。">
     <MAutoForm :schema="schema" :state="form" @submit="onSubmit">
       <template #header>
         <UAlert
@@ -44,7 +44,8 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
           <div class="flex items-center justify-between text-sm mb-2">
             <span class="text-gray-600 dark:text-gray-400">表单完成度</span>
             <UBadge color="primary" variant="subtle">
-              {{ Object.keys(state).filter(k => state[k as keyof Schema]).length }} / {{ Object.keys(schema.shape).length }}
+              {{ Object.keys(state).filter(k => state[k as keyof Schema]).length }} / {{
+                Object.keys(schema.shape).length }}
             </UBadge>
           </div>
           <UProgress

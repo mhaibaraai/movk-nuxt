@@ -30,7 +30,7 @@ const form = ref<Partial<Schema>>({})
 
 <template>
   <Navbar />
-  <Matrix :form="form">
+  <Matrix :form="form" title="注册表示例" description="一个用户注册表单，包含复杂的验证规则和字段依赖。">
     <MAutoForm :schema="schema" :state="form" />
   </Matrix>
 </template>

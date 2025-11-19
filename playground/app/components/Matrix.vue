@@ -1,6 +1,8 @@
 <script lang="ts" setup>
 defineProps<{
   form?: unknown
+  title?: string
+  description?: string
 }>()
 </script>
 
@@ -13,7 +15,17 @@ defineProps<{
     class="min-w-lg"
   >
     <template #header>
-      <slot name="header" />
+      <slot name="header">
+        <div v-if="title" class="flex items-center justify-between">
+          <h3 class="text-base font-semibold leading-6">
+            {{ title }}
+          </h3>
+
+          <p v-if="description" class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            {{ description }}
+          </p>
+        </div>
+      </slot>
     </template>
     <slot />
     <template v-if="form" #footer>

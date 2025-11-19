@@ -4,7 +4,7 @@ const comment = ref('')
 
 <template>
   <Navbar />
-  <Matrix>
+  <Matrix title="带字符限制的输入组件" description="`MWithCharacterLimit` 组件的独立使用示例。">
     <UFormField label="comment" hint="长文本评论">
       <MWithCharacterLimit
         v-model="comment"

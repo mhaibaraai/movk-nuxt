@@ -38,7 +38,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 
 <template>
   <Navbar />
-  <Matrix :form="form">
+  <Matrix :form="form" title="颜色选择器" description="使用 `colorChooser` 类型来渲染一个颜色选择器，支持多种颜色格式。">
     <MAutoForm :schema="schema" :state="form" @submit="onSubmit" />
   </Matrix>
 </template>

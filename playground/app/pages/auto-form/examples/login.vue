@@ -29,7 +29,7 @@ function handleSubmit() {
 
 <template>
   <Navbar />
-  <Matrix :form="form">
+  <Matrix :form="form" title="登录表示例" description="一个基础的登录表单，包含邮箱和密码字段。">
     <MAutoForm :schema="schema" :state="form" @submit="handleSubmit" />
   </Matrix>
 </template>

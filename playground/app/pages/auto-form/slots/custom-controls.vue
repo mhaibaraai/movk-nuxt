@@ -35,7 +35,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 
 <template>
   <Navbar />
-  <Matrix :form="form">
+  <Matrix :form="form" title="自定义控件插槽" description="通过 `field-default` 和 `field-content` 插槽自定义特定字段的渲染。">
     <MAutoForm
       :schema="schema"
       :state="form"
@@ -78,10 +78,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
                   </p>
                 </div>
               </div>
-              <UCheckbox
-                disabled
-                :model-value="value?.[key as keyof typeof value]"
-              />
+              <UCheckbox disabled :model-value="value?.[key as keyof typeof value]" />
             </div>
           </div>
         </UCard>

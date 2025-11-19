@@ -31,7 +31,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 
 <template>
   <Navbar />
-  <Matrix :form="form">
+  <Matrix :form="form" title="动态数组" description="演示如何创建和管理动态添加或删除元素的表单数组。">
     <MAutoForm
       :schema="schema"
       :state="form"

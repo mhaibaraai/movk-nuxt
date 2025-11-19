@@ -45,7 +45,7 @@ const progress = computed(() => Math.round((completedFields.value / totalFields)
 
 <template>
   <Navbar />
-  <Matrix :form="form">
+  <Matrix :form="form" title="混合插槽" description="综合运用 `header`、`footer`、`field-*` 等多种插槽来构建复杂的表单界面。">
     <MAutoForm :schema="schema" :state="form" @submit="onSubmit">
       <template #header="{ loading }">
         <div class="mb-6 space-y-4">

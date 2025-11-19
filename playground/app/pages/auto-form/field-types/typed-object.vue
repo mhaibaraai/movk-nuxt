@@ -67,14 +67,10 @@ async function click() {
 
 <template>
   <Navbar />
-  <Matrix :form="form">
+  <Matrix :form="form" title="类型化对象" description="演示 `normal`, `loose`, `strict` 不同对象验证模式的区别。">
     <template #header>
       选择对象类型：
-      <USelect
-        v-model="currentType"
-        :items="items"
-        outlined
-      />
+      <USelect v-model="currentType" :items="items" outlined />
     </template>
 
     <MAutoForm :schema="schema" :state="form" :submit-button="false">

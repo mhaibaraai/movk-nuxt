@@ -4,7 +4,7 @@ const password = ref('Test@1234')
 
 <template>
   <Navbar />
-  <Matrix>
+  <Matrix title="带密码切换的输入组件" description="`MWithPasswordToggle` 组件的独立使用示例。">
     <UFormField label="带图标的密码" hint="你的密码">
       <MWithPasswordToggle
         v-model="password"

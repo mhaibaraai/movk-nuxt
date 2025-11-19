@@ -4,7 +4,7 @@ const userName = ref('张三')
 
 <template>
   <Navbar />
-  <Matrix>
+  <Matrix title="带清除按钮的输入组件" description="`MWithClear` 组件的独立使用示例。">
     <UFormField label="userName" hint="用户名">
       <MWithClear
         v-model="userName"
