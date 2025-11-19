@@ -72,10 +72,7 @@ async function onSubmit(event: FormSubmitEvent<TabsSchema>) {
 
 <template>
   <Navbar />
-  <UCard>
+  <Matrix :form="form">
     <MAutoForm :schema="tabsSchema" :state="form" @submit="onSubmit" />
-    <template #footer>
-      <FormDataViewer :data="form" />
-    </template>
-  </UCard>
+  </Matrix>
 </template>

@@ -4,7 +4,7 @@ const comment = ref('')
 
 <template>
   <Navbar />
-  <UCard class="w-lg">
+  <Matrix>
     <UFormField label="comment" hint="长文本评论">
       <MWithCharacterLimit
         v-model="comment"
@@ -14,5 +14,5 @@ const comment = ref('')
         leading-icon="i-lucide-message-square"
       />
     </UFormField>
-  </UCard>
+  </Matrix>
 </template>

@@ -4,7 +4,7 @@ const userName = ref('张三')
 
 <template>
   <Navbar />
-  <UCard class="w-lg">
+  <Matrix>
     <UFormField label="userName" hint="用户名">
       <MWithClear
         v-model="userName"
@@ -13,5 +13,5 @@ const userName = ref('张三')
         class="w-full"
       />
     </UFormField>
-  </UCard>
+  </Matrix>
 </template>

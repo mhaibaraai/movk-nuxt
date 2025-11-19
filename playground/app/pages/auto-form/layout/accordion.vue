@@ -48,10 +48,7 @@ async function onSubmit(event: FormSubmitEvent<AccordionSchema>) {
 
 <template>
   <Navbar />
-  <UCard>
+  <Matrix :form="form">
     <MAutoForm :schema="accordionSchema" :state="form" @submit="onSubmit" />
-    <template #footer>
-      <FormDataViewer :data="form" />
-    </template>
-  </UCard>
+  </Matrix>
 </template>

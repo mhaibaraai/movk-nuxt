@@ -67,7 +67,7 @@ async function click() {
 
 <template>
   <Navbar />
-  <UCard>
+  <Matrix :form="form">
     <template #header>
       选择对象类型：
       <USelect
@@ -84,9 +84,5 @@ async function click() {
         </UButton>
       </template>
     </MAutoForm>
-
-    <template #footer>
-      <FormDataViewer :data="form" />
-    </template>
-  </UCard>
+  </Matrix>
 </template>

@@ -36,31 +36,30 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 
 <template>
   <Navbar />
-  <UCard>
-    <div class="mb-4 space-y-4">
-      <UFormField label="最小长度">
-        <USlider
-          v-model="minLength"
-          :min="1"
-          :max="10"
-          :step="1"
-          tooltip
-        />
-      </UFormField>
-      <UFormField label="最大长度">
-        <USlider
-          v-model="maxLength"
-          :min="10"
-          :max="50"
-          :step="1"
-          tooltip
-        />
-      </UFormField>
-    </div>
+  <Matrix :form="form">
+    <template #header>
+      <div class="mb-4 space-y-4">
+        <UFormField label="最小长度">
+          <USlider
+            v-model="minLength"
+            :min="1"
+            :max="10"
+            :step="1"
+            tooltip
+          />
+        </UFormField>
+        <UFormField label="最大长度">
+          <USlider
+            v-model="maxLength"
+            :min="10"
+            :max="50"
+            :step="1"
+            tooltip
+          />
+        </UFormField>
+      </div>
+    </template>
 
     <MAutoForm :schema="schema" :state="form" @submit="onSubmit" />
-    <template #footer>
-      <FormDataViewer :data="form" />
-    </template>
-  </UCard>
+  </Matrix>
 </template>

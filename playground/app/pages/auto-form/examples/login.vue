@@ -29,7 +29,7 @@ function handleSubmit() {
 
 <template>
   <Navbar />
-  <UCard>
+  <Matrix :form="form">
     <MAutoForm :schema="schema" :state="form" @submit="handleSubmit" />
-  </UCard>
+  </Matrix>
 </template>

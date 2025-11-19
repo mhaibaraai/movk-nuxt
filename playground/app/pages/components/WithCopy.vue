@@ -4,7 +4,7 @@ const apiKey = ref('sk-1234567890abcdef')
 
 <template>
   <Navbar />
-  <UCard class="w-lg">
+  <Matrix>
     <UFormField label="apiKey" hint="API 密钥">
       <MWithCopy
         v-model="apiKey"
@@ -13,5 +13,5 @@ const apiKey = ref('sk-1234567890abcdef')
         class="w-full"
       />
     </UFormField>
-  </UCard>
+  </Matrix>
 </template>

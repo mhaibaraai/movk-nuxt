@@ -4,7 +4,7 @@ const password = ref('Test@1234')
 
 <template>
   <Navbar />
-  <UCard class="w-lg">
+  <Matrix>
     <UFormField label="带图标的密码" hint="你的密码">
       <MWithPasswordToggle
         v-model="password"
@@ -13,5 +13,5 @@ const password = ref('Test@1234')
         class="w-full"
       />
     </UFormField>
-  </UCard>
+  </Matrix>
 </template>

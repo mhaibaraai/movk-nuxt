@@ -7,7 +7,7 @@ const halfRating = ref(2.5)
 
 <template>
   <Navbar />
-  <UCard :ui="{ body: 'space-y-6' }" class="w-lg">
+  <Matrix>
     <div class="grid gap-6 md:grid-cols-2">
       <UFormField label="基础评分" hint="5 星评分系统">
         <MStarRating v-model="rating" />
@@ -27,5 +27,5 @@ const halfRating = ref(2.5)
         <MStarRating v-model="halfRating" allow-half />
       </UFormField>
     </div>
-  </UCard>
+  </Matrix>
 </template>

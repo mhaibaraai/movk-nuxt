@@ -49,12 +49,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 
 <template>
   <Navbar />
-  <UCard
-    class="w-lg"
-    :ui="{
-      body: 'max-h-[600px] overflow-y-auto'
-    }"
-  >
+  <Matrix :form="form">
     <MAutoForm
       :schema="schema"
       :state="form"
@@ -63,8 +58,5 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       }"
       @submit="onSubmit"
     />
-    <template #footer>
-      <FormDataViewer :data="form" />
-    </template>
-  </UCard>
+  </Matrix>
 </template>

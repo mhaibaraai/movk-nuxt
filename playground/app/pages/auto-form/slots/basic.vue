@@ -26,7 +26,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 
 <template>
   <Navbar />
-  <UCard>
+  <Matrix :form="form">
     <MAutoForm :schema="schema" :state="form" @submit="onSubmit">
       <template #header>
         <UAlert
@@ -54,9 +54,5 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
         </UCard>
       </template>
     </MAutoForm>
-
-    <template #footer>
-      <FormDataViewer :data="form" />
-    </template>
-  </UCard>
+  </Matrix>
 </template>

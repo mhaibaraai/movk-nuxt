@@ -55,11 +55,7 @@ function getPriorityText(priority: string) {
 
 <template>
   <Navbar />
-  <UCard
-    :ui="{
-      body: 'max-h-[700px] overflow-y-auto'
-    }"
-  >
+  <Matrix :form="form">
     <MAutoForm
       :schema="schema"
       :state="form"
@@ -183,9 +179,5 @@ function getPriorityText(priority: string) {
         </div>
       </template>
     </MAutoForm>
-
-    <template #footer>
-      <FormDataViewer :data="form" />
-    </template>
-  </UCard>
+  </Matrix>
 </template>

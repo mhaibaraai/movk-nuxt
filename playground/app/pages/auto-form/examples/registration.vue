@@ -30,7 +30,7 @@ const form = ref<Partial<Schema>>({})
 
 <template>
   <Navbar />
-  <UCard>
+  <Matrix :form="form">
     <MAutoForm :schema="schema" :state="form" />
-  </UCard>
+  </Matrix>
 </template>

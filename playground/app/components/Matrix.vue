@@ -1,17 +1,28 @@
 <script lang="ts" setup>
 defineProps<{
-  data?: unknown
+  form?: unknown
 }>()
 </script>
 
 <template>
-  <UCard :ui="{ body: 'space-y-6' }" class="min-w-lg">
+  <UCard
+    :ui="{
+      body: 'space-y-6 h-auto max-h-[80vh] overflow-y-auto',
+      footer: 'h-auto max-h-[10vh] overflow-auto'
+    }"
+    class="min-w-lg"
+  >
+    <template #header>
+      <slot name="header" />
+    </template>
     <slot />
-    <details v-if="data">
-      <summary class="cursor-pointer text-muted text-sm font-medium mb-2">
-        查看表单数据
-      </summary>
-      <pre class="text-xs">{{ data }}</pre>
-    </details>
+    <template v-if="form" #footer>
+      <details>
+        <summary class="cursor-pointer text-muted text-sm font-medium mb-2">
+          查看表单数据
+        </summary>
+        <pre class="text-xs">{{ form }}</pre>
+      </details>
+    </template>
   </UCard>
 </template>

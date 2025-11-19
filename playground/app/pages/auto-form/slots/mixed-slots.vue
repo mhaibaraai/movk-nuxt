@@ -45,11 +45,7 @@ const progress = computed(() => Math.round((completedFields.value / totalFields)
 
 <template>
   <Navbar />
-  <UCard
-    :ui="{
-      body: 'max-h-[700px] overflow-y-auto'
-    }"
-  >
+  <Matrix :form="form">
     <MAutoForm :schema="schema" :state="form" @submit="onSubmit">
       <template #header="{ loading }">
         <div class="mb-6 space-y-4">
@@ -107,7 +103,7 @@ const progress = computed(() => Math.round((completedFields.value / totalFields)
         />
       </template>
 
-      <template #field-description:password>
+      <template #field-help:password>
         <UAlert
           color="warning"
           variant="subtle"
@@ -163,9 +159,5 @@ const progress = computed(() => Math.round((completedFields.value / totalFields)
         </div>
       </template>
     </MAutoForm>
-
-    <template #footer>
-      <FormDataViewer :data="form" />
-    </template>
-  </UCard>
+  </Matrix>
 </template>
