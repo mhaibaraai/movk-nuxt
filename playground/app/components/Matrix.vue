@@ -16,7 +16,7 @@ defineProps<{
   >
     <template #header>
       <slot name="header">
-        <div v-if="title" class="flex items-center justify-between">
+        <div v-if="title">
           <h3 class="text-base font-semibold leading-6">
             {{ title }}
           </h3>
