@@ -26,29 +26,13 @@
   "plugins": {
     "@release-it/conventional-changelog": {
       "preset": {
-        "name": "conventionalcommits",
-        "types": [
-          { "type": "feat", "section": "✨ Features" },
-          { "type": "fix", "section": "🐛 Bug Fixes" },
-          { "type": "docs", "section": "📚 Documentation" },
-          { "type": "style", "section": "💄 Styles" },
-          { "type": "refactor", "section": "♻️ Code Refactoring" },
-          { "type": "perf", "section": "⚡ Performance Improvements" },
-          { "type": "test", "section": "✅ Tests" },
-          { "type": "build", "section": "📦 Build System" },
-          { "type": "ci", "section": "👷 CI" },
-          { "type": "chore", "section": "🔧 Chores" }
-        ]
+        "name": "conventionalcommits"
       },
       "infile": "CHANGELOG.md",
       "header": "# 📋 Changelog",
       "ignoreRecommendedBump": true,
       "gitRawCommitsOpts": {
         "path": "."
-      },
-      "parserOpts": {
-        "headerPattern": "^(?:(?:[\\uD83C-\\uDBFF\\uDC00-\\uDFFF]|[\\u2600-\\u27BF])+\\s+)?(\\w+)(?:\\(([^)]*)\\))?!?:\\s(.+)$",
-        "headerCorrespondence": ["type", "scope", "subject"]
       }
     }
   }
