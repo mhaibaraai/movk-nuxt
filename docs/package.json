@@ -7,10 +7,10 @@
     "dev": "nuxt dev"
   },
   "dependencies": {
-    "@movk/nuxt-docs": "^1.3.5",
+    "@movk/nuxt-docs": "^1.3.6",
     "@vercel/analytics": "^1.5.0",
     "@vercel/speed-insights": "^1.2.0",
-    "better-sqlite3": "^12.4.1",
+    "better-sqlite3": "^12.4.6",
     "nuxt": "^4.2.1"
   }
 }
