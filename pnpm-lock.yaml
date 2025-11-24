@@ -15,8 +15,8 @@ importers:
         specifier: ^3.10.0
         version: 3.10.0
       '@movk/core':
-        specifier: ^0.0.5
-        version: 0.0.5(vue@3.5.24(typescript@5.9.3))
+        specifier: ^1.0.1
+        version: 1.0.1(vue@3.5.24(typescript@5.9.3))
       '@nuxt/image':
         specifier: ^2.0.0
         version: 2.0.0(db0@0.3.4(better-sqlite3@12.4.1))(ioredis@5.8.2)(magicast@0.5.1)
@@ -960,6 +960,11 @@ packages:
 
   '@movk/core@0.0.5':
     resolution: {integrity: sha512-I7LOmoijAklVh5xAJZhHPXaQmhfODXWRY4CyQJSFRzNsPR/p49HxMnQ8hDebvXMEsFYoWz6vUvHt85DAOYK4+Q==}
+    peerDependencies:
+      vue: ^3.5.21
+
+  '@movk/core@1.0.1':
+    resolution: {integrity: sha512-dUDXA9eiMZE+lgsUvWa6XRA23kJc953tZSQ6kJIkNQkvTqVTC+VrUPy8wYIzm2pY9rjWVoc45mOPSDkUQGEpSg==}
     peerDependencies:
       vue: ^3.5.21
 
@@ -7857,6 +7862,12 @@ snapshots:
   '@movk/core@0.0.5(vue@3.5.24(typescript@5.9.3))':
     dependencies:
       '@vueuse/core': 13.9.0(vue@3.5.24(typescript@5.9.3))
+      vue: 3.5.24(typescript@5.9.3)
+      zod: 4.1.12
+
+  '@movk/core@1.0.1(vue@3.5.24(typescript@5.9.3))':
+    dependencies:
+      '@vueuse/core': 14.0.0(vue@3.5.24(typescript@5.9.3))
       vue: 3.5.24(typescript@5.9.3)
       zod: 4.1.12
 

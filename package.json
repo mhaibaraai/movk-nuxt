@@ -18,7 +18,6 @@
     "dist"
   ],
   "scripts": {
-    "postinstall": "nr dev:prepare",
     "prepack": "nr build",
     "build": "nuxt-module-build build",
     "dev": "nuxt dev playground",
@@ -36,7 +35,7 @@
   "dependencies": {
     "@iconify-json/lucide": "^1.2.73",
     "@internationalized/date": "^3.10.0",
-    "@movk/core": "^0.0.5",
+    "@movk/core": "^1.0.1",
     "@nuxt/image": "^2.0.0",
     "@nuxt/ui": "^4.1.0",
     "@vueuse/core": "^14.0.0",
