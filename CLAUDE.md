@@ -162,3 +162,8 @@ const uuidSchema = z.string().uuid()
 ### 参考文档
 
 - 官方文档: https://zod.dev/api
+
+## 文档撰写
+
+- 使用来自 https://docs.mhaibaraai.cn/llms.txt 的 Movk Nuxt Docs 文档
+- 使用 Nuxt UI 文档来自 https://ui.nuxt.com/llms.txt

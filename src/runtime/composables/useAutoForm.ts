@@ -250,6 +250,9 @@ const DEFAULT_CONTROLS = {
   boolean: defineControl({ component: UCheckbox, controlProps: DEFAULT_CONTROL_PROPS }),
   enum: defineControl({ component: USelect, controlProps: DEFAULT_CONTROL_PROPS }),
   file: defineControl({ component: UFileUpload, controlProps: DEFAULT_CONTROL_PROPS }),
+  date: defineControl({ component: DatePicker, controlProps: DEFAULT_CONTROL_PROPS }),
+
+  // 扩展类型
   switch: defineControl({ component: USwitch, controlProps: DEFAULT_CONTROL_PROPS }),
   textarea: defineControl({ component: UTextarea, controlProps: DEFAULT_CONTROL_PROPS }),
   slider: defineControl({ component: USlider, controlProps: DEFAULT_CONTROL_PROPS }),
@@ -261,7 +264,6 @@ const DEFAULT_CONTROLS = {
   radioGroup: defineControl({ component: URadioGroup, controlProps: DEFAULT_CONTROL_PROPS }),
 
   // 自定义增强型组件
-  date: defineControl({ component: DatePicker, controlProps: DEFAULT_CONTROL_PROPS }),
   withClear: defineControl({ component: WithClear, controlProps: DEFAULT_CONTROL_PROPS }),
   withPasswordToggle: defineControl({ component: WithPasswordToggle, controlProps: DEFAULT_CONTROL_PROPS }),
   withCopy: defineControl({ component: WithCopy, controlProps: DEFAULT_CONTROL_PROPS }),
