@@ -1,10 +1,10 @@
 import type { GlobalMeta, z } from 'zod/v4'
-import type { IsComponent } from '../core'
+import type { IsComponent } from '@movk/core'
 import type { AutoFormControl, AutoFormControls, AutoFormField, AutoFormMergeMeta } from '../types/auto-form'
 import { isFunction, isObject } from '@movk/core'
 import { markRaw } from 'vue'
 import { z as zod } from 'zod/v4'
-import { joinPath, startCase, toPath } from '../core'
+import { joinPath, startCase, toPath } from '@movk/core'
 import { useAutoForm } from '../composables/useAutoForm'
 import { AUTOFORM_LIMITS, AUTOFORM_META } from '../constants/auto-form'
 

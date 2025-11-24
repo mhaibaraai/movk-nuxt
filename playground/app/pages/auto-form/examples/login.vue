@@ -7,7 +7,7 @@ const toast = useToast()
 const schema = afz.object({
   email: afz.email({
     controlProps: {
-      leadingIcon: 'i-tabler-mail',
+      leadingIcon: 'i-lucide-mail',
       placeholder: '请输入您的邮箱'
     }
   }).meta({ hint: '邮箱' }),

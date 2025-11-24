@@ -1,4 +1,4 @@
-import type { IsComponent } from '../core'
+import type { IsComponent } from '@movk/core'
 import type { AutoFormControl, AutoFormControls, AutoFormLayoutConfig, TypedZodFactory } from '../types/auto-form'
 import { z } from 'zod/v4'
 import WithClear from '../components/input/WithClear.vue'

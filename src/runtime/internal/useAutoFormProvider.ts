@@ -3,7 +3,7 @@ import type { AutoFormField, AutoFormFieldContext } from '../types/auto-form'
 import { UIcon } from '#components'
 import defu from 'defu'
 import { computed, h, inject, isVNode, provide, resolveDynamicComponent, unref } from 'vue'
-import { getPath, setPath } from '../core'
+import { getPath, setPath } from '@movk/core'
 import { enhanceEventProps, resolveReactiveValue } from '../utils/auto-form'
 
 type AutoFormProvider = ReturnType<typeof useAutoFormProvider>

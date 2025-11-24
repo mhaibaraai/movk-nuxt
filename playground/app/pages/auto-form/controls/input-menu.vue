@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import type { ComponentProps } from '#movk/core'
+import type { ComponentProps } from '@movk/core'
 import type { FormSubmitEvent, InputMenuItem } from '@nuxt/ui'
 import type { z } from 'zod/v4'
 import { UAvatar, type UInputMenu } from '#components'

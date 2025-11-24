@@ -2,7 +2,7 @@ import type { VNode } from 'vue'
 import type { AutoFormField } from '../types/auto-form'
 import { UButton, UIcon } from '#components'
 import { h } from 'vue'
-import { setPath } from '../core'
+import { setPath } from '@movk/core'
 import { AUTOFORM_META } from '../constants/auto-form'
 
 /**
