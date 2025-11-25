@@ -4,7 +4,8 @@ export default defineNuxtConfig({
   css: ['~/assets/css/main.css'],
   routeRules: {
     // redirects - default root pages
-    '/docs': { redirect: '/docs/getting-started', prerender: false }
+    '/docs': { redirect: '/docs/getting-started', prerender: false },
+    '/docs/auto-form': { redirect: '/docs/auto-form/core-concepts', prerender: false }
   },
   compatibilityDate: 'latest'
 })
