@@ -13,6 +13,10 @@ export default defineNuxtConfig({
     }
   ],
   css: ['~/assets/css/main.css'],
+  site: {
+    name: 'Movk Nuxt',
+    url: 'https://nuxt.mhaibaraai.cn'
+  },
   routeRules: {
     // redirects - default root pages
     '/docs': { redirect: '/docs/getting-started', prerender: false },

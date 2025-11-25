@@ -6,6 +6,14 @@ export default defineAppConfig({
     rootDir: 'docs'
   },
   ui: {
+    collapsible: {
+      slots: {
+        content: 'space-y-4'
+      }
+    },
+    form: {
+      base: 'space-y-4 min-w-md'
+    },
     colors: {
       primary: 'emerald'
     },

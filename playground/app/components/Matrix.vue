@@ -9,7 +9,7 @@ defineProps<{
 <template>
   <UCard
     :ui="{
-      body: 'space-y-6 h-auto max-h-[80vh] overflow-y-auto',
+      body: 'space-y-6 h-auto max-h-[65vh] overflow-y-auto',
       footer: 'h-auto max-h-[10vh] overflow-auto'
     }"
     class="min-w-lg"
