@@ -86,6 +86,7 @@ const autoFormNav: NavigationMenuItem = {
     {
       label: 'Examples',
       children: [
+        { label: 'Basic', to: '/auto-form/examples/basic' },
         { label: 'Login', to: '/auto-form/examples/login' },
         { label: 'Registration', to: '/auto-form/examples/registration' },
         { label: 'Profile', to: '/auto-form/examples/profile' },
