@@ -35,7 +35,7 @@
   "dependencies": {
     "@iconify-json/lucide": "^1.2.73",
     "@internationalized/date": "^3.10.0",
-    "@movk/core": "^1.0.1",
+    "@movk/core": "^1.0.2",
     "@nuxt/image": "^2.0.0",
     "@nuxt/ui": "^4.1.0",
     "@vueuse/core": "^14.0.0",
