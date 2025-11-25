@@ -1,11 +1,11 @@
-import type { OmitByKey } from '@movk/core'
 import type { CollapsibleRootProps } from 'reka-ui'
 import type { ClassNameValue } from 'tailwind-merge'
-import type { GlobalMeta, z } from 'zod/v4'
-import type { ArrayFieldKeys, ComponentProps, ComponentSlots, GetFieldValue, IsComponent, NonObjectFieldKeys, ObjectFieldKeys, ReactiveValue, Suggest } from '@movk/core'
+import type { z } from 'zod/v4'
+import type { ArrayFieldKeys, ComponentProps, OmitByKey, ComponentSlots, GetFieldValue, IsComponent, NonObjectFieldKeys, ObjectFieldKeys, ReactiveValue, Suggest } from '@movk/core'
 import type { FormError } from '@nuxt/ui'
 import type { AUTOFORM_META } from '../constants/auto-form'
 import type { CalendarDate } from '@internationalized/date'
+import type { ZodAutoFormFieldMeta } from './zod'
 
 // ============================================================================
 // 基础上下文类型
@@ -228,7 +228,7 @@ export interface AutoFormLayoutConfig<C extends IsComponent = IsComponent> {
 /**
  * 合并后的元数据类型 - 包含全局元数据、控件元数据、布局和覆写
  */
-export type AutoFormMergeMeta = GlobalMeta
+export type AutoFormMergeMeta = ZodAutoFormFieldMeta
   & AutoFormControlsMeta
   & {
     /** 已映射的控件实例（运行时生成） */

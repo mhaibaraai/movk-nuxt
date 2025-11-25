@@ -1,6 +1,7 @@
 <script setup lang="ts" generic="S extends z.ZodObject, T extends boolean = true, N extends boolean = false">
 import type { ButtonProps, FormEmits, FormProps, InferInput } from '@nuxt/ui'
-import type { GlobalMeta, z } from 'zod/v4'
+import type { z } from 'zod/v4'
+import type { ZodAutoFormFieldMeta } from '../types/zod'
 import type { AutoFormControls, AutoFormField, AutoFormSlotProps, DynamicFormSlots } from '../types/auto-form'
 import { UForm } from '#components'
 import type { Ref } from 'vue'
@@ -20,10 +21,14 @@ export interface AutoFormProps<S extends z.ZodObject, T extends boolean = true, 
    * @default true
    */
   submitButton?: boolean
-  /** 自定义控件映射 */
+  /**
+   * 自定义控件映射
+   */
   controls?: AutoFormControls
-  /** 全局字段元数据配置 */
-  globalMeta?: GlobalMeta
+  /**
+   * 全局字段元数据配置
+   */
+  globalMeta?: ZodAutoFormFieldMeta
   /** 数组字段添加按钮属性 */
   addButtonProps?: ButtonProps
 }
