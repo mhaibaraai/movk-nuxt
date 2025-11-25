@@ -297,12 +297,9 @@ export function introspectSchema(
   if (coreSchema.type === 'enum' && mapped) {
     const enumValues = extractEnumValues(coreSchema)
     if (enumValues && enumValues.length > 0) {
-      field.meta.mapped = {
-        ...mapped,
-        controlProps: {
-          ...mapped.controlProps,
-          items: enumValues
-        }
+      field.meta.controlProps = {
+        items: enumValues,
+        ...field.meta.controlProps || {}
       }
     }
   }
