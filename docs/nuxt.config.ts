@@ -20,7 +20,8 @@ export default defineNuxtConfig({
   routeRules: {
     // redirects - default root pages
     '/docs': { redirect: '/docs/getting-started', prerender: false },
-    '/docs/auto-form': { redirect: '/docs/auto-form/core-concepts', prerender: false }
+    '/docs/auto-form': { redirect: '/docs/auto-form/core', prerender: false },
+    '/docs/auto-form/field': { redirect: '/docs/auto-form/field/string', prerender: false }
   },
   compatibilityDate: 'latest'
 })

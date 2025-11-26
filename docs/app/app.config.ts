@@ -15,12 +15,15 @@ export default defineAppConfig({
       base: 'space-y-4 min-w-md'
     },
     colors: {
-      primary: 'emerald'
+      primary: 'red'
     },
     prose: {
       codeIcon: {
         source: 'i-lucide-file-code',
-        example: 'i-lucide-app-window-mac'
+        example: 'i-lucide-app-window-mac',
+        email: 'i-lucide-mail',
+        url: 'i-lucide-link',
+        uuid: 'i-lucide-fingerprint'
       }
     }
   },
