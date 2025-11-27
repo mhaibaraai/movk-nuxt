@@ -20,10 +20,10 @@
   "scripts": {
     "prepack": "nr build",
     "build": "nuxt-module-build build",
-    "dev": "nr dev:prepare && nuxt dev playground",
+    "dev": "nuxt dev playground",
     "dev:prepare": "nuxt-module-build build --stub && nuxt-module-build prepare && nuxt prepare playground && nuxt prepare docs",
     "dev:build": "nuxt build playground",
-    "docs": "nr dev:prepare && nuxt dev docs",
+    "docs": "nuxt dev docs",
     "docs:build": "nuxt build docs",
     "release": "release-it",
     "lint": "eslint .",
