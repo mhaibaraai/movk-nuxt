@@ -1,4 +1,10 @@
 export default defineAppConfig({
+  toaster: {
+    expand: true,
+    position: 'top-center' as const,
+    duration: 3000,
+    max: 5
+  },
   header: {
     title: 'Movk Nuxt'
   },
@@ -15,15 +21,12 @@ export default defineAppConfig({
       base: 'space-y-4 min-w-md'
     },
     colors: {
-      primary: 'red'
+      primary: 'sky'
     },
     prose: {
       codeIcon: {
         source: 'i-lucide-file-code',
-        example: 'i-lucide-app-window-mac',
-        email: 'i-lucide-mail',
-        url: 'i-lucide-link',
-        uuid: 'i-lucide-fingerprint'
+        example: 'i-lucide-app-window-mac'
       }
     }
   },

@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-import { sleep } from '@movk/core'
 import type { z } from 'zod/v4'
 
 const { afz } = useAutoForm()
@@ -220,7 +219,6 @@ type Schema = z.output<typeof schema>
 const form = ref<Partial<Schema>>({})
 
 async function handleSubmit() {
-  await sleep(2000)
   toast.add({
     title: '提交成功',
     color: 'success',
