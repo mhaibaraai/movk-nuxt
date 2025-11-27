@@ -21,13 +21,11 @@ export interface AutoFormProps<S extends z.ZodObject, T extends boolean = true, 
    * @default true
    */
   submitButton?: boolean
-  /**
-   * 自定义控件映射
-   */
+  /** 提交按钮属性 */
+  submitButtonProps?: ButtonProps
+  /** 自定义控件映射 */
   controls?: AutoFormControls
-  /**
-   * 全局字段元数据配置
-   */
+  /** 全局字段元数据配置 */
   globalMeta?: ZodAutoFormFieldMeta
   /** 数组字段添加按钮属性 */
   addButtonProps?: ButtonProps
@@ -48,6 +46,7 @@ const {
   controls,
   globalMeta,
   submitButton = true,
+  submitButtonProps,
   addButtonProps,
   state: _state,
   ...restProps
@@ -229,6 +228,8 @@ defineExpose({
           :loading="loading"
           label="提交"
           block
+          loading-auto
+          v-bind="submitButtonProps"
         />
       </slot>
     </template>
