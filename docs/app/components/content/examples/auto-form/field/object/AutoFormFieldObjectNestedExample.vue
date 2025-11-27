@@ -9,12 +9,12 @@ const schema = afz.object({
   user: afz.object({
     name: afz.string(),
     email: afz.email()
-  })
-    .meta({
-      label: '嵌套对象',
-      collapsible: { defaultOpen: true },
-      hint: '支持折叠展开'
-    })
+  }).meta({ label: '用户信息', collapsible: { defaultOpen: true } }),
+  address: afz.object({
+    street: afz.string(),
+    city: afz.string(),
+    zipCode: afz.string()
+  }).optional().meta({ label: '地址信息' })
 })
 
 async function onSubmit(event: FormSubmitEvent<z.output<typeof schema>>) {
