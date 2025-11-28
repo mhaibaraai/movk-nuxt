@@ -4,31 +4,69 @@ import { UButton, UBadge } from '#components'
 import { computed, ref } from 'vue'
 
 export interface StarRatingProps {
-  /** 当前评分值 */
+  /**
+   * 当前评分值
+   * @defaultValue 0
+   */
   modelValue?: number
-  /** 最大星级数 */
+  /**
+   * 最大星级数
+   * @defaultValue 5
+   */
   max?: number
-  /** 是否禁用 */
+  /**
+   * 是否禁用
+   * @defaultValue false
+   */
   disabled?: boolean
-  /** 是否只读 */
+  /**
+   * 是否只读
+   * @defaultValue false
+   */
   readonly?: boolean
-  /** 是否显示评分徽章 */
+  /**
+   * 是否显示评分徽章
+   * @defaultValue true
+   */
   showBadge?: boolean
-  /** 自定义星星按钮属性 */
+  /**
+   * 自定义星星按钮属性
+   */
   buttonProps?: Partial<ButtonProps>
-  /** 未选中星星的图标 */
+  /**
+   * 未选中星星的图标
+   * @defaultValue 'i-lucide-star'
+   */
   emptyIcon?: string
-  /** 选中星星的图标 */
+  /**
+   * 选中星星的图标
+   * @defaultValue 'i-lucide-star'
+   */
   filledIcon?: string
-  /** 半星图标 */
+  /**
+   * 半星图标
+   * @defaultValue 'i-lucide-star-half'
+   */
   halfIcon?: string
-  /** 选中星星的颜色 */
+  /**
+   * 选中星星的颜色
+   * @defaultValue 'warning'
+   */
   color?: ButtonProps['color']
-  /** 星星大小 */
+  /**
+   * 星星大小
+   * @defaultValue 'sm'
+   */
   size?: ButtonProps['size']
-  /** 是否允许半星 */
+  /**
+   * 是否允许半星
+   * @defaultValue false
+   */
   allowHalf?: boolean
-  /** 是否允许清除评分 */
+  /**
+   * 是否允许清除评分
+   * @defaultValue false
+   */
   clearable?: boolean
 }
 
@@ -59,28 +97,28 @@ const {
 const emit = defineEmits<StarRatingEmits>()
 
 const hoveredStar = ref<number | null>(null)
+const focusedIndex = ref<number>(0)
 
 const isInteractive = computed(() => !disabled && !readonly)
 
-function handleClick(index: number, event?: MouseEvent) {
-  if (!isInteractive.value) return
+/**
+ * 计算半星位置：根据鼠标/点击位置判断是否为半星
+ */
+function calculateHalfStarValue(index: number, event: MouseEvent): number {
+  if (!allowHalf) return index + 1
 
-  let newValue = index + 1
+  const target = event.currentTarget as HTMLElement
+  const rect = target.getBoundingClientRect()
+  const posX = event.clientX - rect.left
+  const halfWidth = rect.width / 2
 
-  // 如果允许半星，检测点击位置
-  if (allowHalf && event) {
-    const target = event.currentTarget as HTMLElement
-    const rect = target.getBoundingClientRect()
-    const clickX = event.clientX - rect.left
-    const halfWidth = rect.width / 2
+  return posX < halfWidth ? index + 0.5 : index + 1
+}
 
-    // 点击左半部分为半星
-    if (clickX < halfWidth) {
-      newValue = index + 0.5
-    }
-  }
-
-  // 如果允许清除且点击的是当前值，则清除评分
+/**
+ * 更新评分值
+ */
+function updateValue(newValue: number) {
   if (clearable && newValue === modelValue) {
     emit('update:modelValue', 0)
     emit('change', 0)
@@ -91,23 +129,17 @@ function handleClick(index: number, event?: MouseEvent) {
   emit('change', newValue)
 }
 
+function handleClick(index: number, event?: MouseEvent) {
+  if (!isInteractive.value || !event) return
+
+  const newValue = calculateHalfStarValue(index, event)
+  updateValue(newValue)
+}
+
 function handleMouseEnter(index: number, event?: MouseEvent) {
-  if (!isInteractive.value) return
+  if (!isInteractive.value || !event) return
 
-  let hoverValue = index + 1
-
-  // 如果允许半星，检测悬停位置
-  if (allowHalf && event) {
-    const target = event.currentTarget as HTMLElement
-    const rect = target.getBoundingClientRect()
-    const mouseX = event.clientX - rect.left
-    const halfWidth = rect.width / 2
-
-    if (mouseX < halfWidth) {
-      hoverValue = index + 0.5
-    }
-  }
-
+  const hoverValue = calculateHalfStarValue(index, event)
   hoveredStar.value = hoverValue - 1
   emit('hover', hoverValue)
 }
@@ -115,12 +147,7 @@ function handleMouseEnter(index: number, event?: MouseEvent) {
 function handleMouseMove(index: number, event: MouseEvent) {
   if (!isInteractive.value || !allowHalf) return
 
-  const target = event.currentTarget as HTMLElement
-  const rect = target.getBoundingClientRect()
-  const mouseX = event.clientX - rect.left
-  const halfWidth = rect.width / 2
-
-  const hoverValue = mouseX < halfWidth ? index + 0.5 : index + 1
+  const hoverValue = calculateHalfStarValue(index, event)
   const currentHover = hoveredStar.value !== null ? hoveredStar.value + 1 : null
 
   if (currentHover !== hoverValue) {
@@ -133,6 +160,67 @@ function handleMouseLeave() {
   if (!isInteractive.value) return
   hoveredStar.value = null
   emit('hover', null)
+}
+
+/**
+ * 键盘导航支持
+ */
+function handleKeyDown(event: KeyboardEvent) {
+  if (!isInteractive.value) return
+
+  const step = allowHalf ? 0.5 : 1
+
+  switch (event.key) {
+    case 'ArrowRight':
+    case 'ArrowUp':
+      event.preventDefault()
+      if (modelValue < max) {
+        updateValue(Math.min(modelValue + step, max))
+        focusedIndex.value = Math.min(Math.floor(modelValue + step), max - 1)
+      }
+      break
+
+    case 'ArrowLeft':
+    case 'ArrowDown':
+      event.preventDefault()
+      if (modelValue > 0) {
+        updateValue(Math.max(modelValue - step, 0))
+        focusedIndex.value = Math.max(Math.floor(modelValue - step) - 1, 0)
+      }
+      break
+
+    case 'Home':
+      event.preventDefault()
+      updateValue(step)
+      focusedIndex.value = 0
+      break
+
+    case 'End':
+      event.preventDefault()
+      updateValue(max)
+      focusedIndex.value = max - 1
+      break
+
+    case 'Backspace':
+    case 'Delete':
+      if (clearable) {
+        event.preventDefault()
+        updateValue(0)
+        focusedIndex.value = 0
+      }
+      break
+
+    default:
+      // 数字键快速设置评分
+      if (event.key >= '0' && event.key <= '9') {
+        const numValue = Number.parseInt(event.key)
+        if (numValue <= max) {
+          event.preventDefault()
+          updateValue(numValue)
+          focusedIndex.value = Math.max(numValue - 1, 0)
+        }
+      }
+  }
 }
 
 function getStarState(index: number): 'empty' | 'half' | 'full' {
@@ -165,7 +253,18 @@ const badgeLabel = computed(() => `${modelValue}/${max}`)
 </script>
 
 <template>
-  <div class="inline-flex items-center gap-1">
+  <div
+    class="inline-flex items-center gap-1"
+    role="slider"
+    :aria-label="`评分 ${modelValue} / ${max}`"
+    :aria-valuenow="modelValue"
+    :aria-valuemin="0"
+    :aria-valuemax="max"
+    :aria-disabled="disabled"
+    :aria-readonly="readonly"
+    :tabindex="isInteractive ? 0 : -1"
+    @keydown="handleKeyDown"
+  >
     <slot name="prefix" :value="modelValue" :max="max" />
 
     <div class="flex items-center gap-0.5">
@@ -177,6 +276,8 @@ const badgeLabel = computed(() => `${modelValue}/${max}`)
         variant="ghost"
         :size="size"
         :disabled="disabled"
+        :aria-label="`${index} 星`"
+        :tabindex="-1"
         v-bind="buttonProps"
         class="transition-all duration-150"
         :class="{
