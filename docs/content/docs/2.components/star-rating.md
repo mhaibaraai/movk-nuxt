@@ -1,6 +1,7 @@
 ---
 title: StarRating
 description: 交互式星级评分组件
+category: advanced
 ---
 
 ## 简介
@@ -18,9 +19,6 @@ description: 交互式星级评分组件
 ::component-example
 ---
 name: 'components-star-rating-basic-example'
-collapse: true
-props:
-  class: 'px-4'
 ---
 ::
 
@@ -31,9 +29,6 @@ props:
 ::component-example
 ---
 name: 'components-star-rating-max-example'
-collapse: true
-props:
-  class: 'px-4'
 ---
 ::
 
@@ -44,9 +39,6 @@ props:
 ::component-example
 ---
 name: 'components-star-rating-readonly-example'
-collapse: true
-props:
-  class: 'px-4'
 ---
 ::
 
@@ -57,9 +49,6 @@ props:
 ::component-example
 ---
 name: 'components-star-rating-half-example'
-collapse: true
-props:
-  class: 'px-4'
 ---
 ::
 
@@ -70,9 +59,6 @@ props:
 ::component-example
 ---
 name: 'components-star-rating-clearable-example'
-collapse: true
-props:
-  class: 'px-4'
 ---
 ::
 
@@ -83,9 +69,6 @@ props:
 ::component-example
 ---
 name: 'components-star-rating-badge-example'
-collapse: true
-props:
-  class: 'px-4'
 ---
 ::
 
@@ -96,9 +79,6 @@ props:
 ::component-example
 ---
 name: 'components-star-rating-size-example'
-collapse: true
-props:
-  class: 'px-4'
 ---
 ::
 
@@ -109,9 +89,6 @@ props:
 ::component-example
 ---
 name: 'components-star-rating-color-example'
-collapse: true
-props:
-  class: 'px-4'
 ---
 ::
 
@@ -122,9 +99,6 @@ props:
 ::component-example
 ---
 name: 'components-star-rating-icon-example'
-collapse: true
-props:
-  class: 'px-4'
 ---
 ::
 
@@ -135,10 +109,20 @@ props:
 ::component-example
 ---
 name: 'components-star-rating-events-example'
-collapse: true
-props:
-  class: 'px-4'
 ---
+::
+
+## 键盘导航
+
+组件支持完整的键盘交互，提升无障碍访问性：
+
+- **方向键**：`←` `→` `↑` `↓` 增减评分（支持半星步进）
+- **快捷键**：`Home` 设置最小评分，`End` 设置最大评分
+- **数字键**：`0-9` 直接跳转到对应评分
+- **清除键**：`Backspace` / `Delete` 清除评分（需启用 `clearable`）
+
+::callout{color="primary" icon="i-lucide-keyboard"}
+组件遵循 WCAG 无障碍规范，包含完整的 ARIA 属性和键盘焦点管理
 ::
 
 ## 禁用状态
@@ -148,9 +132,6 @@ props:
 ::component-example
 ---
 name: 'components-star-rating-disabled-example'
-collapse: true
-props:
-  class: 'px-4'
 ---
 ::
 
@@ -161,9 +142,6 @@ props:
 ::component-example
 ---
 name: 'components-star-rating-slot-example'
-collapse: true
-props:
-  class: 'px-4'
 ---
 ::
 
@@ -171,58 +149,16 @@ props:
 
 ### Props
 
-| 属性 | 类型 | 默认值 | 说明 |
-|------|------|--------|------|
-| `modelValue` | `number` | `0` | 当前评分值（支持 v-model） |
-| `max` | `number` | `5` | 最大星级数 |
-| `disabled` | `boolean` | `false` | 是否禁用 |
-| `readonly` | `boolean` | `false` | 是否只读 |
-| `showBadge` | `boolean` | `true` | 是否显示评分徽章 |
-| `allowHalf` | `boolean` | `false` | 是否允许半星 |
-| `clearable` | `boolean` | `false` | 是否允许清除评分 |
-| `color` | `ButtonProps['color']` | `'warning'` | 选中星星的颜色 |
-| `size` | `ButtonProps['size']` | `'sm'` | 星星大小 |
-| `emptyIcon` | `string` | `'i-lucide-star'` | 未选中星星的图标 |
-| `filledIcon` | `string` | `'i-lucide-star'` | 选中星星的图标 |
-| `halfIcon` | `string` | `'i-lucide-star-half'` | 半星图标 |
-| `buttonProps` | `Partial<ButtonProps>` | - | 自定义星星按钮属性 |
+:component-props{slug="MStarRating"}
 
 ### Emits
 
-| 事件 | 参数 | 说明 |
-|------|------|------|
-| `update:modelValue` | `(value: number)` | 评分值更新时触发 |
-| `change` | `(value: number)` | 评分改变时触发 |
-| `hover` | `(value: number \| null)` | 鼠标悬停/离开星星时触发 |
+:component-emits{slug="MStarRating"}
 
 ### Slots
 
-| 插槽名 | 参数 | 说明 |
-|--------|------|------|
-| `prefix` | `{ value, max }` | 评分组件前置内容 |
-| `suffix` | `{ value, max }` | 评分组件后置内容 |
-| `badge` | `{ value, max, label }` | 自定义评分徽章 |
+:component-slots{slug="MStarRating"}
 
-## 交互说明
+## Changelog
 
-### 整星模式
-- 点击星星：设置为对应的整数评分
-- 启用 `clearable` 后，点击当前评分星星可清除评分
-
-### 半星模式（`allow-half`）
-- 点击星星左半部分：设置为 N.5 分
-- 点击星星右半部分：设置为整数分
-- 悬停时实时显示半星预览
-
-### 状态说明
-- `disabled`: 完全禁用，不可交互，显示为灰色
-- `readonly`: 只读展示，不可修改，保持彩色显示
-
-## 使用场景
-
-- **商品评价**：电商平台的商品评分系统
-- **内容评级**：文章、视频等内容的质量评分
-- **服务评价**：外卖、打车等服务评分
-- **用户反馈**：满意度调查、用户体验评分
-- **技能等级**：简历中的技能熟练度展示
-- **难度评估**：游戏、题目难度等级显示
+:commit-changelog{prefix="/components"}
