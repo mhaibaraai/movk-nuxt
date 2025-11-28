@@ -9,7 +9,8 @@ const schema = afz.object({
   attachments: afz.array(afz.file(), {
     type: 'file',
     controlProps: {
-      multiple: true
+      multiple: true,
+      layout: 'list'
     }
   })
     .min(1, '至少上传一个文件')
