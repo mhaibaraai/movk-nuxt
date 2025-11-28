@@ -9,7 +9,9 @@ export default defineAppConfig({
     title: 'Movk Nuxt'
   },
   github: {
-    rootDir: 'docs'
+    rootDir: 'docs',
+    branch: 'feat/0.0.1',
+    commitPath: 'src/runtime'
   },
   ui: {
     collapsible: {

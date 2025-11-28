@@ -1,6 +1,7 @@
 ---
 title: WithPasswordToggle
 description: 带显示/隐藏切换的密码输入框组件
+category: input
 ---
 
 ## 简介
@@ -18,9 +19,6 @@ description: 带显示/隐藏切换的密码输入框组件
 ::component-example
 ---
 name: 'components-with-password-toggle-basic-example'
-collapse: true
-props:
-  class: 'px-4'
 ---
 ::
 
@@ -31,9 +29,6 @@ props:
 ::component-example
 ---
 name: 'components-with-password-toggle-icon-example'
-collapse: true
-props:
-  class: 'px-4'
 ---
 ::
 
@@ -44,9 +39,6 @@ props:
 ::component-example
 ---
 name: 'components-with-password-toggle-login-example'
-collapse: true
-props:
-  class: 'px-4'
 ---
 ::
 
@@ -57,9 +49,6 @@ props:
 ::component-example
 ---
 name: 'components-with-password-toggle-size-example'
-collapse: true
-props:
-  class: 'px-4'
 ---
 ::
 
@@ -70,9 +59,6 @@ props:
 ::component-example
 ---
 name: 'components-with-password-toggle-custom-example'
-collapse: true
-props:
-  class: 'px-4'
 ---
 ::
 
@@ -80,35 +66,16 @@ props:
 
 ### Props
 
-继承自 [UInput](https://ui.nuxt.com/docs/components/input#props) 的所有属性（除了 `type`），并扩展：
-
-| 属性 | 类型 | 默认值 | 说明 |
-|------|------|--------|------|
-| `buttonProps` | `ButtonProps` | - | 自定义切换按钮的属性 |
-
-::note
-`type` 属性被组件内部管理，会在 `'password'` 和 `'text'` 之间自动切换。
-::
+:component-props{slug="MWithPasswordToggle"}
 
 ### Emits
 
-继承自 [UInput](https://ui.nuxt.com/docs/components/input#emits) 的所有事件。
+:component-emits{slug="MWithPasswordToggle"}
 
 ### Slots
 
-继承 UInput 的所有插槽，除了 `trailing` 插槽（被切换按钮占用）。
+:component-slots{slug="MWithPasswordToggle"}
 
-## 无障碍支持
+## Changelog
 
-组件内置了完善的无障碍支持：
-
-- `aria-label`: 根据状态显示 "Show password" 或 "Hide password"
-- `aria-pressed`: 指示按钮的按下状态
-- 兼容屏幕阅读器的状态切换提示
-
-## 使用场景
-
-- **登录/注册表单**：用户输入密码时可以切换查看
-- **修改密码**：确认新密码时避免输入错误
-- **安全设置**：设置 API 密钥等敏感信息时提供可见性选项
-- **密码确认**：在需要二次确认密码的场景下提升体验
+:commit-changelog{prefix="/components/input"}

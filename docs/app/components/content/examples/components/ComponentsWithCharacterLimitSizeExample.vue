@@ -5,7 +5,7 @@ const textLg = ref('')
 </script>
 
 <template>
-  <div class="space-y-4">
+  <div class="space-y-4 flex flex-col">
     <MWithCharacterLimit
       v-model="textSm"
       size="sm"

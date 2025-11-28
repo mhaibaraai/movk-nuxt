@@ -3,8 +3,5 @@ const password = ref('')
 </script>
 
 <template>
-  <MWithPasswordToggle
-    v-model="password"
-    placeholder="输入密码..."
-  />
+  <MWithPasswordToggle v-model="password" placeholder="输入密码..." />
 </template>

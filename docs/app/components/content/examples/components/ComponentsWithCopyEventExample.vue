@@ -12,8 +12,5 @@ function handleCopy(value: string) {
 </script>
 
 <template>
-  <MWithCopy
-    v-model="content"
-    @copy="handleCopy"
-  />
+  <MWithCopy v-model="content" @copy="handleCopy" />
 </template>

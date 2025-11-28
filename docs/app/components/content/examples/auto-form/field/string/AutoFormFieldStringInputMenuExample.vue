@@ -1,6 +1,5 @@
 <script lang="ts" setup>
-import type { FormSubmitEvent } from '@nuxt/ui'
-import type { InputMenuItem } from '@nuxt/ui'
+import type { FormSubmitEvent, InputMenuItem } from '@nuxt/ui'
 import type { z } from 'zod/v4'
 
 const { afz } = useAutoForm()

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { CalendarDate } from '@internationalized/date'
 
-const dates = ref<CalendarDate[]>([
+const dates = shallowRef<CalendarDate[]>([
   new CalendarDate(2025, 11, 1),
   new CalendarDate(2025, 11, 15),
   new CalendarDate(2025, 11, 30)

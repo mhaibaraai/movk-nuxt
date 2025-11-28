@@ -1,6 +1,7 @@
 ---
 title: WithCharacterLimit
 description: 带字符数限制和计数显示的输入框组件
+category: input
 ---
 
 ## 简介
@@ -18,9 +19,6 @@ description: 带字符数限制和计数显示的输入框组件
 ::component-example
 ---
 name: 'components-with-character-limit-basic-example'
-collapse: true
-props:
-  class: 'px-4'
 ---
 ::
 
@@ -31,9 +29,6 @@ props:
 ::component-example
 ---
 name: 'components-with-character-limit-custom-example'
-collapse: true
-props:
-  class: 'px-4'
 ---
 ::
 
@@ -44,9 +39,6 @@ props:
 ::component-example
 ---
 name: 'components-with-character-limit-icon-example'
-collapse: true
-props:
-  class: 'px-4'
 ---
 ::
 
@@ -57,9 +49,6 @@ props:
 ::component-example
 ---
 name: 'components-with-character-limit-size-example'
-collapse: true
-props:
-  class: 'px-4'
 ---
 ::
 
@@ -70,9 +59,6 @@ props:
 ::component-example
 ---
 name: 'components-with-character-limit-counter-example'
-collapse: true
-props:
-  class: 'px-4'
 ---
 ::
 
@@ -83,9 +69,6 @@ props:
 ::component-example
 ---
 name: 'components-with-character-limit-form-example'
-collapse: true
-props:
-  class: 'px-4'
 ---
 ::
 
@@ -93,34 +76,16 @@ props:
 
 ### Props
 
-继承自 [UInput](https://ui.nuxt.com/docs/components/input#props) 的所有属性，并扩展：
-
-| 属性 | 类型 | 默认值 | 说明 |
-|------|------|--------|------|
-| `maxLength` | `number` | `50` | 最大字符数限制 |
-| `counterClass` | `string` | `''` | 计数器的自定义样式类名 |
+:component-props{slug="MWithCharacterLimit"}
 
 ### Emits
 
-继承自 [UInput](https://ui.nuxt.com/docs/components/input#emits) 的所有事件。
+:component-emits{slug="MWithCharacterLimit"}
 
 ### Slots
 
-继承 UInput 的所有插槽，除了 `trailing` 插槽（被计数器占用）。
+:component-slots{slug="MWithCharacterLimit"}
 
-## 无障碍支持
+## Changelog
 
-组件内置了完善的无障碍支持：
-
-- `maxlength` 属性：浏览器原生限制输入长度
-- `aria-describedby`: 关联字符计数器
-- `role="status"`: 标记计数器为动态状态信息
-- `aria-live="polite"`: 让屏幕阅读器播报字符数变化
-
-## 使用场景
-
-- **用户评论**：限制评论长度，避免过长内容
-- **社交媒体**：类似 Twitter 的字数限制
-- **表单输入**：用户名、标题等需要控制长度的字段
-- **短信/消息**：模拟短信字数限制的输入体验
-- **SEO 优化**：限制 Meta 描述、标题等字段长度
+:commit-changelog{prefix="/components/input"}

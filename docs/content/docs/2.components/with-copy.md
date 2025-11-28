@@ -56,27 +56,16 @@ name: 'components-with-copy-event-example'
 
 ### Props
 
-::note{to="https://ui.nuxt.com/docs/components/input#props"}
-继承自 UInput 的所有属性
-::
-
 :component-props{slug=MWithCopy}
 
 ### Emits
 
-继承自 [UInput](https://ui.nuxt.com/docs/components/input#emits) 的所有事件，并扩展：
-
-| 事件 | 参数 | 说明 |
-|------|------|------|
-| `copy` | `(value: string)` | 复制内容时触发 |
+:component-emits{slug=MWithCopy}
 
 ### Slots
 
-继承 UInput 的所有插槽，除了 `trailing` 插槽（被复制按钮占用）。
+:component-slots{slug=MWithCopy}
 
-## 使用场景
+## Changelog
 
-- **API 密钥展示**：方便用户快速复制 Token、API Key 等凭证
-- **分享链接**：一键复制分享 URL 或邀请码
-- **代码片段**：复制配置项、命令行等技术内容
-- **身份标识**：用户 ID、订单号等需要频繁复制的信息
+:commit-changelog{prefix="/components/input"}

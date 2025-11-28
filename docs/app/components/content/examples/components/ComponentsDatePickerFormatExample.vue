@@ -1,33 +1,21 @@
 <script setup lang="ts">
 import { CalendarDate } from '@internationalized/date'
 
-const formatter = useDateFormatter()
-const isoDate = ref(new CalendarDate(2025, 11, 18))
-const timestampDate = ref(new CalendarDate(2025, 11, 18))
-const customDate = ref(new CalendarDate(2025, 11, 18))
+const isoDate = shallowRef(new CalendarDate(2025, 11, 18))
+const timestampDate = shallowRef(new CalendarDate(2025, 11, 18))
+const customDate = shallowRef(new CalendarDate(2025, 11, 18))
 </script>
 
 <template>
   <div class="space-y-4">
-    <!-- ISO 格式 -->
     <UFormField label="ISO 格式">
-      <MDatePicker
-        v-model="isoDate"
-        label-format="iso"
-        :button-props="{ class: 'w-full' }"
-      />
+      <MDatePicker v-model="isoDate" label-format="iso" :button-props="{ class: 'w-full' }" />
     </UFormField>
 
-    <!-- 时间戳 -->
     <UFormField label="时间戳">
-      <MDatePicker
-        v-model="timestampDate"
-        label-format="timestamp"
-        :button-props="{ class: 'w-full' }"
-      />
+      <MDatePicker v-model="timestampDate" label-format="timestamp" :button-props="{ class: 'w-full' }" />
     </UFormField>
 
-    <!-- 自定义格式 -->
     <UFormField label="自定义">
       <MDatePicker
         v-model="customDate"

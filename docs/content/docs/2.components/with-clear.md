@@ -1,6 +1,7 @@
 ---
 title: WithClear
 description: 带清除按钮的输入框组件
+category: input
 ---
 
 ## 简介
@@ -18,9 +19,6 @@ description: 带清除按钮的输入框组件
 ::component-example
 ---
 name: 'components-with-clear-basic-example'
-collapse: true
-props:
-  class: 'px-4'
 ---
 ::
 
@@ -31,9 +29,6 @@ props:
 ::component-example
 ---
 name: 'components-with-clear-icon-example'
-collapse: true
-props:
-  class: 'px-4'
 ---
 ::
 
@@ -44,9 +39,6 @@ props:
 ::component-example
 ---
 name: 'components-with-clear-search-example'
-collapse: true
-props:
-  class: 'px-4'
 ---
 ::
 
@@ -57,9 +49,6 @@ props:
 ::component-example
 ---
 name: 'components-with-clear-event-example'
-collapse: true
-props:
-  class: 'px-4'
 ---
 ::
 
@@ -70,9 +59,6 @@ props:
 ::component-example
 ---
 name: 'components-with-clear-custom-example'
-collapse: true
-props:
-  class: 'px-4'
 ---
 ::
 
@@ -80,27 +66,16 @@ props:
 
 ### Props
 
-继承自 [UInput](https://ui.nuxt.com/docs/components/input#props) 的所有属性，并扩展：
-
-| 属性 | 类型 | 默认值 | 说明 |
-|------|------|--------|------|
-| `buttonProps` | `ButtonProps` | - | 自定义清除按钮的属性 |
+:component-props{slug="MWithClear"}
 
 ### Emits
 
-继承自 [UInput](https://ui.nuxt.com/docs/components/input#emits) 的所有事件，并扩展：
-
-| 事件 | 参数 | 说明 |
-|------|------|------|
-| `clear` | - | 清除内容时触发 |
+:component-emits{slug="MWithClear"}
 
 ### Slots
 
-继承 UInput 的所有插槽，除了 `trailing` 插槽（被清除按钮占用）。
+:component-slots{slug="MWithClear"}
 
-## 使用场景
+## Changelog
 
-- **搜索框**：方便用户快速清除搜索关键词重新输入
-- **表单输入**：在填写表单时快速清空错误输入
-- **筛选器**：清除筛选条件恢复默认状态
-- **临时数据**：快速清除不需要保存的临时输入
+:commit-changelog{prefix="/components/input"}

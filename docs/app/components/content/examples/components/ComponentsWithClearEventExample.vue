@@ -12,8 +12,5 @@ function handleClear() {
 </script>
 
 <template>
-  <MWithClear
-    v-model="keyword"
-    @clear="handleClear"
-  />
+  <MWithClear v-model="keyword" @clear="handleClear" />
 </template>

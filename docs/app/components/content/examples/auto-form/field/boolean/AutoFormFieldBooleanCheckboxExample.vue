@@ -11,7 +11,7 @@ const schema = afz.object({
       label: '我已阅读并同意服务条款'
     }
   })
-    .refine((val) => val === true, '必须同意条款才能继续')
+    .refine(val => val === true, '必须同意条款才能继续')
     .meta({
       label: '复选框'
     })
