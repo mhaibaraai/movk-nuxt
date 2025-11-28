@@ -2,11 +2,19 @@
 import { UInput } from '#components'
 import { computed } from 'vue'
 import type { OmitByKey } from '@movk/core'
+import type { ClassNameValue } from 'tailwind-merge'
 import type { InputEmits, InputProps, InputSlots, InputValue } from '@nuxt/ui'
 
 interface WithCharacterLimitProps extends /** @vue-ignore */ OmitByKey<InputProps<T>, 'modelValue'> {
+  /**
+   * 最大字符数
+   * @defaultValue 50
+   */
   maxLength?: number
-  counterClass?: string
+  /**
+   * 计数器的自定义类名
+   */
+  counterClass?: ClassNameValue
 }
 type WithCharacterLimitEmits = InputEmits<T>
 type WithCharacterLimitSlots = OmitByKey<InputSlots, 'trailing'>

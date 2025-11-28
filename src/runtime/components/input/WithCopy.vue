@@ -6,7 +6,13 @@ import type { OmitByKey } from '@movk/core'
 import type { ButtonProps, InputEmits, InputProps, InputSlots, InputValue, TooltipProps } from '@nuxt/ui'
 
 interface WithCopyProps extends /** @vue-ignore */ OmitByKey<InputProps<T>, 'modelValue'> {
+  /**
+   * 按钮属性
+   */
   buttonProps?: ButtonProps
+  /**
+   * 提示框属性
+   */
   tooltipProps?: TooltipProps
 }
 type WithCopyEmits = InputEmits<T> & {

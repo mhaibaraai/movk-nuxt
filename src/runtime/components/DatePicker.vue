@@ -12,16 +12,19 @@ const LABEL_FORMATS: LabelFormat[] = ['iso', 'formatted', 'date', 'timestamp', '
 type ValueType = CalendarProps<R, M>['modelValue']
 
 interface DatePickerProps extends /** @vue-ignore */ OmitByKey<CalendarProps<R, M>, 'modelValue'>, DateFormatterOptions {
+  /**
+   * 按钮属性
+   * @defaultValue
+   */
   buttonProps?: ButtonProps
+  /**
+   * 弹出层属性
+   * @defaultValue { placement: 'bottom-start' }
+   */
   popoverProps?: PopoverProps<P>
   /**
    * 标签格式化器
-   * - 函数: 自定义格式化逻辑
-   * - 'iso': ISO 8601 格式
-   * - 'formatted': 本地化格式
-   * - 'date': Date 对象的字符串表示
-   * - 'timestamp': 时间戳（毫秒）
-   * - 'unix': Unix 时间戳（秒）
+   * @defaultValue 'formatted'
    */
   labelFormat?: LabelFormat | ((formatter: ReturnType<typeof useDateFormatter>, modelValue: ValueType) => string)
 }

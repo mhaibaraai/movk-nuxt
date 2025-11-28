@@ -5,6 +5,9 @@ import type { ButtonProps, InputEmits, InputProps, InputSlots, InputValue } from
 import { useToggle } from '@vueuse/core'
 
 interface WithPasswordToggleProps extends /** @vue-ignore */ OmitByKey<InputProps<T>, 'type' | 'modelValue'> {
+  /**
+   * 切换按钮属性
+   */
   buttonProps?: ButtonProps
 }
 type WithPasswordToggleEmits = InputEmits<T>

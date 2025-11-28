@@ -5,6 +5,9 @@ import type { OmitByKey } from '@movk/core'
 import type { ButtonProps, InputEmits, InputProps, InputSlots, InputValue } from '@nuxt/ui'
 
 interface WithClearProps extends /** @vue-ignore */ OmitByKey<InputProps<T>, 'modelValue'> {
+  /**
+   * 清除按钮属性
+   */
   buttonProps?: ButtonProps
 }
 type WithClearEmits = InputEmits<T> & {

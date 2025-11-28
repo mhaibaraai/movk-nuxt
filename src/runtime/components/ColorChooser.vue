@@ -4,7 +4,13 @@ import type { ButtonProps, PopoverProps, ColorPickerProps, PopoverEmits } from '
 import { computed } from 'vue'
 
 interface ColorChooserProps extends /** @vue-ignore */ ColorPickerProps {
+  /**
+   * Popover 弹出层属性
+   */
   popoverProps?: PopoverProps<P>
+  /**
+   * 触发按钮的属性
+   */
   buttonProps?: ButtonProps
 }
 
