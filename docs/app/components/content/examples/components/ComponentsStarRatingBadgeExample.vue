@@ -3,7 +3,7 @@ const rating = ref(3)
 </script>
 
 <template>
-  <div class="space-y-4">
+  <div class="flex flex-col gap-4">
     <div>
       <div class="text-sm text-gray-500 mb-2">
         显示徽章
