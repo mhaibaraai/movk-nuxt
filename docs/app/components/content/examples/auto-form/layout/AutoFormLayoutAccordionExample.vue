@@ -16,7 +16,7 @@ const schema = afz.object({
       },
       items: [
         { label: '基本信息', icon: 'i-lucide-user', slot: 'item-0' },
-        { label: '详细信息', icon: 'i-lucide-file-text', slot: 'item-1' }
+        { label: '详细信息', icon: 'i-lucide-square-pen', slot: 'item-1' }
       ]
     },
     fieldSlots: {

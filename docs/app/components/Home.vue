@@ -1,68 +1,54 @@
 <script lang="ts" setup>
+import { CalendarDate } from '@internationalized/date'
 import type { TabsItem } from '@nuxt/ui'
-import { camelCase, capitalize, chunk, debounce, kebabCase, pascalCase, unique } from '@movk/core'
+import type z from 'zod/v4'
+import type { DateRange } from 'reka-ui'
 
 const items = [{
-  label: '字符串处理',
-  icon: 'i-lucide:message-square-text',
-  slot: 'string'
+  label: 'AutoForm',
+  icon: 'i-lucide-square-pen',
+  slot: 'autoform'
 }, {
-  label: '数组处理',
-  icon: 'i-lucide:gallery-vertical-end',
-  slot: 'array'
+  label: 'DatePicker',
+  icon: 'i-lucide-calendar',
+  slot: 'datepicker'
 }, {
-  label: '异步工具',
-  icon: 'i-lucide:clock',
-  slot: 'async'
+  label: '输入增强',
+  icon: 'i-lucide-sparkles',
+  slot: 'enhanced'
 }] satisfies TabsItem[]
 
-// String Demo
-const stringInput = ref('Hello World')
-const stringResult = ref('')
+// AutoForm Demo
+const { afz } = useAutoForm()
+const formSchema = afz.object({
+  username: afz.string('请填写用户名').min(3).max(20).regex(/^\w+$/)
+    .meta({ hint: '仅支持字母、数字和下划线' }),
+  email: afz.email({
+    controlProps: { leadingIcon: 'i-lucide-mail', placeholder: '请输入您的邮箱' },
+    error: '请输入有效的邮箱地址'
+  }),
+  age: afz.number().min(18, '年龄必须大于 18 岁').max(99)
+    .meta({ hint: '年龄范围：18-99' })
+})
 
-function processString(type: 'camel' | 'kebab' | 'cap' | 'pascal') {
-  if (type === 'camel') {
-    stringResult.value = camelCase(stringInput.value)
-  }
-  if (type === 'kebab') {
-    stringResult.value = kebabCase(stringInput.value)
-  }
-  if (type === 'cap') {
-    stringResult.value = capitalize(stringInput.value)
-  }
-  if (type === 'pascal') {
-    stringResult.value = pascalCase(stringInput.value)
-  }
-}
+type Schema = z.output<typeof formSchema>
 
-// Array Demo
-const arrayInput = ref([1, 2, 2, 3, 4, 4, 5, 6, 7, 8])
-const arrayResult = ref<any>(null)
+const formState = ref<Partial<Schema>>({
+  username: 'johndoe',
+  email: 'john@example.com',
+  age: 25
+})
 
-function processArray(type: 'chunk' | 'unique') {
-  if (type === 'chunk') {
-    arrayResult.value = chunk(arrayInput.value, 3)
-  }
-  if (type === 'unique') {
-    arrayResult.value = unique(arrayInput.value)
-  }
-}
+// DatePicker Demo
+const selectedDate = shallowRef(new CalendarDate(2025, 12, 25))
+const dateRange = shallowRef<DateRange>({
+  start: new CalendarDate(2025, 11, 1),
+  end: new CalendarDate(2025, 11, 30)
+})
 
-// Async Demo
-const debounceInput = ref('')
-const debounceCount = ref(0)
-const triggerCount = ref(0)
-const lastTriggerTime = ref('')
-
-const debouncedFn = debounce(() => {
-  debounceCount.value++
-  lastTriggerTime.value = new Date().toLocaleTimeString()
-}, 500)
-
-function onDebounceInput() {
-  triggerCount.value++
-  debouncedFn()
-}
+// Enhanced Input Demo
+const copyText = ref('Hello Movk Nuxt!')
+const passwordText = ref('secret123')
 </script>
 
 <template>
@@ -79,145 +65,96 @@ function onDebounceInput() {
     </template>
 
     <UTabs :items="items" class="w-full">
-      <template #string>
-        <div class="p-4 space-y-6 min-h-65">
-          <UFormField label="输入文本">
-            <UInput
-              v-model="stringInput"
-              icon="i-lucide:square-pen"
-              placeholder="输入任意字符串..."
-              class="w-full"
-            />
-          </UFormField>
+      <template #autoform>
+        <div class="p-4 sm:p-6 min-h-[300px]">
+          <p class="mb-5 text-sm text-gray-600 dark:text-gray-400">
+            通过 Zod Schema 自动生成表单，支持丰富的字段类型和验证规则
+          </p>
+          <MAutoForm :schema="formSchema" :state="formState" :submit-button="false" />
+        </div>
+      </template>
 
-          <UFieldGroup>
-            <UButton
-              color="neutral"
-              variant="solid"
-              icon="i-lucide:arrow-left-right"
-              @click="processString('camel')"
-            >
-              camelCase
-            </UButton>
-            <UButton
-              color="neutral"
-              variant="solid"
-              icon="i-lucide:arrow-up-right"
-              @click="processString('pascal')"
-            >
-              PascalCase
-            </UButton>
-            <UButton
-              color="neutral"
-              variant="solid"
-              icon="i-lucide:minus"
-              @click="processString('kebab')"
-            >
-              kebab-case
-            </UButton>
-            <UButton
-              color="neutral"
-              variant="solid"
-              icon="i-lucide:arrow-up"
-              @click="processString('cap')"
-            >
-              Capitalize
-            </UButton>
-          </UFieldGroup>
+      <template #datepicker>
+        <div class="p-4 sm:p-6 min-h-[300px]">
+          <p class="mb-5 text-sm text-gray-600 dark:text-gray-400">
+            强大的日期选择器，支持单日期和日期范围选择
+          </p>
 
-          <div class="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-100 dark:border-gray-800 transition-all min-h-[86px]">
-            <div class="text-xs text-gray-500 mb-1">
-              转换结果
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div class="space-y-3">
+              <div class="flex items-center gap-2">
+                <UIcon name="i-lucide-calendar" class="text-primary-500 shrink-0" />
+                <div class="min-w-0">
+                  <div class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    单日期选择
+                  </div>
+                  <div class="text-xs text-gray-500 dark:text-gray-500">
+                    选择单个日期
+                  </div>
+                </div>
+              </div>
+              <MDatePicker v-model="selectedDate" label-format="iso" />
             </div>
-            <div v-if="stringResult" class="font-mono text-primary-500 font-medium text-lg">
-              {{ stringResult }}
-            </div>
-            <div v-else class="text-gray-400 dark:text-gray-500 text-sm italic">
-              等待操作...
+
+            <div class="space-y-3">
+              <div class="flex items-center gap-2">
+                <UIcon name="i-lucide-calendar-range" class="text-primary-500 shrink-0" />
+                <div class="min-w-0">
+                  <div class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    日期范围选择
+                  </div>
+                  <div class="text-xs text-gray-500 dark:text-gray-500">
+                    选择开始和结束日期
+                  </div>
+                </div>
+              </div>
+              <MDatePicker
+                v-model="dateRange"
+                label-format="iso"
+                range
+                :number-of-months="2"
+              />
             </div>
           </div>
         </div>
       </template>
 
-      <template #array>
-        <div class="p-4 space-y-6 min-h-65">
-          <UFormField label="原始数组">
-            <UInput
-              :model-value="JSON.stringify(arrayInput)"
-              class="w-full"
-              readonly
-            />
-          </UFormField>
+      <template #enhanced>
+        <div class="p-4 sm:p-6 min-h-[300px]">
+          <p class="mb-5 text-sm text-gray-600 dark:text-gray-400">
+            输入框增强组件，为常见需求提供开箱即用的解决方案
+          </p>
 
-          <UFieldGroup>
-            <UButton
-              color="primary"
-              variant="soft"
-              icon="i-lucide:funnel"
-              @click="processArray('unique')"
-            >
-              Unique (去重)
-            </UButton>
-            <UButton
-              color="primary"
-              variant="soft"
-              icon="i-lucide:layout-grid"
-              @click="processArray('chunk')"
-            >
-              Chunk (分块 size=3)
-            </UButton>
-          </UFieldGroup>
-
-          <div class="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-100 dark:border-gray-800 transition-all min-h-[86px]">
-            <div class="text-xs text-gray-500 mb-1">
-              处理结果
-            </div>
-            <div v-if="arrayResult" class="font-mono text-primary-500 font-medium">
-              {{ JSON.stringify(arrayResult) }}
-            </div>
-            <div v-else class="text-gray-400 dark:text-gray-500 text-sm italic">
-              等待操作...
-            </div>
-          </div>
-        </div>
-      </template>
-
-      <template #async>
-        <div class="p-4 space-y-6 min-h-65">
-          <UFormField label="防抖测试 (Debounce 500ms)" hint="请快速输入字符">
-            <UInput
-              v-model="debounceInput"
-              icon="i-lucide:zap"
-              placeholder="在此处快速输入..."
-              class="w-full"
-              @input="onDebounceInput"
-            />
-          </UFormField>
-
-          <div class="grid grid-cols-2 gap-4">
-            <div class="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-100 dark:border-gray-800 text-center">
-              <div class="text-xs text-gray-500 mb-1">
-                输入事件触发
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div class="space-y-3">
+              <div class="flex items-center gap-2">
+                <UIcon name="i-lucide-copy" class="text-primary-500 shrink-0" />
+                <div class="min-w-0">
+                  <div class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    带复制功能
+                  </div>
+                  <div class="text-xs text-gray-500 dark:text-gray-500">
+                    一键复制输入框内容
+                  </div>
+                </div>
               </div>
-              <div class="text-3xl font-bold text-gray-900 dark:text-white">
-                {{ triggerCount }}
-              </div>
+              <MWithCopy v-model="copyText" placeholder="点击图标复制内容" />
             </div>
-            <div class="p-4 bg-primary-50 dark:bg-primary-900/10 rounded-lg border border-primary-100 dark:border-primary-900/20 text-center">
-              <div class="text-xs text-primary-600 dark:text-primary-400 mb-1">
-                实际执行次数
-              </div>
-              <div class="text-3xl font-bold text-primary-600 dark:text-primary-400">
-                {{ debounceCount }}
-              </div>
-            </div>
-          </div>
 
-          <div class="flex justify-end items-center gap-2 text-xs text-gray-400 h-5">
-            <template v-if="lastTriggerTime">
-              <UIcon name="i-lucide:clock" />
-              <span>最后执行: {{ lastTriggerTime }}</span>
-            </template>
+            <div class="space-y-3">
+              <div class="flex items-center gap-2">
+                <UIcon name="i-lucide-eye" class="text-primary-500 shrink-0" />
+                <div class="min-w-0">
+                  <div class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    密码显隐切换
+                  </div>
+                  <div class="text-xs text-gray-500 dark:text-gray-500">
+                    点击图标切换密码显示
+                  </div>
+                </div>
+              </div>
+              <MWithPasswordToggle v-model="passwordText" placeholder="输入密码..." />
+            </div>
           </div>
         </div>
       </template>

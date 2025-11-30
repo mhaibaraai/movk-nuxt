@@ -1,7 +1,7 @@
 ---
 seo:
-  title: Movk Nuxt - 强大的 Nuxt 4 模块生态系统
-  description: Movk Nuxt 是一个模块化的 Nuxt 4 扩展库，提供基于 Zod Schema 的自动表单生成、自动表格生成、常用 composables 工具等多组件生态系统。
+  title: Movk Nuxt - Nuxt 4 模块化工程套件
+  description: Movk Nuxt 是一个为 Nuxt 4 设计的模块化工程套件，提供 Schema 驱动的自动表单生成、独立 UI 组件和通用工具函数。
 ---
 
 ::u-page-hero{class="dark:bg-gradient-to-b from-neutral-900 to-neutral-950"}
@@ -15,7 +15,7 @@ ui:
 
 #title
 :::motion
-强大的 Nuxt 4[模块生态系统]{.text-primary}
+Nuxt 4 模块化[工程套件]{.text-primary}
 :::
 
 #description
@@ -23,7 +23,7 @@ ui:
 ---
 transition: { duration: 0.6, delay: 0.3 }
 ---
-Movk Nuxt 是一个基于 Nuxt 4 和 Nuxt UI 的模块化扩展库。提供基于 Zod Schema 的自动表单生成、自动表格生成、常用 composables 工具等多组件生态，打造完整的表单与数据处理解决方案。
+基于 Nuxt 4 和 Nuxt UI 的模块化扩展库，提供 Schema 驱动的自动表单生成、自动表格生成、常用 composables 工具等完整的表单与数据处理解决方案。
 :::
 
 #links
@@ -54,37 +54,62 @@ transition: { duration: 0.6, delay: 0.5 }
 :::
 
 #default
-:::motion{class="mx-auto"}
----
-transition: { duration: 0.6, delay: 0.1 }
----
-  ::::prose-pre
-  ---
-  code: |
-    // AutoForm
-    const formSchema = afz.object({
-      username: afz.string().min(3),
-      email: afz.email(),
-      age: afz.number().min(18)
-    })
+:home
+::
 
-    <MAutoForm :schema="formSchema" :state="form" />
+::u-page-section{class="dark:bg-neutral-950"}
+#title
+核心特性
 
-    // AutoTable
-    // const tableSchema = atz.object({...})
-    // <MAutoTable :schema="tableSchema" />
-  filename: MovkNuxtEcosystem.ts
-  ---
+#description
+模块化设计，渐进式采用，从简单的工具函数到完整的自动化系统，满足各种开发需求。
 
-  ```ts
-  import { afz } from '@movk/nuxt/autoform'
+#features
+  :::u-page-feature{icon="i-lucide-zap"}
+  #title
+  Schema 驱动
 
-  const formSchema = afz.object({
-    username: afz.string().min(3),
-    email: afz.email()
-  })
-  ```
-  ::::
-:::
+  #description
+  通过 Zod Schema 定义数据结构，自动生成完整的表单界面和验证逻辑。
+  :::
 
+  :::u-page-feature{icon="i-lucide-blocks"}
+  #title
+  模块化架构
+
+  #description
+  清晰的分层架构：Core Systems、Standalone Components、Composables。
+  :::
+
+  :::u-page-feature{icon="i-lucide-package"}
+  #title
+  独立组件库
+
+  #description
+  10+ 个高质量 UI 组件，无需依赖 AutoForm 即可独立使用。
+  :::
+
+  :::u-page-feature{icon="i-lucide-shield-check"}
+  #title
+  类型安全
+
+  #description
+  完整的 TypeScript 类型推断，从 Schema 到数据全程类型安全。
+  :::
+
+  :::u-page-feature{icon="i-lucide-wrench"}
+  #title
+  通用工具函数
+
+  #description
+  useDateFormatter 等强大的 composables，提升开发效率。
+  :::
+
+  :::u-page-feature{icon="i-lucide-rocket"}
+  #title
+  未来规划
+
+  #description
+  AutoTable 和 UseApi 即将发布，复用 Schema 定义，扩展更多能力。
+  :::
 ::
