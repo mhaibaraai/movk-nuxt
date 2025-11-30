@@ -22,7 +22,9 @@ import {
   USelectMenu,
   UInputMenu,
   UCheckboxGroup,
-  URadioGroup
+  URadioGroup,
+  UInputDate,
+  UInputTime
 } from '#components'
 import { isObject } from '@movk/core'
 import { AUTOFORM_META, CLONE_METHODS } from '../constants/auto-form'
@@ -155,7 +157,9 @@ function createDateFactory() {
       { message: error || '无效的日期格式' }
     )
 
-    return applyMeta(schema, { ...(meta || {}), type: 'date' }) as unknown as z.ZodType<T>
+    const finalType = meta?.type || 'date'
+
+    return applyMeta(schema, { ...(meta || {}), type: finalType }) as unknown as z.ZodType<T>
   }
 }
 
@@ -262,6 +266,8 @@ const DEFAULT_CONTROLS = {
   inputMenu: defineControl({ component: UInputMenu, controlProps: DEFAULT_CONTROL_PROPS }),
   checkboxGroup: defineControl({ component: UCheckboxGroup, controlProps: DEFAULT_CONTROL_PROPS }),
   radioGroup: defineControl({ component: URadioGroup, controlProps: DEFAULT_CONTROL_PROPS }),
+  inputDate: defineControl({ component: UInputDate, controlProps: DEFAULT_CONTROL_PROPS }),
+  inputTime: defineControl({ component: UInputTime, controlProps: DEFAULT_CONTROL_PROPS }),
 
   // 自定义增强型组件
   withClear: defineControl({ component: WithClear, controlProps: DEFAULT_CONTROL_PROPS }),

@@ -26,7 +26,15 @@ const schema = afz.object({
     }
   })
     .transform(date => formatter.convertToISO(date))
-    .meta({ description: '请选择您的假期日期' })
+    .meta({ description: '请选择您的假期日期' }),
+
+  inputDate: afz.date({
+    type: 'inputDate'
+  }).transform(date => formatter.convertToISO(date)),
+
+  inputTime: afz.date({
+    type: 'inputTime'
+  }).transform(date => formatter.convertToISO(date))
 })
 
 type Schema = z.output<typeof schema>
