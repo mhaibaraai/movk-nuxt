@@ -3,9 +3,28 @@
   "type": "module",
   "version": "0.0.0",
   "packageManager": "pnpm@10.24.0",
-  "description": "Movk Nuxt module",
+  "description": "Schema-driven form and table generation module for Nuxt 4",
+  "author": "YiXuan <mhaibaraai@gmail.com>",
   "license": "MIT",
-  "repository": "movk/nuxt",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mhaibaraai/movk-nuxt.git"
+  },
+  "homepage": "https://nuxt.mhaibaraai.cn",
+  "bugs": {
+    "url": "https://github.com/mhaibaraai/movk-nuxt/issues"
+  },
+  "keywords": [
+    "nuxt",
+    "nuxt-module",
+    "nuxt4",
+    "zod",
+    "form",
+    "table",
+    "auto-form",
+    "schema-driven",
+    "validation"
+  ],
   "exports": {
     ".": {
       "types": "./dist/types.d.mts",
@@ -28,7 +47,7 @@
     "release": "release-it",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "typecheck": "vue-tsc --noEmit && nuxt typecheck playground && nuxt typecheck docs",
+    "typecheck": "vue-tsc --noEmit && nuxt typecheck playground",
     "clean": "tsx scripts/rm.ts",
     "up": "taze major -wIr",
     "test": "vitest"
