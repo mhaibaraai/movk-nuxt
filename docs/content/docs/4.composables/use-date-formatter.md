@@ -1,0 +1,542 @@
+---
+title: useDateFormatter
+description: 基于 @internationalized/date 的日期格式化和处理工具。
+---
+
+## Usage
+
+使用自动导入的 `useDateFormatter` composable 进行日期格式化、转换和操作，基于 `@internationalized/date` 库实现国际化日期处理。
+
+```vue
+<script setup lang="ts">
+const formatter = useDateFormatter({ locale: 'zh-CN' })
+
+const today = formatter.getToday()
+const formattedDate = formatter.format(today)
+// "2025年11月29日"
+
+const isoString = formatter.toISO(today)
+// "2025-11-29"
+</script>
+```
+
+- `useDateFormatter` 基于 `Intl.DateTimeFormat` 提供本地化日期格式化。
+- 支持单个日期、日期范围、日期数组以及嵌套对象的批量转换。
+
+::note
+所有格式化和转换方法都内置了错误处理，当传入 `null` 或 `undefined` 时会返回空字符串或 `null`，避免抛出异常。
+::
+
+## API
+
+### useDateFormatter()
+
+`useDateFormatter(options?: DateFormatterOptions): DateFormatter`{lang="ts-type"}
+
+创建日期格式化器实例。
+
+#### Parameters
+
+::field-group
+  ::field{name="options" type="DateFormatterOptions"}
+  日期格式化配置选项。
+
+  ::collapsible
+    ::field-group
+      ::field{name="locale" type="string"}
+      语言区域，默认 `'zh-CN'`。
+      ::
+
+      ::field{name="formatOptions" type="Intl.DateTimeFormatOptions"}
+      日期格式化选项，遵循 [Intl.DateTimeFormat](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Intl/DateTimeFormat/DateTimeFormat) 规范。默认为 `{ dateStyle: 'medium' }`。
+      ::
+
+      ::field{name="timeZone" type="string"}
+      时区标识符（如 `'Asia/Shanghai'`, `'America/New_York'`），默认使用本地时区。详见 [@internationalized/date 时区文档](https://react-spectrum.adobe.com/internationalized/date/index.html#timezones)。
+      ::
+    ::
+  ::
+  ::
+::
+
+#### Returns
+
+返回包含以下方法和属性的日期格式化器对象。
+
+### 格式化方法
+
+::field-group
+  ::field{name="format()" type="(date: DateValue | undefined | null) => string"}
+  格式化单个日期为本地化字符串。
+
+  ::collapsible
+    ```ts
+    formatter.format(date)
+    // "2025年11月29日"
+    ```
+  ::
+  ::
+
+  ::field{name="formatRange()" type="(start: DateValue | undefined | null, end: DateValue | undefined | null, separator?: string) => string"}
+  格式化日期范围，默认分隔符为 `' - '`。
+
+  ::collapsible
+    ```ts
+    formatter.formatRange(startDate, endDate)
+    // "2025年11月1日 - 2025年11月30日"
+
+    formatter.formatRange(startDate, endDate, ' 至 ')
+    // "2025年11月1日 至 2025年11月30日"
+    ```
+  ::
+  ::
+
+  ::field{name="formatArray()" type="(dates: DateValue[] | undefined | null, separator?: string) => string"}
+  格式化日期数组，默认分隔符为 `', '`。
+
+  ::collapsible
+    ```ts
+    formatter.formatArray([date1, date2, date3])
+    // "2025年11月1日, 2025年11月15日, 2025年11月29日"
+    ```
+  ::
+  ::
+::
+
+### 转换方法
+
+::field-group
+  ::field{name="toISO()" type="(date: DateValue | undefined | null) => string"}
+  转换为 ISO 8601 字符串。
+
+  ::collapsible
+    ```ts
+    formatter.toISO(date)
+    // "2025-11-29"
+    ```
+  ::
+  ::
+
+  ::field{name="toDate()" type="(date: DateValue | undefined | null) => Date | null"}
+  转换为 JavaScript Date 对象。
+  ::
+
+  ::field{name="toTimestamp()" type="(date: DateValue | undefined | null) => number | null"}
+  转换为时间戳（毫秒）。
+
+  ::collapsible
+    ```ts
+    formatter.toTimestamp(date)
+    // 1732838400000
+    ```
+  ::
+  ::
+
+  ::field{name="toUnixTimestamp()" type="(date: DateValue | undefined | null) => number | null"}
+  转换为 Unix 时间戳（秒）。
+
+  ::collapsible
+    ```ts
+    formatter.toUnixTimestamp(date)
+    // 1732838400
+    ```
+  ::
+  ::
+
+  ::field{name="parse()" type="(value: string) => DateValue | null"}
+  解析 ISO 8601 日期字符串。自动识别 `CalendarDate`、`CalendarDateTime` 或 `ZonedDateTime`。
+
+  ::collapsible
+    ```ts
+    formatter.parse('2025-11-29')
+    // CalendarDate
+
+    formatter.parse('2025-11-29T10:30:00')
+    // CalendarDateTime
+
+    formatter.parse('2025-11-29T10:30:00[Asia/Shanghai]')
+    // ZonedDateTime
+    ```
+  ::
+  ::
+::
+
+### 工具方法 - 获取日期
+
+::field-group
+  ::field{name="getToday()" type="() => CalendarDate"}
+  获取今天的日期。
+  ::
+
+  ::field{name="getNow()" type="() => ZonedDateTime"}
+  获取当前日期时间。
+  ::
+
+  ::field{name="getStartOfWeek()" type="(date: DateValue) => DateValue"}
+  获取一周的开始日期（基于当前语言区域）。
+  ::
+
+  ::field{name="getEndOfWeek()" type="(date: DateValue) => DateValue"}
+  获取一周的结束日期（基于当前语言区域）。
+  ::
+
+  ::field{name="getStartOfMonth()" type="(date: DateValue) => DateValue"}
+  获取一月的开始日期。
+  ::
+
+  ::field{name="getEndOfMonth()" type="(date: DateValue) => DateValue"}
+  获取一月的结束日期。
+  ::
+
+  ::field{name="getStartOfYear()" type="(date: DateValue) => DateValue"}
+  获取一年的开始日期。
+  ::
+
+  ::field{name="getEndOfYear()" type="(date: DateValue) => DateValue"}
+  获取一年的结束日期。
+  ::
+::
+
+### 工具方法 - 查询
+
+::field-group
+  ::field{name="getDayOfWeek()" type="(date: DateValue) => number"}
+  获取星期几（0-6，0 为本地化的一周第一天）。
+  ::
+
+  ::field{name="getWeeksInMonth()" type="(date: DateValue) => number"}
+  获取本月的周数。
+  ::
+
+  ::field{name="isWeekday()" type="(date: DateValue) => boolean"}
+  判断是否为工作日。
+  ::
+
+  ::field{name="isWeekend()" type="(date: DateValue) => boolean"}
+  判断是否为周末。
+  ::
+
+  ::field{name="isSameDay()" type="(a: DateValue, b: DateValue) => boolean"}
+  判断是否为同一天。
+  ::
+
+  ::field{name="isSameMonth()" type="(a: DateValue, b: DateValue) => boolean"}
+  判断是否为同一月。
+  ::
+
+  ::field{name="isSameYear()" type="(a: DateValue, b: DateValue) => boolean"}
+  判断是否为同一年。
+  ::
+
+  ::field{name="isToday()" type="(date: DateValue) => boolean"}
+  判断是否为今天。
+  ::
+
+  ::field{name="isDateValue()" type="(value: unknown) => value is DateValue"}
+  类型守卫，判断是否为 `DateValue` 类型。
+  ::
+
+  ::field{name="isDateRange()" type="(value: unknown) => value is DateRange"}
+  类型守卫，判断是否为 `DateRange` 类型。
+  ::
+::
+
+### 批量转换方法
+
+::field-group
+  ::field{name="convertData()" type="<T>(data: T, converter: (value: DateValue) => any) => T"}
+  通用数据转换函数，自动处理单个日期、日期范围、日期数组以及嵌套对象。
+
+  ::collapsible
+    ```ts
+    const converted = formatter.convertData(complexData, formatter.toISO)
+    ```
+  ::
+  ::
+
+  ::field{name="convertToISO()" type="<T>(data: T) => T"}
+  批量转换为 ISO 字符串。支持单个日期、日期范围、数组和嵌套对象。
+
+  ::collapsible
+    ```ts
+    // 单个日期
+    formatter.convertToISO(date)
+    // "2025-11-29"
+
+    // 日期范围
+    formatter.convertToISO({ start: date1, end: date2 })
+    // { start: "2025-11-01", end: "2025-11-30" }
+
+    // 日期数组
+    formatter.convertToISO([date1, date2])
+    // ["2025-11-01", "2025-11-15"]
+
+    // 嵌套对象
+    formatter.convertToISO({
+      createdAt: date1,
+      range: { start: date2, end: date3 }
+    })
+    // {
+    //   createdAt: "2025-11-01",
+    //   range: { start: "2025-11-20", end: "2025-11-29" }
+    // }
+    ```
+  ::
+  ::
+
+  ::field{name="convertToFormatted()" type="<T>(data: T) => T"}
+  批量转换为格式化字符串。
+  ::
+
+  ::field{name="convertToDate()" type="<T>(data: T) => T"}
+  批量转换为 Date 对象。
+  ::
+::
+
+### 配置属性
+
+::field-group
+  ::field{name="locale" type="string"}
+  当前使用的语言区域。
+  ::
+
+  ::field{name="timeZone" type="string"}
+  当前使用的时区。
+  ::
+::
+
+## Example
+
+以下是一个完整的使用示例：
+
+```vue
+<script setup lang="ts">
+import { useAutoForm, useDateFormatter } from '@movk/nuxt'
+
+const { afz } = useAutoForm()
+const formatter = useDateFormatter()
+
+// 创建包含日期字段的表单
+const schema = afz.object({
+  startDate: afz.date('请选择开始日期'),
+  endDate: afz.date('请选择结束日期'),
+  workDays: afz.array(afz.date(), {
+    label: '工作日'
+  }),
+  birthday: afz.date('请选择出生日期')
+})
+
+const formData = ref({
+  startDate: formatter.getStartOfMonth(formatter.getToday()),
+  endDate: formatter.getEndOfMonth(formatter.getToday()),
+  workDays: [],
+  birthday: null
+})
+
+// 格式化显示
+const displayData = computed(() => {
+  if (!formData.value) return null
+  return formatter.convertToFormatted(formData.value)
+})
+
+// 提交时转换为 ISO 格式
+async function handleSubmit() {
+  const payload = formatter.convertToISO(formData.value)
+
+  // payload 示例：
+  // {
+  //   startDate: "2025-11-01",
+  //   endDate: "2025-11-30",
+  //   workDays: ["2025-11-05", "2025-11-12", "2025-11-19"],
+  //   birthday: "1990-01-01"
+  // }
+
+  await api.submit(payload)
+}
+
+// 日期范围处理
+const weekRange = computed(() => {
+  const today = formatter.getToday()
+  return {
+    start: formatter.getStartOfWeek(today),
+    end: formatter.getEndOfWeek(today)
+  }
+})
+
+const weekRangeText = computed(() => {
+  return formatter.formatRange(weekRange.value.start, weekRange.value.end)
+  // "2025年11月24日 - 2025年11月30日"
+})
+
+// 判断是否为周末
+const isWeekendToday = computed(() => {
+  return formatter.isWeekend(formatter.getToday())
+})
+</script>
+
+<template>
+  <div>
+    <MAutoForm
+      v-model="formData"
+      :schema="schema"
+      @submit="handleSubmit"
+    />
+
+    <div v-if="displayData" class="mt-4">
+      <h3>格式化显示</h3>
+      <pre>{{ displayData }}</pre>
+    </div>
+
+    <div class="mt-4">
+      <p>本周范围：{{ weekRangeText }}</p>
+      <p>今天是否为周末：{{ isWeekendToday }}</p>
+    </div>
+  </div>
+</template>
+```
+
+## 配置示例
+
+### 语言区域
+
+```ts
+// 中文
+const formatterZH = useDateFormatter({ locale: 'zh-CN' })
+formatterZH.format(date)  // "2025年11月29日"
+
+// 英文
+const formatterEN = useDateFormatter({ locale: 'en-US' })
+formatterEN.format(date)  // "Nov 29, 2025"
+
+// 日文
+const formatterJA = useDateFormatter({ locale: 'ja-JP' })
+formatterJA.format(date)  // "2025年11月29日"
+```
+
+### 格式化选项
+
+```ts
+// 短日期
+useDateFormatter({
+  formatOptions: { dateStyle: 'short' }
+})
+// 2025/11/29
+
+// 中等日期
+useDateFormatter({
+  formatOptions: { dateStyle: 'medium' }
+})
+// 2025年11月29日
+
+// 长日期
+useDateFormatter({
+  formatOptions: { dateStyle: 'long' }
+})
+// 2025年11月29日
+
+// 完整日期
+useDateFormatter({
+  formatOptions: { dateStyle: 'full' }
+})
+// 2025年11月29日星期六
+
+// 日期和时间
+useDateFormatter({
+  formatOptions: {
+    dateStyle: 'medium',
+    timeStyle: 'short'
+  }
+})
+// 2025年11月29日 14:30
+
+// 自定义格式
+useDateFormatter({
+  formatOptions: {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    weekday: 'long'
+  }
+})
+// 2025年11月29日星期六
+```
+
+## Caveats
+
+### 时区处理
+
+默认情况下，`useDateFormatter` 使用本地时区。如需指定时区，使用 `timeZone` 参数：
+
+```ts
+const formatter = useDateFormatter({
+  timeZone: 'Asia/Shanghai'
+})
+
+// 或使用其他时区
+const formatterNY = useDateFormatter({
+  timeZone: 'America/New_York'
+})
+```
+
+时区标识符遵循 IANA 时区数据库规范。常用时区包括：
+- `'Asia/Shanghai'` - 中国标准时间
+- `'America/New_York'` - 美国东部时间
+- `'Europe/London'` - 英国时间
+- `'Asia/Tokyo'` - 日本标准时间
+
+### 类型安全
+
+`useDateFormatter` 提供了类型守卫函数用于运行时类型检查：
+
+```ts
+const formatter = useDateFormatter()
+
+// 检查是否为 DateValue
+if (formatter.isDateValue(someValue)) {
+  // TypeScript 自动推断 someValue 为 DateValue 类型
+  const formatted = formatter.format(someValue)
+}
+
+// 检查是否为 DateRange
+if (formatter.isDateRange(someValue)) {
+  // TypeScript 自动推断 someValue 为 DateRange 类型
+  const { start, end } = someValue
+}
+```
+
+### 与 AutoForm 集成
+
+在 AutoForm 中使用日期字段时，建议使用 `convertToISO()` 进行批量转换后提交：
+
+```vue
+<script setup lang="ts">
+const { afz } = useAutoForm()
+const formatter = useDateFormatter()
+
+const schema = afz.object({
+  eventDate: afz.date(),
+  eventRange: afz.date({
+    controlProps: { mode: 'range' }
+  })
+})
+
+const formData = ref()
+
+async function handleSubmit() {
+  // 自动处理所有日期字段的转换
+  const payload = formatter.convertToISO(formData.value)
+
+  // payload.eventDate: "2025-11-29"
+  // payload.eventRange: { start: "2025-11-01", end: "2025-11-30" }
+
+  await api.submit(payload)
+}
+</script>
+```
+
+::note
+这种方式可以：
+- 自动处理所有嵌套的日期字段
+- 保持对象结构不变
+- 避免手动遍历转换
+::
