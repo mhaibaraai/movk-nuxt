@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<script lang="ts" setup>
 import type { FormSubmitEvent } from '@nuxt/ui'
 import type { z } from 'zod/v4'
 
@@ -6,20 +6,18 @@ const { afz } = useAutoForm()
 const toast = useToast()
 
 const schema = afz.object({
-  $grid: afz.layout({
-    class: 'grid grid-cols-2 gap-4',
-    fields: {
-      firstName: afz.string().meta({ label: '名字' }),
-      lastName: afz.string().meta({ label: '姓氏' }),
-      email: afz.email().meta({
-        class: 'col-span-2',
-        label: '邮箱地址',
-        description: '此字段占据两列宽度'
-      }),
-      phone: afz.string().meta({ label: '电话' }),
-      age: afz.number().int().min(0).meta({ label: '年龄' })
-    }
-  })
+  contacts: afz.array(
+    afz.object({
+      name: afz.string().meta({ label: '姓名' }),
+      email: afz.email().meta({ label: '邮箱' })
+    })
+  ).meta({
+    label: '联系人列表',
+    collapsible: { defaultOpen: true }
+  }).default([
+    { name: '张三', email: 'zhangsan@example.com' },
+    { name: '李四', email: 'lisi@example.com' }
+  ])
 })
 
 type Schema = z.output<typeof schema>

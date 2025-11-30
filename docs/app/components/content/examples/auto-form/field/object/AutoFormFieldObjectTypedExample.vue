@@ -59,11 +59,13 @@ async function click() {
 </script>
 
 <template>
-  <div class="space-y-4">
-    <div class="flex items-center gap-2">
-      <span class="text-sm font-medium">选择对象类型：</span>
-      <USelect v-model="currentType" :items="items" />
-    </div>
+  <UCard class="space-y-4">
+    <template #header>
+      <div class="flex items-center gap-2">
+        <span class="text-sm font-medium">选择对象类型：</span>
+        <USelect v-model="currentType" :items="items" />
+      </div>
+    </template>
 
     <MAutoForm :schema="schema" :submit-button="false">
       <template #footer>
@@ -72,5 +74,5 @@ async function click() {
         </UButton>
       </template>
     </MAutoForm>
-  </div>
+  </UCard>
 </template>

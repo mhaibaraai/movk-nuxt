@@ -42,7 +42,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 </script>
 
 <template>
-  <UCard class="w-lg">
+  <UCard>
     <MAutoForm :schema="schema" :state="form" @submit="onSubmit" />
   </UCard>
 </template>

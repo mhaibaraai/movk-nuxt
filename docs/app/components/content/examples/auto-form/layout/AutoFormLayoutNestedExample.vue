@@ -25,7 +25,7 @@ const schema = afz.object({
           phoneNumber: afz.string().meta({
             class: 'col-span-2',
             label: '电话号码',
-            description: '此字段占据两列宽度'
+            hint: '此字段占据两列宽度'
           })
         }
       })
@@ -47,7 +47,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 </script>
 
 <template>
-  <UCard class="w-lg">
+  <UCard>
     <MAutoForm :schema="schema" :state="form" @submit="onSubmit" />
   </UCard>
 </template>
