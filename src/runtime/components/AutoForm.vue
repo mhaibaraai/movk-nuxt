@@ -227,7 +227,6 @@ defineExpose({
           type="submit"
           :loading="loading"
           label="提交"
-          block
           loading-auto
           v-bind="submitButtonProps"
         />

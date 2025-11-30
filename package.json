@@ -34,7 +34,7 @@
     "test": "vitest"
   },
   "dependencies": {
-    "@iconify-json/lucide": "^1.2.76",
+    "@iconify-json/lucide": "^1.2.77",
     "@internationalized/date": "^3.10.0",
     "@movk/core": "^1.0.2",
     "@nuxt/image": "^2.0.0",
@@ -54,7 +54,7 @@
     "@nuxt/test-utils": "^3.20.1",
     "@release-it/bumper": "^7.0.5",
     "@release-it/conventional-changelog": "^10.0.2",
-    "@vitest/coverage-v8": "^3.2.4",
+    "@vitest/coverage-v8": "^4.0.14",
     "@vueuse/nuxt": "^14.1.0",
     "eslint": "9.38.0",
     "fast-glob": "^3.3.3",
