@@ -20,15 +20,32 @@ const items = [{
 
 // AutoForm Demo
 const { afz } = useAutoForm()
+const formatter = useDateFormatter()
 const formSchema = afz.object({
-  username: afz.string('请填写用户名').min(3).max(20).regex(/^\w+$/)
-    .meta({ hint: '仅支持字母、数字和下划线' }),
-  email: afz.email({
-    controlProps: { leadingIcon: 'i-lucide-mail', placeholder: '请输入您的邮箱' },
-    error: '请输入有效的邮箱地址'
+  $personalInfo: afz.layout({
+    class: 'grid grid-cols-1 sm:grid-cols-2 gap-4',
+    fields: {
+      username: afz.string('请填写用户名').min(3).max(20).regex(/^\w+$/)
+        .meta({ hint: '仅支持字母、数字和下划线' }),
+      age: afz.number().min(18, '年龄必须大于 18 岁').max(99)
+        .meta({ hint: '年龄范围：18-99' })
+    }
   }),
-  age: afz.number().min(18, '年龄必须大于 18 岁').max(99)
-    .meta({ hint: '年龄范围：18-99' })
+  $contactInfo: afz.layout({
+    class: 'grid grid-cols-1 sm:grid-cols-2 gap-4',
+    fields: {
+      email: afz.email({
+        controlProps: { leadingIcon: 'i-lucide-mail', placeholder: '请输入您的邮箱' },
+        error: '请输入有效的邮箱地址'
+      }),
+      birthDate: afz.calendarDate()
+        .transform(date => formatter.convertToISO(date))
+        .default(new CalendarDate(1990, 1, 1))
+        .meta({
+          hint: '出生日期'
+        })
+    }
+  })
 })
 
 type Schema = z.output<typeof formSchema>
@@ -81,40 +98,26 @@ const passwordText = ref('secret123')
           </p>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            <div class="space-y-3">
-              <div class="flex items-center gap-2">
-                <UIcon name="i-lucide-calendar" class="text-primary-500 shrink-0" />
-                <div class="min-w-0">
-                  <div class="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    单日期选择
-                  </div>
-                  <div class="text-xs text-gray-500 dark:text-gray-500">
-                    选择单个日期
-                  </div>
-                </div>
-              </div>
+            <UFormField>
+              <template #label>
+                <UIcon name="i-lucide-calendar" class="text-primary-500" />
+                单日期选择
+              </template>
               <MDatePicker v-model="selectedDate" label-format="iso" />
-            </div>
+            </UFormField>
 
-            <div class="space-y-3">
-              <div class="flex items-center gap-2">
-                <UIcon name="i-lucide-calendar-range" class="text-primary-500 shrink-0" />
-                <div class="min-w-0">
-                  <div class="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    日期范围选择
-                  </div>
-                  <div class="text-xs text-gray-500 dark:text-gray-500">
-                    选择开始和结束日期
-                  </div>
-                </div>
-              </div>
+            <UFormField>
+              <template #label>
+                <UIcon name="i-lucide-calendar-range" class="text-primary-500" />
+                日期范围选择
+              </template>
               <MDatePicker
                 v-model="dateRange"
                 label-format="iso"
                 range
                 :number-of-months="2"
               />
-            </div>
+            </UFormField>
           </div>
         </div>
       </template>
@@ -126,35 +129,21 @@ const passwordText = ref('secret123')
           </p>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            <div class="space-y-3">
-              <div class="flex items-center gap-2">
-                <UIcon name="i-lucide-copy" class="text-primary-500 shrink-0" />
-                <div class="min-w-0">
-                  <div class="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    带复制功能
-                  </div>
-                  <div class="text-xs text-gray-500 dark:text-gray-500">
-                    一键复制输入框内容
-                  </div>
-                </div>
-              </div>
+            <UFormField>
+              <template #label>
+                <UIcon name="i-lucide-copy" class="text-primary-500" />
+                带复制功能
+              </template>
               <MWithCopy v-model="copyText" placeholder="点击图标复制内容" />
-            </div>
+            </UFormField>
 
-            <div class="space-y-3">
-              <div class="flex items-center gap-2">
-                <UIcon name="i-lucide-eye" class="text-primary-500 shrink-0" />
-                <div class="min-w-0">
-                  <div class="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    密码显隐切换
-                  </div>
-                  <div class="text-xs text-gray-500 dark:text-gray-500">
-                    点击图标切换密码显示
-                  </div>
-                </div>
-              </div>
+            <UFormField>
+              <template #label>
+                <UIcon name="i-lucide-lock" class="text-primary-500" />
+                密码输入框
+              </template>
               <MWithPasswordToggle v-model="passwordText" placeholder="输入密码..." />
-            </div>
+            </UFormField>
           </div>
         </div>
       </template>

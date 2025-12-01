@@ -20,7 +20,7 @@ export default defineAppConfig({
       }
     },
     form: {
-      base: 'space-y-4 min-w-md'
+      base: 'space-y-4 min-w-0 sm:min-w-md'
     },
     colors: {
       primary: 'sky'
