@@ -108,7 +108,7 @@ const schema = afz.object({
 
   // 高级类型
   email: afz.email(),
-  birthdate: afz.date(),
+  birthdate: afz.calendarDate(),
   role: afz.enum(['admin', 'user']),
   avatar: afz.file(),
 

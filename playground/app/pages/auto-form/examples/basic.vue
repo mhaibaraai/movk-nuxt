@@ -139,7 +139,7 @@ const schema = afz.object({
         hint: '选择所在国家或地区'
       }),
 
-      birthday: afz.date({ type: 'datePicker' }).optional().meta({
+      birthday: afz.calendarDate({ type: 'datePicker' }).optional().meta({
         label: 'Birthday',
         hint: '选择您的出生日期'
       })

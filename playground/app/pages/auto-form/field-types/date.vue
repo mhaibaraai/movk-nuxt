@@ -8,16 +8,18 @@ const toast = useToast()
 const formatter = useDateFormatter()
 
 const schema = afz.object({
-  birthDate: afz.date({ controlProps: { labelFormat: 'iso' } })
+  birthDate: afz.calendarDate({ controlProps: { labelFormat: 'iso' } })
     .transform(date => formatter.toISO(date))
     .meta({ description: '请选择您的出生日期' }),
-  appointmentDate: afz.date().refine(
+
+  appointmentDate: afz.calendarDate().refine(
     date => date > new CalendarDate(2025, 1, 1),
     { message: '日期必须在 2025 年之后' }
   )
     .transform(date => formatter.toTimestamp(date))
     .meta({ label: '预约日期', description: '请选择一个在 2025 年之后的日期' }),
-  vacationDate: afz.date({
+
+  vacationDate: afz.calendarDate({
     controlProps: {
       labelFormat: 'iso',
       buttonProps: { color: 'success' },
@@ -28,13 +30,25 @@ const schema = afz.object({
     .transform(date => formatter.convertToISO(date))
     .meta({ description: '请选择您的假期日期' }),
 
-  inputDate: afz.date({
-    type: 'inputDate'
-  }).transform(date => formatter.convertToISO(date)),
+  inputDate: afz.inputDate()
+    .transform(date => formatter.convertToISO(date))
+    .meta({ description: '使用输入框选择日期' }),
 
-  inputTime: afz.date({
-    type: 'inputTime'
-  }).transform(date => formatter.convertToISO(date))
+  inputTime: afz.inputTime()
+    .transform(date => formatter.convertToISO(date))
+    .meta({ description: '使用输入框选择时间' }),
+
+  // 使用 isoDatetime() - 验证 ISO 8601 字符串
+  isoDatetime: afz.isoDatetime()
+    .meta({ description: 'ISO 8601 日期时间字符串(如 2025-12-01T06:15:00Z)' }),
+
+  // 使用 isoDate() - 验证日期字符串
+  isoDate: afz.isoDate()
+    .meta({ description: 'ISO 日期字符串(如 2025-12-01)' }),
+
+  // 使用 isoTime() - 验证时间字符串
+  isoTime: afz.isoTime()
+    .meta({ description: 'ISO 时间字符串(如 14:30:00)' })
 })
 
 type Schema = z.output<typeof schema>

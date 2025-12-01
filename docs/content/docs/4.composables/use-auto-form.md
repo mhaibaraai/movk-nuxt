@@ -104,7 +104,7 @@ const formData = ref()
   创建文件类型 Schema，默认映射到 `UFileUpload` 组件。
   ::
 
-  ::field{name="afz.date()" type="<T = CalendarDate>(meta?: string | AutoFormMeta) => ZodType<T>"}
+  ::field{name="afz.calendarDate()" type="<T = CalendarDate>(meta?: string | AutoFormMeta) => ZodType<T>"}
   创建日期类型 Schema，默认映射到 `DatePicker` 组件。
   ::
 ::
@@ -244,7 +244,7 @@ afz.string({
 | `boolean` | `UCheckbox` | 复选框 |
 | `enum` | `USelect` | 下拉选择 |
 | `file` | `UFileUpload` | 文件上传 |
-| `date` | `DatePicker` | 日期选择器 |
+| `calendarDate` | `DatePicker` | 日期选择器 |
 
 ### 扩展控件类型
 
@@ -326,7 +326,7 @@ const schema = afz.object({
   city: afz.string('请输入城市'),
 
   // 日期选择
-  birthdate: afz.date('请选择出生日期')
+  birthdate: afz.calendarDate('请选择出生日期')
 })
 
 const formData = ref()

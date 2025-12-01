@@ -318,12 +318,12 @@ const formatter = useDateFormatter()
 
 // 创建包含日期字段的表单
 const schema = afz.object({
-  startDate: afz.date('请选择开始日期'),
-  endDate: afz.date('请选择结束日期'),
-  workDays: afz.array(afz.date(), {
+  startDate: afz.calendarDate('请选择开始日期'),
+  endDate: afz.calendarDate('请选择结束日期'),
+  workDays: afz.array(afz.calendarDate(), {
     label: '工作日'
   }),
-  birthday: afz.date('请选择出生日期')
+  birthday: afz.calendarDate('请选择出生日期')
 })
 
 const formData = ref({
@@ -514,8 +514,8 @@ const { afz } = useAutoForm()
 const formatter = useDateFormatter()
 
 const schema = afz.object({
-  eventDate: afz.date(),
-  eventRange: afz.date({
+  eventDate: afz.calendarDate(),
+  eventRange: afz.calendarDate({
     controlProps: { mode: 'range' }
   })
 })
