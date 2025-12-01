@@ -7,7 +7,7 @@ const toast = useToast()
 const formatter = useDateFormatter()
 
 const schema = afz.object({
-  vacation: afz.date({
+  vacation: afz.calendarDate({
     controlProps: {
       labelFormat: 'iso',
       range: true,

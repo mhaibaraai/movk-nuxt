@@ -1,20 +1,21 @@
 <script lang="ts" setup>
 import type { FormSubmitEvent } from '@nuxt/ui'
 import type { z } from 'zod/v4'
-import { CalendarDate } from '@internationalized/date'
 
 const { afz } = useAutoForm()
 const toast = useToast()
-const formatter = useDateFormatter()
 
 const schema = afz.object({
-  appointmentDate: afz.calendarDate({ controlProps: { labelFormat: 'iso' } })
+  meetingTime: afz.inputTime()
     .refine(
-      date => date > new CalendarDate(2025, 1, 1),
-      { message: '日期必须在 2025 年之后' }
+      time => time.hour >= 9 && time.hour < 18,
+      { message: '会议时间必须在工作时间内 (9:00-18:00)' }
     )
-    .transform(date => formatter.toTimestamp(date))
-    .meta({ label: '预约日期', description: '请选择一个在 2025 年之后的日期' })
+    .transform(time => `${String(time.hour).padStart(2, '0')}:${String(time.minute).padStart(2, '0')}`)
+    .meta({
+      label: '会议时间',
+      description: '请选择会议时间（工作时间内）'
+    })
 })
 
 async function onSubmit(event: FormSubmitEvent<z.output<typeof schema>>) {
