@@ -1,10 +1,10 @@
-import type { CollapsibleRootProps } from 'reka-ui'
+import type { CollapsibleRootProps, DateRange } from 'reka-ui'
 import type { ClassNameValue } from 'tailwind-merge'
 import type { z } from 'zod/v4'
 import type { ArrayFieldKeys, ComponentProps, OmitByKey, ComponentSlots, GetFieldValue, IsComponent, NonObjectFieldKeys, ObjectFieldKeys, ReactiveValue, Suggest } from '@movk/core'
 import type { FormError } from '@nuxt/ui'
 import type { AUTOFORM_META } from '../constants/auto-form'
-import type { CalendarDate } from '@internationalized/date'
+import type { CalendarDate, DateValue, Time } from '@internationalized/date'
 import type { ZodAutoFormFieldMeta } from './zod'
 
 // ============================================================================
@@ -601,22 +601,57 @@ export interface TypedZodFactory<TC extends AutoFormControls, DFTC extends AutoF
   }
 
   // --------------------------------------------------------------------------
-  // 日期工厂
+  // 日期和时间工厂
   // --------------------------------------------------------------------------
 
   /**
-   * 日期类型工厂 - 默认返回 CalendarDate 类型
+   * 日期类型工厂 - 用于 DatePicker/Calendar
+   * 支持 CalendarDate、DateRange、CalendarDate[]
    * @template T - 日期值类型（默认 CalendarDate）
    */
-  date: {
-    <T = CalendarDate>(meta?: ({ component?: never, type?: never } & MetaByZod<WithDefaultControls<TC, DFTC>, 'date'>)): z.ZodType<T>
-    <K extends ControlTypeKey<WithDefaultControls<TC, DFTC>>, T = CalendarDate>(
+  calendarDate: {
+    <T extends DateValue | DateRange | DateValue[] = CalendarDate>(meta?: ({ component?: never, type?: never } & MetaByZod<WithDefaultControls<TC, DFTC>, 'date'>)): z.ZodType<T>
+    <K extends ControlTypeKey<WithDefaultControls<TC, DFTC>>, T extends DateValue | DateRange | DateValue[] = CalendarDate>(
       meta?: { type: Suggest<K>, component?: never } & MetaByType<WithDefaultControls<TC, DFTC>, K>
     ): z.ZodType<T>
-    <C extends IsComponent, T = CalendarDate>(
+    <C extends IsComponent, T extends DateValue | DateRange | DateValue[] = CalendarDate>(
       meta?: { component: C, type?: never } & OmitControlMeta<C>
     ): z.ZodType<T>
   }
+
+  /**
+   * 输入日期工厂 - 用于 UInputDate 组件
+   * 返回 CalendarDate 类型
+   */
+  inputDate: AutoFormFactoryMethod<WithDefaultControls<TC, DFTC>, 'inputDate', z.ZodType<CalendarDate>>
+
+  /**
+   * 输入时间工厂 - 用于 UInputTime 组件
+   * 返回 Time 类型
+   */
+  inputTime: AutoFormFactoryMethod<WithDefaultControls<TC, DFTC>, 'inputTime', z.ZodType<Time>>
+
+  // --------------------------------------------------------------------------
+  // ISO 字符串工厂
+  // --------------------------------------------------------------------------
+
+  /**
+   * ISO 日期时间字符串工厂
+   * 验证 ISO 8601 格式(如 "2025-12-01T06:15:00Z")
+   */
+  isoDatetime: AutoFormFactoryMethod<WithDefaultControls<TC, DFTC>, 'string', z.ZodType<string>>
+
+  /**
+   * ISO 日期字符串工厂
+   * 验证 YYYY-MM-DD 格式(如 "2025-12-01")
+   */
+  isoDate: AutoFormFactoryMethod<WithDefaultControls<TC, DFTC>, 'string', z.ZodType<string>>
+
+  /**
+   * ISO 时间字符串工厂
+   * 验证 HH:MM[:SS[.s+]] 格式(如 "14:30:00")
+   */
+  isoTime: AutoFormFactoryMethod<WithDefaultControls<TC, DFTC>, 'string', z.ZodType<string>>
 
   // --------------------------------------------------------------------------
   // 集合类型工厂

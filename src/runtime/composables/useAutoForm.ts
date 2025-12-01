@@ -28,7 +28,8 @@ import {
 } from '#components'
 import { isObject } from '@movk/core'
 import { AUTOFORM_META, CLONE_METHODS } from '../constants/auto-form'
-import type { CalendarDate } from '@internationalized/date'
+import type { CalendarDate, DateValue, Time } from '@internationalized/date'
+import type { DateRange } from 'reka-ui'
 import { useDateFormatter } from './useDateFormatter'
 import { extractEnumValuesFromItems } from '../utils/auto-form'
 
@@ -130,23 +131,21 @@ function createBasicFactory<T extends z.ZodType>(
 }
 
 /**
- * 日期字段工厂（支持泛型覆盖类型）
+ * 日期字段工厂 - 用于 DatePicker/Calendar
+ * 支持 CalendarDate、DateRange、CalendarDate[]
  */
-function createDateFactory() {
+function createCalendarDateFactory(type: 'calendarDate' | 'inputDate' = 'calendarDate') {
   const { isDateValue, isDateRange } = useDateFormatter()
-  return <T = CalendarDate>(controlMeta?: any): z.ZodType<T> => {
+  return <T extends DateValue | DateRange | DateValue[] = CalendarDate>(
+    controlMeta?: any
+  ): z.ZodType<T> => {
     const [error, meta] = extractErrorAndMeta(controlMeta)
 
     const schema = z.custom<T>().refine(
       (val: unknown) => {
-        if (isDateValue(val)) {
-          return true
-        }
-        if (val instanceof Date && !Number.isNaN(val.getTime())) {
-          return true
-        }
+        if (isDateValue(val)) return true
         if (isDateRange(val)) {
-          const range = val as any
+          const range = val as DateRange
           return isDateValue(range.start) && isDateValue(range.end)
         }
         if (Array.isArray(val)) {
@@ -157,9 +156,50 @@ function createDateFactory() {
       { message: error || '无效的日期格式' }
     )
 
-    const finalType = meta?.type || 'date'
-
+    const finalType = meta?.type || type
     return applyMeta(schema, { ...(meta || {}), type: finalType }) as unknown as z.ZodType<T>
+  }
+}
+
+/**
+ * 输入时间字段工厂 - 用于 UInputTime
+ * 返回 Time 类型
+ */
+function createInputTimeFactory() {
+  return (controlMeta?: any): z.ZodType<Time> => {
+    const [error, meta] = extractErrorAndMeta(controlMeta)
+
+    const schema = z.custom<Time>().refine(
+      (val: unknown) => {
+        return (
+          val !== null
+          && val !== undefined
+          && typeof val === 'object'
+          && 'hour' in val
+          && 'minute' in val
+          && typeof (val as any).hour === 'number'
+          && typeof (val as any).minute === 'number'
+        )
+      },
+      { message: error || '无效的时间格式' }
+    )
+
+    return applyMeta(schema, { ...(meta || {}), type: 'inputTime' })
+  }
+}
+
+/**
+ * 通用 ISO 字符串工厂创建器
+ * @param type - ISO 类型
+ *   - `datetime`: ISO 8601 日期时间字符串
+ *   - `date`: YYYY-MM-DD 日期字符串
+ *   - `time`: HH:MM[:SS[.s+]] 时间字符串
+ */
+function createISOFactory(type: 'datetime' | 'date' | 'time') {
+  return (controlMeta?: any) => {
+    const [error, meta] = extractErrorAndMeta(controlMeta)
+    const schema = z.iso[type](error)
+    return applyMeta(schema, meta || {})
   }
 }
 
@@ -254,7 +294,7 @@ const DEFAULT_CONTROLS = {
   boolean: defineControl({ component: UCheckbox, controlProps: DEFAULT_CONTROL_PROPS }),
   enum: defineControl({ component: USelect, controlProps: DEFAULT_CONTROL_PROPS }),
   file: defineControl({ component: UFileUpload, controlProps: DEFAULT_CONTROL_PROPS }),
-  date: defineControl({ component: DatePicker, controlProps: DEFAULT_CONTROL_PROPS }),
+  calendarDate: defineControl({ component: DatePicker, controlProps: DEFAULT_CONTROL_PROPS }),
 
   // 扩展类型
   switch: defineControl({ component: USwitch, controlProps: DEFAULT_CONTROL_PROPS }),
@@ -293,7 +333,16 @@ export function useAutoForm<TControls extends AutoFormControls = typeof DEFAULT_
       number: createBasicFactory(z.number),
       boolean: createBasicFactory(z.boolean),
       file: createBasicFactory(z.file),
-      date: createDateFactory(),
+
+      // 日期和时间类型
+      calendarDate: createCalendarDateFactory(),
+      inputDate: createCalendarDateFactory('inputDate'),
+      inputTime: createInputTimeFactory(),
+
+      // ISO 字符串类型
+      isoDatetime: createISOFactory('datetime'),
+      isoDate: createISOFactory('date'),
+      isoTime: createISOFactory('time'),
 
       // Zod v4 专用验证函数
       email: createBasicFactory(z.email),
