@@ -540,3 +540,7 @@ async function handleSubmit() {
 - 保持对象结构不变
 - 避免手动遍历转换
 ::
+
+## Changelog
+
+:commit-changelog{prefix="/composables" suffix="ts"}

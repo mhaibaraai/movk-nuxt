@@ -403,3 +403,7 @@ const schema = afz.string({
   controlProps: { variant: 'outline' }
 })
 ```
+
+## Changelog
+
+:commit-changelog{prefix="/composables" suffix="ts"}
