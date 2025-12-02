@@ -1,17 +1,10 @@
 <script setup lang="ts" generic="S extends z.ZodObject">
-import type { AnyObject } from '@movk/core'
 import type { z } from 'zod/v4'
-import type { AutoFormField } from '../../types/auto-form'
-import type { AutoFormProps } from '../AutoForm.vue'
+import type { AutoFormFieldProps } from '../../types/auto-form-renderer'
 import { UFormField } from '#components'
 import { computed } from 'vue'
 import { useAutoFormInjector } from '../../internal/useAutoFormProvider'
 import { VNodeRender } from '../../utils/auto-form'
-
-interface AutoFormFieldProps<S extends z.ZodObject> extends Pick<AutoFormProps<S>, 'schema'> {
-  field: AutoFormField
-  extraProps?: AnyObject
-}
 
 const { field, extraProps } = defineProps<AutoFormFieldProps<S>>()
 

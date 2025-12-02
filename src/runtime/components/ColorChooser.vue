@@ -1,20 +1,7 @@
 <script setup lang="ts" generic="P extends 'click' | 'hover' = 'click'">
 import { UPopover, UButton, UColorPicker, UIcon } from '#components'
-import type { ButtonProps, PopoverProps, ColorPickerProps, PopoverEmits } from '@nuxt/ui'
 import { computed } from 'vue'
-
-interface ColorChooserProps extends /** @vue-ignore */ ColorPickerProps {
-  /**
-   * Popover 弹出层属性
-   */
-  popoverProps?: PopoverProps<P>
-  /**
-   * 触发按钮的属性
-   */
-  buttonProps?: ButtonProps
-}
-
-type ColorChooserEmits = PopoverEmits
+import type { ColorChooserProps, ColorChooserEmits } from '../types/components'
 
 const {
   buttonProps,

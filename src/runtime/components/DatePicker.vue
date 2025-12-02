@@ -1,35 +1,11 @@
 <script setup lang="ts" generic="R extends boolean, M extends boolean, P extends 'click' | 'hover' = 'click'">
 import { UPopover, UButton, UCalendar } from '#components'
-import type { ButtonProps, PopoverProps, CalendarProps, PopoverEmits, CalendarEmits } from '@nuxt/ui'
 import type { DateValue } from '@internationalized/date'
 import { computed } from 'vue'
 import { useDateFormatter } from '../composables/useDateFormatter'
-import type { DateFormatterOptions } from '../composables/useDateFormatter'
-import type { OmitByKey } from '@movk/core'
+import type { DatePickerProps, DatePickerEmits, LabelFormat, ValueType } from '../types/components'
 
-type LabelFormat = 'iso' | 'formatted' | 'date' | 'timestamp' | 'unix'
 const LABEL_FORMATS: LabelFormat[] = ['iso', 'formatted', 'date', 'timestamp', 'unix']
-type ValueType = CalendarProps<R, M>['modelValue']
-
-interface DatePickerProps extends /** @vue-ignore */ OmitByKey<CalendarProps<R, M>, 'modelValue'>, DateFormatterOptions {
-  /**
-   * 按钮属性
-   * @defaultValue
-   */
-  buttonProps?: ButtonProps
-  /**
-   * 弹出层属性
-   * @defaultValue { placement: 'bottom-start' }
-   */
-  popoverProps?: PopoverProps<P>
-  /**
-   * 标签格式化器
-   * @defaultValue 'formatted'
-   */
-  labelFormat?: LabelFormat | ((formatter: ReturnType<typeof useDateFormatter>, modelValue: ValueType) => string)
-}
-
-type DatePickerEmits = PopoverEmits & CalendarEmits<R, M>
 
 const {
   buttonProps = { label: '选择日期' },
@@ -37,13 +13,13 @@ const {
   formatOptions = { dateStyle: 'medium' },
   locale,
   labelFormat = 'formatted'
-} = defineProps<DatePickerProps>()
+} = defineProps<DatePickerProps<R, M, P>>()
 
-const emit = defineEmits<DatePickerEmits>()
+const emit = defineEmits<DatePickerEmits<R, M>>()
 
 defineOptions({ inheritAttrs: false })
 
-const modelValue = defineModel<ValueType>()
+const modelValue = defineModel<ValueType<R, M>>()
 
 const formatter = useDateFormatter({ locale, formatOptions })
 
@@ -65,7 +41,7 @@ const convertRange = (range: { start?: DateValue | null, end?: DateValue | null 
   return `${convertSingle(range.start, format)} - ${convertSingle(range.end, format)}`
 }
 
-const convertToLabel = (value: ValueType): string => {
+const convertToLabel = (value: ValueType<R, M>): string => {
   if (!value) return buttonProps.label || ''
 
   const format = LABEL_FORMATS.includes(labelFormat as LabelFormat) ? labelFormat as LabelFormat : 'formatted'

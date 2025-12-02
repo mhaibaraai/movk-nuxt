@@ -1,9 +1,8 @@
 <script setup lang="ts" generic="S extends z.ZodObject">
-import type { AnyObject } from '@movk/core'
-import type { ButtonProps } from '@nuxt/ui'
 import type { z } from 'zod/v4'
+import type { ButtonProps } from '@nuxt/ui'
 import type { AutoFormField } from '../../types/auto-form'
-import type { AutoFormProps } from '../AutoForm.vue'
+import type { AutoFormRendererArrayProps } from '../../types/auto-form-renderer'
 import { UButton, UCollapsible } from '#components'
 import { computed, ref, unref } from 'vue'
 import { useAutoFormInjector } from '../../internal/useAutoFormProvider'
@@ -11,12 +10,6 @@ import { joinPath } from '@movk/core'
 import { collectFieldDefaults, createHintSlotFactory, VNodeRender } from '../../utils/auto-form'
 import AutoFormRendererField from './AutoFormRendererField.vue'
 import AutoFormRendererNested from './AutoFormRendererNested.vue'
-
-interface AutoFormRendererArrayProps<S extends z.ZodObject> extends Pick<AutoFormProps<S>, 'schema'> {
-  field: AutoFormField
-  extraProps?: AnyObject
-  addButtonProps?: Partial<ButtonProps>
-}
 
 const {
   extraProps,

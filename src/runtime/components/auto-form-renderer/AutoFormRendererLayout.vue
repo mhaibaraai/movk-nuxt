@@ -1,8 +1,7 @@
 <script setup lang="ts" generic="S extends z.ZodObject">
-import type { AnyObject } from '@movk/core'
 import type { z } from 'zod/v4'
 import type { AutoFormField } from '../../types/auto-form'
-import type { AutoFormProps } from '../AutoForm.vue'
+import type { AutoFormRendererLayoutProps } from '../../types/auto-form-renderer'
 import { computed, defineAsyncComponent, resolveDynamicComponent } from 'vue'
 import { classifyFields } from '../../utils/auto-form'
 import { resolveReactiveValue } from '../../utils/reactive-utils'
@@ -13,11 +12,6 @@ import { useAutoFormInjector } from '../../internal/useAutoFormProvider'
 const AutoFormRendererNested = defineAsyncComponent(() =>
   import('./AutoFormRendererNested.vue')
 )
-
-interface AutoFormRendererLayoutProps<S extends z.ZodObject> extends Pick<AutoFormProps<S>, 'schema'> {
-  field: AutoFormField
-  extraProps?: AnyObject
-}
 
 const {
   field,

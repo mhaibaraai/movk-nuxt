@@ -2,23 +2,8 @@
 import { UInput, UButton, UTooltip } from '#components'
 import { useClipboard } from '@vueuse/core'
 import { isEmpty } from '@movk/core'
-import type { OmitByKey } from '@movk/core'
-import type { ButtonProps, InputEmits, InputProps, InputSlots, InputValue, TooltipProps } from '@nuxt/ui'
-
-interface WithCopyProps extends /** @vue-ignore */ OmitByKey<InputProps<T>, 'modelValue'> {
-  /**
-   * 按钮属性
-   */
-  buttonProps?: ButtonProps
-  /**
-   * 提示框属性
-   */
-  tooltipProps?: TooltipProps
-}
-type WithCopyEmits = InputEmits<T> & {
-  copy: [value: string]
-}
-type WithCopySlots = OmitByKey<InputSlots, 'trailing'>
+import type { InputProps, InputValue } from '@nuxt/ui'
+import type { WithCopyProps, WithCopyEmits, WithCopySlots } from '../../types/components'
 
 const { buttonProps, tooltipProps } = defineProps<WithCopyProps>()
 const emit = defineEmits<WithCopyEmits>()
