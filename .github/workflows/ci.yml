@@ -23,6 +23,9 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install
+      
+      - name: Prepare
+        run: pnpm run dev:prepare
 
       - name: Run lint
         run: pnpm run lint
