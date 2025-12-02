@@ -1,6 +1,5 @@
 <script setup lang="ts" generic="S extends z.ZodObject">
 import type { z } from 'zod/v4'
-import type { AutoFormField } from '../../types/auto-form'
 import type { AutoFormRendererNestedProps } from '../../types/auto-form-renderer'
 import { UCollapsible } from '#components'
 import { computed, defineAsyncComponent } from 'vue'
