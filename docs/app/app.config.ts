@@ -10,7 +10,6 @@ export default defineAppConfig({
   },
   github: {
     rootDir: 'docs',
-    branch: 'feat/0.0.1',
     commitPath: 'src/runtime'
   },
   ui: {
