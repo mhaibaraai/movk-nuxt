@@ -39,6 +39,9 @@
   "files": [
     "dist"
   ],
+  "peerDependencies": {
+    "zod": ">=4.1.13"
+  },
   "scripts": {
     "prepack": "nr build",
     "build": "nuxt-module-build build",
