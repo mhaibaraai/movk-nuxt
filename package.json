@@ -1,7 +1,7 @@
 {
   "name": "@movk/nuxt",
   "type": "module",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "packageManager": "pnpm@10.24.0",
   "description": "Schema-driven form and table generation module for Nuxt 4",
   "author": "YiXuan <mhaibaraai@gmail.com>",
