@@ -1,6 +1,7 @@
 import {
   addComponentsDir,
   addImportsDir,
+  addTemplate,
   addTypeTemplate,
   createResolver,
   defineNuxtModule
@@ -58,6 +59,16 @@ export default defineNuxtModule<ModuleOptions>({
 
     addImportsDir(resolve('runtime/composables'))
     addImportsDir(resolve('runtime/shared'))
+
+    const cssTemplate = addTemplate({
+      filename: 'movk-nuxt.css',
+      getContents: () => {
+        return `@import "tailwindcss";
+@import "@nuxt/ui";`
+      }
+    })
+
+    nuxt.options.css.unshift(cssTemplate.dst)
 
     addTypeTemplate({
       filename: 'runtime/types/auto-form-zod.d.ts',
