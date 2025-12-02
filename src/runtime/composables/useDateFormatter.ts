@@ -147,11 +147,14 @@ export function useDateFormatter(options: DateFormatterOptions = {}) {
 
   /**
    * 转换为 JS Date 对象
+   * 注意:返回该日期在 UTC 午夜的 Date 对象,确保在任何环境中都能正确表示该日期
    */
   const toDate = (date: DateValue | undefined | null): Date | null => {
     if (!date) return null
     try {
-      return date.toDate(timeZone)
+      // 使用 UTC 时区创建 Date 对象,避免本地时区影响
+      // 这样 getDate()/getMonth()/getFullYear() 在不同环境中都能返回一致结果
+      return new Date(Date.UTC(date.year, date.month - 1, date.day))
     } catch (error) {
       console.error('[useDateFormatter] toDate error:', error)
       return null
