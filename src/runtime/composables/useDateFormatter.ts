@@ -87,7 +87,10 @@ export function useDateFormatter(options: DateFormatterOptions = {}) {
   const formatOptions = options.formatOptions ?? DEFAULT_FORMAT_OPTIONS
   const timeZone = options.timeZone ?? getLocalTimeZone()
 
-  const formatter = new DateFormatter(locale, formatOptions)
+  const formatter = new DateFormatter(locale, {
+    ...formatOptions,
+    timeZone
+  })
 
   // ==================== 格式化方法 ====================
 
