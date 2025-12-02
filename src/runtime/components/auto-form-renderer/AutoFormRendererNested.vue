@@ -2,15 +2,12 @@
 import type { z } from 'zod/v4'
 import type { AutoFormRendererNestedProps } from '../../types/auto-form-renderer'
 import { UCollapsible } from '#components'
-import { computed, defineAsyncComponent } from 'vue'
+import { computed } from 'vue'
 import { useAutoFormInjector } from '../../internal/useAutoFormProvider'
 import { classifyFields, isLeafField, VNodeRender } from '../../utils/auto-form'
 import AutoFormRendererArray from './AutoFormRendererArray.vue'
 import AutoFormRendererField from './AutoFormRendererField.vue'
-
-const AutoFormRendererLayout = defineAsyncComponent(() =>
-  import('./AutoFormRendererLayout.vue')
-)
+import AutoFormRendererLayout from './AutoFormRendererLayout.vue'
 
 const {
   field,

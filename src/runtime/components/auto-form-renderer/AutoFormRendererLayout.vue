@@ -2,16 +2,13 @@
 import type { z } from 'zod/v4'
 import type { AutoFormField } from '../../types/auto-form'
 import type { AutoFormRendererLayoutProps } from '../../types/auto-form-renderer'
-import { computed, defineAsyncComponent, resolveDynamicComponent } from 'vue'
+import { computed, resolveDynamicComponent } from 'vue'
 import { classifyFields } from '../../utils/auto-form'
 import { resolveReactiveValue } from '../../utils/reactive-utils'
+import { useAutoFormInjector } from '../../internal/useAutoFormProvider'
 import AutoFormRendererArray from './AutoFormRendererArray.vue'
 import AutoFormRendererField from './AutoFormRendererField.vue'
-import { useAutoFormInjector } from '../../internal/useAutoFormProvider'
-
-const AutoFormRendererNested = defineAsyncComponent(() =>
-  import('./AutoFormRendererNested.vue')
-)
+import AutoFormRendererNested from './AutoFormRendererNested.vue'
 
 const {
   field,
