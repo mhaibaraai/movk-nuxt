@@ -44,7 +44,7 @@
     "dev:build": "nuxt build playground",
     "docs": "nuxt dev docs",
     "docs:build": "nuxt build docs",
-    "release": "release-it",
+    "release": "release-it && npm publish --access public",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "typecheck": "vue-tsc --noEmit && nuxt typecheck playground",
