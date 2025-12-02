@@ -49,7 +49,6 @@
     "lint:fix": "eslint . --fix",
     "typecheck": "vue-tsc --noEmit && nuxt typecheck playground",
     "clean": "tsx scripts/rm.ts",
-    "up": "taze major -wIr",
     "test": "vitest"
   },
   "dependencies": {
@@ -78,7 +77,6 @@
     "eslint": "9.38.0",
     "fast-glob": "^3.3.3",
     "nuxt": "^4.2.1",
-    "taze": "^19.9.2",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "vitest": "3.2.4",
