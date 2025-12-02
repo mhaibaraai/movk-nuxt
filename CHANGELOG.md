@@ -1,5 +1,29 @@
 # 📋 Changelog
 
+## [0.1.1](https://github.com/mhaibaraai/movk-nuxt/compare/v0.1.0...v0.1.1) (2025-12-02)
+
+### 📝 Documentation
+
+* 优化安装指南中的依赖说明 ([99232d9](https://github.com/mhaibaraai/movk-nuxt/commit/99232d9d085a1f55cb12b92b398693e0ead0254e))
+* 修复安装文档格式并补充 pnpm 配置说明 ([ecfff31](https://github.com/mhaibaraai/movk-nuxt/commit/ecfff31dcac3f0af7cda001d7a7b736ae54d4fa6))
+* 新增 LLM 集成文档 ([767ef16](https://github.com/mhaibaraai/movk-nuxt/commit/767ef16518bae4e035f51e339c2bd8176482f3e4))
+* 更新 README 中的安装命令 ([2a34693](https://github.com/mhaibaraai/movk-nuxt/commit/2a34693f5f227d565e104410440a12764557c102))
+
+### ♻️ Code Refactoring
+
+* 移除未使用的主 CSS 文件 ([11e3aea](https://github.com/mhaibaraai/movk-nuxt/commit/11e3aeac976968f428b38fa5b287e702195fe8a7))
+
+### 🔧 Chores
+
+* **deps:** 升级 vitest 版本至 ^4.0.14 ([f134a09](https://github.com/mhaibaraai/movk-nuxt/commit/f134a095897c60b9932d4c705eb39c55574bb151))
+* **deps:** 更新模块依赖版本并调整依赖位置 ([0fedff4](https://github.com/mhaibaraai/movk-nuxt/commit/0fedff4f1053a44a8ff96d6c1c9bfc13cd178957))
+* **deps:** 添加 @nuxt/ui 到 peerDependencies ([6e6954d](https://github.com/mhaibaraai/movk-nuxt/commit/6e6954de1f50c89d2531460f443c83a8134c5f96))
+* **deps:** 添加 tailwindcss 依赖，版本为 4.1.17 ([5fd7a1a](https://github.com/mhaibaraai/movk-nuxt/commit/5fd7a1a9b5c3a158bd3277490de15dbf221eff98))
+* **deps:** 添加 zod peerDependency 声明 ([e847b90](https://github.com/mhaibaraai/movk-nuxt/commit/e847b901fb90f130eeabf3141074318afef52b26))
+* 优化发布流程自动执行 npm publish ([8ae5409](https://github.com/mhaibaraai/movk-nuxt/commit/8ae5409fb98b211bc222f9a4a8a5a79766b94be2))
+* 更新 Node.js 版本要求为 ^20.x || ^22.x ([3d933d9](https://github.com/mhaibaraai/movk-nuxt/commit/3d933d9bbecf7c1bd8b048113a0373258a5c86a2))
+* 更新项目配置 ([2490bb1](https://github.com/mhaibaraai/movk-nuxt/commit/2490bb1b93280054efbb34d5ea936b8e1f75fb9b))
+
 ## 0.1.0 (2025-12-02)
 
 ### ⚠ BREAKING CHANGES
