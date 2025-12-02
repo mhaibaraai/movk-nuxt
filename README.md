@@ -26,13 +26,13 @@
 
 ```bash
 # pnpm
-pnpm add @movk/nuxt
+pnpm add @movk/nuxt @nuxt/ui zod
 
 # yarn
-yarn add @movk/nuxt
+yarn add @movk/nuxt @nuxt/ui zod
 
 # npm
-npm install @movk/nuxt
+npm install @movk/nuxt @nuxt/ui zod
 ```
 
 ### 配置

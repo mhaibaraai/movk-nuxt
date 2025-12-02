@@ -49,8 +49,6 @@ export default defineNuxtModule<ModuleOptions>({
     nuxt.options.alias['#movk'] = resolve('./runtime')
     nuxt.options.appConfig.movk = defu(nuxt.options.appConfig.movk || {}, options)
 
-    nuxt.options.css.push(resolve('runtime/assets/css/main.css'))
-
     addComponentsDir({
       path: resolve('runtime/components'),
       prefix: options.prefix,
