@@ -1,0 +1,15 @@
+{
+  "name": "@movk/nuxt-playground",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "nuxt dev",
+    "build": "nuxt build",
+    "generate": "nuxt generate",
+    "typecheck": "nuxt typecheck"
+  },
+  "devDependencies": {
+    "nuxt": "^4.2.1",
+    "sass-embedded": "^1.93.3"
+  }
+}

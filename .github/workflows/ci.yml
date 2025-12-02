@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v6
+        with:
+          node-version: lts/*
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install
+      
+      - name: Prepare
+        run: pnpm run dev:prepare
+
+      - name: Run lint
+        run: pnpm run lint
+
+      - name: Run type check
+        run: pnpm run typecheck
+
+      - name: Test
+        run: pnpm run test run
+
+      - name: Build
+        run: pnpm run build
+
+      - name: Publish
+        run: pnpx pkg-pr-new publish --compact --no-template --pnpm

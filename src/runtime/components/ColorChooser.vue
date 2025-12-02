@@ -1,0 +1,58 @@
+<script setup lang="ts" generic="P extends 'click' | 'hover' = 'click'">
+import { UPopover, UButton, UColorPicker, UIcon } from '#components'
+import { computed } from 'vue'
+import type { ColorChooserProps, ColorChooserEmits } from '../types/components'
+
+const {
+  buttonProps,
+  popoverProps
+} = defineProps<ColorChooserProps>()
+
+const emit = defineEmits<ColorChooserEmits>()
+
+defineOptions({ inheritAttrs: false })
+
+const modelValue = defineModel<string>()
+
+const label = computed(() => {
+  return modelValue.value || buttonProps?.label || '选择颜色'
+})
+
+const chipStyle = computed(() => ({
+  backgroundColor: modelValue.value || ''
+}))
+</script>
+
+<template>
+  <UPopover v-bind="popoverProps" @close:prevent="emit('close:prevent')" @update:open="emit('update:open', $event)">
+    <template #default="defaultSlotProps">
+      <slot v-bind="defaultSlotProps">
+        <UButton
+          color="neutral"
+          variant="subtle"
+          class="w-full"
+          v-bind="buttonProps"
+          :label="label"
+        >
+          <template #leading="leading">
+            <slot name="leading" v-bind="leading">
+              <span v-if="modelValue" :style="chipStyle" class="size-3 rounded-full" />
+              <UIcon v-else name="i-lucide-palette" class="size-3" />
+            </slot>
+          </template>
+          <template v-if="$slots.trailing" #trailing="trailing">
+            <slot name="trailing" v-bind="trailing" />
+          </template>
+        </UButton>
+      </slot>
+    </template>
+
+    <template v-if="$slots.anchor" #anchor="anchor">
+      <slot name="anchor" v-bind="anchor" />
+    </template>
+
+    <template #content>
+      <UColorPicker v-model="modelValue" class="p-2" v-bind="$attrs" />
+    </template>
+  </UPopover>
+</template>

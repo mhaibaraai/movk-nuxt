@@ -1,0 +1,204 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## 项目概览
+
+这是一个为 Nuxt 4 设计的 Schema 驱动表单和表格生成模块 (`@movk/nuxt`),基于 Zod v4 和 Nuxt UI 构建。核心功能是通过 Zod Schema 自动生成表单和表格,同时提供独立的 UI 组件和工具函数。
+
+## 常用命令
+
+### 开发相关
+
+```bash
+# 开发环境准备(首次运行或依赖更新后必须执行)
+pnpm dev:prepare
+
+# 启动 playground 开发服务器
+pnpm dev
+
+# 启动文档站点开发服务器
+pnpm docs
+
+# 构建 playground
+pnpm dev:build
+
+# 构建文档站点
+pnpm docs:build
+```
+
+### 构建与发布
+
+```bash
+# 构建模块(生成 dist 目录)
+pnpm build
+
+# 发布新版本
+pnpm release
+```
+
+### 代码质量
+
+```bash
+# 运行 ESLint 检查
+pnpm lint
+
+# 自动修复 ESLint 问题
+pnpm lint:fix
+
+# 类型检查(包含 playground 和 docs)
+pnpm typecheck
+
+# 运行所有测试(watch 模式)
+pnpm test
+
+# 运行单个测试文件
+pnpm vitest test/composables/useDateFormatter.test.ts
+
+# 运行测试并生成覆盖率报告
+pnpm vitest --coverage
+```
+
+### 其他工具
+
+```bash
+# 更新依赖到最新主版本
+pnpm up
+
+# 清理构建产物和缓存
+pnpm clean
+```
+
+## 架构设计
+
+### 分层架构
+
+项目采用三层架构设计:
+
+1. **Core Systems** (`src/runtime/composables/useAutoForm.ts`)
+   - `useAutoForm`: 核心 composable,提供 Schema 驱动的表单生成能力
+   - `afz` (AutoFormZod): 增强的 Zod 工厂函数,支持元数据附加
+   - 通过拦截 Zod 克隆方法实现元数据自动传递(应对 Zod v4 不可变设计)
+
+2. **Standalone Components** (`src/runtime/components/`)
+   - 独立 UI 组件: `DatePicker`、`ColorChooser`、`StarRating`
+   - 输入增强组件: `WithClear`、`WithPasswordToggle`、`WithCopy`、`WithCharacterLimit`
+   - 表单渲染器: `auto-form-renderer/` 目录下的内部组件
+
+3. **Utilities & Composables**
+   - `useDateFormatter`: 日期格式化工具
+   - `schema-introspector.ts`: Schema 内省与字段生成
+   - `field-utils.ts`: 字段处理工具函数
+
+### 关键设计模式
+
+#### 元数据传递机制
+
+Zod v4 采用不可变设计,每次链式调用都会返回新的 Schema 实例。为了在链式调用中保持元数据,使用了方法拦截模式:
+
+```typescript
+// src/runtime/composables/useAutoForm.ts:37-62
+// interceptCloneMethods 拦截所有克隆方法,自动传递 customMeta
+```
+
+#### Schema 驱动控件映射
+
+通过类型内省将 Zod Schema 映射到 UI 组件:
+
+```typescript
+// src/runtime/utils/schema-introspector.ts
+// inferControlType() 根据 Zod Schema 类型推断对应的 UI 控件
+// buildFields() 递归解析 Schema 生成表单字段配置
+```
+
+#### 组件自动注册
+
+模块会自动注册所有 runtime components,并添加可配置的前缀(默认 `M`):
+
+```typescript
+// src/module.ts:54-59
+addComponentsDir({
+  path: resolve('runtime/components'),
+  prefix: options.prefix, // 默认 'M'
+  pathPrefix: false,
+  ignore: ['auto-form-renderer/**'] // 渲染器组件仅供内部使用
+})
+```
+
+### 目录结构约定
+
+```
+src/
+├── module.ts                  # Nuxt 模块入口
+└── runtime/
+    ├── components/            # 组件目录(自动注册,使用 prefix)
+    │   ├── auto-form-renderer/  # 内部渲染器组件(不自动注册)
+    │   ├── input/             # 输入增强组件
+    │   └── *.vue              # 独立组件
+    ├── composables/           # 自动导入的 composables
+    ├── constants/             # 常量定义
+    ├── internal/              # 内部使用的工具(provide/inject 等)
+    ├── types/                 # 类型定义
+    └── utils/                 # 工具函数
+
+playground/                    # 开发测试环境
+docs/                          # 文档站点(基于 @movk/nuxt-docs)
+test/                          # 测试文件
+```
+
+## 开发约定
+
+### Zod v4 特定要求
+
+- 使用 `import { z } from 'zod/v4'` 导入(非 `zod`)
+- 优先使用新的验证函数: `z.email()` / `z.url()` / `z.uuid()`(代替 `.refine()`)
+- 避免使用 `z.describe()`,改用 `z.meta({ description: '...' })`
+
+### 组件开发规范
+
+- 新增独立组件放在 `src/runtime/components/` 根目录
+- 内部渲染组件放在 `auto-form-renderer/` 子目录
+- 组件必须支持 `v-model` 或 `modelValue` prop
+- 使用 `markRaw()` 包装组件引用以避免不必要的响应式转换
+
+### 测试要求
+
+- 新增 composable 必须添加单元测试到 `test/composables/`
+- 使用 `@nuxt/test-utils` 进行 E2E 测试
+- 测试文件使用 `.test.ts` 后缀
+
+### 类型安全
+
+- 所有公共 API 必须导出类型定义
+- 使用 `z.input<>` / `z.output<>` 提取 Schema 类型
+- 优先使用 `satisfies` 而非类型断言
+
+## 特殊注意事项
+
+### 模块依赖
+
+本模块依赖以下 Nuxt 模块(会自动检查版本兼容性):
+- `@nuxt/image` >= 1.11.0
+- `@nuxt/ui` >= 4.1.0
+- `@vueuse/nuxt` >= 14.0.0
+
+确保 playground 和 docs 环境正确安装这些依赖。
+
+### 文档站点配置
+
+文档站点 (`docs/`) 扩展自 `@movk/nuxt-docs`,并注册了示例组件:
+
+```typescript
+// docs/nuxt.config.ts:9-13
+// 自动注册 app/components/content/examples 为全局组件
+```
+
+在文档中使用示例组件时无需导入,直接在 MDC 中使用即可。
+
+### 发布流程
+
+使用 `release-it` 管理版本发布,配置文件为 `.release-it.json`:
+- 自动生成 CHANGELOG
+- 自动更新版本号
+- 自动创建 Git tag
+- 需要 npm 发布权限
