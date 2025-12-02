@@ -33,13 +33,13 @@ export default defineNuxtModule<ModuleOptions>({
   defaults: moduleOptionsSchema.parse({}),
   moduleDependencies: {
     '@nuxt/image': {
-      version: '>=1.11.0'
+      version: '>=2.0.0'
     },
     '@nuxt/ui': {
-      version: '>=4.1.0'
+      version: '>=4.2.1'
     },
     '@vueuse/nuxt': {
-      version: '>=14.0.0'
+      version: '>=14.1.0'
     }
   },
   async setup(options, nuxt) {
