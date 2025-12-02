@@ -40,9 +40,6 @@ export default defineNuxtModule<ModuleOptions>({
     },
     '@vueuse/nuxt': {
       version: '>=14.1.0'
-    },
-    'zod': {
-      version: '>=4.1.13'
     }
   },
   async setup(options, nuxt) {
