@@ -1,6 +1,7 @@
 import {
   addComponentsDir,
   addImportsDir,
+  addPlugin,
   addTypeTemplate,
   createResolver,
   defineNuxtModule
@@ -8,15 +9,25 @@ import {
 import defu from 'defu'
 import { z } from 'zod/v4'
 import { name, version } from '../package.json'
+import {
+  movkApiModuleOptionsSchema,
+  type MovkApiModuleOptions
+} from './runtime/schemas/api'
 
 export type * from './runtime/types'
+
+// ==================== 模块配置 Schema ====================
 
 const moduleOptionsSchema = z.object({
   /**
    * 组件前缀
    * @default 'M'
    */
-  prefix: z.string().default('M')
+  prefix: z.string().default('M'),
+  /**
+   * API 模块配置
+   */
+  api: movkApiModuleOptionsSchema.optional()
 })
 
 export type ModuleOptions = z.input<typeof moduleOptionsSchema>
@@ -49,6 +60,42 @@ export default defineNuxtModule<ModuleOptions>({
     nuxt.options.alias['#movk'] = resolve('./runtime')
     nuxt.options.appConfig.movk = defu(nuxt.options.appConfig.movk || {}, options)
 
+    // ==================== API 模块配置 ====================
+    const apiConfig = defu(options.api || {}, {
+      enabled: true,
+      defaultEndpoint: 'default',
+      endpoints: {
+        default: {
+          baseURL: '/api'
+        }
+      },
+      auth: {
+        enabled: false,
+        tokenSource: 'session',
+        sessionTokenPath: 'secure.token',
+        tokenType: 'Bearer',
+        headerName: 'Authorization',
+        redirectOnUnauthorized: true,
+        loginPath: '/login',
+        clearSessionOnUnauthorized: true
+      },
+      toast: {
+        enabled: true,
+        success: { show: true, color: 'success', duration: 3000 },
+        error: { show: true, color: 'error', duration: 5000 }
+      },
+      success: {
+        successCodes: [200, 0],
+        codeKey: 'code',
+        messageKey: 'msg',
+        dataKey: 'data'
+      },
+      debug: false
+    } satisfies MovkApiModuleOptions)
+
+    // 注入运行时配置
+    nuxt.options.runtimeConfig.public.movkApi = apiConfig
+
     addComponentsDir({
       path: resolve('runtime/components'),
       prefix: options.prefix,
@@ -58,6 +105,14 @@ export default defineNuxtModule<ModuleOptions>({
 
     addImportsDir(resolve('runtime/composables'))
     addImportsDir(resolve('runtime/shared'))
+
+    // 注册 API 插件
+    if (apiConfig.enabled) {
+      addPlugin({
+        src: resolve('runtime/plugins/api.factory'),
+        mode: 'all'
+      })
+    }
 
     addTypeTemplate({
       filename: 'runtime/types/auto-form-zod.d.ts',
@@ -69,5 +124,9 @@ export default defineNuxtModule<ModuleOptions>({
 declare module 'nuxt/schema' {
   interface NuxtOptions {
     ['movk']: ModuleOptions
+  }
+
+  interface PublicRuntimeConfig {
+    movkApi: MovkApiModuleOptions
   }
 }
