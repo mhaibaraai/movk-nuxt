@@ -1,74 +1,30 @@
-import type { Ref, MaybeRefOrGetter } from 'vue'
+import type { MaybeRefOrGetter } from 'vue'
 import type { FetchError } from 'ofetch'
-import type {
-  ApiResponseBase,
-  UseApiFetchOptions
-} from '../types/api.d'
-import type {
-  ApiSuccessConfig,
-  ApiToastConfig,
-  MovkApiModuleOptions
-} from '../schemas/api'
-import { useFetch, useRuntimeConfig, useNuxtApp } from '#imports'
-
-/**
- * useApiFetch 返回类型
- */
-export interface UseApiFetchReturn<T> {
-  data: Ref<T | null>
-  error: Ref<FetchError<ApiResponseBase<unknown>> | null>
-  pending: Ref<boolean>
-  status: Ref<'idle' | 'pending' | 'success' | 'error'>
-  refresh: () => Promise<void>
-  execute: () => Promise<void>
-  clear: () => void
-}
-
-/**
- * 判断响应是否成功
- */
-function isSuccessResponse(
-  response: ApiResponseBase<unknown>,
-  successConfig: Partial<ApiSuccessConfig> = {}
-): boolean {
-  const merged = {
-    successCodes: [200, 0],
-    codeKey: 'code',
-    ...successConfig
-  }
-
-  const code = response[merged.codeKey]
-  return merged.successCodes.includes(code as number | string)
-}
-
-/**
- * 从响应中提取消息
- */
-function extractMessage(
-  response: ApiResponseBase<unknown>,
-  messageKey = 'msg'
-): string | undefined {
-  return (response[messageKey] as string)
-    || response.message
-    || response.msg
-}
+import type { AsyncData, AsyncDataOptions } from 'nuxt/app'
+import type { ApiResponseBase, UseApiFetchOptions, ApiRequestOptions } from '../types'
+import { toValue } from 'vue'
+import { useNuxtApp, useAsyncData } from '#imports'
 
 /**
  * 自定义 API Fetch 组合式函数
- * 封装 useFetch，集成认证、Toast、数据解包等功能
+ * 基于 $api 实例的响应式封装，自动获得认证、Toast、数据解包等功能
  *
  * @example
  * ```ts
- * // 基础用法
- * const { data, pending, error } = await useApiFetch('/users')
+ * // 基础 GET 请求
+ * const { data, pending, error, refresh } = await useApiFetch('/users')
  *
- * // 带配置
+ * // POST 请求
  * const { data } = await useApiFetch('/users', {
  *   method: 'POST',
- *   body: { name: 'test' },
+ *   body: { name: 'test' }
+ * })
+ *
+ * // 自定义配置
+ * const { data } = await useApiFetch('/users', {
  *   api: {
  *     toast: { successMessage: '创建成功' },
- *     unwrap: true // 自动解包 data 字段
+ *     unwrap: false // 不自动解包
  *   }
  * })
  *
@@ -81,164 +37,106 @@ function extractMessage(
 export function useApiFetch<T = unknown>(
   url: MaybeRefOrGetter<string>,
   options: UseApiFetchOptions<T> = {}
-): UseApiFetchReturn<T> {
-  const config = useRuntimeConfig().public.movkApi as MovkApiModuleOptions
+): AsyncData<T | null, FetchError<ApiResponseBase<unknown>> | null> {
   const nuxtApp = useNuxtApp()
 
-  // 获取端点配置
-  const endpointName = options.endpoint || config.defaultEndpoint || 'default'
-  const endpoints = config.endpoints || {}
-  const endpointConfig = endpoints[endpointName] || endpoints.default || { baseURL: '/api' }
-
-  // 合并配置
-  const successConfig: Partial<ApiSuccessConfig> = {
-    ...config.success,
-    ...endpointConfig.success
+  // 获取 API 实例
+  const getApiInstance = () => {
+    const endpoint = options.endpoint
+    return endpoint ? nuxtApp.$api.use(endpoint) : nuxtApp.$api
   }
 
-  const toastConfig: Partial<ApiToastConfig> = {
-    ...config.toast,
-    ...endpointConfig.toast
+  // 提取选项
+  const {
+    api: apiOptions,
+    endpoint: _endpoint,
+    method = 'GET',
+    body,
+    // AsyncData 选项
+    lazy,
+    server,
+    immediate,
+    watch,
+    default: defaultValue,
+    deep,
+    dedupe,
+    key,
+    // 其他选项忽略
+    ...restOptions
+  } = options
+
+  // 构建 $api 请求选项
+  const requestOptions: ApiRequestOptions<T> = {
+    ...apiOptions,
+    // 传递 query/params 等 fetch 选项
+    query: restOptions.query as Record<string, unknown> | undefined,
+    params: restOptions.params as Record<string, unknown> | undefined,
+    headers: restOptions.headers as HeadersInit | undefined
   }
 
-  const apiOptions = options.api || {}
+  // 获取方法名
+  const methodName = (typeof method === 'string' ? method : 'GET').toUpperCase() as 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
 
-  /**
-   * 获取 Toast 实例
-   */
-  const getToast = () => {
-    try {
-      // @ts-expect-error - useToast 来自 @nuxt/ui
-      return useToast?.()
-    }
-    catch {
-      return null
-    }
+  // 生成唯一 key
+  const asyncKey = key || `api-${methodName}-${toValue(url)}`
+
+  // 构建 useAsyncData 选项
+  const asyncDataOptions: AsyncDataOptions<T> = {
+    lazy,
+    server,
+    immediate,
+    deep,
+    dedupe
   }
 
-  /**
-   * 显示 Toast 提示
-   */
-  const showToast = (
-    type: 'success' | 'error',
-    message: string | undefined
-  ) => {
-    // 全局禁用
-    if (!config.toast?.enabled) return
-    // 端点禁用
-    if (toastConfig.enabled === false) return
-    // 请求禁用
-    if (apiOptions.toast === false) return
-
-    const toast = getToast()
-    if (!toast) return
-
-    const globalTypeConfig = config.toast?.[type]
-    const endpointTypeConfig = toastConfig[type]
-    const requestToast = apiOptions.toast
-
-    // 检查是否显示
-    if (globalTypeConfig?.show === false) return
-    if (endpointTypeConfig?.show === false) return
-    if (typeof requestToast === 'object' && requestToast[type] === false) return
-
-    // 获取自定义消息
-    const customMessage = typeof requestToast === 'object'
-      ? (type === 'success' ? requestToast.successMessage : requestToast.errorMessage)
-      : undefined
-
-    const finalMessage = customMessage || message
-    if (!finalMessage) return
-
-    // 合并 Toast 配置
-    const toastProps = {
-      color: type === 'success' ? 'success' as const : 'error' as const,
-      title: finalMessage,
-      duration: type === 'success' ? 3000 : 5000,
-      ...globalTypeConfig,
-      ...endpointTypeConfig,
-      ...(typeof requestToast === 'object' && typeof requestToast[type] === 'object' ? requestToast[type] : {})
-    }
-
-    toast.add(toastProps)
+  // 只在有值时添加 watch 和 default
+  if (watch !== undefined && watch !== false) {
+    asyncDataOptions.watch = watch as AsyncDataOptions<T>['watch']
+  }
+  if (defaultValue !== undefined) {
+    asyncDataOptions.default = defaultValue as AsyncDataOptions<T>['default']
   }
 
-  // 构建 useFetch 选项
-  const fetchOptions = {
-    ...options,
-    baseURL: endpointConfig.baseURL,
-    timeout: apiOptions.timeout || endpointConfig.timeout,
-    retry: apiOptions.retry,
+  // 使用 useAsyncData 包装 $api 调用
+  return useAsyncData<T, FetchError<ApiResponseBase<unknown>>>(
+    asyncKey,
+    async () => {
+      const api = getApiInstance()
+      const resolvedUrl = toValue(url)
 
-    // 使用 $api 实例
-    $fetch: nuxtApp.$api?.raw as typeof $fetch,
-
-    // 响应转换
-    transform: (response: unknown) => {
-      const apiResponse = response as ApiResponseBase<T>
-
-      // 检查业务状态码
-      if (!isSuccessResponse(apiResponse, successConfig)) {
-        const errorMessage = extractMessage(apiResponse, successConfig.messageKey)
-        showToast('error', errorMessage)
-        throw new Error(errorMessage || '请求失败')
+      switch (methodName) {
+        case 'POST':
+          return api.post<T>(resolvedUrl, body, requestOptions)
+        case 'PUT':
+          return api.put<T>(resolvedUrl, body, requestOptions)
+        case 'PATCH':
+          return api.patch<T>(resolvedUrl, body, requestOptions)
+        case 'DELETE':
+          return api.delete<T>(resolvedUrl, requestOptions)
+        default:
+          return api.get<T>(resolvedUrl, requestOptions)
       }
-
-      // 显示成功提示
-      const successMessage = extractMessage(apiResponse, successConfig.messageKey)
-      showToast('success', successMessage)
-
-      // 自定义转换
-      if (apiOptions.transform) {
-        return apiOptions.transform(apiResponse)
-      }
-
-      // 解包数据
-      if (apiOptions.unwrap !== false) {
-        const dataKey = successConfig.dataKey || 'data'
-        return (apiResponse[dataKey] ?? apiResponse.result ?? apiResponse) as T
-      }
-
-      return apiResponse as unknown as T
     },
-
-    // 错误处理
-    onResponseError({ response }: { response: { _data?: unknown, status: number } }) {
-      const errorData = response._data as ApiResponseBase<unknown> | undefined
-      const errorMessage = errorData
-        ? extractMessage(errorData, successConfig.messageKey)
-        : `请求失败: ${response.status}`
-
-      showToast('error', errorMessage)
-    }
-  }
-
-  // 移除 api 和 endpoint 选项，避免传递给 useFetch
-  delete (fetchOptions as Record<string, unknown>).api
-  delete (fetchOptions as Record<string, unknown>).endpoint
-
-  // @ts-expect-error - useFetch 类型比较复杂，这里使用类型断言
-  const result = useFetch(url, fetchOptions)
-
-  return {
-    data: result.data as Ref<T | null>,
-    error: result.error as Ref<FetchError<ApiResponseBase<unknown>> | null>,
-    pending: result.pending,
-    status: result.status,
-    refresh: result.refresh,
-    execute: result.execute,
-    clear: result.clear
-  }
+    asyncDataOptions
+  ) as AsyncData<T | null, FetchError<ApiResponseBase<unknown>> | null>
 }
 
 /**
  * Lazy 版本的 useApiFetch
- * 不会在服务端渲染时执行
+ * 不会在服务端渲染时执行，适合用户交互触发的请求
+ *
+ * @example
+ * ```ts
+ * const { data, pending, execute } = useLazyApiFetch('/users')
+ *
+ * // 手动触发
+ * await execute()
+ * ```
  */
 export function useLazyApiFetch<T = unknown>(
   url: MaybeRefOrGetter<string>,
   options: UseApiFetchOptions<T> = {}
-): UseApiFetchReturn<T> {
+): AsyncData<T | null, FetchError<ApiResponseBase<unknown>> | null> {
   return useApiFetch<T>(url, {
     ...options,
     lazy: true
@@ -246,8 +144,8 @@ export function useLazyApiFetch<T = unknown>(
 }
 
 /**
- * 创建类型安全的 API Fetch
- * 用于定义接口时获得更好的类型推断
+ * 创建类型安全的 API Fetch 工厂
+ * 用于定义 API 接口时获得更好的类型推断
  *
  * @example
  * ```ts
@@ -256,7 +154,11 @@ export function useLazyApiFetch<T = unknown>(
  *   name: string
  * }
  *
- * const { data } = await useTypedApiFetch<User>('/user/1')
+ * // 创建类型化的 fetcher
+ * const fetchUser = useTypedApiFetch<User>()
+ *
+ * // 使用时自动获得类型
+ * const { data } = await fetchUser('/user/1')
  * // data 类型为 Ref<User | null>
  * ```
  */
