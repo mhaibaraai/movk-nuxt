@@ -9,14 +9,10 @@ import {
 import defu from 'defu'
 import { z } from 'zod/v4'
 import { name, version } from '../package.json'
-import {
-  movkApiModuleOptionsSchema,
-  type MovkApiModuleOptions
-} from './runtime/schemas/api'
+import { movkApiModuleOptionsSchema } from './runtime/schemas/api'
+import type { ApiInstance, MovkApiModuleOptions } from './runtime/types'
 
-export type * from './runtime/types'
-
-// ==================== 模块配置 Schema ====================
+export * from './runtime/types'
 
 const moduleOptionsSchema = z.object({
   /**
@@ -51,6 +47,9 @@ export default defineNuxtModule<ModuleOptions>({
     },
     '@vueuse/nuxt': {
       version: '>=14.1.0'
+    },
+    'nuxt-auth-utils': {
+      version: '>=0.5.25'
     }
   },
   async setup(options, nuxt) {
@@ -60,8 +59,7 @@ export default defineNuxtModule<ModuleOptions>({
     nuxt.options.alias['#movk'] = resolve('./runtime')
     nuxt.options.appConfig.movk = defu(nuxt.options.appConfig.movk || {}, options)
 
-    // ==================== API 模块配置 ====================
-    const apiConfig = defu(options.api || {}, {
+    const apiConfig = movkApiModuleOptionsSchema.parse(defu(options.api || {}, {
       enabled: true,
       defaultEndpoint: 'default',
       endpoints: {
@@ -91,7 +89,7 @@ export default defineNuxtModule<ModuleOptions>({
         dataKey: 'data'
       },
       debug: false
-    } satisfies MovkApiModuleOptions)
+    }))
 
     // 注入运行时配置
     nuxt.options.runtimeConfig.public.movkApi = apiConfig
@@ -121,10 +119,18 @@ export default defineNuxtModule<ModuleOptions>({
   }
 })
 
-declare module 'nuxt/schema' {
+declare module 'nuxt/app' {
+  interface NuxtApp {
+    $api: ApiInstance
+  }
+}
+
+declare module '@nuxt/schema' {
   interface NuxtOptions {
     ['movk']: ModuleOptions
   }
+
+  interface RuntimeConfig { }
 
   interface PublicRuntimeConfig {
     movkApi: MovkApiModuleOptions
