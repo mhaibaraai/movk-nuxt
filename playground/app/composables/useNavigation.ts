@@ -117,7 +117,10 @@ const components: NavigationMenuItem[] = [
 ]
 
 export const useNavigation = () => {
-  const items = [{ label: 'Home', icon: 'i-lucide-house', to: '/' }]
+  const items = [
+    { label: 'Home', icon: 'i-lucide-house', to: '/' },
+    { label: 'Use API Fetch', icon: 'i-lucide-database', to: '/UseApiFetch' }
+  ]
 
   const groups = computed(() => [
     { id: 'links', items },
