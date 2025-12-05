@@ -1,4 +1,4 @@
 export * from './auto-form'
-export * from './components'
-export * from './auto-form-renderer'
-export * from './api'
+export * from './components.d'
+export * from './auto-form-renderer.d'
+export * from './api.d'

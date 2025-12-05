@@ -1,17 +1,14 @@
 import { z } from 'zod/v4'
 
-// ==================== API 响应 Schema ====================
-
 /**
  * 标准 API 响应结构 Schema
- * 支持不同后端返回格式
  */
 export const apiResponseSchema = <T extends z.ZodType>(dataSchema: T) =>
   z.object({
-    /** 状态码 - 支持 code/status 等多种命名 */
+    /** 状态码 */
     code: z.union([z.number(), z.string()]).optional(),
     status: z.union([z.number(), z.string()]).optional(),
-    /** 消息字段 - 支持 msg/message 等多种命名 */
+    /** 消息字段 */
     msg: z.string().optional(),
     message: z.string().optional(),
     /** 数据字段 */
@@ -22,136 +19,142 @@ export const apiResponseSchema = <T extends z.ZodType>(dataSchema: T) =>
     error: z.string().nullable().optional()
   }).loose()
 
-// ==================== 成功响应配置 Schema ====================
-
 /**
  * 成功响应判断配置 Schema
  */
 export const apiSuccessConfigSchema = z.object({
-  /** 成功状态码列表，默认 [200, 0] */
+  /**
+   * 成功状态码列表
+   * @defaultValue [200, 0]
+   */
   successCodes: z.array(z.union([z.number(), z.string()])).default([200, 0]),
-  /** 状态码字段名，默认 'code' */
+  /**
+   * 状态码字段名
+   * @defaultValue 'code'
+   */
   codeKey: z.string().default('code'),
-  /** 消息字段名，默认 'msg' */
+  /**
+   * 消息字段名
+   * @defaultValue 'msg'
+   */
   messageKey: z.string().default('msg'),
-  /** 数据字段名，默认 'data' */
+  /**
+   * 数据字段名
+   * @defaultValue 'data'
+   */
   dataKey: z.string().default('data')
 })
-
-// ==================== 认证配置 Schema ====================
 
 /**
  * Auth 认证配置 Schema
  * 使用 nuxt-auth-utils 进行认证管理
  */
 export const apiAuthConfigSchema = z.object({
-  /** 是否启用认证，默认 false */
+  /**
+   * 是否启用认证
+   * @defaultValue false
+   */
   enabled: z.boolean().default(false),
   /**
    * Token 来源
    * - 'session': 从 nuxt-auth-utils 的 session 中获取 (推荐)
    * - 'custom': 使用自定义 tokenGetter
+   * @defaultValue 'session'
    */
   tokenSource: z.enum(['session', 'custom']).default('session'),
-  /** Session 中 token 的路径，默认 'secure.token' (用于 nuxt-auth-utils) */
+  /**
+   * Session 中 token 的路径
+   * 用于 nuxt-auth-utils
+   * @defaultValue 'secure.token'
+   */
   sessionTokenPath: z.string().default('secure.token'),
-  /** Token 类型，默认 'Bearer' */
+  /**
+   * Token 类型
+   * @defaultValue 'Bearer'
+   */
   tokenType: z.enum(['Bearer', 'Basic', 'Custom']).default('Bearer'),
-  /** 自定义 Token 类型值 (当 tokenType 为 'Custom' 时使用) */
+  /**
+   * 自定义 Token 类型值
+   * 当 tokenType 为 'Custom' 时使用
+   */
   customTokenType: z.string().optional(),
-  /** 自定义 Header 名称，默认 'Authorization' */
+  /**
+   * 自定义 Header 名称
+   * @defaultValue 'Authorization'
+   */
   headerName: z.string().default('Authorization'),
-  /** 401 错误时是否自动跳转登录页 */
+  /**
+   * 401 错误时是否自动跳转登录页
+   * @defaultValue true
+   */
   redirectOnUnauthorized: z.boolean().default(true),
-  /** 登录页路径 */
+  /**
+   * 登录页路径
+   * @defaultValue '/login'
+   */
   loginPath: z.string().default('/login'),
-  /** 是否在 401 时自动清除 session */
+  /**
+   * 是否在 401 时自动清除 session
+   * @defaultValue true
+   */
   clearSessionOnUnauthorized: z.boolean().default(true)
 })
 
-// ==================== Toast 配置 Schema ====================
-
 /**
  * Toast 提示配置 Schema
+ * @see https://ui.nuxt.com/docs/composables/use-toast
  */
 export const apiToastConfigSchema = z.object({
-  /** 是否全局启用提示，默认 true */
+  /**
+   * 是否全局启用提示
+   * @defaultValue true
+   */
   enabled: z.boolean().default(true),
   /** 成功提示配置 */
   success: z.object({
-    /** 是否显示成功提示，默认 true */
+    /**
+     * 是否显示成功提示
+     * @defaultValue true
+     */
     show: z.boolean().default(true),
-    /** 默认颜色 */
+    /**
+     * 默认颜色
+     * @defaultValue 'success'
+     */
     color: z.string().default('success'),
-    /** 持续时间 (ms) */
+    /**
+     * 默认图标
+     */
+    icon: z.string().optional(),
+    /**
+     * 持续时间 (ms)
+     * @defaultValue 3000
+     */
     duration: z.number().default(3000)
   }).loose().optional(),
   /** 错误提示配置 */
   error: z.object({
-    /** 是否显示错误提示，默认 true */
+    /**
+     * 是否显示错误提示
+     * @defaultValue true
+     */
     show: z.boolean().default(true),
-    /** 默认颜色 */
+    /**
+     * 默认颜色
+     * @defaultValue 'error'
+     */
     color: z.string().default('error'),
-    /** 持续时间 (ms) */
+    /**
+     * 默认图标
+     */
+    icon: z.string().optional(),
+    /**
+     * 持续时间 (ms)
+     * @defaultValue 5000
+     */
     duration: z.number().default(5000)
   }).loose().optional()
 })
-
-// ==================== 请求 Toast 配置 Schema ====================
-
-/**
- * 单次请求的 Toast 配置 Schema
- */
-export const requestToastOptionsSchema = z.object({
-  /** 是否显示提示 */
-  show: z.boolean().optional(),
-  /** 成功提示配置 */
-  success: z.union([
-    z.object({
-      color: z.string().optional(),
-      title: z.string().optional(),
-      description: z.string().optional(),
-      duration: z.number().optional()
-    }).loose(),
-    z.literal(false)
-  ]).optional(),
-  /** 错误提示配置 */
-  error: z.union([
-    z.object({
-      color: z.string().optional(),
-      title: z.string().optional(),
-      description: z.string().optional(),
-      duration: z.number().optional()
-    }).loose(),
-    z.literal(false)
-  ]).optional(),
-  /** 自定义成功消息 */
-  successMessage: z.string().optional(),
-  /** 自定义错误消息 */
-  errorMessage: z.string().optional()
-})
-
-// ==================== 请求配置 Schema ====================
-
-/**
- * 单次请求配置 Schema
- */
-export const requestOptionsSchema = z.object({
-  /** 是否携带认证信息，覆盖全局配置 */
-  auth: z.boolean().optional(),
-  /** Toast 配置 */
-  toast: z.union([requestToastOptionsSchema, z.literal(false)]).optional(),
-  /** 是否解包响应数据，直接返回 data 字段 */
-  unwrap: z.boolean().default(true),
-  /** 请求超时时间 (ms) */
-  timeout: z.number().optional(),
-  /** 重试次数 */
-  retry: z.union([z.number(), z.literal(false)]).optional(),
-  /** 重试延迟 (ms) */
-  retryDelay: z.number().optional()
-})
-
-// ==================== API 端点配置 Schema ====================
 
 /**
  * 单个 API 端点配置 Schema
@@ -168,20 +171,22 @@ export const apiEndpointConfigSchema = z.object({
   /** 该端点的成功判断配置 */
   success: apiSuccessConfigSchema.partial().optional(),
   /** 默认请求头 */
-  headers: z.record(z.string(), z.string()).optional(),
-  /** 请求超时时间 (ms) */
-  timeout: z.number().optional()
+  headers: z.record(z.string(), z.string()).optional()
 })
-
-// ==================== 模块配置 Schema ====================
 
 /**
  * Movk API 模块配置 Schema
  */
 export const movkApiModuleOptionsSchema = z.object({
-  /** 是否启用 API 功能，默认 true */
+  /**
+   * 是否启用 API 功能
+   * @defaultValue true
+   */
   enabled: z.boolean().default(true),
-  /** 默认使用的端点名称，默认 'default' */
+  /**
+   * 默认使用的端点名称
+   * @defaultValue 'default'
+   */
   defaultEndpoint: z.string().default('default'),
   /** API 端点配置 */
   endpoints: z.record(z.string(), apiEndpointConfigSchema).optional(),
@@ -191,7 +196,10 @@ export const movkApiModuleOptionsSchema = z.object({
   toast: apiToastConfigSchema.partial().optional(),
   /** 全局成功判断配置 */
   success: apiSuccessConfigSchema.partial().optional(),
-  /** 是否启用调试模式 */
+  /**
+   * 是否启用调试模式
+   * @defaultValue false
+   */
   debug: z.boolean().default(false)
 })
 
@@ -201,12 +209,8 @@ export type ApiResponseBase<T = unknown> = z.infer<ReturnType<typeof apiResponse
 export type ApiSuccessConfig = z.infer<typeof apiSuccessConfigSchema>
 export type ApiAuthConfig = z.infer<typeof apiAuthConfigSchema>
 export type ApiToastConfig = z.infer<typeof apiToastConfigSchema>
-export type RequestToastOptions = z.infer<typeof requestToastOptionsSchema>
-export type RequestOptions = z.infer<typeof requestOptionsSchema>
 export type ApiEndpointConfig = z.infer<typeof apiEndpointConfigSchema>
 export type MovkApiModuleOptions = z.infer<typeof movkApiModuleOptionsSchema>
-
-// ==================== 解析函数 ====================
 
 /**
  * 解析 API 模块配置
