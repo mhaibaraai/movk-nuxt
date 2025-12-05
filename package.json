@@ -67,6 +67,7 @@
     "@vueuse/core": "^14.1.0",
     "@vueuse/nuxt": "^14.1.0",
     "defu": "^6.1.4",
+    "nuxt-auth-utils": "^0.5.25",
     "tailwindcss": "^4.1.17",
     "scule": "^1.3.0",
     "zod": "^4.1.13"
