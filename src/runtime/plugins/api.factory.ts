@@ -1,8 +1,8 @@
 import type { $Fetch } from 'ofetch'
 import type {
-  ApiEndpointsConfig,
   ApiInstance,
-  RequestOptionsWithTransform,
+  ApiRequestOptions,
+  RequestToastConfig,
   UploadRequestOptions
 } from '../types/api.d'
 import type {
@@ -11,22 +11,117 @@ import type {
   ApiResponseBase,
   ApiSuccessConfig,
   ApiToastConfig,
-  MovkApiModuleOptions,
-  RequestToastOptions
+  MovkApiModuleOptions
 } from '../schemas/api'
+import { getPath, triggerDownload, separate } from '@movk/core'
 import { defineNuxtPlugin, useRuntimeConfig, navigateTo } from '#app'
+import defu from 'defu'
+
+// ==================== 工具函数 ====================
 
 /**
- * 从对象路径获取值
- * @example getValueByPath({ a: { b: 'value' } }, 'a.b') => 'value'
+ * 判断响应是否成功
  */
-function getValueByPath(obj: Record<string, unknown>, path: string): unknown {
-  return path.split('.').reduce<unknown>((acc, part) => {
-    if (acc && typeof acc === 'object') {
-      return (acc as Record<string, unknown>)[part]
-    }
-    return undefined
-  }, obj)
+function isSuccessResponse(
+  response: ApiResponseBase<unknown>,
+  successConfig: Partial<ApiSuccessConfig> = {}
+): boolean {
+  const merged = {
+    successCodes: [200, 0],
+    codeKey: 'code',
+    ...successConfig
+  }
+
+  const code = response[merged.codeKey]
+  return merged.successCodes.includes(code as number | string)
+}
+
+/**
+ * 从响应中提取消息
+ */
+function extractMessage(
+  response: ApiResponseBase<unknown>,
+  successConfig: Partial<ApiSuccessConfig> = {}
+): string | undefined {
+  const messageKey = successConfig.messageKey || 'msg'
+  return (response[messageKey] as string) || response.message || response.msg
+}
+
+/**
+ * 获取 Toast 实例
+ */
+function getToast() {
+  try {
+    // @ts-expect-error - useToast 来自 @nuxt/ui
+    return useToast?.()
+  }
+  catch {
+    return null
+  }
+}
+
+/**
+ * Toast 显示配置
+ */
+interface ShowToastOptions {
+  type: 'success' | 'error'
+  message: string | undefined
+  requestToast?: RequestToastConfig | false
+  globalToast?: Partial<ApiToastConfig>
+  endpointToast?: Partial<ApiToastConfig>
+}
+
+/**
+ * 显示 Toast 提示
+ * @see https://ui.nuxt.com/docs/composables/use-toast
+ */
+function showToast(options: ShowToastOptions) {
+  const { type, message, requestToast, globalToast = {}, endpointToast = {} } = options
+
+  // 全局禁用
+  if (!globalToast.enabled) return
+  // 端点禁用
+  if (endpointToast.enabled === false) return
+  // 请求禁用
+  if (requestToast === false) return
+
+  const toast = getToast()
+  if (!toast) return
+
+  const globalTypeConfig = globalToast[type]
+  const endpointTypeConfig = endpointToast[type]
+  const requestTypeConfig = requestToast?.[type]
+
+  // 检查是否显示
+  if (globalTypeConfig?.show === false) return
+  if (endpointTypeConfig?.show === false) return
+  if (requestTypeConfig === false) return
+
+  // 获取自定义消息
+  const customMessage = type === 'success'
+    ? requestToast?.successMessage
+    : requestToast?.errorMessage
+
+  const finalMessage = customMessage || message
+  if (!finalMessage) return
+
+  // 合并 Toast 配置
+  const toastOptions: Record<string, unknown> = {
+    title: finalMessage,
+    color: type === 'success' ? 'success' : 'error',
+    duration: type === 'success' ? 3000 : 5000,
+    // 合并全局配置
+    ...globalTypeConfig,
+    // 合并端点配置
+    ...endpointTypeConfig,
+    // 合并请求配置
+    ...(typeof requestTypeConfig === 'object' ? requestTypeConfig : {})
+  }
+
+  // 移除内部控制属性
+  delete toastOptions.show
+
+  toast.add(toastOptions)
 }
 
 /**
@@ -44,19 +139,6 @@ export default defineNuxtPlugin((nuxtApp) => {
   const endpointInstances = new Map<string, ApiInstance>()
 
   /**
-   * 获取 Toast 实例
-   */
-  const getToast = () => {
-    try {
-      // @ts-expect-error - useToast 来自 @nuxt/ui
-      return useToast?.()
-    }
-    catch {
-      return null
-    }
-  }
-
-  /**
    * 获取 nuxt-auth-utils 的 useUserSession
    */
   const getUserSession = () => {
@@ -70,106 +152,12 @@ export default defineNuxtPlugin((nuxtApp) => {
   }
 
   /**
-   * 判断响应是否成功
-   */
-  const isSuccessResponse = (
-    response: ApiResponseBase<unknown>,
-    successConfig: Partial<ApiSuccessConfig> = {}
-  ): boolean => {
-    const merged = {
-      successCodes: [200, 0],
-      codeKey: 'code',
-      ...config.success,
-      ...successConfig
-    }
-
-    const code = response[merged.codeKey]
-    return merged.successCodes.includes(code as number | string)
-  }
-
-  /**
-   * 从响应中提取消息
-   */
-  const extractMessage = (
-    response: ApiResponseBase<unknown>,
-    toastConfig: Partial<ApiToastConfig> = {}
-  ): string | undefined => {
-    const messageKey = config.success?.messageKey || toastConfig.success?.color || 'msg'
-    return (response[messageKey] as string)
-      || response.message
-      || response.msg
-  }
-
-  /**
-   * 显示 Toast 提示
-   */
-  const showToast = (
-    type: 'success' | 'error',
-    message: string | undefined,
-    requestToast: RequestToastOptions | false | undefined,
-    endpointToast: Partial<ApiToastConfig> = {}
-  ) => {
-    // 全局禁用
-    if (!config.toast?.enabled) return
-    // 端点禁用
-    if (endpointToast.enabled === false) return
-    // 请求禁用
-    if (requestToast === false) return
-
-    const toast = getToast()
-    if (!toast) return
-
-    const globalTypeConfig = config.toast?.[type]
-    const endpointTypeConfig = endpointToast[type]
-    const requestTypeConfig = requestToast?.[type]
-
-    // 检查是否显示
-    if (globalTypeConfig?.show === false) return
-    if (endpointTypeConfig?.show === false) return
-    if (requestTypeConfig === false) return
-
-    // 获取自定义消息
-    const customMessage = type === 'success'
-      ? requestToast?.successMessage
-      : requestToast?.errorMessage
-
-    const finalMessage = customMessage || message
-    if (!finalMessage) return
-
-    // 合并 Toast 配置
-    const toastProps = {
-      color: type === 'success' ? 'success' as const : 'error' as const,
-      title: finalMessage,
-      duration: type === 'success' ? 3000 : 5000,
-      ...globalTypeConfig,
-      ...endpointTypeConfig,
-      ...(typeof requestTypeConfig === 'object' ? requestTypeConfig : {})
-    }
-
-    toast.add(toastProps)
-  }
-
-  /**
    * 创建端点的 $fetch 实例
    */
-  const createEndpointFetch = (
-    endpointName: string,
-    endpointConfig: ApiEndpointConfig
-  ): ApiInstance => {
-    const authConfig: Partial<ApiAuthConfig> = {
-      ...config.auth,
-      ...endpointConfig.auth
-    }
-
-    const toastConfig: Partial<ApiToastConfig> = {
-      ...config.toast,
-      ...endpointConfig.toast
-    }
-
-    const successConfig: Partial<ApiSuccessConfig> = {
-      ...config.success,
-      ...endpointConfig.success
-    }
+  const createEndpointFetch = (endpointConfig: ApiEndpointConfig): ApiInstance => {
+    const authConfig: Partial<ApiAuthConfig> = defu(endpointConfig.auth, config.auth)
+    const toastConfig: Partial<ApiToastConfig> = defu(endpointConfig.toast, config.toast)
+    const successConfig: Partial<ApiSuccessConfig> = defu(endpointConfig.success, config.success)
 
     /**
      * 从 nuxt-auth-utils session 获取 Token
@@ -182,9 +170,9 @@ export default defineNuxtPlugin((nuxtApp) => {
       const tokenPath = authConfig.sessionTokenPath || 'secure.token'
 
       // 尝试从 session 或 secure 中获取 token
-      const token = getValueByPath(sessionData as Record<string, unknown>, tokenPath)
-        || getValueByPath(sessionData as Record<string, unknown>, 'token')
-        || (sessionData as { secure?: { token?: string } }).secure?.token
+      const token = getPath(sessionData, tokenPath)
+        ?? getPath(sessionData, 'token')
+        ?? getPath(sessionData, 'secure.token')
 
       return token as string | null
     }
@@ -228,7 +216,6 @@ export default defineNuxtPlugin((nuxtApp) => {
      */
     const baseFetch = $fetch.create({
       baseURL: endpointConfig.baseURL,
-      timeout: endpointConfig.timeout,
       headers: endpointConfig.headers,
 
       async onRequest({ options }) {
@@ -306,15 +293,18 @@ export default defineNuxtPlugin((nuxtApp) => {
       method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE',
       url: string,
       body?: unknown,
-      requestOptions: RequestOptionsWithTransform<T> = {}
+      requestOptions: ApiRequestOptions<T> = {}
     ): Promise<T> => {
+      // 使用 separate 分离 API 选项和 fetch 选项
+      const { picked: apiOpts, omitted: fetchOpts } = separate(requestOptions, ['auth', 'toast', 'unwrap', 'transform'])
+      const { auth, toast: toastOpt, unwrap, transform } = apiOpts
+
       const fetchOptions: Record<string, unknown> = {
+        ...fetchOpts,
         method,
         body,
-        timeout: requestOptions.timeout,
-        retry: requestOptions.retry,
         // 传递 skipAuth 标志
-        _skipAuth: requestOptions.auth === false
+        _skipAuth: auth === false
       }
 
       try {
@@ -322,22 +312,22 @@ export default defineNuxtPlugin((nuxtApp) => {
 
         // 检查业务状态码
         if (!isSuccessResponse(response, successConfig)) {
-          const errorMessage = extractMessage(response, toastConfig)
-          showToast('error', errorMessage, requestOptions.toast, toastConfig)
+          const errorMessage = extractMessage(response, successConfig)
+          showToast({ type: 'error', message: errorMessage, requestToast: toastOpt, globalToast: config.toast, endpointToast: toastConfig })
           throw createApiError(response, errorMessage)
         }
 
         // 显示成功提示
-        const successMessage = extractMessage(response, toastConfig)
-        showToast('success', successMessage, requestOptions.toast, toastConfig)
+        const successMessage = extractMessage(response, successConfig)
+        showToast({ type: 'success', message: successMessage, requestToast: toastOpt, globalToast: config.toast, endpointToast: toastConfig })
 
         // 数据转换
-        if (requestOptions.transform) {
-          return requestOptions.transform(response)
+        if (transform) {
+          return transform(response)
         }
 
         // 解包数据
-        if (requestOptions.unwrap !== false) {
+        if (unwrap !== false) {
           const dataKey = successConfig.dataKey || 'data'
           return (response[dataKey] ?? response.result ?? response) as T
         }
@@ -352,10 +342,10 @@ export default defineNuxtPlugin((nuxtApp) => {
 
         const fetchError = error as { data?: ApiResponseBase<unknown>, statusCode?: number, message?: string }
         const errorMessage = fetchError.data
-          ? extractMessage(fetchError.data, toastConfig)
+          ? extractMessage(fetchError.data, successConfig)
           : fetchError.message || '网络请求失败'
 
-        showToast('error', errorMessage, requestOptions.toast, toastConfig)
+        showToast({ type: 'error', message: errorMessage, requestToast: toastOpt, globalToast: config.toast, endpointToast: toastConfig })
         throw error
       }
     }
@@ -365,37 +355,24 @@ export default defineNuxtPlugin((nuxtApp) => {
      */
     const download = async (
       url: string,
-      options: RequestOptionsWithTransform = {},
+      options: Omit<ApiRequestOptions, 'transform'> = {},
       filename?: string
     ): Promise<void> => {
+      const { picked: apiOpts, omitted: fetchOpts } = separate(options, ['auth', 'toast', 'unwrap'])
+      const { auth, toast: toastOpt } = apiOpts
+
       const response = await baseFetch(url, {
+        ...fetchOpts,
         method: 'GET',
         responseType: 'blob',
-        timeout: options.timeout,
-        _skipAuth: options.auth === false
+        _skipAuth: auth === false
       } as Record<string, unknown>) as Blob
 
-      // 创建下载链接
-      const blob = new Blob([response])
-      const downloadUrl = window.URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.href = downloadUrl
-      link.download = filename || getFilenameFromUrl(url)
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-      window.URL.revokeObjectURL(downloadUrl)
+      const finalFilename = filename || url.split('/').pop() || 'download'
+      triggerDownload(new Blob([response]), finalFilename)
 
       // 显示成功提示
-      showToast('success', '下载成功', options.toast, toastConfig)
-    }
-
-    /**
-     * 从 URL 获取文件名
-     */
-    const getFilenameFromUrl = (url: string): string => {
-      const parts = url.split('/')
-      return parts[parts.length - 1] || 'download'
+      showToast({ type: 'success', message: '下载成功', requestToast: toastOpt, globalToast: config.toast, endpointToast: toastConfig })
     }
 
     /**
@@ -406,6 +383,9 @@ export default defineNuxtPlugin((nuxtApp) => {
       file: File | FormData,
       options: UploadRequestOptions<T> = {}
     ): Promise<ApiResponseBase<T>> => {
+      const { picked: apiOpts, omitted: fetchOpts } = separate(options, ['auth', 'toast', 'unwrap', 'transform', 'fieldName', 'onProgress'])
+      const { auth, toast: toastOpt, fieldName, onProgress: _onProgress } = apiOpts
+
       let formData: FormData
 
       if (file instanceof FormData) {
@@ -413,26 +393,26 @@ export default defineNuxtPlugin((nuxtApp) => {
       }
       else {
         formData = new FormData()
-        formData.append(options.fieldName || 'file', file)
+        formData.append(fieldName || 'file', file)
       }
 
       const response = await baseFetch<ApiResponseBase<T>>(url, {
+        ...fetchOpts,
         method: 'POST',
         body: formData,
-        timeout: options.timeout,
-        _skipAuth: options.auth === false
+        _skipAuth: auth === false
       } as Record<string, unknown>)
 
       // 检查业务状态码
       if (!isSuccessResponse(response, successConfig)) {
-        const errorMessage = extractMessage(response, toastConfig)
-        showToast('error', errorMessage, options.toast, toastConfig)
+        const errorMessage = extractMessage(response, successConfig)
+        showToast({ type: 'error', message: errorMessage, requestToast: toastOpt, globalToast: config.toast, endpointToast: toastConfig })
         throw createApiError(response, errorMessage)
       }
 
       // 显示成功提示
-      const successMessage = extractMessage(response, toastConfig)
-      showToast('success', successMessage, options.toast, toastConfig)
+      const successMessage = extractMessage(response, successConfig)
+      showToast({ type: 'success', message: successMessage, requestToast: toastOpt, globalToast: config.toast, endpointToast: toastConfig })
 
       return response
     }
@@ -441,19 +421,19 @@ export default defineNuxtPlugin((nuxtApp) => {
     const apiInstance: ApiInstance = {
       raw: baseFetch,
 
-      get: <T>(url: string, options?: RequestOptionsWithTransform<T>) =>
+      get: <T>(url: string, options?: ApiRequestOptions<T>) =>
         wrapRequest<T>('GET', url, undefined, options),
 
-      post: <T>(url: string, body?: unknown, options?: RequestOptionsWithTransform<T>) =>
+      post: <T>(url: string, body?: unknown, options?: ApiRequestOptions<T>) =>
         wrapRequest<T>('POST', url, body, options),
 
-      put: <T>(url: string, body?: unknown, options?: RequestOptionsWithTransform<T>) =>
+      put: <T>(url: string, body?: unknown, options?: ApiRequestOptions<T>) =>
         wrapRequest<T>('PUT', url, body, options),
 
-      patch: <T>(url: string, body?: unknown, options?: RequestOptionsWithTransform<T>) =>
+      patch: <T>(url: string, body?: unknown, options?: ApiRequestOptions<T>) =>
         wrapRequest<T>('PATCH', url, body, options),
 
-      delete: <T>(url: string, options?: RequestOptionsWithTransform<T>) =>
+      delete: <T>(url: string, options?: ApiRequestOptions<T>) =>
         wrapRequest<T>('DELETE', url, undefined, options),
 
       download,
@@ -477,7 +457,7 @@ export default defineNuxtPlugin((nuxtApp) => {
     }
 
     // 获取端点配置
-    const endpoints = config.endpoints as ApiEndpointsConfig || {}
+    const endpoints = config.endpoints || {}
     const endpointConfig = endpoints[endpointName]
 
     if (!endpointConfig) {
@@ -486,7 +466,7 @@ export default defineNuxtPlugin((nuxtApp) => {
     }
 
     // 创建实例
-    const instance = createEndpointFetch(endpointName, endpointConfig)
+    const instance = createEndpointFetch(endpointConfig)
     endpointInstances.set(endpointName, instance)
 
     return instance
