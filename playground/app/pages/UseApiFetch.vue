@@ -1,13 +1,24 @@
 <script lang="ts" setup>
-const searchQuery = ref('initial')
-const { data } = await useFetch('/api/search', {
-  query: { q: searchQuery },
-  watch: false
+interface User {
+  id: number
+  username: string
+  token: string
+}
+
+const { data, execute } = useClientApiFetch<User>('/login', {
+  method: 'POST',
+  body: {
+    username: 'admin',
+    password: 'admin123',
+    validateCode: 48,
+    rememberMe: false
+  }
 })
-// does not trigger a refetch
-searchQuery.value = 'new search'
 </script>
 
 <template>
-  <div>2</div>
+  {{ data?.username }}
+  <UButton @click="execute()">
+    Use Api Fetch
+  </UButton>
 </template>
