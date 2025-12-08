@@ -125,7 +125,7 @@ declare module 'nuxt/app' {
   }
 }
 
-declare module '@nuxt/schema' {
+declare module 'nuxt/schema' {
   interface NuxtOptions {
     ['movk']: ModuleOptions
   }

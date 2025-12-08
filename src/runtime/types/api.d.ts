@@ -51,6 +51,11 @@ export interface ApiCoreOptions<T = unknown> {
   unwrap?: boolean
   /** 自定义响应转换函数 */
   transform?: (response: ApiResponseBase<T>) => T
+  /**
+   * 是否跳过业务状态码检查
+   * @defaultValue false
+   */
+  skipBusinessCheck?: boolean
 }
 
 /**
@@ -70,23 +75,83 @@ export interface UploadRequestOptions<T = unknown> extends ApiRequestOptions<T> 
   onProgress?: (progress: number) => void
 }
 
-/** API 实例方法 */
-export interface ApiExtendedMethods {
-  download: (url: string, options?: Omit<ApiRequestOptions, 'transform'>, filename?: string) => Promise<void>
-  upload: <T = unknown>(url: string, file: File | FormData, options?: UploadRequestOptions<T>) => Promise<ApiResponseBase<T>>
-  get: <T = unknown>(url: string, options?: ApiRequestOptions<T>) => Promise<T>
-  post: <T = unknown>(url: string, body?: unknown, options?: ApiRequestOptions<T>) => Promise<T>
-  put: <T = unknown>(url: string, body?: unknown, options?: ApiRequestOptions<T>) => Promise<T>
-  patch: <T = unknown>(url: string, body?: unknown, options?: ApiRequestOptions<T>) => Promise<T>
-  delete: <T = unknown>(url: string, options?: ApiRequestOptions<T>) => Promise<T>
-  use: (endpoint: string) => ApiInstance
-  getConfig: () => ApiEndpointConfig
-}
+/**
+ * API 实例类型
+ */
+export interface ApiInstance {
+  /**
+   * 核心 $fetch 实例
+   * 用于 useFetch 的 $fetch 选项
+   *
+   * @example
+   * ```ts
+   * // 直接使用
+   * const { $api } = useNuxtApp()
+   * const data = await $api.$fetch('/users')
+   *
+   * // 配合 useFetch
+   * const { data } = await useFetch('/users', {
+   *   $fetch: $api.$fetch
+   * })
+   * ```
+   */
+  $fetch: $Fetch
 
-/** API 实例类型 */
-export interface ApiInstance extends ApiExtendedMethods {
-  /** 原始 $fetch 实例 */
-  raw: <T = unknown>(url: string, options?: Record<string, unknown>) => Promise<T>
+  /**
+   * 切换到其他端点
+   *
+   * @param endpoint 端点名称
+   * @returns 新的 API 实例
+   *
+   * @example
+   * ```ts
+   * const { $api } = useNuxtApp()
+   * const v2Api = $api.use('v2')
+   * const data = await v2Api.$fetch('/users')
+   * ```
+   */
+  use: (endpoint: string) => ApiInstance
+
+  /**
+   * 下载文件
+   *
+   * @param url 下载 URL
+   * @param filename 保存文件名
+   * @param options 请求选项
+   *
+   * @example
+   * ```ts
+   * const { $api } = useNuxtApp()
+   * await $api.download('/export', 'data.csv')
+   * ```
+   */
+  download: (url: string, filename?: string, options?: Omit<ApiRequestOptions, 'transform'>) => Promise<void>
+
+  /**
+   * 上传文件
+   *
+   * @param url 上传 URL
+   * @param file 文件或 FormData
+   * @param options 上传选项
+   *
+   * @example
+   * ```ts
+   * const { $api } = useNuxtApp()
+   * const file = new File(['content'], 'test.txt')
+   * const result = await $api.upload('/upload', file)
+   * ```
+   */
+  upload: <T = unknown>(url: string, file: File | FormData, options?: UploadRequestOptions<T>) => Promise<ApiResponseBase<T>>
+
+  /**
+   * 获取端点配置（内部使用）
+   * @internal
+   */
+  getConfig: () => ApiEndpointConfig & {
+    auth: Partial<ApiAuthConfig>
+    toast: Partial<ApiToastConfig>
+    success: Partial<ApiSuccessConfig>
+  }
 }
 
 /** useApiFetch 选项，继承 Nuxt UseFetchOptions */
