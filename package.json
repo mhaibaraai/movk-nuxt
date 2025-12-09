@@ -2,7 +2,7 @@
   "name": "@movk/nuxt",
   "type": "module",
   "version": "0.1.1",
-  "packageManager": "pnpm@10.24.0",
+  "packageManager": "pnpm@10.25.0",
   "description": "Schema-driven form and table generation module for Nuxt 4",
   "author": "YiXuan <mhaibaraai@gmail.com>",
   "license": "MIT",
@@ -88,6 +88,6 @@
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "vitest": "^4.0.15",
-    "vue-tsc": "^3.1.7"
+    "vue-tsc": "^3.1.8"
   }
 }
