@@ -9,7 +9,7 @@
     "typecheck": "nuxt typecheck"
   },
   "devDependencies": {
-    "nuxt": "^4.2.1",
+    "nuxt": "^4.2.2",
     "sass-embedded": "^1.93.3"
   }
 }
