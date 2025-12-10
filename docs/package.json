@@ -12,6 +12,6 @@
     "@tiptap/starter-kit": "^3.12.1",
     "@tiptap/vue-3": "^3.12.1",
     "better-sqlite3": "^12.5.0",
-    "nuxt": "^4.2.1"
+    "nuxt": "^4.2.2"
   }
 }
