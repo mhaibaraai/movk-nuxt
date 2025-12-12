@@ -1,23 +1,23 @@
 <script lang="ts" setup>
-interface User {
-  id: number
-  username: string
-  token: string
+interface LoginResponse {
+  accessToken: string
+  tokenType: string
+  expiresIn: number
 }
 
-const { data, execute } = useClientApiFetch<User>('/login', {
+const { data, execute } = useClientApiFetch<LoginResponse>('/auth/login', {
   method: 'POST',
   body: {
-    username: 'admin',
-    password: 'admin123',
-    validateCode: 48,
-    rememberMe: false
+    email: 'admin@movk.com',
+    password: 'Admin@2025#Secure'
   }
 })
 </script>
 
 <template>
-  {{ data?.username }}
+  <div v-if="data" class="break-all">
+    {{ data.accessToken }}
+  </div>
   <UButton @click="execute()">
     Use Api Fetch
   </UButton>
