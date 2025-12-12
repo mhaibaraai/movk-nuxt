@@ -3,11 +3,25 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   css: ['~/assets/css/main.css'],
   compatibilityDate: 'latest',
+  vite: {
+    server: {
+      proxy: {
+        '/movk-backend': {
+          target: 'https://server.mhaibaraai.cn',
+          changeOrigin: true,
+          secure: false,
+          headers: {
+            Origin: 'https://server.mhaibaraai.cn'
+          }
+        }
+      }
+    }
+  },
   movk: {
     api: {
       endpoints: {
         default: {
-          baseURL: 'http://vue.ruoyi.vip/prod-api'
+          baseURL: '/movk-backend'
         }
       }
     }
