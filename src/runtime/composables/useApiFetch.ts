@@ -105,7 +105,7 @@ export function useLazyApiFetch<T = unknown>(
  * 仅客户端版本的 useApiFetch
  *
  * 仅在客户端执行请求，不会在服务端渲染时运行。
- * 设置了 `server: false` 和 `lazy: true`，适合非 SEO 敏感数据。
+ * 设置了 `server: false`  `lazy: true`， `immediate: false`，适合非 SEO 敏感数据。
  *
  * @typeParam T - 响应数据类型
  * @param url - 请求 URL（支持响应式）
@@ -130,7 +130,8 @@ export function useClientApiFetch<T = unknown>(
   return useApiFetch<T>(url, {
     ...options,
     lazy: true,
-    server: false
+    server: false,
+    immediate: false
   })
 }
 
