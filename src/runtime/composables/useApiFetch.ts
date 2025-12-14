@@ -1,32 +1,24 @@
 import type { MaybeRefOrGetter } from 'vue'
-import type { FetchError } from 'ofetch'
 import type { AsyncData } from 'nuxt/app'
-import type { ApiResponseBase, UseApiFetchOptions } from '../types'
+import type { ApiResponse, UseApiFetchOptions, ApiError } from '../types/api'
 import { useNuxtApp, useFetch } from '#imports'
-import { createApiResponseHandler } from '../utils/api-helpers'
+import { createResponseHandlers } from '../utils/api-utils'
+
+type UseApiFetchReturn<T> = AsyncData<T | null, ApiError | null>
 
 /**
- * 自定义 API Fetch 组合式函数
+ * API Fetch 组合式函数
  *
- * 基于 Nuxt 的 `useFetch` 封装，提供认证、Toast 提示、数据解包等功能。
- * 遵循 [Nuxt Custom useFetch Recipe](https://nuxt.com/docs/4.x/guide/recipes/custom-usefetch)。
- *
- * @typeParam T - 响应数据类型
- * @param url - 请求 URL（支持响应式）
- * @param options - 请求配置选项
- * @param options.endpoint - 使用的端点名称（默认为配置的 defaultEndpoint）
- * @param options.api - API 特定配置
- * @param options.api.auth - 是否携带认证（默认 true）
- * @param options.api.toast - Toast 配置或禁用
- * @param options.api.unwrap - 是否自动解包数据（默认 true）
- * @param options.api.transform - 自定义数据转换函数
- * @param options.api.skipBusinessCheck - 跳过业务状态码检查
- * @returns AsyncData 对象，包含 data、pending、error、refresh 等属性
+ * 基于 Nuxt useFetch 封装，提供：
+ * - 自动认证（从 session 获取 token）
+ * - 业务状态码检查
+ * - Toast 提示
+ * - 自动数据解包
  *
  * @example
  * ```ts
- * // 基础 GET 请求
- * const { data, pending, error, refresh } = await useApiFetch('/users')
+ * // 基础用法
+ * const { data, pending, error } = await useApiFetch('/users')
  *
  * // POST 请求
  * const { data } = await useApiFetch('/users', {
@@ -34,103 +26,131 @@ import { createApiResponseHandler } from '../utils/api-helpers'
  *   body: { name: 'test' }
  * })
  *
- * // 自定义配置
+ * // 自定义 Toast
  * const { data } = await useApiFetch('/users', {
- *   api: {
- *     toast: { successMessage: '创建成功' },
- *     unwrap: false // 不自动解包
- *   }
+ *   toast: { successMessage: '创建成功' }
  * })
  *
- * // 使用不同端点
- * const { data } = await useApiFetch('/users', {
- *   endpoint: 'v2'
- * })
+ * // 禁用自动解包
+ * const { data } = await useApiFetch<FullResponse>('/users', { unwrap: false })
+ *
+ * // 使用其他端点
+ * const { data } = await useApiFetch('/users', { endpoint: 'v2' })
  * ```
  */
 export function useApiFetch<T = unknown>(
   url: MaybeRefOrGetter<string>,
   options: UseApiFetchOptions<T> = {}
-): AsyncData<T | null, FetchError<ApiResponseBase<unknown>> | null> {
+): UseApiFetchReturn<T> {
   const { $api } = useNuxtApp()
 
-  // 提取选项
-  const { api: apiOptions, endpoint, ...useFetchOptions } = options
+  // 解构选项
+  const {
+    endpoint,
+    auth,
+    toast,
+    unwrap,
+    transform,
+    skipBusinessCheck,
+    onRequest: userOnRequest,
+    onRequestError: userOnRequestError,
+    onResponse: userOnResponse,
+    onResponseError: userOnResponseError,
+    ...fetchOptions
+  } = options
 
   // 获取 API 实例和配置
   const apiInstance = endpoint ? $api.use(endpoint) : $api
   const endpointConfig = apiInstance.getConfig()
 
   // 创建响应处理器
-  const handlers = createApiResponseHandler<T>(apiOptions, endpointConfig)
+  const handlers = createResponseHandlers<T>({
+    requestOptions: { toast, unwrap, transform, skipBusinessCheck },
+    toastConfig: endpointConfig.toast,
+    successConfig: endpointConfig.success
+  })
 
   return useFetch(url, {
-    ...useFetchOptions,
-    $fetch: apiInstance.$fetch as any,
-    onResponse: handlers.onResponse,
+    ...fetchOptions,
+    $fetch: apiInstance.$fetch as typeof $fetch,
+    onRequest(context) {
+      if (typeof userOnRequest === 'function') {
+        userOnRequest(context)
+      }
+      else if (Array.isArray(userOnRequest)) {
+        userOnRequest.forEach(fn => fn(context))
+      }
+    },
+    onRequestError(context) {
+      if (typeof userOnRequestError === 'function') {
+        userOnRequestError(context)
+      }
+      else if (Array.isArray(userOnRequestError)) {
+        userOnRequestError.forEach(fn => fn(context))
+      }
+    },
+    onResponse(context) {
+      handlers.onResponse(context as { response: { _data: ApiResponse } })
+      if (typeof userOnResponse === 'function') {
+        userOnResponse(context)
+      }
+      else if (Array.isArray(userOnResponse)) {
+        userOnResponse.forEach(fn => fn(context))
+      }
+    },
+    onResponseError(context) {
+      if (typeof userOnResponseError === 'function') {
+        userOnResponseError(context)
+      }
+      else if (Array.isArray(userOnResponseError)) {
+        userOnResponseError.forEach(fn => fn(context))
+      }
+    },
     transform: handlers.transform as any
-  }) as AsyncData<T | null, FetchError<ApiResponseBase<unknown>> | null>
+  }) as UseApiFetchReturn<T>
 }
 
 /**
  * Lazy 版本的 useApiFetch
  *
- * 不会在服务端渲染时执行，适合用户交互触发的请求。
- * 等同于 `useApiFetch` 但设置了 `lazy: true`。
- *
- * @typeParam T - 响应数据类型
- * @param url - 请求 URL（支持响应式）
- * @param options - 请求配置选项（同 useApiFetch）
- * @returns AsyncData 对象，初始 data 为 null，需要调用 execute() 手动触发
+ * 设置 `lazy: true`，不阻塞页面渲染
  *
  * @example
  * ```ts
  * const { data, pending, execute } = useLazyApiFetch('/users')
- *
- * // 手动触发请求
+ * // 手动触发
  * await execute()
  * ```
  */
 export function useLazyApiFetch<T = unknown>(
   url: MaybeRefOrGetter<string>,
   options: UseApiFetchOptions<T> = {}
-): AsyncData<T | null, FetchError<ApiResponseBase<unknown>> | null> {
-  return useApiFetch<T>(url, {
-    ...options,
-    lazy: true
-  })
+): UseApiFetchReturn<T> {
+  return useApiFetch<T>(url, { ...options, lazy: true })
 }
 
 /**
- * 仅客户端版本的 useApiFetch
+ * 仅客户端执行的 useApiFetch
  *
- * 仅在客户端执行请求，不会在服务端渲染时运行。
- * 设置了 `server: false`  `lazy: true`， `immediate: false`，适合非 SEO 敏感数据。
- *
- * @typeParam T - 响应数据类型
- * @param url - 请求 URL（支持响应式）
- * @param options - 请求配置选项（同 useApiFetch）
- * @returns AsyncData 对象，初始 data 为 null，仅在客户端执行
+ * 设置 `server: false, lazy: true, immediate: false`
+ * 适合非 SEO 敏感数据
  *
  * @example
  * ```ts
- * // 仅在客户端加载用户偏好设置
- * const { data: preferences } = useClientApiFetch('/user/preferences')
+ * const { data, execute } = useClientApiFetch('/user/preferences')
  *
- * // 适合非 SEO 数据，如用户通知
- * const { data: notifications, pending } = useClientApiFetch('/notifications')
+ * // 在 onMounted 或用户操作时触发
+ * onMounted(() => execute())
  * ```
- *
- * @see https://nuxt.com/docs/4.x/getting-started/data-fetching
  */
 export function useClientApiFetch<T = unknown>(
   url: MaybeRefOrGetter<string>,
   options: UseApiFetchOptions<T> = {}
-): AsyncData<T | null, FetchError<ApiResponseBase<unknown>> | null> {
+): UseApiFetchReturn<T> {
   return useApiFetch<T>(url, {
     ...options,
-    lazy: true,
     server: false,
+    lazy: true,
     immediate: false
   })
 }

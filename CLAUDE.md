@@ -85,10 +85,17 @@ pnpm clean
    - 输入增强组件: `WithClear`、`WithPasswordToggle`、`WithCopy`、`WithCharacterLimit`
    - 表单渲染器: `auto-form-renderer/` 目录下的内部组件
 
-3. **Utilities & Composables**
+3. **API System** (`src/runtime/composables/useApiFetch.ts`, `useApiAuth.ts`)
+   - `useApiFetch`: 基于 Nuxt useFetch 封装的 API 请求 composable
+   - `useApiAuth`: 与 nuxt-auth-utils 集成的认证管理
+   - `api.factory.ts`: API 客户端工厂插件,提供 `$api` 实例
+   - 支持多端点、自动认证、业务状态码检查、Toast 提示
+
+4. **Utilities & Composables**
    - `useDateFormatter`: 日期格式化工具
    - `schema-introspector.ts`: Schema 内省与字段生成
    - `field-utils.ts`: 字段处理工具函数
+   - `api-utils.ts`: API 响应处理工具
 
 ### 关键设计模式
 
@@ -125,6 +132,20 @@ addComponentsDir({
 })
 ```
 
+#### API 模块架构
+
+API 系统采用分层设计:
+
+```
+types/api.ts          → 类型定义 (Interface)
+schemas/api.ts        → 配置验证 (Zod Schema)
+plugins/api.factory.ts → 客户端工厂 ($api 实例)
+composables/useApiFetch.ts → 请求封装
+composables/useApiAuth.ts  → 认证管理
+utils/api-utils.ts    → 响应处理工具
+server/api/_movk/     → Session 管理 API
+```
+
 ### 目录结构约定
 
 ```
@@ -138,6 +159,9 @@ src/
     ├── composables/           # 自动导入的 composables
     ├── constants/             # 常量定义
     ├── internal/              # 内部使用的工具(provide/inject 等)
+    ├── plugins/               # Nuxt 插件
+    ├── schemas/               # Zod Schema 定义(配置验证)
+    ├── server/                # 服务端 API 路由
     ├── types/                 # 类型定义
     └── utils/                 # 工具函数
 
@@ -181,8 +205,29 @@ test/                          # 测试文件
 - `@nuxt/image` >= 1.11.0
 - `@nuxt/ui` >= 4.1.0
 - `@vueuse/nuxt` >= 14.0.0
+- `nuxt-auth-utils` (可选,用于 useApiAuth)
 
 确保 playground 和 docs 环境正确安装这些依赖。
+
+### API 模块开发
+
+#### 类型定义约定
+
+- `types/api.ts`: TypeScript Interface,用于开发时类型提示
+- `schemas/api.ts`: Zod Schema,用于运行时配置验证
+- 两者独立维护,Schema 用于验证模块配置,Interface 用于 API 使用
+
+#### JSDoc 注释规范
+
+使用多行 `@defaultValue` 格式:
+
+```typescript
+/**
+ * 字段描述
+ * @defaultValue 'value'
+ */
+fieldName: string
+```
 
 ### 文档站点配置
 

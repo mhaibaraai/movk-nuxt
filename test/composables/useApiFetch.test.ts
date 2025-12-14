@@ -140,13 +140,51 @@ describe('useApiFetch', () => {
 
       useApiFetch('/users')
 
+      // 验证 useFetch 被调用，且包含 onResponse、onResponseError 和 transform
       expect(mockUseFetch).toHaveBeenCalledWith(
         '/users',
         expect.objectContaining({
-          onResponse: mockHandlers.onResponse,
           transform: mockHandlers.transform
         })
       )
+
+      // 验证 onResponse 是一个函数（包装函数）
+      const callArgs = mockUseFetch.mock.calls[0][1]
+      expect(typeof callArgs.onResponse).toBe('function')
+      expect(typeof callArgs.onResponseError).toBe('function')
+
+      // 验证包装函数会调用内部处理器
+      const mockContext = { response: { _data: {} } }
+      callArgs.onResponse(mockContext)
+      expect(mockHandlers.onResponse).toHaveBeenCalledWith(mockContext)
+    })
+
+    it('应同时执行内部处理器和用户自定义 onResponse 回调', () => {
+      const mockHandlers = {
+        onResponse: vi.fn(),
+        transform: vi.fn()
+      }
+      const userOnResponse = vi.fn()
+      const userOnResponseError = vi.fn()
+
+      vi.mocked(apiHelpers.createApiResponseHandler).mockReturnValue(mockHandlers)
+
+      useApiFetch('/users', {
+        onResponse: userOnResponse,
+        onResponseError: userOnResponseError
+      })
+
+      const callArgs = mockUseFetch.mock.calls[0][1]
+      const mockContext = { response: { _data: {} } }
+
+      // 验证 onResponse 同时调用内部处理器和用户回调
+      callArgs.onResponse(mockContext)
+      expect(mockHandlers.onResponse).toHaveBeenCalledWith(mockContext)
+      expect(userOnResponse).toHaveBeenCalledWith(mockContext)
+
+      // 验证 onResponseError 调用用户回调
+      callArgs.onResponseError(mockContext)
+      expect(userOnResponseError).toHaveBeenCalledWith(mockContext)
     })
 
     it('应使用默认 API 实例(不指定 endpoint)', () => {

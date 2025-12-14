@@ -18,7 +18,7 @@ import { useAutoForm } from '../composables/useAutoForm'
 export interface AutoFormProps<S extends z.ZodObject, T extends boolean = true, N extends boolean = false> extends FormProps<S, T, N> {
   /**
    * 是否显示默认提交按钮
-   * @default true
+   * @defaultValue true
    */
   submitButton?: boolean
   /** 提交按钮属性 */

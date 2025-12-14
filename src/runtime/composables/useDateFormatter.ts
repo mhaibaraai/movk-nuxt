@@ -27,7 +27,7 @@ import type { DateRange } from 'reka-ui'
 export interface DateFormatterOptions {
   /**
    * 语言区域
-   * @default 'zh-CN'
+   * @defaultValue 'zh-CN'
    */
   locale?: string
   /**

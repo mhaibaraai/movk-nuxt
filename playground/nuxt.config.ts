@@ -2,7 +2,9 @@ export default defineNuxtConfig({
   modules: ['../src/module'],
   devtools: { enabled: true },
   css: ['~/assets/css/main.css'],
+
   compatibilityDate: 'latest',
+
   vite: {
     server: {
       proxy: {
@@ -19,6 +21,9 @@ export default defineNuxtConfig({
   },
   movk: {
     api: {
+      auth: {
+        enabled: true
+      },
       endpoints: {
         default: {
           baseURL: '/movk-backend'
