@@ -35,14 +35,51 @@ export const apiSuccessConfigSchema = z.object({
   codeKey: z.string().default('code'),
   /**
    * 消息字段名
-   * @defaultValue 'msg'
+   * @defaultValue 'message'
    */
-  messageKey: z.string().default('msg'),
+  messageKey: z.string().default('message'),
   /**
    * 数据字段名
    * @defaultValue 'data'
    */
   dataKey: z.string().default('data')
+})
+
+/**
+ * Session 管理配置 Schema
+ * 用于登录流程中自动设置 nuxt-auth-utils session
+ */
+export const apiSessionConfigSchema = z.object({
+  /**
+   * 是否启用 session 自动管理
+   * @defaultValue false
+   */
+  enabled: z.boolean().default(false),
+
+  /**
+   * 用户信息接口路径
+   * 登录成功后自动调用此接口获取用户信息
+   * 如果不设置，则从登录响应中提取用户信息
+   */
+  userInfoPath: z.string().optional(),
+
+  /**
+   * 从登录响应中提取 token 的路径
+   * @defaultValue 'data.token'
+   */
+  tokenPath: z.string().default('data.token'),
+
+  /**
+   * 用户信息在响应中的路径
+   * @defaultValue 'data'
+   */
+  userDataPath: z.string().default('data'),
+
+  /**
+   * session 中存储 token 的路径
+   * @defaultValue 'token'
+   */
+  sessionTokenPath: z.string().default('token')
 })
 
 /**
@@ -64,10 +101,14 @@ export const apiAuthConfigSchema = z.object({
   tokenSource: z.enum(['session', 'custom']).default('session'),
   /**
    * Session 中 token 的路径
-   * 用于 nuxt-auth-utils
-   * @defaultValue 'secure.token'
+   *
+   * 例如：
+   * - 'token' -> session.token
+   * - 'user.token' -> session.user.token
+   *
+   * @defaultValue 'token'
    */
-  sessionTokenPath: z.string().default('secure.token'),
+  sessionTokenPath: z.string().default('token'),
   /**
    * Token 类型
    * @defaultValue 'Bearer'
@@ -188,25 +229,43 @@ export const movkApiModuleOptionsSchema = z.object({
    * @defaultValue 'default'
    */
   defaultEndpoint: z.string().default('default'),
-  /** API 端点配置 */
-  endpoints: z.record(z.string(), apiEndpointConfigSchema).optional(),
-  /** 全局认证配置 */
-  auth: apiAuthConfigSchema.partial().optional(),
-  /** 全局 Toast 配置 */
-  toast: apiToastConfigSchema.partial().optional(),
-  /** 全局成功判断配置 */
-  success: apiSuccessConfigSchema.partial().optional(),
+  /**
+   * API 端点配置
+   * @defaultValue { default: { baseURL: '/api' } }
+   */
+  endpoints: z.record(z.string(), apiEndpointConfigSchema).default({
+    default: { baseURL: '/api' }
+  }),
+  /**
+   * 全局认证配置
+   */
+  auth: apiAuthConfigSchema.optional(),
+  /**
+   * 全局 Toast 配置
+   */
+  toast: apiToastConfigSchema.optional(),
+  /**
+   * 全局成功判断配置
+   */
+  success: apiSuccessConfigSchema.optional(),
   /**
    * 是否启用调试模式
    * @defaultValue false
    */
   debug: z.boolean().default(false)
-})
+}).transform(data => ({
+  ...data,
+  // 使用 schema 解析确保默认值生效
+  auth: apiAuthConfigSchema.parse(data.auth ?? {}),
+  toast: apiToastConfigSchema.parse(data.toast ?? {}),
+  success: apiSuccessConfigSchema.parse(data.success ?? {})
+}))
 
 // ==================== 导出类型 ====================
 
 export type ApiResponseBase<T = unknown> = z.infer<ReturnType<typeof apiResponseSchema<z.ZodType<T>>>>
 export type ApiSuccessConfig = z.infer<typeof apiSuccessConfigSchema>
+export type ApiSessionConfig = z.infer<typeof apiSessionConfigSchema>
 export type ApiAuthConfig = z.infer<typeof apiAuthConfigSchema>
 export type ApiToastConfig = z.infer<typeof apiToastConfigSchema>
 export type ApiEndpointConfig = z.infer<typeof apiEndpointConfigSchema>

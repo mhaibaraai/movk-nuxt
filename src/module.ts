@@ -2,6 +2,7 @@ import {
   addComponentsDir,
   addImportsDir,
   addPlugin,
+  addServerHandler,
   addTypeTemplate,
   createResolver,
   defineNuxtModule
@@ -10,7 +11,7 @@ import defu from 'defu'
 import { z } from 'zod/v4'
 import { name, version } from '../package.json'
 import { movkApiModuleOptionsSchema } from './runtime/schemas/api'
-import type { ApiInstance, MovkApiModuleOptions } from './runtime/types'
+import type { ApiClient, ApiModuleConfig } from './runtime/types'
 
 export * from './runtime/types'
 
@@ -59,37 +60,8 @@ export default defineNuxtModule<ModuleOptions>({
     nuxt.options.alias['#movk'] = resolve('./runtime')
     nuxt.options.appConfig.movk = defu(nuxt.options.appConfig.movk || {}, options)
 
-    const apiConfig = movkApiModuleOptionsSchema.parse(defu(options.api || {}, {
-      enabled: true,
-      defaultEndpoint: 'default',
-      endpoints: {
-        default: {
-          baseURL: '/api'
-        }
-      },
-      auth: {
-        enabled: false,
-        tokenSource: 'session',
-        sessionTokenPath: 'secure.token',
-        tokenType: 'Bearer',
-        headerName: 'Authorization',
-        redirectOnUnauthorized: true,
-        loginPath: '/login',
-        clearSessionOnUnauthorized: true
-      },
-      toast: {
-        enabled: true,
-        success: { show: true, color: 'success', duration: 3000 },
-        error: { show: true, color: 'error', duration: 5000 }
-      },
-      success: {
-        successCodes: [200, 0],
-        codeKey: 'code',
-        messageKey: 'msg',
-        dataKey: 'data'
-      },
-      debug: false
-    }))
+    // 使用 zod schema 的默认值，用户配置优先
+    const apiConfig = movkApiModuleOptionsSchema.parse(options.api ?? {})
 
     // 注入运行时配置
     nuxt.options.runtimeConfig.public.movkApi = apiConfig
@@ -110,18 +82,34 @@ export default defineNuxtModule<ModuleOptions>({
         src: resolve('runtime/plugins/api.factory'),
         mode: 'all'
       })
+
+      // 注册服务端 session API 路由
+      addServerHandler({
+        route: '/api/_movk/session',
+        method: 'post',
+        handler: resolve('runtime/server/api/_movk/session.post')
+      })
+      addServerHandler({
+        route: '/api/_movk/session',
+        method: 'patch',
+        handler: resolve('runtime/server/api/_movk/session.patch')
+      })
     }
 
     addTypeTemplate({
       filename: 'runtime/types/auto-form-zod.d.ts',
       src: resolve('runtime/types/zod.d.ts')
     })
+    addTypeTemplate({
+      filename: 'runtime/types/auth.d.ts',
+      src: resolve('runtime/types/auth.d.ts')
+    })
   }
 })
 
 declare module 'nuxt/app' {
   interface NuxtApp {
-    $api: ApiInstance
+    $api: ApiClient
   }
 }
 
@@ -133,6 +121,6 @@ declare module 'nuxt/schema' {
   interface RuntimeConfig { }
 
   interface PublicRuntimeConfig {
-    movkApi: MovkApiModuleOptions
+    movkApi: ApiModuleConfig
   }
 }
