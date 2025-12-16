@@ -1,25 +1,6 @@
 import { z } from 'zod/v4'
 
 /**
- * 标准 API 响应结构 Schema
- */
-export const apiResponseSchema = <T extends z.ZodType>(dataSchema: T) =>
-  z.object({
-    /** 状态码 */
-    code: z.union([z.number(), z.string()]).optional(),
-    status: z.union([z.number(), z.string()]).optional(),
-    /** 消息字段 */
-    msg: z.string().optional(),
-    message: z.string().optional(),
-    /** 数据字段 */
-    data: dataSchema.optional(),
-    result: dataSchema.optional(),
-    token: z.string().optional(),
-    /** 错误信息 */
-    error: z.string().nullable().optional()
-  }).loose()
-
-/**
  * 成功响应判断配置 Schema
  */
 export const apiSuccessConfigSchema = z.object({
@@ -191,9 +172,9 @@ export const apiToastConfigSchema = z.object({
     icon: z.string().optional(),
     /**
      * 持续时间 (ms)
-     * @defaultValue 5000
+     * @defaultValue 3000
      */
-    duration: z.number().default(5000)
+    duration: z.number().default(3000)
   }).loose().optional()
 })
 
@@ -260,27 +241,3 @@ export const movkApiModuleOptionsSchema = z.object({
   toast: apiToastConfigSchema.parse(data.toast ?? {}),
   success: apiSuccessConfigSchema.parse(data.success ?? {})
 }))
-
-// ==================== 导出类型 ====================
-
-export type ApiResponseBase<T = unknown> = z.infer<ReturnType<typeof apiResponseSchema<z.ZodType<T>>>>
-export type ApiSuccessConfig = z.infer<typeof apiSuccessConfigSchema>
-export type ApiSessionConfig = z.infer<typeof apiSessionConfigSchema>
-export type ApiAuthConfig = z.infer<typeof apiAuthConfigSchema>
-export type ApiToastConfig = z.infer<typeof apiToastConfigSchema>
-export type ApiEndpointConfig = z.infer<typeof apiEndpointConfigSchema>
-export type MovkApiModuleOptions = z.infer<typeof movkApiModuleOptionsSchema>
-
-/**
- * 解析 API 模块配置
- */
-export function parseMovkApiOptions(options: unknown): MovkApiModuleOptions {
-  return movkApiModuleOptionsSchema.parse(options)
-}
-
-/**
- * 安全解析 API 模块配置
- */
-export function safeParseMovkApiOptions(options: unknown) {
-  return movkApiModuleOptionsSchema.safeParse(options)
-}

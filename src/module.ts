@@ -11,7 +11,7 @@ import defu from 'defu'
 import { z } from 'zod/v4'
 import { name, version } from '../package.json'
 import { movkApiModuleOptionsSchema } from './runtime/schemas/api'
-import type { ApiClient, ApiModuleConfig } from './runtime/types'
+import type { ApiClient, MovkApiModuleOptions } from './runtime/types'
 
 export * from './runtime/types'
 
@@ -89,11 +89,6 @@ export default defineNuxtModule<ModuleOptions>({
         method: 'post',
         handler: resolve('runtime/server/api/_movk/session.post')
       })
-      addServerHandler({
-        route: '/api/_movk/session',
-        method: 'patch',
-        handler: resolve('runtime/server/api/_movk/session.patch')
-      })
     }
 
     addTypeTemplate({
@@ -121,6 +116,6 @@ declare module 'nuxt/schema' {
   interface RuntimeConfig { }
 
   interface PublicRuntimeConfig {
-    movkApi: ApiModuleConfig
+    movkApi: MovkApiModuleOptions
   }
 }

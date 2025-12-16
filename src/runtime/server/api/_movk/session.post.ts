@@ -1,14 +1,10 @@
 import { defineEventHandler, readBody, createError } from 'h3'
 
 /**
- * 设置用户 Session
- *
+ * 用于登录成功后设置完整的 session 数据
  * POST /api/_movk/session
  *
- * 用于登录成功后设置完整的 session 数据，
- * 包括用户信息和 token（存储在 secure 中）。
- *
- * @body { user: Record<string, unknown>, secure?: Record<string, unknown>, loggedInAt?: string }
+ * @body UserSession
  */
 export default defineEventHandler(async (event) => {
   const body = await readBody(event)

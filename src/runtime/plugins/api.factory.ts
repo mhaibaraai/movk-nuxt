@@ -1,13 +1,13 @@
-import type { $Fetch, FetchOptions } from 'ofetch'
+import type { $Fetch, FetchOptions, FetchHooks } from 'ofetch'
 import type {
   ApiClient,
-  ApiModuleConfig,
+  MovkApiModuleOptions,
   ApiResponse,
-  AuthConfig,
-  EndpointConfig,
+  ApiAuthConfig,
+  ApiEndpointConfig,
   ResolvedEndpointConfig,
-  SuccessConfig,
-  ToastConfig,
+  ApiSuccessConfig,
+  ApiToastConfig,
   UploadOptions
 } from '../types/api'
 import { getPath, triggerDownload } from '@movk/core'
@@ -31,8 +31,6 @@ function getUserSession(): ReturnType<typeof useUserSession> | null {
 
 /**
  * 从 session 获取 Token
- *
- * 从 session 公开数据中获取 token，客户端和服务端都可访问
  */
 function getTokenFromSession(tokenPath: string): string | null {
   const userSession = getUserSession()
@@ -45,7 +43,7 @@ function getTokenFromSession(tokenPath: string): string | null {
 /**
  * 构建 Authorization Header 值
  */
-function buildAuthHeader(token: string, config: Partial<AuthConfig>): string {
+function buildAuthHeader(token: string, config: Partial<ApiAuthConfig>): string {
   const tokenType = config.tokenType === 'Custom'
     ? (config.customTokenType || '')
     : (config.tokenType || 'Bearer')
@@ -56,7 +54,7 @@ function buildAuthHeader(token: string, config: Partial<AuthConfig>): string {
 /**
  * 处理 401 未授权
  */
-async function handleUnauthorized(config: Partial<AuthConfig>, nuxtApp: ReturnType<typeof useNuxtApp>): Promise<void> {
+async function handleUnauthorized(config: Partial<ApiAuthConfig>): Promise<void> {
   const userSession = getUserSession()
 
   // 清除 session
@@ -67,31 +65,23 @@ async function handleUnauthorized(config: Partial<AuthConfig>, nuxtApp: ReturnTy
   // 跳转登录页
   if (config.redirectOnUnauthorized) {
     const loginPath = config.loginPath || '/login'
+    const nuxtApp = useNuxtApp()
     await nuxtApp.runWithContext(() => navigateTo(loginPath))
   }
 }
 
-// ==================== API Client 工厂 ====================
+// ==================== 内置钩子函数 ====================
 
 /**
- * 创建 API Client
+ * 创建内置钩子集合
  */
-function createApiClient(
-  endpointConfig: EndpointConfig,
-  resolvedConfig: ResolvedEndpointConfig,
-  moduleConfig: ApiModuleConfig,
-  nuxtApp: ReturnType<typeof useNuxtApp>,
-  getOrCreateEndpoint: (name: string) => ApiClient
-): ApiClient {
-  const { auth: authConfig } = resolvedConfig
-
-  // 创建 $fetch 实例
-  const $fetchInstance = $fetch.create({
-    baseURL: endpointConfig.baseURL,
-    headers: endpointConfig.headers,
-
-    onRequest({ options }) {
-      // 添加认证 Header
+function createBuiltinHooks(
+  authConfig: Partial<ApiAuthConfig>,
+  moduleConfig: MovkApiModuleOptions,
+  endpointConfig: ApiEndpointConfig
+): FetchHooks {
+  return {
+    onRequest(context) {
       if (authConfig.enabled) {
         const tokenPath = authConfig.sessionTokenPath || 'token'
         const token = getTokenFromSession(tokenPath)
@@ -100,38 +90,68 @@ function createApiClient(
           const headerName = authConfig.headerName || 'Authorization'
           const headerValue = buildAuthHeader(token, authConfig)
 
-          options.headers = options.headers || new Headers()
-          if (options.headers instanceof Headers) {
-            options.headers.set(headerName, headerValue)
+          context.options.headers = context.options.headers || new Headers()
+          if (context.options.headers instanceof Headers) {
+            context.options.headers.set(headerName, headerValue)
           }
           else {
-            (options.headers as Record<string, string>)[headerName] = headerValue
+            (context.options.headers as Record<string, string>)[headerName] = headerValue
           }
         }
       }
 
-      // Debug
       if (moduleConfig.debug) {
-        console.log(`[Movk API] Request: ${options.method || 'GET'} ${endpointConfig.baseURL}${String(options.baseURL || '')}`)
+        console.log(`[Movk API] Request: ${context.options.method || 'GET'} ${endpointConfig.baseURL}${String(context.options.baseURL || '')}`)
       }
     },
 
-    async onResponse({ response }) {
+    async onRequestError(context) {
       if (moduleConfig.debug) {
-        console.log('[Movk API] Response:', response._data)
+        console.error('[Movk API] Request Error:', context.error)
       }
     },
 
-    async onResponseError({ response }) {
-      // 401 处理
-      if (response.status === 401) {
-        await handleUnauthorized(authConfig, nuxtApp)
+    async onResponse(context) {
+      if (moduleConfig.debug) {
+        console.log('[Movk API] Response:', context.response._data)
+      }
+    },
+
+    async onResponseError(context) {
+      if (context.response.status === 401) {
+        await handleUnauthorized(authConfig)
       }
 
       if (moduleConfig.debug) {
-        console.error('[Movk API] Error:', response.status, response._data)
+        console.error('[Movk API] Error:', context.response.status, context.response._data)
       }
     }
+  } as FetchHooks
+}
+
+// ==================== API Client 工厂 ====================
+
+/**
+ * 创建 API Client
+ */
+function createApiClient(
+  endpointConfig: ApiEndpointConfig,
+  resolvedConfig: ResolvedEndpointConfig,
+  moduleConfig: MovkApiModuleOptions,
+  getOrCreateEndpoint: (name: string) => ApiClient
+): ApiClient {
+  const { auth: authConfig } = resolvedConfig
+
+  const builtinHooks = createBuiltinHooks(authConfig, moduleConfig, endpointConfig)
+  resolvedConfig.builtinHooks = builtinHooks
+
+  const $fetchInstance = $fetch.create({
+    baseURL: endpointConfig.baseURL,
+    headers: endpointConfig.headers,
+    onRequest: builtinHooks.onRequest,
+    onRequestError: builtinHooks.onRequestError,
+    onResponse: builtinHooks.onResponse,
+    onResponseError: builtinHooks.onResponseError
   }) as $Fetch
 
   // 下载方法
@@ -182,8 +202,8 @@ function createApiClient(
 
 // ==================== 插件入口 ====================
 
-export default defineNuxtPlugin((nuxtApp) => {
-  const moduleConfig = useRuntimeConfig().public.movkApi as ApiModuleConfig
+export default defineNuxtPlugin(() => {
+  const moduleConfig = useRuntimeConfig().public.movkApi as MovkApiModuleOptions
 
   if (!moduleConfig.enabled) {
     return
@@ -213,9 +233,9 @@ export default defineNuxtPlugin((nuxtApp) => {
     // 合并配置
     const resolvedConfig: ResolvedEndpointConfig = {
       ...endpointConfig,
-      auth: defu(endpointConfig.auth, moduleConfig.auth) as Partial<AuthConfig>,
-      toast: defu(endpointConfig.toast, moduleConfig.toast) as Partial<ToastConfig>,
-      success: defu(endpointConfig.success, moduleConfig.success) as Partial<SuccessConfig>
+      auth: defu(endpointConfig.auth, moduleConfig.auth) as Partial<ApiAuthConfig>,
+      toast: defu(endpointConfig.toast, moduleConfig.toast) as Partial<ApiToastConfig>,
+      success: defu(endpointConfig.success, moduleConfig.success) as Partial<ApiSuccessConfig>
     }
 
     // 创建实例
@@ -223,7 +243,6 @@ export default defineNuxtPlugin((nuxtApp) => {
       endpointConfig,
       resolvedConfig,
       moduleConfig,
-      nuxtApp as any,
       getOrCreateEndpoint
     )
 
