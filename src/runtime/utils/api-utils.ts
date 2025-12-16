@@ -2,8 +2,8 @@ import type { ToastProps } from '@nuxt/ui'
 import type {
   ApiResponse,
   ApiError,
-  SuccessConfig,
-  ToastConfig,
+  ApiSuccessConfig,
+  ApiToastConfig,
   RequestToastOptions
 } from '../types/api'
 import { useNuxtApp, useToast } from '#imports'
@@ -15,7 +15,7 @@ import { useNuxtApp, useToast } from '#imports'
  */
 export function isBusinessSuccess(
   response: ApiResponse,
-  config: Partial<SuccessConfig> = {}
+  config: Partial<ApiSuccessConfig> = {}
 ): boolean {
   const codeKey = config.codeKey || 'code'
   const successCodes = config.successCodes || [200, 0]
@@ -28,7 +28,7 @@ export function isBusinessSuccess(
  */
 export function extractMessage(
   response: ApiResponse,
-  config: Partial<SuccessConfig> = {}
+  config: Partial<ApiSuccessConfig> = {}
 ): string | undefined {
   const messageKey = config.messageKey || 'message'
   return (response[messageKey] as string) || response.message || response.msg
@@ -39,7 +39,7 @@ export function extractMessage(
  */
 export function extractData<T>(
   response: ApiResponse<T>,
-  config: Partial<SuccessConfig> = {}
+  config: Partial<ApiSuccessConfig> = {}
 ): T {
   const dataKey = config.dataKey || 'data'
   return (response[dataKey] ?? response.result ?? response) as T
@@ -72,150 +72,93 @@ function getToast(): ReturnType<typeof useToast> | null {
 }
 
 /**
- * Toast 显示选项
- */
-interface ShowToastOptions {
-  type: 'success' | 'error'
-  response: ApiResponse
-  requestOptions?: RequestToastOptions | false
-  globalConfig: Partial<ToastConfig>
-  successConfig: Partial<SuccessConfig>
-}
-
-/**
  * 显示 Toast 提示
  */
-export function showToast(options: ShowToastOptions): void {
-  const { type, response, requestOptions, globalConfig, successConfig } = options
+export function showToast(
+  type: 'success' | 'error',
+  message: string | undefined,
+  requestOptions: RequestToastOptions | false | undefined,
+  globalConfig: Partial<ApiToastConfig>
+): void {
+  // 全局禁用或请求级禁用
+  if (globalConfig.enabled === false || requestOptions === false) return
+  if (!message) return
 
-  // 检查是否禁用
-  if (globalConfig.enabled === false) return
-  if (requestOptions === false) return
+  // 类型配置禁用
+  const typeConfig = globalConfig[type]
+  if (typeConfig?.show === false) return
+  if (requestOptions?.[type] === false) return
 
   const toast = getToast()
   if (!toast) return
 
-  // 获取类型配置
-  const typeConfig = globalConfig[type]
-  if (typeConfig?.show === false) return
+  const requestTypeConfig = typeof requestOptions?.[type] === 'object'
+    ? requestOptions[type] as Partial<ToastProps>
+    : {}
 
-  // 检查请求级配置
-  if (requestOptions && requestOptions[type] === false) return
-
-  // 获取消息
-  const customMessage = type === 'success'
-    ? requestOptions?.successMessage
-    : requestOptions?.errorMessage
-  const autoMessage = extractMessage(response, successConfig)
-  const finalMessage = customMessage || autoMessage
-
-  if (!finalMessage) return
-
-  // 构建 Toast 选项
-  const toastOptions: Partial<ToastProps> = {
-    title: finalMessage,
+  toast.add({
+    title: message,
     color: type === 'success' ? 'success' : 'error',
-    duration: 1500,
-    ...typeConfig as Partial<ToastProps>,
-    ...(typeof requestOptions?.[type] === 'object' ? requestOptions[type] as Partial<ToastProps> : {})
-  }
-
-  // 移除内部属性
-  delete (toastOptions as Record<string, unknown>).show
-
-  toast.add(toastOptions as ToastProps)
+    duration: 3000,
+    ...(typeConfig && { ...typeConfig, show: undefined }),
+    ...requestTypeConfig
+  } as ToastProps)
 }
 
-// ==================== 响应处理器 ====================
+// ==================== Transform 工厂 ====================
 
-/**
- * 响应处理器配置
- */
-interface ResponseHandlerConfig<T = unknown> {
-  /** 请求级选项 */
-  requestOptions?: {
-    toast?: RequestToastOptions | false
-    unwrap?: boolean
-    transform?: (response: ApiResponse<T>) => T
-    skipBusinessCheck?: boolean
-  }
-  /** Toast 配置 */
-  toastConfig: Partial<ToastConfig>
-  /** 成功判断配置 */
-  successConfig: Partial<SuccessConfig>
+interface CreateTransformOptions<T> {
+  unwrap: boolean
+  skipBusinessCheck: boolean
+  toast?: RequestToastOptions | false
+  userTransform?: (data: ApiResponse<T>) => T
+  toastConfig: Partial<ApiToastConfig>
+  successConfig: Partial<ApiSuccessConfig>
 }
 
 /**
- * 响应处理器返回
- */
-interface ResponseHandlers<T = unknown> {
-  /** onResponse 钩子 */
-  onResponse: (context: { response: { _data: ApiResponse } }) => void
-  /** transform 函数 */
-  transform: (data: ApiResponse<T>) => T
-}
-
-/**
- * 创建响应处理器
+ * 创建 useFetch transform 函数
  *
- * 用于 useFetch 的 onResponse 和 transform 钩子
+ * 处理流程:
+ * 1. 业务状态码检查 → 失败时抛出 ApiError
+ * 2. Toast 提示 (仅客户端)
+ * 3. 用户自定义 transform
+ * 4. 自动解包数据
  */
-export function createResponseHandlers<T = unknown>(
-  config: ResponseHandlerConfig<T>
-): ResponseHandlers<T> {
-  const { requestOptions = {}, toastConfig, successConfig } = config
+export function createTransform<T>(options: CreateTransformOptions<T>) {
+  const {
+    unwrap,
+    skipBusinessCheck,
+    toast,
+    userTransform,
+    toastConfig,
+    successConfig
+  } = options
 
-  return {
-    onResponse({ response }) {
-      if (requestOptions.skipBusinessCheck) return
+  return (response: ApiResponse<T>): T => {
+    const isSuccess = skipBusinessCheck || isBusinessSuccess(response, successConfig)
+    const message = extractMessage(response, successConfig)
 
-      const isSuccess = isBusinessSuccess(response._data, successConfig)
-
-      showToast({
-        type: isSuccess ? 'success' : 'error',
-        response: response._data,
-        requestOptions: requestOptions.toast,
-        globalConfig: toastConfig,
-        successConfig
-      })
-    },
-
-    transform(data) {
-      // 业务错误检查
-      if (!requestOptions.skipBusinessCheck && !isBusinessSuccess(data, successConfig)) {
-        const errorMessage = extractMessage(data, successConfig)
-        throw createApiError(data, errorMessage)
+    // 业务失败处理
+    if (!isSuccess) {
+      if (import.meta.client) {
+        showToast('error', message, toast, toastConfig)
       }
-
-      // 自定义转换
-      if (requestOptions.transform) {
-        return requestOptions.transform(data)
-      }
-
-      // 自动解包
-      if (requestOptions.unwrap !== false) {
-        return extractData(data, successConfig)
-      }
-
-      return data as T
+      throw createApiError(response, message)
     }
-  }
-}
 
-// ==================== Hook 调用工具 ====================
+    // 业务成功提示
+    if (import.meta.client) {
+      const customMessage = toast !== false ? (toast?.successMessage || message) : undefined
+      showToast('success', customMessage, toast, toastConfig)
+    }
 
-type FetchHook<T> = ((context: T) => void) | ((context: T) => void)[]
+    // 用户自定义 transform
+    if (userTransform) {
+      return userTransform(response)
+    }
 
-/**
- * 安全调用 Fetch Hook
- */
-export function callFetchHook<T>(hook: FetchHook<T> | undefined, context: T): void {
-  if (!hook) return
-
-  if (typeof hook === 'function') {
-    hook(context)
-  }
-  else if (Array.isArray(hook)) {
-    hook.forEach(fn => fn(context))
+    // 自动解包
+    return unwrap ? extractData<T>(response, successConfig) : response as unknown as T
   }
 }
