@@ -1,16 +1,21 @@
-import type { $Fetch, FetchOptions, FetchHooks } from 'ofetch'
+import type { $Fetch, FetchHooks, FetchResponse, FetchContext } from 'ofetch'
 import type {
   ApiClient,
   MovkApiModuleOptions,
   ApiResponse,
   ApiAuthConfig,
-  ApiEndpointConfig,
   ResolvedEndpointConfig,
-  ApiSuccessConfig,
-  ApiToastConfig,
-  UploadOptions
+  UploadOptions,
+  DownloadOptions,
+  ApiFetchContext
 } from '../types/api'
-import { getPath, triggerDownload } from '@movk/core'
+import { getPath, triggerDownload, extractFilename } from '@movk/core'
+import {
+  showToast,
+  isBusinessSuccess,
+  extractMessage,
+  extractToastMessage
+} from '../utils/api-utils'
 import { defineNuxtPlugin, useRuntimeConfig, navigateTo, useNuxtApp, useUserSession } from '#imports'
 import defu from 'defu'
 
@@ -73,15 +78,30 @@ async function handleUnauthorized(config: Partial<ApiAuthConfig>): Promise<void>
 // ==================== 内置钩子函数 ====================
 
 /**
+ * 从请求上下文中获取 ApiFetchContext
+ */
+function getApiFetchContext(context: FetchContext): ApiFetchContext {
+  return (context.options as { context?: ApiFetchContext }).context || {}
+}
+
+/**
  * 创建内置钩子集合
+ *
+ * 处理：
+ * - 认证 Token 注入
+ * - 401 未授权处理
+ * - Toast 提示（业务成功/失败、网络错误）
+ * - 调试日志
  */
 function createBuiltinHooks(
-  authConfig: Partial<ApiAuthConfig>,
-  moduleConfig: MovkApiModuleOptions,
-  endpointConfig: ApiEndpointConfig
+  resolvedConfig: ResolvedEndpointConfig,
+  moduleConfig: MovkApiModuleOptions
 ): FetchHooks {
+  const { auth: authConfig, toast: toastConfig, success: successConfig } = resolvedConfig
+
   return {
     onRequest(context) {
+      // 认证 Token 注入
       if (authConfig.enabled) {
         const tokenPath = authConfig.sessionTokenPath || 'token'
         const token = getTokenFromSession(tokenPath)
@@ -101,30 +121,60 @@ function createBuiltinHooks(
       }
 
       if (moduleConfig.debug) {
-        console.log(`[Movk API] Request: ${context.options.method || 'GET'} ${endpointConfig.baseURL}${String(context.options.baseURL || '')}`)
+        console.log(`[Movk API] Request: ${context.options.method || 'GET'} ${resolvedConfig.baseURL}${context.request}`)
       }
     },
 
-    async onRequestError(context) {
+    async onRequestError({ error }) {
       if (moduleConfig.debug) {
-        console.error('[Movk API] Request Error:', context.error)
+        console.error('[Movk API] Request Error:', error)
       }
     },
 
     async onResponse(context) {
+      const response = context.response
+      const data = response._data as ApiResponse
+
       if (moduleConfig.debug) {
-        console.log('[Movk API] Response:', context.response._data)
+        console.log('[Movk API] Response:', data)
+      }
+
+      // 客户端显示 Toast
+      if (!import.meta.client) return
+
+      const { toast, skipBusinessCheck } = getApiFetchContext(context)
+      const isSuccess = skipBusinessCheck || isBusinessSuccess(data, successConfig)
+      const message = extractMessage(data, successConfig)
+
+      if (isSuccess) {
+        const successMessage = toast !== false ? (toast?.successMessage || message) : undefined
+        showToast('success', successMessage, toast, toastConfig)
       }
     },
 
     async onResponseError(context) {
-      if (context.response.status === 401) {
+      const { response } = context
+
+      // 401 未授权处理
+      if (response.status === 401) {
         await handleUnauthorized(authConfig)
       }
 
       if (moduleConfig.debug) {
-        console.error('[Movk API] Error:', context.response.status, context.response._data)
+        console.error('[Movk API] Error:', response.status, response._data)
       }
+
+      // 客户端显示网络错误 Toast
+      if (!import.meta.client) return
+
+      const { toast } = getApiFetchContext(context)
+      const data = response._data as ApiResponse | undefined
+      const message = data ? extractMessage(data, successConfig) : undefined
+      const errorMessage = toast !== false
+        ? (toast?.errorMessage || message || `请求失败 (${response.status})`)
+        : undefined
+
+      showToast('error', errorMessage, toast, toastConfig)
     }
   } as FetchHooks
 }
@@ -135,59 +185,77 @@ function createBuiltinHooks(
  * 创建 API Client
  */
 function createApiClient(
-  endpointConfig: ApiEndpointConfig,
   resolvedConfig: ResolvedEndpointConfig,
   moduleConfig: MovkApiModuleOptions,
   getOrCreateEndpoint: (name: string) => ApiClient
 ): ApiClient {
-  const { auth: authConfig } = resolvedConfig
-
-  const builtinHooks = createBuiltinHooks(authConfig, moduleConfig, endpointConfig)
+  const builtinHooks = createBuiltinHooks(resolvedConfig, moduleConfig)
   resolvedConfig.builtinHooks = builtinHooks
 
   const $fetchInstance = $fetch.create({
-    baseURL: endpointConfig.baseURL,
-    headers: endpointConfig.headers,
+    baseURL: resolvedConfig.baseURL,
+    headers: resolvedConfig.headers,
     onRequest: builtinHooks.onRequest,
     onRequestError: builtinHooks.onRequestError,
     onResponse: builtinHooks.onResponse,
     onResponseError: builtinHooks.onResponseError
   }) as $Fetch
 
-  // 下载方法
+  // 下载方法（blob 响应，需单独处理 Toast）
   const download = async (
     url: string,
     filename?: string,
-    options?: FetchOptions
+    options: DownloadOptions = {}
   ): Promise<void> => {
-    const blob = await $fetchInstance<Blob>(url, {
-      ...options,
-      method: 'GET',
-      responseType: 'blob' as 'json'
-    })
+    const { toast, ...fetchOptions } = options
 
-    const finalFilename = filename || url.split('/').pop() || 'download'
-    triggerDownload(new Blob([blob]), finalFilename)
+    // 通过 context 传递 toast 配置，让 onResponseError 处理网络错误
+    const response = await $fetchInstance.raw<Blob>(url, {
+      ...fetchOptions,
+      method: 'GET',
+      responseType: 'blob' as any,
+      context: { toast }
+    }) as FetchResponse<Blob>
+
+    if (!response._data) {
+      throw new Error('下载失败: 未接收到数据')
+    }
+
+    const finalFilename = filename || extractFilename(response.headers, url.split('/').pop() || 'download')
+    triggerDownload(response._data, finalFilename)
+
+    // 下载成功提示（blob 响应无业务状态码，需手动提示）
+    if (import.meta.client && toast !== false) {
+      const message = extractToastMessage(toast, 'success', `下载成功: ${finalFilename}`)
+      showToast('success', message, toast, resolvedConfig.toast)
+    }
   }
 
-  // 上传方法
+  // 上传方法（通过 context 传递 toast，内置 hooks 处理提示）
   const upload = async <T>(
     url: string,
-    file: File | FormData,
+    file: File | File[] | FormData,
     options: UploadOptions = {}
   ): Promise<ApiResponse<T>> => {
+    const { toast, fieldName = 'file', ...fetchOptions } = options
+
+    // 构建 FormData
     const formData = file instanceof FormData
       ? file
       : (() => {
           const fd = new FormData()
-          fd.append(options.fieldName || 'file', file)
+          const files = Array.isArray(file) ? file : [file]
+          files.forEach(f => fd.append(fieldName, f))
           return fd
         })()
 
+    // 通过 context 传递配置，内置 hooks 处理业务状态码和 Toast
+
     return $fetchInstance<ApiResponse<T>>(url, {
-      ...options,
+      ...fetchOptions,
       method: 'POST',
-      body: formData
+      body: formData,
+      context: { toast }
     })
   }
 
@@ -233,14 +301,13 @@ export default defineNuxtPlugin(() => {
     // 合并配置
     const resolvedConfig: ResolvedEndpointConfig = {
       ...endpointConfig,
-      auth: defu(endpointConfig.auth, moduleConfig.auth) as Partial<ApiAuthConfig>,
-      toast: defu(endpointConfig.toast, moduleConfig.toast) as Partial<ApiToastConfig>,
-      success: defu(endpointConfig.success, moduleConfig.success) as Partial<ApiSuccessConfig>
+      auth: defu(endpointConfig.auth, moduleConfig.auth) as ResolvedEndpointConfig['auth'],
+      toast: defu(endpointConfig.toast, moduleConfig.toast) as ResolvedEndpointConfig['toast'],
+      success: defu(endpointConfig.success, moduleConfig.success) as ResolvedEndpointConfig['success']
     }
 
     // 创建实例
     const client = createApiClient(
-      endpointConfig,
       resolvedConfig,
       moduleConfig,
       getOrCreateEndpoint

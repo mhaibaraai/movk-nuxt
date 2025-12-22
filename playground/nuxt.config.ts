@@ -21,12 +21,13 @@ export default defineNuxtConfig({
   },
   movk: {
     api: {
-      auth: {
-        enabled: true
-      },
       endpoints: {
         default: {
-          baseURL: '/movk-backend'
+          baseURL: '/movk-backend',
+          auth: {
+            enabled: true,
+            clearSessionOnUnauthorized: true
+          }
         }
       }
     }

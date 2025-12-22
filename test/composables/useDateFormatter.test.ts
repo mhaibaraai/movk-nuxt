@@ -119,6 +119,36 @@ describe('useDateFormatter', () => {
   describe('工具方法 - 查询', () => {
     const formatter = useDateFormatter({ locale: 'zh-CN' })
 
+    it('getDayOfWeek: 获取星期几数字', () => {
+      // 2025-11-29 is Saturday
+      // In zh-CN locale, week starts on Monday (0), so Saturday is 5
+      expect(formatter.getDayOfWeek(fixedDate)).toBe(5)
+    })
+
+    it('getDayOfWeekName: 获取星期几名称 (long)', () => {
+      // 2025-11-29 is Saturday
+      expect(formatter.getDayOfWeekName(fixedDate)).toBe('星期六')
+      expect(formatter.getDayOfWeekName(fixedDate, 'long')).toBe('星期六')
+    })
+
+    it('getDayOfWeekName: 获取星期几名称 (short)', () => {
+      // 2025-11-29 is Saturday
+      expect(formatter.getDayOfWeekName(fixedDate, 'short')).toBe('周六')
+    })
+
+    it('getDayOfWeekName: 获取星期几名称 (narrow)', () => {
+      // 2025-11-29 is Saturday
+      expect(formatter.getDayOfWeekName(fixedDate, 'narrow')).toBe('六')
+    })
+
+    it('getDayOfWeekName: 支持不同 locale', () => {
+      const enFormatter = useDateFormatter({ locale: 'en-US' })
+      // 2025-11-29 is Saturday
+      expect(enFormatter.getDayOfWeekName(fixedDate)).toBe('Saturday')
+      expect(enFormatter.getDayOfWeekName(fixedDate, 'short')).toBe('Sat')
+      expect(enFormatter.getDayOfWeekName(fixedDate, 'narrow')).toBe('S')
+    })
+
     it('isWeekend: 判断周末', () => {
       // 2025-11-29 is Saturday
       expect(formatter.isWeekend(fixedDate)).toBe(true)

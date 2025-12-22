@@ -107,9 +107,9 @@ export const apiAuthConfigSchema = z.object({
   headerName: z.string().default('Authorization'),
   /**
    * 401 错误时是否自动跳转登录页
-   * @defaultValue true
+   * @defaultValue false
    */
-  redirectOnUnauthorized: z.boolean().default(true),
+  redirectOnUnauthorized: z.boolean().default(false),
   /**
    * 登录页路径
    * @defaultValue '/login'
@@ -117,9 +117,9 @@ export const apiAuthConfigSchema = z.object({
   loginPath: z.string().default('/login'),
   /**
    * 是否在 401 时自动清除 session
-   * @defaultValue true
+   * @defaultValue false
    */
-  clearSessionOnUnauthorized: z.boolean().default(true)
+  clearSessionOnUnauthorized: z.boolean().default(false)
 })
 
 /**

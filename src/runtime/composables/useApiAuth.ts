@@ -141,8 +141,10 @@ export function useApiAuth(): UseApiAuthReturn {
       const headerName = getHeaderName(authConfig)
       const headerValue = buildAuthHeader(token, authConfig)
 
+      // 静默获取用户信息（禁用 Toast 提示）
       const userResponse = await api.$fetch<ApiResponse<User>>(userInfoPath, {
-        headers: { [headerName]: headerValue }
+        headers: { [headerName]: headerValue },
+        context: { toast: false }
       })
       // 从响应中提取用户数据
       userInfo = (getPath(userResponse, 'data') ?? userResponse) as User

@@ -1,12 +1,16 @@
 import type { ToastProps } from '@nuxt/ui'
+import type { FetchContext, FetchHooks } from 'ofetch'
 import type {
   ApiResponse,
   ApiError,
   ApiSuccessConfig,
   ApiToastConfig,
-  RequestToastOptions
+  ApiAuthConfig,
+  RequestToastOptions,
+  ResolvedEndpointConfig
 } from '../types/api'
-import { useNuxtApp, useToast } from '#imports'
+import { getPath } from '@movk/core'
+import { useNuxtApp, useToast, useUserSession } from '#imports'
 
 // ==================== 业务逻辑工具 ====================
 
@@ -72,6 +76,18 @@ function getToast(): ReturnType<typeof useToast> | null {
 }
 
 /**
+ * 从请求选项中提取 Toast 消息
+ */
+export function extractToastMessage(
+  toast: RequestToastOptions | false | undefined,
+  type: 'success' | 'error',
+  fallback: string
+): string {
+  if (toast === false) return fallback
+  return (typeof toast === 'object' ? toast?.[`${type}Message`] : undefined) || fallback
+}
+
+/**
  * 显示 Toast 提示
  */
 export function showToast(
@@ -97,6 +113,7 @@ export function showToast(
     : {}
 
   toast.add({
+    icon: type === 'success' ? 'i-lucide-circle-check' : 'i-lucide-circle-x',
     title: message,
     color: type === 'success' ? 'success' : 'error',
     duration: 3000,
@@ -107,12 +124,9 @@ export function showToast(
 
 // ==================== Transform 工厂 ====================
 
-interface CreateTransformOptions<T> {
-  unwrap: boolean
+interface CreateTransformOptions<ResT, DataT = ResT> {
   skipBusinessCheck: boolean
-  toast?: RequestToastOptions | false
-  userTransform?: (data: ApiResponse<T>) => T
-  toastConfig: Partial<ApiToastConfig>
+  userTransform?: (data: ResT) => DataT
   successConfig: Partial<ApiSuccessConfig>
 }
 
@@ -121,44 +135,141 @@ interface CreateTransformOptions<T> {
  *
  * 处理流程:
  * 1. 业务状态码检查 → 失败时抛出 ApiError
- * 2. Toast 提示 (仅客户端)
- * 3. 用户自定义 transform
- * 4. 自动解包数据
+ * 2. 解包数据（提取 response.data）
+ * 3. 用户自定义 transform（接收解包后的数据）
  */
-export function createTransform<T>(options: CreateTransformOptions<T>) {
-  const {
-    unwrap,
-    skipBusinessCheck,
-    toast,
-    userTransform,
-    toastConfig,
-    successConfig
-  } = options
+export function createTransform<ResT, DataT = ResT>(
+  options: CreateTransformOptions<ResT, DataT>
+): (response: ApiResponse<ResT>) => DataT {
+  const { skipBusinessCheck, userTransform, successConfig } = options
 
-  return (response: ApiResponse<T>): T => {
-    const isSuccess = skipBusinessCheck || isBusinessSuccess(response, successConfig)
-    const message = extractMessage(response, successConfig)
-
-    // 业务失败处理
-    if (!isSuccess) {
-      if (import.meta.client) {
-        showToast('error', message, toast, toastConfig)
-      }
-      throw createApiError(response, message)
+  return (response: ApiResponse<ResT>): DataT => {
+    // 业务状态码检查
+    if (!skipBusinessCheck && !isBusinessSuccess(response, successConfig)) {
+      throw createApiError(response, extractMessage(response, successConfig))
     }
 
-    // 业务成功提示
-    if (import.meta.client) {
-      const customMessage = toast !== false ? (toast?.successMessage || message) : undefined
-      showToast('success', customMessage, toast, toastConfig)
-    }
+    // 解包数据
+    const unwrappedData = extractData<ResT>(response, successConfig)
 
     // 用户自定义 transform
     if (userTransform) {
-      return userTransform(response)
+      return userTransform(unwrappedData)
     }
 
-    // 自动解包
-    return unwrap ? extractData<T>(response, successConfig) : response as unknown as T
+    return unwrappedData as unknown as DataT
   }
+}
+
+// ==================== Hooks 合并工具 ====================
+
+type HookFunction = (context: FetchContext) => void | Promise<void>
+
+/**
+ * 合并多个 hook 函数，确保所有 hooks 都会执行
+ */
+export function mergeHooks(...hooks: (HookFunction | undefined)[]): HookFunction {
+  const validHooks = hooks.filter((h): h is HookFunction => typeof h === 'function')
+  if (validHooks.length === 0) return () => {}
+  if (validHooks.length === 1) return validHooks[0]!
+
+  return async (context: FetchContext) => {
+    for (const hook of validHooks) {
+      await hook(context)
+    }
+  }
+}
+
+/**
+ * 合并 FetchHooks 对象，每个 hook 类型单独合并
+ */
+export function mergeFetchHooks(
+  builtinHooks: Partial<FetchHooks>,
+  userHooks: Partial<FetchHooks>
+): FetchHooks {
+  return {
+    onRequest: mergeHooks(
+      builtinHooks.onRequest as HookFunction | undefined,
+      userHooks.onRequest as HookFunction | undefined
+    ),
+    onRequestError: mergeHooks(
+      builtinHooks.onRequestError as HookFunction | undefined,
+      userHooks.onRequestError as HookFunction | undefined
+    ),
+    onResponse: mergeHooks(
+      builtinHooks.onResponse as HookFunction | undefined,
+      userHooks.onResponse as HookFunction | undefined
+    ),
+    onResponseError: mergeHooks(
+      builtinHooks.onResponseError as HookFunction | undefined,
+      userHooks.onResponseError as HookFunction | undefined
+    )
+  }
+}
+
+// ==================== 认证工具 ====================
+
+/**
+ * 安全获取 useUserSession
+ */
+function getUserSession(): ReturnType<typeof useUserSession> | null {
+  try {
+    const nuxtApp = useNuxtApp()
+    return nuxtApp.runWithContext(() => useUserSession()) as ReturnType<typeof useUserSession>
+  }
+  catch {
+    return null
+  }
+}
+
+/**
+ * 从 session 获取 Token
+ */
+function getTokenFromSession(tokenPath: string): string | null {
+  const userSession = getUserSession()
+  if (!userSession?.session?.value) return null
+
+  const sessionData = userSession.session.value
+  return (getPath(sessionData, tokenPath) as string) || null
+}
+
+/**
+ * 构建 Authorization Header 值
+ */
+function buildAuthHeaderValue(token: string, config: Partial<ApiAuthConfig>): string {
+  const tokenType = config.tokenType === 'Custom'
+    ? (config.customTokenType || '')
+    : (config.tokenType || 'Bearer')
+
+  return tokenType ? `${tokenType} ${token}` : token
+}
+
+/**
+ * 获取认证 Headers
+ *
+ * 根据端点配置获取认证相关的 headers（如 Authorization）
+ * 用于原生 fetch/XHR 请求（如带进度的上传下载）
+ *
+ * @example
+ * ```ts
+ * const config = $api.getConfig()
+ * const authHeaders = getAuthHeaders(config)
+ * fetch(url, { headers: { ...headers, ...authHeaders } })
+ * ```
+ */
+export function getAuthHeaders(config: ResolvedEndpointConfig): Record<string, string> {
+  const headers: Record<string, string> = {}
+  const authConfig = config.auth
+
+  if (!authConfig.enabled) return headers
+
+  const tokenPath = authConfig.sessionTokenPath || 'token'
+  const token = getTokenFromSession(tokenPath)
+
+  if (token) {
+    const headerName = authConfig.headerName || 'Authorization'
+    headers[headerName] = buildAuthHeaderValue(token, authConfig)
+  }
+
+  return headers
 }

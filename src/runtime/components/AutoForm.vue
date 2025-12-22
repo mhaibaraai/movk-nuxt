@@ -29,6 +29,7 @@ export interface AutoFormProps<S extends z.ZodObject, T extends boolean = true, 
   globalMeta?: ZodAutoFormFieldMeta
   /** 数组字段添加按钮属性 */
   addButtonProps?: ButtonProps
+  loadingAuto?: boolean
 }
 
 export interface AutoFormEmits<S extends z.ZodObject, T extends boolean = true> extends FormEmits<S, T> {
@@ -49,6 +50,7 @@ const {
   submitButtonProps,
   addButtonProps,
   state: _state,
+  loadingAuto = true,
   ...restProps
 } = defineProps<AutoFormProps<S, T, N>>()
 
@@ -174,6 +176,7 @@ defineExpose({
     ref="formRef"
     :state="state"
     :schema="pureSchema"
+    :loading-auto="loadingAuto"
     v-bind="restProps"
   >
     <template #default="{ errors, loading }">

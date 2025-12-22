@@ -14,6 +14,33 @@ import {
 } from '../schemas/api'
 import type { User, UserSession, UserSessionComposable } from '#auth-utils'
 
+// ==================== ofetch 类型扩展 ====================
+
+/**
+ * 扩展 ofetch FetchOptions，添加 context 字段
+ *
+ * ofetch 运行时支持 context 字段用于在 hooks 间传递自定义数据，
+ * 但其 TypeScript 类型定义未包含此字段，这里进行补充
+ */
+declare module 'ofetch' {
+  interface FetchOptions {
+    /** 请求上下文，用于在 hooks 间传递自定义数据 */
+    context?: ApiFetchContext
+  }
+}
+
+/**
+ * API 请求上下文
+ *
+ * 用于在 hooks 中传递请求级配置（如 Toast、业务检查等）
+ */
+export interface ApiFetchContext {
+  /** Toast 配置 */
+  toast?: RequestToastOptions | false
+  /** 跳过业务状态码检查 */
+  skipBusinessCheck?: boolean
+}
+
 // ==================== 从 Schema 推导的基础类型 ====================
 
 /** 成功响应判断配置 */
@@ -88,17 +115,15 @@ export interface RequestToastOptions {
 
 /**
  * useApiFetch 扩展选项
+ *
+ * @typeParam ResT - API 响应 data 字段的原始类型
+ * @typeParam DataT - transform 转换后的最终类型（默认等于 ResT）
  */
-export interface ApiFetchExtras<T> {
+export interface ApiFetchExtras<ResT, DataT = ResT> {
   /** 端点名称 */
   endpoint?: string
   /** Toast 配置 */
   toast?: RequestToastOptions | false
-  /**
-   * 是否解包数据（从 response.data 提取）
-   * @defaultValue true
-   */
-  unwrap?: boolean
   /**
    * 跳过业务状态码检查
    * @defaultValue false
@@ -106,23 +131,52 @@ export interface ApiFetchExtras<T> {
   skipBusinessCheck?: boolean
   /**
    * 自定义数据转换函数
-   * 在业务检查通过后执行，替代默认的解包行为
+   * 接收解包后的数据（response.data），与 Nuxt 官方 useFetch 行为一致
+   *
+   * @example
+   * ```ts
+   * // 从分页响应中提取列表
+   * const { data } = useApiFetch<{ content: User[] }, User[]>('/users', {
+   *   transform: ({ content }) => content ?? []
+   * })
+   * ```
    */
-  transform?: (data: ApiResponse<T>) => T
+  transform?: (data: ResT) => DataT
 }
 
 /**
  * useApiFetch 选项类型
  *
  * 基于 Nuxt UseFetchOptions，使用 Omit 移除冲突的 transform
- * 然后在 ApiFetchExtras 中重新定义更精确的 transform 类型
+ * 支持双泛型：ResT 为原始响应类型，DataT 为转换后类型
+ *
+ * @typeParam ResT - API 响应 data 字段的原始类型
+ * @typeParam DataT - transform 转换后的最终类型（默认等于 ResT）
  */
-export type UseApiFetchOptions<T> = Omit<NuxtUseFetchOptions<ApiResponse<T>, T>, 'transform'> & ApiFetchExtras<T>
+export type UseApiFetchOptions<ResT, DataT = ResT>
+  = Omit<NuxtUseFetchOptions<ApiResponse<ResT>, DataT>, 'transform'> & ApiFetchExtras<ResT, DataT>
 
 /**
  * useApiFetch 返回类型
  */
-export type UseApiFetchReturn<T> = AsyncData<T | null, FetchError | ApiError | null>
+export type UseApiFetchReturn<DataT> = AsyncData<DataT | null, FetchError | ApiError | null>
+
+/**
+ * 下载选项
+ */
+export interface DownloadOptions extends Omit<FetchOptions<'json'>, 'responseType'> {
+  /**
+   * Toast 配置
+   * - false: 禁用所有提示
+   * - RequestToastOptions: 自定义成功/失败提示
+   */
+  toast?: RequestToastOptions | false
+  /**
+   * 下载进度回调
+   * @param progress - 下载进度百分比 (0-100)
+   */
+  onProgress?: (progress: number) => void
+}
 
 /**
  * 上传选项
@@ -133,7 +187,16 @@ export interface UploadOptions extends Omit<FetchOptions<'json'>, 'responseType'
    * @defaultValue 'file'
    */
   fieldName?: string
-  /** 上传进度回调 */
+  /**
+   * Toast 配置
+   * - false: 禁用所有提示
+   * - RequestToastOptions: 自定义成功/失败提示
+   */
+  toast?: RequestToastOptions | false
+  /**
+   * 上传进度回调
+   * @param progress - 上传进度百分比 (0-100)
+   */
   onProgress?: (progress: number) => void
 }
 
@@ -153,15 +216,23 @@ export interface ApiClient {
 
   /**
    * 下载文件
+   * @param url - 下载 URL
+   * @param filename - 可选的文件名,如果不提供会从 Content-Disposition 响应头中提取
+   * @param options - 下载选项
    * @example await $api.download('/export', 'data.csv')
+   * @example await $api.download('/export') // 自动从响应头提取文件名
    */
-  download: (url: string, filename?: string, options?: FetchOptions) => Promise<void>
+  download: (url: string, filename?: string, options?: DownloadOptions) => Promise<void>
 
   /**
-   * 上传文件
+   * 上传单个或多个文件
+   * @param url - 上传 URL
+   * @param file - 单个文件、文件数组或 FormData
+   * @param options - 上传选项
    * @example await $api.upload('/upload', file, { fieldName: 'avatar' })
+   * @example await $api.upload('/upload', [file1, file2]) // 多文件上传
    */
-  upload: <T = unknown>(url: string, file: File | FormData, options?: UploadOptions) => Promise<ApiResponse<T>>
+  upload: <T = unknown>(url: string, file: File | File[] | FormData, options?: UploadOptions) => Promise<ApiResponse<T>>
 
   /**
    * 获取端点配置（内部使用）
