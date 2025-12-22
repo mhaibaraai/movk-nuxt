@@ -116,8 +116,20 @@ const components: NavigationMenuItem[] = [
   }
 ]
 
+const composables: NavigationMenuItem[] = [
+  { label: 'useApiAuth', to: '/composables/useApiAuth' },
+  { label: 'useApiFetch', to: '/composables/useApiFetch' },
+  { label: 'useClientApiFetch', to: '/composables/useClientApiFetch' },
+  { label: 'useDateFormatter', to: '/composables/useDateFormatter' },
+  { label: 'useUploadWithProgress', to: '/composables/useUploadWithProgress' },
+  { label: 'useDownloadWithProgress', to: '/composables/useDownloadWithProgress' }
+]
+
 export const useNavigation = () => {
-  const items = [{ label: 'Home', icon: 'i-lucide-house', to: '/' }]
+  const items = [
+    { label: 'Home', icon: 'i-lucide-house', to: '/' },
+    ...composables
+  ]
 
   const groups = computed(() => [
     { id: 'links', items },

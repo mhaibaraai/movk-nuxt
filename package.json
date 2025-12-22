@@ -40,8 +40,8 @@
     "dist"
   ],
   "peerDependencies": {
-    "zod": ">=4.1.13",
-    "@nuxt/ui": ">=4.2.1"
+    "@nuxt/ui": ">=4.2.1",
+    "zod": ">=4.1.13"
   },
   "scripts": {
     "prepack": "nr build",
@@ -51,7 +51,7 @@
     "dev:build": "nuxt build playground",
     "docs": "nuxt dev docs",
     "docs:build": "nuxt build docs",
-    "release": "release-it && npm publish --access public",
+    "release": "release-it && npm publish",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "typecheck": "vue-tsc --noEmit && nuxt typecheck playground",
