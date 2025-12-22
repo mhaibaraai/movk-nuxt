@@ -5,6 +5,10 @@ export default defineAppConfig({
     duration: 3000,
     max: 5
   },
+  vercelAnalytics: {
+    enable: true,
+    debug: false
+  },
   header: {
     title: 'Movk Nuxt'
   },
