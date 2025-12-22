@@ -2,7 +2,7 @@
   "name": "@movk/nuxt",
   "type": "module",
   "version": "0.1.1",
-  "packageManager": "pnpm@10.25.0",
+  "packageManager": "pnpm@10.26.1",
   "description": "Schema-driven form and table generation module for Nuxt 4",
   "author": "YiXuan <mhaibaraai@gmail.com>",
   "license": "MIT",
@@ -59,11 +59,11 @@
     "test": "vitest"
   },
   "dependencies": {
-    "@iconify-json/lucide": "^1.2.79",
-    "@internationalized/date": "^3.10.0",
+    "@iconify-json/lucide": "^1.2.82",
+    "@internationalized/date": "^3.10.1",
     "@movk/core": "^1.0.2",
     "@nuxt/image": "^2.0.0",
-    "@nuxt/ui": "^4.2.1",
+    "@nuxt/ui": "^4.3.0",
     "@vueuse/core": "^14.1.0",
     "@vueuse/nuxt": "^14.1.0",
     "defu": "^6.1.4",
@@ -75,7 +75,7 @@
   "devDependencies": {
     "@antfu/ni": "^28.0.0",
     "@nuxt/devtools": "^3.1.1",
-    "@nuxt/eslint": "^1.11.0",
+    "@nuxt/eslint": "^1.12.1",
     "@nuxt/kit": "^4.2.2",
     "@nuxt/module-builder": "^1.0.2",
     "@nuxt/schema": "^4.2.2",
@@ -89,7 +89,7 @@
     "nuxt": "^4.2.2",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
-    "vitest": "^4.0.15",
-    "vue-tsc": "^3.1.8"
+    "vitest": "^4.0.16",
+    "vue-tsc": "^3.2.1"
   }
 }
