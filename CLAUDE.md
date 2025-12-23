@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 项目概览
 
-这是一个为 Nuxt 4 设计的 Schema 驱动表单和表格生成模块 (`@movk/nuxt`),基于 Zod v4 和 Nuxt UI 构建。核心功能是通过 Zod Schema 自动生成表单和表格,同时提供独立的 UI 组件和工具函数。
+这是一个为 Nuxt 4 设计的 Schema 驱动表单生成模块 (`@movk/nuxt`),基于 Zod v4 和 Nuxt UI 构建。核心功能是通过 Zod Schema 自动生成表单,同时提供独立的 UI 组件和工具函数。
 
 ## 常用命令
 

@@ -1,6 +1,6 @@
 [![Movk Nuxt](https://nuxt.mhaibaraai.cn/og-image.png)](https://nuxt.mhaibaraai.cn/)
 
-> `@movk/nuxt` 是一个为 Nuxt 4 设计的模块化工程套件,提供 Schema 驱动的自动表单生成、独立 UI 组件和通用工具函数。
+> `@movk/nuxt` 是一个为 Nuxt 4 设计的模块化工程套件，提供 Schema 驱动的自动表单生成、API 集成系统、独立 UI 组件和通用工具函数。
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue.svg)](https://www.typescriptlang.org/)
 [![Nuxt](https://img.shields.io/badge/Nuxt-4-00DC82.svg)](https://nuxt.com/)
@@ -13,12 +13,12 @@
 
 ## ✨ 特性
 
-- **Schema 驱动** - 基于 Zod v4 的声明式表单定义,一份 Schema 同时定义数据结构、验证规则和 UI 配置。
-- **自动化系统** - AutoForm 通过 Schema 自动生成完整表单界面,支持 15+ 种控件类型。
-- **API 集成** - 内置 useApiFetch、useApiAuth,提供多端点支持、自动认证、业务状态码检查和 Toast 提示。
-- **模块化设计** - 采用分层架构,按需使用 UI 组件、工具函数或全套自动化系统。
+- **Schema 驱动** - 基于 Zod v4 的声明式表单定义，一份 Schema 同时定义数据结构、验证规则和 UI 配置。
+- **自动化系统** - AutoForm 通过 Schema 自动生成完整表单界面，支持 15+ 种控件类型。
+- **API 集成** - 内置 useApiFetch、useApiAuth、useUploadWithProgress、useDownloadWithProgress，提供多端点支持、自动认证、业务状态码检查、Toast 提示和进度监控。
+- **模块化设计** - 采用分层架构，按需使用 UI 组件、工具函数或全套自动化系统。
 - **独立组件库** - 内置 DatePicker、StarRating、WithCopy 等 10+ 个通用 UI 组件。
-- **类型安全** - 完整的 TypeScript 类型推断,从 Schema 到表单数据。
+- **类型安全** - 完整的 TypeScript 类型推断，从 Schema 到表单数据。
 - **可扩展** - 支持自定义控件、布局系统、条件渲染等高级特性。
 
 ## 🚀 快速开始
@@ -217,7 +217,7 @@ const meta = getAutoFormMetadata(schema)
 
 #### useApiFetch
 
-基于 Nuxt useFetch 封装的 API 请求:
+基于 Nuxt useFetch 封装的 API 请求：
 
 ```ts
 // 基础用法
@@ -236,20 +236,20 @@ const { data } = await useApiFetch('/users', { endpoint: 'v2' })
 
 #### useApiAuth
 
-与 nuxt-auth-utils 集成的认证管理:
+与 nuxt-auth-utils 集成的认证管理：
 
 ```ts
-const { login, logout, loggedIn, user } = useApiAuth()
+const { login, clear, loggedIn, user } = useApiAuth()
 
 // 登录
 await login({
   loginPath: '/auth/login',
   credentials: { username: 'admin', password: '123456' },
-  userInfoPath: '/auth/me' // 可选,登录后获取用户信息
+  userInfoPath: '/auth/me' // 可选，登录后获取用户信息
 })
 
 // 登出
-await logout()
+await clear()
 
 // 响应式状态
 if (loggedIn.value) {
@@ -257,11 +257,39 @@ if (loggedIn.value) {
 }
 ```
 
+#### useUploadWithProgress
+
+带进度监控的文件上传：
+
+```ts
+const { progress, uploading, upload, abort } = useUploadWithProgress()
+
+// 上传文件
+await upload('/api/upload', file, {
+  fieldName: 'avatar',
+  onSuccess: (response) => console.log('上传成功:', response)
+})
+```
+
+#### useDownloadWithProgress
+
+带进度监控的文件下载：
+
+```ts
+const { progress, downloading, download, abort } = useDownloadWithProgress()
+
+// 下载文件
+await download('/api/export/report', {
+  filename: 'report.pdf',
+  onSuccess: (filename) => console.log('下载完成:', filename)
+})
+```
+
 ## 🏗️ 架构分层
 
 Movk Nuxt 采用清晰的分层架构:
 
-- **Core Systems** - AutoForm(已发布)、AutoTable(规划中)
+- **Core Systems** - AutoForm(已发布)
 - **API System** - useApiFetch、useApiAuth,提供完整的 API 请求和认证方案
 - **Standalone Components** - DatePicker、StarRating、WithCopy 等独立 UI 组件
 - **Composables** - useDateFormatter、useAutoForm 等通用组合式函数
@@ -278,9 +306,12 @@ Movk Nuxt 采用清晰的分层架构:
 
 ## 🗺️ 开发路线图
 
-- ✅ **AutoForm** - Schema 驱动的表单系统(已发布)
-- ✅ **UseApi** - API 请求封装和认证管理(已发布)
-- 🚧 **AutoTable** - 将复用相同的 Zod Schema,实现定义一次,既生成表单又生成表格
+- ✅ **AutoForm** - Schema 驱动的表单系统（已发布）
+- ✅ **API System** - API 请求封装和认证管理（已发布）
+  - useApiFetch、useClientApiFetch - API 请求
+  - useApiAuth - 认证管理
+  - useUploadWithProgress、useDownloadWithProgress - 进度监控
+- ✅ **独立组件库** - DatePicker、StarRating、WithCopy 等组件（已发布）
 
 ## 📄 许可证
 

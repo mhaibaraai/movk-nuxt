@@ -1,7 +1,7 @@
 ---
 seo:
   title: Movk Nuxt - Nuxt 4 模块化工程套件
-  description: Movk Nuxt 是一个为 Nuxt 4 设计的模块化工程套件，提供 Schema 驱动的自动表单生成、独立 UI 组件和通用工具函数。
+  description: Movk Nuxt 是一个为 Nuxt 4 设计的模块化工程套件，提供 Schema 驱动的自动表单生成、API 集成系统、独立 UI 组件和通用工具函数。
 ---
 
 ::u-page-hero{class="dark:bg-gradient-to-b from-neutral-900 to-neutral-950"}
@@ -23,7 +23,7 @@ Nuxt 4 模块化[工程套件]{.text-primary}
 ---
 transition: { duration: 0.6, delay: 0.3 }
 ---
-基于 Nuxt 4 和 Nuxt UI 的模块化扩展库，提供 Schema 驱动的自动表单生成、自动表格生成、常用 composables 工具等完整的表单与数据处理解决方案。
+基于 Nuxt 4 和 Nuxt UI 的模块化扩展库，提供 Schema 驱动的自动表单生成、API 集成系统、常用 composables 工具等完整的表单与数据处理解决方案。
 :::
 
 #links
@@ -73,12 +73,20 @@ transition: { duration: 0.6, delay: 0.5 }
   通过 Zod Schema 定义数据结构，自动生成完整的表单界面和验证逻辑。
   :::
 
+  :::u-page-feature{icon="i-lucide-cloud"}
+  #title
+  API 集成
+
+  #description
+  useApiFetch、useApiAuth、useUploadWithProgress 等完整的 API 请求和认证方案。
+  :::
+
   :::u-page-feature{icon="i-lucide-blocks"}
   #title
   模块化架构
 
   #description
-  清晰的分层架构：Core Systems、Standalone Components、Composables。
+  清晰的分层架构：Core Systems、API System、Standalone Components、Composables。
   :::
 
   :::u-page-feature{icon="i-lucide-package"}
@@ -105,11 +113,4 @@ transition: { duration: 0.6, delay: 0.5 }
   useDateFormatter 等强大的 composables，提升开发效率。
   :::
 
-  :::u-page-feature{icon="i-lucide-rocket"}
-  #title
-  未来规划
-
-  #description
-  AutoTable 和 UseApi 即将发布，复用 Schema 定义，扩展更多能力。
-  :::
 ::

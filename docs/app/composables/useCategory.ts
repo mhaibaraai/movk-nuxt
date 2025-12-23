@@ -1,10 +1,17 @@
 export function useCategory() {
   const categories = {
-    components: [
+    'getting-started': [
+      {
+        id: 'ai',
+        title: 'AI 集成',
+        icon: 'i-lucide-bot'
+      }
+    ],
+    'components': [
       {
         id: 'input',
         title: '输入框',
-        icon: 'lucide-pencil-line'
+        icon: 'i-lucide-pencil-line'
       },
       {
         id: 'advanced',
