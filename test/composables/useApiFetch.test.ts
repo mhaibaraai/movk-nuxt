@@ -1,11 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { ref } from 'vue'
-import { useApiFetch, useLazyApiFetch } from '../../src/runtime/composables/useApiFetch'
+import { useApiFetch } from '../../src/runtime/composables/useApiFetch'
 import * as nuxtImports from '#imports'
-import * as apiHelpers from '../../src/runtime/utils/api-helpers'
+import * as apiUtils from '../../src/runtime/utils/api-utils'
 
 vi.mock('#imports')
-vi.mock('../../src/runtime/utils/api-helpers')
+vi.mock('../../src/runtime/utils/api-utils')
 
 describe('useApiFetch', () => {
   const mockFetch = vi.fn()
@@ -16,7 +16,8 @@ describe('useApiFetch', () => {
       baseURL: '/api',
       auth: { enabled: false },
       toast: { enabled: true },
-      success: { successCodes: [200, 0], codeKey: 'code', dataKey: 'data' }
+      success: { successCodes: [200, 0], codeKey: 'code', dataKey: 'data' },
+      builtinHooks: {}
     }))
   }
 
@@ -33,11 +34,11 @@ describe('useApiFetch', () => {
     // Mock useFetch
     vi.mocked(nuxtImports.useFetch).mockImplementation(mockUseFetch)
 
-    // Mock createApiResponseHandler
-    vi.mocked(apiHelpers.createApiResponseHandler).mockReturnValue({
-      onResponse: vi.fn(),
-      transform: vi.fn(data => data)
-    })
+    // Mock createTransform
+    vi.mocked(apiUtils.createTransform).mockReturnValue((data: any) => data)
+
+    // Mock mergeFetchHooks
+    vi.mocked(apiUtils.mergeFetchHooks).mockImplementation((builtin, user) => user as any)
   })
 
   describe('useApiFetch', () => {
@@ -60,20 +61,18 @@ describe('useApiFetch', () => {
       )
     })
 
-    it('应提取并传递 API 选项到 createApiResponseHandler', () => {
+    it('应提取并传递 skipBusinessCheck 到 createTransform', () => {
       const url = '/users'
-      const apiOptions = {
-        toast: { successMessage: '成功' },
-        unwrap: false
-      }
 
       useApiFetch(url, {
-        api: apiOptions
+        skipBusinessCheck: true
       })
 
-      expect(apiHelpers.createApiResponseHandler).toHaveBeenCalledWith(
-        apiOptions,
-        expect.any(Object)
+      expect(apiUtils.createTransform).toHaveBeenCalledWith(
+        expect.objectContaining({
+          skipBusinessCheck: true,
+          successConfig: expect.any(Object)
+        })
       )
     })
 
@@ -130,61 +129,49 @@ describe('useApiFetch', () => {
       )
     })
 
-    it('应传递响应处理器到 useFetch', () => {
-      const mockHandlers = {
-        onResponse: vi.fn(),
-        transform: vi.fn()
-      }
-
-      vi.mocked(apiHelpers.createApiResponseHandler).mockReturnValue(mockHandlers)
+    it('应传递 transform 函数到 useFetch', () => {
+      const mockTransform = vi.fn()
+      vi.mocked(apiUtils.createTransform).mockReturnValue(mockTransform)
 
       useApiFetch('/users')
 
-      // 验证 useFetch 被调用，且包含 onResponse、onResponseError 和 transform
+      // 验证 useFetch 被调用，且包含 transform
       expect(mockUseFetch).toHaveBeenCalledWith(
         '/users',
         expect.objectContaining({
-          transform: mockHandlers.transform
+          transform: mockTransform
+        })
+      )
+    })
+
+    it('应合并内置 hooks 和用户自定义 hooks', () => {
+      const userOnResponse = vi.fn()
+      const userOnRequest = vi.fn()
+      const mockMergedHooks = {
+        onRequest: userOnRequest,
+        onResponse: userOnResponse,
+        onRequestError: vi.fn(),
+        onResponseError: vi.fn()
+      }
+
+      vi.mocked(apiUtils.mergeFetchHooks).mockReturnValue(mockMergedHooks)
+
+      useApiFetch('/users', {
+        onRequest: userOnRequest,
+        onResponse: userOnResponse
+      })
+
+      expect(apiUtils.mergeFetchHooks).toHaveBeenCalledWith(
+        {}, // builtinHooks
+        expect.objectContaining({
+          onRequest: userOnRequest,
+          onResponse: userOnResponse
         })
       )
 
-      // 验证 onResponse 是一个函数（包装函数）
       const callArgs = mockUseFetch.mock.calls[0][1]
-      expect(typeof callArgs.onResponse).toBe('function')
-      expect(typeof callArgs.onResponseError).toBe('function')
-
-      // 验证包装函数会调用内部处理器
-      const mockContext = { response: { _data: {} } }
-      callArgs.onResponse(mockContext)
-      expect(mockHandlers.onResponse).toHaveBeenCalledWith(mockContext)
-    })
-
-    it('应同时执行内部处理器和用户自定义 onResponse 回调', () => {
-      const mockHandlers = {
-        onResponse: vi.fn(),
-        transform: vi.fn()
-      }
-      const userOnResponse = vi.fn()
-      const userOnResponseError = vi.fn()
-
-      vi.mocked(apiHelpers.createApiResponseHandler).mockReturnValue(mockHandlers)
-
-      useApiFetch('/users', {
-        onResponse: userOnResponse,
-        onResponseError: userOnResponseError
-      })
-
-      const callArgs = mockUseFetch.mock.calls[0][1]
-      const mockContext = { response: { _data: {} } }
-
-      // 验证 onResponse 同时调用内部处理器和用户回调
-      callArgs.onResponse(mockContext)
-      expect(mockHandlers.onResponse).toHaveBeenCalledWith(mockContext)
-      expect(userOnResponse).toHaveBeenCalledWith(mockContext)
-
-      // 验证 onResponseError 调用用户回调
-      callArgs.onResponseError(mockContext)
-      expect(userOnResponseError).toHaveBeenCalledWith(mockContext)
+      expect(callArgs.onRequest).toBe(mockMergedHooks.onRequest)
+      expect(callArgs.onResponse).toBe(mockMergedHooks.onResponse)
     })
 
     it('应使用默认 API 实例(不指定 endpoint)', () => {
@@ -222,62 +209,12 @@ describe('useApiFetch', () => {
     })
   })
 
-  describe('useLazyApiFetch', () => {
-    it('应调用 useApiFetch 并设置 lazy: true', () => {
-      const url = '/users'
-      const options = {
-        method: 'GET' as const
-      }
-
-      useLazyApiFetch(url, options)
-
-      expect(mockUseFetch).toHaveBeenCalledWith(
-        url,
-        expect.objectContaining({
-          lazy: true,
-          method: 'GET'
-        })
-      )
-    })
-
-    it('应保留其他选项', () => {
-      const options = {
-        api: { toast: false as const },
-        endpoint: 'v2',
-        server: false
-      }
-
-      useLazyApiFetch('/users', options)
-
-      expect(mockUseFetch).toHaveBeenCalledWith(
-        '/users',
-        expect.objectContaining({
-          lazy: true,
-          server: false
-        })
-      )
-    })
-
-    it('应覆盖显式传递的 lazy: false', () => {
-      useLazyApiFetch('/users', { lazy: false } as any)
-
-      expect(mockUseFetch).toHaveBeenCalledWith(
-        '/users',
-        expect.objectContaining({
-          lazy: true
-        })
-      )
-    })
-  })
 
   describe('集成测试', () => {
     it('应正确处理完整的请求流程', () => {
-      const mockTransform = vi.fn(data => data.data)
+      const mockTransform = vi.fn(data => data)
 
-      vi.mocked(apiHelpers.createApiResponseHandler).mockReturnValue({
-        onResponse: vi.fn(),
-        transform: mockTransform
-      })
+      vi.mocked(apiUtils.createTransform).mockReturnValue(mockTransform)
 
       mockUseFetch.mockReturnValue({
         data: ref({ id: 1, name: 'test' }),
@@ -288,19 +225,15 @@ describe('useApiFetch', () => {
 
       const result = useApiFetch('/users', {
         method: 'GET',
-        api: {
-          toast: { successMessage: '获取成功' },
-          unwrap: true
-        }
+        skipBusinessCheck: false
       })
 
       expect(result).toBeDefined()
-      expect(apiHelpers.createApiResponseHandler).toHaveBeenCalledWith(
+      expect(apiUtils.createTransform).toHaveBeenCalledWith(
         expect.objectContaining({
-          toast: { successMessage: '获取成功' },
-          unwrap: true
-        }),
-        expect.any(Object)
+          skipBusinessCheck: false,
+          successConfig: expect.any(Object)
+        })
       )
     })
 

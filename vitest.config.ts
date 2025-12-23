@@ -1,7 +1,9 @@
 import { defineConfig } from 'vitest/config'
 import { resolve } from 'node:path'
+import vue from '@vitejs/plugin-vue'
 
 export default defineConfig({
+  plugins: [vue()],
   test: {
     globals: true,
     environment: 'jsdom',
@@ -23,6 +25,7 @@ export default defineConfig({
     alias: {
       '#imports': resolve(__dirname, './test/__mocks__/nuxt-imports.ts'),
       '#app': resolve(__dirname, './test/__mocks__/nuxt-app.ts'),
+      '#components': resolve(__dirname, './test/__mocks__/components.ts'),
       '@movk/core': resolve(__dirname, './test/__mocks__/movk-core.ts')
     }
   }
