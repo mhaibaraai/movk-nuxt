@@ -4,7 +4,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 项目概览
 
-这是一个为 Nuxt 4 设计的 Schema 驱动表单生成模块 (`@movk/nuxt`),基于 Zod v4 和 Nuxt UI 构建。核心功能是通过 Zod Schema 自动生成表单,同时提供独立的 UI 组件和工具函数。
+`@movk/nuxt` 是一个为 Nuxt 4 设计的模块化工程套件,提供 Schema 驱动的自动表单生成、API 集成系统、独立 UI 组件和通用工具函数。
+
+核心特性:
+- **Schema 驱动**: 基于 Zod v4 的声明式表单定义,一份 Schema 同时定义数据结构、验证规则和 UI 配置
+- **自动化系统**: AutoForm 通过 Schema 自动生成完整表单界面,支持 15+ 种控件类型
+- **API 集成**: 内置 useApiFetch、useApiAuth、useUploadWithProgress、useDownloadWithProgress,提供多端点支持、自动认证、业务状态码检查、Toast 提示和进度监控
+- **模块化设计**: 采用分层架构,按需使用 UI 组件、工具函数或全套自动化系统
+- **独立组件库**: 内置 DatePicker、StarRating、WithCopy 等 10+ 个通用 UI 组件
+- **类型安全**: 完整的 TypeScript 类型推断,从 Schema 到表单数据
 
 ## 常用命令
 
@@ -85,17 +93,21 @@ pnpm clean
    - 输入增强组件: `WithClear`、`WithPasswordToggle`、`WithCopy`、`WithCharacterLimit`
    - 表单渲染器: `auto-form-renderer/` 目录下的内部组件
 
-3. **API System** (`src/runtime/composables/useApiFetch.ts`, `useApiAuth.ts`)
+3. **API System** (`src/runtime/composables/`)
    - `useApiFetch`: 基于 Nuxt useFetch 封装的 API 请求 composable
+   - `useClientApiFetch`: 仅客户端执行的 API 请求(设置 `server: false, lazy: true`)
    - `useApiAuth`: 与 nuxt-auth-utils 集成的认证管理
+   - `useUploadWithProgress`: 带进度监控的文件上传 composable
+   - `useDownloadWithProgress`: 带进度监控的文件下载 composable
    - `api.factory.ts`: API 客户端工厂插件,提供 `$api` 实例
-   - 支持多端点、自动认证、业务状态码检查、Toast 提示
+   - 支持多端点、自动认证、业务状态码检查、Toast 提示、文件传输进度跟踪
 
 4. **Utilities & Composables**
    - `useDateFormatter`: 日期格式化工具
    - `schema-introspector.ts`: Schema 内省与字段生成
    - `field-utils.ts`: 字段处理工具函数
    - `api-utils.ts`: API 响应处理工具
+   - `reactive-utils.ts`: 响应式数据处理工具
 
 ### 关键设计模式
 
@@ -137,13 +149,16 @@ addComponentsDir({
 API 系统采用分层设计:
 
 ```
-types/api.ts          → 类型定义 (Interface)
-schemas/api.ts        → 配置验证 (Zod Schema)
-plugins/api.factory.ts → 客户端工厂 ($api 实例)
-composables/useApiFetch.ts → 请求封装
-composables/useApiAuth.ts  → 认证管理
-utils/api-utils.ts    → 响应处理工具
-server/api/_movk/     → Session 管理 API
+types/api.ts                       → 类型定义 (Interface)
+schemas/api.ts                     → 配置验证 (Zod Schema)
+plugins/api.factory.ts             → 客户端工厂 ($api 实例)
+composables/useApiFetch.ts         → 请求封装 (SSR/CSR 通用)
+composables/useClientApiFetch.ts   → 客户端专用请求封装
+composables/useApiAuth.ts          → 认证管理
+composables/useUploadWithProgress.ts   → 文件上传(带进度)
+composables/useDownloadWithProgress.ts → 文件下载(带进度)
+utils/api-utils.ts                 → 响应处理工具
+server/api/_movk/                  → Session 管理 API
 ```
 
 ### 目录结构约定
@@ -202,10 +217,12 @@ test/                          # 测试文件
 ### 模块依赖
 
 本模块依赖以下 Nuxt 模块(会自动检查版本兼容性):
-- `@nuxt/image` >= 1.11.0
-- `@nuxt/ui` >= 4.1.0
+- `@nuxt/image` >= 2.0.0
+- `@nuxt/ui` >= 4.2.1
 - `@vueuse/nuxt` >= 14.0.0
-- `nuxt-auth-utils` (可选,用于 useApiAuth)
+- `nuxt-auth-utils` >= 0.5.0 (可选,用于 useApiAuth)
+- `zod` >= 4.1.13 (peer dependency)
+- `@movk/core` >= 1.0.2 (文件下载等工具函数)
 
 确保 playground 和 docs 环境正确安装这些依赖。
 
@@ -228,6 +245,25 @@ test/                          # 测试文件
  */
 fieldName: string
 ```
+
+#### 文件上传/下载功能
+
+**useUploadWithProgress**:
+- 基于原生 XMLHttpRequest 实现,支持实时进度监控
+- 自动处理 FormData 构建和认证 Header
+- 提供 `progress`(0-100)、`status`、`abort()` 等响应式状态
+- 支持自定义字段名(默认 `file`)和额外表单字段
+
+**useDownloadWithProgress**:
+- 基于原生 fetch + ReadableStream 实现,支持实时进度和取消下载
+- 自动从 Content-Disposition 提取文件名或使用自定义文件名
+- 使用 `@movk/core` 的 `triggerDownload` 触发浏览器下载
+- 提供 `progress`(0-100)、`status`、`abort()` 等响应式状态
+
+**useClientApiFetch**:
+- 仅客户端执行的 API 请求,设置 `server: false, lazy: true`
+- 适合非 SEO 敏感数据,需手动调用 `execute()` 触发请求
+- 常用于用户偏好设置、个人信息等客户端专属数据
 
 ### 文档站点配置
 
