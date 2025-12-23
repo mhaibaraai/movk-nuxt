@@ -29,11 +29,11 @@ export default defineNuxtConfig({
   llms: {
     domain: 'https://nuxt.mhaibaraai.cn',
     title: '@movk/nuxt',
-    description: 'Movk Nuxt 是一个为 Nuxt 4 设计的模块化工程套件，提供 Schema 驱动的自动表单生成、独立 UI 组件和通用工具函数。',
+    description: 'Movk Nuxt 是一个为 Nuxt 4 设计的模块化工程套件，提供 Schema 驱动的自动表单生成、API 集成系统、独立 UI 组件和通用工具函数。',
     full: {
       title: '@movk/nuxt - Nuxt 4 模块化工程套件',
-      description: '基于 Nuxt 4 和 Nuxt UI 的模块化扩展库，提供 Schema 驱动的自动表单生成、自动表格生成、常用 composables 工具等完整的表单与数据处理解决方案。采用分层架构设计，包含 Core Systems (AutoForm)、Standalone Components (DatePicker, StarRating 等) 和 Composables (useDateFormatter 等)。'
+      description: '基于 Nuxt 4 和 Nuxt UI 的模块化扩展库，提供 Schema 驱动的自动表单生成、API 请求与认证管理、常用 composables 工具等完整的表单与数据处理解决方案。采用分层架构设计，包含 Core Systems (AutoForm)、API System (useApiFetch, useApiAuth, useUploadWithProgress, useDownloadWithProgress)、Standalone Components (DatePicker, StarRating 等) 和 Composables (useDateFormatter 等)。'
     },
-    notes: ['nuxt', 'nuxt4', 'autoform', 'zod', 'schema-driven', 'ui-components', 'composables']
+    notes: ['nuxt', 'nuxt4', 'autoform', 'zod', 'schema-driven', 'api', 'fetch', 'auth', 'upload', 'download', 'ui-components', 'composables']
   }
 })
