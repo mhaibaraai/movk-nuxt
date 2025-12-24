@@ -2,11 +2,18 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { useDownloadWithProgress } from '../../src/runtime/composables/useDownloadWithProgress'
 import * as nuxtImports from '#imports'
 import * as apiUtils from '../../src/runtime/utils/api-utils'
-import * as movkCore from '@movk/core'
+import { triggerDownload } from '@movk/core'
 
 vi.mock('#imports')
 vi.mock('../../src/runtime/utils/api-utils')
-vi.mock('@movk/core')
+// Use real @movk/core, but spy on triggerDownload (has DOM side effects)
+vi.mock('@movk/core', async () => {
+  const actual = await vi.importActual<typeof import('@movk/core')>('@movk/core')
+  return {
+    ...actual,
+    triggerDownload: vi.fn() // Mock only the function with side effects
+  }
+})
 
 describe('useDownloadWithProgress', () => {
   const mockApiInstance = {
@@ -33,9 +40,8 @@ describe('useDownloadWithProgress', () => {
     vi.mocked(apiUtils.showToast).mockImplementation(() => {})
     vi.mocked(apiUtils.getAuthHeaders).mockReturnValue({})
 
-    // Mock movk-core functions
-    vi.mocked(movkCore.extractFilename).mockReturnValue('test.pdf')
-    vi.mocked(movkCore.triggerDownload).mockImplementation(() => {})
+    // triggerDownload is already mocked via vi.mock above
+    // extractFilename uses real implementation from @movk/core
   })
 
   afterEach(() => {
@@ -113,7 +119,7 @@ describe('useDownloadWithProgress', () => {
   })
 
   describe('文件名提取', () => {
-    it('应从响应头提取文件名', () => {
+    it('应从响应头提取文件名', async () => {
       global.fetch = vi.fn().mockResolvedValue({
         ok: true,
         headers: new Headers({ 'content-disposition': 'attachment; filename="report.pdf"' }),
@@ -127,9 +133,13 @@ describe('useDownloadWithProgress', () => {
       }) as any
 
       const { download } = useDownloadWithProgress()
-      download('/export')
+      await download('/export')
 
-      expect(movkCore.extractFilename).toHaveBeenCalled()
+      // Verify triggerDownload was called with extracted filename
+      expect(triggerDownload).toHaveBeenCalledWith(
+        expect.any(Blob),
+        expect.stringContaining('report.pdf')
+      )
     })
 
     it('应支持自定义文件名', () => {

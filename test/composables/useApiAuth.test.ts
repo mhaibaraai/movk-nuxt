@@ -2,10 +2,9 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { ref } from 'vue'
 import { useApiAuth } from '../../src/runtime/composables/useApiAuth'
 import * as nuxtImports from '#imports'
-import * as movkCore from '@movk/core'
 
 vi.mock('#imports')
-vi.mock('@movk/core')
+// Use real @movk/core for better integration testing
 
 describe('useApiAuth', () => {
   const mockFetch = vi.fn()
@@ -61,20 +60,7 @@ describe('useApiAuth', () => {
     // Mock global $fetch
     global.$fetch = mockGlobalFetch as any
 
-    // Mock getPath from @movk/core
-    vi.mocked(movkCore.getPath).mockImplementation((obj: any, path: string) => {
-      const parts = path.split('.')
-      let current = obj
-      for (const part of parts) {
-        if (current && typeof current === 'object' && part in current) {
-          current = current[part]
-        }
-        else {
-          return undefined
-        }
-      }
-      return current
-    })
+    // Use real @movk/core.getPath - no mocking needed
   })
 
   describe('基础登录流程', () => {

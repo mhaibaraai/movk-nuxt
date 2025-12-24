@@ -23,10 +23,11 @@ export default defineConfig({
   },
   resolve: {
     alias: {
+      // Mock Nuxt runtime only
       '#imports': resolve(__dirname, './test/__mocks__/nuxt-imports.ts'),
       '#app': resolve(__dirname, './test/__mocks__/nuxt-app.ts'),
-      '#components': resolve(__dirname, './test/__mocks__/components.ts'),
-      '@movk/core': resolve(__dirname, './test/__mocks__/movk-core.ts')
+      '#components': resolve(__dirname, './test/__mocks__/components.ts')
+      // Use real @movk/core package for better integration testing
     }
   }
 })
