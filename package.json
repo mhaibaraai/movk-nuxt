@@ -50,7 +50,7 @@
     "zod": ">=4.1.13"
   },
   "scripts": {
-    "prepack": "nr build",
+    "prepack": "pnpm build",
     "build": "nuxt-module-build build",
     "dev": "nuxt dev playground",
     "dev:prepare": "nuxt-module-build build --stub && nuxt-module-build prepare && nuxt prepare playground && nuxt prepare docs",
