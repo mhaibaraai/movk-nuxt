@@ -1,7 +1,7 @@
 {
   "name": "@movk/nuxt",
   "type": "module",
-  "version": "0.1.1",
+  "version": "1.0.0",
   "packageManager": "pnpm@10.26.1",
   "description": "Modular engineering suite for Nuxt 4 with schema-driven forms, API integration, UI components and composables",
   "author": "YiXuan <mhaibaraai@gmail.com>",

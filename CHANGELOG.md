@@ -1,5 +1,93 @@
 # 📋 Changelog
 
+## [1.0.0](https://github.com/mhaibaraai/movk-nuxt/compare/v0.1.1...v1.0.0) (2025-12-24)
+
+### ⚠ BREAKING CHANGES
+
+* **api:** useApiAuth 移除 logout() 和 refreshUser()，改用 nuxt-auth-utils 原生的 clear() 方法
+* **useApiFetch:** UseApiFetchOptions 类型签名变更，移除 auth、onRequest 等钩子选项，认证由 api.factory 插件统一处理
+* **api:** API 实例方法签名变更,不再提供 get/post/put/patch/delete 等方法,改用 $fetch 实例。
+
+**主要改动:**
+
+- **useApiFetch 重构**:基于 Nuxt 官方推荐的 [Custom useFetch Recipe](https://nuxt.com/docs/4.x/guide/recipes/custom-usefetch),使用自定义 $fetch 实例
+- **新增 useClientApiFetch**:仅客户端执行版本,设置 `server: false` + `lazy: true`
+- **响应处理分离**:新增 `api-helpers.ts` 工具,集中处理响应拦截、Toast 提示、数据解包、业务状态码检查
+- **ApiInstance 简化**:移除 get/post/put/patch/delete 方法,仅保留 $fetch、use、download、upload、getConfig
+- **模块声明修正**:修复 module.ts 中 `@nuxt/schema` 为 `nuxt/schema`
+
+**技术细节:**
+
+- 在 $fetch 实例的 `onResponse` 中检查业务状态码并抛出错误
+- 使用 `createApiResponseHandler` 创建响应处理器,传递给 `useFetch`
+- 新增 `skipBusinessCheck` 选项,允许跳过业务状态码检查
+- 优化认证逻辑:提取 `getTokenFromSession` 和 `handleUnauthorized`
+- 优化 Toast 逻辑:统一 `showToast` 函数,支持配置优先级合并
+
+**迁移指南:**
+
+```ts
+// ❌ 旧方式
+const { $api } = useNuxtApp()
+const data = await $api.get('/users')
+
+// ✅ 新方式
+const { data } = await useApiFetch('/users')
+
+// ✅ 或直接使用 $fetch
+const { $api } = useNuxtApp()
+const data = await $api.$fetch('/users')
+```
+
+### ✨ Features
+
+* **api:** 添加自定义 API Fetch 框架 ([419b575](https://github.com/mhaibaraai/movk-nuxt/commit/419b575983f1fb0d1014e8bbcefe7508718f30f3))
+* **api:** 重构 useApiFetch 基于 useFetch 和自定义 $fetch 实例 ([3bffbd8](https://github.com/mhaibaraai/movk-nuxt/commit/3bffbd85e20d51386ec2b2ae24394dbb871336b7))
+* **auth:** ✨ 增加 UserSession.token 类型并将 token 存储在 session 公开字段 ([36ab58f](https://github.com/mhaibaraai/movk-nuxt/commit/36ab58f74a12808fa86085bf4cd30ab7918b25c3))
+* **docs:** 添加 Sandbox 嵌入式编辑器组件 ([77fc3c4](https://github.com/mhaibaraai/movk-nuxt/commit/77fc3c40e15c2724617619434bd90c022cdcbd98))
+* **playground:** 添加 UseApiFetch 示例页面 ([231e7bc](https://github.com/mhaibaraai/movk-nuxt/commit/231e7bc8e43451ab94d6aef8a8f60babb42f1900))
+* **playground:** 重构导航结构并新增 composables 示例页面 ([bdddd20](https://github.com/mhaibaraai/movk-nuxt/commit/bdddd20226de88bbdacc27235c7a247bee65ff48))
+
+### 🐛 Bug Fixes
+
+* **module:** 使用 schema.parse 确保 API 配置类型正确 ([361e56d](https://github.com/mhaibaraai/movk-nuxt/commit/361e56d6d779a446c8fcb8ae83369c57d635228f))
+* **useApiFetch:** 修复 useClientApiFetch 立即执行问题 ([b31fb3f](https://github.com/mhaibaraai/movk-nuxt/commit/b31fb3f80e665c0cbfed622461cf38ab5e7e5003))
+
+### 📝 Documentation
+
+* **api:** 完善 useApiFetch 文档 ([4c372c0](https://github.com/mhaibaraai/movk-nuxt/commit/4c372c057fa79996b1db88d42ad3ac27d0795d07))
+* **api:** 添加 useApiFetch 使用文档 ([ba6a62d](https://github.com/mhaibaraai/movk-nuxt/commit/ba6a62d2224e7d378d4e76d43fe2fcc914b158a1))
+* 删除过时的 API 文档和示例文件 ([8d0db8d](https://github.com/mhaibaraai/movk-nuxt/commit/8d0db8d523b6238e7e07c6145facc0b0e072644b))
+* 更新 CLAUDE.md 文档以反映最新架构 ([94a6884](https://github.com/mhaibaraai/movk-nuxt/commit/94a68845ce90eff7b73dbde7f23f9a41601145c8))
+* 添加示例文档章节 ([2052cdd](https://github.com/mhaibaraai/movk-nuxt/commit/2052cdd0f7aa7f01ac13f994431b39f82bf69857))
+* 重构文档结构并新增 API 相关文档 ([4185868](https://github.com/mhaibaraai/movk-nuxt/commit/4185868045a761f813f06c5613134a92f6a6b373))
+
+### ♻️ Code Refactoring
+
+* **api:** 简化 API 模块类型和认证流程 ([b0c67e3](https://github.com/mhaibaraai/movk-nuxt/commit/b0c67e3ccc8b43d4697dd9b4a443870596d2843c))
+* **api:** 重构  插件工厂 ([720b78b](https://github.com/mhaibaraai/movk-nuxt/commit/720b78b236c6e0cce80f077f32e50739491a306b))
+* **api:** 重构 API 模块类型定义和 Schema ([edf18ac](https://github.com/mhaibaraai/movk-nuxt/commit/edf18ac3d4c32d927e85f042240364e5a736ffd4))
+* **api:** 重构 API 配置架构并新增上传下载组件 ([f27096f](https://github.com/mhaibaraai/movk-nuxt/commit/f27096f9b340879808b6a6519fb306357b912d68))
+* **api:** 重构 useApiFetch 基于 useAsyncData + $api ([8776235](https://github.com/mhaibaraai/movk-nuxt/commit/8776235f4a9bcd378f1caa98cc50d457b7485b5b))
+* **docs:** 使用 @movk/nuxt-docs 内置 Vercel Analytics 配置 ([5bfd0cd](https://github.com/mhaibaraai/movk-nuxt/commit/5bfd0cd92ac2fcd478add739c9d2b08a15dfd2a9))
+* **schemas:** ♻️ 使用 zod 默认值统一管理 API 模块配置 ([0d6a807](https://github.com/mhaibaraai/movk-nuxt/commit/0d6a80757481c1b487d2aa791c6b91e96c3190c6))
+* **test:** 优化测试策略并清理 mock 文件 ([6c057fe](https://github.com/mhaibaraai/movk-nuxt/commit/6c057fea8a9c52d7c3030d7781e467641193ce40))
+* **test:** 使用真实的 @movk/core 包替代 mock ([895057b](https://github.com/mhaibaraai/movk-nuxt/commit/895057b45279401799178941fcff656a43594657))
+* **useApiFetch:** 重构 API 请求模块架构 ([277ea7c](https://github.com/mhaibaraai/movk-nuxt/commit/277ea7ccda2a2bbd27befd337ffb010909ed371c))
+
+### ✅ Tests
+
+* 创建并修正 composables 全面测试用例 ([ff33407](https://github.com/mhaibaraai/movk-nuxt/commit/ff33407bd945179dd7d238128271c68bfcbba086)), closes [#components](https://github.com/mhaibaraai/movk-nuxt/issues/components)
+* 新增 useApiFetch 单元测试和 vitest 配置 ([1163257](https://github.com/mhaibaraai/movk-nuxt/commit/1163257eae7b78598195d3bbd95caed60c57424d))
+
+### 🔧 Chores
+
+* 🔧 更新文档、示例与自动生成的类型 ([6e8f3f7](https://github.com/mhaibaraai/movk-nuxt/commit/6e8f3f7366bfcb1c7359b7533a71add8913834c7))
+* **test:** 清理测试文档并优化代码格式 ([d857ffd](https://github.com/mhaibaraai/movk-nuxt/commit/d857ffd7aa6356edc57e7a04f8c5f5191ff4dea4))
+* 优化项目依赖配置 ([ffe9dba](https://github.com/mhaibaraai/movk-nuxt/commit/ffe9dba63324238b7e2d92bc2514167287bdfd1d))
+* 更新项目配置和依赖 ([d396693](https://github.com/mhaibaraai/movk-nuxt/commit/d396693cf71c24c905305df3cc58082cf0e44f5e))
+* 统一使用 pnpm 命令替代 nr 别名 ([79bfc63](https://github.com/mhaibaraai/movk-nuxt/commit/79bfc637601605c9a141464cfe30e4e3b3b559c4))
+
 ## [0.1.1](https://github.com/mhaibaraai/movk-nuxt/compare/v0.1.0...v0.1.1) (2025-12-02)
 
 ### 📝 Documentation
