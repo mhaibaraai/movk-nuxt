@@ -35,7 +35,7 @@ export interface ZodAutoFormFieldMeta {
    */
   validateOnInputDelay?: ZodValue<number>
   class?: ZodValue<any>
-  ui?: ZodValue<{ root?: ClassNameValue, wrapper?: ClassNameValue, labelWrapper?: ClassNameValue, label?: strClassNameValueing, container?: ClassNameValue, description?: ClassNameValue, error?: ClassNameValue, hint?: ClassNameValue, help?: ClassNameValue }>
+  ui?: ZodValue<{ root?: ClassNameValue, wrapper?: ClassNameValue, labelWrapper?: ClassNameValue, label?: ClassNameValue, container?: ClassNameValue, description?: ClassNameValue, error?: ClassNameValue, hint?: ClassNameValue, help?: ClassNameValue }>
   /**
    * @see https://ui4.nuxt.com/docs/components/form-field#slots
    */
