@@ -1,4 +1,4 @@
-import { defineCollection, defineContentConfig, property, z } from '@nuxt/content'
+import { defineCollection, defineContentConfig, z } from '@nuxt/content'
 import { asSeoCollection } from '@nuxtjs/seo/content'
 
 export default defineContentConfig({
@@ -8,7 +8,17 @@ export default defineContentConfig({
       source: 'releases.yml',
       schema: z.object({
         releases: z.string(),
-        hero: property(z.object({})).inherit('@nuxt/ui/components/PageHero.vue')
+        hero: z.object({
+          title: z.string().optional(),
+          description: z.string().optional(),
+          icon: z.string().optional(),
+          links: z.array(z.object({
+            label: z.string(),
+            to: z.string().optional(),
+            target: z.string().optional(),
+            icon: z.string().optional()
+          })).optional()
+        }).optional()
       })
     }))
   }
