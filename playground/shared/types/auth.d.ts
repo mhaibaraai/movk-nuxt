@@ -39,9 +39,6 @@ declare module '#auth-utils' {
   interface UserSession {
     token?: string
   }
-
-  interface SecureSessionData {
-  }
 }
 
 export { }
