@@ -19,8 +19,6 @@ import {
 import { defineNuxtPlugin, useRuntimeConfig, navigateTo, useNuxtApp, useUserSession } from '#imports'
 import defu from 'defu'
 
-// ==================== Session 工具 ====================
-
 /**
  * 安全获取 useUserSession
  */
@@ -74,8 +72,6 @@ async function handleUnauthorized(config: Partial<ApiAuthConfig>): Promise<void>
     await nuxtApp.runWithContext(() => navigateTo(loginPath))
   }
 }
-
-// ==================== 内置钩子函数 ====================
 
 /**
  * 从请求上下文中获取 ApiFetchContext
@@ -179,8 +175,6 @@ function createBuiltinHooks(
   } as FetchHooks
 }
 
-// ==================== API Client 工厂 ====================
-
 /**
  * 创建 API Client
  */
@@ -267,8 +261,6 @@ function createApiClient(
     getConfig: () => resolvedConfig
   }
 }
-
-// ==================== 插件入口 ====================
 
 export default defineNuxtPlugin(() => {
   const moduleConfig = useRuntimeConfig().public.movkApi as MovkApiModuleOptions

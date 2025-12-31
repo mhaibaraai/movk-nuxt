@@ -6,7 +6,7 @@ import { z as zod } from 'zod/v4'
 import { joinPath, startCase, toPath, isFunction, isObject } from '@movk/core'
 import { useAutoForm } from '../composables/useAutoForm'
 import { AUTOFORM_LIMITS, AUTOFORM_META } from '../constants/auto-form'
-import type { ZodAutoFormFieldMeta } from '../types/zod'
+import type { ZodAutoFormFieldMeta } from '../../types/zod'
 
 /**
  * 提取 schema 的 decorators 信息

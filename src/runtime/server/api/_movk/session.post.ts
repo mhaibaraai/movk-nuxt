@@ -23,7 +23,6 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  // 设置 session
   await setUserSession(event, body)
 
   return { success: true }

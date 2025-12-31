@@ -3,7 +3,6 @@ import type { OmitByKey } from '@movk/core'
 import type { ClassNameValue } from 'tailwind-merge'
 import type { DateFormatterOptions, useDateFormatter } from '../composables/useDateFormatter'
 
-// ColorChooser
 export interface ColorChooserProps<P extends 'click' | 'hover' = 'click'> extends /** @vue-ignore */ ColorPickerProps {
   popoverProps?: PopoverProps<P>
   buttonProps?: ButtonProps
@@ -11,7 +10,6 @@ export interface ColorChooserProps<P extends 'click' | 'hover' = 'click'> extend
 
 export type ColorChooserEmits = PopoverEmits
 
-// DatePicker
 export type LabelFormat = 'iso' | 'formatted' | 'date' | 'timestamp' | 'unix'
 export type ValueType<R extends boolean, M extends boolean> = CalendarProps<R, M>['modelValue']
 
@@ -23,7 +21,6 @@ export interface DatePickerProps<R extends boolean, M extends boolean, P extends
 
 export type DatePickerEmits<R extends boolean, M extends boolean> = PopoverEmits & CalendarEmits<R, M>
 
-// Input components
 export interface WithCharacterLimitProps<T extends InputValue = InputValue> extends /** @vue-ignore */ OmitByKey<InputProps<T>, 'modelValue'> {
   maxLength?: number
   counterClass?: ClassNameValue

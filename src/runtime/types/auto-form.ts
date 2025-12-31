@@ -5,11 +5,7 @@ import type { ArrayFieldKeys, ComponentProps, OmitByKey, ComponentSlots, GetFiel
 import type { FormError } from '@nuxt/ui'
 import type { AUTOFORM_META } from '../constants/auto-form'
 import type { CalendarDate, DateValue, Time } from '@internationalized/date'
-import type { ZodAutoFormFieldMeta } from './zod'
-
-// ============================================================================
-// 基础上下文类型
-// ============================================================================
+import type { ZodAutoFormFieldMeta } from '../../types/zod'
 
 // 提取字段值类型
 type FieldValueType<S, P extends string> = P extends string
@@ -94,10 +90,6 @@ export interface AutoFormFieldSlots {
   default: (props: { error?: boolean | string } & AutoFormFieldContext) => unknown
 }
 
-// ============================================================================
-// 动态插槽类型
-// ============================================================================
-
 type DynamicFieldSlotKeys = keyof AutoFormFieldSlots
 
 type SlotTypeExtraProps<SlotType extends DynamicFieldSlotKeys>
@@ -161,10 +153,6 @@ export interface AutoFormSlotProps<T extends object> {
   state: T
 }
 
-// ============================================================================
-// 控件元数据类型
-// ============================================================================
-
 /**
  * 控件元数据统一模型 - 支持响应式属性
  * @template C - 组件类型
@@ -199,10 +187,6 @@ export interface AutoFormControl<C extends IsComponent = IsComponent> {
  * 控件注册表类型 - 字符串键映射到控件配置
  */
 export type AutoFormControls = Record<string, AutoFormControl>
-
-// ============================================================================
-// 布局配置类型
-// ============================================================================
 
 /**
  * 自动表单布局配置 - 支持自定义布局容器
@@ -239,10 +223,6 @@ export type AutoFormMergeMeta = ZodAutoFormFieldMeta
     overwrite?: AutoFormControlsMeta
   }
 
-// ============================================================================
-// 字段配置类型
-// ============================================================================
-
 /**
  * 自动表单字段配置 - 描述单个表单字段的完整信息
  */
@@ -270,10 +250,6 @@ export interface AutoFormField {
   arrayElement?: AutoFormField
 }
 
-// ============================================================================
-// 嵌套折叠配置
-// ============================================================================
-
 /**
  * 嵌套字段折叠配置 - 控制对象/数组字段的展开/收起行为
  */
@@ -299,10 +275,6 @@ export interface AutoFormNestedCollapsible extends Pick<CollapsibleRootProps, 'd
     content?: ClassNameValue
   }
 }
-
-// ============================================================================
-// 类型工具
-// ============================================================================
 
 /**
  * 提取对象的已知键（剔除索引签名）
@@ -399,10 +371,6 @@ type ExtractLayoutShape<
  */
 type WithDefaultControls<TControls, DFTC> = TControls & DFTC
 
-// ============================================================================
-// 对象工厂辅助类型
-// ============================================================================
-
 /**
  * 对象工厂元数据类型 - 基础元数据
  */
@@ -466,10 +434,6 @@ type ObjectFactoryDirect<
   ): z.ZodObject<ExtractLayoutShape<S>, Mode>
 }
 
-// ============================================================================
-// 工厂方法类型
-// ============================================================================
-
 /**
  * 基础工厂方法类型 - 支持多种调用方式
  * @template TControls - 控件注册表
@@ -506,10 +470,6 @@ export type AutoFormFactoryMethod<
   ): TResult
 }
 
-// ============================================================================
-// 类型化 Zod 工厂接口
-// ============================================================================
-
 /**
  * 类型化的 Zod 工厂接口 - 提供类型安全的 schema 构建方法
  * @template TC - 自定义控件注册表
@@ -519,10 +479,6 @@ export type AutoFormFactoryMethod<
  * 支持自动推导控件类型和元数据，并与 AutoForm 无缝集成
  */
 export interface TypedZodFactory<TC extends AutoFormControls, DFTC extends AutoFormControls> {
-  // --------------------------------------------------------------------------
-  // 基础类型工厂
-  // --------------------------------------------------------------------------
-
   /** 字符串类型工厂 */
   string: AutoFormFactoryMethod<WithDefaultControls<TC, DFTC>, 'string', z.ZodString>
 
@@ -535,10 +491,6 @@ export interface TypedZodFactory<TC extends AutoFormControls, DFTC extends AutoF
   /** 文件类型工厂 */
   file: AutoFormFactoryMethod<WithDefaultControls<TC, DFTC>, 'file', z.ZodType<File>>
 
-  // --------------------------------------------------------------------------
-  // Zod v4 专用验证工厂
-  // --------------------------------------------------------------------------
-
   /** 电子邮件验证工厂 */
   email: AutoFormFactoryMethod<WithDefaultControls<TC, DFTC>, 'string', z.ZodString>
 
@@ -547,10 +499,6 @@ export interface TypedZodFactory<TC extends AutoFormControls, DFTC extends AutoF
 
   /** UUID 验证工厂 */
   uuid: AutoFormFactoryMethod<WithDefaultControls<TC, DFTC>, 'string', z.ZodString>
-
-  // --------------------------------------------------------------------------
-  // 枚举工厂
-  // --------------------------------------------------------------------------
 
   /**
    * 枚举类型工厂 - 支持字符串数组或枚举对象
@@ -600,10 +548,6 @@ export interface TypedZodFactory<TC extends AutoFormControls, DFTC extends AutoF
     ): z.ZodEnum<T>
   }
 
-  // --------------------------------------------------------------------------
-  // 日期和时间工厂
-  // --------------------------------------------------------------------------
-
   /**
    * 日期类型工厂 - 用于 DatePicker/Calendar
    * 支持 CalendarDate、DateRange、CalendarDate[]
@@ -631,10 +575,6 @@ export interface TypedZodFactory<TC extends AutoFormControls, DFTC extends AutoF
    */
   inputTime: AutoFormFactoryMethod<WithDefaultControls<TC, DFTC>, 'inputTime', z.ZodType<Time>>
 
-  // --------------------------------------------------------------------------
-  // ISO 字符串工厂
-  // --------------------------------------------------------------------------
-
   /**
    * ISO 日期时间字符串工厂
    * 验证 ISO 8601 格式(如 "2025-12-01T06:15:00Z")
@@ -652,10 +592,6 @@ export interface TypedZodFactory<TC extends AutoFormControls, DFTC extends AutoF
    * 验证 HH:MM[:SS[.s+]] 格式(如 "14:30:00")
    */
   isoTime: AutoFormFactoryMethod<WithDefaultControls<TC, DFTC>, 'string', z.ZodType<string>>
-
-  // --------------------------------------------------------------------------
-  // 集合类型工厂
-  // --------------------------------------------------------------------------
 
   /**
    * 数组类型工厂
@@ -684,10 +620,6 @@ export interface TypedZodFactory<TC extends AutoFormControls, DFTC extends AutoF
       schemas: T, overwrite?: { component: C, type?: never } & OmitControlMeta<C>
     ): z.ZodTuple<T>
   }
-
-  // --------------------------------------------------------------------------
-  // 布局和对象工厂
-  // --------------------------------------------------------------------------
 
   /**
    * 布局工厂 - 创建表单布局容器
