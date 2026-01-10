@@ -7,7 +7,7 @@
     "dev": "nuxt dev"
   },
   "dependencies": {
-    "@movk/nuxt-docs": "^1.4.2",
+    "@movk/nuxt-docs": "^1.6.2",
     "better-sqlite3": "^12.5.0",
     "nuxt": "^4.2.2"
   }
