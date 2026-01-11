@@ -14,8 +14,6 @@ import {
 } from '../schemas/api'
 import type { User, UserSession, UserSessionComposable } from '#auth-utils'
 
-// ==================== ofetch 类型扩展 ====================
-
 /**
  * 扩展 ofetch FetchOptions，添加 context 字段
  *
@@ -41,8 +39,6 @@ export interface ApiFetchContext {
   skipBusinessCheck?: boolean
 }
 
-// ==================== 从 Schema 推导的基础类型 ====================
-
 /** 成功响应判断配置 */
 export type ApiSuccessConfig = z.infer<typeof apiSuccessConfigSchema>
 
@@ -60,8 +56,6 @@ export type ApiEndpointConfig = z.infer<typeof apiEndpointConfigSchema>
 
 /** 模块配置 */
 export type MovkApiModuleOptions = z.infer<typeof movkApiModuleOptionsSchema>
-
-// ==================== API 响应与错误类型 ====================
 
 /**
  * API 标准响应结构
@@ -89,8 +83,6 @@ export interface ApiError extends Error {
   isBusinessError: boolean
 }
 
-// ==================== 端点配置类型 ====================
-
 /**
  * 合并后的端点配置（运行时使用）
  */
@@ -100,8 +92,6 @@ export interface ResolvedEndpointConfig extends ApiEndpointConfig {
   success: Partial<ApiSuccessConfig>
   builtinHooks?: FetchHooks
 }
-
-// ==================== 请求选项类型 ====================
 
 /**
  * 请求级 Toast 配置
@@ -200,8 +190,6 @@ export interface UploadOptions extends Omit<FetchOptions<'json'>, 'responseType'
   onProgress?: (progress: number) => void
 }
 
-// ==================== API 实例类型 ====================
-
 /**
  * API 客户端实例
  */
@@ -241,8 +229,6 @@ export interface ApiClient {
   getConfig: () => ResolvedEndpointConfig
 }
 
-// ==================== useApiAuth 类型 ====================
-
 /** 登录选项 */
 export interface LoginOptions<LoginRData = unknown> {
   loginPath: string
@@ -261,8 +247,6 @@ export interface LoginResult {
 export interface UseApiAuthReturn extends UserSessionComposable {
   login: <LoginRData = unknown>(options: LoginOptions<LoginRData>) => Promise<LoginResult>
 }
-
-// ==================== 默认配置 ====================
 
 export const DEFAULT_SUCCESS_CONFIG: ApiSuccessConfig = apiSuccessConfigSchema.parse({})
 export const DEFAULT_AUTH_CONFIG: ApiAuthConfig = apiAuthConfigSchema.parse({})

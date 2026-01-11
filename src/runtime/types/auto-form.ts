@@ -7,10 +7,6 @@ import type { AUTOFORM_META } from '../constants/auto-form'
 import type { CalendarDate, DateValue, Time } from '@internationalized/date'
 import type { ZodAutoFormFieldMeta } from './zod'
 
-// ============================================================================
-// 基础上下文类型
-// ============================================================================
-
 // 提取字段值类型
 type FieldValueType<S, P extends string> = P extends string
   ? (string extends P ? S[keyof S] : GetFieldValue<S, P>)
@@ -94,10 +90,6 @@ export interface AutoFormFieldSlots {
   default: (props: { error?: boolean | string } & AutoFormFieldContext) => unknown
 }
 
-// ============================================================================
-// 动态插槽类型
-// ============================================================================
-
 type DynamicFieldSlotKeys = keyof AutoFormFieldSlots
 
 type SlotTypeExtraProps<SlotType extends DynamicFieldSlotKeys>
@@ -161,10 +153,6 @@ export interface AutoFormSlotProps<T extends object> {
   state: T
 }
 
-// ============================================================================
-// 控件元数据类型
-// ============================================================================
-
 /**
  * 控件元数据统一模型 - 支持响应式属性
  * @template C - 组件类型
@@ -199,10 +187,6 @@ export interface AutoFormControl<C extends IsComponent = IsComponent> {
  * 控件注册表类型 - 字符串键映射到控件配置
  */
 export type AutoFormControls = Record<string, AutoFormControl>
-
-// ============================================================================
-// 布局配置类型
-// ============================================================================
 
 /**
  * 自动表单布局配置 - 支持自定义布局容器
@@ -239,10 +223,6 @@ export type AutoFormMergeMeta = ZodAutoFormFieldMeta
     overwrite?: AutoFormControlsMeta
   }
 
-// ============================================================================
-// 字段配置类型
-// ============================================================================
-
 /**
  * 自动表单字段配置 - 描述单个表单字段的完整信息
  */
@@ -270,10 +250,6 @@ export interface AutoFormField {
   arrayElement?: AutoFormField
 }
 
-// ============================================================================
-// 嵌套折叠配置
-// ============================================================================
-
 /**
  * 嵌套字段折叠配置 - 控制对象/数组字段的展开/收起行为
  */
@@ -299,10 +275,6 @@ export interface AutoFormNestedCollapsible extends Pick<CollapsibleRootProps, 'd
     content?: ClassNameValue
   }
 }
-
-// ============================================================================
-// 类型工具
-// ============================================================================
 
 /**
  * 提取对象的已知键（剔除索引签名）
@@ -399,10 +371,6 @@ type ExtractLayoutShape<
  */
 type WithDefaultControls<TControls, DFTC> = TControls & DFTC
 
-// ============================================================================
-// 对象工厂辅助类型
-// ============================================================================
-
 /**
  * 对象工厂元数据类型 - 基础元数据
  */
@@ -466,10 +434,6 @@ type ObjectFactoryDirect<
   ): z.ZodObject<ExtractLayoutShape<S>, Mode>
 }
 
-// ============================================================================
-// 工厂方法类型
-// ============================================================================
-
 /**
  * 基础工厂方法类型 - 支持多种调用方式
  * @template TControls - 控件注册表
@@ -505,10 +469,6 @@ export type AutoFormFactoryMethod<
     ...args: [...TExtraParams, ({ component: C, type?: never } & OmitControlMeta<C>)?]
   ): TResult
 }
-
-// ============================================================================
-// 类型化 Zod 工厂接口
-// ============================================================================
 
 /**
  * 类型化的 Zod 工厂接口 - 提供类型安全的 schema 构建方法
