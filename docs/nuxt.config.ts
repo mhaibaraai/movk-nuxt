@@ -26,6 +26,14 @@ export default defineNuxtConfig({
     '/docs/examples': { redirect: '/docs/examples/auto-form', prerender: false }
   },
   compatibilityDate: 'latest',
+  aiChat: {
+    models: [
+      'mistral/devstral-2',
+      'kwaipilot/kat-coder-pro-v1',
+      'openrouter/mistralai/devstral-2512:free',
+      'openrouter/xiaomi/mimo-v2-flash:free'
+    ]
+  },
   llms: {
     domain: 'https://nuxt.mhaibaraai.cn',
     title: '@movk/nuxt',
@@ -35,5 +43,9 @@ export default defineNuxtConfig({
       description: '基于 Nuxt 4 和 Nuxt UI 的模块化扩展库，提供 Schema 驱动的自动表单生成、API 请求与认证管理、常用 composables 工具等完整的表单与数据处理解决方案。采用分层架构设计，包含 Core Systems (AutoForm)、API System (useApiFetch, useApiAuth, useUploadWithProgress, useDownloadWithProgress)、Standalone Components (DatePicker, StarRating 等) 和 Composables (useDateFormatter 等)。'
     },
     notes: ['nuxt', 'nuxt4', 'autoform', 'zod', 'schema-driven', 'api', 'fetch', 'auth', 'upload', 'download', 'ui-components', 'composables']
+  },
+  mcp: {
+    name: 'Movk Nuxt'
+    // browserRedirect: '/docs/getting-started/ai/mcp'
   }
 })
