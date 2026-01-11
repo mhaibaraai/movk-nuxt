@@ -12,7 +12,7 @@
   },
   "homepage": "https://nuxt.mhaibaraai.cn",
   "engines": {
-    "node": "^20.x || ^22.x"
+    "node": "^20.x || ^22.x || ^24.x"
   },
   "bugs": {
     "url": "https://github.com/mhaibaraai/movk-nuxt/issues"
@@ -61,7 +61,7 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "typecheck": "vue-tsc --noEmit && nuxt typecheck playground",
-    "clean": "tsx scripts/rm.ts",
+    "clean": "movk-clean",
     "test": "vitest"
   },
   "dependencies": {
@@ -90,9 +90,7 @@
     "@vitest/coverage-v8": "^4.0.16",
     "jsdom": "^27.4.0",
     "eslint": "9.39.2",
-    "fast-glob": "^3.3.3",
     "nuxt": "^4.2.2",
-    "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "vitest": "^4.0.16",
     "vue-tsc": "^3.2.2"
