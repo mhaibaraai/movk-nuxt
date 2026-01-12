@@ -65,7 +65,7 @@
     "test": "vitest"
   },
   "dependencies": {
-    "@iconify-json/lucide": "^1.2.83",
+    "@iconify-json/lucide": "^1.2.84",
     "@internationalized/date": "^3.10.1",
     "@movk/core": "^1.1.0",
     "@nuxt/image": "^2.0.0",
