@@ -12,8 +12,6 @@ import type {
 import { getPath } from '@movk/core'
 import { useNuxtApp, useToast, useUserSession } from '#imports'
 
-// ==================== 业务逻辑工具 ====================
-
 /**
  * 检查业务状态码是否成功
  */
@@ -59,8 +57,6 @@ export function createApiError(response: ApiResponse, message?: string): ApiErro
   error.isBusinessError = true
   return error
 }
-
-// ==================== Toast 工具 ====================
 
 /**
  * 获取 Toast 实例（安全获取）
@@ -122,8 +118,6 @@ export function showToast(
   } as ToastProps)
 }
 
-// ==================== Transform 工厂 ====================
-
 interface CreateTransformOptions<ResT, DataT = ResT> {
   skipBusinessCheck: boolean
   userTransform?: (data: ResT) => DataT
@@ -160,8 +154,6 @@ export function createTransform<ResT, DataT = ResT>(
     return unwrappedData as unknown as DataT
   }
 }
-
-// ==================== Hooks 合并工具 ====================
 
 type HookFunction = (context: FetchContext) => void | Promise<void>
 
@@ -206,8 +198,6 @@ export function mergeFetchHooks(
     )
   }
 }
-
-// ==================== 认证工具 ====================
 
 /**
  * 安全获取 useUserSession
