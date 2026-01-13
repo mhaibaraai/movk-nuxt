@@ -9,12 +9,63 @@ export default defineAppConfig({
     enable: true,
     debug: false
   },
+  aiChat: {
+    faqQuestions: [
+      {
+        category: '快速入门',
+        items: [
+          '如何安装和配置？',
+          '如何创建第一个表单？',
+          '如何查看组件列表？'
+        ]
+      },
+      {
+        category: 'AutoForm 表单',
+        items: [
+          '支持哪些控件类型？',
+          '如何定义嵌套对象和数组？',
+          '如何实现条件显示？',
+          '如何自定义控件和样式？'
+        ]
+      },
+      {
+        category: 'API 集成',
+        items: [
+          '如何发起 API 请求？',
+          '如何配置认证登录？',
+          '如何监控上传进度？',
+          '如何监控下载进度？'
+        ]
+      },
+      {
+        category: '独立组件',
+        items: [
+          '如何单独使用组件？',
+          'DatePicker 如何配置？',
+          'WithCopy 等增强组件如何用？',
+          '如何覆盖组件样式？'
+        ]
+      },
+      {
+        category: 'Composables',
+        items: [
+          'useDateFormatter 如何用？',
+          'useAutoForm 如何获取元数据？',
+          'useApiAuth 如何管理认证？',
+          'useUploadWithProgress 如何使用？'
+        ]
+      }
+    ]
+  },
   header: {
     title: 'Movk Nuxt'
   },
   github: {
     rootDir: 'docs',
     commitPath: 'src/runtime'
+  },
+  theme: {
+    radius: 0
   },
   ui: {
     collapsible: {
@@ -26,7 +77,7 @@ export default defineAppConfig({
       base: 'space-y-4 min-w-0 sm:min-w-md'
     },
     colors: {
-      primary: 'sky'
+      primary: 'emerald'
     },
     prose: {
       codeIcon: {
@@ -39,16 +90,10 @@ export default defineAppConfig({
     bottom: {
       links: [
         {
-          icon: 'i-lucide-brain',
+          icon: 'i-lucide-message-circle-code',
           to: 'https://nuxt.mhaibaraai.cn/llms.txt',
           target: '_blank',
           label: 'Open LLMs'
-        },
-        {
-          icon: 'i-lucide-link',
-          to: 'https://nuxt.mhaibaraai.cn/__link-checker__/link-checker-report.html',
-          target: '_blank',
-          label: 'Open Link Checker'
         }
       ]
     }
