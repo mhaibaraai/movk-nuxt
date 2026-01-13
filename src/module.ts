@@ -44,13 +44,13 @@ export default defineNuxtModule<ModuleOptions>({
       version: '>=2.0.0'
     },
     '@nuxt/ui': {
-      version: '>=4.2.1'
+      version: '>=4.3.0'
     },
     '@vueuse/nuxt': {
       version: '>=14.1.0'
     },
     'nuxt-auth-utils': {
-      version: '>=0.5.25'
+      version: '>=0.5.26'
     }
   },
   async setup(options, nuxt) {
@@ -60,10 +60,8 @@ export default defineNuxtModule<ModuleOptions>({
     nuxt.options.alias['#movk'] = resolve('./runtime')
     nuxt.options.appConfig.movk = defu(nuxt.options.appConfig.movk || {}, options)
 
-    // 使用 zod schema 的默认值，用户配置优先
     const apiConfig = movkApiModuleOptionsSchema.parse(options.api ?? {})
 
-    // 注入运行时配置
     nuxt.options.runtimeConfig.public.movkApi = apiConfig
 
     addComponentsDir({
@@ -76,14 +74,12 @@ export default defineNuxtModule<ModuleOptions>({
     addImportsDir(resolve('runtime/composables'))
     addImportsDir(resolve('runtime/shared'))
 
-    // 注册 API 插件
     if (apiConfig.enabled) {
       addPlugin({
         src: resolve('runtime/plugins/api.factory'),
         mode: 'all'
       })
 
-      // 注册服务端 session API 路由
       addServerHandler({
         route: '/api/_movk/session',
         method: 'post',
