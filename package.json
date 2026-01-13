@@ -60,7 +60,7 @@
     "release": "release-it && npm publish",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "typecheck": "vue-tsc -b --noEmit && nuxt typecheck playground && nuxt typecheck docs",
+    "typecheck": "vue-tsc --noEmit && nuxt typecheck playground && nuxt typecheck docs",
     "clean": "movk-clean",
     "test": "vitest"
   },
