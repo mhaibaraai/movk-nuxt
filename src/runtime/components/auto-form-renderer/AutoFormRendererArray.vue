@@ -70,7 +70,7 @@ function updateFieldPaths(template: AutoFormField, oldBasePath: string, newBaseP
             ...template.meta?.fieldSlots
           }
         : {
-            hint: ({ open, path, count }) => hintSlotFactory(template, path, open, count),
+            hint: (props: { open?: boolean, path: string, count?: number }) => hintSlotFactory(template, props.path, props.open, props.count),
             ...template.meta?.fieldSlots
           }
     }

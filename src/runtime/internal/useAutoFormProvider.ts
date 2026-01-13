@@ -247,13 +247,13 @@ export function useAutoFormProvider<T extends Record<string, any>>(
       return defu(field, {
         meta: {
           fieldSlots: {
-            hint: ({ open }) => h(UIcon, {
-              name: open ? 'i-lucide-chevron-down' : 'i-lucide-chevron-right',
+            hint: (props: { open?: boolean }) => h(UIcon, {
+              name: props.open ? 'i-lucide-chevron-down' : 'i-lucide-chevron-right',
               class: 'shrink-0 size-5 transition-transform duration-200'
             })
           }
         }
-      } as AutoFormField)
+      } as Partial<AutoFormField>)
     })
 
     return {
