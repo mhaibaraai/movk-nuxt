@@ -287,7 +287,31 @@ function defineControl<C extends IsComponent>(e: AutoFormControl<C>): AutoFormCo
   return e
 }
 
-const DEFAULT_CONTROLS = {
+const DEFAULT_CONTROLS: {
+  readonly string: AutoFormControl<typeof UInput>
+  readonly number: AutoFormControl<typeof UInputNumber>
+  readonly boolean: AutoFormControl<typeof UCheckbox>
+  readonly enum: AutoFormControl<typeof USelect>
+  readonly file: AutoFormControl<typeof UFileUpload>
+  readonly calendarDate: AutoFormControl<typeof DatePicker>
+  readonly switch: AutoFormControl<typeof USwitch>
+  readonly textarea: AutoFormControl<typeof UTextarea>
+  readonly slider: AutoFormControl<typeof USlider>
+  readonly pinInput: AutoFormControl<typeof UPinInput>
+  readonly inputTags: AutoFormControl<typeof UInputTags>
+  readonly selectMenu: AutoFormControl<typeof USelectMenu>
+  readonly inputMenu: AutoFormControl<typeof UInputMenu>
+  readonly checkboxGroup: AutoFormControl<typeof UCheckboxGroup>
+  readonly radioGroup: AutoFormControl<typeof URadioGroup>
+  readonly inputDate: AutoFormControl<typeof UInputDate>
+  readonly inputTime: AutoFormControl<typeof UInputTime>
+  readonly withClear: AutoFormControl<typeof WithClear>
+  readonly withPasswordToggle: AutoFormControl<typeof WithPasswordToggle>
+  readonly withCopy: AutoFormControl<typeof WithCopy>
+  readonly withCharacterLimit: AutoFormControl<typeof WithCharacterLimit>
+  readonly colorChooser: AutoFormControl<typeof ColorChooser>
+  readonly starRating: AutoFormControl<typeof StarRating>
+} = {
   // 基础类型
   string: defineControl({ component: UInput, controlProps: DEFAULT_CONTROL_PROPS }),
   number: defineControl({ component: UInputNumber, controlProps: DEFAULT_CONTROL_PROPS }),
@@ -316,7 +340,7 @@ const DEFAULT_CONTROLS = {
   withCharacterLimit: defineControl({ component: WithCharacterLimit, controlProps: DEFAULT_CONTROL_PROPS }),
   colorChooser: defineControl({ component: ColorChooser, controlProps: DEFAULT_CONTROL_PROPS }),
   starRating: defineControl({ component: StarRating, controlProps: DEFAULT_CONTROL_PROPS })
-} as const satisfies AutoFormControls
+}
 
 export function useAutoForm<TControls extends AutoFormControls = typeof DEFAULT_CONTROLS>(controls?: TControls) {
   /**
