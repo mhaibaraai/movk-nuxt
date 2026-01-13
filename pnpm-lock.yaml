@@ -93,9 +93,6 @@ importers:
 
   docs:
     dependencies:
-      '@movk/nuxt':
-        specifier: workspace:^
-        version: link:..
       '@movk/nuxt-docs':
         specifier: ^1.7.1
         version: 1.7.1(b215f912acfa1c6f34244968313907a0)
