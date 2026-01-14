@@ -72,9 +72,9 @@ const passwordText = ref('secret123')
   <UCard class="w-full max-w-2xl mx-auto shadow-lg ring-1 ring-gray-200 dark:ring-gray-800">
     <template #header>
       <div class="flex items-center justify-between">
-        <h3 class="text-base font-semibold leading-6 text-gray-900 dark:text-white">
+        <h2 class="text-base font-semibold leading-6 text-gray-900 dark:text-white">
           交互式演示
-        </h3>
+        </h2>
         <UBadge color="primary" variant="subtle" size="xs">
           Live Demo
         </UBadge>
