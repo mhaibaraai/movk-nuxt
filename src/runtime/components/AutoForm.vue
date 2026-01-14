@@ -231,6 +231,7 @@ defineExpose({
           :loading="loading"
           label="提交"
           loading-auto
+          block
           v-bind="submitButtonProps"
         />
       </slot>
