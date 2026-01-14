@@ -64,9 +64,6 @@ export default defineAppConfig({
     rootDir: 'docs',
     commitPath: 'src/runtime'
   },
-  theme: {
-    radius: 0
-  },
   ui: {
     collapsible: {
       slots: {

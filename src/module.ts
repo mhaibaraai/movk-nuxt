@@ -71,6 +71,8 @@ export default defineNuxtModule<ModuleOptions>({
       ignore: ['auto-form-renderer/**']
     })
 
+    nuxt.options.css.push(resolve('runtime/style.css'))
+
     addImportsDir(resolve('runtime/composables'))
     addImportsDir(resolve('runtime/shared'))
 

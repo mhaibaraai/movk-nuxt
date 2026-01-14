@@ -26,6 +26,9 @@ export default defineNuxtConfig({
     '/docs/examples': { redirect: '/docs/examples/auto-form', prerender: false }
   },
   compatibilityDate: 'latest',
+  a11y: {
+    enabled: false
+  },
   aiChat: {
     model: 'mistral/devstral-2',
     models: [
