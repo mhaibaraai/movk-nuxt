@@ -165,9 +165,24 @@ defineExpose({ reset })
         class="absolute inset-0 flex items-center justify-center text-sm font-medium pointer-events-none"
         :class="textClass"
       >
-        <span v-if="!isVerified" class="text-muted" :style="{ opacity: 1 - progress * 0.5 }">
+        <Motion
+          v-if="!isVerified"
+          as="span"
+          class="relative inline-block bg-size-[200%_100%] bg-clip-text text-transparent bg-no-repeat"
+          :style="{
+            backgroundImage: 'radial-gradient(circle at center, var(--color-gray-500), transparent), linear-gradient(var(--color-neutral-400), var(--color-neutral-400))',
+            opacity: 1 - progress * 0.5
+          }"
+          :animate="{ backgroundPosition: '-200% 50%, 0 0' }"
+          :initial="{ backgroundPosition: '200% 50%, 0 0' }"
+          :transition="{
+            repeat: Infinity,
+            duration: 2,
+            ease: 'linear'
+          }"
+        >
           {{ text }}
-        </span>
+        </Motion>
         <span v-else class="text-inverted font-medium">{{ successText }}</span>
       </div>
     </div>
