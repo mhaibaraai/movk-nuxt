@@ -12,7 +12,7 @@
   },
   "homepage": "https://nuxt.mhaibaraai.cn",
   "engines": {
-    "node": "^20.x || ^22.x || ^24.x"
+    "node": "^22.x || ^24.x"
   },
   "bugs": {
     "url": "https://github.com/mhaibaraai/movk-nuxt/issues"
