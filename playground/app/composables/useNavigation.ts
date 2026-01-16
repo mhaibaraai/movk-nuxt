@@ -112,7 +112,8 @@ const components: NavigationMenuItem[] = [
       { label: 'WithPasswordToggle', to: '/components/WithPasswordToggle' },
       { label: 'WithCopy', to: '/components/WithCopy' },
       { label: 'WithCharacterLimit', to: '/components/WithCharacterLimit' },
-      { label: 'SlideVerify', to: '/components/SlideVerify' }
+      { label: 'SlideVerify', to: '/components/SlideVerify' },
+      { label: 'ThemePicker', to: '/components/ThemePicker' }
     ]
   }
 ]
