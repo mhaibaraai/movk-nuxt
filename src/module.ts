@@ -12,6 +12,7 @@ import { z } from 'zod/v4'
 import { name, version } from '../package.json'
 import { movkApiModuleOptionsSchema } from './runtime/schemas/api'
 import type { ApiClient, MovkApiModuleOptions } from './runtime/types'
+import { setupTheme } from './theme'
 
 export * from './runtime/types'
 
@@ -49,12 +50,17 @@ export default defineNuxtModule<ModuleOptions>({
     '@vueuse/nuxt': {
       version: '>=14.1.0'
     },
+    'nuxt-og-image': {
+      version: '>=5.1.13'
+    },
     'nuxt-auth-utils': {
       version: '>=0.5.26'
     }
   },
   async setup(options, nuxt) {
     const { resolve } = createResolver(import.meta.url)
+
+    setupTheme(nuxt, resolve)
 
     nuxt.options.movk = options
     nuxt.options.alias['#movk'] = resolve('./runtime')
@@ -68,7 +74,7 @@ export default defineNuxtModule<ModuleOptions>({
       path: resolve('runtime/components'),
       prefix: options.prefix,
       pathPrefix: false,
-      ignore: ['auto-form-renderer/**']
+      ignore: ['auto-form-renderer/**', 'theme-picker/ThemePickerButton.vue']
     })
 
     nuxt.options.css.push(resolve('runtime/style.css'))
@@ -116,4 +122,13 @@ declare module 'nuxt/schema' {
   interface PublicRuntimeConfig {
     movkApi: MovkApiModuleOptions
   }
+
+  interface AppConfig {
+    theme: {
+      radius: number
+      blackAsPrimary: boolean
+      font: string
+    }
+  }
+
 }
