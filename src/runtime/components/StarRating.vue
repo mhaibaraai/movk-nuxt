@@ -96,6 +96,8 @@ const {
 
 const emit = defineEmits<StarRatingEmits>()
 
+defineOptions({ inheritAttrs: false })
+
 const hoveredStar = ref<number | null>(null)
 const focusedIndex = ref<number>(0)
 

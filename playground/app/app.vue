@@ -1,13 +1,26 @@
 <script setup lang="ts">
 import { zh_cn } from '@nuxt/ui/locale'
+import colors from 'tailwindcss/colors'
 
 const route = useRoute()
 const appConfig = useAppConfig()
+const colorMode = useColorMode()
+
+const color = computed(() => colorMode.value === 'dark' ? (colors as any)[appConfig.ui.colors.neutral][900] : 'white')
+const radius = computed(() => `:root { --ui-radius: ${appConfig.theme.radius}rem; }`)
+const blackAsPrimary = computed(() => appConfig.theme.blackAsPrimary ? `:root { --ui-primary: black; } .dark { --ui-primary: white; }` : ':root {}')
+const font = computed(() => `:root { --font-sans: '${appConfig.theme.font}', sans-serif; }`)
+
 useHead({
   title: 'Movk Nuxt - Playground',
   meta: [
-    { name: 'viewport', content: 'width=device-width, initial-scale=1' },
+    { key: 'theme-color', name: 'theme-color', content: color },
     { name: 'description', content: 'Explore and test all Movk Nuxt in an interactive environment' }
+  ],
+  style: [
+    { innerHTML: radius, id: 'nuxt-ui-radius', tagPriority: -2 },
+    { innerHTML: blackAsPrimary, id: 'nuxt-ui-black-as-primary', tagPriority: -2 },
+    { innerHTML: font, id: 'nuxt-ui-font', tagPriority: -2 }
   ]
 })
 
