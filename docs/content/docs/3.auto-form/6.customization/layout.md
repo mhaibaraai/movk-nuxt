@@ -1,6 +1,7 @@
 ---
 title: 布局系统
 description: 使用布局系统灵活控制表单字段的视觉呈现和组织结构
+category: customization
 ---
 
 ## 基础用法

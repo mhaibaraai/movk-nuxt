@@ -1,6 +1,7 @@
 ---
 title: 全局元数据
 description: 使用全局元数据统一配置所有字段的行为和样式，简化重复配置。
+category: customization
 ---
 
 ## 基础用法

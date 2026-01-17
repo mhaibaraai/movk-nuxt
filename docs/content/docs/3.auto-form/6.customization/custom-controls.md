@@ -1,6 +1,7 @@
 ---
 title: 自定义控件
 description: 注册和使用自定义 Vue 组件作为表单字段的渲染控件，扩展 AutoForm 的功能。
+category: customization
 ---
 
 ## 概述
