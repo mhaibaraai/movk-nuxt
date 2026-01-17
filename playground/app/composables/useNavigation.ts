@@ -41,7 +41,9 @@ const autoFormNav: NavigationMenuItem = {
         { label: 'SelectMenu', to: '/auto-form/controls/select-menu' },
         { label: 'InputMenu', to: '/auto-form/controls/input-menu' },
         { label: 'CheckboxGroup', to: '/auto-form/controls/checkbox-group' },
-        { label: 'RadioGroup', to: '/auto-form/controls/radio-group' }
+        { label: 'RadioGroup', to: '/auto-form/controls/radio-group' },
+        { label: 'StarRating', to: '/auto-form/controls/star-rating' },
+        { label: 'SlideVerify', to: '/auto-form/controls/slide-verify' }
       ]
     },
     {
