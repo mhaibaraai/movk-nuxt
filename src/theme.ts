@@ -10,7 +10,8 @@ export function setupTheme(nuxt: Nuxt, resolve: Resolver['resolve']) {
   nuxt.options.appConfig.theme = defu(nuxt.options.appConfig.theme || {}, {
     radius: 0.25,
     blackAsPrimary: false,
-    font: 'Public Sans'
+    font: 'Public Sans',
+    icons: 'lucide'
   })
 
   nuxt.options.app.head.meta = nuxt.options.app.head.meta || []

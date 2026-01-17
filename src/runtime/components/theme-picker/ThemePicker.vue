@@ -23,6 +23,8 @@ const {
   radius,
   fonts,
   font,
+  icon,
+  icons,
   modes,
   mode,
   hasCSSChanges,
@@ -165,6 +167,35 @@ const {
             :items="fonts"
             class="w-full ring-default rounded-sm hover:bg-elevated/50 text-[11px] data-[state=open]:bg-elevated/50"
             :ui="{ trailingIcon: 'group-data-[state=open]:rotate-180 transition-transform duration-200' }"
+          />
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend class="text-[11px] leading-none font-semibold mb-2 select-none flex items-center gap-1">
+          Icons
+
+          <UButton
+            to="https://ui.nuxt.com/docs/getting-started/integrations/icons"
+            size="xs"
+            color="neutral"
+            variant="link"
+            target="_blank"
+            icon="i-lucide-circle-help"
+            class="p-0 -my-0.5"
+            :ui="{ leadingIcon: 'size-3' }"
+          />
+        </legend>
+
+        <div class="-mx-2">
+          <USelect
+            v-model="icon"
+            size="sm"
+            color="neutral"
+            :icon="icons.find(i => i.value === icon)?.icon"
+            :items="icons"
+            class="w-full ring-default rounded-sm hover:bg-elevated/50 capitalize text-[11px] data-[state=open]:bg-elevated/50"
+            :ui="{ item: 'capitalize text-[11px]', trailingIcon: 'group-data-[state=open]:rotate-180 transition-transform duration-200' }"
           />
         </div>
       </fieldset>

@@ -2,6 +2,7 @@ import { useAppConfig, useColorMode, useSiteConfig } from '#imports'
 import { omit } from '@movk/core'
 import colors from 'tailwindcss/colors'
 import { computed } from 'vue'
+import { themeIcons } from '../utils/theme'
 
 export function useTheme() {
   const appConfig = useAppConfig()
@@ -56,6 +57,32 @@ export function useTheme() {
     }
   })
 
+  const icons = [{
+    label: 'Lucide',
+    icon: 'i-lucide-feather',
+    value: 'lucide'
+  }, {
+    label: 'Phosphor',
+    icon: 'i-ph-phosphor-logo',
+    value: 'phosphor'
+  }, {
+    label: 'Tabler',
+    icon: 'i-tabler-brand-tabler',
+    value: 'tabler'
+  }]
+  const icon = computed({
+    get() {
+      return appConfig.theme.icons
+    },
+    set(option) {
+      appConfig.theme.icons = option
+      appConfig.ui.icons = themeIcons[option as keyof typeof themeIcons] as any
+      if (appConfig.theme.icons) {
+        window.localStorage.setItem(`${site.name}-ui-icons`, appConfig.theme.icons)
+      }
+    }
+  })
+
   const modes = [
     { label: 'light', icon: appConfig.ui.icons.light },
     { label: 'dark', icon: appConfig.ui.icons.dark },
@@ -79,6 +106,7 @@ export function useTheme() {
     return appConfig.theme.radius !== 0.25
       || appConfig.theme.blackAsPrimary
       || appConfig.theme.font !== 'Public Sans'
+      || appConfig.theme.icons !== 'lucide'
   })
 
   const hasAppConfigChanges = computed(() => {
@@ -128,6 +156,13 @@ export function useTheme() {
       }
     }
 
+    if (appConfig.theme.icons !== 'lucide') {
+      const iconSet = appConfig.theme.icons
+      const icons = themeIcons[iconSet as keyof typeof themeIcons]
+      config.ui = config.ui || {}
+      config.ui.icons = icons
+    }
+
     const configString = JSON.stringify(config, null, 2)
       .replace(/"([^"]+)":/g, '$1:')
       .replace(/"/g, '\'')
@@ -149,6 +184,10 @@ export function useTheme() {
     appConfig.theme.font = 'Public Sans'
     window.localStorage.removeItem(`${site.name}-ui-font`)
 
+    appConfig.theme.icons = 'lucide'
+    appConfig.ui.icons = themeIcons.lucide as any
+    window.localStorage.removeItem(`${site.name}-ui-icons`)
+
     appConfig.theme.blackAsPrimary = false
     window.localStorage.removeItem(`${site.name}-ui-black-as-primary`)
   }
@@ -163,6 +202,8 @@ export function useTheme() {
     radius,
     fonts,
     font,
+    icon,
+    icons,
     modes,
     mode,
     hasCSSChanges,
