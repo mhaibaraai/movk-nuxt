@@ -1,4 +1,5 @@
-import { defineNuxtPlugin, useAppConfig, useHead, useSiteConfig } from '#imports'
+import { defineNuxtPlugin, onNuxtReady, useAppConfig, useHead, useSiteConfig } from '#imports'
+import { themeIcons } from '../utils/theme'
 
 export default defineNuxtPlugin({
   enforce: 'post',
@@ -41,6 +42,18 @@ export default defineNuxtPlugin({
       updateBlackAsPrimary()
       updateFont()
     }
+
+    onNuxtReady(() => {
+      function updateIcons() {
+        const icons = localStorage.getItem(`${site.name}-ui-icons`)
+        if (icons) {
+          appConfig.theme.icons = icons
+          appConfig.ui.icons = themeIcons[icons as keyof typeof themeIcons] as any
+        }
+      }
+
+      updateIcons()
+    })
 
     if (import.meta.server) {
       useHead({

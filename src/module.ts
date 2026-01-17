@@ -161,6 +161,7 @@ declare module 'nuxt/schema' {
       radius: number
       blackAsPrimary: boolean
       font: string
+      icons: string
     }
   }
 }
