@@ -5,7 +5,7 @@ description: 注册和使用自定义 Vue 组件作为表单字段的渲染控�
 
 ## 概述
 
-AutoForm 允许你注册自定义 Vue 组件作为表单字段的渲染控件。这使得你可以扩展 AutoForm 的功能，使用任何 UI 组件库或自定义组件来渲染特定类型的字段。
+`AutoForm` 允许你注册自定义 Vue 组件作为表单字段的渲染控件。这使得你可以扩展 `AutoForm` 的功能，使用任何 UI 组件库或自定义组件来渲染特定类型的字段。
 
 自定义控件适用于以下场景：
 
@@ -16,7 +16,7 @@ AutoForm 允许你注册自定义 Vue 组件作为表单字段的渲染控件。
 
 ## 基本用法
 
-通过 `useAutoForm` composable 注册自定义控件：
+通过 `useAutoForm` 注册自定义控件：
 
 ```ts
 import { RichTextEditor } from '#components'
