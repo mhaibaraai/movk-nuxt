@@ -1,5 +1,25 @@
 # 📋 Changelog
 
+## [1.1.1](https://github.com/mhaibaraai/movk-nuxt/compare/v1.1.0...v1.1.1) (2026-01-17)
+
+### ✨ Features
+
+* 优化 AI Chat 建议问题分类和内容 ([277e216](https://github.com/mhaibaraai/movk-nuxt/commit/277e2162b335ca19bdf8413c0df9ee6835f1c024))
+* 实现主题图标集动态切换功能 ([31bf76d](https://github.com/mhaibaraai/movk-nuxt/commit/31bf76dbcfbe98761403e0095f1a8776a9289a22))
+* 添加 @movk/nuxt MCP 服务器支持 ([242d4b9](https://github.com/mhaibaraai/movk-nuxt/commit/242d4b9f5b0a9ea4759032966ccc8da27355707b))
+* 添加 MCP 安装徽章和浏览器重定向 ([c379693](https://github.com/mhaibaraai/movk-nuxt/commit/c379693b82b9620afc7bb69a06e3cbc3ebe7d670))
+
+### 📝 Documentation
+
+* 修正 ThemePicker 文档中的 Changelog 前缀路径 ([fb9d3c3](https://github.com/mhaibaraai/movk-nuxt/commit/fb9d3c38ac8f0a1dfc5b5a1abfd4230612a0711d))
+* 增强文档元数据和 MCP 使用说明 ([a4f1214](https://github.com/mhaibaraai/movk-nuxt/commit/a4f12143c693a9afec677741d89d69f50c732ce0))
+* 添加 ThemePicker 组件使用文档和示例 ([7956bf9](https://github.com/mhaibaraai/movk-nuxt/commit/7956bf9945d3c5a596cff30c100c144eb7f6eb22))
+
+### 🔧 Chores
+
+* 在初始化钩子中添加类型检查命令 ([850990e](https://github.com/mhaibaraai/movk-nuxt/commit/850990e268cf4c9f96f80e2a5b98a68aa33c968c))
+* 添加 Phosphor 和 Tabler 图标库依赖 ([d702334](https://github.com/mhaibaraai/movk-nuxt/commit/d702334f409b0adfa0cf8ab478d2e3dc7cb90338))
+
 ## [1.1.0](https://github.com/mhaibaraai/movk-nuxt/compare/v1.0.0...v1.1.0) (2025-01-17)
 
 ### ✨ Features
