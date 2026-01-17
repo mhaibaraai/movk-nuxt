@@ -14,45 +14,47 @@ export default defineAppConfig({
       {
         category: '快速入门',
         items: [
-          '如何安装和配置？',
-          '如何创建第一个表单？',
-          '如何查看组件列表？'
+          '如何安装 @movk/nuxt？',
+          '支持哪些 Nuxt 版本？',
+          '如何配置组件前缀？',
+          '模块依赖哪些库？'
         ]
       },
       {
         category: 'AutoForm 表单',
         items: [
-          '支持哪些控件类型？',
-          '如何定义嵌套对象和数组？',
-          '如何实现条件显示？',
-          '如何自定义控件和样式？'
+          '如何创建基础表单？',
+          '支持哪些字段类型？',
+          '如何添加验证规则？',
+          '如何实现条件渲染？',
+          '如何处理嵌套对象和数组？'
         ]
       },
       {
-        category: 'API 集成',
+        category: 'API 系统',
         items: [
-          '如何发起 API 请求？',
-          '如何配置认证登录？',
-          '如何监控上传进度？',
-          '如何监控下载进度？'
+          '如何配置 API 端点？',
+          'useApiFetch 和 $fetch 区别？',
+          '如何处理认证登录？',
+          '如何监控上传/下载进度？'
         ]
       },
       {
         category: '独立组件',
         items: [
-          '如何单独使用组件？',
-          'DatePicker 如何配置？',
-          'WithCopy 等增强组件如何用？',
-          '如何覆盖组件样式？'
+          '有哪些独立组件？',
+          'DatePicker 如何使用？',
+          'StarRating 如何自定义？',
+          'SlideVerify 如何配置？'
         ]
       },
       {
         category: 'Composables',
         items: [
-          'useDateFormatter 如何用？',
-          'useAutoForm 如何获取元数据？',
+          'useDateFormatter 如何格式化日期？',
+          'useAutoForm 如何定义自定义控件？',
           'useApiAuth 如何管理认证？',
-          'useUploadWithProgress 如何使用？'
+          'useTheme 如何切换主题？'
         ]
       }
     ]

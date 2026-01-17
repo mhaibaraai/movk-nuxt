@@ -1,6 +1,7 @@
 ---
 title: 条件渲染
 description: 根据表单状态动态显示或隐藏字段，创建智能响应式表单。
+category: customization
 ---
 
 ## 基本概念

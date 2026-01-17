@@ -1,6 +1,7 @@
 ---
 title: 可折叠字段
 description: 使用折叠功能将嵌套字段组织成可展开/收起的部分，提高表单的整洁性和可读性。
+category: customization
 ---
 
 ## 基础用法
