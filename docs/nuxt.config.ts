@@ -47,7 +47,7 @@ export default defineNuxtConfig({
     notes: ['nuxt', 'nuxt4', 'autoform', 'zod', 'schema-driven', 'api', 'fetch', 'auth', 'upload', 'download', 'ui-components', 'composables']
   },
   mcp: {
-    name: 'Movk Nuxt'
-    // browserRedirect: '/docs/getting-started/ai/mcp'
+    name: 'Movk Nuxt',
+    browserRedirect: '/docs/getting-started/ai/mcp'
   }
 })
