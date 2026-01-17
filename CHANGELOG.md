@@ -1,5 +1,41 @@
 # 📋 Changelog
 
+## [1.1.0](https://github.com/mhaibaraai/movk-nuxt/compare/v1.0.0...v1.1.0) (2025-01-17)
+
+### ✨ Features
+
+* **auto-form:** 新增 SlideVerify 滑块验证组件，支持文字渐变动画效果，并集成为 AutoForm 控件 ([0569cbb](https://github.com/mhaibaraai/movk-nuxt/commit/0569cbbcf6b6bc5eee3cc674b8a46b0bd87417b8))
+* **theme:** 添加主题自定义系统核心功能，包含 ThemePicker 主题选择器组件，并集成到 playground ([73edc58](https://github.com/mhaibaraai/movk-nuxt/commit/73edc58b2c7bb16c110d385a67fd68150ca3ccb5))
+* **docs:** 增强 AI Chat 功能配置与 UI 主题 ([9248e7a](https://github.com/mhaibaraai/movk-nuxt/commit/9248e7ac2f949019e7b0bf1a614f2f475d250d34))
+
+### 🐛 Bug Fixes
+
+* 改进 DEFAULT_CONTROLS 类型定义以增强类型推导 ([30cefdf](https://github.com/mhaibaraai/movk-nuxt/commit/30cefdfba4c32f443e50be68b700994da7a40a2f))
+
+### 📝 Documentation
+
+* 优化配置和 AutoForm 文档结构 ([7704dd8](https://github.com/mhaibaraai/movk-nuxt/commit/7704dd81ba3e50ea4fc6562e97b2f6925d1603da))
+* 优化 API 文档格式和内容结构 ([96fd571](https://github.com/mhaibaraai/movk-nuxt/commit/96fd57115c0ebf944bbcb3e5912eb7c10e837c90))
+* 更新 API 模块配置文档 ([8254bc1](https://github.com/mhaibaraai/movk-nuxt/commit/8254bc16f2e9674077413da845d6b181bac81872))
+
+### 💄 Styles
+
+* 设置 AutoForm 提交按钮为块级按钮 ([1979b15](https://github.com/mhaibaraai/movk-nuxt/commit/1979b150a6e6a377513bc918a77abf92ce461808))
+
+### ♻️ Code Refactoring
+
+* **api:** 优化配置架构，区分公共和私有配置 ([413bf43](https://github.com/mhaibaraai/movk-nuxt/commit/413bf43a6e7ec7b728aeb034ae6f722209fd095f))
+* 增强 AutoForm 组件类型安全性 ([49e06cd](https://github.com/mhaibaraai/movk-nuxt/commit/49e06cd855d85974fb887c9261cb77ce260a2530))
+* 优化 TypeScript 配置与代码清理 ([73eed3c](https://github.com/mhaibaraai/movk-nuxt/commit/73eed3ce7b0308fc66936dc090ee443ff39645fa))
+
+### 🔧 Chores
+
+* **deps:** 更新所有非主版本依赖 ([be05a35](https://github.com/mhaibaraai/movk-nuxt/commit/be05a353e399390c7230a24e06fdd543a22e0b10))
+* 升级 @movk/nuxt-docs 至 1.7.4 并更新 Node 版本要求 ([59f48f4](https://github.com/mhaibaraai/movk-nuxt/commit/59f48f4b3fa44c375ef4f9b12817ee3daf5e8d4f))
+* 优化 TypeScript 项目配置结构 ([afe40f4](https://github.com/mhaibaraai/movk-nuxt/commit/afe40f4965c9989f51a95bdfa39ce4b5f277d000))
+* 简化构建脚本和依赖配置 ([65dfa47](https://github.com/mhaibaraai/movk-nuxt/commit/65dfa47acdcfddb063ae4731fecead5ec3085b53))
+* 清理废弃文件并新增 AGENTS.md ([4ee8e94](https://github.com/mhaibaraai/movk-nuxt/commit/4ee8e9433b872553099d15f394f921de33c26c71))
+
 ## [1.0.0](https://github.com/mhaibaraai/movk-nuxt/compare/v0.1.1...v1.0.0) (2025-12-24)
 
 ### ⚠ BREAKING CHANGES
