@@ -1,13 +1,14 @@
 import type { $Fetch, FetchHooks, FetchResponse, FetchContext } from 'ofetch'
 import type {
   ApiClient,
-  MovkApiModuleOptions,
   ApiResponse,
   ApiAuthConfig,
   ResolvedEndpointConfig,
   UploadOptions,
   DownloadOptions,
-  ApiFetchContext
+  ApiFetchContext,
+  MovkApiPublicConfig,
+  MovkApiPrivateConfig
 } from '../types/api'
 import { getPath, triggerDownload, extractFilename } from '@movk/core'
 import {
@@ -16,11 +17,13 @@ import {
   extractMessage,
   extractToastMessage
 } from '../utils/api-utils'
-import { defineNuxtPlugin, useRuntimeConfig, navigateTo, useNuxtApp, useUserSession } from '#imports'
+import { defineNuxtPlugin, navigateTo, useNuxtApp, useUserSession, useRuntimeConfig } from '#imports'
 import defu from 'defu'
 
 /**
- * 安全获取 useUserSession
+ * 获取用户会话实例
+ * @returns 用户会话对象或null（如果在不支持的上下文中调用）
+ * @internal
  */
 function getUserSession(): ReturnType<typeof useUserSession> | null {
   try {
@@ -33,7 +36,10 @@ function getUserSession(): ReturnType<typeof useUserSession> | null {
 }
 
 /**
- * 从 session 获取 Token
+ * 从用户会话中提取认证令牌
+ * @param tokenPath - 令牌在会话对象中的路径（支持点号分隔的嵌套路径）
+ * @returns 令牌字符串或null
+ * @internal
  */
 function getTokenFromSession(tokenPath: string): string | null {
   const userSession = getUserSession()
@@ -44,7 +50,11 @@ function getTokenFromSession(tokenPath: string): string | null {
 }
 
 /**
- * 构建 Authorization Header 值
+ * 构建认证请求头的值
+ * @param token - 认证令牌
+ * @param config - 认证配置
+ * @returns 格式化的认证头值（如: "Bearer token123"）
+ * @internal
  */
 function buildAuthHeader(token: string, config: Partial<ApiAuthConfig>): string {
   const tokenType = config.tokenType === 'Custom'
@@ -55,49 +65,51 @@ function buildAuthHeader(token: string, config: Partial<ApiAuthConfig>): string 
 }
 
 /**
- * 处理 401 未授权
+ * 处理401未授权响应
+ * @param config - 认证配置
+ * @internal
  */
 async function handleUnauthorized(config: Partial<ApiAuthConfig>): Promise<void> {
   const userSession = getUserSession()
+  const unauthorizedConfig = config.unauthorized
 
-  // 清除 session
-  if (config.clearSessionOnUnauthorized && userSession?.clear) {
+  if (unauthorizedConfig?.clearSession && userSession?.clear) {
     await userSession.clear()
   }
 
-  // 跳转登录页
-  if (config.redirectOnUnauthorized) {
-    const loginPath = config.loginPath || '/login'
+  if (unauthorizedConfig?.redirect) {
+    const loginPath = unauthorizedConfig.loginPath || '/login'
     const nuxtApp = useNuxtApp()
     await nuxtApp.runWithContext(() => navigateTo(loginPath))
   }
 }
 
 /**
- * 从请求上下文中获取 ApiFetchContext
+ * 从 Fetch 上下文中提取自定义 API 上下文
+ * @param context - Fetch请求上下文
+ * @returns API请求的扩展上下文（包含toast、skipBusinessCheck等配置）
+ * @internal
  */
 function getApiFetchContext(context: FetchContext): ApiFetchContext {
   return (context.options as { context?: ApiFetchContext }).context || {}
 }
 
 /**
- * 创建内置钩子集合
- *
- * 处理：
- * - 认证 Token 注入
- * - 401 未授权处理
- * - Toast 提示（业务成功/失败、网络错误）
- * - 调试日志
+ * 创建内置的请求生命周期钩子
+ * @description 处理请求前认证、响应后Toast提示、业务状态码检查、401重定向等核心逻辑
+ * @param resolvedConfig - 已解析的端点配置
+ * @param publicConfig - 全局公共配置
+ * @returns Fetch钩子集合（onRequest/onRequestError/onResponse/onResponseError）
+ * @internal
  */
 function createBuiltinHooks(
   resolvedConfig: ResolvedEndpointConfig,
-  moduleConfig: MovkApiModuleOptions
+  publicConfig: MovkApiPublicConfig
 ): FetchHooks {
-  const { auth: authConfig, toast: toastConfig, success: successConfig } = resolvedConfig
+  const { auth: authConfig, toast: toastConfig, response: responseConfig } = resolvedConfig
 
   return {
     onRequest(context) {
-      // 认证 Token 注入
       if (authConfig.enabled) {
         const tokenPath = authConfig.sessionTokenPath || 'token'
         const token = getTokenFromSession(tokenPath)
@@ -116,13 +128,13 @@ function createBuiltinHooks(
         }
       }
 
-      if (moduleConfig.debug) {
+      if (publicConfig.debug) {
         console.log(`[Movk API] Request: ${context.options.method || 'GET'} ${resolvedConfig.baseURL}${context.request}`)
       }
     },
 
     async onRequestError({ error }) {
-      if (moduleConfig.debug) {
+      if (publicConfig.debug) {
         console.error('[Movk API] Request Error:', error)
       }
     },
@@ -131,16 +143,15 @@ function createBuiltinHooks(
       const response = context.response
       const data = response._data as ApiResponse
 
-      if (moduleConfig.debug) {
+      if (publicConfig.debug) {
         console.log('[Movk API] Response:', data)
       }
 
-      // 客户端显示 Toast
       if (!import.meta.client) return
 
       const { toast, skipBusinessCheck } = getApiFetchContext(context)
-      const isSuccess = skipBusinessCheck || isBusinessSuccess(data, successConfig)
-      const message = extractMessage(data, successConfig)
+      const isSuccess = skipBusinessCheck || isBusinessSuccess(data, responseConfig)
+      const message = extractMessage(data, responseConfig)
 
       if (isSuccess) {
         const successMessage = toast !== false ? (toast?.successMessage || message) : undefined
@@ -151,21 +162,19 @@ function createBuiltinHooks(
     async onResponseError(context) {
       const { response } = context
 
-      // 401 未授权处理
       if (response.status === 401) {
         await handleUnauthorized(authConfig)
       }
 
-      if (moduleConfig.debug) {
+      if (publicConfig.debug) {
         console.error('[Movk API] Error:', response.status, response._data)
       }
 
-      // 客户端显示网络错误 Toast
       if (!import.meta.client) return
 
       const { toast } = getApiFetchContext(context)
       const data = response._data as ApiResponse | undefined
-      const message = data ? extractMessage(data, successConfig) : undefined
+      const message = data ? extractMessage(data, responseConfig) : undefined
       const errorMessage = toast !== false
         ? (toast?.errorMessage || message || `请求失败 (${response.status})`)
         : undefined
@@ -176,14 +185,19 @@ function createBuiltinHooks(
 }
 
 /**
- * 创建 API Client
+ * 创建 API 客户端实例
+ * @param resolvedConfig - 已解析的端点配置
+ * @param publicConfig - 全局公共配置
+ * @param getOrCreateEndpoint - 获取或创建端点的工厂函数（用于实现 use() 方法）
+ * @returns API客户端实例（包含 $fetch、use、download、upload、getConfig 方法）
+ * @internal
  */
 function createApiClient(
   resolvedConfig: ResolvedEndpointConfig,
-  moduleConfig: MovkApiModuleOptions,
+  publicConfig: MovkApiPublicConfig,
   getOrCreateEndpoint: (name: string) => ApiClient
 ): ApiClient {
-  const builtinHooks = createBuiltinHooks(resolvedConfig, moduleConfig)
+  const builtinHooks = createBuiltinHooks(resolvedConfig, publicConfig)
   resolvedConfig.builtinHooks = builtinHooks
 
   const $fetchInstance = $fetch.create({
@@ -195,7 +209,12 @@ function createApiClient(
     onResponseError: builtinHooks.onResponseError
   }) as $Fetch
 
-  // 下载方法（blob 响应，需单独处理 Toast）
+  /**
+   * 下载文件
+   * @param url - 下载地址
+   * @param filename - 保存的文件名（可选，默认从响应头或URL提取）
+   * @param options - 下载选项（包含toast配置和其他fetch选项）
+   */
   const download = async (
     url: string,
     filename?: string,
@@ -203,7 +222,6 @@ function createApiClient(
   ): Promise<void> => {
     const { toast, ...fetchOptions } = options
 
-    // 通过 context 传递 toast 配置，让 onResponseError 处理网络错误
     const response = await $fetchInstance.raw<Blob>(url, {
       ...fetchOptions,
       method: 'GET',
@@ -218,14 +236,19 @@ function createApiClient(
     const finalFilename = filename || extractFilename(response.headers, url.split('/').pop() || 'download')
     triggerDownload(response._data, finalFilename)
 
-    // 下载成功提示（blob 响应无业务状态码，需手动提示）
     if (import.meta.client && toast !== false) {
       const message = extractToastMessage(toast, 'success', `下载成功: ${finalFilename}`)
       showToast('success', message, toast, resolvedConfig.toast)
     }
   }
 
-  // 上传方法（通过 context 传递 toast，内置 hooks 处理提示）
+  /**
+   * 上传文件
+   * @param url - 上传地址
+   * @param file - 文件对象、文件数组或FormData
+   * @param options - 上传选项（包含fieldName、toast配置和其他fetch选项）
+   * @returns API响应数据
+   */
   const upload = async <T>(
     url: string,
     file: File | File[] | FormData,
@@ -233,7 +256,6 @@ function createApiClient(
   ): Promise<ApiResponse<T>> => {
     const { toast, fieldName = 'file', ...fetchOptions } = options
 
-    // 构建 FormData
     const formData = file instanceof FormData
       ? file
       : (() => {
@@ -242,8 +264,6 @@ function createApiClient(
           files.forEach(f => fd.append(fieldName, f))
           return fd
         })()
-
-    // 通过 context 传递配置，内置 hooks 处理业务状态码和 Toast
 
     return $fetchInstance<ApiResponse<T>>(url, {
       ...fetchOptions,
@@ -263,54 +283,44 @@ function createApiClient(
 }
 
 export default defineNuxtPlugin(() => {
-  const moduleConfig = useRuntimeConfig().public.movkApi as MovkApiModuleOptions
+  const runtimeConfig = useRuntimeConfig()
+  const publicConfig = runtimeConfig.public.movkApi as MovkApiPublicConfig
+  const privateConfig = import.meta.server
+    ? (runtimeConfig.movkApi as MovkApiPrivateConfig | undefined)
+    : undefined
 
-  if (!moduleConfig.enabled) {
-    return
-  }
-
-  // 端点实例缓存
   const endpointCache = new Map<string, ApiClient>()
 
-  /**
-   * 获取或创建端点实例
-   */
   const getOrCreateEndpoint = (endpointName: string): ApiClient => {
-    // 缓存命中
     if (endpointCache.has(endpointName)) {
       return endpointCache.get(endpointName)!
     }
 
-    // 获取端点配置
-    const endpoints = moduleConfig.endpoints || {}
+    const endpoints = publicConfig.endpoints || {}
     const endpointConfig = endpoints[endpointName]
 
     if (!endpointConfig) {
       console.warn(`[Movk API] Endpoint "${endpointName}" not found, using default`)
-      return getOrCreateEndpoint(moduleConfig.defaultEndpoint || 'default')
+      return getOrCreateEndpoint(publicConfig.defaultEndpoint || 'default')
     }
 
-    // 合并配置
+    const privateEndpointConfig = privateConfig?.endpoints?.[endpointName]
+
     const resolvedConfig: ResolvedEndpointConfig = {
       ...endpointConfig,
-      auth: defu(endpointConfig.auth, moduleConfig.auth) as ResolvedEndpointConfig['auth'],
-      toast: defu(endpointConfig.toast, moduleConfig.toast) as ResolvedEndpointConfig['toast'],
-      success: defu(endpointConfig.success, moduleConfig.success) as ResolvedEndpointConfig['success']
+      headers: privateEndpointConfig?.headers,
+      auth: defu(endpointConfig.auth, publicConfig.auth) as ResolvedEndpointConfig['auth'],
+      toast: defu(endpointConfig.toast, publicConfig.toast) as ResolvedEndpointConfig['toast'],
+      response: defu(endpointConfig.response, publicConfig.response) as ResolvedEndpointConfig['response']
     }
 
-    // 创建实例
-    const client = createApiClient(
-      resolvedConfig,
-      moduleConfig,
-      getOrCreateEndpoint
-    )
+    const client = createApiClient(resolvedConfig, publicConfig, getOrCreateEndpoint)
 
     endpointCache.set(endpointName, client)
     return client
   }
 
-  // 创建默认端点
-  const defaultEndpoint = moduleConfig.defaultEndpoint || 'default'
+  const defaultEndpoint = publicConfig.defaultEndpoint || 'default'
   const api = getOrCreateEndpoint(defaultEndpoint)
 
   return {

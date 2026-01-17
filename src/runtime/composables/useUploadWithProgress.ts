@@ -101,8 +101,8 @@ export function useUploadWithProgress<T = unknown>() {
 
         try {
           const response = JSON.parse(xhr.responseText) as ApiResponse<T>
-          const isSuccess = isBusinessSuccess(response, config.success)
-          const message = extractMessage(response, config.success)
+          const isSuccess = isBusinessSuccess(response, config.response)
+          const message = extractMessage(response, config.response)
 
           if (isSuccess) {
             data.value = response

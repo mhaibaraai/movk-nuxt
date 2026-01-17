@@ -64,14 +64,12 @@ export function useApiFetch<ResT = unknown, DataT = ResT>(
   const endpointConfig = apiInstance.getConfig()
   const builtinHooks = endpointConfig.builtinHooks || {}
 
-  // 创建 transform
   const transformFn = createTransform<ResT, DataT>({
     skipBusinessCheck,
     userTransform,
-    successConfig: endpointConfig.success
+    successConfig: endpointConfig.response
   })
 
-  // 合并内置 hooks 与用户 hooks
   const mergedHooks = mergeFetchHooks(builtinHooks, {
     onRequest: userOnRequest as any,
     onRequestError: userOnRequestError as any,
@@ -79,20 +77,16 @@ export function useApiFetch<ResT = unknown, DataT = ResT>(
     onResponseError: userOnResponseError as any
   })
 
-  // 通过 context 传递请求级配置给内置 hooks
   const context: ApiFetchContext = { toast, skipBusinessCheck }
 
-  // 注：useFetch 泛型类型复杂度较高，需要类型断言避免 TS2589 错误
   return useFetch(url, {
     ...fetchOptions,
     $fetch: apiInstance.$fetch,
     transform: transformFn,
-    // 合并后的 hooks
     onRequest: mergedHooks.onRequest,
     onRequestError: mergedHooks.onRequestError,
     onResponse: mergedHooks.onResponse,
     onResponseError: mergedHooks.onResponseError,
-    // 传递请求级配置给内置 hooks
     context
   } as Parameters<typeof useFetch>[1]) as UseApiFetchReturn<DataT>
 }

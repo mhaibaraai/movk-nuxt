@@ -19,7 +19,7 @@ props:
 
 ## 配置选项
 
-### AutoFormNestedCollapsible
+### `AutoFormNestedCollapsible`
 
 `collapsible` 属性接受一个配置对象，支持以下选项：
 

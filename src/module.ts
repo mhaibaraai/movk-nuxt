@@ -7,11 +7,15 @@ import {
   createResolver,
   defineNuxtModule
 } from '@nuxt/kit'
-import defu from 'defu'
 import { z } from 'zod/v4'
 import { name, version } from '../package.json'
-import { movkApiModuleOptionsSchema } from './runtime/schemas/api'
-import type { ApiClient, MovkApiModuleOptions } from './runtime/types'
+import {
+  movkApiFullConfigSchema,
+  apiResponseConfigSchema,
+  apiAuthConfigSchema,
+  apiToastConfigSchema
+} from './runtime/schemas/api'
+import type { ApiClient, MovkApiPublicConfig, MovkApiPrivateConfig, ApiEndpointPublicConfig } from './runtime/types'
 import { setupTheme } from './theme'
 
 export * from './runtime/types'
@@ -25,7 +29,7 @@ const moduleOptionsSchema = z.object({
   /**
    * API 模块配置
    */
-  api: movkApiModuleOptionsSchema.optional()
+  api: movkApiFullConfigSchema.optional()
 })
 
 export type ModuleOptions = z.input<typeof moduleOptionsSchema>
@@ -62,13 +66,9 @@ export default defineNuxtModule<ModuleOptions>({
 
     setupTheme(nuxt, resolve)
 
-    nuxt.options.movk = options
     nuxt.options.alias['#movk'] = resolve('./runtime')
-    nuxt.options.appConfig.movk = defu(nuxt.options.appConfig.movk || {}, options)
 
-    const apiConfig = movkApiModuleOptionsSchema.parse(options.api ?? {})
-
-    nuxt.options.runtimeConfig.public.movkApi = apiConfig
+    const apiConfig = options.api || {}
 
     addComponentsDir({
       path: resolve('runtime/components'),
@@ -82,7 +82,38 @@ export default defineNuxtModule<ModuleOptions>({
     addImportsDir(resolve('runtime/composables'))
     addImportsDir(resolve('runtime/shared'))
 
-    if (apiConfig.enabled) {
+    if (apiConfig.enabled !== false) {
+      const publicEndpoints: Record<string, ApiEndpointPublicConfig> = {}
+      const privateEndpoints: Record<string, { headers?: Record<string, string> }> = {}
+
+      if (apiConfig.endpoints) {
+        for (const [endpointName, endpoint] of Object.entries(apiConfig.endpoints)) {
+          const { headers, ...publicConfig } = endpoint
+          publicEndpoints[endpointName] = publicConfig as ApiEndpointPublicConfig
+          if (headers) {
+            privateEndpoints[endpointName] = { headers }
+          }
+        }
+      }
+
+      const publicConfig: MovkApiPublicConfig = {
+        defaultEndpoint: apiConfig.defaultEndpoint ?? 'default',
+        debug: apiConfig.debug ?? false,
+        endpoints: Object.keys(publicEndpoints).length > 0
+          ? publicEndpoints
+          : { default: { baseURL: '/api' } },
+        response: apiResponseConfigSchema.parse(apiConfig.response ?? {}),
+        auth: apiAuthConfigSchema.parse(apiConfig.auth ?? {}),
+        toast: apiToastConfigSchema.parse(apiConfig.toast ?? {})
+      }
+
+      const privateConfig: MovkApiPrivateConfig = {
+        endpoints: Object.keys(privateEndpoints).length > 0 ? privateEndpoints : undefined
+      }
+
+      nuxt.options.runtimeConfig.movkApi = privateConfig
+      nuxt.options.runtimeConfig.public.movkApi = publicConfig
+
       addPlugin({
         src: resolve('runtime/plugins/api.factory'),
         mode: 'all'
@@ -117,10 +148,12 @@ declare module 'nuxt/schema' {
     ['movk']: ModuleOptions
   }
 
-  interface RuntimeConfig { }
-
   interface PublicRuntimeConfig {
-    movkApi: MovkApiModuleOptions
+    movkApi: MovkApiPublicConfig
+  }
+
+  interface RuntimeConfig {
+    movkApi: MovkApiPrivateConfig
   }
 
   interface AppConfig {
@@ -130,5 +163,4 @@ declare module 'nuxt/schema' {
       font: string
     }
   }
-
 }

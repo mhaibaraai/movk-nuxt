@@ -94,7 +94,7 @@ props:
 
 ## 布局配置详解
 
-### AutoFormLayoutConfig
+### `AutoFormLayoutConfig`
 
 `afz.layout` 接受一个配置对象，包含以下属性：
 
@@ -135,7 +135,7 @@ afz.layout({
 })
 ```
 
-### fieldSlot vs fieldSlots
+### `fieldSlot` vs `fieldSlots`
 
 - **`fieldSlot`** - 将所有字段渲染到同一个插槽，适用于简单场景：
 

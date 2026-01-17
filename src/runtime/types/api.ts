@@ -3,251 +3,242 @@ import type { UseFetchOptions as NuxtUseFetchOptions, AsyncData } from 'nuxt/app
 import type { ToastProps } from '@nuxt/ui'
 import type { z } from 'zod/v4'
 import type {
-  apiSessionConfigSchema,
-  apiEndpointConfigSchema,
-  movkApiModuleOptionsSchema
-} from '../schemas/api'
-import {
-  apiSuccessConfigSchema,
+  apiEndpointPublicConfigSchema,
+  movkApiPublicConfigSchema,
+  movkApiPrivateConfigSchema,
+  movkApiFullConfigSchema,
+  apiUnauthorizedConfigSchema,
+  apiResponseConfigSchema,
   apiAuthConfigSchema,
   apiToastConfigSchema
 } from '../schemas/api'
 import type { User, UserSession, UserSessionComposable } from '#auth-utils'
 
-/**
- * 扩展 ofetch FetchOptions，添加 context 字段
- *
- * ofetch 运行时支持 context 字段用于在 hooks 间传递自定义数据，
- * 但其 TypeScript 类型定义未包含此字段，这里进行补充
- */
 declare module 'ofetch' {
   interface FetchOptions {
-    /** 请求上下文，用于在 hooks 间传递自定义数据 */
     context?: ApiFetchContext
   }
 }
 
 /**
- * API 请求上下文
- *
- * 用于在 hooks 中传递请求级配置（如 Toast、业务检查等）
+ * API 请求扩展上下文
+ * @description 通过 fetch options 的 context 字段传递的额外配置
  */
 export interface ApiFetchContext {
-  /** Toast 配置 */
+  /** Toast 提示配置，设置为 false 禁用提示 */
   toast?: RequestToastOptions | false
-  /** 跳过业务状态码检查 */
+  /** 是否跳过业务状态码检查 */
   skipBusinessCheck?: boolean
 }
 
-/** 成功响应判断配置 */
-export type ApiSuccessConfig = z.infer<typeof apiSuccessConfigSchema>
-
-/** Session 管理配置 */
-export type ApiSessionConfig = z.infer<typeof apiSessionConfigSchema>
-
-/** 认证配置 */
+/** API 响应配置（包含业务状态码、数据/消息字段映射） */
+export type ApiResponseConfig = z.infer<typeof apiResponseConfigSchema>
+/** API 认证配置（包含令牌来源、认证头配置） */
 export type ApiAuthConfig = z.infer<typeof apiAuthConfigSchema>
-
-/** Toast 配置 */
+/** 401 未授权处理配置（包含重定向和会话清理选项） */
+export type ApiUnauthorizedConfig = z.infer<typeof apiUnauthorizedConfigSchema>
+/** Toast 提示配置（包含成功/错误提示的样式和行为） */
 export type ApiToastConfig = z.infer<typeof apiToastConfigSchema>
-
-/** 单个端点配置 */
-export type ApiEndpointConfig = z.infer<typeof apiEndpointConfigSchema>
-
-/** 模块配置 */
-export type MovkApiModuleOptions = z.infer<typeof movkApiModuleOptionsSchema>
+/** API 端点公共配置（用于模块配置的公共部分） */
+export type ApiEndpointPublicConfig = z.infer<typeof apiEndpointPublicConfigSchema>
+/** Movk API 模块公共配置 */
+export type MovkApiPublicConfig = z.infer<typeof movkApiPublicConfigSchema>
+/** Movk API 模块私有配置（仅服务端可访问） */
+export type MovkApiPrivateConfig = z.infer<typeof movkApiPrivateConfigSchema>
+/** Movk API 模块完整配置（公共+私有） */
+export type MovkApiFullConfig = z.input<typeof movkApiFullConfigSchema>
 
 /**
- * API 标准响应结构
- * 支持多种常见后端响应格式
+ * API 响应数据结构
+ * @description 适配多种常见的后端响应格式
+ * @template T - 业务数据类型
  */
 export interface ApiResponse<T = unknown> {
+  /** 业务状态码 */
   code?: number | string
+  /** HTTP 状态码或业务状态 */
   status?: number | string
+  /** 消息内容（简写） */
   msg?: string
+  /** 消息内容 */
   message?: string
+  /** 业务数据 */
   data?: T
+  /** 业务数据（别名） */
   result?: T
+  /** 认证令牌 */
   token?: string
+  /** 访问令牌 */
   accessToken?: string
+  /** 错误信息 */
   error?: string | null
+  /** 支持任意额外字段 */
   [key: string]: unknown
 }
 
 /**
- * API 业务错误
+ * API 错误对象
+ * @description 扩展标准 Error，包含业务响应和状态码信息
  */
 export interface ApiError extends Error {
+  /** HTTP 或业务状态码 */
   statusCode: number
+  /** 原始 API 响应数据 */
   response?: ApiResponse
+  /** 是否为业务逻辑错误（非 HTTP 错误） */
   isBusinessError: boolean
 }
 
 /**
- * 合并后的端点配置（运行时使用）
+ * 已解析的端点配置
+ * @description 合并全局配置和端点配置后的最终配置，供内部使用
  */
-export interface ResolvedEndpointConfig extends ApiEndpointConfig {
+export interface ResolvedEndpointConfig extends ApiEndpointPublicConfig {
+  /** 认证配置（已合并全局配置） */
   auth: Partial<ApiAuthConfig>
+  /** Toast 配置（已合并全局配置） */
   toast: Partial<ApiToastConfig>
-  success: Partial<ApiSuccessConfig>
+  /** 响应配置（已合并全局配置） */
+  response: Partial<ApiResponseConfig>
+  /** 自定义请求头（仅服务端配置） */
+  headers?: Record<string, string>
+  /** 内置请求钩子（内部使用） */
   builtinHooks?: FetchHooks
 }
 
 /**
- * 请求级 Toast 配置
+ * 请求级别的 Toast 提示选项
+ * @description 用于单个请求的 Toast 配置，可覆盖全局配置
  */
 export interface RequestToastOptions {
+  /** 成功提示配置，设置为 false 禁用成功提示 */
   success?: Partial<ToastProps> | false
+  /** 错误提示配置，设置为 false 禁用错误提示 */
   error?: Partial<ToastProps> | false
+  /** 自定义成功消息 */
   successMessage?: string
+  /** 自定义错误消息 */
   errorMessage?: string
 }
 
 /**
- * useApiFetch 扩展选项
- *
- * @typeParam ResT - API 响应 data 字段的原始类型
- * @typeParam DataT - transform 转换后的最终类型（默认等于 ResT）
+ * useApiFetch 的扩展选项
+ * @template ResT - API 响应数据类型
+ * @template DataT - 转换后的数据类型
  */
 export interface ApiFetchExtras<ResT, DataT = ResT> {
-  /** 端点名称 */
+  /** 使用的端点名称（默认使用 defaultEndpoint） */
   endpoint?: string
-  /** Toast 配置 */
+  /** Toast 提示配置，设置为 false 禁用提示 */
   toast?: RequestToastOptions | false
-  /**
-   * 跳过业务状态码检查
-   * @defaultValue false
-   */
+  /** 是否跳过业务状态码检查 */
   skipBusinessCheck?: boolean
-  /**
-   * 自定义数据转换函数
-   * 接收解包后的数据（response.data），与 Nuxt 官方 useFetch 行为一致
-   *
-   * @example
-   * ```ts
-   * // 从分页响应中提取列表
-   * const { data } = useApiFetch<{ content: User[] }, User[]>('/users', {
-   *   transform: ({ content }) => content ?? []
-   * })
-   * ```
-   */
+  /** 数据转换函数（应用于提取后的业务数据） */
   transform?: (data: ResT) => DataT
 }
 
 /**
  * useApiFetch 选项类型
- *
- * 基于 Nuxt UseFetchOptions，使用 Omit 移除冲突的 transform
- * 支持双泛型：ResT 为原始响应类型，DataT 为转换后类型
- *
- * @typeParam ResT - API 响应 data 字段的原始类型
- * @typeParam DataT - transform 转换后的最终类型（默认等于 ResT）
+ * @template ResT - API 响应数据类型
+ * @template DataT - 转换后的数据类型
  */
 export type UseApiFetchOptions<ResT, DataT = ResT>
   = Omit<NuxtUseFetchOptions<ApiResponse<ResT>, DataT>, 'transform'> & ApiFetchExtras<ResT, DataT>
 
 /**
- * useApiFetch 返回类型
+ * useApiFetch 返回值类型
+ * @template DataT - 数据类型
  */
 export type UseApiFetchReturn<DataT> = AsyncData<DataT | null, FetchError | ApiError | null>
 
 /**
- * 下载选项
+ * 文件下载选项
  */
 export interface DownloadOptions extends Omit<FetchOptions<'json'>, 'responseType'> {
-  /**
-   * Toast 配置
-   * - false: 禁用所有提示
-   * - RequestToastOptions: 自定义成功/失败提示
-   */
+  /** Toast 提示配置，设置为 false 禁用提示 */
   toast?: RequestToastOptions | false
-  /**
-   * 下载进度回调
-   * @param progress - 下载进度百分比 (0-100)
-   */
+  /** 下载进度回调（0-100） */
   onProgress?: (progress: number) => void
 }
 
 /**
- * 上传选项
+ * 文件上传选项
  */
 export interface UploadOptions extends Omit<FetchOptions<'json'>, 'responseType' | 'body'> {
   /**
-   * 文件字段名
+   * FormData 中的文件字段名
    * @defaultValue 'file'
    */
   fieldName?: string
-  /**
-   * Toast 配置
-   * - false: 禁用所有提示
-   * - RequestToastOptions: 自定义成功/失败提示
-   */
+  /** Toast 提示配置，设置为 false 禁用提示 */
   toast?: RequestToastOptions | false
-  /**
-   * 上传进度回调
-   * @param progress - 上传进度百分比 (0-100)
-   */
+  /** 上传进度回调（0-100） */
   onProgress?: (progress: number) => void
 }
 
 /**
- * API 客户端实例
+ * API 客户端接口
+ * @description 提供统一的 API 请求、文件上传下载等功能
  */
 export interface ApiClient {
+  /** ofetch 实例，用于发起请求 */
   $fetch: $Fetch
-
-  /**
-   * 切换端点
-   * @example $api.use('v2').$fetch('/users')
-   */
+  /** 切换到指定端点 */
   use: (endpoint: string) => ApiClient
-
-  /**
-   * 下载文件
-   * @param url - 下载 URL
-   * @param filename - 可选的文件名,如果不提供会从 Content-Disposition 响应头中提取
-   * @param options - 下载选项
-   * @example await $api.download('/export', 'data.csv')
-   * @example await $api.download('/export') // 自动从响应头提取文件名
-   */
+  /** 下载文件 */
   download: (url: string, filename?: string, options?: DownloadOptions) => Promise<void>
-
   /**
-   * 上传单个或多个文件
-   * @param url - 上传 URL
-   * @param file - 单个文件、文件数组或 FormData
-   * @param options - 上传选项
-   * @example await $api.upload('/upload', file, { fieldName: 'avatar' })
-   * @example await $api.upload('/upload', [file1, file2]) // 多文件上传
+   * 上传文件
+   * @template T - API 响应数据类型
    */
   upload: <T = unknown>(url: string, file: File | File[] | FormData, options?: UploadOptions) => Promise<ApiResponse<T>>
-
-  /**
-   * 获取端点配置（内部使用）
-   * @internal
-   */
+  /** 获取当前端点配置 */
   getConfig: () => ResolvedEndpointConfig
 }
 
-/** 登录选项 */
+/**
+ * 登录选项
+ * @template LoginRData - 登录接口响应数据类型
+ */
 export interface LoginOptions<LoginRData = unknown> {
+  /** 登录接口路径 */
   loginPath: string
+  /** 登录凭证（用户名/密码等） */
   credentials: unknown
+  /** 获取用户信息的接口路径（可选，如果登录接口不返回用户信息） */
   userInfoPath?: string
+  /**
+   * 从登录响应中提取令牌的函数
+   * @defaultValue 从 response.token 或 response.data.token 提取
+   */
   tokenExtractor?: (response: ApiResponse<LoginRData>) => string | null | undefined
+  /**
+   * 自定义会话构建函数
+   * @defaultValue 使用 { user, token } 作为会话数据
+   */
   sessionBuilder?: (userInfo: User, token: string) => UserSession
+  /** 使用的端点名称（默认使用 defaultEndpoint） */
   endpoint?: string
 }
 
+/**
+ * 登录结果
+ */
 export interface LoginResult {
+  /** 用户信息 */
   user: User
+  /** 认证令牌 */
   token: string
 }
 
+/**
+ * useApiAuth 返回值类型
+ * @description 扩展 nuxt-auth-utils 的 UserSessionComposable，添加 login 方法
+ */
 export interface UseApiAuthReturn extends UserSessionComposable {
+  /**
+   * 登录方法
+   * @template LoginRData - 登录接口响应数据类型
+   */
   login: <LoginRData = unknown>(options: LoginOptions<LoginRData>) => Promise<LoginResult>
 }
-
-export const DEFAULT_SUCCESS_CONFIG: ApiSuccessConfig = apiSuccessConfigSchema.parse({})
-export const DEFAULT_AUTH_CONFIG: ApiAuthConfig = apiAuthConfigSchema.parse({})
-export const DEFAULT_TOAST_CONFIG: ApiToastConfig = apiToastConfigSchema.parse({})

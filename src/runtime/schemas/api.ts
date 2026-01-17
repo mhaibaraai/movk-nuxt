@@ -1,71 +1,57 @@
 import { z } from 'zod/v4'
 
 /**
- * 成功响应判断配置 Schema
+ * API 响应配置 Schema
+ * @description 定义业务状态码判断规则和数据/消息字段的映射关系
  */
-export const apiSuccessConfigSchema = z.object({
+export const apiResponseConfigSchema = z.object({
   /**
-   * 成功状态码列表
+   * 表示成功的业务状态码列表
    * @defaultValue [200, 0]
    */
   successCodes: z.array(z.union([z.number(), z.string()])).default([200, 0]),
   /**
-   * 状态码字段名
+   * 响应中业务状态码的字段名
    * @defaultValue 'code'
    */
   codeKey: z.string().default('code'),
   /**
-   * 消息字段名
+   * 响应中消息内容的字段名
    * @defaultValue 'message'
    */
   messageKey: z.string().default('message'),
   /**
-   * 数据字段名
+   * 响应中业务数据的字段名
    * @defaultValue 'data'
    */
   dataKey: z.string().default('data')
 })
 
 /**
- * Session 管理配置 Schema
- * 用于登录流程中自动设置 nuxt-auth-utils session
+ * 401 未授权处理配置 Schema
+ * @description 定义当接收到 401 响应时的自动处理行为
  */
-export const apiSessionConfigSchema = z.object({
+export const apiUnauthorizedConfigSchema = z.object({
   /**
-   * 是否启用 session 自动管理
+   * 是否自动重定向到登录页
    * @defaultValue false
    */
-  enabled: z.boolean().default(false),
-
+  redirect: z.boolean().default(false),
   /**
-   * 用户信息接口路径
-   * 登录成功后自动调用此接口获取用户信息
-   * 如果不设置，则从登录响应中提取用户信息
+   * 登录页路径
+   * @defaultValue '/login'
    */
-  userInfoPath: z.string().optional(),
-
+  loginPath: z.string().default('/login'),
   /**
-   * 从登录响应中提取 token 的路径
-   * @defaultValue 'data.token'
+   * 是否清除用户会话
+   * @defaultValue false
    */
-  tokenPath: z.string().default('data.token'),
-
-  /**
-   * 用户信息在响应中的路径
-   * @defaultValue 'data'
-   */
-  userDataPath: z.string().default('data'),
-
-  /**
-   * session 中存储 token 的路径
-   * @defaultValue 'token'
-   */
-  sessionTokenPath: z.string().default('token')
+  clearSession: z.boolean().default(false)
 })
 
 /**
- * Auth 认证配置 Schema
- * 使用 nuxt-auth-utils 进行认证管理
+ * API 认证配置 Schema
+ * @description 定义认证令牌的来源、格式和请求头配置
  */
 export const apiAuthConfigSchema = z.object({
   /**
@@ -74,61 +60,38 @@ export const apiAuthConfigSchema = z.object({
    */
   enabled: z.boolean().default(false),
   /**
-   * Token 来源
-   * - 'session': 从 nuxt-auth-utils 的 session 中获取 (推荐)
-   * - 'custom': 使用自定义 tokenGetter
+   * 令牌来源类型
    * @defaultValue 'session'
    */
   tokenSource: z.enum(['session', 'custom']).default('session'),
   /**
-   * Session 中 token 的路径
-   *
-   * 例如：
-   * - 'token' -> session.token
-   * - 'user.token' -> session.user.token
-   *
+   * 令牌在会话对象中的路径（支持点号分隔的嵌套路径）
    * @defaultValue 'token'
    */
   sessionTokenPath: z.string().default('token'),
   /**
-   * Token 类型
+   * 令牌类型前缀
    * @defaultValue 'Bearer'
    */
   tokenType: z.enum(['Bearer', 'Basic', 'Custom']).default('Bearer'),
-  /**
-   * 自定义 Token 类型值
-   * 当 tokenType 为 'Custom' 时使用
-   */
+  /** 自定义令牌类型前缀（当 tokenType 为 'Custom' 时使用） */
   customTokenType: z.string().optional(),
   /**
-   * 自定义 Header 名称
+   * 认证请求头名称
    * @defaultValue 'Authorization'
    */
   headerName: z.string().default('Authorization'),
-  /**
-   * 401 错误时是否自动跳转登录页
-   * @defaultValue false
-   */
-  redirectOnUnauthorized: z.boolean().default(false),
-  /**
-   * 登录页路径
-   * @defaultValue '/login'
-   */
-  loginPath: z.string().default('/login'),
-  /**
-   * 是否在 401 时自动清除 session
-   * @defaultValue false
-   */
-  clearSessionOnUnauthorized: z.boolean().default(false)
+  /** 401 未授权处理配置 */
+  unauthorized: apiUnauthorizedConfigSchema.optional()
 })
 
 /**
  * Toast 提示配置 Schema
- * @see https://ui.nuxt.com/docs/composables/use-toast
+ * @description 定义成功和错误提示的全局样式和行为
  */
-export const apiToastConfigSchema = z.object({
+export const apiToastConfigSchema = z.looseObject({
   /**
-   * 是否全局启用提示
+   * 是否启用 Toast 提示
    * @defaultValue true
    */
   enabled: z.boolean().default(true),
@@ -140,68 +103,152 @@ export const apiToastConfigSchema = z.object({
      */
     show: z.boolean().default(true),
     /**
-     * 默认颜色
+     * 提示颜色
      * @defaultValue 'success'
      */
     color: z.string().default('success'),
     /**
-     * 默认图标
+     * 图标类名
+     * @defaultValue 'i-lucide-circle-check'
      */
     icon: z.string().optional(),
     /**
-     * 持续时间 (ms)
+     * 显示时长（毫秒）
      * @defaultValue 3000
      */
     duration: z.number().default(3000)
-  }).loose().optional(),
+  }).optional(),
   /** 错误提示配置 */
-  error: z.object({
+  error: z.looseObject({
     /**
      * 是否显示错误提示
      * @defaultValue true
      */
     show: z.boolean().default(true),
     /**
-     * 默认颜色
+     * 提示颜色
      * @defaultValue 'error'
      */
     color: z.string().default('error'),
     /**
-     * 默认图标
+     * 图标类名
+     * @defaultValue 'i-lucide-circle-x'
      */
     icon: z.string().optional(),
     /**
-     * 持续时间 (ms)
+     * 显示时长（毫秒）
      * @defaultValue 3000
      */
     duration: z.number().default(3000)
-  }).loose().optional()
+  }).optional()
 })
 
 /**
- * 单个 API 端点配置 Schema
+ * API 认证部分配置 Schema
+ * @description 用于端点级别的认证配置覆盖（所有字段均可选）
+ * @internal
  */
-export const apiEndpointConfigSchema = z.object({
-  /** 基础 URL */
+const apiAuthPartialSchema = z.object({
+  /** 是否启用认证 */
+  enabled: z.boolean().optional(),
+  /** 令牌来源类型 */
+  tokenSource: z.enum(['session', 'custom']).optional(),
+  /** 令牌在会话对象中的路径（支持点号分隔的嵌套路径） */
+  sessionTokenPath: z.string().optional(),
+  /** 令牌类型前缀 */
+  tokenType: z.enum(['Bearer', 'Basic', 'Custom']).optional(),
+  /** 自定义令牌类型前缀（当 tokenType 为 'Custom' 时使用） */
+  customTokenType: z.string().optional(),
+  /** 认证请求头名称 */
+  headerName: z.string().optional(),
+  /** 401 未授权处理配置 */
+  unauthorized: z.object({
+    /** 是否自动重定向到登录页 */
+    redirect: z.boolean().optional(),
+    /** 登录页路径 */
+    loginPath: z.string().optional(),
+    /** 是否清除用户会话 */
+    clearSession: z.boolean().optional()
+  }).optional()
+}).optional()
+
+/**
+ * API 端点公共配置 Schema
+ * @description 定义单个 API 端点的配置（可在客户端访问的配置）
+ */
+export const apiEndpointPublicConfigSchema = z.object({
+  /** 端点的基础 URL */
   baseURL: z.string(),
-  /** 端点别名 */
+  /** 端点别名（用于标识） */
   alias: z.string().optional(),
-  /** 该端点的认证配置 */
-  auth: apiAuthConfigSchema.partial().optional(),
-  /** 该端点的 Toast 配置 */
+  /** 端点级别的认证配置（覆盖全局配置） */
+  auth: apiAuthPartialSchema,
+  /** 端点级别的 Toast 配置（覆盖全局配置） */
   toast: apiToastConfigSchema.partial().optional(),
-  /** 该端点的成功判断配置 */
-  success: apiSuccessConfigSchema.partial().optional(),
-  /** 默认请求头 */
+  /** 端点级别的响应配置（覆盖全局配置） */
+  response: apiResponseConfigSchema.partial().optional()
+})
+
+/**
+ * API 端点私有配置 Schema
+ * @description 定义仅在服务端可访问的端点配置（不会暴露给客户端）
+ */
+export const apiEndpointPrivateConfigSchema = z.object({
+  /** 自定义请求头（仅服务端使用，不会暴露给客户端） */
   headers: z.record(z.string(), z.string()).optional()
 })
 
 /**
- * Movk API 模块配置 Schema
+ * Movk API 模块公共配置 Schema
+ * @description 定义模块的全局配置（可在客户端访问）
  */
-export const movkApiModuleOptionsSchema = z.object({
+export const movkApiPublicConfigSchema = z.object({
   /**
-   * 是否启用 API 功能
+   * 默认使用的端点名称
+   * @defaultValue 'default'
+   */
+  defaultEndpoint: z.string().default('default'),
+  /**
+   * 是否启用调试模式（在控制台输出请求和响应日志）
+   * @defaultValue false
+   */
+  debug: z.boolean().default(false),
+  /**
+   * 端点配置映射
+   * @defaultValue { default: { baseURL: '/api' } }
+   */
+  endpoints: z.record(z.string(), apiEndpointPublicConfigSchema).default({
+    default: { baseURL: '/api' }
+  }),
+  /** 全局响应配置 */
+  response: apiResponseConfigSchema.optional(),
+  /** 全局认证配置 */
+  auth: apiAuthConfigSchema.optional(),
+  /** 全局 Toast 配置 */
+  toast: apiToastConfigSchema.optional()
+}).transform(data => ({
+  ...data,
+  response: apiResponseConfigSchema.parse(data.response ?? {}),
+  auth: apiAuthConfigSchema.parse(data.auth ?? {}),
+  toast: apiToastConfigSchema.parse(data.toast ?? {})
+}))
+
+/**
+ * Movk API 模块私有配置 Schema
+ * @description 定义模块的私有配置（仅服务端可访问，不会暴露给客户端）
+ */
+export const movkApiPrivateConfigSchema = z.object({
+  /** 各端点的私有配置 */
+  endpoints: z.record(z.string(), apiEndpointPrivateConfigSchema).optional()
+})
+
+/**
+ * Movk API 模块完整配置 Schema
+ * @description 定义模块的完整配置（公共+私有），用于模块初始化时的配置验证
+ */
+export const movkApiFullConfigSchema = z.object({
+  /**
+   * 是否启用 API 模块
    * @defaultValue true
    */
   enabled: z.boolean().default(true),
@@ -211,33 +258,22 @@ export const movkApiModuleOptionsSchema = z.object({
    */
   defaultEndpoint: z.string().default('default'),
   /**
-   * API 端点配置
-   * @defaultValue { default: { baseURL: '/api' } }
-   */
-  endpoints: z.record(z.string(), apiEndpointConfigSchema).default({
-    default: { baseURL: '/api' }
-  }),
-  /**
-   * 全局认证配置
-   */
-  auth: apiAuthConfigSchema.optional(),
-  /**
-   * 全局 Toast 配置
-   */
-  toast: apiToastConfigSchema.optional(),
-  /**
-   * 全局成功判断配置
-   */
-  success: apiSuccessConfigSchema.optional(),
-  /**
    * 是否启用调试模式
    * @defaultValue false
    */
-  debug: z.boolean().default(false)
-}).transform(data => ({
-  ...data,
-  // 使用 schema 解析确保默认值生效
-  auth: apiAuthConfigSchema.parse(data.auth ?? {}),
-  toast: apiToastConfigSchema.parse(data.toast ?? {}),
-  success: apiSuccessConfigSchema.parse(data.success ?? {})
-}))
+  debug: z.boolean().default(false),
+  /**
+   * 端点配置映射（包含公共和私有配置）
+   * @defaultValue { default: { baseURL: '/api' } }
+   */
+  endpoints: z.record(
+    z.string(),
+    apiEndpointPublicConfigSchema.extend(apiEndpointPrivateConfigSchema.shape)
+  ).default({ default: { baseURL: '/api' } }),
+  /** 全局响应配置 */
+  response: apiResponseConfigSchema.optional(),
+  /** 全局认证配置 */
+  auth: apiAuthConfigSchema.optional(),
+  /** 全局 Toast 配置 */
+  toast: apiToastConfigSchema.optional()
+})
