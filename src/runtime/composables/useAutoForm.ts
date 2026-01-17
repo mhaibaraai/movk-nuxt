@@ -8,6 +8,7 @@ import WithCharacterLimit from '../components/input/WithCharacterLimit.vue'
 import DatePicker from '../components/DatePicker.vue'
 import ColorChooser from '../components/ColorChooser.vue'
 import StarRating from '../components/StarRating.vue'
+import SlideVerify from '../components/SlideVerify.vue'
 import {
   UInput,
   UInputNumber,
@@ -213,9 +214,6 @@ function applyOverwrite<T extends z.ZodType>(schema: T, overwrite?: any): T {
 }
 
 /**
- * 对象工厂创建器，支持柯里化和直接调用
- */
-/**
  * 对象工厂 - 支持两种模式
  * 1. 普通对象: afz.object({ name: afz.string() })
  * 2. 双参数控件覆盖: afz.object({}, { type: 'enum', controlProps: {...} })
@@ -311,6 +309,7 @@ const DEFAULT_CONTROLS: {
   readonly withCharacterLimit: AutoFormControl<typeof WithCharacterLimit>
   readonly colorChooser: AutoFormControl<typeof ColorChooser>
   readonly starRating: AutoFormControl<typeof StarRating>
+  readonly slideVerify: AutoFormControl<typeof SlideVerify>
 } = {
   // 基础类型
   string: defineControl({ component: UInput, controlProps: DEFAULT_CONTROL_PROPS }),
@@ -339,7 +338,8 @@ const DEFAULT_CONTROLS: {
   withCopy: defineControl({ component: WithCopy, controlProps: DEFAULT_CONTROL_PROPS }),
   withCharacterLimit: defineControl({ component: WithCharacterLimit, controlProps: DEFAULT_CONTROL_PROPS }),
   colorChooser: defineControl({ component: ColorChooser, controlProps: DEFAULT_CONTROL_PROPS }),
-  starRating: defineControl({ component: StarRating, controlProps: DEFAULT_CONTROL_PROPS })
+  starRating: defineControl({ component: StarRating, controlProps: DEFAULT_CONTROL_PROPS }),
+  slideVerify: defineControl({ component: SlideVerify, controlProps: DEFAULT_CONTROL_PROPS })
 }
 
 export function useAutoForm<TControls extends AutoFormControls = typeof DEFAULT_CONTROLS>(controls?: TControls) {
@@ -385,7 +385,6 @@ export function useAutoForm<TControls extends AutoFormControls = typeof DEFAULT_
       object: createObjectFactory('object'),
       looseObject: createObjectFactory('looseObject'),
       strictObject: createObjectFactory('strictObject')
-
     } as unknown as TypedZodFactory<TControls, typeof DEFAULT_CONTROLS>
   }
 

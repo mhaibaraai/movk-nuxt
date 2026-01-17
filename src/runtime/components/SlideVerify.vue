@@ -141,7 +141,7 @@ defineExpose({ reset })
     :class="[
       'relative select-none overflow-hidden rounded-lg border transition-colors duration-300',
       props.class,
-      disabled ? 'opacity-50 pointer-events-none' : '',
+      disabled ? 'opacity-50 cursor-not-allowed' : '',
       isVerified ? 'bg-success border-transparent' : 'bg-elevated border-default'
     ]"
     :style="{ height: `${height}px` }"
