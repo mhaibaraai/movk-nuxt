@@ -50,4 +50,4 @@ name: 'components-theme-picker-basic-example'
 
 ## Changelog
 
-:commit-changelog{prefix="/components"}
+:commit-changelog{prefix="/components/theme-picker"}
