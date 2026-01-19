@@ -1,5 +1,15 @@
 # 📋 Changelog
 
+## [1.1.2](https://github.com/mhaibaraai/movk-nuxt/compare/v1.1.1...v1.1.2) (2026-01-19)
+
+### ♻️ Code Refactoring
+
+* 重构模块导出配置和类型系统 ([e2ad3e8](https://github.com/mhaibaraai/movk-nuxt/commit/e2ad3e875f446def70c3871b16ba81bccb34e058))
+
+### 🔧 Chores
+
+* **deps:** lock file maintenance ([7144ed2](https://github.com/mhaibaraai/movk-nuxt/commit/7144ed22b37bbf1829597db9bc36f19dcd9e3183))
+
 ## [1.1.1](https://github.com/mhaibaraai/movk-nuxt/compare/v1.1.0...v1.1.1) (2026-01-17)
 
 ### ✨ Features
