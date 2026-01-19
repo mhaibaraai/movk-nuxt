@@ -36,12 +36,42 @@
   ],
   "exports": {
     ".": {
-      "types": "./dist/types.d.mts",
+      "types": "./dist/module.d.mts",
+      "style": "./dist/runtime/style.css",
       "import": "./dist/module.mjs"
+    },
+    "./runtime/*": "./dist/runtime/*",
+    "./components/*": "./dist/runtime/components/*",
+    "./composables": {
+      "types": "./dist/runtime/composables/index.d.ts",
+      "import": "./dist/runtime/composables/index.js"
+    },
+    "./composables/*": {
+      "types": "./dist/runtime/composables/*.d.ts",
+      "import": "./dist/runtime/composables/*.js"
     }
   },
+  "typesVersions": {
+    "*": {
+      ".": [
+        "./dist/module.d.mts"
+      ],
+      "runtime/*": [
+        "./dist/runtime/*"
+      ],
+      "components/*": [
+        "./dist/runtime/components/*"
+      ],
+      "composables": [
+        "./dist/runtime/composables/index.d.ts"
+      ],
+      "composables/*": [
+        "./dist/runtime/composables/*.d.ts"
+      ]
+    }
+  },
+  "style": "./dist/runtime/index.css",
   "main": "./dist/module.mjs",
-  "types": "./dist/types.d.mts",
   "files": [
     "dist"
   ],
