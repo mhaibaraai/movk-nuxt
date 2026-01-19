@@ -6,18 +6,18 @@ import {
   createResolver,
   defineNuxtModule
 } from '@nuxt/kit'
+import { defu } from 'defu'
 import { name, version } from '../package.json'
 import {
-  apiResponseConfigSchema,
-  apiAuthConfigSchema,
-  apiToastConfigSchema
-} from './runtime/schemas/api'
+  DEFAULT_RESPONSE_CONFIG,
+  DEFAULT_AUTH_CONFIG,
+  DEFAULT_TOAST_CONFIG,
+  DEFAULT_ENDPOINT
+} from './runtime/constants/api-defaults'
 import type { MovkApiPublicConfig, MovkApiPrivateConfig, ApiEndpointPublicConfig, MovkApiFullConfig, ModuleOptions } from './runtime/types'
 import { setupTheme } from './theme'
 
 export * from './runtime/types'
-
-const DEFAULT_ENDPOINT = { default: { baseURL: '/api' } }
 
 function splitEndpointConfigs(endpoints?: MovkApiFullConfig['endpoints']) {
   const publicEndpoints: Record<string, ApiEndpointPublicConfig> = {}
@@ -43,9 +43,9 @@ function buildApiRuntimeConfig(apiConfig: MovkApiFullConfig) {
     defaultEndpoint: apiConfig.defaultEndpoint ?? 'default',
     debug: apiConfig.debug ?? false,
     endpoints: hasEndpoints ? publicEndpoints : DEFAULT_ENDPOINT,
-    response: apiResponseConfigSchema.parse(apiConfig.response ?? {}),
-    auth: apiAuthConfigSchema.parse(apiConfig.auth ?? {}),
-    toast: apiToastConfigSchema.parse(apiConfig.toast ?? {})
+    response: defu(apiConfig.response, DEFAULT_RESPONSE_CONFIG) as MovkApiPublicConfig['response'],
+    auth: defu(apiConfig.auth, DEFAULT_AUTH_CONFIG) as MovkApiPublicConfig['auth'],
+    toast: defu(apiConfig.toast, DEFAULT_TOAST_CONFIG) as MovkApiPublicConfig['toast']
   }
 
   const privateConfig: MovkApiPrivateConfig = {
