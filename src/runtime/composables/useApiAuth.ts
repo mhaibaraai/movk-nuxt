@@ -6,8 +6,10 @@ import type {
   UseApiAuthReturn
 } from '../types/api'
 import { getPath } from '@movk/core'
-import { useNuxtApp, useRuntimeConfig, useUserSession } from '#imports'
+import type { PartialByKeys } from '@movk/core'
+import { useNuxtApp, useRuntimeConfig, useSiteConfig, useUserSession } from '#imports'
 import type { User, UserSession } from '#auth-utils'
+import type { SessionConfig } from 'h3'
 
 /**
  * API 认证 Composable
@@ -71,13 +73,15 @@ import type { User, UserSession } from '#auth-utils'
  */
 export function useApiAuth(): UseApiAuthReturn {
   const { $api } = useNuxtApp()
+  const site = useSiteConfig()
   const userSession = useUserSession()
   const moduleConfig = useRuntimeConfig().public.movkApi
 
-  /**
-   * 构建 Authorization Header 值
-   */
-  const buildAuthHeader = (token: string, authConfig: Partial<ApiAuthConfig> = {}): string => {
+  const getAuthConfig = (endpointConfig?: ReturnType<typeof $api.getConfig>): Partial<ApiAuthConfig> => {
+    return endpointConfig?.auth || moduleConfig.auth || {}
+  }
+
+  const buildAuthHeader = (token: string, authConfig: Partial<ApiAuthConfig>): string => {
     const tokenType = authConfig.tokenType === 'Custom'
       ? (authConfig.customTokenType || '')
       : (authConfig.tokenType || 'Bearer')
@@ -85,30 +89,28 @@ export function useApiAuth(): UseApiAuthReturn {
     return tokenType ? `${tokenType} ${token}` : token
   }
 
-  /**
-   * 获取 Header 名称
-   */
-  const getHeaderName = (authConfig: Partial<ApiAuthConfig> = {}): string => {
-    return authConfig.headerName || 'Authorization'
-  }
-
-  /**
-   * 默认 token 提取器
-   */
   const defaultTokenExtractor = <LoginRData = unknown>(response: ApiResponse<LoginRData>): string | null | undefined => {
-    return (getPath(response, 'data.token') as string | undefined)
-      ?? (getPath(response, 'data.accessToken') as string | undefined)
-      ?? (getPath(response, 'token') as string | undefined)
+    const paths = ['data.token', 'data.accessToken', 'token']
+    for (const path of paths) {
+      const token = getPath(response, path)
+      if (token) return token as string
+    }
+    return undefined
   }
 
-  /**
-   * 默认 session 构建器
-   */
-  const defaultSessionBuilder = (user: User, token: string): UserSession => ({
+  const extractUserData = <T>(response: ApiResponse<T>): User => {
+    return (getPath(response, 'data') ?? response) as User
+  }
+
+  const defaultSessionBuilder = (user: User, token: string): PartialByKeys<UserSession, 'id'> => ({
     user,
     token,
     loggedInAt: new Date().toISOString()
   })
+
+  const defaultSessionConfig: Partial<SessionConfig> = {
+    name: site.name
+  }
 
   /**
    * 执行登录流程
@@ -127,7 +129,7 @@ export function useApiAuth(): UseApiAuthReturn {
       userInfoPath,
       tokenExtractor = defaultTokenExtractor,
       sessionBuilder = defaultSessionBuilder,
-      sessionConfig,
+      sessionConfig = defaultSessionConfig,
       endpoint
     } = options
 
@@ -149,20 +151,18 @@ export function useApiAuth(): UseApiAuthReturn {
     let userInfo: User
 
     if (userInfoPath) {
-      const endpointConfig = api.getConfig()
-      const authConfig = endpointConfig.auth || moduleConfig.auth || {}
-
-      const headerName = getHeaderName(authConfig)
+      const authConfig = getAuthConfig(api.getConfig())
+      const headerName = authConfig.headerName || 'Authorization'
       const headerValue = buildAuthHeader(token, authConfig)
 
       const userResponse = await api.$fetch<ApiResponse<User>>(userInfoPath, {
         headers: { [headerName]: headerValue },
         context: { toast: false }
       })
-      userInfo = (getPath(userResponse, 'data') ?? userResponse) as User
+      userInfo = extractUserData(userResponse)
     }
     else {
-      userInfo = (getPath(loginResponse, 'data') ?? loginResponse) as User
+      userInfo = extractUserData(loginResponse)
     }
 
     // 4. 构建 session 数据
