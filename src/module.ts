@@ -16,6 +16,7 @@ import {
 } from './runtime/constants/api-defaults'
 import type { MovkApiPublicConfig, MovkApiPrivateConfig, ApiEndpointPublicConfig, MovkApiFullConfig, ModuleOptions } from './runtime/types'
 import { setupTheme } from './theme'
+import { getPackageJsonMetadata, inferSiteURL } from './utils/meta'
 
 export * from './runtime/types'
 
@@ -70,8 +71,18 @@ export default defineNuxtModule<ModuleOptions>({
     'nuxt-og-image': { version: '>=5.1.13' },
     'nuxt-auth-utils': { version: '>=0.5.27' }
   },
-  setup(options, nuxt) {
+  async setup(options, nuxt) {
     const { resolve } = createResolver(import.meta.url)
+
+    const meta = await getPackageJsonMetadata(nuxt.options.rootDir)
+    const url = inferSiteURL()
+
+    const siteName = nuxt.options?.site?.name || meta.name
+    nuxt.options.site = defu(nuxt.options.site, {
+      url,
+      name: siteName,
+      debug: false
+    })
 
     setupTheme(nuxt, resolve)
 

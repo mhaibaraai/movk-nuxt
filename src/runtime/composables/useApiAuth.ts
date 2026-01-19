@@ -7,9 +7,8 @@ import type {
 } from '../types/api'
 import { getPath } from '@movk/core'
 import type { PartialByKeys } from '@movk/core'
-import { useNuxtApp, useRuntimeConfig, useSiteConfig, useUserSession } from '#imports'
+import { useNuxtApp, useRuntimeConfig, useUserSession } from '#imports'
 import type { User, UserSession } from '#auth-utils'
-import type { SessionConfig } from 'h3'
 
 /**
  * API 认证 Composable
@@ -73,7 +72,6 @@ import type { SessionConfig } from 'h3'
  */
 export function useApiAuth(): UseApiAuthReturn {
   const { $api } = useNuxtApp()
-  const site = useSiteConfig()
   const userSession = useUserSession()
   const moduleConfig = useRuntimeConfig().public.movkApi
 
@@ -108,10 +106,6 @@ export function useApiAuth(): UseApiAuthReturn {
     loggedInAt: new Date().toISOString()
   })
 
-  const defaultSessionConfig: Partial<SessionConfig> = {
-    name: site.name
-  }
-
   /**
    * 执行登录流程
    *
@@ -129,7 +123,7 @@ export function useApiAuth(): UseApiAuthReturn {
       userInfoPath,
       tokenExtractor = defaultTokenExtractor,
       sessionBuilder = defaultSessionBuilder,
-      sessionConfig = defaultSessionConfig,
+      sessionConfig,
       endpoint
     } = options
 
