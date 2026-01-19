@@ -222,7 +222,7 @@ export interface LoginOptions<LoginRData = unknown> {
    * Session 配置（maxAge、cookie 等）
    * @see https://github.com/h3js/h3/blob/c04c458810e34eb15c1647e1369e7d7ef19f567d/src/utils/session.ts#L20
    */
-  sessionConfig?: SessionConfig
+  sessionConfig?: Partial<SessionConfig>
   /** 使用的端点名称（默认使用 defaultEndpoint） */
   endpoint?: string
 }
