@@ -13,6 +13,7 @@ import type {
   apiToastConfigSchema
 } from '../schemas/api'
 import type { User, UserSession, UserSessionComposable } from '#auth-utils'
+import type { SessionConfig } from 'h3'
 
 declare module 'ofetch' {
   interface FetchOptions {
@@ -217,6 +218,11 @@ export interface LoginOptions<LoginRData = unknown> {
    * @defaultValue 使用 { user, token } 作为会话数据
    */
   sessionBuilder?: (userInfo: User, token: string) => UserSession
+  /**
+   * Session 配置（maxAge、cookie 等）
+   * @see https://github.com/h3js/h3/blob/c04c458810e34eb15c1647e1369e7d7ef19f567d/src/utils/session.ts#L20
+   */
+  sessionConfig?: SessionConfig
   /** 使用的端点名称（默认使用 defaultEndpoint） */
   endpoint?: string
 }
