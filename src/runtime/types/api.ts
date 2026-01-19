@@ -3,6 +3,7 @@ import type { UseFetchOptions as NuxtUseFetchOptions, AsyncData } from 'nuxt/app
 import type { ToastProps } from '@nuxt/ui'
 import type { User, UserSession, UserSessionComposable } from '#auth-utils'
 import type { SessionConfig } from 'h3'
+import type { PartialByKeys } from '@movk/core'
 
 declare module 'ofetch' {
   interface FetchOptions {
@@ -466,10 +467,11 @@ export interface LoginOptions<LoginRData = unknown> {
    * 自定义会话构建函数
    * @defaultValue 使用 { user, token } 作为会话数据
    */
-  sessionBuilder?: (userInfo: User, token: string) => UserSession
+  sessionBuilder?: (userInfo: User, token: string) => PartialByKeys<UserSession, 'id'>
   /**
    * Session 配置（maxAge、cookie 等）
-   * @see https://github.com/h3js/h3/blob/c04c458810e34eb15c1647e1369e7d7ef19f567d/src/utils/session.ts#L20
+   * @defaultValue { name: 'nuxt-session', password: process.env.NUXT_SESSION_PASSWORD || '', cookie: { sameSite: 'lax' } }
+   * @see https://github.com/atinux/nuxt-auth-utils?tab=readme-ov-file#configuration
    */
   sessionConfig?: Partial<SessionConfig>
   /** 使用的端点名称（默认使用 defaultEndpoint） */
