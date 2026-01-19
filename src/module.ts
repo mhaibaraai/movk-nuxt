@@ -16,7 +16,7 @@ import {
 } from './runtime/constants/api-defaults'
 import type { MovkApiPublicConfig, MovkApiPrivateConfig, ApiEndpointPublicConfig, MovkApiFullConfig, ModuleOptions } from './runtime/types'
 import { setupTheme } from './theme'
-import { getPackageJsonMetadata, inferSiteURL } from './utils/meta'
+import { getPackageJsonMetadata } from './utils/meta'
 
 export * from './runtime/types'
 
@@ -74,16 +74,6 @@ export default defineNuxtModule<ModuleOptions>({
   async setup(options, nuxt) {
     const { resolve } = createResolver(import.meta.url)
 
-    const meta = await getPackageJsonMetadata(nuxt.options.rootDir)
-    const url = inferSiteURL()
-
-    const siteName = nuxt.options?.site?.name || meta.name
-    nuxt.options.site = defu(nuxt.options.site, {
-      url,
-      name: siteName,
-      debug: false
-    })
-
     setupTheme(nuxt, resolve)
 
     nuxt.options.alias['#movk'] = resolve('./runtime')
@@ -110,6 +100,14 @@ export default defineNuxtModule<ModuleOptions>({
         route: '/api/_movk/session',
         method: 'post',
         handler: resolve('runtime/server/api/_movk/session.post')
+      })
+
+      const packageMeta = await getPackageJsonMetadata(nuxt.options.rootDir)
+      // @ts-expect-error runtimeConfig typing
+      const siteName = nuxt.options?.site?.name || packageMeta.name
+      // @ts-expect-error nuxt auth utils config is not typed yet
+      nuxt.options.session = defu(nuxt.options.session, {
+        name: `${siteName}_session`
       })
     }
   }
