@@ -1,17 +1,6 @@
 import type { $Fetch, FetchOptions, FetchHooks, FetchError } from 'ofetch'
 import type { UseFetchOptions as NuxtUseFetchOptions, AsyncData } from 'nuxt/app'
 import type { ToastProps } from '@nuxt/ui'
-import type { z } from 'zod/v4'
-import type {
-  apiEndpointPublicConfigSchema,
-  movkApiPublicConfigSchema,
-  movkApiPrivateConfigSchema,
-  movkApiFullConfigSchema,
-  apiUnauthorizedConfigSchema,
-  apiResponseConfigSchema,
-  apiAuthConfigSchema,
-  apiToastConfigSchema
-} from '../schemas/api'
 import type { User, UserSession, UserSessionComposable } from '#auth-utils'
 import type { SessionConfig } from 'h3'
 
@@ -32,22 +21,282 @@ export interface ApiFetchContext {
   skipBusinessCheck?: boolean
 }
 
-/** API 响应配置（包含业务状态码、数据/消息字段映射） */
-export type ApiResponseConfig = z.infer<typeof apiResponseConfigSchema>
-/** API 认证配置（包含令牌来源、认证头配置） */
-export type ApiAuthConfig = z.infer<typeof apiAuthConfigSchema>
-/** 401 未授权处理配置（包含重定向和会话清理选项） */
-export type ApiUnauthorizedConfig = z.infer<typeof apiUnauthorizedConfigSchema>
-/** Toast 提示配置（包含成功/错误提示的样式和行为） */
-export type ApiToastConfig = z.infer<typeof apiToastConfigSchema>
-/** API 端点公共配置（用于模块配置的公共部分） */
-export type ApiEndpointPublicConfig = z.infer<typeof apiEndpointPublicConfigSchema>
-/** Movk API 模块公共配置 */
-export type MovkApiPublicConfig = z.infer<typeof movkApiPublicConfigSchema>
-/** Movk API 模块私有配置（仅服务端可访问） */
-export type MovkApiPrivateConfig = z.infer<typeof movkApiPrivateConfigSchema>
-/** Movk API 模块完整配置（公共+私有） */
-export type MovkApiFullConfig = z.input<typeof movkApiFullConfigSchema>
+/**
+ * API 响应配置
+ * @description 定义业务状态码判断规则和数据/消息字段的映射关系
+ */
+export interface ApiResponseConfig {
+  /**
+   * 表示成功的业务状态码列表
+   * @defaultValue [200, 0]
+   */
+  successCodes: (number | string)[]
+  /**
+   * 响应中业务状态码的字段名
+   * @defaultValue 'code'
+   */
+  codeKey: string
+  /**
+   * 响应中消息内容的字段名
+   * @defaultValue 'message'
+   */
+  messageKey: string
+  /**
+   * 响应中业务数据的字段名
+   * @defaultValue 'data'
+   */
+  dataKey: string
+}
+
+/**
+ * 401 未授权处理配置
+ * @description 定义当接收到 401 响应时的自动处理行为
+ */
+export interface ApiUnauthorizedConfig {
+  /**
+   * 是否自动重定向到登录页
+   * @defaultValue false
+   */
+  redirect?: boolean
+  /**
+   * 登录页路径
+   * @defaultValue '/login'
+   */
+  loginPath?: string
+  /**
+   * 是否清除用户会话
+   * @defaultValue false
+   */
+  clearSession?: boolean
+}
+
+/**
+ * API 认证配置
+ * @description 定义认证令牌的来源、格式和请求头配置
+ */
+export interface ApiAuthConfig {
+  /**
+   * 是否启用认证
+   * @defaultValue false
+   */
+  enabled: boolean
+  /**
+   * 令牌来源类型
+   * - `session`: 从用户会话中获取令牌
+   * - `custom`: 通过自定义逻辑提供令牌
+   * @defaultValue 'session'
+   */
+  tokenSource: 'session' | 'custom'
+  /**
+   * 令牌在会话对象中的路径（支持点号分隔的嵌套路径）
+   * @defaultValue 'token'
+   * @example 'token' | 'user.accessToken' | 'auth.credentials.token'
+   */
+  sessionTokenPath: string
+  /**
+   * 令牌类型前缀
+   * @defaultValue 'Bearer'
+   */
+  tokenType: 'Bearer' | 'Basic' | 'Custom'
+  /**
+   * 自定义令牌类型前缀（当 tokenType 为 'Custom' 时使用）
+   */
+  customTokenType?: string
+  /**
+   * 认证请求头名称
+   * @defaultValue 'Authorization'
+   */
+  headerName: string
+  /**
+   * 401 未授权处理配置
+   */
+  unauthorized?: ApiUnauthorizedConfig
+}
+
+/**
+ * Toast 提示配置
+ * @description 定义成功和错误提示的全局样式和行为
+ */
+export interface ApiToastConfig {
+  /**
+   * 是否启用 Toast 提示
+   * @defaultValue true
+   */
+  enabled: boolean
+  /**
+   * 成功提示配置
+   */
+  success?: {
+    /**
+     * 是否显示成功提示
+     * @defaultValue true
+     */
+    show: boolean
+    /**
+     * 提示颜色
+     * @defaultValue 'success'
+     */
+    color: string
+    /**
+     * 图标类名
+     * @defaultValue 'i-lucide-circle-check'
+     */
+    icon?: string
+    /**
+     * 显示时长（毫秒）
+     * @defaultValue 3000
+     */
+    duration: number
+  }
+  /**
+   * 错误提示配置
+   */
+  error?: {
+    /**
+     * 是否显示错误提示
+     * @defaultValue true
+     */
+    show: boolean
+    /**
+     * 提示颜色
+     * @defaultValue 'error'
+     */
+    color: string
+    /**
+     * 图标类名
+     * @defaultValue 'i-lucide-circle-x'
+     */
+    icon?: string
+    /**
+     * 显示时长（毫秒）
+     * @defaultValue 3000
+     */
+    duration: number
+  }
+  /** 允许额外的自定义字段 */
+  [key: string]: unknown
+}
+
+/**
+ * API 端点公共配置
+ * @description 定义单个 API 端点的配置（可在客户端访问的配置）
+ */
+export interface ApiEndpointPublicConfig {
+  /**
+   * 端点的基础 URL
+   */
+  baseURL: string
+  /**
+   * 端点别名（用于标识）
+   */
+  alias?: string
+  /**
+   * 端点级别的认证配置（覆盖全局配置）
+   */
+  auth?: Partial<ApiAuthConfig>
+  /**
+   * 端点级别的 Toast 配置（覆盖全局配置）
+   */
+  toast?: Partial<ApiToastConfig>
+  /**
+   * 端点级别的响应配置（覆盖全局配置）
+   */
+  response?: Partial<ApiResponseConfig>
+}
+
+/**
+ * Movk API 模块公共配置
+ * @description 定义模块的全局配置（可在客户端访问）
+ */
+export interface MovkApiPublicConfig {
+  /**
+   * 默认使用的端点名称
+   * @defaultValue 'default'
+   */
+  defaultEndpoint: string
+  /**
+   * 是否启用调试模式（在控制台输出请求和响应日志）
+   * @defaultValue false
+   */
+  debug: boolean
+  /**
+   * 端点配置映射
+   * @defaultValue { default: { baseURL: '/api' } }
+   */
+  endpoints: Record<string, ApiEndpointPublicConfig>
+  /**
+   * 全局响应配置
+   */
+  response?: ApiResponseConfig
+  /**
+   * 全局认证配置
+   */
+  auth?: ApiAuthConfig
+  /**
+   * 全局 Toast 配置
+   */
+  toast?: ApiToastConfig
+}
+
+/**
+ * Movk API 模块私有配置
+ * @description 定义模块的私有配置（仅服务端可访问，不会暴露给客户端）
+ */
+export interface MovkApiPrivateConfig {
+  /**
+   * 各端点的私有配置
+   */
+  endpoints?: Record<string, {
+    /**
+     * 自定义请求头（仅服务端使用，不会暴露给客户端）
+     */
+    headers?: Record<string, string>
+  }>
+}
+
+/**
+ * Movk API 模块完整配置
+ * @description 定义模块的完整配置（公共+私有），用于模块初始化时的配置验证
+ */
+export interface MovkApiFullConfig {
+  /**
+   * 是否启用 API 模块
+   * @defaultValue true
+   */
+  enabled?: boolean
+  /**
+   * 默认使用的端点名称
+   * @defaultValue 'default'
+   */
+  defaultEndpoint?: string
+  /**
+   * 是否启用调试模式
+   * @defaultValue false
+   */
+  debug?: boolean
+  /**
+   * 端点配置映射（包含公共和私有配置）
+   * @defaultValue { default: { baseURL: '/api' } }
+   */
+  endpoints?: Record<string, ApiEndpointPublicConfig & {
+    /**
+     * 自定义请求头（仅服务端使用）
+     */
+    headers?: Record<string, string>
+  }>
+  /**
+   * 全局响应配置
+   */
+  response?: Partial<ApiResponseConfig>
+  /**
+   * 全局认证配置
+   */
+  auth?: Partial<ApiAuthConfig>
+  /**
+   * 全局 Toast 配置
+   */
+  toast?: Partial<ApiToastConfig>
+}
 
 /**
  * API 响应数据结构

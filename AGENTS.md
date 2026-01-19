@@ -150,7 +150,7 @@ API 系统采用分层设计:
 
 ```
 types/api.ts                       → 类型定义 (Interface)
-schemas/api.ts                     → 配置验证 (Zod Schema)
+constants/api-defaults.ts          → 配置默认值
 plugins/api.factory.ts             → 客户端工厂 ($api 实例)
 composables/useApiFetch.ts         → 请求封装 (SSR/CSR 通用)
 composables/useClientApiFetch.ts   → 客户端专用请求封装
@@ -172,10 +172,9 @@ src/
     │   ├── input/             # 输入增强组件
     │   └── *.vue              # 独立组件
     ├── composables/           # 自动导入的 composables
-    ├── constants/             # 常量定义
+    ├── constants/             # 常量定义和配置默认值
     ├── internal/              # 内部使用的工具(provide/inject 等)
     ├── plugins/               # Nuxt 插件
-    ├── schemas/               # Zod Schema 定义(配置验证)
     ├── server/                # 服务端 API 路由
     ├── types/                 # 类型定义
     └── utils/                 # 工具函数
@@ -230,9 +229,8 @@ test/                          # 测试文件
 
 #### 类型定义约定
 
-- `types/api.ts`: TypeScript Interface,用于开发时类型提示
-- `schemas/api.ts`: Zod Schema,用于运行时配置验证
-- 两者独立维护,Schema 用于验证模块配置,Interface 用于 API 使用
+- `types/api.ts`: TypeScript Interface,用于开发时类型提示和 API 使用
+- `constants/api-defaults.ts`: 配置默认值常量,通过 `defu` 合并用户配置
 
 #### JSDoc 注释规范
 
