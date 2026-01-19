@@ -68,7 +68,7 @@ export default defineNuxtModule<ModuleOptions>({
     '@nuxt/ui': { version: '>=4.3.0' },
     '@vueuse/nuxt': { version: '>=14.1.0' },
     'nuxt-og-image': { version: '>=5.1.13' },
-    'nuxt-auth-utils': { version: '>=0.5.26' }
+    'nuxt-auth-utils': { version: '>=0.5.27' }
   },
   setup(options, nuxt) {
     const { resolve } = createResolver(import.meta.url)

@@ -45,6 +45,21 @@ import type { User, UserSession } from '#auth-utils'
  *   })
  * })
  *
+ * // 自定义 Session 配置（过期时间、Cookie 配置等）
+ * await login({
+ *   loginPath: '/auth/login',
+ *   credentials: { username: 'admin', password: '123456' },
+ *   sessionConfig: {
+ *     maxAge: 60 * 60 * 24 * 7, // 7 天
+ *     name: 'my-app-session',
+ *     cookie: {
+ *       httpOnly: true,
+ *       secure: true,
+ *       sameSite: 'lax'
+ *     }
+ *   }
+ * })
+ *
  * // 登出
  * await clear()
  *
@@ -112,6 +127,7 @@ export function useApiAuth(): UseApiAuthReturn {
       userInfoPath,
       tokenExtractor = defaultTokenExtractor,
       sessionBuilder = defaultSessionBuilder,
+      sessionConfig,
       endpoint
     } = options
 
@@ -133,24 +149,19 @@ export function useApiAuth(): UseApiAuthReturn {
     let userInfo: User
 
     if (userInfoPath) {
-      // 获取端点认证配置
       const endpointConfig = api.getConfig()
       const authConfig = endpointConfig.auth || moduleConfig.auth || {}
 
-      // 使用 token 调用用户信息接口
       const headerName = getHeaderName(authConfig)
       const headerValue = buildAuthHeader(token, authConfig)
 
-      // 静默获取用户信息（禁用 Toast 提示）
       const userResponse = await api.$fetch<ApiResponse<User>>(userInfoPath, {
         headers: { [headerName]: headerValue },
         context: { toast: false }
       })
-      // 从响应中提取用户数据
       userInfo = (getPath(userResponse, 'data') ?? userResponse) as User
     }
     else {
-      // 从登录响应中提取用户信息
       userInfo = (getPath(loginResponse, 'data') ?? loginResponse) as User
     }
 
@@ -160,7 +171,10 @@ export function useApiAuth(): UseApiAuthReturn {
     // 5. 设置 session（通过服务端 API）
     await $fetch('/api/_movk/session', {
       method: 'POST',
-      body: sessionData
+      body: {
+        session: sessionData,
+        config: sessionConfig
+      }
     })
 
     // 6. 刷新客户端 session 状态
