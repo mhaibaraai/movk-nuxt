@@ -103,10 +103,8 @@ export default defineNuxtModule<ModuleOptions>({
       })
 
       const packageMeta = await getPackageJsonMetadata(nuxt.options.rootDir)
-      // @ts-expect-error runtimeConfig typing
-      const siteName = nuxt.options?.site?.name || packageMeta.name
-      // @ts-expect-error nuxt auth utils config is not typed yet
-      nuxt.options.session = defu(nuxt.options.session, {
+      const siteName = (nuxt.options as any)?.site?.name || packageMeta.name
+      nuxt.options.runtimeConfig.session = defu(nuxt.options.runtimeConfig.session, {
         name: `${siteName}_session`
       })
     }
