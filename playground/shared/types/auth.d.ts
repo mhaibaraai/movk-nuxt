@@ -37,7 +37,9 @@ declare module '#auth-utils' {
   }
 
   interface UserSession {
+    user?: User
     token?: string
+    loggedInAt?: string
   }
 
   interface SecureSessionData {

@@ -1,5 +1,6 @@
 import type {
   ApiResponse,
+  ApiResponseConfig,
   ApiAuthConfig,
   LoginOptions,
   LoginResult,
@@ -13,10 +14,9 @@ import type { User, UserSession } from '#auth-utils'
 /**
  * API 认证 Composable
  *
- * 提供完整的登录、登出、刷新用户信息等功能，
- * 与 nuxt-auth-utils 无缝集成。
+ * 扩展 nuxt-auth-utils 的 useUserSession，添加 login() 方法处理完整登录流程。
  *
- * @returns UseApiAuthReturn 认证相关方法和状态
+ * @returns 包含 login 方法的 UserSessionComposable
  *
  * @example
  * ```ts
@@ -28,7 +28,7 @@ import type { User, UserSession } from '#auth-utils'
  *   credentials: { username: 'admin', password: '123456' }
  * })
  *
- * // 登录后获取用户信息
+ * // 使用独立接口获取用户信息
  * await login({
  *   loginPath: '/auth/login',
  *   credentials: { username: 'admin', password: '123456' },
@@ -45,29 +45,6 @@ import type { User, UserSession } from '#auth-utils'
  *     secure: { token, permissions: user.permissions }
  *   })
  * })
- *
- * // 自定义 Session 配置（过期时间、Cookie 配置等）
- * await login({
- *   loginPath: '/auth/login',
- *   credentials: { username: 'admin', password: '123456' },
- *   sessionConfig: {
- *     maxAge: 60 * 60 * 24 * 7, // 7 天
- *     name: 'my-app-session',
- *     cookie: {
- *       httpOnly: true,
- *       secure: true,
- *       sameSite: 'lax'
- *     }
- *   }
- * })
- *
- * // 登出
- * await clear()
- *
- * // 响应式状态
- * if (loggedIn.value) {
- *   console.log('当前用户:', user.value)
- * }
  * ```
  */
 export function useApiAuth(): UseApiAuthReturn {
@@ -83,21 +60,27 @@ export function useApiAuth(): UseApiAuthReturn {
     const tokenType = authConfig.tokenType === 'Custom'
       ? (authConfig.customTokenType || '')
       : (authConfig.tokenType || 'Bearer')
-
     return tokenType ? `${tokenType} ${token}` : token
   }
 
-  const defaultTokenExtractor = <LoginRData = unknown>(response: ApiResponse<LoginRData>): string | null | undefined => {
-    const paths = ['data.token', 'data.accessToken', 'token']
-    for (const path of paths) {
+  const extractToken = <T>(response: ApiResponse<T>, authConfig: Partial<ApiAuthConfig>): string | undefined => {
+    // 优先使用配置的路径
+    const configuredPath = authConfig.sessionTokenPath
+    if (configuredPath) {
+      const token = getPath(response, configuredPath) ?? getPath(response, `data.${configuredPath}`)
+      if (token) return token as string
+    }
+    // 降级到常见路径
+    const fallbackPaths = ['data.token', 'data.accessToken', 'token', 'accessToken']
+    for (const path of fallbackPaths) {
       const token = getPath(response, path)
       if (token) return token as string
     }
-    return undefined
   }
 
-  const extractUserData = <T>(response: ApiResponse<T>): User => {
-    return (getPath(response, 'data') ?? response) as User
+  const extractUserData = <T>(response: ApiResponse<T>, responseConfig: Partial<ApiResponseConfig>): User => {
+    const dataKey = responseConfig.dataKey || 'data'
+    return (getPath(response, dataKey) ?? response) as User
   }
 
   const defaultSessionBuilder = (user: User, token: string): PartialByKeys<UserSession, 'id'> => ({
@@ -108,26 +91,22 @@ export function useApiAuth(): UseApiAuthReturn {
 
   /**
    * 执行登录流程
-   *
-   * 1. 调用登录接口获取 token
-   * 2. 如果配置了 userInfoPath，使用 token 调用用户信息接口
-   * 3. 构建 session 数据并设置到 nuxt-auth-utils
-   * 4. 刷新客户端 session 状态
    */
-  async function login<LoginRData = unknown>(
-    options: LoginOptions<LoginRData>
-  ): Promise<LoginResult> {
+  async function login<LoginRData = unknown>(options: LoginOptions<LoginRData>): Promise<LoginResult<LoginRData>> {
     const {
       loginPath,
       credentials,
       userInfoPath,
-      tokenExtractor = defaultTokenExtractor,
+      tokenExtractor,
       sessionBuilder = defaultSessionBuilder,
       sessionConfig,
       endpoint
     } = options
 
     const api = endpoint ? $api.use(endpoint) : $api
+    const config = api.getConfig()
+    const authConfig = getAuthConfig(config)
+    const responseConfig = config.response || {}
 
     // 1. 调用登录接口
     const loginResponse = await api.$fetch<ApiResponse<LoginRData>>(loginPath, {
@@ -136,33 +115,31 @@ export function useApiAuth(): UseApiAuthReturn {
     })
 
     // 2. 提取 token
-    const token = tokenExtractor(loginResponse)
+    const token = tokenExtractor?.(loginResponse) ?? extractToken(loginResponse, authConfig)
     if (!token) {
       throw new Error('Login failed: token not found in response')
     }
 
-    // 3. 获取用户信息
+    // 3. 提取登录响应数据
+    const loginData = extractUserData(loginResponse, responseConfig) as LoginRData
+
+    // 4. 获取用户信息
     let userInfo: User
-
     if (userInfoPath) {
-      const authConfig = getAuthConfig(api.getConfig())
-      const headerName = authConfig.headerName || 'Authorization'
-      const headerValue = buildAuthHeader(token, authConfig)
-
       const userResponse = await api.$fetch<ApiResponse<User>>(userInfoPath, {
-        headers: { [headerName]: headerValue },
+        headers: { [authConfig.headerName || 'Authorization']: buildAuthHeader(token, authConfig) },
         context: { toast: false }
       })
-      userInfo = extractUserData(userResponse)
+      userInfo = extractUserData(userResponse, responseConfig)
     }
     else {
-      userInfo = extractUserData(loginResponse)
+      userInfo = loginData as User
     }
 
-    // 4. 构建 session 数据
-    const sessionData = sessionBuilder(userInfo, token)
+    // 5. 构建 session 数据
+    const sessionData = sessionBuilder(userInfo, token, loginData)
 
-    // 5. 设置 session（通过服务端 API）
+    // 6. 设置 session（通过服务端 API）
     await $fetch('/api/_movk/session', {
       method: 'POST',
       body: {
@@ -171,10 +148,10 @@ export function useApiAuth(): UseApiAuthReturn {
       }
     })
 
-    // 6. 刷新客户端 session 状态
+    // 7. 刷新客户端 session 状态
     await userSession.fetch()
 
-    return { user: userInfo, token }
+    return { user: userInfo, token, loginData }
   }
 
   return {

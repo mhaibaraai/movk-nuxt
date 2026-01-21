@@ -465,9 +465,9 @@ export interface LoginOptions<LoginRData = unknown> {
   tokenExtractor?: (response: ApiResponse<LoginRData>) => string | null | undefined
   /**
    * 自定义会话构建函数
-   * @defaultValue 使用 { user, token } 作为会话数据
+   * @defaultValue 使用 { user, token, loggedInAt: new Date().toISOString() } 作为会话数据
    */
-  sessionBuilder?: (userInfo: User, token: string) => PartialByKeys<UserSession, 'id'>
+  sessionBuilder?: (userInfo: User, token: string, loginData: LoginRData) => PartialByKeys<UserSession, 'id'>
   /**
    * Session 配置（maxAge、cookie 等）
    * @defaultValue { name: 'nuxt-session', password: process.env.NUXT_SESSION_PASSWORD || '', cookie: { sameSite: 'lax' } }
@@ -480,12 +480,15 @@ export interface LoginOptions<LoginRData = unknown> {
 
 /**
  * 登录结果
+ * @template LoginRData - 登录接口响应数据类型
  */
-export interface LoginResult {
+export interface LoginResult<LoginRData = unknown> {
   /** 用户信息 */
   user: User
   /** 认证令牌 */
   token: string
+  /** 登录响应数据（已提取） */
+  loginData: LoginRData
 }
 
 /**
@@ -497,5 +500,5 @@ export interface UseApiAuthReturn extends UserSessionComposable {
    * 登录方法
    * @template LoginRData - 登录接口响应数据类型
    */
-  login: <LoginRData = unknown>(options: LoginOptions<LoginRData>) => Promise<LoginResult>
+  login: <LoginRData = unknown>(options: LoginOptions<LoginRData>) => Promise<LoginResult<LoginRData>>
 }
