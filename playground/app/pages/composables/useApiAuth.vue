@@ -29,7 +29,7 @@ async function submit() {
       },
       userInfoPath: form.value.userInfoPath,
       endpoint: form.value.endpoint,
-      sessionBuilder: (userInfo, token) => ({
+      sessionBuilder: (userInfo, token, loginResponse) => ({
         user: {
           id: userInfo.id,
           username: userInfo.username,
@@ -37,7 +37,9 @@ async function submit() {
           email: userInfo.email,
           phone: userInfo.phone
         },
-        token
+        token,
+        loggedInAt: new Date().toISOString(),
+        loginResponse
       })
     })
   }
