@@ -8,7 +8,7 @@
   },
   "dependencies": {
     "@internationalized/date": "^3.10.1",
-    "@movk/nuxt-docs": "^1.11.0",
+    "@movk/nuxt-docs": "^1.11.1",
     "@nuxt/content": "^3.11.0",
     "@nuxt/ui": "^4.4.0",
     "@nuxt/kit": "^4.3.0",

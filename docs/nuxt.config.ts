@@ -43,7 +43,7 @@ export default defineNuxtConfig({
 
   llms: {
     domain: 'https://nuxt.mhaibaraai.cn',
-    title: '@movk/nuxt',
+    title: 'Movk Nuxt',
     description: 'Movk Nuxt 是一个为 Nuxt 4 设计的模块化工程套件，提供 Schema 驱动的自动表单生成、API 集成系统、独立 UI 组件和通用工具函数。',
     full: {
       title: '@movk/nuxt - Nuxt 4 模块化工程套件',
