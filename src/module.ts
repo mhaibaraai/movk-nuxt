@@ -77,6 +77,8 @@ export default defineNuxtModule<ModuleOptions>({
     setupTheme(nuxt, resolve)
 
     nuxt.options.alias['#movk'] = resolve('./runtime')
+
+    nuxt.options.css = nuxt.options.css || []
     nuxt.options.css.push(resolve('runtime/style.css'))
 
     addComponentsDir({

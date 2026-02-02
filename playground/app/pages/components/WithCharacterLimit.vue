@@ -9,7 +9,7 @@ const comment = ref('')
       <MWithCharacterLimit
         v-model="comment"
         class="w-full"
-        :max-length="200"
+        :max-length="10"
         placeholder="请输入您的评论..."
         leading-icon="i-lucide-message-square"
       />

@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { UIcon } from '#components'
 import type { FormSubmitEvent } from '@nuxt/ui'
-import type { z } from 'zod/v4'
+import type { z } from 'zod'
 
 const { afz } = useAutoForm()
 const toast = useToast()

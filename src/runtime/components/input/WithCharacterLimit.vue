@@ -1,17 +1,29 @@
 <script setup lang="ts" generic="T extends InputValue">
 import { UInput } from '#components'
 import { computed } from 'vue'
-import type { InputProps, InputValue } from '@nuxt/ui'
-import type { WithCharacterLimitProps, WithCharacterLimitEmits, WithCharacterLimitSlots } from '../../types/components'
+import type { InputEmits, InputProps, InputSlots, InputValue } from '@nuxt/ui'
+import type { OmitByKey } from '@movk/core'
+import type { ClassNameValue } from 'tailwind-merge'
 
-const { maxLength = 50, counterClass = '' } = defineProps<WithCharacterLimitProps>()
-const emit = defineEmits<WithCharacterLimitEmits>()
-const slots = defineSlots<WithCharacterLimitSlots>()
+export interface WithCharacterLimitProps<T extends InputValue = InputValue> extends /** @vue-ignore */ OmitByKey<InputProps<T>, 'modelValue'> {
+  /**
+   * Maximum number of characters allowed
+   * @defaultValue 50
+   */
+  maxLength?: number
+  /** Custom class for the character counter */
+  counterClass?: ClassNameValue
+}
+
+const props = defineProps<WithCharacterLimitProps<T>>()
+const emit = defineEmits<InputEmits<T>>()
+const slots = defineSlots<OmitByKey<InputSlots, 'trailing'>>()
 
 defineOptions({ inheritAttrs: false })
 
 const modelValue = defineModel<InputProps['modelValue']>()
 
+const maxLengthValue = 50
 const currentLength = computed(() => {
   return String(modelValue.value ?? '').length
 })
@@ -20,7 +32,7 @@ const currentLength = computed(() => {
 <template>
   <UInput
     v-model="modelValue"
-    :maxlength="maxLength"
+    :maxlength="props.maxLength ?? maxLengthValue"
     aria-describedby="character-count"
     :ui="{ trailing: 'pointer-events-none' }"
     v-bind="$attrs"
@@ -34,11 +46,11 @@ const currentLength = computed(() => {
     <template #trailing>
       <div
         id="character-count"
-        :class="[counterClass, 'text-xs text-muted tabular-nums']"
+        :class="[props.counterClass, 'text-xs text-muted tabular-nums']"
         aria-live="polite"
         role="status"
       >
-        {{ currentLength }}/{{ maxLength }}
+        {{ currentLength }}/{{ props.maxLength ?? maxLengthValue }}
       </div>
     </template>
   </UInput>

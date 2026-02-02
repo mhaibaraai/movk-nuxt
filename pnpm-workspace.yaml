@@ -1,6 +1,5 @@
 packages:
   - playground
-  - test
   - docs
 
 ignoredBuiltDependencies:
@@ -12,5 +11,6 @@ ignoredBuiltDependencies:
   - vue-demi
 
 onlyBuiltDependencies:
+  - '@swc/core'
   - better-sqlite3
   - sharp

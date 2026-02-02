@@ -1,5 +1,5 @@
 import { defineEventHandler, readBody, createError } from 'h3'
-// @ts-expect-error setUserSession is auto-imported server function from nuxt-auth-utils
+// @ts-ignore setUserSession is auto-imported server function from nuxt-auth-utils
 import { setUserSession } from '#imports'
 
 /**

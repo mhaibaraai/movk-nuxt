@@ -1,6 +1,6 @@
 import type { IsComponent } from '@movk/core'
 import type { AutoFormControl, AutoFormControls, AutoFormLayoutConfig, TypedZodFactory } from '../types/auto-form'
-import { z } from 'zod/v4'
+import { z } from 'zod'
 import WithClear from '../components/input/WithClear.vue'
 import WithPasswordToggle from '../components/input/WithPasswordToggle.vue'
 import WithCopy from '../components/input/WithCopy.vue'

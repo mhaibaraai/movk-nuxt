@@ -1,6 +1,8 @@
 export default defineNuxtConfig({
   modules: ['../src/module'],
+
   devtools: { enabled: true },
+
   css: ['~/assets/css/main.css'],
 
   compatibilityDate: 'latest',
@@ -19,6 +21,7 @@ export default defineNuxtConfig({
       }
     }
   },
+
   movk: {
     api: {
       endpoints: {

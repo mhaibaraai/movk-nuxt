@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { sleep } from '@movk/core'
-import type { z } from 'zod/v4'
+import type { z } from 'zod'
 
 const { afz } = useAutoForm()
 const toast = useToast()

@@ -1,9 +1,22 @@
 <script setup lang="ts" generic="R extends boolean, M extends boolean, P extends 'click' | 'hover' = 'click'">
 import { UPopover, UButton, UCalendar } from '#components'
 import type { DateValue } from '@internationalized/date'
+import type { DateFormatterOptions } from '../composables/useDateFormatter'
+import type { ButtonProps, CalendarEmits, CalendarProps, PopoverEmits, PopoverProps } from '@nuxt/ui'
+import type { OmitByKey } from '@movk/core'
 import { computed } from 'vue'
 import { useDateFormatter } from '../composables/useDateFormatter'
-import type { DatePickerProps, DatePickerEmits, LabelFormat, ValueType } from '../types/components'
+
+export type LabelFormat = 'iso' | 'formatted' | 'date' | 'timestamp' | 'unix'
+
+export interface DatePickerProps<R extends boolean, M extends boolean, P extends 'click' | 'hover' = 'click'> extends /** @vue-ignore */ OmitByKey<CalendarProps<R, M>, 'modelValue'>, DateFormatterOptions {
+  /** Props for the button component */
+  buttonProps?: ButtonProps
+  /** Props for the popover component */
+  popoverProps?: PopoverProps<P>
+  /** Format for the label displayed on the button */
+  labelFormat?: LabelFormat | ((formatter: ReturnType<typeof useDateFormatter>, modelValue: CalendarProps<R, M>['modelValue']) => string)
+}
 
 const LABEL_FORMATS: LabelFormat[] = ['iso', 'formatted', 'date', 'timestamp', 'unix']
 
@@ -15,11 +28,11 @@ const {
   labelFormat = 'formatted'
 } = defineProps<DatePickerProps<R, M, P>>()
 
-const emit = defineEmits<DatePickerEmits<R, M>>()
+const emit = defineEmits<PopoverEmits & CalendarEmits<R, M>>()
 
 defineOptions({ inheritAttrs: false })
 
-const modelValue = defineModel<ValueType<R, M>>()
+const modelValue = defineModel<CalendarProps<R, M>['modelValue']>()
 
 const formatter = useDateFormatter({ locale, formatOptions })
 
@@ -41,7 +54,7 @@ const convertRange = (range: { start?: DateValue | null, end?: DateValue | null 
   return `${convertSingle(range.start, format)} - ${convertSingle(range.end, format)}`
 }
 
-const convertToLabel = (value: ValueType<R, M>): string => {
+const convertToLabel = (value: CalendarProps<R, M>['modelValue']): string => {
   if (!value) return buttonProps.label || ''
 
   const format = LABEL_FORMATS.includes(labelFormat as LabelFormat) ? labelFormat as LabelFormat : 'formatted'

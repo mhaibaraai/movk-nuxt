@@ -1,6 +1,6 @@
 <script setup lang="ts" generic="S extends z.ZodObject, T extends boolean = true, N extends boolean = false">
 import type { ButtonProps, FormEmits, FormProps, InferInput } from '@nuxt/ui'
-import type { z } from 'zod/v4'
+import type { z } from 'zod'
 import type { ZodAutoFormFieldMeta } from '../types/zod'
 import type { AutoFormControls, AutoFormField, AutoFormSlotProps, DynamicFormSlots } from '../types/auto-form'
 import { UForm } from '#components'

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { FormSubmitEvent } from '@nuxt/ui'
-import type { z } from 'zod/v4'
+import type { z } from 'zod'
 import { UAccordion } from '#components'
 
 const { afz } = useAutoForm()

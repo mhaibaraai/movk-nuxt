@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type z from 'zod/v4'
+import type z from 'zod'
 
 const { afz } = useAutoForm()
 const { login, clear, loggedIn, user, session } = useApiAuth()

@@ -1,7 +1,7 @@
 <script lang="tsx" setup>
 import { UBadge } from '#components'
 import type { FormSubmitEvent } from '@nuxt/ui'
-import type { z } from 'zod/v4'
+import type { z } from 'zod'
 
 const toast = useToast()
 const { afz } = useAutoForm()
