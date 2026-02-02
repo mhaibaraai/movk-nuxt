@@ -1,13 +1,23 @@
 <script setup lang="ts" generic="T extends InputValue">
 import { UInput, UButton, UTooltip } from '#components'
 import { useClipboard } from '@vueuse/core'
-import { isEmpty } from '@movk/core'
-import type { InputProps, InputValue } from '@nuxt/ui'
-import type { WithCopyProps, WithCopyEmits, WithCopySlots } from '../../types/components'
+import { isEmpty, type OmitByKey } from '@movk/core'
+import type { ButtonProps, InputEmits, InputProps, InputSlots, InputValue, TooltipProps } from '@nuxt/ui'
 
-const { buttonProps, tooltipProps } = defineProps<WithCopyProps>()
-const emit = defineEmits<WithCopyEmits>()
-const slots = defineSlots<WithCopySlots>()
+export interface WithCopyProps<T extends InputValue = InputValue> extends /** @vue-ignore */ OmitByKey<InputProps<T>, 'modelValue'> {
+  /** Custom props for the copy button */
+  buttonProps?: ButtonProps
+  /** Custom props for the tooltip */
+  tooltipProps?: TooltipProps
+}
+
+export type WithCopyEmits<T extends InputValue = InputValue> = InputEmits<T> & {
+  copy: [value: string]
+}
+
+const props = defineProps<WithCopyProps<T>>()
+const emit = defineEmits<WithCopyEmits<T>>()
+const slots = defineSlots<OmitByKey<InputSlots, 'trailing'>>()
 
 defineOptions({ inheritAttrs: false })
 
@@ -37,14 +47,14 @@ function handleCopy() {
     </template>
 
     <template v-if="!isEmpty(modelValue)" #trailing>
-      <UTooltip text="Copy to clipboard" v-bind="tooltipProps">
+      <UTooltip text="Copy to clipboard" v-bind="props.tooltipProps">
         <UButton
           :color="copied ? 'success' : 'neutral'"
           variant="link"
           size="sm"
           :icon="copied ? 'i-lucide-copy-check' : 'i-lucide-copy'"
           aria-label="Copy to clipboard"
-          v-bind="buttonProps"
+          v-bind="props.buttonProps"
           @click="handleCopy"
         />
       </UTooltip>

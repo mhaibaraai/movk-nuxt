@@ -1,9 +1,10 @@
 import type { $Fetch, FetchOptions, FetchHooks, FetchError } from 'ofetch'
 import type { UseFetchOptions as NuxtUseFetchOptions, AsyncData } from 'nuxt/app'
 import type { ToastProps } from '@nuxt/ui'
-import type { User, UserSession, UserSessionComposable } from '#auth-utils'
 import type { SessionConfig } from 'h3'
 import type { PartialByKeys } from '@movk/core'
+// @ts-ignore - no types available
+import type { User, UserSession, UserSessionComposable } from '#auth-utils'
 
 declare module 'ofetch' {
   interface FetchOptions {

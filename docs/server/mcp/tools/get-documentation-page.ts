@@ -1,4 +1,4 @@
-import { z } from 'zod/v4'
+import { z } from 'zod'
 
 export default defineMcpTool({
   description: '通过 URL 路径获取文档页面内容',

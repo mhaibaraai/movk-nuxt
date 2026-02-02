@@ -186,9 +186,9 @@ test/                          # 测试文件
 
 ## 开发约定
 
-### Zod v4 特定要求
+### Zod 特定要求
 
-- 使用 `import { z } from 'zod/v4'` 导入(非 `zod`)
+- 使用 `import { z } from 'zod'` 导入
 - 优先使用新的验证函数: `z.email()` / `z.url()` / `z.uuid()`(代替 `.refine()`)
 - 避免使用 `z.describe()`,改用 `z.meta({ description: '...' })`
 

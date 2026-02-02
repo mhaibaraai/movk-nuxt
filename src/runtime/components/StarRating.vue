@@ -78,22 +78,20 @@ export interface StarRatingEmits {
   'hover': [value: number | null]
 }
 
-const {
-  modelValue = 0,
-  max = 5,
-  disabled = false,
-  readonly = false,
-  showBadge = true,
-  buttonProps,
-  emptyIcon = 'i-lucide-star',
-  filledIcon = 'i-lucide-star',
-  halfIcon = 'i-lucide-star-half',
-  color = 'warning',
-  size = 'sm',
-  allowHalf = false,
-  clearable = false
-} = defineProps<StarRatingProps>()
-
+const props = withDefaults(defineProps<StarRatingProps>(), {
+  modelValue: 0,
+  max: 5,
+  disabled: false,
+  readonly: false,
+  showBadge: true,
+  emptyIcon: 'i-lucide-star',
+  filledIcon: 'i-lucide-star',
+  halfIcon: 'i-lucide-star-half',
+  color: 'warning',
+  size: 'sm',
+  allowHalf: false,
+  clearable: false
+})
 const emit = defineEmits<StarRatingEmits>()
 
 defineOptions({ inheritAttrs: false })
@@ -101,13 +99,13 @@ defineOptions({ inheritAttrs: false })
 const hoveredStar = ref<number | null>(null)
 const focusedIndex = ref<number>(0)
 
-const isInteractive = computed(() => !disabled && !readonly)
+const isInteractive = computed(() => !props.disabled && !props.readonly)
 
 /**
  * 计算半星位置：根据鼠标/点击位置判断是否为半星
  */
 function calculateHalfStarValue(index: number, event: MouseEvent): number {
-  if (!allowHalf) return index + 1
+  if (!props.allowHalf) return index + 1
 
   const target = event.currentTarget as HTMLElement
   const rect = target.getBoundingClientRect()
@@ -121,7 +119,7 @@ function calculateHalfStarValue(index: number, event: MouseEvent): number {
  * 更新评分值
  */
 function updateValue(newValue: number) {
-  if (clearable && newValue === modelValue) {
+  if (props.clearable && newValue === props.modelValue) {
     emit('update:modelValue', 0)
     emit('change', 0)
     return
@@ -147,7 +145,7 @@ function handleMouseEnter(index: number, event?: MouseEvent) {
 }
 
 function handleMouseMove(index: number, event: MouseEvent) {
-  if (!isInteractive.value || !allowHalf) return
+  if (!isInteractive.value || !props.allowHalf) return
 
   const hoverValue = calculateHalfStarValue(index, event)
   const currentHover = hoveredStar.value !== null ? hoveredStar.value + 1 : null
@@ -170,24 +168,24 @@ function handleMouseLeave() {
 function handleKeyDown(event: KeyboardEvent) {
   if (!isInteractive.value) return
 
-  const step = allowHalf ? 0.5 : 1
+  const step = props.allowHalf ? 0.5 : 1
 
   switch (event.key) {
     case 'ArrowRight':
     case 'ArrowUp':
       event.preventDefault()
-      if (modelValue < max) {
-        updateValue(Math.min(modelValue + step, max))
-        focusedIndex.value = Math.min(Math.floor(modelValue + step), max - 1)
+      if (props.modelValue < props.max) {
+        updateValue(Math.min(props.modelValue + step, props.max))
+        focusedIndex.value = Math.min(Math.floor(props.modelValue + step), props.max - 1)
       }
       break
 
     case 'ArrowLeft':
     case 'ArrowDown':
       event.preventDefault()
-      if (modelValue > 0) {
-        updateValue(Math.max(modelValue - step, 0))
-        focusedIndex.value = Math.max(Math.floor(modelValue - step) - 1, 0)
+      if (props.modelValue > 0) {
+        updateValue(Math.max(props.modelValue - step, 0))
+        focusedIndex.value = Math.max(Math.floor(props.modelValue - step) - 1, 0)
       }
       break
 
@@ -199,13 +197,13 @@ function handleKeyDown(event: KeyboardEvent) {
 
     case 'End':
       event.preventDefault()
-      updateValue(max)
-      focusedIndex.value = max - 1
+      updateValue(props.max)
+      focusedIndex.value = props.max - 1
       break
 
     case 'Backspace':
     case 'Delete':
-      if (clearable) {
+      if (props.clearable) {
         event.preventDefault()
         updateValue(0)
         focusedIndex.value = 0
@@ -216,7 +214,7 @@ function handleKeyDown(event: KeyboardEvent) {
       // 数字键快速设置评分
       if (event.key >= '0' && event.key <= '9') {
         const numValue = Number.parseInt(event.key)
-        if (numValue <= max) {
+        if (numValue <= props.max) {
           event.preventDefault()
           updateValue(numValue)
           focusedIndex.value = Math.max(numValue - 1, 0)
@@ -226,13 +224,13 @@ function handleKeyDown(event: KeyboardEvent) {
 }
 
 function getStarState(index: number): 'empty' | 'half' | 'full' {
-  const displayValue = hoveredStar.value !== null ? hoveredStar.value + 1 : modelValue
+  const displayValue = hoveredStar.value !== null ? hoveredStar.value + 1 : props.modelValue
 
   if (index < Math.floor(displayValue)) {
     return 'full'
   }
 
-  if (allowHalf && index === Math.floor(displayValue) && displayValue % 1 !== 0) {
+  if (props.allowHalf && index === Math.floor(displayValue) && displayValue % 1 !== 0) {
     return 'half'
   }
 
@@ -241,51 +239,50 @@ function getStarState(index: number): 'empty' | 'half' | 'full' {
 
 function getStarIcon(index: number): string {
   const state = getStarState(index)
-  if (state === 'full') return filledIcon
-  if (state === 'half') return halfIcon
-  return emptyIcon
+  if (state === 'full') return props.filledIcon
+  if (state === 'half') return props.halfIcon
+  return props.emptyIcon
 }
 
 function getStarColor(index: number): ButtonProps['color'] {
   const state = getStarState(index)
-  return state !== 'empty' ? color : 'neutral'
+  return state !== 'empty' ? props.color : 'neutral'
 }
 
-const badgeLabel = computed(() => `${modelValue}/${max}`)
+const badgeLabel = computed(() => `${props.modelValue}/${props.max}`)
 </script>
 
 <template>
   <div
     class="inline-flex items-center gap-1"
     role="slider"
-    :aria-label="`评分 ${modelValue} / ${max}`"
-    :aria-valuenow="modelValue"
+    :aria-label="`评分 ${props.modelValue} / ${props.max}`"
+    :aria-valuenow="props.modelValue"
     :aria-valuemin="0"
-    :aria-valuemax="max"
-    :aria-disabled="disabled"
-    :aria-readonly="readonly"
+    :aria-valuemax="props.max"
+    :aria-disabled="props.disabled"
+    :aria-readonly="props.readonly"
     :tabindex="isInteractive ? 0 : -1"
     @keydown="handleKeyDown"
   >
-    <slot name="prefix" :value="modelValue" :max="max" />
-
+    <slot name="prefix" :value="props.modelValue" :max="props.max" />
     <div class="flex items-center gap-0.5">
       <UButton
-        v-for="index in max"
+        v-for="index in props.max"
         :key="index"
         :icon="getStarIcon(index - 1)"
         :color="getStarColor(index - 1)"
         variant="ghost"
-        :size="size"
-        :disabled="disabled"
+        :size="props.size"
+        :disabled="props.disabled"
         :aria-label="`${index} 星`"
         :tabindex="-1"
         v-bind="buttonProps"
         class="transition-all duration-150"
         :class="{
           'cursor-pointer hover:scale-110': isInteractive,
-          'cursor-not-allowed opacity-50': disabled,
-          'cursor-default': readonly && !disabled
+          'cursor-not-allowed opacity-50': props.disabled,
+          'cursor-default': props.readonly && !props.disabled
         }"
         @click="handleClick(index - 1, $event)"
         @mouseenter="handleMouseEnter(index - 1, $event)"
@@ -296,12 +293,12 @@ const badgeLabel = computed(() => `${modelValue}/${max}`)
 
     <slot
       name="badge"
-      :value="modelValue"
-      :max="max"
+      :value="props.modelValue"
+      :max="props.max"
       :label="badgeLabel"
     >
       <UBadge
-        v-if="showBadge && modelValue > 0"
+        v-if="showBadge && props.modelValue > 0"
         :label="badgeLabel"
         color="primary"
         variant="subtle"
@@ -309,6 +306,6 @@ const badgeLabel = computed(() => `${modelValue}/${max}`)
       />
     </slot>
 
-    <slot name="suffix" :value="modelValue" :max="max" />
+    <slot name="suffix" :value="props.modelValue" :max="props.max" />
   </div>
 </template>

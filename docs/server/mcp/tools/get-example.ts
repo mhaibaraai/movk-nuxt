@@ -1,4 +1,4 @@
-import { z } from 'zod/v4'
+import { z } from 'zod'
 
 export default defineMcpTool({
   description: '获取特定 UI 示例的实现代码和详细信息',

@@ -12,7 +12,7 @@ export interface ModuleOptions {
   api?: MovkApiFullConfig
 }
 
-declare module '#app' {
+declare module 'nuxt/app' {
   interface NuxtApp {
     $api: ApiClient
   }

@@ -4,6 +4,7 @@ const { resolve } = createResolver(import.meta.url)
 
 export default defineNuxtConfig({
   extends: ['@movk/nuxt-docs'],
+
   modules: [
     '../src/module',
     (_, nuxt) => {
@@ -12,11 +13,13 @@ export default defineNuxtConfig({
       })
     }
   ],
+
   css: ['~/assets/css/main.css'],
+
   site: {
-    name: 'Movk Nuxt',
     url: 'https://nuxt.mhaibaraai.cn'
   },
+
   routeRules: {
     '/docs': { redirect: '/docs/getting-started', prerender: false },
     '/docs/components': { redirect: '/docs/components/with-character-limit', prerender: false },
@@ -25,17 +28,19 @@ export default defineNuxtConfig({
     '/docs/composables': { redirect: '/docs/composables/use-auto-form', prerender: false },
     '/docs/examples': { redirect: '/docs/examples/auto-form', prerender: false }
   },
+
   compatibilityDate: 'latest',
+
   aiChat: {
-    model: 'mistral/devstral-2',
+    model: 'mistral/devstral-3b',
     models: [
       'mistral/devstral-2',
-      'kwaipilot/kat-coder-pro-v1',
-      'openrouter/mistralai/devstral-2512:free',
       'openrouter/xiaomi/mimo-v2-flash:free',
-      'openrouter/z-ai/glm-4.5-air:free'
+      'openrouter/z-ai/glm-4.5-air:free',
+      'mistral/ministral-3b'
     ]
   },
+
   llms: {
     domain: 'https://nuxt.mhaibaraai.cn',
     title: '@movk/nuxt',
@@ -46,6 +51,7 @@ export default defineNuxtConfig({
     },
     notes: ['nuxt', 'nuxt4', 'autoform', 'zod', 'schema-driven', 'api', 'fetch', 'auth', 'upload', 'download', 'ui-components', 'composables']
   },
+
   mcp: {
     name: 'Movk Nuxt',
     browserRedirect: '/docs/getting-started/ai/mcp'

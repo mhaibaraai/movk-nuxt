@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import type { FormSubmitEvent } from '@nuxt/ui'
-import type { z } from 'zod/v4'
+import type { z } from 'zod'
 import { CalendarDate } from '@internationalized/date'
 
 const { afz } = useAutoForm()

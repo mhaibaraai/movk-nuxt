@@ -54,7 +54,7 @@ export interface ZodAutoFormFieldMeta {
   [key: string]: unknown
 }
 
-declare module 'zod/v4' {
+declare module 'zod' {
 
   interface GlobalMeta extends ZodAutoFormFieldMeta { }
 

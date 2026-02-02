@@ -1,6 +1,4 @@
 export * from './auto-form'
-export * from './auto-form-renderer'
-export * from './components'
 export * from './zod.d'
 export * from './api'
 export * from './module'

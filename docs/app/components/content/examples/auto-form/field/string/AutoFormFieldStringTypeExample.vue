@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import type { FormSubmitEvent } from '@nuxt/ui'
-import type z from 'zod/v4'
+import type z from 'zod'
 
 const props = defineProps<{
   type: 'string' | 'textarea' | 'withPasswordToggle' | 'withClear' | 'withCopy' | 'withCharacterLimit'

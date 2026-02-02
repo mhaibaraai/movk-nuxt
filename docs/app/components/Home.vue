@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { CalendarDate } from '@internationalized/date'
 import type { TabsItem } from '@nuxt/ui'
-import type z from 'zod/v4'
+import type z from 'zod'
 import type { DateRange } from 'reka-ui'
 
 const items = [{

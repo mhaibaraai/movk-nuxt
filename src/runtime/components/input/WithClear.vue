@@ -1,12 +1,20 @@
 <script setup lang="ts" generic="T extends InputValue">
 import { UInput, UButton } from '#components'
-import { isEmpty } from '@movk/core'
-import type { InputProps, InputValue } from '@nuxt/ui'
-import type { WithClearProps, WithClearEmits, WithClearSlots } from '../../types/components'
+import { isEmpty, type OmitByKey } from '@movk/core'
+import type { ButtonProps, InputEmits, InputProps, InputSlots, InputValue } from '@nuxt/ui'
 
-const { buttonProps } = defineProps<WithClearProps>()
-const emit = defineEmits<WithClearEmits>()
-const slots = defineSlots<WithClearSlots>()
+export interface WithClearProps<T extends InputValue = InputValue> extends /** @vue-ignore */ OmitByKey<InputProps<T>, 'modelValue'> {
+  /** Custom props for the clear button */
+  buttonProps?: ButtonProps
+}
+
+export type WithClearEmits<T extends InputValue = InputValue> = InputEmits<T> & {
+  clear: []
+}
+
+const props = defineProps<WithClearProps<T>>()
+const emit = defineEmits<WithClearEmits<T>>()
+const slots = defineSlots<OmitByKey<InputSlots, 'trailing'>>()
 
 defineOptions({ inheritAttrs: false })
 
@@ -37,7 +45,7 @@ function handleClear() {
         size="sm"
         icon="i-lucide-circle-x"
         aria-label="Clear input"
-        v-bind="buttonProps"
+        v-bind="props.buttonProps"
         @click="handleClear"
       />
     </template>

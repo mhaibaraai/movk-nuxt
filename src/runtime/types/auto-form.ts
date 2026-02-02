@@ -1,6 +1,6 @@
 import type { CollapsibleRootProps, DateRange } from 'reka-ui'
 import type { ClassNameValue } from 'tailwind-merge'
-import type { z } from 'zod/v4'
+import type { z } from 'zod'
 import type { ArrayFieldKeys, ComponentProps, OmitByKey, ComponentSlots, GetFieldValue, IsComponent, NonObjectFieldKeys, ObjectFieldKeys, ReactiveValue, Suggest } from '@movk/core'
 import type { FormError } from '@nuxt/ui'
 import type { AUTOFORM_META } from '../constants/auto-form'
@@ -479,10 +479,6 @@ export type AutoFormFactoryMethod<
  * 支持自动推导控件类型和元数据，并与 AutoForm 无缝集成
  */
 export interface TypedZodFactory<TC extends AutoFormControls, DFTC extends AutoFormControls> {
-  // --------------------------------------------------------------------------
-  // 基础类型工厂
-  // --------------------------------------------------------------------------
-
   /** 字符串类型工厂 */
   string: AutoFormFactoryMethod<WithDefaultControls<TC, DFTC>, 'string', z.ZodString>
 
@@ -495,10 +491,6 @@ export interface TypedZodFactory<TC extends AutoFormControls, DFTC extends AutoF
   /** 文件类型工厂 */
   file: AutoFormFactoryMethod<WithDefaultControls<TC, DFTC>, 'file', z.ZodType<File>>
 
-  // --------------------------------------------------------------------------
-  // Zod v4 专用验证工厂
-  // --------------------------------------------------------------------------
-
   /** 电子邮件验证工厂 */
   email: AutoFormFactoryMethod<WithDefaultControls<TC, DFTC>, 'string', z.ZodString>
 
@@ -507,10 +499,6 @@ export interface TypedZodFactory<TC extends AutoFormControls, DFTC extends AutoF
 
   /** UUID 验证工厂 */
   uuid: AutoFormFactoryMethod<WithDefaultControls<TC, DFTC>, 'string', z.ZodString>
-
-  // --------------------------------------------------------------------------
-  // 枚举工厂
-  // --------------------------------------------------------------------------
 
   /**
    * 枚举类型工厂 - 支持字符串数组或枚举对象
@@ -560,10 +548,6 @@ export interface TypedZodFactory<TC extends AutoFormControls, DFTC extends AutoF
     ): z.ZodEnum<T>
   }
 
-  // --------------------------------------------------------------------------
-  // 日期和时间工厂
-  // --------------------------------------------------------------------------
-
   /**
    * 日期类型工厂 - 用于 DatePicker/Calendar
    * 支持 CalendarDate、DateRange、CalendarDate[]
@@ -591,10 +575,6 @@ export interface TypedZodFactory<TC extends AutoFormControls, DFTC extends AutoF
    */
   inputTime: AutoFormFactoryMethod<WithDefaultControls<TC, DFTC>, 'inputTime', z.ZodType<Time>>
 
-  // --------------------------------------------------------------------------
-  // ISO 字符串工厂
-  // --------------------------------------------------------------------------
-
   /**
    * ISO 日期时间字符串工厂
    * 验证 ISO 8601 格式(如 "2025-12-01T06:15:00Z")
@@ -612,10 +592,6 @@ export interface TypedZodFactory<TC extends AutoFormControls, DFTC extends AutoF
    * 验证 HH:MM[:SS[.s+]] 格式(如 "14:30:00")
    */
   isoTime: AutoFormFactoryMethod<WithDefaultControls<TC, DFTC>, 'string', z.ZodType<string>>
-
-  // --------------------------------------------------------------------------
-  // 集合类型工厂
-  // --------------------------------------------------------------------------
 
   /**
    * 数组类型工厂
@@ -644,10 +620,6 @@ export interface TypedZodFactory<TC extends AutoFormControls, DFTC extends AutoF
       schemas: T, overwrite?: { component: C, type?: never } & OmitControlMeta<C>
     ): z.ZodTuple<T>
   }
-
-  // --------------------------------------------------------------------------
-  // 布局和对象工厂
-  // --------------------------------------------------------------------------
 
   /**
    * 布局工厂 - 创建表单布局容器

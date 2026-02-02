@@ -1,18 +1,23 @@
 <script setup lang="ts" generic="T extends InputValue">
 import { UInput, UButton } from '#components'
-import type { InputProps, InputValue } from '@nuxt/ui'
+import type { OmitByKey } from '@movk/core'
+import type { ButtonProps, InputEmits, InputProps, InputSlots, InputValue } from '@nuxt/ui'
 import { useToggle } from '@vueuse/core'
-import type { WithPasswordToggleProps, WithPasswordToggleEmits, WithPasswordToggleSlots } from '../../types/components'
 
-const { buttonProps } = defineProps<WithPasswordToggleProps>()
-const emit = defineEmits<WithPasswordToggleEmits>()
-const slots = defineSlots<WithPasswordToggleSlots>()
+export interface WithPasswordToggleProps<T extends InputValue = InputValue> extends /** @vue-ignore */ OmitByKey<InputProps<T>, 'type' | 'modelValue'> {
+  /** Custom props for the toggle button */
+  buttonProps?: ButtonProps
+}
+
+const props = defineProps<WithPasswordToggleProps<T>>()
+const emit = defineEmits<InputEmits<T>>()
+const slots = defineSlots<OmitByKey<InputSlots, 'trailing'>>()
 
 defineOptions({ inheritAttrs: false })
 
 const modelValue = defineModel<InputProps['modelValue']>()
 
-const [value, toggle] = useToggle()
+const [value, toggle] = useToggle(false)
 </script>
 
 <template>
@@ -36,7 +41,7 @@ const [value, toggle] = useToggle()
         :icon="value ? 'i-lucide-eye-off' : 'i-lucide-eye'"
         :aria-label="value ? 'Hide password' : 'Show password'"
         :aria-pressed="value"
-        v-bind="buttonProps"
+        v-bind="props.buttonProps"
         @click="toggle()"
       />
     </template>
