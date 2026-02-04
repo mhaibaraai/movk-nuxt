@@ -95,10 +95,10 @@
     "test": "vitest"
   },
   "dependencies": {
-    "@iconify-json/lucide": "^1.2.87",
+    "@iconify-json/lucide": "^1.2.88",
     "@iconify-json/ph": "^1.2.2",
     "@iconify-json/tabler": "^1.2.26",
-    "@internationalized/date": "^3.10.1",
+    "@internationalized/date": "^3.11.0",
     "@movk/core": "^1.1.0",
     "@nuxt/image": "^2.0.0",
     "@nuxt/ui": "^4.4.0",

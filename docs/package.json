@@ -7,13 +7,13 @@
     "dev": "nuxt dev"
   },
   "dependencies": {
-    "@internationalized/date": "^3.10.1",
+    "@internationalized/date": "^3.11.0",
     "@movk/nuxt-docs": "^1.11.1",
     "@nuxt/content": "^3.11.0",
     "@nuxt/ui": "^4.4.0",
     "@nuxt/kit": "^4.3.0",
-    "@tiptap/starter-kit": "^3.18.0",
-    "@tiptap/vue-3": "^3.18.0",
+    "@tiptap/starter-kit": "^3.19.0",
+    "@tiptap/vue-3": "^3.19.0",
     "better-sqlite3": "^12.6.2",
     "nuxt": "^4.3.0",
     "reka-ui": "^2.8.0",
