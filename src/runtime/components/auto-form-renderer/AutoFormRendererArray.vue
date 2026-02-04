@@ -12,7 +12,7 @@ import { collectFieldDefaults, createHintSlotFactory, VNodeRender } from '../../
 import AutoFormRendererField from './AutoFormRendererField.vue'
 import AutoFormRendererNested from './AutoFormRendererNested.vue'
 
-interface AutoFormRendererArrayProps<S extends z.ZodObject> extends Pick<AutoFormProps<S>, 'schema'> {
+export interface AutoFormRendererArrayProps<S extends z.ZodObject> extends Pick<AutoFormProps<S>, 'schema'> {
   field: AutoFormField
   extraProps?: AnyObject
   addButtonProps?: Partial<ButtonProps>

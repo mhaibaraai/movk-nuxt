@@ -13,8 +13,8 @@ export default defineEventHandler(async (event) => {
 
   if (!body || typeof body !== 'object') {
     throw createError({
-      statusCode: 400,
-      message: 'Invalid request body'
+      status: 400,
+      statusText: 'Invalid request body'
     })
   }
 
@@ -22,15 +22,15 @@ export default defineEventHandler(async (event) => {
 
   if (!session || typeof session !== 'object') {
     throw createError({
-      statusCode: 400,
-      message: 'Session data is required'
+      status: 400,
+      statusText: 'Session data is required'
     })
   }
 
   if (!session.user || typeof session.user !== 'object') {
     throw createError({
-      statusCode: 400,
-      message: 'User data is required'
+      status: 400,
+      statusText: 'User data is required'
     })
   }
 

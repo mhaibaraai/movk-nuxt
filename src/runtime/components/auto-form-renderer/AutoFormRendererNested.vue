@@ -11,7 +11,7 @@ import AutoFormRendererArray from './AutoFormRendererArray.vue'
 import AutoFormRendererField from './AutoFormRendererField.vue'
 import AutoFormRendererLayout from './AutoFormRendererLayout.vue'
 
-interface AutoFormRendererNestedProps<S extends z.ZodObject> extends Pick<AutoFormProps<S>, 'schema'> {
+export interface AutoFormRendererNestedProps<S extends z.ZodObject> extends Pick<AutoFormProps<S>, 'schema'> {
   field: AutoFormField
   extraProps?: AnyObject
 }

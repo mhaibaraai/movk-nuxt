@@ -3,12 +3,14 @@ import type {
   ApiClient,
   ApiResponse,
   ApiAuthConfig,
+  ApiHooksConfig,
   ResolvedEndpointConfig,
   UploadOptions,
   DownloadOptions,
   ApiFetchContext,
   MovkApiPublicConfig,
-  MovkApiPrivateConfig
+  MovkApiPrivateConfig,
+  ApiHooksRegistry
 } from '../types/api'
 import { getPath, triggerDownload, extractFilename } from '@movk/core'
 import {
@@ -92,6 +94,59 @@ async function handleUnauthorized(config: Partial<ApiAuthConfig>): Promise<void>
  */
 function getApiFetchContext(context: FetchContext): ApiFetchContext {
   return (context.options as { context?: ApiFetchContext }).context || {}
+}
+
+/**
+ * 从钩子注册表中解析用户钩子
+ * @description 优先级：端点级钩子 > 全局钩子 > undefined
+ * @param registry - 钩子注册表
+ * @param endpointName - 端点名称
+ * @param hookName - 钩子名称
+ * @returns 用户钩子函数或 undefined
+ * @internal
+ */
+function resolveUserHook<K extends keyof ApiHooksConfig>(
+  registry: ApiHooksRegistry,
+  endpointName: string,
+  hookName: K
+): ApiHooksConfig[K] | undefined {
+  const endpointHooks = registry.endpoints.get(endpointName)
+  return endpointHooks?.[hookName] ?? registry.global?.[hookName]
+}
+
+/**
+ * 用用户钩子包装内置钩子
+ * @description 每个包装后的钩子在执行时懒查询注册表，找到用户钩子则调用用户钩子（传入 builtin），否则直接调用内置钩子
+ * @param builtinHooks - 内置钩子集合
+ * @param endpointName - 端点名称（用于查找端点级钩子）
+ * @param registry - 钩子注册表
+ * @returns 包装后的钩子集合
+ * @internal
+ */
+function wrapWithUserHooks(
+  builtinHooks: FetchHooks,
+  endpointName: string,
+  registry: ApiHooksRegistry
+): FetchHooks {
+  const hookNames = ['onRequest', 'onRequestError', 'onResponse', 'onResponseError'] as const
+
+  const wrapped: Record<string, (context: any) => Promise<void>> = {}
+
+  for (const name of hookNames) {
+    const builtin = builtinHooks[name] as ((ctx: any) => void | Promise<void>) | undefined
+
+    wrapped[name] = async (context: any) => {
+      const userHook = resolveUserHook(registry, endpointName, name)
+      if (userHook) {
+        await (userHook as any)(context, builtin || (() => {}))
+      }
+      else if (builtin) {
+        await builtin(context)
+      }
+    }
+  }
+
+  return wrapped as unknown as FetchHooks
 }
 
 /**
@@ -188,6 +243,8 @@ function createBuiltinHooks(
  * 创建 API 客户端实例
  * @param resolvedConfig - 已解析的端点配置
  * @param publicConfig - 全局公共配置
+ * @param endpointName - 端点名称（用于解析用户钩子）
+ * @param hooksRegistry - 钩子注册表
  * @param getOrCreateEndpoint - 获取或创建端点的工厂函数（用于实现 use() 方法）
  * @returns API客户端实例（包含 $fetch、use、download、upload、getConfig 方法）
  * @internal
@@ -195,18 +252,22 @@ function createBuiltinHooks(
 function createApiClient(
   resolvedConfig: ResolvedEndpointConfig,
   publicConfig: MovkApiPublicConfig,
+  endpointName: string,
+  hooksRegistry: ApiHooksRegistry,
   getOrCreateEndpoint: (name: string) => ApiClient
 ): ApiClient {
   const builtinHooks = createBuiltinHooks(resolvedConfig, publicConfig)
   resolvedConfig.builtinHooks = builtinHooks
 
+  const effectiveHooks = wrapWithUserHooks(builtinHooks, endpointName, hooksRegistry)
+
   const $fetchInstance = $fetch.create({
     baseURL: resolvedConfig.baseURL,
     headers: resolvedConfig.headers,
-    onRequest: builtinHooks.onRequest,
-    onRequestError: builtinHooks.onRequestError,
-    onResponse: builtinHooks.onResponse,
-    onResponseError: builtinHooks.onResponseError
+    onRequest: effectiveHooks.onRequest,
+    onRequestError: effectiveHooks.onRequestError,
+    onResponse: effectiveHooks.onResponse,
+    onResponseError: effectiveHooks.onResponseError
   }) as $Fetch
 
   /**
@@ -289,6 +350,11 @@ export default defineNuxtPlugin(() => {
     ? (runtimeConfig.movkApi as MovkApiPrivateConfig | undefined)
     : undefined
 
+  const hooksRegistry: ApiHooksRegistry = {
+    global: undefined,
+    endpoints: new Map()
+  }
+
   const endpointCache = new Map<string, ApiClient>()
 
   const getOrCreateEndpoint = (endpointName: string): ApiClient => {
@@ -314,7 +380,7 @@ export default defineNuxtPlugin(() => {
       response: defu(endpointConfig.response, publicConfig.response) as ResolvedEndpointConfig['response']
     }
 
-    const client = createApiClient(resolvedConfig, publicConfig, getOrCreateEndpoint)
+    const client = createApiClient(resolvedConfig, publicConfig, endpointName, hooksRegistry, getOrCreateEndpoint)
 
     endpointCache.set(endpointName, client)
     return client
@@ -324,6 +390,9 @@ export default defineNuxtPlugin(() => {
   const api = getOrCreateEndpoint(defaultEndpoint)
 
   return {
-    provide: { api }
+    provide: {
+      api,
+      _apiHooksRegistry: hooksRegistry
+    }
   }
 })

@@ -12,7 +12,12 @@ export const DEFAULT_AUTH_CONFIG: ApiAuthConfig = {
   tokenSource: 'session',
   sessionTokenPath: 'token',
   tokenType: 'Bearer',
-  headerName: 'Authorization'
+  headerName: 'Authorization',
+  unauthorized: {
+    redirect: true,
+    clearSession: true,
+    loginPath: '/login'
+  }
 }
 
 export const DEFAULT_TOAST_CONFIG: ApiToastConfig = {

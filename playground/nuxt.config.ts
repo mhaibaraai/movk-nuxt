@@ -28,10 +28,7 @@ export default defineNuxtConfig({
         default: {
           baseURL: '/movk-backend',
           auth: {
-            enabled: true,
-            unauthorized: {
-              clearSession: true
-            }
+            enabled: true
           }
         }
       }

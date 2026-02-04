@@ -1,4 +1,4 @@
-import type { $Fetch, FetchOptions, FetchHooks, FetchError } from 'ofetch'
+import type { $Fetch, FetchOptions, FetchHooks, FetchError, FetchContext, FetchResponse } from 'ofetch'
 import type { UseFetchOptions as NuxtUseFetchOptions, AsyncData } from 'nuxt/app'
 import type { ToastProps } from '@nuxt/ui'
 import type { SessionConfig } from 'h3'
@@ -57,7 +57,7 @@ export interface ApiResponseConfig {
 export interface ApiUnauthorizedConfig {
   /**
    * 是否自动重定向到登录页
-   * @defaultValue false
+   * @defaultValue true
    */
   redirect?: boolean
   /**
@@ -67,7 +67,7 @@ export interface ApiUnauthorizedConfig {
   loginPath?: string
   /**
    * 是否清除用户会话
-   * @defaultValue false
+   * @defaultValue true
    */
   clearSession?: boolean
 }
@@ -446,6 +446,58 @@ export interface ApiClient {
   upload: <T = unknown>(url: string, file: File | File[] | FormData, options?: UploadOptions) => Promise<ApiResponse<T>>
   /** 获取当前端点配置 */
   getConfig: () => ResolvedEndpointConfig
+}
+
+/**
+ * 用户自定义钩子函数
+ * @description 接收请求上下文和内置钩子函数，由用户决定是否调用内置逻辑
+ * @template C - 钩子上下文类型
+ *
+ * @example
+ * ```ts
+ * // 完全覆盖内置行为
+ * const hook: ApiHookFn = (context) => {
+ *   // 自定义逻辑，不调用 builtin 则跳过内置行为
+ * }
+ *
+ * // 扩展内置行为
+ * const hook: ApiHookFn = async (context, builtin) => {
+ *   // 前置逻辑
+ *   await builtin(context)
+ *   // 后置逻辑
+ * }
+ * ```
+ */
+export type ApiHookFn<C extends FetchContext = FetchContext> = (
+  context: C,
+  builtin: (context: C) => void | Promise<void>
+) => void | Promise<void>
+
+export interface ApiHooksConfig {
+  /** 请求发送前（内置行为：认证 header 注入、debug 日志） */
+  onRequest?: ApiHookFn<FetchContext>
+  /** 请求失败时（内置行为：debug 错误日志） */
+  onRequestError?: ApiHookFn<FetchContext & { error: Error }>
+  /** 响应成功时（内置行为：业务状态码检查、成功 Toast） */
+  onResponse?: ApiHookFn<FetchContext & { response: FetchResponse<any> }>
+  /** 响应错误时（内置行为：401 处理、错误 Toast） */
+  onResponseError?: ApiHookFn<FetchContext & { response: FetchResponse<any> }>
+}
+
+export interface ApiHooksDefinition {
+  /** 全局钩子（应用于所有端点） */
+  hooks?: ApiHooksConfig
+  /** 按端点配置钩子（覆盖该端点的全局钩子） */
+  endpoints?: Record<string, ApiHooksConfig>
+}
+
+/**
+ * 钩子注册表（内部使用）
+ * @internal
+ */
+export interface ApiHooksRegistry {
+  global?: ApiHooksConfig
+  endpoints: Map<string, ApiHooksConfig>
 }
 
 /**
