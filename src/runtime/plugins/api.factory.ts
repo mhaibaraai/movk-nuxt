@@ -77,6 +77,7 @@ async function handleUnauthorized(config: Partial<ApiAuthConfig>): Promise<void>
 
   if (unauthorizedConfig?.clearSession && userSession?.clear) {
     await userSession.clear()
+    await userSession.fetch()
   }
 
   if (unauthorizedConfig?.redirect) {
@@ -184,7 +185,11 @@ function createBuiltinHooks(
       }
 
       if (publicConfig.debug) {
-        console.log(`[Movk API] Request: ${context.options.method || 'GET'} ${resolvedConfig.baseURL}${context.request}`)
+        console.log('[Movk API] Request:', {
+          method: context.options.method || 'GET',
+          url: `${resolvedConfig.baseURL}${context.request}`,
+          body: context.options.body ? '(body present)' : undefined
+        })
       }
     },
 
