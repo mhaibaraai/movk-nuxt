@@ -78,7 +78,7 @@ transition: { duration: 0.6, delay: 0.5 }
   API 集成
 
   #description
-  useApiFetch、useApiAuth、useUploadWithProgress 等完整的 API 请求和认证方案。
+  useApiFetch、useUploadWithProgress、useDownloadWithProgress 等完整的 API 请求方案。
   :::
 
   :::u-page-feature{icon="i-lucide-blocks"}

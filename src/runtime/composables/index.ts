@@ -1,6 +1,5 @@
 export * from './useApiFetch'
 export * from './useClientApiFetch'
-export * from './useApiAuth'
 export * from './useDownloadWithProgress'
 export * from './useUploadWithProgress'
 export * from './useAutoForm'

@@ -2,7 +2,6 @@ import {
   addComponentsDir,
   addImportsDir,
   addPlugin,
-  addServerHandler,
   createResolver,
   defineNuxtModule
 } from '@nuxt/kit'
@@ -16,7 +15,6 @@ import {
 } from './runtime/constants/api-defaults'
 import type { MovkApiPublicConfig, MovkApiPrivateConfig, ApiEndpointPublicConfig, MovkApiFullConfig, ModuleOptions } from './runtime/types'
 import { setupTheme } from './theme'
-import { getPackageJsonMetadata } from './utils/meta'
 
 export * from './runtime/types'
 
@@ -98,17 +96,6 @@ export default defineNuxtModule<ModuleOptions>({
       nuxt.options.runtimeConfig.public.movkApi = publicConfig
 
       addPlugin({ src: resolve('runtime/plugins/api.factory'), mode: 'all' })
-      addServerHandler({
-        route: '/api/_movk/session',
-        method: 'post',
-        handler: resolve('runtime/server/api/_movk/session.post')
-      })
-
-      const packageMeta = await getPackageJsonMetadata(nuxt.options.rootDir)
-      const siteName = (nuxt.options as any)?.site?.name || packageMeta.name
-      nuxt.options.runtimeConfig.session = defu(nuxt.options.runtimeConfig.session, {
-        name: `${siteName}_session`
-      })
     }
   }
 })

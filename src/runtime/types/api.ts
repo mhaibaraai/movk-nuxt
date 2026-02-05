@@ -1,10 +1,6 @@
 import type { $Fetch, FetchOptions, FetchHooks, FetchError, FetchContext, FetchResponse } from 'ofetch'
 import type { UseFetchOptions as NuxtUseFetchOptions, AsyncData } from 'nuxt/app'
 import type { ToastProps } from '@nuxt/ui'
-import type { SessionConfig } from 'h3'
-import type { PartialByKeys } from '@movk/core'
-// @ts-ignore - no types available
-import type { User, UserSession, UserSessionComposable } from '#auth-utils'
 
 declare module 'ofetch' {
   interface FetchOptions {
@@ -498,60 +494,4 @@ export interface ApiHooksDefinition {
 export interface ApiHooksRegistry {
   global?: ApiHooksConfig
   endpoints: Map<string, ApiHooksConfig>
-}
-
-/**
- * 登录选项
- * @template LoginRData - 登录接口响应数据类型
- */
-export interface LoginOptions<LoginRData = unknown> {
-  /** 登录接口路径 */
-  loginPath: string
-  /** 登录凭证（用户名/密码等） */
-  credentials: unknown
-  /** 获取用户信息的接口路径（可选，如果登录接口不返回用户信息） */
-  userInfoPath?: string
-  /**
-   * 从登录响应中提取令牌的函数
-   * @defaultValue 从 response.token 或 response.data.token 提取
-   */
-  tokenExtractor?: (response: ApiResponse<LoginRData>) => string | null | undefined
-  /**
-   * 自定义会话构建函数
-   * @defaultValue 使用 { user, token, loggedInAt: new Date().toISOString() } 作为会话数据
-   */
-  sessionBuilder?: (userInfo: User, token: string, loginData: LoginRData) => PartialByKeys<UserSession, 'id'>
-  /**
-   * Session 配置（maxAge、cookie 等）
-   * @defaultValue { name: 'nuxt-session', password: process.env.NUXT_SESSION_PASSWORD || '', cookie: { sameSite: 'lax' } }
-   * @see https://github.com/atinux/nuxt-auth-utils?tab=readme-ov-file#configuration
-   */
-  sessionConfig?: Partial<SessionConfig>
-  /** 使用的端点名称（默认使用 defaultEndpoint） */
-  endpoint?: string
-}
-
-/**
- * 登录结果
- * @template LoginRData - 登录接口响应数据类型
- */
-export interface LoginResult<LoginRData = unknown> {
-  /** 用户信息 */
-  user: User
-  /** 认证令牌 */
-  token: string
-  /** 登录响应数据（已提取） */
-  loginData: LoginRData
-}
-
-/**
- * useApiAuth 返回值类型
- * @description 扩展 nuxt-auth-utils 的 UserSessionComposable，添加 login 方法
- */
-export interface UseApiAuthReturn extends UserSessionComposable {
-  /**
-   * 登录方法
-   * @template LoginRData - 登录接口响应数据类型
-   */
-  login: <LoginRData = unknown>(options: LoginOptions<LoginRData>) => Promise<LoginResult<LoginRData>>
 }

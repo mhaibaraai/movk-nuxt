@@ -121,7 +121,6 @@ const components: NavigationMenuItem[] = [
 ]
 
 const composables: NavigationMenuItem[] = [
-  { label: 'useApiAuth', to: '/composables/useApiAuth' },
   { label: 'useApiFetch', to: '/composables/useApiFetch' },
   { label: 'useClientApiFetch', to: '/composables/useClientApiFetch' },
   { label: 'useDateFormatter', to: '/composables/useDateFormatter' },

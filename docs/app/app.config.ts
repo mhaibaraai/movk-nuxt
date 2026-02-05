@@ -53,7 +53,6 @@ export default defineAppConfig({
         items: [
           'useDateFormatter 如何格式化日期？',
           'useAutoForm 如何定义自定义控件？',
-          'useApiAuth 如何管理认证？',
           'useTheme 如何切换主题？'
         ]
       }

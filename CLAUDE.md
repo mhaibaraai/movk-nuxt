@@ -9,7 +9,7 @@ This file provides guidance to AI coding agents when working with code in this r
 核心特性:
 - **Schema 驱动**: 基于 Zod v4 的声明式表单定义,一份 Schema 同时定义数据结构、验证规则和 UI 配置
 - **自动化系统**: AutoForm 通过 Schema 自动生成完整表单界面,支持 15+ 种控件类型
-- **API 集成**: 内置 useApiFetch、useApiAuth、useUploadWithProgress、useDownloadWithProgress,提供多端点支持、自动认证、业务状态码检查、Toast 提示和进度监控
+- **API 集成**: 内置 useApiFetch、useUploadWithProgress、useDownloadWithProgress,提供多端点支持、自动认证、业务状态码检查、Toast 提示和进度监控
 - **模块化设计**: 采用分层架构,按需使用 UI 组件、工具函数或全套自动化系统
 - **独立组件库**: 内置 DatePicker、StarRating、WithCopy 等 10+ 个通用 UI 组件
 - **类型安全**: 完整的 TypeScript 类型推断,从 Schema 到表单数据
@@ -96,7 +96,6 @@ pnpm clean
 3. **API System** (`src/runtime/composables/`)
    - `useApiFetch`: 基于 Nuxt useFetch 封装的 API 请求 composable
    - `useClientApiFetch`: 仅客户端执行的 API 请求(设置 `server: false, lazy: true`)
-   - `useApiAuth`: 与 nuxt-auth-utils 集成的认证管理
    - `useUploadWithProgress`: 带进度监控的文件上传 composable
    - `useDownloadWithProgress`: 带进度监控的文件下载 composable
    - `api.factory.ts`: API 客户端工厂插件,提供 `$api` 实例
@@ -154,11 +153,9 @@ constants/api-defaults.ts          → 配置默认值
 plugins/api.factory.ts             → 客户端工厂 ($api 实例)
 composables/useApiFetch.ts         → 请求封装 (SSR/CSR 通用)
 composables/useClientApiFetch.ts   → 客户端专用请求封装
-composables/useApiAuth.ts          → 认证管理
 composables/useUploadWithProgress.ts   → 文件上传(带进度)
 composables/useDownloadWithProgress.ts → 文件下载(带进度)
 utils/api-utils.ts                 → 响应处理工具
-server/api/_movk/                  → Session 管理 API
 ```
 
 ### 目录结构约定
@@ -175,7 +172,6 @@ src/
     ├── constants/             # 常量定义和配置默认值
     ├── internal/              # 内部使用的工具(provide/inject 等)
     ├── plugins/               # Nuxt 插件
-    ├── server/                # 服务端 API 路由
     ├── types/                 # 类型定义
     └── utils/                 # 工具函数
 
@@ -219,7 +215,7 @@ test/                          # 测试文件
 - `@nuxt/image` >= 2.0.0
 - `@nuxt/ui` >= 4.2.1
 - `@vueuse/nuxt` >= 14.0.0
-- `nuxt-auth-utils` >= 0.5.0 (可选,用于 useApiAuth)
+- `nuxt-auth-utils` >= 0.5.0 (用于 API 认证 token 注入和 401 处理)
 - `zod` >= 4.1.13 (peer dependency)
 - `@movk/core` >= 1.0.2 (文件下载等工具函数)
 
