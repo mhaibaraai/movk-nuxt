@@ -26,6 +26,11 @@ export function useHeader() {
     to: '/docs/auto-form',
     active: route.path.startsWith('/docs/auto-form')
   }, {
+    label: 'API',
+    icon: 'i-lucide-cloud',
+    to: '/docs/api',
+    active: route.path.startsWith('/docs/api')
+  }, {
     label: 'Composables',
     icon: 'i-lucide-square-function',
     to: '/docs/composables',

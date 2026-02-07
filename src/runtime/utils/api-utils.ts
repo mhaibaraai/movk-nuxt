@@ -1,5 +1,4 @@
 import type { ToastProps } from '@nuxt/ui'
-import type { FetchContext, FetchHooks } from 'ofetch'
 import type {
   ApiResponse,
   ApiError,
@@ -7,15 +6,17 @@ import type {
   ApiToastConfig,
   ApiAuthConfig,
   RequestToastOptions,
-  ResolvedEndpointConfig
+  ResolvedEndpointConfig,
+  MovkApiPublicConfig
 } from '../types/api'
 import { getPath } from '@movk/core'
+import defu from 'defu'
 import { useNuxtApp, useToast, useUserSession } from '#imports'
 
 /**
- * 判断API响应是否业务成功
- * @param response - API响应对象
- * @param config - 响应配置（包含codeKey和successCodes）
+ * 判断 API 响应是否业务成功
+ * @param response - API 响应对象
+ * @param config - 响应配置（包含 codeKey 和 successCodes）
  * @returns 是否业务成功
  */
 export function isBusinessSuccess(
@@ -29,36 +30,38 @@ export function isBusinessSuccess(
 }
 
 /**
- * 从API响应中提取消息内容
- * @param response - API响应对象
- * @param config - 响应配置（包含messageKey）
- * @returns 消息字符串或undefined
+ * 从 API 响应中提取消息内容
+ * @param response - API 响应对象
+ * @param config - 响应配置（包含 messageKey）
+ * @returns 消息字符串或 undefined
  */
 export function extractMessage(
   response: ApiResponse,
   config: Partial<ApiResponseConfig> = {}
 ): string | undefined {
   const messageKey = config.messageKey || 'message'
-  return (response[messageKey] as string) || response.message || response.msg
+  return (response[messageKey] as string | undefined)
+    || (response.message as string | undefined)
+    || (response.msg as string | undefined)
 }
 
 /**
- * 从API响应中提取业务数据
- * @param response - API响应对象
- * @param config - 响应配置（包含dataKey）
+ * 从 API 响应中提取业务数据
+ * @param response - API 响应对象
+ * @param config - 响应配置（包含 dataKey）
  * @returns 业务数据
  */
-export function extractData<T>(
-  response: ApiResponse<T>,
+export function extractData(
+  response: ApiResponse,
   config: Partial<ApiResponseConfig> = {}
-): T {
+): unknown {
   const dataKey = config.dataKey || 'data'
-  return (response[dataKey] ?? response.result ?? response) as T
+  return response[dataKey] ?? response
 }
 
 /**
  * 创建业务错误对象
- * @param response - API响应对象
+ * @param response - API 响应对象
  * @param message - 错误消息（可选）
  * @returns 业务错误对象
  */
@@ -71,8 +74,8 @@ export function createApiError(response: ApiResponse, message?: string): ApiErro
 }
 
 /**
- * 获取Toast实例
- * @returns Toast实例或null（如果在不支持的上下文中调用）
+ * 获取 Toast 实例
+ * @returns Toast 实例或 null
  * @internal
  */
 function getToast(): ReturnType<typeof useToast> | null {
@@ -86,8 +89,8 @@ function getToast(): ReturnType<typeof useToast> | null {
 }
 
 /**
- * 提取Toast消息内容
- * @param toast - Toast配置选项
+ * 提取 Toast 消息内容
+ * @param toast - Toast 配置选项
  * @param type - 消息类型
  * @param fallback - 默认消息
  * @returns 最终显示的消息内容
@@ -102,11 +105,11 @@ export function extractToastMessage(
 }
 
 /**
- * 显示Toast提示
+ * 显示 Toast 提示
  * @param type - 提示类型
  * @param message - 提示消息
- * @param requestOptions - 请求级别的Toast配置
- * @param globalConfig - 全局Toast配置
+ * @param requestOptions - 请求级别的 Toast 配置
+ * @param globalConfig - 全局 Toast 配置
  */
 export function showToast(
   type: 'success' | 'error',
@@ -138,90 +141,9 @@ export function showToast(
   } as ToastProps)
 }
 
-interface CreateTransformOptions<ResT, DataT = ResT> {
-  skipBusinessCheck: boolean
-  userTransform?: (data: ResT) => DataT
-  successConfig: Partial<ApiResponseConfig>
-}
-
-/**
- * 创建响应转换函数
- * @description 用于 useFetch 的 transform 选项，处理业务状态码检查和数据提取
- * @param options - 转换选项（包含skipBusinessCheck、userTransform、successConfig）
- * @returns 响应转换函数
- */
-export function createTransform<ResT, DataT = ResT>(
-  options: CreateTransformOptions<ResT, DataT>
-): (response: ApiResponse<ResT>) => DataT {
-  const { skipBusinessCheck, userTransform, successConfig } = options
-
-  return (response: ApiResponse<ResT>): DataT => {
-    if (!skipBusinessCheck && !isBusinessSuccess(response, successConfig)) {
-      throw createApiError(response, extractMessage(response, successConfig))
-    }
-
-    const unwrappedData = extractData<ResT>(response, successConfig)
-
-    if (userTransform) {
-      return userTransform(unwrappedData)
-    }
-
-    return unwrappedData as unknown as DataT
-  }
-}
-
-type HookFunction = (context: FetchContext) => void | Promise<void>
-
-/**
- * 合并多个钩子函数为一个
- * @param hooks - 钩子函数数组
- * @returns 合并后的钩子函数
- */
-export function mergeHooks(...hooks: (HookFunction | undefined)[]): HookFunction {
-  const validHooks = hooks.filter((h): h is HookFunction => typeof h === 'function')
-  if (validHooks.length === 0) return () => {}
-  if (validHooks.length === 1) return validHooks[0]!
-
-  return async (context: FetchContext) => {
-    for (const hook of validHooks) {
-      await hook(context)
-    }
-  }
-}
-
-/**
- * 合并内置钩子和用户钩子
- * @param builtinHooks - 内置钩子集合
- * @param userHooks - 用户自定义钩子集合
- * @returns 合并后的完整钩子集合
- */
-export function mergeFetchHooks(
-  builtinHooks: Partial<FetchHooks>,
-  userHooks: Partial<FetchHooks>
-): FetchHooks {
-  return {
-    onRequest: mergeHooks(
-      builtinHooks.onRequest as HookFunction | undefined,
-      userHooks.onRequest as HookFunction | undefined
-    ),
-    onRequestError: mergeHooks(
-      builtinHooks.onRequestError as HookFunction | undefined,
-      userHooks.onRequestError as HookFunction | undefined
-    ),
-    onResponse: mergeHooks(
-      builtinHooks.onResponse as HookFunction | undefined,
-      userHooks.onResponse as HookFunction | undefined
-    ),
-    onResponseError: mergeHooks(
-      builtinHooks.onResponseError as HookFunction | undefined,
-      userHooks.onResponseError as HookFunction | undefined
-    )
-  }
-}
-
 /**
  * 获取用户会话实例
- * @returns 用户会话对象或null（如果在不支持的上下文中调用）
+ * @returns 用户会话对象或 null
  * @internal
  */
 function getUserSession(): ReturnType<typeof useUserSession> | null {
@@ -237,7 +159,7 @@ function getUserSession(): ReturnType<typeof useUserSession> | null {
 /**
  * 从用户会话中提取认证令牌
  * @param tokenPath - 令牌在会话对象中的路径（支持点号分隔的嵌套路径）
- * @returns 令牌字符串或null
+ * @returns 令牌字符串或 null
  * @internal
  */
 function getTokenFromSession(tokenPath: string): string | null {
@@ -265,10 +187,10 @@ function buildAuthHeaderValue(token: string, config: Partial<ApiAuthConfig>): st
 
 /**
  * 获取认证请求头
- * @param config - 已解析的端点配置
+ * @param config - 已解析的端点配置（或至少包含 auth 字段）
  * @returns 认证请求头对象
  */
-export function getAuthHeaders(config: ResolvedEndpointConfig): Record<string, string> {
+export function getAuthHeaders(config: Pick<ResolvedEndpointConfig, 'auth'>): Record<string, string> {
   const headers: Record<string, string> = {}
   const authConfig = config.auth
 
@@ -283,4 +205,29 @@ export function getAuthHeaders(config: ResolvedEndpointConfig): Record<string, s
   }
 
   return headers
+}
+
+/**
+ * 从 publicConfig 解析端点配置（合并全局默认值）
+ * @param publicConfig - 模块公共配置
+ * @param endpoint - 端点名称（可选，默认使用 defaultEndpoint）
+ * @returns 已解析的端点配置（含 baseURL、auth、toast、response）
+ */
+export function resolveEndpointConfig(
+  publicConfig: MovkApiPublicConfig,
+  endpoint?: string
+): Pick<ResolvedEndpointConfig, 'baseURL' | 'auth' | 'toast' | 'response'> {
+  const endpointName = endpoint || publicConfig.defaultEndpoint || 'default'
+  const endpointConfig = publicConfig.endpoints[endpointName]
+  if (!endpointConfig) {
+    console.warn(`[Movk API] Endpoint "${endpointName}" not found, using default`)
+    return resolveEndpointConfig(publicConfig, publicConfig.defaultEndpoint || 'default')
+  }
+
+  return {
+    baseURL: endpointConfig.baseURL || '',
+    auth: defu(endpointConfig.auth, publicConfig.auth) as ResolvedEndpointConfig['auth'],
+    toast: defu(endpointConfig.toast, publicConfig.toast) as ResolvedEndpointConfig['toast'],
+    response: defu(endpointConfig.response, publicConfig.response) as ResolvedEndpointConfig['response']
+  }
 }

@@ -1,11 +1,12 @@
-import type { ApiResponse, RequestToastOptions } from '../types/api'
-import { ref, useNuxtApp } from '#imports'
+import type { ApiResponse, RequestToastOptions, MovkApiPublicConfig } from '../types/api'
+import { ref, useRuntimeConfig } from '#imports'
 import {
   showToast,
   isBusinessSuccess,
   extractMessage,
   extractToastMessage,
-  getAuthHeaders
+  getAuthHeaders,
+  resolveEndpointConfig
 } from '../utils/api-utils'
 
 /**
@@ -43,12 +44,12 @@ export interface UploadWithProgressOptions {
  * })
  * ```
  */
-export function useUploadWithProgress<T = unknown>() {
-  const { $api } = useNuxtApp()
+export function useUploadWithProgress() {
+  const publicConfig = useRuntimeConfig().public.movkApi as MovkApiPublicConfig
 
   const progress = ref(0)
   const uploading = ref(false)
-  const data = ref<ApiResponse<T> | null>(null)
+  const data = ref<ApiResponse | null>(null)
   const error = ref<Error | null>(null)
 
   let currentXhr: XMLHttpRequest | null = null
@@ -64,12 +65,11 @@ export function useUploadWithProgress<T = unknown>() {
     url: string,
     files: File | File[],
     options: UploadWithProgressOptions = {}
-  ): Promise<{ data: ApiResponse<T> | null, error: Error | null }> => {
+  ): Promise<{ data: ApiResponse | null, error: Error | null }> => {
     const { fieldName = 'file', fields = {}, headers = {}, toast, endpoint, onSuccess, onError } = options
 
-    const apiInstance = endpoint ? $api.use(endpoint) : $api
-    const config = apiInstance.getConfig()
-    const fullUrl = `${config.baseURL || ''}${url}`
+    const config = resolveEndpointConfig(publicConfig, endpoint)
+    const fullUrl = `${config.baseURL}${url}`
 
     // 构建 FormData
     const formData = new FormData()
@@ -100,7 +100,7 @@ export function useUploadWithProgress<T = unknown>() {
         currentXhr = null
 
         try {
-          const response = JSON.parse(xhr.responseText) as ApiResponse<T>
+          const response = JSON.parse(xhr.responseText) as ApiResponse
           const isSuccess = isBusinessSuccess(response, config.response)
           const message = extractMessage(response, config.response)
 

@@ -2,11 +2,9 @@
 import type { SelectItem } from '@nuxt/ui'
 import type { User } from '#auth-utils'
 
-const { data: users } = await useApiFetch('/api/system/users', {
+const { data: users } = await useApiFetch<{ content: User[] }, SelectItem[]>('/api/system/users', {
   toast: { successMessage: '用户列表加载成功' },
-  transform: ({ content }: {
-    content: User[]
-  }) => {
+  transform: ({ content }) => {
     return content?.map(user => ({
       label: user.username,
       value: String(user.id)
@@ -14,7 +12,8 @@ const { data: users } = await useApiFetch('/api/system/users', {
   }
 })
 
-const value = ref(users.value?.[0]?.value)
+const firstItem = users.value?.[0]
+const value = ref(typeof firstItem === 'object' && firstItem !== null ? (firstItem as { value: string }).value : undefined)
 </script>
 
 <template>

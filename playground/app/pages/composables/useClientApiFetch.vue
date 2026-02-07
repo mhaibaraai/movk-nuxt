@@ -13,55 +13,56 @@ const { data, execute, pending } = await useClientApiFetch<User>(`/api/system/us
   }
 })
 
-const { $api } = useNuxtApp()
-
 const file = ref<File | null>(null)
 const files = ref<File[]>([])
-const loading = ref(false)
-const multipleLoading = ref(false)
-const downloadLoading = ref(false)
-const downloadCustomNameLoading = ref(false)
+
+const {
+  progress: uploadProgress,
+  uploading,
+  upload,
+  abort: abortUpload
+} = useUploadWithProgress()
+
+const {
+  progress: downloadProgress,
+  downloading,
+  download,
+  abort: abortDownload
+} = useDownloadWithProgress()
 
 async function uploadFile() {
   if (!file.value) return
 
-  loading.value = true
-  await $api.upload('/api/system/files/upload', file.value, {
+  await upload('/api/system/files/upload', file.value, {
     toast: {
       successMessage: '文件上传成功!',
       errorMessage: '文件上传失败,请重试'
     }
   })
-  loading.value = false
 }
 
 async function uploadMultipleFiles() {
   if (!files.value.length) return
 
-  multipleLoading.value = true
-  await $api.upload('/api/system/files/upload/batch', files.value, {
+  await upload('/api/system/files/upload/batch', files.value, {
     fieldName: 'files',
     toast: {
       successMessage: `成功上传 ${files.value.length} 个文件!`
     }
   })
-  multipleLoading.value = false
 }
 
 async function downloadFile() {
-  downloadLoading.value = true
-  await $api.download('/api/system/files/download/b8f3e133-2ac6-4931-9286-bb86527041a0')
-  downloadLoading.value = false
+  await download('/api/system/files/download/b8f3e133-2ac6-4931-9286-bb86527041a0')
 }
 
 async function downloadWithCustomName() {
-  downloadCustomNameLoading.value = true
-  await $api.download('/api/system/files/download/b8f3e133-2ac6-4931-9286-bb86527041a0', 'custom-name.png', {
+  await download('/api/system/files/download/b8f3e133-2ac6-4931-9286-bb86527041a0', {
+    filename: 'custom-name.png',
     toast: {
       successMessage: '文件已保存到下载目录'
     }
   })
-  downloadCustomNameLoading.value = false
 }
 </script>
 
@@ -85,14 +86,25 @@ async function downloadWithCustomName() {
 
     <UPageCard title="基础上传">
       <UFileUpload v-model="file" accept="image/*" class="min-h-32" />
-      <UButton
-        class="mt-2"
-        :disabled="!file"
-        :loading="loading"
-        @click="uploadFile"
-      >
-        上传文件
-      </UButton>
+      <div class="mt-2 space-y-2">
+        <UProgress v-if="uploading" :model-value="uploadProgress" :max="100" />
+        <div class="flex gap-2">
+          <UButton
+            :disabled="!file"
+            :loading="uploading"
+            @click="uploadFile"
+          >
+            上传文件
+          </UButton>
+          <UButton
+            v-if="uploading"
+            color="error"
+            @click="abortUpload"
+          >
+            取消
+          </UButton>
+        </div>
+      </div>
     </UPageCard>
 
     <UPageCard title="上传多个文件">
@@ -106,7 +118,7 @@ async function downloadWithCustomName() {
       <UButton
         class="mt-2"
         :disabled="!files.length"
-        :loading="multipleLoading"
+        :loading="uploading"
         @click="uploadMultipleFiles"
       >
         上传多个文件 ({{ files.length }})
@@ -114,13 +126,25 @@ async function downloadWithCustomName() {
     </UPageCard>
 
     <UPageCard title="下载文件">
-      <UButton :loading="downloadLoading" color="primary" @click="downloadFile">
-        下载文件 (自动命名)
-      </UButton>
+      <div class="space-y-2">
+        <UProgress v-if="downloading" :model-value="downloadProgress" :max="100" />
+        <div class="flex gap-2">
+          <UButton :loading="downloading" color="primary" @click="downloadFile">
+            下载文件 (自动命名)
+          </UButton>
+          <UButton
+            v-if="downloading"
+            color="error"
+            @click="abortDownload"
+          >
+            取消
+          </UButton>
+        </div>
+      </div>
     </UPageCard>
 
     <UPageCard title="下载文件 (自定义命名)">
-      <UButton :loading="downloadCustomNameLoading" color="primary" @click="downloadWithCustomName">
+      <UButton :loading="downloading" color="primary" @click="downloadWithCustomName">
         下载文件 (自定义命名)
       </UButton>
     </UPageCard>

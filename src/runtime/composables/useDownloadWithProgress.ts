@@ -1,7 +1,7 @@
-import type { RequestToastOptions } from '../types/api'
-import { ref, useNuxtApp } from '#imports'
+import type { RequestToastOptions, MovkApiPublicConfig } from '../types/api'
+import { ref, useRuntimeConfig } from '#imports'
 import { extractFilename, triggerDownload } from '@movk/core'
-import { showToast, extractToastMessage, getAuthHeaders } from '../utils/api-utils'
+import { showToast, extractToastMessage, getAuthHeaders, resolveEndpointConfig } from '../utils/api-utils'
 
 /**
  * 下载选项(带进度监控)
@@ -37,7 +37,7 @@ export interface DownloadWithProgressOptions {
  * ```
  */
 export function useDownloadWithProgress() {
-  const { $api } = useNuxtApp()
+  const publicConfig = useRuntimeConfig().public.movkApi as MovkApiPublicConfig
 
   const progress = ref(0)
   const downloading = ref(false)
@@ -58,9 +58,8 @@ export function useDownloadWithProgress() {
   ): Promise<{ success: boolean, error: Error | null }> => {
     const { filename, headers = {}, toast, endpoint, onSuccess, onError } = options
 
-    const apiInstance = endpoint ? $api.use(endpoint) : $api
-    const config = apiInstance.getConfig()
-    const fullUrl = `${config.baseURL || ''}${url}`
+    const config = resolveEndpointConfig(publicConfig, endpoint)
+    const fullUrl = `${config.baseURL}${url}`
 
     // 重置状态
     progress.value = 0

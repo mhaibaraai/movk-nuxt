@@ -1,4 +1,10 @@
 export default defineAppConfig({
+  seo: {
+    title: 'Movk Nuxt'
+  },
+  header: {
+    title: 'Movk Nuxt'
+  },
   toaster: {
     expand: true,
     position: 'top-center' as const,
@@ -57,9 +63,6 @@ export default defineAppConfig({
         ]
       }
     ]
-  },
-  header: {
-    title: 'Movk Nuxt'
   },
   github: {
     rootDir: 'docs',

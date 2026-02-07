@@ -14,11 +14,20 @@ export default defineNuxtConfig({
     }
   ],
 
-  css: ['~/assets/css/main.css'],
-
-  site: {
-    url: 'https://nuxt.mhaibaraai.cn'
+  $development: {
+    site: {
+      name: 'Movk Nuxt',
+      url: 'http://localhost:3000'
+    }
   },
+
+  $production: {
+    site: {
+      url: 'https://nuxt.mhaibaraai.cn'
+    }
+  },
+
+  css: ['~/assets/css/main.css'],
 
   routeRules: {
     '/docs': { redirect: '/docs/getting-started', prerender: false },
@@ -26,7 +35,8 @@ export default defineNuxtConfig({
     '/docs/auto-form/field': { redirect: '/docs/auto-form/field/string', prerender: false },
     '/docs/auto-form/customization': { redirect: '/docs/auto-form/customization/collapsible', prerender: false },
     '/docs/composables': { redirect: '/docs/composables/use-auto-form', prerender: false },
-    '/docs/examples': { redirect: '/docs/examples/auto-form', prerender: false }
+    '/docs/examples': { redirect: '/docs/examples/auto-form', prerender: false },
+    '/docs/best-practices': { redirect: '/docs/best-practices/project-structure', prerender: false }
   },
 
   compatibilityDate: 'latest',
@@ -44,12 +54,12 @@ export default defineNuxtConfig({
   llms: {
     domain: 'https://nuxt.mhaibaraai.cn',
     title: 'Movk Nuxt',
-    description: 'Movk Nuxt 是一个为 Nuxt 4 设计的模块化工程套件，提供 Schema 驱动的自动表单生成、API 集成系统、独立 UI 组件和通用工具函数。',
+    description: 'Nuxt 4 模块化工程套件 — 基于 Zod v4 的 Schema 驱动自动表单、带认证与进度追踪的 API 集成系统、10+ 独立 UI 组件和通用 Composables。',
     full: {
-      title: '@movk/nuxt - Nuxt 4 模块化工程套件',
-      description: '基于 Nuxt 4 和 Nuxt UI 的模块化扩展库，提供 Schema 驱动的自动表单生成、API 请求封装、常用 composables 工具等完整的表单与数据处理解决方案。采用分层架构设计，包含 Core Systems (AutoForm)、API System (useApiFetch, useUploadWithProgress, useDownloadWithProgress)、Standalone Components (DatePicker, StarRating 等) 和 Composables (useDateFormatter 等)。'
+      title: 'Movk Nuxt — Nuxt 4 模块化工程套件',
+      description: '基于 Nuxt UI 和 Zod v4 构建的 Nuxt 4 模块化工程套件。采用分层架构设计：Core Systems (AutoForm — Schema 驱动的自动表单生成，支持 15+ 控件类型)、API System (useApiFetch/useLazyApiFetch/useClientApiFetch — 多端点、自动认证、业务状态码检查、Toast 提示；useUploadWithProgress/useDownloadWithProgress — 带进度监控的文件传输)、Standalone Components (DatePicker、StarRating、WithCopy 等 10+ 个独立 UI 组件)、Composables (useDateFormatter 等通用工具函数)。'
     },
-    notes: ['nuxt', 'nuxt4', 'autoform', 'zod', 'schema-driven', 'api', 'fetch', 'auth', 'upload', 'download', 'ui-components', 'composables']
+    notes: ['nuxt', 'nuxt4', 'autoform', 'zod', 'zod-v4', 'schema-driven', 'api', 'fetch', 'auth', 'upload', 'download', 'progress', 'ui-components', 'composables', 'nuxt-ui', 'vueuse']
   },
 
   mcp: {
