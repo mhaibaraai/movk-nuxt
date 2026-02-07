@@ -3,7 +3,7 @@
   "type": "module",
   "version": "1.1.2",
   "packageManager": "pnpm@10.28.2",
-  "description": "Modular engineering suite for Nuxt 4 with schema-driven forms, API integration, UI components and composables",
+  "description": "Nuxt 4 modular engineering suite — schema-driven auto forms (Zod v4), API integration with auth & progress tracking, standalone UI components, and utility composables",
   "author": "YiXuan <mhaibaraai@gmail.com>",
   "license": "MIT",
   "repository": {

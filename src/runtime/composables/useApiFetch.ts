@@ -1,19 +1,13 @@
-import type { UseApiFetchOptions, UseApiFetchReturn, ApiFetchContext } from '../types/api'
+import type { UseApiFetchOptions, UseApiFetchReturn } from '../types/api'
 import { useNuxtApp, useFetch } from '#imports'
-import { createTransform, mergeFetchHooks } from '../utils/api-utils'
 
 /**
  * API Fetch 组合式函数
  *
- * 基于 Nuxt useFetch 封装，提供：
- * - 自动认证（从 session 获取 token）
- * - 业务状态码检查
- * - Toast 提示（通过内置 hooks 统一处理）
- * - 自动数据解包
- * - 支持用户自定义 hooks（与内置 hooks 合并执行）
+ * 基于 Nuxt useFetch 的薄封装，自动注入 $api 实例。
+ * 所有核心能力（认证、业务检查、数据解包、Toast）由 $api interceptors 统一处理。
  *
- * @typeParam ResT - API 响应 data 字段的原始类型
- * @typeParam DataT - transform 转换后的最终类型（默认等于 ResT）
+ * @typeParam T - 业务数据类型（已由 $api 自动解包）
  *
  * @example
  * ```ts
@@ -26,67 +20,48 @@ import { createTransform, mergeFetchHooks } from '../utils/api-utils'
  *   body: { name: 'test' }
  * })
  *
- * // 自定义 transform（双泛型，接收解包后的数据）
- * const { data } = await useApiFetch<{ content: User[] }, User[]>('/users', {
- *   transform: ({ content }) => content ?? []
+ * // 自定义 transform（接收已解包的业务数据）
+ * const { data } = await useApiFetch<User[]>('/users', {
+ *   transform: (users) => users.filter(u => u.active)
  * })
  *
  * // 使用其他端点
  * const { data } = await useApiFetch('/users', { endpoint: 'v2' })
  *
- * // 自定义 hooks（与内置 hooks 合并执行）
+ * // 自定义 Toast
+ * const { data } = await useApiFetch('/users', {
+ *   toast: { successMessage: '加载成功' }
+ * })
+ *
+ * // 跳过业务检查（直接返回原始响应）
+ * const { data } = await useApiFetch('/external', { skipBusinessCheck: true })
+ *
+ * // 用户自定义 hooks（通过 useFetch 原生选项透传）
  * const { data } = await useApiFetch('/users', {
  *   onResponse({ response }) {
- *     console.log('用户自定义处理:', response._data)
+ *     console.log('自定义处理:', response._data)
  *   }
  * })
  * ```
  */
-export function useApiFetch<ResT = unknown, DataT = ResT>(
+export function useApiFetch<T = unknown, DataT = T>(
   url: string | (() => string),
-  options: UseApiFetchOptions<ResT, DataT> = {}
+  options: UseApiFetchOptions<T, DataT> = {} as UseApiFetchOptions<T, DataT>
 ): UseApiFetchReturn<DataT> {
   const { $api } = useNuxtApp()
 
   const {
     endpoint,
     toast,
-    skipBusinessCheck = false,
-    transform: userTransform,
-    onRequest: userOnRequest,
-    onRequestError: userOnRequestError,
-    onResponse: userOnResponse,
-    onResponseError: userOnResponseError,
+    skipBusinessCheck,
     ...fetchOptions
   } = options
 
   const apiInstance = endpoint ? $api.use(endpoint) : $api
-  const endpointConfig = apiInstance.getConfig()
-  const builtinHooks = endpointConfig.builtinHooks || {}
-
-  const transformFn = createTransform<ResT, DataT>({
-    skipBusinessCheck,
-    userTransform,
-    successConfig: endpointConfig.response
-  })
-
-  const mergedHooks = mergeFetchHooks(builtinHooks, {
-    onRequest: userOnRequest as any,
-    onRequestError: userOnRequestError as any,
-    onResponse: userOnResponse as any,
-    onResponseError: userOnResponseError as any
-  })
-
-  const context: ApiFetchContext = { toast, skipBusinessCheck }
 
   return useFetch(url, {
     ...fetchOptions,
-    $fetch: apiInstance.$fetch,
-    transform: transformFn,
-    onRequest: mergedHooks.onRequest,
-    onRequestError: mergedHooks.onRequestError,
-    onResponse: mergedHooks.onResponse,
-    onResponseError: mergedHooks.onResponseError,
-    context
+    $fetch: apiInstance as typeof $fetch,
+    context: { toast, skipBusinessCheck }
   } as Parameters<typeof useFetch>[1]) as UseApiFetchReturn<DataT>
 }

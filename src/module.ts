@@ -13,29 +13,22 @@ import {
   DEFAULT_TOAST_CONFIG,
   DEFAULT_ENDPOINT
 } from './runtime/constants/api-defaults'
-import type { MovkApiPublicConfig, MovkApiPrivateConfig, ApiEndpointPublicConfig, MovkApiFullConfig, ModuleOptions } from './runtime/types'
+import type { MovkApiPublicConfig, ApiEndpointPublicConfig, EndpointPrivateConfig, MovkApiFullConfig, ModuleOptions } from './runtime/types'
 import { setupTheme } from './theme'
 
 export * from './runtime/types'
 
-function splitEndpointConfigs(endpoints?: MovkApiFullConfig['endpoints']) {
+function buildApiRuntimeConfig(apiConfig: MovkApiFullConfig) {
   const publicEndpoints: Record<string, ApiEndpointPublicConfig> = {}
-  const privateEndpoints: Record<string, { headers?: Record<string, string> }> = {}
+  const privateEndpoints: Record<string, EndpointPrivateConfig> = {}
 
-  if (!endpoints) return { publicEndpoints, privateEndpoints }
-
-  for (const [name, { headers, ...publicConfig }] of Object.entries(endpoints)) {
-    publicEndpoints[name] = publicConfig as ApiEndpointPublicConfig
-    if (headers) {
-      privateEndpoints[name] = { headers }
+  if (apiConfig.endpoints) {
+    for (const [key, { headers, ...rest }] of Object.entries(apiConfig.endpoints)) {
+      publicEndpoints[key] = rest as ApiEndpointPublicConfig
+      if (headers) privateEndpoints[key] = { headers }
     }
   }
 
-  return { publicEndpoints, privateEndpoints }
-}
-
-function buildApiRuntimeConfig(apiConfig: MovkApiFullConfig) {
-  const { publicEndpoints, privateEndpoints } = splitEndpointConfigs(apiConfig.endpoints)
   const hasEndpoints = Object.keys(publicEndpoints).length > 0
 
   const publicConfig: MovkApiPublicConfig = {
@@ -47,7 +40,7 @@ function buildApiRuntimeConfig(apiConfig: MovkApiFullConfig) {
     toast: defu(apiConfig.toast, DEFAULT_TOAST_CONFIG) as MovkApiPublicConfig['toast']
   }
 
-  const privateConfig: MovkApiPrivateConfig = {
+  const privateConfig = {
     endpoints: Object.keys(privateEndpoints).length > 0 ? privateEndpoints : undefined
   }
 

@@ -1,4 +1,4 @@
-import type { $Fetch, FetchOptions, FetchHooks, FetchError, FetchContext, FetchResponse } from 'ofetch'
+import type { $Fetch, FetchError } from 'ofetch'
 import type { UseFetchOptions as NuxtUseFetchOptions, AsyncData } from 'nuxt/app'
 import type { ToastProps } from '@nuxt/ui'
 
@@ -80,11 +80,9 @@ export interface ApiAuthConfig {
   enabled: boolean
   /**
    * 令牌来源类型
-   * - `session`: 从用户会话中获取令牌
-   * - `custom`: 通过自定义逻辑提供令牌
    * @defaultValue 'session'
    */
-  tokenSource: 'session' | 'custom'
+  tokenSource: 'session'
   /**
    * 令牌在会话对象中的路径（支持点号分隔的嵌套路径）
    * @defaultValue 'token'
@@ -171,8 +169,6 @@ export interface ApiToastConfig {
      */
     duration: number
   }
-  /** 允许额外的自定义字段 */
-  [key: string]: unknown
 }
 
 /**
@@ -223,33 +219,26 @@ export interface MovkApiPublicConfig {
    */
   endpoints: Record<string, ApiEndpointPublicConfig>
   /**
-   * 全局响应配置
+   * 全局响应配置（已合并默认值，运行时必然存在）
    */
-  response?: ApiResponseConfig
+  response: ApiResponseConfig
   /**
-   * 全局认证配置
+   * 全局认证配置（已合并默认值，运行时必然存在）
    */
-  auth?: ApiAuthConfig
+  auth: ApiAuthConfig
   /**
-   * 全局 Toast 配置
+   * 全局 Toast 配置（已合并默认值，运行时必然存在）
    */
-  toast?: ApiToastConfig
+  toast: ApiToastConfig
 }
 
 /**
- * Movk API 模块私有配置
- * @description 定义模块的私有配置（仅服务端可访问，不会暴露给客户端）
+ * 端点私有配置（仅服务端）
+ * @description 从端点配置中拆分出的服务端专用字段，不会暴露给客户端
  */
-export interface MovkApiPrivateConfig {
-  /**
-   * 各端点的私有配置
-   */
-  endpoints?: Record<string, {
-    /**
-     * 自定义请求头（仅服务端使用，不会暴露给客户端）
-     */
-    headers?: Record<string, string>
-  }>
+export interface EndpointPrivateConfig {
+  /** 自定义请求头（仅服务端使用，不会暴露给客户端） */
+  headers?: Record<string, string>
 }
 
 /**
@@ -276,12 +265,7 @@ export interface MovkApiFullConfig {
    * 端点配置映射（包含公共和私有配置）
    * @defaultValue { default: { baseURL: '/api' } }
    */
-  endpoints?: Record<string, ApiEndpointPublicConfig & {
-    /**
-     * 自定义请求头（仅服务端使用）
-     */
-    headers?: Record<string, string>
-  }>
+  endpoints?: Record<string, ApiEndpointPublicConfig & EndpointPrivateConfig>
   /**
    * 全局响应配置
    */
@@ -298,29 +282,9 @@ export interface MovkApiFullConfig {
 
 /**
  * API 响应数据结构
- * @description 适配多种常见的后端响应格式
- * @template T - 业务数据类型
+ * @description 字段名通过 ApiResponseConfig 的 codeKey/messageKey/dataKey 配置化读取
  */
-export interface ApiResponse<T = unknown> {
-  /** 业务状态码 */
-  code?: number | string
-  /** HTTP 状态码或业务状态 */
-  status?: number | string
-  /** 消息内容（简写） */
-  msg?: string
-  /** 消息内容 */
-  message?: string
-  /** 业务数据 */
-  data?: T
-  /** 业务数据（别名） */
-  result?: T
-  /** 认证令牌 */
-  token?: string
-  /** 访问令牌 */
-  accessToken?: string
-  /** 错误信息 */
-  error?: string | null
-  /** 支持任意额外字段 */
+export interface ApiResponse {
   [key: string]: unknown
 }
 
@@ -342,16 +306,14 @@ export interface ApiError extends Error {
  * @description 合并全局配置和端点配置后的最终配置，供内部使用
  */
 export interface ResolvedEndpointConfig extends ApiEndpointPublicConfig {
-  /** 认证配置（已合并全局配置） */
-  auth: Partial<ApiAuthConfig>
-  /** Toast 配置（已合并全局配置） */
-  toast: Partial<ApiToastConfig>
-  /** 响应配置（已合并全局配置） */
-  response: Partial<ApiResponseConfig>
+  /** 认证配置（已合并全局默认值） */
+  auth: ApiAuthConfig
+  /** Toast 配置（已合并全局默认值） */
+  toast: ApiToastConfig
+  /** 响应配置（已合并全局默认值） */
+  response: ApiResponseConfig
   /** 自定义请求头（仅服务端配置） */
   headers?: Record<string, string>
-  /** 内置请求钩子（内部使用） */
-  builtinHooks?: FetchHooks
 }
 
 /**
@@ -370,128 +332,37 @@ export interface RequestToastOptions {
 }
 
 /**
- * useApiFetch 的扩展选项
- * @template ResT - API 响应数据类型
- * @template DataT - 转换后的数据类型
+ * API 实例类型
+ * @description $fetch.create() 返回的实例，附加 use() 方法支持多端点切换
  */
-export interface ApiFetchExtras<ResT, DataT = ResT> {
+export type ApiInstance = $Fetch & {
+  /** 切换到指定端点，返回该端点的 $fetch 实例 */
+  use: (endpoint: string) => ApiInstance
+}
+
+/**
+ * useApiFetch 的扩展选项
+ * @template T - 业务数据类型（已解包）
+ */
+export interface ApiFetchExtras {
   /** 使用的端点名称（默认使用 defaultEndpoint） */
   endpoint?: string
   /** Toast 提示配置，设置为 false 禁用提示 */
   toast?: RequestToastOptions | false
   /** 是否跳过业务状态码检查 */
   skipBusinessCheck?: boolean
-  /** 数据转换函数（应用于提取后的业务数据） */
-  transform?: (data: ResT) => DataT
 }
 
 /**
  * useApiFetch 选项类型
- * @template ResT - API 响应数据类型
- * @template DataT - 转换后的数据类型
+ * @template T - 业务数据类型（已解包）
+ * @template DataT - transform 转换后的类型（默认等于 T）
  */
-export type UseApiFetchOptions<ResT, DataT = ResT>
-  = Omit<NuxtUseFetchOptions<ApiResponse<ResT>, DataT>, 'transform'> & ApiFetchExtras<ResT, DataT>
+export type UseApiFetchOptions<T = unknown, DataT = T>
+  = Omit<NuxtUseFetchOptions<T, DataT>, '$fetch' | 'context'> & ApiFetchExtras
 
 /**
  * useApiFetch 返回值类型
- * @template DataT - 数据类型
+ * @template DataT - 最终数据类型
  */
 export type UseApiFetchReturn<DataT> = AsyncData<DataT | null, FetchError | ApiError | null>
-
-/**
- * 文件下载选项
- */
-export interface DownloadOptions extends Omit<FetchOptions<'json'>, 'responseType'> {
-  /** Toast 提示配置，设置为 false 禁用提示 */
-  toast?: RequestToastOptions | false
-  /** 下载进度回调（0-100） */
-  onProgress?: (progress: number) => void
-}
-
-/**
- * 文件上传选项
- */
-export interface UploadOptions extends Omit<FetchOptions<'json'>, 'responseType' | 'body'> {
-  /**
-   * FormData 中的文件字段名
-   * @defaultValue 'file'
-   */
-  fieldName?: string
-  /** Toast 提示配置，设置为 false 禁用提示 */
-  toast?: RequestToastOptions | false
-  /** 上传进度回调（0-100） */
-  onProgress?: (progress: number) => void
-}
-
-/**
- * API 客户端接口
- * @description 提供统一的 API 请求、文件上传下载等功能
- */
-export interface ApiClient {
-  /** ofetch 实例，用于发起请求 */
-  $fetch: $Fetch
-  /** 切换到指定端点 */
-  use: (endpoint: string) => ApiClient
-  /** 下载文件 */
-  download: (url: string, filename?: string, options?: DownloadOptions) => Promise<void>
-  /**
-   * 上传文件
-   * @template T - API 响应数据类型
-   */
-  upload: <T = unknown>(url: string, file: File | File[] | FormData, options?: UploadOptions) => Promise<ApiResponse<T>>
-  /** 获取当前端点配置 */
-  getConfig: () => ResolvedEndpointConfig
-}
-
-/**
- * 用户自定义钩子函数
- * @description 接收请求上下文和内置钩子函数，由用户决定是否调用内置逻辑
- * @template C - 钩子上下文类型
- *
- * @example
- * ```ts
- * // 完全覆盖内置行为
- * const hook: ApiHookFn = (context) => {
- *   // 自定义逻辑，不调用 builtin 则跳过内置行为
- * }
- *
- * // 扩展内置行为
- * const hook: ApiHookFn = async (context, builtin) => {
- *   // 前置逻辑
- *   await builtin(context)
- *   // 后置逻辑
- * }
- * ```
- */
-export type ApiHookFn<C extends FetchContext = FetchContext> = (
-  context: C,
-  builtin: (context: C) => void | Promise<void>
-) => void | Promise<void>
-
-export interface ApiHooksConfig {
-  /** 请求发送前（内置行为：认证 header 注入、debug 日志） */
-  onRequest?: ApiHookFn<FetchContext>
-  /** 请求失败时（内置行为：debug 错误日志） */
-  onRequestError?: ApiHookFn<FetchContext & { error: Error }>
-  /** 响应成功时（内置行为：业务状态码检查、成功 Toast） */
-  onResponse?: ApiHookFn<FetchContext & { response: FetchResponse<any> }>
-  /** 响应错误时（内置行为：401 处理、错误 Toast） */
-  onResponseError?: ApiHookFn<FetchContext & { response: FetchResponse<any> }>
-}
-
-export interface ApiHooksDefinition {
-  /** 全局钩子（应用于所有端点） */
-  hooks?: ApiHooksConfig
-  /** 按端点配置钩子（覆盖该端点的全局钩子） */
-  endpoints?: Record<string, ApiHooksConfig>
-}
-
-/**
- * 钩子注册表（内部使用）
- * @internal
- */
-export interface ApiHooksRegistry {
-  global?: ApiHooksConfig
-  endpoints: Map<string, ApiHooksConfig>
-}

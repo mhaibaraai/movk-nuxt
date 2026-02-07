@@ -1,6 +1,6 @@
 [![Movk Nuxt](https://nuxt.mhaibaraai.cn/og-image.png)](https://nuxt.mhaibaraai.cn/)
 
-> `@movk/nuxt` 是一个为 Nuxt 4 设计的模块化工程套件，提供 Schema 驱动的自动表单生成、API 集成系统、独立 UI 组件和通用工具函数。
+> Nuxt 4 模块化工程套件 — 基于 Zod v4 的 Schema 驱动自动表单、带认证与进度追踪的 API 集成系统、10+ 独立 UI 组件和通用 Composables。
 
 [![Install MCP in Cursor](https://nuxt.mhaibaraai.cn/mcp/badge.svg)](https://nuxt.mhaibaraai.cn/mcp/deeplink)
 [![Install MCP in VS Code](https://nuxt.mhaibaraai.cn/mcp/badge.svg?ide=vscode)](https://nuxt.mhaibaraai.cn/mcp/deeplink?ide=vscode)

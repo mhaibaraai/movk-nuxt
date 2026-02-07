@@ -1,7 +1,7 @@
 ---
 seo:
-  title: Movk Nuxt - Nuxt 4 模块化工程套件
-  description: Movk Nuxt 是一个为 Nuxt 4 设计的模块化工程套件，提供 Schema 驱动的自动表单生成、API 集成系统、独立 UI 组件和通用工具函数。
+  title: Nuxt 4 模块化工程套件 — Schema 驱动表单、API 集成、UI 组件
+  description: 基于 Zod v4 的 Schema 驱动自动表单生成、带认证与进度追踪的 API 集成系统、10+ 独立 UI 组件和通用 Composables 工具函数。
 ---
 
 ::u-page-hero{class="dark:bg-gradient-to-b from-neutral-900 to-neutral-950"}
@@ -23,7 +23,7 @@ Nuxt 4 模块化[工程套件]{.text-primary}
 ---
 transition: { duration: 0.6, delay: 0.3 }
 ---
-基于 Nuxt 4 和 Nuxt UI 的模块化扩展库，提供 Schema 驱动的自动表单生成、API 集成系统、常用 composables 工具等完整的表单与数据处理解决方案。
+基于 Nuxt UI 和 Zod v4 构建，提供 Schema 驱动的自动表单生成、带认证与进度追踪的 API 集成系统、10+ 独立 UI 组件和通用 Composables。
 :::
 
 #links

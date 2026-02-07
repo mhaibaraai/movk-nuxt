@@ -7,8 +7,7 @@ import { useApiFetch } from './useApiFetch'
  * 设置 `server: false, lazy: true`
  * 适合非 SEO 敏感数据，需手动调用 execute() 触发请求
  *
- * @typeParam ResT - API 响应 data 字段的原始类型
- * @typeParam DataT - transform 转换后的最终类型（默认等于 ResT）
+ * @typeParam T - 业务数据类型（已由 $api 自动解包）
  *
  * @example
  * ```ts
@@ -17,17 +16,17 @@ import { useApiFetch } from './useApiFetch'
  * // 在 onMounted 或用户操作时触发
  * onMounted(() => execute())
  *
- * // 使用 transform 转换数据（接收解包后的数据）
- * const { data } = useClientApiFetch<{ content: User[] }, User[]>('/users', {
- *   transform: ({ content }) => content ?? []
+ * // 使用 transform 转换数据（接收已解包的业务数据）
+ * const { data } = useClientApiFetch<User[]>('/users', {
+ *   transform: (users) => users.filter(u => u.active)
  * })
  * ```
  */
-export function useClientApiFetch<ResT = unknown, DataT = ResT>(
+export function useClientApiFetch<T = unknown, DataT = T>(
   url: string | (() => string),
-  options: UseApiFetchOptions<ResT, DataT> = {}
+  options: UseApiFetchOptions<T, DataT> = {} as UseApiFetchOptions<T, DataT>
 ): UseApiFetchReturn<DataT> {
-  return useApiFetch<ResT, DataT>(url, {
+  return useApiFetch<T, DataT>(url, {
     ...options,
     lazy: true,
     server: false
