@@ -1,7 +1,4 @@
 export default defineAppConfig({
-  seo: {
-    title: 'Movk Nuxt'
-  },
   header: {
     title: 'Movk Nuxt'
   },
@@ -23,7 +20,7 @@ export default defineAppConfig({
           '如何安装 @movk/nuxt？',
           '支持哪些 Nuxt 版本？',
           '如何配置组件前缀？',
-          '模块依赖哪些库？'
+          '模块需要哪些前置依赖？'
         ]
       },
       {
@@ -31,35 +28,41 @@ export default defineAppConfig({
         items: [
           '如何创建基础表单？',
           '支持哪些字段类型？',
-          '如何添加验证规则？',
-          '如何实现条件渲染？',
+          '如何自定义字段渲染？',
+          '如何使用 Slot 自定义布局？',
           '如何处理嵌套对象和数组？'
         ]
       },
       {
         category: 'API 系统',
         items: [
-          '如何配置 API 端点？',
-          'useApiFetch 和 $fetch 区别？',
-          '如何处理认证登录？',
+          '如何配置多个 API 端点？',
+          'useApiFetch 和 useLazyApiFetch 有什么区别？',
+          '如何使用 Hooks 扩展请求流程？',
           '如何监控上传/下载进度？'
         ]
       },
       {
-        category: '独立组件',
+        category: '组件',
         items: [
-          '有哪些独立组件？',
-          'DatePicker 如何使用？',
-          'StarRating 如何自定义？',
+          '有哪些可用组件？',
+          'DatePicker 和 ColorChooser 如何使用？',
+          '输入增强组件（WithClear、WithCopy）怎么用？',
           'SlideVerify 如何配置？'
         ]
       },
       {
         category: 'Composables',
         items: [
-          'useDateFormatter 如何格式化日期？',
-          'useAutoForm 如何定义自定义控件？',
-          'useTheme 如何切换主题？'
+          'useDateFormatter 支持哪些日期格式？',
+          'useAutoForm 如何注册自定义控件？'
+        ]
+      },
+      {
+        category: '最佳实践',
+        items: [
+          '推荐的项目结构是什么？',
+          'Composable 设计有哪些常用模式？'
         ]
       }
     ]
