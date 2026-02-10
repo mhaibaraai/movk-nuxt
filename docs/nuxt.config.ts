@@ -16,7 +16,6 @@ export default defineNuxtConfig({
 
   $development: {
     site: {
-      name: 'Movk Nuxt',
       url: 'http://localhost:3000'
     }
   },
@@ -42,12 +41,13 @@ export default defineNuxtConfig({
   compatibilityDate: 'latest',
 
   aiChat: {
-    model: 'mistral/devstral-3b',
+    model: 'alibaba/qwen3-coder',
     models: [
-      'mistral/devstral-2',
-      'openrouter/xiaomi/mimo-v2-flash:free',
-      'openrouter/z-ai/glm-4.5-air:free',
-      'mistral/ministral-3b'
+      'openai/gpt-4o-mini',
+      'alibaba/qwen3-coder',
+      'deepseek/deepseek-v3.2',
+      'anthropic/claude-3-haiku',
+      'deepseek/deepseek-v3.2-thinking'
     ]
   },
 
