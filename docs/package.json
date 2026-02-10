@@ -3,12 +3,12 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "build": "pnpm -w run dev:prepare && nuxt build",
+    "build": "pnpm -w run dev:prepare && NODE_OPTIONS='--max-old-space-size=7168' nuxt build",
     "dev": "nuxt dev"
   },
   "dependencies": {
     "@internationalized/date": "^3.11.0",
-    "@movk/nuxt-docs": "^1.12.2",
+    "@movk/nuxt-docs": "^1.12.3",
     "@nuxt/content": "^3.11.2",
     "@nuxt/ui": "^4.4.0",
     "@nuxt/kit": "^4.3.1",
