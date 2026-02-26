@@ -21,7 +21,7 @@ const slots = defineSlots<OmitByKey<InputSlots, 'trailing'>>()
 
 defineOptions({ inheritAttrs: false })
 
-const modelValue = defineModel<InputProps['modelValue']>()
+const modelValue = defineModel<T>()
 
 const { copy, copied } = useClipboard()
 

@@ -1,4 +1,4 @@
-import type { NavigationMenuItem } from '@nuxt/ui'
+import type { CommandPaletteGroup, CommandPaletteItem, NavigationMenuItem } from '@nuxt/ui'
 
 const autoFormNav: NavigationMenuItem = {
   label: 'AutoForm',
@@ -134,9 +134,9 @@ export const useNavigation = () => {
     ...composables
   ]
 
-  const groups = computed(() => [
-    { id: 'links', items },
-    { id: 'components', label: 'Components', items: components }
+  const groups = computed<CommandPaletteGroup<CommandPaletteItem>[]>(() => [
+    { id: 'links', items: items as unknown as CommandPaletteItem[] },
+    { id: 'components', label: 'Components', items: components as unknown as CommandPaletteItem[] }
   ])
 
   return {
