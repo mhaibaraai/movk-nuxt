@@ -8,17 +8,17 @@
   },
   "dependencies": {
     "@internationalized/date": "^3.11.0",
-    "@movk/nuxt-docs": "^1.12.3",
+    "@movk/nuxt-docs": "^1.12.4",
     "@nuxt/content": "^3.11.2",
-    "@nuxt/ui": "^4.4.0",
+    "@nuxt/ui": "^4.5.0",
     "@nuxt/kit": "^4.3.1",
     "@nuxtjs/mdc": "^0.20.1",
-    "@tiptap/starter-kit": "^3.19.0",
-    "@tiptap/vue-3": "^3.19.0",
+    "@tiptap/starter-kit": "^3.20.0",
+    "@tiptap/vue-3": "^3.20.0",
     "better-sqlite3": "^12.6.2",
     "nuxt": "^4.3.1",
-    "reka-ui": "^2.8.0",
-    "tailwindcss": "^4.1.18",
+    "reka-ui": "^2.8.2",
+    "tailwindcss": "^4.2.1",
     "unist-util-visit": "^5.1.0",
     "zod": "^4.3.6"
   }
