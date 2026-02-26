@@ -28,11 +28,8 @@ export default defineNuxtConfig({
 
   css: ['~/assets/css/main.css'],
 
-  mdc: {
-    highlight: {
-      noApiRoute: false,
-      shikiEngine: 'javascript'
-    }
+  build: {
+    transpile: ['reka-ui']
   },
 
   routeRules: {
