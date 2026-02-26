@@ -38,18 +38,7 @@ export default defineNuxtConfig({
     '/docs/best-practices': { redirect: '/docs/best-practices/project-structure', prerender: false }
   },
 
-  compatibilityDate: '2026-01-14',
-
-  nitro: {
-    prerender: {
-      crawlLinks: true,
-      failOnError: false,
-      autoSubfolderIndex: false
-    },
-    compatibilityDate: {
-      vercel: '2026-01-14'
-    }
-  },
+  compatibilityDate: 'latest',
 
   aiChat: {
     model: 'deepseek/deepseek-v3.2-thinking',
