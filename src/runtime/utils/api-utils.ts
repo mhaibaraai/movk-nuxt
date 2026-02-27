@@ -78,10 +78,10 @@ export function createApiError(response: ApiResponse, message?: string): ApiErro
  * @returns Toast 实例或 null
  * @internal
  */
-function getToast(): ReturnType<typeof useToast> | null {
+async function getToast(): Promise<ReturnType<typeof useToast> | null> {
   try {
     const nuxtApp = useNuxtApp()
-    return nuxtApp.runWithContext(() => useToast()) as ReturnType<typeof useToast>
+    return await nuxtApp.runWithContext(() => useToast()) as ReturnType<typeof useToast>
   }
   catch {
     return null
@@ -111,12 +111,12 @@ export function extractToastMessage(
  * @param requestOptions - 请求级别的 Toast 配置
  * @param globalConfig - 全局 Toast 配置
  */
-export function showToast(
+export async function showToast(
   type: 'success' | 'error',
   message: string | undefined,
   requestOptions: RequestToastOptions | false | undefined,
   globalConfig: Partial<ApiToastConfig>
-): void {
+): Promise<void> {
   if (globalConfig.enabled === false || requestOptions === false) return
   if (!message) return
 
@@ -124,7 +124,7 @@ export function showToast(
   if (typeConfig?.show === false) return
   if (requestOptions?.[type] === false) return
 
-  const toast = getToast()
+  const toast = await getToast()
   if (!toast) return
 
   const requestTypeConfig = typeof requestOptions?.[type] === 'object'
@@ -146,10 +146,10 @@ export function showToast(
  * @returns 用户会话对象或 null
  * @internal
  */
-function getUserSession(): ReturnType<typeof useUserSession> | null {
+async function getUserSession(): Promise<ReturnType<typeof useUserSession> | null> {
   try {
     const nuxtApp = useNuxtApp()
-    return nuxtApp.runWithContext(() => useUserSession()) as ReturnType<typeof useUserSession>
+    return await nuxtApp.runWithContext(() => useUserSession()) as ReturnType<typeof useUserSession>
   }
   catch {
     return null
@@ -162,8 +162,8 @@ function getUserSession(): ReturnType<typeof useUserSession> | null {
  * @returns 令牌字符串或 null
  * @internal
  */
-function getTokenFromSession(tokenPath: string): string | null {
-  const userSession = getUserSession()
+async function getTokenFromSession(tokenPath: string): Promise<string | null> {
+  const userSession = await getUserSession()
   if (!userSession?.session?.value) return null
 
   const sessionData = userSession.session.value
@@ -190,14 +190,14 @@ function buildAuthHeaderValue(token: string, config: Partial<ApiAuthConfig>): st
  * @param config - 已解析的端点配置（或至少包含 auth 字段）
  * @returns 认证请求头对象
  */
-export function getAuthHeaders(config: Pick<ResolvedEndpointConfig, 'auth'>): Record<string, string> {
+export async function getAuthHeaders(config: Pick<ResolvedEndpointConfig, 'auth'>): Promise<Record<string, string>> {
   const headers: Record<string, string> = {}
   const authConfig = config.auth
 
   if (!authConfig.enabled) return headers
 
   const tokenPath = authConfig.sessionTokenPath || 'token'
-  const token = getTokenFromSession(tokenPath)
+  const token = await getTokenFromSession(tokenPath)
 
   if (token) {
     const headerName = authConfig.headerName || 'Authorization'

@@ -111,7 +111,7 @@ export function useDownloadWithProgress() {
 
       if (import.meta.client && toast !== false) {
         const message = extractToastMessage(toast, 'success', `下载成功: ${finalFilename}`)
-        showToast('success', message, toast, config.toast)
+        await showToast('success', message, toast, config.toast)
       }
 
       onSuccess?.(finalFilename)
@@ -128,7 +128,7 @@ export function useDownloadWithProgress() {
 
       if (import.meta.client && !isAborted && toast !== false) {
         const message = extractToastMessage(toast, 'error', downloadError.message || '下载失败')
-        showToast('error', message, toast, config.toast)
+        await showToast('error', message, toast, config.toast)
       }
 
       if (!isAborted) onError?.(downloadError)

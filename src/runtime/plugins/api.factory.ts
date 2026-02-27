@@ -32,7 +32,7 @@ async function handleUnauthorized(
 
   if (unauthorizedConfig.clearSession) {
     try {
-      const userSession = nuxtApp.runWithContext(() => useUserSession()) as ReturnType<typeof useUserSession>
+      const userSession = await nuxtApp.runWithContext(() => useUserSession()) as ReturnType<typeof useUserSession>
       if (userSession?.clear) {
         await userSession.clear()
         await userSession.fetch()
@@ -73,7 +73,7 @@ function createEndpointFetch(
     async onRequest(context) {
       // 1. 认证 token 注入
       if (authConfig.enabled) {
-        const authHeaders = getAuthHeaders({ auth: authConfig })
+        const authHeaders = await getAuthHeaders({ auth: authConfig })
         const headers = new Headers(context.options.headers as HeadersInit)
         for (const [key, value] of Object.entries(authHeaders)) {
           headers.set(key, value)
@@ -115,7 +115,7 @@ function createEndpointFetch(
           const message = toast !== false
             ? extractToastMessage(toast, 'success', extractMessage(raw, responseConfig) || '')
             : undefined
-          showToast('success', message, toast, toastConfig)
+          await showToast('success', message, toast, toastConfig)
         }
       }
       else {
@@ -128,7 +128,7 @@ function createEndpointFetch(
           const errorMessage = toast !== false
             ? extractToastMessage(toast, 'error', message || '请求失败')
             : undefined
-          showToast('error', errorMessage, toast, toastConfig)
+          await showToast('error', errorMessage, toast, toastConfig)
         }
 
         // 抛出业务错误 → useFetch 自动设置到 error.value
@@ -159,7 +159,7 @@ function createEndpointFetch(
         const errorMessage = toast !== false
           ? extractToastMessage(toast, 'error', message || `请求失败 (${response.status})`)
           : undefined
-        showToast('error', errorMessage, toast, toastConfig)
+        await showToast('error', errorMessage, toast, toastConfig)
       }
 
       // Debug 日志
