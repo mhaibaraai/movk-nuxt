@@ -84,6 +84,7 @@ export function useUploadWithProgress() {
     error.value = null
 
     return new Promise((resolve) => {
+      const authHeaders = getAuthHeaders(config)
       const xhr = new XMLHttpRequest()
       currentXhr = xhr
 
@@ -169,7 +170,6 @@ export function useUploadWithProgress() {
       xhr.open('POST', fullUrl)
 
       // 设置请求头（用户 headers + 认证 headers）
-      const authHeaders = getAuthHeaders(config)
       Object.entries({ ...headers, ...authHeaders }).forEach(([key, value]) => {
         xhr.setRequestHeader(key, value)
       })
