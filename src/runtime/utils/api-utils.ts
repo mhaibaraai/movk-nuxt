@@ -81,7 +81,7 @@ export function createApiError(response: ApiResponse, message?: string): ApiErro
 function getToast(): ReturnType<typeof useToast> | null {
   try {
     const nuxtApp = useNuxtApp()
-    return nuxtApp.runWithContext(() => useToast()) as ReturnType<typeof useToast>
+    return nuxtApp.vueApp.runWithContext(() => useToast())
   }
   catch {
     return null
@@ -149,7 +149,7 @@ export function showToast(
 function getUserSession(): ReturnType<typeof useUserSession> | null {
   try {
     const nuxtApp = useNuxtApp()
-    return nuxtApp.runWithContext(() => useUserSession()) as ReturnType<typeof useUserSession>
+    return nuxtApp.vueApp.runWithContext(() => useUserSession())
   }
   catch {
     return null

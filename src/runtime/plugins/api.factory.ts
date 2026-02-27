@@ -32,7 +32,7 @@ async function handleUnauthorized(
 
   if (unauthorizedConfig.clearSession) {
     try {
-      const userSession = nuxtApp.runWithContext(() => useUserSession()) as ReturnType<typeof useUserSession>
+      const userSession = nuxtApp.vueApp.runWithContext(() => useUserSession())
       if (userSession?.clear) {
         await userSession.clear()
         await userSession.fetch()
