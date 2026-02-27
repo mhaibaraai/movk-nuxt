@@ -92,14 +92,14 @@ const isDragging = ref(false)
 const dragX = ref(0)
 
 const maxDragDistance = computed(() =>
-  trackWidth.value ? Math.max(0, trackWidth.value - props.sliderWidth - 8) : 200
+  trackWidth.value ? Math.max(0, trackWidth.value - props.sliderWidth - 8) : 0
 )
 
 const progress = computed(() =>
   isVerified.value ? 1 : maxDragDistance.value ? Math.min(dragX.value / maxDragDistance.value, 1) : 0
 )
 
-const canInteract = computed(() => !props.disabled && !isVerified.value)
+const canInteract = computed(() => !props.disabled && !isVerified.value && trackWidth.value > 0)
 
 const springTransition = { type: 'spring' as const, stiffness: 400, damping: 30 }
 
@@ -158,7 +158,7 @@ defineExpose({ reset })
         as="div"
         class="absolute inset-y-0 left-0 bg-primary/20"
         :animate="{ width: `${progress * 100}%`, opacity: 0.6 }"
-        :transition="springTransition"
+        :transition="isDragging ? { duration: 0 } : springTransition"
       />
 
       <div
@@ -192,8 +192,8 @@ defineExpose({ reset })
       class="absolute inset-1"
       :style="{ width: `${sliderWidth}px` }"
       :initial="{ x: 0 }"
-      :animate="{ x: isVerified ? maxDragDistance : isDragging ? dragX : 0 }"
-      :transition="isDragging ? { duration: 0 } : springTransition"
+      :animate="{ x: isVerified ? maxDragDistance : 0 }"
+      :transition="springTransition"
       :while-hover="canInteract ? { scale: 1.02 } : undefined"
       :while-tap="canInteract ? { scale: 0.98 } : undefined"
       :drag="canInteract ? 'x' : false"
