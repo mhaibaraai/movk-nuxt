@@ -83,9 +83,14 @@ function createEndpointFetch(
 
       // 2. Debug 日志
       if (publicConfig.debug) {
+        const h = context.options.headers
+        const headersLog = h instanceof Headers
+          ? Object.fromEntries(h.entries())
+          : h
         console.log('[Movk API] Request:', {
           method: context.options.method || 'GET',
           url: `${resolvedConfig.baseURL}${context.request}`,
+          headers: headersLog,
           body: context.options.body ? '(body present)' : undefined
         })
       }
