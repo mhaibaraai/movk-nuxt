@@ -5,14 +5,15 @@ import type { ZodAutoFormFieldMeta } from '../types/zod'
 import type { AutoFormControls, DynamicFormSlots } from '../types/auto-form'
 import { UButton, UCollapsible, UForm } from '#components'
 import type { Ref } from 'vue'
-import { computed, ref, useSlots, useTemplateRef, watch } from 'vue'
+import { computed, ref, useTemplateRef, watch } from 'vue'
 import { useAutoFormProvider } from '../internal/useAutoFormProvider'
 import { extractPureSchema, introspectSchema } from '../utils/auto-form'
 import { useAutoForm } from '../composables/useAutoForm'
 import AutoFormRendererField from './auto-form-renderer/AutoFormRendererField.vue'
 import { useAppConfig } from '#app'
+import { resolveGridClasses } from '../constants/grid-cols'
 
-interface SearchFormProps<S extends z.ZodObject, T extends boolean = true, N extends boolean = false> extends FormProps<S, T, N> {
+export interface SearchFormProps<S extends z.ZodObject, T extends boolean = true, N extends boolean = false> extends FormProps<S, T, N> {
   /**
    * Zod 对象 schema，定义搜索字段
    */
@@ -95,9 +96,7 @@ interface SearchFormProps<S extends z.ZodObject, T extends boolean = true, N ext
   gap?: string
 }
 
-type SearchFormStateType = Partial<InferInput<S>>
-
-interface SearchFormActionSlots {
+export interface SearchFormActionSlots {
   /** 替换默认按钮区域 */
   actions: (props: {
     expanded: boolean
@@ -109,6 +108,8 @@ interface SearchFormActionSlots {
   /** 追加在默认按钮后面 */
   extraActions: (props: { expanded: boolean }) => any
 }
+
+type SearchFormStateType = Partial<InferInput<S>>
 
 type SearchFormSlotTypes = SearchFormActionSlots & DynamicFormSlots<SearchFormStateType>
 
@@ -146,9 +147,10 @@ defineOptions({ inheritAttrs: false })
 
 const state = ref(modelValue.value ?? _state ?? {}) as Ref<SearchFormStateType>
 
-// v-model 双向同步
-watch(state, (val) => {
-  modelValue.value = val
+watch(() => state.value, (val) => {
+  if (val !== modelValue.value) {
+    modelValue.value = val
+  }
 }, { deep: true })
 
 watch(() => modelValue.value, (val) => {
@@ -160,15 +162,12 @@ watch(() => modelValue.value, (val) => {
 const appConfig = useAppConfig()
 const formRef = useTemplateRef('formRef')
 const expanded = ref(defaultExpanded)
-const vueSlots = useSlots()
 
 const { DEFAULT_CONTROLS } = useAutoForm()
 useAutoFormProvider(state, _slots)
 
-// actions 区域是否需要显示
-const showActionsCell = computed(() => showSearchButton || showResetButton || !!vueSlots.actions || !!vueSlots.extraActions)
+const showActionsCell = computed(() => showSearchButton || showResetButton || !!_slots.actions || !!_slots.extraActions)
 
-// 提取纯净 schema 用于验证
 const pureSchema = computed(() => schema ? extractPureSchema(schema) as S : schema)
 
 const controlsMapping = computed(() => ({
@@ -176,87 +175,25 @@ const controlsMapping = computed(() => ({
   ...controls
 }))
 
-// schema 内省 → 字段列表
 const fields = computed(() => {
   if (!schema) return []
   return introspectSchema(schema, controlsMapping.value, '', globalMeta)
 })
 
-// Tailwind 要求类名以完整字符串形式出现在源码中，不能动态拼接
-const COLS_MAP: Record<number, string> = {
-  1: 'grid-cols-1',
-  2: 'grid-cols-2',
-  3: 'grid-cols-3',
-  4: 'grid-cols-4',
-  5: 'grid-cols-5',
-  6: 'grid-cols-6'
-}
-const SM_COLS_MAP: Record<number, string> = {
-  1: 'sm:grid-cols-1',
-  2: 'sm:grid-cols-2',
-  3: 'sm:grid-cols-3',
-  4: 'sm:grid-cols-4',
-  5: 'sm:grid-cols-5',
-  6: 'sm:grid-cols-6'
-}
-const MD_COLS_MAP: Record<number, string> = {
-  1: 'md:grid-cols-1',
-  2: 'md:grid-cols-2',
-  3: 'md:grid-cols-3',
-  4: 'md:grid-cols-4',
-  5: 'md:grid-cols-5',
-  6: 'md:grid-cols-6'
-}
-const LG_COLS_MAP: Record<number, string> = {
-  1: 'lg:grid-cols-1',
-  2: 'lg:grid-cols-2',
-  3: 'lg:grid-cols-3',
-  4: 'lg:grid-cols-4',
-  5: 'lg:grid-cols-5',
-  6: 'lg:grid-cols-6'
-}
-const XL_COLS_MAP: Record<number, string> = {
-  1: 'xl:grid-cols-1',
-  2: 'xl:grid-cols-2',
-  3: 'xl:grid-cols-3',
-  4: 'xl:grid-cols-4',
-  5: 'xl:grid-cols-5',
-  6: 'xl:grid-cols-6'
-}
-
-const gridClass = computed(() => {
-  const classes = ['grid', gap]
-
-  if (typeof cols === 'number') {
-    classes.push(COLS_MAP[cols] ?? 'grid-cols-3')
-  } else {
-    classes.push('grid-cols-1')
-    if (cols.sm) classes.push(SM_COLS_MAP[cols.sm] ?? '')
-    if (cols.md) classes.push(MD_COLS_MAP[cols.md] ?? '')
-    if (cols.lg) classes.push(LG_COLS_MAP[cols.lg] ?? '')
-    if (cols.xl) classes.push(XL_COLS_MAP[cols.xl] ?? '')
-  }
-
-  return classes.join(' ')
-})
-
-// 计算可见字段数（基于最大列数）
-const resolvedMaxCols = computed(() => {
-  if (typeof cols === 'number') return cols
-  return Math.max(cols.sm ?? 1, cols.md ?? 1, cols.lg ?? 1, cols.xl ?? 1)
-})
+const gridClass = computed(() => resolveGridClasses(cols, gap))
 
 const visibleCount = computed(() => {
-  const base = resolvedMaxCols.value * visibleRows
-  const adjusted = showActionsCell.value ? base - 1 : base
-  return Math.max(0, adjusted)
+  const maxCols = typeof cols === 'number'
+    ? cols
+    : Math.max(cols.sm ?? 1, cols.md ?? 1, cols.lg ?? 1, cols.xl ?? 1)
+  const base = maxCols * visibleRows
+  return Math.max(0, showActionsCell.value ? base - 1 : base)
 })
 
 const visibleFields = computed(() => fields.value.slice(0, visibleCount.value))
 const collapsedFields = computed(() => fields.value.slice(visibleCount.value))
 const needsCollapse = computed(() => collapsedFields.value.length > 0)
 
-// 切换展开/收起
 function toggle() {
   expanded.value = !expanded.value
   emit('expand', expanded.value)
@@ -266,26 +203,18 @@ function handleSearch() {
   emit('search', { ...state.value })
 }
 
-// 重置
-function handleReset() {
-  const keys = Object.keys(state.value)
-  const cleared = {} as SearchFormStateType
-  state.value = cleared
-
-  // 清空原始 keys 触发响应式更新
-  for (const key of keys) {
-    // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-    delete (state.value as Record<string, unknown>)[key]
-  }
-
-  formRef.value?.clear()
-  emit('reset')
+function triggerSearch() {
+  formRef.value?.submit()
 }
 
-// 清空表单
 function clear() {
   state.value = {} as SearchFormStateType
   formRef.value?.clear()
+}
+
+function handleReset() {
+  clear()
+  emit('reset')
 }
 
 defineExpose({
@@ -322,7 +251,7 @@ defineExpose({
               name="actions"
               :expanded="expanded"
               :toggle="toggle"
-              :search="handleSearch"
+              :search="triggerSearch"
               :reset="handleReset"
               :loading="loading"
             >
