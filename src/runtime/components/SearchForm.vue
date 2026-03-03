@@ -1,11 +1,11 @@
 <script setup lang="ts" generic="S extends z.ZodObject, T extends boolean = true, N extends boolean = false">
-import type { FormProps, InferInput } from '@nuxt/ui'
+import type { ButtonProps, FormProps, InferInput } from '@nuxt/ui'
 import type { z } from 'zod'
 import type { ZodAutoFormFieldMeta } from '../types/zod'
 import type { AutoFormControls, DynamicFormSlots } from '../types/auto-form'
 import { UButton, UCollapsible, UForm } from '#components'
 import type { Ref } from 'vue'
-import { computed, ref, useTemplateRef } from 'vue'
+import { computed, ref, useSlots, useTemplateRef, watch } from 'vue'
 import { useAutoFormProvider } from '../internal/useAutoFormProvider'
 import { extractPureSchema, introspectSchema } from '../utils/auto-form'
 import { useAutoForm } from '../composables/useAutoForm'
@@ -36,6 +36,39 @@ interface SearchFormProps<S extends z.ZodObject, T extends boolean = true, N ext
    */
   globalMeta?: ZodAutoFormFieldMeta
   /**
+   * 搜索按钮属性
+   */
+  searchButtonProps?: ButtonProps
+  /**
+   * 重置按钮属性
+   */
+  resetButtonProps?: ButtonProps
+  /**
+   * 搜索按钮文本
+   * @defaultValue '搜索'
+   */
+  searchText?: string
+  /**
+   * 重置按钮文本
+   * @defaultValue '重置'
+   */
+  resetText?: string
+  /**
+   * 是否显示搜索按钮
+   * @defaultValue true
+   */
+  showSearchButton?: boolean
+  /**
+   * 是否显示重置按钮
+   * @defaultValue true
+   */
+  showResetButton?: boolean
+  /**
+   * 搜索按钮加载状态
+   * @defaultValue false
+   */
+  loading?: boolean
+  /**
    * 展开/收起按钮图标
    * @defaultValue 'i-lucide-chevron-down'
    */
@@ -64,7 +97,20 @@ interface SearchFormProps<S extends z.ZodObject, T extends boolean = true, N ext
 
 type SearchFormStateType = Partial<InferInput<S>>
 
-type SearchFormSlotTypes = DynamicFormSlots<SearchFormStateType>
+interface SearchFormActionSlots {
+  /** 替换默认按钮区域 */
+  actions: (props: {
+    expanded: boolean
+    toggle: () => void
+    search: () => void
+    reset: () => void
+    loading: boolean
+  }) => any
+  /** 追加在默认按钮后面 */
+  extraActions: (props: { expanded: boolean }) => any
+}
+
+type SearchFormSlotTypes = SearchFormActionSlots & DynamicFormSlots<SearchFormStateType>
 
 const {
   schema,
@@ -77,6 +123,13 @@ const {
   collapseText = '收起',
   defaultExpanded = false,
   gap = 'gap-4',
+  searchText = '搜索',
+  resetText = '重置',
+  searchButtonProps,
+  resetButtonProps,
+  showSearchButton = true,
+  showResetButton = true,
+  loading = false,
   state: _state,
   ...restProps
 } = defineProps<SearchFormProps<S, T, N>>()
@@ -87,17 +140,33 @@ const emit = defineEmits<{
   expand: [expanded: boolean]
 }>()
 
+const modelValue = defineModel<SearchFormStateType>()
 const _slots = defineSlots<SearchFormSlotTypes>()
 defineOptions({ inheritAttrs: false })
 
-const state = ref(_state || {}) as Ref<SearchFormStateType>
+const state = ref(modelValue.value ?? _state ?? {}) as Ref<SearchFormStateType>
+
+// v-model 双向同步
+watch(state, (val) => {
+  modelValue.value = val
+}, { deep: true })
+
+watch(() => modelValue.value, (val) => {
+  if (val !== undefined && val !== state.value) {
+    state.value = (val ?? {}) as SearchFormStateType
+  }
+})
 
 const appConfig = useAppConfig()
 const formRef = useTemplateRef('formRef')
 const expanded = ref(defaultExpanded)
+const vueSlots = useSlots()
 
 const { DEFAULT_CONTROLS } = useAutoForm()
 useAutoFormProvider(state, _slots)
+
+// actions 区域是否需要显示
+const showActionsCell = computed(() => showSearchButton || showResetButton || !!vueSlots.actions || !!vueSlots.extraActions)
 
 // 提取纯净 schema 用于验证
 const pureSchema = computed(() => schema ? extractPureSchema(schema) as S : schema)
@@ -177,7 +246,11 @@ const resolvedMaxCols = computed(() => {
   return Math.max(cols.sm ?? 1, cols.md ?? 1, cols.lg ?? 1, cols.xl ?? 1)
 })
 
-const visibleCount = computed(() => resolvedMaxCols.value * visibleRows)
+const visibleCount = computed(() => {
+  const base = resolvedMaxCols.value * visibleRows
+  const adjusted = showActionsCell.value ? base - 1 : base
+  return Math.max(0, adjusted)
+})
 
 const visibleFields = computed(() => fields.value.slice(0, visibleCount.value))
 const collapsedFields = computed(() => fields.value.slice(visibleCount.value))
@@ -232,7 +305,7 @@ defineExpose({
     v-bind="restProps"
     @submit="handleSearch"
   >
-    <template #default="{ errors, loading }">
+    <template #default="{ errors, loading: formLoading }">
       <div class="group/search pb-6 -mb-6">
         <div class="relative">
           <div :class="gridClass">
@@ -241,8 +314,39 @@ defineExpose({
               :key="field.path"
               :field="field"
               :schema="schema"
-              :extra-props="{ errors, loading }"
+              :extra-props="{ errors, loading: formLoading }"
             />
+
+            <slot
+              v-if="showActionsCell"
+              name="actions"
+              :expanded="expanded"
+              :toggle="toggle"
+              :search="handleSearch"
+              :reset="handleReset"
+              :loading="loading"
+            >
+              <div class="flex items-end gap-2 justify-end">
+                <UButton
+                  v-if="showSearchButton"
+                  type="submit"
+                  icon="i-lucide-search"
+                  :label="searchText"
+                  :loading="loading"
+                  v-bind="searchButtonProps"
+                />
+                <UButton
+                  v-if="showResetButton"
+                  :label="resetText"
+                  color="neutral"
+                  variant="outline"
+                  icon="i-lucide-rotate-ccw"
+                  v-bind="resetButtonProps"
+                  @click="handleReset"
+                />
+                <slot name="extraActions" :expanded="expanded" />
+              </div>
+            </slot>
           </div>
 
           <div
@@ -272,7 +376,7 @@ defineExpose({
                 :key="field.path"
                 :field="field"
                 :schema="schema"
-                :extra-props="{ errors, loading }"
+                :extra-props="{ errors, loading: formLoading }"
               />
             </div>
           </template>
