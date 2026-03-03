@@ -20,6 +20,16 @@ name: 'components-search-form-basic-example'
 ---
 ::
 
+## v-model 绑定
+
+通过 `v-model` 双向绑定表单数据。传入的初始值会被组件记录为重置基准——点击「重置」按钮时恢复到初始值而非清空：
+
+::component-example
+---
+name: 'components-search-form-model-example'
+---
+::
+
 ## 多列布局
 
 通过 `cols` 属性控制网格列数：
@@ -91,8 +101,8 @@ name: 'components-search-form-responsive-example'
 | Name | Type |
 | ---- | ---- |
 | `formRef`{lang="ts-type"} | `Ref<InstanceType<typeof UForm>>`{lang="ts-type"} <br> <div class="text-toned mt-1"><p>UForm 组件引用</p> |
-| `reset()`{lang="ts-type"} | `void`{lang="ts-type"} <br> <div class="text-toned mt-1"><p>重置表单到初始状态</p> |
-| `clear()`{lang="ts-type"} | `void`{lang="ts-type"} <br> <div class="text-toned mt-1"><p>清空表单所有字段</p> |
+| `reset()`{lang="ts-type"} | `void`{lang="ts-type"} <br> <div class="text-toned mt-1"><p>恢复到初始值（`v-model` / `state` prop 传入的值），并触发 `reset` 事件</p> |
+| `clear()`{lang="ts-type"} | `void`{lang="ts-type"} <br> <div class="text-toned mt-1"><p>清空表单所有字段为空值，不触发事件</p> |
 | `expanded`{lang="ts-type"} | `Ref<boolean>`{lang="ts-type"} <br> <div class="text-toned mt-1"><p>当前展开/收起状态</p> |
 | `toggle()`{lang="ts-type"} | `void`{lang="ts-type"} <br> <div class="text-toned mt-1"><p>切换展开/收起</p> |
 

@@ -146,6 +146,7 @@ const _slots = defineSlots<SearchFormSlotTypes>()
 defineOptions({ inheritAttrs: false })
 
 const state = ref(modelValue.value ?? _state ?? {}) as Ref<SearchFormStateType>
+const initialState = { ...(modelValue.value ?? _state ?? {}) } as SearchFormStateType
 
 watch(() => state.value, (val) => {
   if (val !== modelValue.value) {
@@ -212,14 +213,15 @@ function clear() {
   formRef.value?.clear()
 }
 
-function handleReset() {
-  clear()
+function reset() {
+  state.value = { ...initialState }
+  formRef.value?.clear()
   emit('reset')
 }
 
 defineExpose({
   formRef,
-  reset: handleReset,
+  reset,
   clear,
   expanded,
   toggle
@@ -252,7 +254,7 @@ defineExpose({
               :expanded="expanded"
               :toggle="toggle"
               :search="triggerSearch"
-              :reset="handleReset"
+              :reset="reset"
               :loading="loading"
             >
               <div class="flex items-end gap-2 justify-end">
@@ -271,7 +273,7 @@ defineExpose({
                   variant="outline"
                   icon="i-lucide-rotate-ccw"
                   v-bind="resetButtonProps"
-                  @click="handleReset"
+                  @click="reset"
                 />
                 <slot name="extraActions" :expanded="expanded" />
               </div>
