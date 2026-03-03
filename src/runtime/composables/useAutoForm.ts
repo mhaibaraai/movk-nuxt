@@ -279,7 +279,7 @@ function createEnumFactory() {
   }
 }
 
-const DEFAULT_CONTROL_PROPS = { class: 'w-full' } as const
+const DEFAULT_CONTROL_PROPS = { class: '' } as const
 
 function defineControl<C extends IsComponent>(e: AutoFormControl<C>): AutoFormControl<C> {
   return e

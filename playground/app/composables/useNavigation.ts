@@ -107,6 +107,7 @@ const components: NavigationMenuItem[] = [
     icon: 'i-lucide-box',
     defaultOpen: true,
     children: [
+      { label: 'SearchForm', to: '/components/SearchForm' },
       { label: 'ColorChooser', to: '/components/ColorChooser' },
       { label: 'DatePicker', to: '/components/DatePicker' },
       { label: 'StarRating', to: '/components/StarRating' },

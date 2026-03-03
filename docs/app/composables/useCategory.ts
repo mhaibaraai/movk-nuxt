@@ -17,6 +17,11 @@ export function useCategory() {
         id: 'advanced',
         title: '进阶组件',
         icon: 'i-lucide-blocks'
+      },
+      {
+        id: 'form',
+        title: '表单组件',
+        icon: 'i-lucide-clipboard-list'
       }
     ]
   }
