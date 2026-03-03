@@ -90,18 +90,6 @@ name: 'components-slide-verify-events-example'
 
 您可以通过 [`useTemplateRef`](https://vuejs.org/api/composition-api-helpers.html#usetemplateref) 访问该类型化组件实例。
 
-```vue
-<script setup lang="ts">
-const slideVerifyRef = useTemplateRef('slideVerifyRef')
-</script>
-
-<template>
-  <MSlideVerify ref="slideVerifyRef" />
-</template>
-```
-
-这将使您能够访问以下内容：
-
 | Name | Type |
 | ---- | ---- |
 | `reset()`{lang="ts-type"} | `Promise<void>`{lang="ts-type"} <br> <div class="text-toned mt-1"><p>重置验证状态</p> |

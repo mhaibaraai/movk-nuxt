@@ -88,16 +88,6 @@ name: 'components-search-form-responsive-example'
 
 您可以通过 [`useTemplateRef`](https://vuejs.org/api/composition-api-helpers.html#usetemplateref) 访问该类型化组件实例。
 
-```vue
-<script setup lang="ts">
-const searchFormRef = useTemplateRef('searchFormRef')
-</script>
-
-<template>
-  <MSearchForm ref="searchFormRef" />
-</template>
-```
-
 | Name | Type |
 | ---- | ---- |
 | `formRef`{lang="ts-type"} | `Ref<InstanceType<typeof UForm>>`{lang="ts-type"} <br> <div class="text-toned mt-1"><p>UForm 组件引用</p> |
