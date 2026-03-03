@@ -2,3 +2,4 @@
 @import "@nuxt/ui";
 
 @source "./components";
+@source "./constants";

@@ -15,7 +15,9 @@ export interface WithCharacterLimitProps<T extends InputValue = InputValue> exte
   counterClass?: ClassNameValue
 }
 
-const props = defineProps<WithCharacterLimitProps<T>>()
+const props = withDefaults(defineProps<WithCharacterLimitProps<T>>(), {
+  maxLength: 50
+})
 const emit = defineEmits<InputEmits<T>>()
 const slots = defineSlots<OmitByKey<InputSlots, 'trailing'>>()
 
@@ -23,7 +25,6 @@ defineOptions({ inheritAttrs: false })
 
 const modelValue = defineModel<T>()
 
-const maxLengthValue = 50
 const currentLength = computed(() => {
   return String(modelValue.value ?? '').length
 })
@@ -32,7 +33,7 @@ const currentLength = computed(() => {
 <template>
   <UInput
     v-model="modelValue"
-    :maxlength="props.maxLength ?? maxLengthValue"
+    :maxlength="props.maxLength"
     aria-describedby="character-count"
     :ui="{ trailing: 'pointer-events-none' }"
     v-bind="$attrs"
@@ -50,7 +51,7 @@ const currentLength = computed(() => {
         aria-live="polite"
         role="status"
       >
-        {{ currentLength }}/{{ props.maxLength ?? maxLengthValue }}
+        {{ currentLength }}/{{ props.maxLength }}
       </div>
     </template>
   </UInput>
