@@ -5,13 +5,14 @@ import type { z } from 'zod'
 const { afz } = useAutoForm()
 const toast = useToast()
 
-const { data: users } = await useFetch('https://jsonplaceholder.typicode.com/users', {
+const { data: users } = await useLazyFetch('https://jsonplaceholder.typicode.com/users', {
   key: 'typicode-users-basic',
+  immediate: false,
   transform: (data: { id: number, name: string }[]) => {
     return data?.map(user => ({
       label: user.name,
       value: String(user.id),
-      avatar: { src: `https://i.pravatar.cc/120?img=${user.id}` }
+      avatar: { src: `https://i.pravatar.cc/120?img=${user.id}`, loading: 'lazy' }
     }))
   }
 })

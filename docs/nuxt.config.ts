@@ -1,17 +1,8 @@
-import { createResolver } from '@nuxt/kit'
-
-const { resolve } = createResolver(import.meta.url)
-
 export default defineNuxtConfig({
   extends: ['@movk/nuxt-docs'],
 
   modules: [
-    '../src/module',
-    (_, nuxt) => {
-      nuxt.hook('components:dirs', (dirs) => {
-        dirs.unshift({ path: resolve('./app/components/content/examples'), pathPrefix: false, prefix: '', global: true })
-      })
-    }
+    '../src/module'
   ],
 
   $development: {
@@ -45,12 +36,12 @@ export default defineNuxtConfig({
   compatibilityDate: 'latest',
 
   aiChat: {
-    model: 'deepseek/deepseek-v3.2-thinking',
+    model: 'zai/glm-4.7',
     models: [
-      'openai/gpt-4o-mini',
+      'zai/glm-4.7',
+      'openai/gpt-4.1-mini',
       'alibaba/qwen3-coder',
-      'deepseek/deepseek-v3.2',
-      'anthropic/claude-3-haiku',
+      'moonshotai/kimi-k2',
       'deepseek/deepseek-v3.2-thinking'
     ]
   },

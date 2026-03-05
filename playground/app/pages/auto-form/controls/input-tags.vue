@@ -12,7 +12,8 @@ const schema = afz.object({
       placeholder: '添加技能标签',
       deleteIcon: 'i-lucide-trash',
       avatar: {
-        src: 'https://github.com/vuejs.png'
+        src: 'https://github.com/vuejs.png',
+        loading: 'lazy'
       }
     }
   }).default(['Vue', 'TypeScript']),
