@@ -18,7 +18,6 @@ const items = [{
   slot: 'enhanced'
 }] satisfies TabsItem[]
 
-// AutoForm Demo
 const { afz } = useAutoForm()
 const formatter = useDateFormatter()
 const formSchema = afz.object({
@@ -56,14 +55,12 @@ const formState = ref<Partial<Schema>>({
   age: 25
 })
 
-// DatePicker Demo
 const selectedDate = shallowRef(new CalendarDate(2025, 12, 25))
 const dateRange = shallowRef<DateRange>({
   start: new CalendarDate(2025, 11, 1),
   end: new CalendarDate(2025, 11, 30)
 })
 
-// Enhanced Input Demo
 const copyText = ref('Hello Movk Nuxt!')
 const passwordText = ref('secret123')
 </script>
@@ -83,7 +80,7 @@ const passwordText = ref('secret123')
 
     <UTabs :items="items" class="w-full">
       <template #autoform>
-        <div class="p-4 sm:p-6 min-h-[300px]">
+        <div class="p-4 sm:p-6 min-h-75">
           <p class="mb-5 text-sm text-gray-600 dark:text-gray-400">
             通过 Zod Schema 自动生成表单，支持丰富的字段类型和验证规则
           </p>
@@ -92,7 +89,7 @@ const passwordText = ref('secret123')
       </template>
 
       <template #datepicker>
-        <div class="p-4 sm:p-6 min-h-[300px]">
+        <div class="p-4 sm:p-6 min-h-75">
           <p class="mb-5 text-sm text-gray-600 dark:text-gray-400">
             强大的日期选择器，支持单日期和日期范围选择
           </p>
@@ -123,7 +120,7 @@ const passwordText = ref('secret123')
       </template>
 
       <template #enhanced>
-        <div class="p-4 sm:p-6 min-h-[300px]">
+        <div class="p-4 sm:p-6 min-h-75">
           <p class="mb-5 text-sm text-gray-600 dark:text-gray-400">
             输入框增强组件，为常见需求提供开箱即用的解决方案
           </p>

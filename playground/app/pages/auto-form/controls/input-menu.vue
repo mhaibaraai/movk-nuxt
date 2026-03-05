@@ -16,7 +16,7 @@ const { data: users, pending } = await useFetch('https://jsonplaceholder.typicod
     return data?.map(user => ({
       label: user.name,
       value: String(user.id),
-      avatar: { src: `https://i.pravatar.cc/120?img=${user.id}` }
+      avatar: { src: `https://i.pravatar.cc/120?img=${user.id}`, loading: 'lazy' }
     }))
   },
   lazy: true

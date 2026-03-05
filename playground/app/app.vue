@@ -41,7 +41,7 @@ provide('components', components)
         :toggle="{ size: 'sm', variant: 'outline', class: 'ring-default' }"
       >
         <template #header="{ collapsed }">
-          <UAvatar src="/avatar.png" />
+          <UAvatar src="/avatar.png" loading="lazy" />
 
           <div v-if="!collapsed" class="flex items-center ms-auto">
             <ThemeDropdown />

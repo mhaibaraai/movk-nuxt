@@ -8,7 +8,10 @@ const toast = useToast()
 const schema = afz.object({
   username: afz.string('请填写用户名').min(3).max(20).regex(/^\w+$/),
   email: afz.email({
-    controlProps: { leadingIcon: 'i-lucide-mail', placeholder: '请输入您的邮箱' },
+    controlProps: {
+      leadingIcon: 'i-lucide-mail',
+      placeholder: '请输入您的邮箱'
+    },
     error: '请输入有效的邮箱地址'
   }).meta({ hint: '邮箱' }),
   password: afz.string({ type: 'withPasswordToggle' })
