@@ -2,7 +2,8 @@
 import type { ComponentProps } from '@movk/core'
 import type { FormSubmitEvent, InputMenuItem } from '@nuxt/ui'
 import type { z } from 'zod'
-import { UAvatar, type UInputMenu } from '#components'
+import type { UInputMenu } from '#components'
+import { UAvatar } from '#components'
 
 const { afz } = useAutoForm()
 const toast = useToast()
