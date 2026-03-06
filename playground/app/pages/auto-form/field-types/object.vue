@@ -5,13 +5,15 @@ import type { z } from 'zod'
 const { afz } = useAutoForm()
 const toast = useToast()
 
-const { data: users } = await useFetch('https://jsonplaceholder.typicode.com/users', {
+const { data: users } = useFetch('https://jsonplaceholder.typicode.com/users', {
   key: 'typicode-users',
+  lazy: true,
+  getCachedData: (key, nuxtApp) => nuxtApp.payload.data[key],
   transform: (data: { id: number, name: string }[]) => {
     return data?.map(user => ({
       label: user.name,
       value: String(user.id),
-      avatar: { src: `https://i.pravatar.cc/120?img=${user.id}`, loading: 'lazy' }
+      avatar: { src: `https://i.pravatar.cc/120?img=${user.id}`, loading: 'lazy' as const }
     }))
   }
 })
@@ -22,11 +24,10 @@ const schema = afz.object({
   email: afz.email('请输入有效的邮箱地址'),
   user: afz.object({}, {
     type: 'selectMenu',
-    controlProps: ({ value }: { value: { avatar: { src: string } } }) => ({
+    controlProps: {
       placeholder: '请选择用户',
-      items: users.value,
-      avatar: value?.avatar
-    })
+      items: users.value
+    }
   })
 })
 
