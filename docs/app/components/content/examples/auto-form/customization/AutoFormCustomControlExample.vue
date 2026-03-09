@@ -17,6 +17,14 @@ const SKILL_OPTIONS = [
   'Python', 'GraphQL', 'Docker', 'Tailwind CSS', 'Vite'
 ]
 
+const ROLE_OPTIONS = {
+  frontend: '前端开发',
+  backend: '后端开发',
+  fullstack: '全栈开发',
+  devops: 'DevOps',
+  designer: 'UI / 设计'
+}
+
 const schema = afz.object({
   name: afz
     .string({ controlProps: { placeholder: '请输入您的姓名' } })
@@ -24,7 +32,7 @@ const schema = afz.object({
     .meta({ label: '姓名' }),
 
   role: afz
-    .enum(['frontend', 'backend', 'fullstack', 'devops', 'designer'] as const)
+    .enum(Object.keys(ROLE_OPTIONS) as [string, ...string[]])
     .default('fullstack')
     .meta({ label: '职位', description: '您的主要技术方向' }),
 
@@ -67,13 +75,12 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 </script>
 
 <template>
-  <Navbar />
-  <Matrix :form="form" title="自定义控件" description="演示如何注册并使用自定义 Vue 组件作为表单字段的渲染控件。">
+  <UCard>
     <MAutoForm
       :schema="schema"
-      :controls="controls"
       :state="form"
+      :controls="controls"
       @submit="onSubmit"
     />
-  </Matrix>
+  </UCard>
 </template>

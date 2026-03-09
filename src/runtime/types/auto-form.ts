@@ -81,7 +81,6 @@ export interface AutoFormFieldContext<S = any, P extends string = string> {
     ): void
     (relativePath: string, value: any): void
   }
-
   /** 字段错误列表 */
   readonly errors: unknown[]
   /** 表单提交加载状态 */
@@ -106,20 +105,14 @@ export interface AutoFormFieldSlots {
 
 type DynamicFieldSlotKeys = keyof AutoFormFieldSlots
 
-type SlotTypeExtraProps<SlotType extends DynamicFieldSlotKeys>
-  = SlotType extends 'label' ? { label?: string }
-    : SlotType extends 'hint' ? { hint?: string }
-      : SlotType extends 'description' ? { description?: string }
-        : SlotType extends 'help' ? { help?: string }
-          : SlotType extends 'error' ? { error?: boolean | string }
-            : SlotType extends 'default' ? { error?: boolean | string }
-              : {}
-
-type FieldSlotFunction<T, K extends DynamicFieldSlotKeys, P extends string>
-  = (props: SlotTypeExtraProps<K> & AutoFormFieldContext<T, P>) => unknown
-
-type FieldSlotsMapping<T, K extends DynamicFieldSlotKeys, P extends string> = {
-  [Path in P as `field-${K}:${Path}`]: FieldSlotFunction<T, K, Path>
+/** 插槽附加 props 查找表 - O(1) 索引，替代 6 层嵌套三元 */
+type SlotExtraPropsMap = {
+  label: { label?: string }
+  hint: { hint?: string }
+  description: { description?: string }
+  help: { help?: string }
+  error: { error?: boolean | string }
+  default: { error?: boolean | string }
 }
 
 /**
@@ -133,17 +126,23 @@ type FieldSlotsMapping<T, K extends DynamicFieldSlotKeys, P extends string> = {
  */
 type AllFieldKeys<T> = NonObjectFieldKeys<T> | ObjectFieldKeys<T>
 
+/**
+ * 所有字段插槽映射 - 合并 6 个独立映射类型为单一映射类型
+ * 通过模板字面量分发 + 受约束的 infer 提取 SlotType 和 Path
+ */
+type AllFieldSlotMappings<T> = {
+  [Key in `field-${DynamicFieldSlotKeys}:${AllFieldKeys<T>}`]:
+  Key extends `field-${infer K extends DynamicFieldSlotKeys}:${infer P extends string & AllFieldKeys<T>}`
+    ? (props: SlotExtraPropsMap[K] & AutoFormFieldContext<T, P>) => unknown
+    : never
+}
+
 export type DynamicFormSlots<T>
   = Record<string, (props: AutoFormFieldContext<T>) => unknown>
     & {
-      [K in DynamicFieldSlotKeys as `field-${K}`]: (props: SlotTypeExtraProps<K> & AutoFormFieldContext<T>) => unknown
+      [K in DynamicFieldSlotKeys as `field-${K}`]: (props: SlotExtraPropsMap[K] & AutoFormFieldContext<T>) => unknown
     }
-    & FieldSlotsMapping<T, 'label', AllFieldKeys<T>>
-    & FieldSlotsMapping<T, 'hint', AllFieldKeys<T>>
-    & FieldSlotsMapping<T, 'description', AllFieldKeys<T>>
-    & FieldSlotsMapping<T, 'help', AllFieldKeys<T>>
-    & FieldSlotsMapping<T, 'error', AllFieldKeys<T>>
-    & FieldSlotsMapping<T, 'default', AllFieldKeys<T>>
+    & AllFieldSlotMappings<T>
     & {
       [P in ObjectFieldKeys<T> | ArrayFieldKeys<T> as `field-${'content' | 'before' | 'after'}:${P}`]: (props: AutoFormFieldContext<T, P>) => unknown
     }
@@ -307,9 +306,10 @@ interface LayoutFieldMarker<Fields extends Record<string, z.ZodType>> extends z.
 }
 
 /**
- * 轻量布局展开类型
+ * 布局展开类型 - 递归展开嵌套 layout
  * @description
- * 为保证编辑器类型性能，仅做一层 layout 字段展开。
+ * 对每层 LayoutFieldMarker<Fields> 递归调用 ExtractLayoutShape，
+ * 确保多层嵌套 layout 的字段都能正确展平到顶层。
  * 运行时仍通过 extractPureSchema 处理完整 layout 结构。
  */
 type LayoutRestShape<S extends Record<string, any>> = {
@@ -318,7 +318,7 @@ type LayoutRestShape<S extends Record<string, any>> = {
 
 type LayoutExpandedShape<S extends Record<string, any>> = UnionToIntersection<
   {
-    [P in keyof S]: S[P] extends LayoutFieldMarker<infer Fields> ? Fields : {}
+    [P in keyof S]: S[P] extends LayoutFieldMarker<infer Fields> ? ExtractLayoutShape<Fields> : {}
   }[keyof S]
 >
 

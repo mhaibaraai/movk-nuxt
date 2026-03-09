@@ -27,7 +27,14 @@ defineProps<{
         </div>
       </slot>
     </template>
-    <slot />
+    <UTheme
+      :ui="{
+        collapsible: { content: 'space-y-4' },
+        form: { base: 'space-y-4 min-w-md' }
+      }"
+    >
+      <slot />
+    </UTheme>
     <template v-if="form" #footer>
       <details>
         <summary class="cursor-pointer text-muted text-sm font-medium mb-2">

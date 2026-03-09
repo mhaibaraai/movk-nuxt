@@ -20,7 +20,7 @@ const schema = afz.object({
 
   interests: afz.array(afz.string(), {
     type: 'inputTags',
-    controlProps: { placeholder: '添加兴趣', loading: true }
+    controlProps: { placeholder: '添加兴趣' }
   }).min(1),
 
   keywords: afz.array(afz.string(), {

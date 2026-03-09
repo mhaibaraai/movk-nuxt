@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import type { FormSubmitEvent } from '@nuxt/ui'
 import type { z } from 'zod'
-import StarRating from '~/components/StarRating.vue'
+import { StarRating } from '#components'
 
 const toast = useToast()
 
@@ -9,18 +9,13 @@ const { afz } = useAutoForm()
 
 const schema = afz.object({
   rating: afz.number({
-    component: StarRating,
-    controlProps: {
-      class: 'w-full',
-      max: 5
-    }
+    component: StarRating
   }).int().min(1).max(5).default(4)
     .meta({ label: '满意度评分', description: '请对我们的服务进行评分' }),
 
   userRating: afz.number({
     component: StarRating,
     controlProps: {
-      class: 'w-full',
       max: 10
     }
   }).int().min(1).max(10).default(7)

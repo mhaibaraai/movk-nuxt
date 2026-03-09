@@ -1,4 +1,6 @@
 <script lang="ts" setup>
+import type z from 'zod'
+
 const { afz } = useAutoForm()
 
 const schema = afz.object({
@@ -64,7 +66,9 @@ const schema = afz.object({
     })
 })
 
-const form = ref({})
+type Schema = z.output<typeof schema>
+
+const form = ref<Partial<Schema>>({})
 </script>
 
 <template>

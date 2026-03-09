@@ -38,11 +38,6 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       :global-meta="{
         collapsible: { defaultOpen: true }
       }"
-      :add-button-props="{
-        color: 'info',
-        variant: 'soft',
-        block: false
-      }"
       @submit="onSubmit"
     />
   </Matrix>

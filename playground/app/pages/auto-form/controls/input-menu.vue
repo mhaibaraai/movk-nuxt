@@ -11,7 +11,8 @@ const toast = useToast()
 const searchTerm = ref('')
 const searchTermDebounced = refDebounced(searchTerm, 200)
 
-const { data: users, pending } = await useFetch('https://jsonplaceholder.typicode.com/users', {
+const { data: users, status, execute } = await useLazyFetch('https://jsonplaceholder.typicode.com/users', {
+  key: 'typicode-users',
   params: { q: searchTermDebounced },
   transform: (data: { id: number, name: string }[]) => {
     return data?.map(user => ({
@@ -20,7 +21,7 @@ const { data: users, pending } = await useFetch('https://jsonplaceholder.typicod
       avatar: { src: `https://i.pravatar.cc/120?img=${user.id}`, loading: 'lazy' }
     }))
   },
-  lazy: true
+  immediate: false
 })
 
 const items = ref([
@@ -38,7 +39,7 @@ const schema = afz.object({
   food: afz.array(afz.string(), {
     type: 'inputMenu',
     controlProps: ({ value }) => ({
-      items: items.value,
+      items: items.value || [],
       createItem: true,
       multiple: true,
       onCreate: (item: string) => {
@@ -56,17 +57,22 @@ const schema = afz.object({
     })
   }, {
     type: 'inputMenu',
-    controlProps: computed(() => ({
-      'items': users.value,
-      'loading': pending.value,
+    controlProps: () => ({
+      'items': users.value || [],
+      'loading': status.value === 'pending',
       'ignoreFilter': true,
       'icon': 'i-lucide-user',
       'placeholder': '搜索用户...',
       'searchTerm': searchTerm.value,
+      'onUpdate:open': () => {
+        if (!users.value?.length) {
+          execute()
+        }
+      },
       'onUpdate:searchTerm': (term: string) => {
         searchTerm.value = term
       }
-    } as ComponentProps<typeof UInputMenu>)),
+    } as ComponentProps<typeof UInputMenu>),
     controlSlots: {
       leading: ({ modelValue, ui }) => {
         if (modelValue) {

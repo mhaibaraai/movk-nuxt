@@ -52,14 +52,18 @@ function applyMeta<T extends z.ZodType>(schema: T, meta?: unknown): T {
 /**
  * 从 Zod schema 中提取 AutoForm 元数据
  * @description
- * 不再依赖克隆方法拦截，而是通过递归解包读取：
- * - schema.meta()
- * - schema.unwrap()
- * - schema.def.innerType / schema._def.innerType
+ * 不再依赖克隆方法拦截，而是通过 BFS 遍历以下路径读取 meta：
+ * - schema.meta() — Zod v4 全局 registry
+ * - schema._zod.parent — .refine()/.check() 创建新实例时设置的父引用
+ * - schema.unwrap() — 可选/默认值等包装类型
+ * - schema.def.innerType / .in / .out / .schema — 结构性内层类型
+ *
+ * 收集所有层级的 meta 并合并，外层（先找到的）优先级更高。
  */
 function getAutoFormMetadata(schema: z.ZodType): Record<string, any> {
   const queue: unknown[] = [schema]
   const visited = new Set<unknown>()
+  const collectedMetas: AutoFormMetadata[] = []
 
   while (queue.length > 0) {
     const current = queue.shift() as any
@@ -71,9 +75,10 @@ function getAutoFormMetadata(schema: z.ZodType): Record<string, any> {
     const meta = typeof current.meta === 'function' ? current.meta() : undefined
     if (meta && isObject(meta)) {
       const typedMeta = meta as AutoFormMetadata
-      return typedMeta?.[AUTOFORM_META.KEY] && isObject(typedMeta[AUTOFORM_META.KEY])
+      const normalizedMeta = typedMeta?.[AUTOFORM_META.KEY] && isObject(typedMeta[AUTOFORM_META.KEY])
         ? typedMeta[AUTOFORM_META.KEY] as AutoFormMetadata
         : typedMeta
+      collectedMetas.push(normalizedMeta)
     }
 
     if (typeof current.unwrap === 'function') {
@@ -83,6 +88,12 @@ function getAutoFormMetadata(schema: z.ZodType): Record<string, any> {
         // unwrap 失败时忽略
       }
     }
+
+    // 跟踪 Zod v4 的 _zod.parent 链路
+    // .refine()/.check() 等方法通过 core.clone(inst, def, { parent: true }) 创建新实例，
+    // 新实例不在 globalRegistry 中，但通过 _zod.parent 持有对原实例的引用
+    if (current?._zod?.parent)
+      queue.push(current._zod.parent)
 
     const def = current?.def || current?._def
     if (def?.innerType)
@@ -95,7 +106,13 @@ function getAutoFormMetadata(schema: z.ZodType): Record<string, any> {
       queue.push(def.schema)
   }
 
-  return {}
+  if (collectedMetas.length === 0)
+    return {}
+
+  // 内层 meta 提供基础字段（type、controlProps 等），外层 meta 覆盖（description、label 等）
+  // collectedMetas[0] = 最外层，collectedMetas[n] = 最内层
+  // reverse 后 assign：内层先写入，外层后覆盖
+  return Object.assign({}, ...collectedMetas.reverse())
 }
 
 /**
@@ -166,27 +183,25 @@ function createCalendarDateFactory(type: 'calendarDate' | 'inputDate' = 'calenda
  * 输入时间字段工厂 - 用于 UInputTime
  * 返回 Time 类型
  */
-function createInputTimeFactory() {
-  return (controlMeta?: any): z.ZodType<Time> => {
-    const [error, meta] = extractErrorAndMeta(controlMeta)
+function inputTimeFactory(controlMeta?: any): z.ZodType<Time> {
+  const [error, meta] = extractErrorAndMeta(controlMeta)
 
-    const schema = z.custom<Time>().refine(
-      (val: unknown) => {
-        return (
-          val !== null
-          && val !== undefined
-          && typeof val === 'object'
-          && 'hour' in val
-          && 'minute' in val
-          && typeof (val as any).hour === 'number'
-          && typeof (val as any).minute === 'number'
-        )
-      },
-      { message: error || '无效的时间格式' }
-    )
+  const schema = z.custom<Time>().refine(
+    (val: unknown) => {
+      return (
+        val !== null
+        && val !== undefined
+        && typeof val === 'object'
+        && 'hour' in val
+        && 'minute' in val
+        && typeof (val as any).hour === 'number'
+        && typeof (val as any).minute === 'number'
+      )
+    },
+    { message: error || '无效的时间格式' }
+  )
 
-    return applyMeta(schema, { ...(meta || {}), type: 'inputTime' })
-  }
+  return applyMeta(schema, { ...(meta || {}), type: 'inputTime' })
 }
 
 /**
@@ -226,27 +241,25 @@ function createObjectFactory(method: 'object' | 'looseObject' | 'strictObject') 
 /**
  * 布局字段工厂
  */
-function createLayoutFactory() {
-  return <C extends IsComponent = IsComponent>(config: AutoFormLayoutConfig<C>) => {
-    return applyMeta(z.custom<AutoFormLayoutConfig<C>>(), {
-      type: AUTOFORM_META.LAYOUT_KEY,
-      layout: config
-    })
-  }
+function layoutFactory<C extends IsComponent = IsComponent>(config: AutoFormLayoutConfig<C>) {
+  return applyMeta(z.custom<AutoFormLayoutConfig<C>>(), {
+    type: AUTOFORM_META.LAYOUT_KEY,
+    layout: config
+  })
 }
 
 /**
  * 数组工厂
  */
-function createArrayFactory() {
-  return (schema: z.ZodType, overwrite?: any) => applyOverwrite(z.array(schema), overwrite)
+function arrayFactory(schema: z.ZodType, overwrite?: any) {
+  return applyOverwrite(z.array(schema), overwrite)
 }
 
 /**
  * 元组工厂
  */
-function createTupleFactory() {
-  return (schemas: readonly [z.ZodType, ...z.ZodType[]], overwrite?: any) => applyOverwrite(z.tuple(schemas), overwrite)
+function tupleFactory(schemas: readonly [z.ZodType, ...z.ZodType[]], overwrite?: any) {
+  return applyOverwrite(z.tuple(schemas), overwrite)
 }
 
 /**
@@ -352,7 +365,7 @@ export function useAutoForm<TControls extends AutoFormControls = typeof DEFAULT_
       // 日期和时间类型
       calendarDate: createCalendarDateFactory(),
       inputDate: createCalendarDateFactory('inputDate'),
-      inputTime: createInputTimeFactory(),
+      inputTime: inputTimeFactory,
 
       // ISO 字符串类型
       isoDatetime: createISOFactory('datetime'),
@@ -365,12 +378,12 @@ export function useAutoForm<TControls extends AutoFormControls = typeof DEFAULT_
       uuid: createBasicFactory(z.uuid),
 
       // 集合类型
-      array: createArrayFactory(),
-      tuple: createTupleFactory(),
+      array: arrayFactory,
+      tuple: tupleFactory,
       enum: createEnumFactory(),
 
       // 布局系统
-      layout: createLayoutFactory(),
+      layout: layoutFactory,
 
       // 对象类型
       object: createObjectFactory('object'),
@@ -379,16 +392,9 @@ export function useAutoForm<TControls extends AutoFormControls = typeof DEFAULT_
     } as unknown as TypedZodFactory<TFactoryControls>
   }
 
-  const builtControls = controls
-    ? (Object.fromEntries(
-        Object.entries(controls).map(([key, control]) => [key, defineControl(control as AutoFormControl<IsComponent>)])
-      ) as TControls)
-    : undefined
-
-  const mergedControls = {
-    ...DEFAULT_CONTROLS,
-    ...(builtControls || {})
-  } as FinalControls
+  const mergedControls = (controls
+    ? { ...DEFAULT_CONTROLS, ...controls }
+    : DEFAULT_CONTROLS) as FinalControls
 
   const afz = createZodFactory<FinalControls>()
 

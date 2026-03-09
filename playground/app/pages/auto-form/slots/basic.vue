@@ -35,7 +35,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
           icon="i-lucide-info"
           title="欢迎注册"
           description="请填写以下信息完成注册，所有字段均为必填项"
-          class="mb-6"
+          class="mb-4"
         />
       </template>
 

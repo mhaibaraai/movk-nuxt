@@ -1,20 +1,19 @@
 <script lang="ts" setup>
-import type { FormSubmitEvent } from '@nuxt/ui'
+import type { FormSubmitEvent, SelectMenuItem } from '@nuxt/ui'
 import type { z } from 'zod'
 
 const { afz } = useAutoForm()
 const toast = useToast()
 
-const { data: users } = useFetch('https://jsonplaceholder.typicode.com/users', {
+const { data: users, status, execute } = await useLazyFetch('https://jsonplaceholder.typicode.com/users', {
   key: 'typicode-users',
-  lazy: true,
-  getCachedData: (key, nuxtApp) => nuxtApp.payload.data[key],
+  immediate: false,
   transform: (data: { id: number, name: string }[]) => {
     return data?.map(user => ({
       label: user.name,
       value: String(user.id),
-      avatar: { src: `https://i.pravatar.cc/120?img=${user.id}`, loading: 'lazy' as const }
-    }))
+      avatar: { src: `https://i.pravatar.cc/120?img=${user.id}`, loading: 'lazy' }
+    } as SelectMenuItem))
   }
 })
 
@@ -24,10 +23,16 @@ const schema = afz.object({
   email: afz.email('请输入有效的邮箱地址'),
   user: afz.object({}, {
     type: 'selectMenu',
-    controlProps: {
-      placeholder: '请选择用户',
-      items: users.value
-    }
+    controlProps: () => ({
+      'placeholder': '请选择用户',
+      'items': users.value || [],
+      'loading': status.value === 'pending',
+      'onUpdate:open': () => {
+        if (!users.value?.length) {
+          execute()
+        }
+      }
+    })
   })
 })
 
