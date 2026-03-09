@@ -36,7 +36,7 @@ import {
 import { isObject } from '@movk/core'
 import { AUTOFORM_META } from '../constants/auto-form'
 import { useDateFormatter } from './useDateFormatter'
-import { extractEnumValuesFromItems } from '../utils/auto-form'
+import { extractEnumValuesFromItems } from '../utils/field-utils'
 
 type AutoFormMetadata = Record<string, unknown>
 
