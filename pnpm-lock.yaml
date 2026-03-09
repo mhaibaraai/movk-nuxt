@@ -1239,7 +1239,7 @@ packages:
         optional: true
 
   '@movk/core@https://pkg.pr.new/@movk/core@70':
-    resolution: {tarball: https://pkg.pr.new/@movk/core@70}
+    resolution: {integrity: sha512-h2RFoeVTGJ6KanPLSFQhamKyTwls23qjJs+z3qegLvymoneH//6elJJ4rTt4XpbzkJq78JH1yzP2VbKvDBWJlA==, tarball: https://pkg.pr.new/@movk/core@70}
     version: 1.2.0
     hasBin: true
     peerDependencies:
