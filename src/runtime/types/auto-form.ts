@@ -1,7 +1,21 @@
 import type { CollapsibleRootProps, DateRange } from 'reka-ui'
 import type { ClassNameValue } from 'tailwind-merge'
 import type { z } from 'zod'
-import type { ArrayFieldKeys, ComponentProps, OmitByKey, ComponentSlots, GetFieldValue, IsComponent, NonObjectFieldKeys, ObjectFieldKeys, ReactiveValue, Suggest } from '@movk/core'
+import type {
+  ArrayFieldKeys,
+  ComponentProps,
+  ComponentSlots,
+  GetFieldValue,
+  IsAny,
+  IsComponent,
+  KnownKeys,
+  NonObjectFieldKeys,
+  ObjectFieldKeys,
+  Prettify,
+  ReactiveValue,
+  UnionToIntersection,
+  WidenLiteral
+} from '@movk/core'
 import type { FormError } from '@nuxt/ui'
 import type { AUTOFORM_META } from '../constants/auto-form'
 import type { CalendarDate, DateValue, Time } from '@internationalized/date'
@@ -67,7 +81,6 @@ export interface AutoFormFieldContext<S = any, P extends string = string> {
     ): void
     (relativePath: string, value: any): void
   }
-
   /** 字段错误列表 */
   readonly errors: unknown[]
   /** 表单提交加载状态 */
@@ -92,20 +105,14 @@ export interface AutoFormFieldSlots {
 
 type DynamicFieldSlotKeys = keyof AutoFormFieldSlots
 
-type SlotTypeExtraProps<SlotType extends DynamicFieldSlotKeys>
-  = SlotType extends 'label' ? { label?: string }
-    : SlotType extends 'hint' ? { hint?: string }
-      : SlotType extends 'description' ? { description?: string }
-        : SlotType extends 'help' ? { help?: string }
-          : SlotType extends 'error' ? { error?: boolean | string }
-            : SlotType extends 'default' ? { error?: boolean | string }
-              : {}
-
-type FieldSlotFunction<T, K extends DynamicFieldSlotKeys, P extends string>
-  = (props: SlotTypeExtraProps<K> & AutoFormFieldContext<T, P>) => unknown
-
-type FieldSlotsMapping<T, K extends DynamicFieldSlotKeys, P extends string> = {
-  [Path in P as `field-${K}:${Path}`]: FieldSlotFunction<T, K, Path>
+/** 插槽附加 props 查找表 - O(1) 索引，替代 6 层嵌套三元 */
+type SlotExtraPropsMap = {
+  label: { label?: string }
+  hint: { hint?: string }
+  description: { description?: string }
+  help: { help?: string }
+  error: { error?: boolean | string }
+  default: { error?: boolean | string }
 }
 
 /**
@@ -117,23 +124,25 @@ type FieldSlotsMapping<T, K extends DynamicFieldSlotKeys, P extends string> = {
  * - 字段：`field-{slotType}:{fieldKey}` - 精确推导字段类型
  * - 嵌套：`field-{content|before|after}:{objectKey|arrayKey}`
  */
+type AllFieldKeys<T> = NonObjectFieldKeys<T> | ObjectFieldKeys<T>
+
+/**
+ * 所有字段插槽映射 - 合并 6 个独立映射类型为单一映射类型
+ * 通过模板字面量分发 + 受约束的 infer 提取 SlotType 和 Path
+ */
+type AllFieldSlotMappings<T> = {
+  [Key in `field-${DynamicFieldSlotKeys}:${AllFieldKeys<T>}`]:
+  Key extends `field-${infer K extends DynamicFieldSlotKeys}:${infer P extends string & AllFieldKeys<T>}`
+    ? (props: SlotExtraPropsMap[K] & AutoFormFieldContext<T, P>) => unknown
+    : never
+}
+
 export type DynamicFormSlots<T>
   = Record<string, (props: AutoFormFieldContext<T>) => unknown>
     & {
-      [K in DynamicFieldSlotKeys as `field-${K}`]: (props: SlotTypeExtraProps<K> & AutoFormFieldContext<T>) => unknown
+      [K in DynamicFieldSlotKeys as `field-${K}`]: (props: SlotExtraPropsMap[K] & AutoFormFieldContext<T>) => unknown
     }
-    & FieldSlotsMapping<T, 'label', NonObjectFieldKeys<T>>
-    & FieldSlotsMapping<T, 'hint', NonObjectFieldKeys<T>>
-    & FieldSlotsMapping<T, 'description', NonObjectFieldKeys<T>>
-    & FieldSlotsMapping<T, 'help', NonObjectFieldKeys<T>>
-    & FieldSlotsMapping<T, 'error', NonObjectFieldKeys<T>>
-    & FieldSlotsMapping<T, 'default', NonObjectFieldKeys<T>>
-    & FieldSlotsMapping<T, 'label', ObjectFieldKeys<T>>
-    & FieldSlotsMapping<T, 'hint', ObjectFieldKeys<T>>
-    & FieldSlotsMapping<T, 'description', ObjectFieldKeys<T>>
-    & FieldSlotsMapping<T, 'help', ObjectFieldKeys<T>>
-    & FieldSlotsMapping<T, 'error', ObjectFieldKeys<T>>
-    & FieldSlotsMapping<T, 'default', ObjectFieldKeys<T>>
+    & AllFieldSlotMappings<T>
     & {
       [P in ObjectFieldKeys<T> | ArrayFieldKeys<T> as `field-${'content' | 'before' | 'after'}:${P}`]: (props: AutoFormFieldContext<T, P>) => unknown
     }
@@ -170,11 +179,20 @@ export interface AutoFormControlsMeta<C extends IsComponent = IsComponent> {
   error?: string
 }
 
+/** 幻影类型哨兵：标记 P/S 未被覆写 */
+export type _Unset = { readonly __brand: 'AutoFormControlUnset' }
+
 /**
  * 控件实例配置 - 运行时使用的简化版本
  * @template C - 组件类型
+ * @template _P - Props 类型覆写（phantom，仅用于工厂方法推断）
+ * @template _S - Slots 类型覆写（phantom，仅用于工厂方法推断）
  */
-export interface AutoFormControl<C extends IsComponent = IsComponent> {
+export interface AutoFormControl<
+  C extends IsComponent = IsComponent,
+  _P = _Unset,
+  _S = _Unset
+> {
   /** 控件组件实例 */
   component: C
   /** 控件静态属性 */
@@ -186,7 +204,8 @@ export interface AutoFormControl<C extends IsComponent = IsComponent> {
 /**
  * 控件注册表类型 - 字符串键映射到控件配置
  */
-export type AutoFormControls = Record<string, AutoFormControl>
+
+export type AutoFormControls = Record<string, AutoFormControl<any, any, any>>
 
 /**
  * 自动表单布局配置 - 支持自定义布局容器
@@ -277,63 +296,6 @@ export interface AutoFormNestedCollapsible extends Pick<CollapsibleRootProps, 'd
 }
 
 /**
- * 提取对象的已知键（剔除索引签名）
- * @template T - 源对象类型
- */
-type KnownKeys<T> = {
-  [K in keyof T]-?: string extends K
-    ? never
-    : number extends K
-      ? never
-      : symbol extends K
-        ? never
-        : K
-}[keyof T]
-
-type KeysOf<T> = Extract<keyof T, string>
-
-/**
- * 提取控件类型键的简化类型
- * @template TControls - 控件注册表类型
- */
-type ControlTypeKey<TControls> = KnownKeys<TControls> & keyof TControls & string
-
-/**
- * 排除 component 和 type 的控件元数据
- * @template T - 组件类型
- */
-type OmitControlMeta<T extends IsComponent> = OmitByKey<AutoFormControlsMeta<T>, 'component' | 'type'>
-
-/**
- * 根据控件类型键获取对应的元数据类型
- * @template TControls - 控件注册表类型
- * @template K - 控件类型键
- */
-type MetaByType<TControls, K extends keyof TControls>
-  = TControls[K] extends AutoFormControl<infer C>
-    ? OmitControlMeta<C>
-    : OmitControlMeta<IsComponent>
-
-/**
- * 根据 Zod 类型字符串获取对应的元数据类型
- * @template TControls - 控件注册表类型
- * @template TZod - Zod 类型名称
- */
-type MetaByZod<TControls, TZod extends string>
-  = TZod extends KnownKeys<TControls>
-    ? TControls[TZod] extends AutoFormControl<infer C>
-      ? OmitControlMeta<C>
-      : OmitControlMeta<IsComponent>
-    : OmitControlMeta<IsComponent>
-
-/**
- * 联合类型转交叉类型
- * @template U - 联合类型
- * @description 此类型可能导致大型联合类型的性能问题，建议限制联合成员数量
- */
-type UnionToIntersection<U> = (U extends unknown ? (k: U) => void : never) extends ((k: infer I) => void) ? I : never
-
-/**
  * 布局标记类型 - 用于类型层面识别布局字段
  * @template Fields - 布局内的字段定义
  * @description 运行时会被替换为 ZodCustom，仅用于类型推导
@@ -344,208 +306,187 @@ interface LayoutFieldMarker<Fields extends Record<string, z.ZodType>> extends z.
 }
 
 /**
- * 递归展开布局字段 - 移除布局标记并合并 fields
- * @template S - Shape 类型
- * @template Depth - 当前递归深度（内部使用）
- * @description 递归深度限制为 5 层，超过后将停止展开并保留原类型
+ * 布局展开类型 - 递归展开嵌套 layout
+ * @description
+ * 对每层 LayoutFieldMarker<Fields> 递归调用 ExtractLayoutShape，
+ * 确保多层嵌套 layout 的字段都能正确展平到顶层。
+ * 运行时仍通过 extractPureSchema 处理完整 layout 结构。
  */
-type ExtractLayoutShape<
-  S extends Record<string, any>,
-  Depth extends number[] = []
-> = Depth['length'] extends 5
-  ? S // 达到最大深度，直接返回原类型
-  : {
-    [K in keyof S as S[K] extends LayoutFieldMarker<any> ? never : K]: S[K]
-  } & UnionToIntersection<
-    {
-      [K in keyof S]: S[K] extends LayoutFieldMarker<infer F>
-        ? ExtractLayoutShape<F, [...Depth, 1]> // 增加深度计数
-        : {}
-    }[keyof S]
-  >
+type LayoutRestShape<S extends Record<string, any>> = {
+  [P in keyof S as S[P] extends LayoutFieldMarker<any> ? never : P]: S[P]
+}
+
+type LayoutExpandedShape<S extends Record<string, any>> = UnionToIntersection<
+  {
+    [P in keyof S]: S[P] extends LayoutFieldMarker<infer Fields> ? ExtractLayoutShape<Fields> : {}
+  }[keyof S]
+>
+
+type ExtractLayoutShape<S extends Record<string, any>> = LayoutRestShape<S> & LayoutExpandedShape<S>
 
 /**
- * 合并默认控件和自定义控件
- * @template TControls - 自定义控件
- * @template DFTC - 默认控件
+ * 从 ComponentProps 中移除索引签名，只保留已知属性键
+ * 用于工厂方法的 controlProps 自动补全，防止 `string` 索引污染 IntelliSense
  */
-type WithDefaultControls<TControls, DFTC> = TControls & DFTC
+type StrictComponentProps<C extends IsComponent> = {
+  [K in keyof ComponentProps<C> as {} extends Record<K, unknown> ? never : K]: ComponentProps<C>[K]
+}
 
-/**
- * 对象工厂元数据类型 - 基础元数据
- */
-type ObjectMetaBase<TC extends AutoFormControls, DFTC extends AutoFormControls>
-  = { component?: never, type?: never } & MetaByZod<WithDefaultControls<TC, DFTC>, 'object'>
+/** ComponentSlots 的 any 安全包装：当结果为 any 时回退为 {} */
+type StrictComponentSlots<C extends IsComponent>
+  = IsAny<ComponentSlots<C>> extends true ? {} : ComponentSlots<C>
 
-/**
- * 对象工厂元数据类型 - 带 type
- */
-type ObjectMetaWithType<TC extends AutoFormControls, DFTC extends AutoFormControls, K extends ControlTypeKey<WithDefaultControls<TC, DFTC>>>
-  = { type: Suggest<K>, component?: never } & MetaByType<WithDefaultControls<TC, DFTC>, K>
+type ControlKey<TControls extends AutoFormControls> = Extract<KnownKeys<TControls>, string>
 
-/**
- * 对象工厂元数据类型 - 带 component
- */
-type ObjectMetaWithComponent<C extends IsComponent>
-  = { component: C, type?: never } & OmitControlMeta<C>
+/** 保留完整类型（含 phantom P/S），不重新包装 */
+type ControlEntryByKey<TControls extends AutoFormControls, K extends string>
+  = K extends keyof TControls ? TControls[K] : never
 
-/**
- * 对象工厂柯里化签名
- */
+/** 工厂级 Props 宽化：所有属性强制可选（+?），值类型通过 WidenLiteral 放宽 */
+type _WidenForFactory<T> = {
+  [K in keyof T]+?: WidenLiteral<T[K]>
+}
+
+/** 提取控件的 Props 覆写（phantom P），未覆写时回退到 StrictComponentProps */
+
+type ExtractControlProps<T> = T extends AutoFormControl<infer C, infer P, any>
+  ? [P] extends [_Unset] ? StrictComponentProps<C> : Prettify<_WidenForFactory<P> & {}>
+  : {}
+
+/** 提取控件的 Slots 覆写（phantom S），未覆写时回退到 StrictComponentSlots */
+
+type ExtractControlSlots<T> = T extends AutoFormControl<infer C, any, infer S>
+  ? [S] extends [_Unset] ? StrictComponentSlots<C> : S
+  : {}
+
+type ControlPropsByKey<
+  TControls extends AutoFormControls,
+  K extends ControlKey<TControls>
+> = Prettify<ExtractControlProps<ControlEntryByKey<TControls, K>>> & Record<string, unknown>
+
+type ControlSlotsByKey<
+  TControls extends AutoFormControls,
+  K extends ControlKey<TControls>
+> = Partial<ExtractControlSlots<ControlEntryByKey<TControls, K>>>
+
+/** 控件元数据公共字段（controlProps / controlSlots / error） */
+type MetaPropsFor<
+  TControls extends AutoFormControls,
+  K extends ControlKey<TControls>
+> = {
+  controlProps?: ReactiveValue<ControlPropsByKey<TControls, K>, AutoFormFieldContext>
+  controlSlots?: ReactiveValue<ControlSlotsByKey<TControls, K>, AutoFormFieldContext> | Record<string, unknown>
+  error?: string
+}
+
+type MetaByControlKey<
+  TControls extends AutoFormControls,
+  K extends ControlKey<TControls>
+> = { type: K, component?: never } & MetaPropsFor<TControls, K>
+
+type MetaByComponent<C extends IsComponent> = {
+  component: C
+  type?: never
+} & Omit<AutoFormControlsMeta<C>, 'component' | 'type'>
+
+type MetaByDefaultIfExists<
+  TControls extends AutoFormControls,
+  TDefaultKey extends string
+> = TDefaultKey extends ControlKey<TControls>
+  ? { component?: never, type?: never } & MetaPropsFor<TControls, TDefaultKey>
+  : never
+
+type ObjectShape = Record<string, z.ZodType>
+
+type TypedObjectShape<T extends object> = Partial<Record<Extract<keyof T, string>, z.ZodType>>
+
+/** 对象工厂重载（统一 Curried 和 Direct，通过 ShapeConstraint 区分） */
+type ObjectFactoryOverloads<
+  TControls extends AutoFormControls,
+  Mode extends z.core.$strip | z.core.$loose | z.core.$strict,
+  TDefaultKey extends string,
+  ShapeConstraint = {}
+> = {
+  <S extends ObjectShape, K extends ControlKey<TControls>>(shape: S & ShapeConstraint, meta?: MetaByControlKey<TControls, K>): z.ZodObject<ExtractLayoutShape<S>, Mode>
+  <S extends ObjectShape>(shape: S & ShapeConstraint, meta: MetaByDefaultIfExists<TControls, TDefaultKey>): z.ZodObject<ExtractLayoutShape<S>, Mode>
+  <S extends ObjectShape, C extends IsComponent>(shape: S & ShapeConstraint, meta: MetaByComponent<C>): z.ZodObject<ExtractLayoutShape<S>, Mode>
+}
+
 type ObjectFactoryCurried<
-  TC extends AutoFormControls,
-  DFTC extends AutoFormControls,
+  TControls extends AutoFormControls,
   T extends object,
-  Mode extends z.core.$strip | z.core.$loose | z.core.$strict
-> = {
-  <S extends Record<string, any>>(
-    shape: S & Partial<Record<KeysOf<T>, any>>,
-    meta?: ObjectMetaBase<TC, DFTC>
-  ): z.ZodObject<ExtractLayoutShape<S>, Mode>
-  <S extends Record<string, any>, K extends ControlTypeKey<WithDefaultControls<TC, DFTC>>>(
-    shape: S & Partial<Record<KeysOf<T>, any>>,
-    meta?: ObjectMetaWithType<TC, DFTC, K>
-  ): z.ZodObject<ExtractLayoutShape<S>, Mode>
-  <S extends Record<string, any>, C extends IsComponent>(
-    shape: S & Partial<Record<KeysOf<T>, any>>,
-    meta?: ObjectMetaWithComponent<C>
-  ): z.ZodObject<ExtractLayoutShape<S>, Mode>
-}
+  Mode extends z.core.$strip | z.core.$loose | z.core.$strict,
+  TDefaultKey extends string
+> = ObjectFactoryOverloads<TControls, Mode, TDefaultKey, TypedObjectShape<T>>
 
-/**
- * 对象工厂直接调用签名
- */
 type ObjectFactoryDirect<
-  TC extends AutoFormControls,
-  DFTC extends AutoFormControls,
-  Mode extends z.core.$strip | z.core.$loose | z.core.$strict
-> = {
-  <S extends Record<string, any>>(
-    shape: S,
-    meta?: ObjectMetaBase<TC, DFTC>
-  ): z.ZodObject<ExtractLayoutShape<S>, Mode>
-  <S extends Record<string, any>, K extends ControlTypeKey<WithDefaultControls<TC, DFTC>>>(
-    shape: S,
-    meta?: ObjectMetaWithType<TC, DFTC, K>
-  ): z.ZodObject<ExtractLayoutShape<S>, Mode>
-  <S extends Record<string, any>, C extends IsComponent>(
-    shape: S,
-    meta?: ObjectMetaWithComponent<C>
-  ): z.ZodObject<ExtractLayoutShape<S>, Mode>
-}
+  TControls extends AutoFormControls,
+  Mode extends z.core.$strip | z.core.$loose | z.core.$strict,
+  TDefaultKey extends string
+> = ObjectFactoryOverloads<TControls, Mode, TDefaultKey>
 
 /**
- * 基础工厂方法类型 - 支持多种调用方式
- * @template TControls - 控件注册表
- * @template TZod - Zod 类型名称
- * @template TResult - 返回类型
- * @template TExtraParams - 额外参数（如数组的元素 schema）
- *
- * 支持四种调用方式：
- * 1. 传入错误消息字符串
- * 2. 传入基础元数据对象
- * 3. 传入带 type 的元数据（指定控件类型）
- * 4. 传入带 component 的元数据（直接指定组件）
+ * 轻量工厂方法类型
+ * @description
+ * - 默认分支：根据方法名推导默认控件 props（如 string -> UInput props）
+ * - type 分支：根据 `type` 推导对应控件 props（使用泛型 K 推断）
+ * - component 分支：根据传入组件推导 props
  */
 export type AutoFormFactoryMethod<
-  TControls,
-  TZod extends string,
+  TControls extends AutoFormControls,
   TResult,
-  TExtraParams extends unknown[] = []
+  TDefaultKey extends string,
+  TExtraArgs extends unknown[] = []
 > = {
-  /** 调用方式 1: 仅传入错误消息或额外参数 */
-  (...args: [...TExtraParams, string?]): TResult
-
-  /** 调用方式 2: 传入基础元数据（不指定 type 或 component） */
-  (...args: [...TExtraParams, ({ component?: never, type?: never } & MetaByZod<TControls, TZod>)?]): TResult
-
-  /** 调用方式 3: 传入带 type 的元数据 */
-  <K extends ControlTypeKey<TControls>>(
-    ...args: [...TExtraParams, ({ type: Suggest<K>, component?: never } & MetaByType<TControls, K>)?]
-  ): TResult
-
-  /** 调用方式 4: 传入带 component 的元数据 */
+  (...args: [...TExtraArgs, string?]): TResult
+  <K extends ControlKey<TControls>>(...args: [...TExtraArgs, MetaByControlKey<TControls, K>]): TResult
+  (...args: [...TExtraArgs, MetaByDefaultIfExists<TControls, TDefaultKey>]): TResult
   <C extends IsComponent>(
-    ...args: [...TExtraParams, ({ component: C, type?: never } & OmitControlMeta<C>)?]
+    ...args: [...TExtraArgs, MetaByComponent<C>]
   ): TResult
 }
 
 /**
- * 类型化的 Zod 工厂接口 - 提供类型安全的 schema 构建方法
- * @template TC - 自定义控件注册表
- * @template DFTC - 默认控件注册表
- *
- * @description 此接口提供了一套类型安全的 API 来构建 Zod schema，
- * 支持自动推导控件类型和元数据，并与 AutoForm 无缝集成
+ * 类型化的 Zod 工厂接口（轻量版）
+ * @template TControls - 合并后的控件注册表
  */
-export interface TypedZodFactory<TC extends AutoFormControls, DFTC extends AutoFormControls> {
+export interface TypedZodFactory<TControls extends AutoFormControls> {
   /** 字符串类型工厂 */
-  string: AutoFormFactoryMethod<WithDefaultControls<TC, DFTC>, 'string', z.ZodString>
+  string: AutoFormFactoryMethod<TControls, z.ZodString, 'string'>
 
   /** 数字类型工厂 */
-  number: AutoFormFactoryMethod<WithDefaultControls<TC, DFTC>, 'number', z.ZodNumber>
+  number: AutoFormFactoryMethod<TControls, z.ZodNumber, 'number'>
 
   /** 布尔类型工厂 */
-  boolean: AutoFormFactoryMethod<WithDefaultControls<TC, DFTC>, 'boolean', z.ZodBoolean>
+  boolean: AutoFormFactoryMethod<TControls, z.ZodBoolean, 'boolean'>
 
   /** 文件类型工厂 */
-  file: AutoFormFactoryMethod<WithDefaultControls<TC, DFTC>, 'file', z.ZodType<File>>
+  file: AutoFormFactoryMethod<TControls, z.ZodType<File>, 'file'>
 
   /** 电子邮件验证工厂 */
-  email: AutoFormFactoryMethod<WithDefaultControls<TC, DFTC>, 'string', z.ZodString>
+  email: AutoFormFactoryMethod<TControls, z.ZodString, 'string'>
 
   /** URL 验证工厂 */
-  url: AutoFormFactoryMethod<WithDefaultControls<TC, DFTC>, 'string', z.ZodString>
+  url: AutoFormFactoryMethod<TControls, z.ZodString, 'string'>
 
   /** UUID 验证工厂 */
-  uuid: AutoFormFactoryMethod<WithDefaultControls<TC, DFTC>, 'string', z.ZodString>
+  uuid: AutoFormFactoryMethod<TControls, z.ZodString, 'string'>
 
   /**
    * 枚举类型工厂 - 支持字符串数组或枚举对象
-   * @description 重载顺序：空数组 > 字符串数组 > 枚举对象
    */
   enum: {
-    // 空数组重载（最高优先级）- 返回 ZodString 支持运行时动态值
-    (
-      values: [],
-      overwrite?: MetaByZod<WithDefaultControls<TC, DFTC>, 'enum'>
-    ): z.ZodString
-    <K extends ControlTypeKey<WithDefaultControls<TC, DFTC>>>(
-      values: [],
-      overwrite?: { type: Suggest<K>, component?: never } & MetaByType<WithDefaultControls<TC, DFTC>, K>
-    ): z.ZodString
-    <C extends IsComponent>(
-      values: [],
-      overwrite?: { component: C, type?: never } & OmitControlMeta<C>
-    ): z.ZodString
+    <K extends ControlKey<TControls>>(values: [], overwrite?: MetaByControlKey<TControls, K>): z.ZodString
+    (values: [], overwrite: MetaByDefaultIfExists<TControls, 'enum'>): z.ZodString
+    <C extends IsComponent>(values: [], overwrite: MetaByComponent<C>): z.ZodString
 
-    // 字符串数组重载
-    <const T extends ReadonlyArray<string>>(
-      values: T,
-      overwrite?: MetaByZod<WithDefaultControls<TC, DFTC>, 'enum'>
-    ): z.ZodEnum<z.core.util.ToEnum<T[number]>>
-    <const T extends ReadonlyArray<string>, K extends ControlTypeKey<WithDefaultControls<TC, DFTC>>>(
-      values: T,
-      overwrite?: { type: Suggest<K>, component?: never } & MetaByType<WithDefaultControls<TC, DFTC>, K>
-    ): z.ZodEnum<z.core.util.ToEnum<T[number]>>
-    <const T extends ReadonlyArray<string>, C extends IsComponent>(
-      values: T,
-      overwrite?: { component: C, type?: never } & OmitControlMeta<C>
-    ): z.ZodEnum<z.core.util.ToEnum<T[number]>>
+    <const T extends readonly [string, ...string[]], K extends ControlKey<TControls>>(values: T, overwrite?: MetaByControlKey<TControls, K>): z.ZodEnum<z.core.util.ToEnum<T[number]>>
+    <const T extends readonly [string, ...string[]]>(values: T, overwrite: MetaByDefaultIfExists<TControls, 'enum'>): z.ZodEnum<z.core.util.ToEnum<T[number]>>
+    <const T extends readonly [string, ...string[]], C extends IsComponent>(values: T, overwrite: MetaByComponent<C>): z.ZodEnum<z.core.util.ToEnum<T[number]>>
 
-    // 枚举对象重载
-    <const T extends z.core.util.EnumLike>(
-      values: T,
-      overwrite?: MetaByZod<WithDefaultControls<TC, DFTC>, 'enum'>
-    ): z.ZodEnum<T>
-    <const T extends z.core.util.EnumLike, K extends ControlTypeKey<WithDefaultControls<TC, DFTC>>>(
-      values: T,
-      overwrite?: { type: Suggest<K>, component?: never } & MetaByType<WithDefaultControls<TC, DFTC>, K>
-    ): z.ZodEnum<T>
-    <const T extends z.core.util.EnumLike, C extends IsComponent>(
-      values: T,
-      overwrite?: { component: C, type?: never } & OmitControlMeta<C>
-    ): z.ZodEnum<T>
+    <const T extends z.core.util.EnumLike, K extends ControlKey<TControls>>(values: T, overwrite?: MetaByControlKey<TControls, K>): z.ZodEnum<T>
+    <const T extends z.core.util.EnumLike>(values: T, overwrite: MetaByDefaultIfExists<TControls, 'enum'>): z.ZodEnum<T>
+    <const T extends z.core.util.EnumLike, C extends IsComponent>(values: T, overwrite: MetaByComponent<C>): z.ZodEnum<T>
   }
 
   /**
@@ -554,12 +495,14 @@ export interface TypedZodFactory<TC extends AutoFormControls, DFTC extends AutoF
    * @template T - 日期值类型（默认 CalendarDate）
    */
   calendarDate: {
-    <T extends DateValue | DateRange | DateValue[] = CalendarDate>(meta?: ({ component?: never, type?: never } & MetaByZod<WithDefaultControls<TC, DFTC>, 'date'>)): z.ZodType<T>
-    <K extends ControlTypeKey<WithDefaultControls<TC, DFTC>>, T extends DateValue | DateRange | DateValue[] = CalendarDate>(
-      meta?: { type: Suggest<K>, component?: never } & MetaByType<WithDefaultControls<TC, DFTC>, K>
+    <T extends DateValue | DateRange | DateValue[] = CalendarDate, K extends ControlKey<TControls> = never>(
+      meta?: MetaByControlKey<TControls, K>
+    ): z.ZodType<T>
+    <T extends DateValue | DateRange | DateValue[] = CalendarDate>(
+      meta: MetaByDefaultIfExists<TControls, 'calendarDate'>
     ): z.ZodType<T>
     <C extends IsComponent, T extends DateValue | DateRange | DateValue[] = CalendarDate>(
-      meta?: { component: C, type?: never } & OmitControlMeta<C>
+      meta: MetaByComponent<C>
     ): z.ZodType<T>
   }
 
@@ -567,44 +510,40 @@ export interface TypedZodFactory<TC extends AutoFormControls, DFTC extends AutoF
    * 输入日期工厂 - 用于 UInputDate 组件
    * 返回 CalendarDate 类型
    */
-  inputDate: AutoFormFactoryMethod<WithDefaultControls<TC, DFTC>, 'inputDate', z.ZodType<CalendarDate>>
+  inputDate: AutoFormFactoryMethod<TControls, z.ZodType<CalendarDate>, 'inputDate'>
 
   /**
    * 输入时间工厂 - 用于 UInputTime 组件
    * 返回 Time 类型
    */
-  inputTime: AutoFormFactoryMethod<WithDefaultControls<TC, DFTC>, 'inputTime', z.ZodType<Time>>
+  inputTime: AutoFormFactoryMethod<TControls, z.ZodType<Time>, 'inputTime'>
 
   /**
    * ISO 日期时间字符串工厂
    * 验证 ISO 8601 格式(如 "2025-12-01T06:15:00Z")
    */
-  isoDatetime: AutoFormFactoryMethod<WithDefaultControls<TC, DFTC>, 'string', z.ZodType<string>>
+  isoDatetime: AutoFormFactoryMethod<TControls, z.ZodType<string>, 'string'>
 
   /**
    * ISO 日期字符串工厂
    * 验证 YYYY-MM-DD 格式(如 "2025-12-01")
    */
-  isoDate: AutoFormFactoryMethod<WithDefaultControls<TC, DFTC>, 'string', z.ZodType<string>>
+  isoDate: AutoFormFactoryMethod<TControls, z.ZodType<string>, 'string'>
 
   /**
    * ISO 时间字符串工厂
    * 验证 HH:MM[:SS[.s+]] 格式(如 "14:30:00")
    */
-  isoTime: AutoFormFactoryMethod<WithDefaultControls<TC, DFTC>, 'string', z.ZodType<string>>
+  isoTime: AutoFormFactoryMethod<TControls, z.ZodType<string>, 'string'>
 
   /**
    * 数组类型工厂
    * @template T - 数组元素的 Zod 类型
    */
   array: {
-    <T extends z.ZodType>(schema: T, overwrite?: never): z.ZodArray<T>
-    <T extends z.ZodType, K extends ControlTypeKey<WithDefaultControls<TC, DFTC>>>(
-      schema: T, overwrite?: { type: Suggest<K>, component?: never } & MetaByType<WithDefaultControls<TC, DFTC>, K>
-    ): z.ZodArray<T>
-    <T extends z.ZodType, C extends IsComponent>(
-      schema: T, overwrite?: { component: C, type?: never } & OmitControlMeta<C>
-    ): z.ZodArray<T>
+    <T extends z.ZodType, K extends ControlKey<TControls>>(schema: T, overwrite?: MetaByControlKey<TControls, K>): z.ZodArray<T>
+    <T extends z.ZodType>(schema: T, overwrite: MetaByDefaultIfExists<TControls, 'array'>): z.ZodArray<T>
+    <T extends z.ZodType, C extends IsComponent>(schema: T, overwrite: MetaByComponent<C>): z.ZodArray<T>
   }
 
   /**
@@ -612,12 +551,17 @@ export interface TypedZodFactory<TC extends AutoFormControls, DFTC extends AutoF
    * @template T - 元组元素的 Zod 类型数组
    */
   tuple: {
-    <T extends readonly [z.ZodType, ...z.ZodType[]]>(schemas: T, overwrite?: never): z.ZodTuple<T>
-    <T extends readonly [z.ZodType, ...z.ZodType[]], K extends ControlTypeKey<WithDefaultControls<TC, DFTC>>>(
-      schemas: T, overwrite?: { type: Suggest<K>, component?: never } & MetaByType<WithDefaultControls<TC, DFTC>, K>
+    <T extends readonly [z.ZodType, ...z.ZodType[]], K extends ControlKey<TControls>>(
+      schemas: T,
+      overwrite?: MetaByControlKey<TControls, K>
+    ): z.ZodTuple<T>
+    <T extends readonly [z.ZodType, ...z.ZodType[]]>(
+      schemas: T,
+      overwrite: MetaByDefaultIfExists<TControls, 'tuple'>
     ): z.ZodTuple<T>
     <T extends readonly [z.ZodType, ...z.ZodType[]], C extends IsComponent>(
-      schemas: T, overwrite?: { component: C, type?: never } & OmitControlMeta<C>
+      schemas: T,
+      overwrite: MetaByComponent<C>
     ): z.ZodTuple<T>
   }
 
@@ -633,52 +577,22 @@ export interface TypedZodFactory<TC extends AutoFormControls, DFTC extends AutoF
 
   /**
    * 对象工厂 - 支持柯里化和直接调用
-   * @description
-   * - 柯里化: afz.object<State>()({ name: afz.string() }, { type: 'input' })
-   * - 直接调用: afz.object({ name: afz.string() }, { type: 'input' })
    */
   object: {
-    <T extends object>(): ObjectFactoryCurried<TC, DFTC, T, z.core.$strip>
-    <S extends Record<string, any>>(shape: S, meta?: ObjectMetaBase<TC, DFTC>): z.ZodObject<ExtractLayoutShape<S>, z.core.$strip>
-    <S extends Record<string, any>, K extends ControlTypeKey<WithDefaultControls<TC, DFTC>>>(
-      shape: S,
-      meta?: ObjectMetaWithType<TC, DFTC, K>
-    ): z.ZodObject<ExtractLayoutShape<S>, z.core.$strip>
-    <S extends Record<string, any>, C extends IsComponent>(
-      shape: S,
-      meta?: ObjectMetaWithComponent<C>
-    ): z.ZodObject<ExtractLayoutShape<S>, z.core.$strip>
-  } & ObjectFactoryDirect<TC, DFTC, z.core.$strip>
+    <T extends object>(): ObjectFactoryCurried<TControls, T, z.core.$strip, 'object'>
+  } & ObjectFactoryDirect<TControls, z.core.$strip, 'object'>
 
   /**
    * 松散对象工厂 - 允许额外属性
    */
   looseObject: {
-    <T extends object>(): ObjectFactoryCurried<TC, DFTC, T, z.core.$loose>
-    <S extends Record<string, any>>(shape: S, meta?: ObjectMetaBase<TC, DFTC>): z.ZodObject<ExtractLayoutShape<S>, z.core.$loose>
-    <S extends Record<string, any>, K extends ControlTypeKey<WithDefaultControls<TC, DFTC>>>(
-      shape: S,
-      meta?: ObjectMetaWithType<TC, DFTC, K>
-    ): z.ZodObject<ExtractLayoutShape<S>, z.core.$loose>
-    <S extends Record<string, any>, C extends IsComponent>(
-      shape: S,
-      meta?: ObjectMetaWithComponent<C>
-    ): z.ZodObject<ExtractLayoutShape<S>, z.core.$loose>
-  } & ObjectFactoryDirect<TC, DFTC, z.core.$loose>
+    <T extends object>(): ObjectFactoryCurried<TControls, T, z.core.$loose, 'looseObject'>
+  } & ObjectFactoryDirect<TControls, z.core.$loose, 'looseObject'>
 
   /**
    * 严格对象工厂 - 禁止额外属性
    */
   strictObject: {
-    <T extends object>(): ObjectFactoryCurried<TC, DFTC, T, z.core.$strict>
-    <S extends Record<string, any>>(shape: S, meta?: ObjectMetaBase<TC, DFTC>): z.ZodObject<ExtractLayoutShape<S>, z.core.$strict>
-    <S extends Record<string, any>, K extends ControlTypeKey<WithDefaultControls<TC, DFTC>>>(
-      shape: S,
-      meta?: ObjectMetaWithType<TC, DFTC, K>
-    ): z.ZodObject<ExtractLayoutShape<S>, z.core.$strict>
-    <S extends Record<string, any>, C extends IsComponent>(
-      shape: S,
-      meta?: ObjectMetaWithComponent<C>
-    ): z.ZodObject<ExtractLayoutShape<S>, z.core.$strict>
-  } & ObjectFactoryDirect<TC, DFTC, z.core.$strict>
+    <T extends object>(): ObjectFactoryCurried<TControls, T, z.core.$strict, 'strictObject'>
+  } & ObjectFactoryDirect<TControls, z.core.$strict, 'strictObject'>
 }

@@ -12,6 +12,8 @@ const schema = afz.object({
       email: afz.email()
     })
   ).meta({
+    label: '联系人列表',
+    hint: '您可以添加多个联系人',
     collapsible: { defaultOpen: true }
   }).default([])
 })

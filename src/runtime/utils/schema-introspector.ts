@@ -8,6 +8,11 @@ import { useAutoForm } from '../composables/useAutoForm'
 import { AUTOFORM_LIMITS, AUTOFORM_META } from '../constants/auto-form'
 import type { ZodAutoFormFieldMeta } from '../types/zod'
 
+function getUnwrappedSchema(schema: any): z.ZodType | undefined {
+  const def = schema?.def || schema?._def
+  return def?.innerType || def?.in || def?.schema || undefined
+}
+
 /**
  * 提取 schema 的 decorators 信息
  */
@@ -20,7 +25,7 @@ function extractDecorators(schema: z.ZodType): {
   let coreSchema: z.ZodType = schema
 
   while (cur) {
-    const def = cur?.def
+    const def = cur?.def || cur?._def
     if (!def?.type)
       break
     switch (def.type) {
@@ -37,8 +42,11 @@ function extractDecorators(schema: z.ZodType): {
         break
     }
 
-    const next = def?.innerType
+    const next = getUnwrappedSchema(cur)
     if (!next)
+      break
+
+    if (next === cur)
       break
 
     cur = next
@@ -299,8 +307,8 @@ export function introspectSchema(
     if (enumValues && enumValues.length > 0) {
       field.meta.controlProps = {
         items: enumValues,
-        ...field.meta.controlProps || {}
-      }
+        ...(field.meta.controlProps as unknown as Record<string, unknown>)
+      } as unknown as AutoFormMergeMeta['controlProps']
     }
   }
 

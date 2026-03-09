@@ -15,9 +15,9 @@ const schema = computed(() => afz.object({
     .meta({ hint: `用户名长度应在 ${minLength.value} 到 ${maxLength.value} 个字符之间` }),
 
   acceptTerms: afz.boolean({
-    controlProps: computed(() => ({
+    controlProps: () => ({
       label: `我已阅读并同意 ${new Date().getFullYear()} 年服务条款`
-    }))
+    })
   })
 }))
 

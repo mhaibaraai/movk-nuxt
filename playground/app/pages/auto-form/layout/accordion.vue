@@ -10,6 +10,7 @@ const accordionSchema = afz.object({
   $accordion: afz.layout({
     component: UAccordion,
     props: {
+      defaultValue: ['0'],
       trailingIcon: 'i-lucide-arrow-down',
       type: 'multiple',
       ui: {
@@ -28,7 +29,7 @@ const accordionSchema = afz.object({
     fields: {
       name: afz.string().meta({ label: '姓名' }),
       email: afz.email().meta({ label: '邮箱' }),
-      bio: afz.string({ type: 'textarea' }).meta({ label: '个人简介' }).optional()
+      bio: afz.string({ type: 'textarea', controlProps: { rows: 4 } }).meta({ label: '个人简介' }).optional()
     }
   })
 })

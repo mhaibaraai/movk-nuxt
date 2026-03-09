@@ -140,7 +140,6 @@ export function createHintSlotFactory(removeCallback: (count?: number) => void) 
       color: 'error',
       variant: 'ghost',
       size: 'xs',
-      square: true,
       onClick: (event: Event) => {
         event?.stopPropagation()
         removeCallback(count)
@@ -151,7 +150,7 @@ export function createHintSlotFactory(removeCallback: (count?: number) => void) 
       return deleteButton
     }
 
-    return h('div', { class: 'flex items-center gap-2' }, [
+    return h('div', { class: 'flex items-center gap-1.5' }, [
       deleteButton,
       chevronIcon
     ])

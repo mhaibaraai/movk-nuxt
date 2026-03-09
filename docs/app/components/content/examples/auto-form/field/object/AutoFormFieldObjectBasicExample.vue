@@ -5,14 +5,14 @@ import type { z } from 'zod'
 const { afz } = useAutoForm()
 const toast = useToast()
 
-const { data: users } = await useLazyFetch('https://jsonplaceholder.typicode.com/users', {
+const { data: users, execute, pending } = await useLazyFetch('https://jsonplaceholder.typicode.com/users', {
   key: 'typicode-users-basic',
   immediate: false,
   transform: (data: { id: number, name: string }[]) => {
     return data?.map(user => ({
       label: user.name,
       value: String(user.id),
-      avatar: { src: `https://i.pravatar.cc/120?img=${user.id}`, loading: 'lazy' }
+      avatar: { src: `https://i.pravatar.cc/120?img=${user.id}`, loading: 'lazy' as const }
     }))
   }
 })
@@ -28,9 +28,15 @@ const schema = afz.object({
   }, {
     type: 'selectMenu',
     controlProps: ({ value }: { value: { avatar: { src: string } } }) => ({
-      placeholder: '请选择用户',
-      items: users.value,
-      avatar: value?.avatar
+      'placeholder': '请选择用户',
+      'items': users.value || [],
+      'avatar': value?.avatar,
+      'loading': pending.value,
+      'onUpdate:open': () => {
+        if (!users.value && !pending.value) {
+          execute()
+        }
+      }
     })
   })
 })

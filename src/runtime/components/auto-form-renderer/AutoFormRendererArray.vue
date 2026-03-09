@@ -138,9 +138,8 @@ const { collapsibleConfig, shouldShowCollapsible, isHidden, enhancedField } = cr
 
 const DEFAULT_ADD_BUTTON_PROPS = {
   icon: 'i-lucide-plus',
-  color: 'neutral',
-  variant: 'subtle',
-  block: true,
+  color: 'info',
+  variant: 'soft',
   size: 'sm'
 } satisfies ButtonProps
 

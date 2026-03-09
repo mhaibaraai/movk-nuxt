@@ -6,50 +6,43 @@ category: customization
 
 ## 概述
 
-`AutoForm` 允许你注册自定义 Vue 组件作为表单字段的渲染控件。这使得你可以扩展 `AutoForm` 的功能，使用任何 UI 组件库或自定义组件来渲染特定类型的字段。
+`AutoForm` 支持两种方式来使用自定义 Vue 组件作为表单控件：
 
-自定义控件适用于以下场景：
+- **注册类型**：通过 `useAutoForm()` 注册控件类型，在 schema 中通过 `type` 引用，适合需要复用的控件
+- **直接传入**：在 schema 中通过 `component` 直接传入组件实例，适合一次性使用
 
-- 集成第三方组件库（如富文本编辑器、颜色选择器等）
-- 实现特定业务逻辑的输入控件
-- 复用现有的表单组件
-- 为特定字段类型提供统一的渲染方式
+## 注册自定义控件
 
-## 基本用法
-
-通过 `useAutoForm` 注册自定义控件：
+通过 `useAutoForm()` 注册控件，然后在 schema 中通过 `type` 字段引用：
 
 ```ts
-import { RichTextEditor } from '#components'
+import { TagSelector } from '#components'
 
 const { afz, controls } = useAutoForm({
-  // 注册控件类型为 'richtext'
-  richtext: {
-    component: RichTextEditor,
-    controlProps: { class: 'w-full' }
+  tagSelector: {
+    component: TagSelector,
+    controlProps: { class: 'w-full' } // 全局 controlProps（可被字段级覆盖）
   }
 })
 ```
 
-然后在 schema 中使用自定义控件：
+在 schema 中使用注册的控件类型：
 
 ```ts
 const schema = afz.object({
-  content: afz
-    .string({
-      type: 'richtext',  // 指定使用自定义控件
+  skills: afz
+    .array(afz.string(), {
+      type: 'tagSelector',       // 指定控件类型
       controlProps: {
-        readonly: false
+        options: ['Vue.js', 'Nuxt', 'TypeScript'],
+        max: 5
       }
     })
-    .meta({
-      label: '文章内容',
-      description: '使用富文本编辑器编写文章内容'
-    })
+    .meta({ label: '技能标签' })
 })
 ```
 
-最后将 `controls` 传递给 `AutoForm` 组件：
+将 `controls` 传给 `MAutoForm`：
 
 ```vue
 <MAutoForm
@@ -60,65 +53,81 @@ const schema = afz.object({
 />
 ```
 
-## 控件组件要求
+## 直接传入组件
 
-自定义控件组件需要满足以下要求：
+无需注册，直接在 schema 的 meta 中传入组件实例：
 
-1. **接受 v-model**：组件必须支持 `v-model` 绑定
+```ts
+import { StarRating } from '#components'
 
-```vue
-<script setup>
-// 使用 defineModel (Vue 3.4+)
-const modelValue = defineModel()
-
-// 或使用 props + emit
-const props = defineProps<{
-  modelValue: any
-}>()
-
-const emit = defineEmits<{
-  'update:modelValue': [value: any]
-}>()
-</script>
+const schema = afz.object({
+  rating: afz.number({
+    component: StarRating,
+    controlProps: { max: 10 }
+  }).meta({ label: '评分' })
+})
 ```
 
-2. **接收 controlProps**：组件应该能够接收并处理传入的 props
-
-```vue
-<script setup>
-defineProps<{
-  modelValue: string
-  readonly?: boolean
-  placeholder?: string
-  // 其他自定义 props...
-}>()
-</script>
-```
+::note
+直接传入组件时，`type` 与 `component` 互斥，同时存在时以 `component` 为准。
+::
 
 ## 示例
 
 ::component-example
 ---
-name: 'auto-form-custom-control-rich-text-example'
+name: 'auto-form-custom-control-example'
 collapse: true
 props:
   class: 'p-4 w-full'
 ---
 ::
 
+## 自定义控件规范
+
+自定义控件组件需满足以下要求：
+
+### 支持 v-model
+
+```vue
+<script setup>
+// Vue 3.4+ 推荐写法
+const model = defineModel()
+
+// 或传统写法
+const props = defineProps(['modelValue'])
+const emit = defineEmits(['update:modelValue'])
+</script>
+```
+
+### 接受 controlProps
+
+`controlProps` 中的字段会作为 props 透传给控件组件。组件应声明对应的 props：
+
+```vue
+<script setup>
+defineProps<{
+  modelValue?: string[]
+  options?: string[]  // 对应 controlProps.options
+  max?: number        // 对应 controlProps.max
+  disabled?: boolean
+}>()
+</script>
+```
+
 ## 注意事项
 
 ::note
 **类型推断**
-使用自定义控件时，Zod schema 的类型推断仍然基于底层的数据类型（如 `string()`、`number()` 等），而不是控件类型。
+Zod schema 的类型推断基于底层数据类型（如 `string()`、`number()`），而非控件类型。自定义控件不影响表单数据的类型推断。
 ::
 
 ::tip
 **Props 合并**
-`useAutoForm` 中的 `controlProps` 和字段级别的 `controlProps` 会进行浅合并，字段级别的配置优先级更高。
+`useAutoForm()` 中注册时的 `controlProps` 与字段级的 `controlProps` 会进行浅合并，字段级配置优先级更高。
 ::
 
 ::warning
 **组件导入**
-确保自定义控件组件已正确导入。在 Nuxt 项目中，可以使用 `#components` 自动导入，或手动导入组件。
+确保自定义控件组件已正确导入。在 Nuxt 项目中，推荐使用 `#components` 自动导入。
 ::

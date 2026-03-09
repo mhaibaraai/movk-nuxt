@@ -12,7 +12,8 @@ type Country = {
   emoji: string
 }
 
-const { data: countries, execute, pending } = await useLazyFetch<Country[]>('https://ui.nuxt.com/api/countries.json', {
+const { data: countries, execute, status } = await useLazyFetch<Country[]>('https://ui.nuxt.com/api/countries.json', {
+  key: 'countries',
   immediate: false
 })
 
@@ -23,9 +24,9 @@ const schema = afz.object({
     emoji: afz.string()
   }, {
     type: 'selectMenu',
-    controlProps: computed(() => ({
-      'items': countries.value,
-      'loading': pending.value,
+    controlProps: () => ({
+      'items': countries.value || [],
+      'loading': status.value === 'pending',
       'labelKey': 'name',
       'searchInput': { icon: 'i-lucide-search' },
       'onUpdate:open': () => {
@@ -33,7 +34,7 @@ const schema = afz.object({
           execute()
         }
       }
-    })),
+    }),
     controlSlots: {
       'leading': ({ modelValue, ui }) => {
         if (modelValue) {

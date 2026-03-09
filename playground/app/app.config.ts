@@ -10,14 +10,6 @@ export default defineAppConfig({
     colors: {
       primary: 'sky',
       neutral: 'zinc'
-    },
-    collapsible: {
-      slots: {
-        content: 'space-y-4'
-      }
-    },
-    form: {
-      base: 'space-y-4 min-w-md'
     }
   }
 })

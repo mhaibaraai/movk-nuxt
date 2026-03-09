@@ -1,0 +1,24 @@
+{
+  "mcpServers": {
+    "nuxt": {
+      "type": "http",
+      "url": "https://nuxt.com/mcp"
+    },
+    "nuxt-ui": {
+      "type": "http",
+      "url": "https://ui.nuxt.com/mcp"
+    },
+    "movk-nuxt-docs": {
+      "type": "http",
+      "url": "https://docs.mhaibaraai.cn/mcp"
+    },
+    "movk-nuxt": {
+      "type": "http",
+      "url": "https://nuxt.mhaibaraai.cn/mcp"
+    },
+    "movk-core": {
+      "type": "http",
+      "url": "https://core.mhaibaraai.cn/mcp"
+    }
+  }
+}
