@@ -37,10 +37,7 @@ export default defineNuxtConfig({
 
   vite: {
     resolve: {
-      dedupe: ['reka-ui']
-    },
-    ssr: {
-      noExternal: ['reka-ui']
+      dedupe: ['reka-ui', 'vue']
     }
   },
 
