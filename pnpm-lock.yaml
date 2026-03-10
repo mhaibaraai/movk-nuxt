@@ -4,9 +4,6 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
-overrides:
-  reka-ui: 2.8.2
-
 importers:
 
   .:
@@ -7704,7 +7701,7 @@ packages:
   vaul-vue@0.4.1:
     resolution: {integrity: sha512-A6jOWOZX5yvyo1qMn7IveoWN91mJI5L3BUKsIwkg6qrTGgHs1Sb1JF/vyLJgnbN1rH4OOOxFbtqL9A46bOyGUQ==}
     peerDependencies:
-      reka-ui: 2.8.2
+      reka-ui: ^2.0.0
       vue: ^3.3.0
 
   vfile-location@5.0.3:
