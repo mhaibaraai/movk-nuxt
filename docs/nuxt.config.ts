@@ -23,13 +23,6 @@ export default defineNuxtConfig({
     name: 'Movk Nuxt'
   },
 
-  mdc: {
-    highlight: {
-      shikiEngine: 'javascript',
-      noApiRoute: false
-    }
-  },
-
   routeRules: {
     '/docs': { redirect: '/docs/getting-started', prerender: false },
     '/docs/components': { redirect: '/docs/components/with-character-limit', prerender: false },
@@ -41,6 +34,15 @@ export default defineNuxtConfig({
   },
 
   compatibilityDate: 'latest',
+
+  vite: {
+    resolve: {
+      dedupe: ['reka-ui']
+    },
+    ssr: {
+      noExternal: ['reka-ui']
+    }
+  },
 
   aiChat: {
     model: 'zai/glm-4.7',
