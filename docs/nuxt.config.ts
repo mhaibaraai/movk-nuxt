@@ -35,9 +35,15 @@ export default defineNuxtConfig({
 
   compatibilityDate: 'latest',
 
+  nitro: {
+    externals: {
+      inline: ['reka-ui']
+    }
+  },
+
   vite: {
     resolve: {
-      dedupe: ['reka-ui', 'vue']
+      dedupe: ['reka-ui']
     }
   },
 
