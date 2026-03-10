@@ -10,9 +10,6 @@ ignoredBuiltDependencies:
   - unrs-resolver
   - vue-demi
 
-overrides:
-  '@movk/core': https://pkg.pr.new/@movk/core@70
-
 onlyBuiltDependencies:
   - better-sqlite3
   - sharp
