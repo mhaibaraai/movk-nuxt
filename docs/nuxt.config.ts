@@ -23,10 +23,6 @@ export default defineNuxtConfig({
     name: 'Movk Nuxt'
   },
 
-  build: {
-    transpile: ['reka-ui']
-  },
-
   routeRules: {
     '/docs': { redirect: '/docs/getting-started', prerender: false },
     '/docs/components': { redirect: '/docs/components/with-character-limit', prerender: false },
@@ -38,6 +34,12 @@ export default defineNuxtConfig({
   },
 
   compatibilityDate: 'latest',
+
+  vite: {
+    resolve: {
+      dedupe: ['reka-ui']
+    }
+  },
 
   aiChat: {
     model: 'zai/glm-4.7',
