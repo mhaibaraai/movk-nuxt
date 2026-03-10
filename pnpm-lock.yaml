@@ -21,8 +21,8 @@ importers:
         specifier: ^3.12.0
         version: 3.12.0
       '@movk/core':
-        specifier: ^1.2.1
-        version: 1.2.1(vue@3.5.30(typescript@5.9.3))
+        specifier: ^1.2.2
+        version: 1.2.2(vue@3.5.30(typescript@5.9.3))
       '@nuxt/image':
         specifier: ^2.0.0
         version: 2.0.0(db0@0.3.4(better-sqlite3@12.6.2))(ioredis@5.10.0)(magicast@0.5.2)
@@ -144,10 +144,6 @@ importers:
       zod:
         specifier: ^4.3.6
         version: 4.3.6
-    devDependencies:
-      reka-ui:
-        specifier: 2.8.2
-        version: 2.8.2(vue@3.5.30(typescript@5.9.3))
 
   playground:
     devDependencies:
@@ -1236,8 +1232,8 @@ packages:
       '@cfworker/json-schema':
         optional: true
 
-  '@movk/core@1.2.1':
-    resolution: {integrity: sha512-PkMd1apLZZLcbrP6AiyDetmBpMPe922pYa8cH2o8L3d8JLr04Y1XpEJPNYDbj+dJgUUdZqb3X5hd8BAa1OeGLQ==}
+  '@movk/core@1.2.2':
+    resolution: {integrity: sha512-crKKB8Ym3PmN8m/UIEl1BTOlWj90Np4Q4rvs91AQGUJiTvCUQqObkKmbFqaXbeNLqu1P4L/RNSJ5ymgv1RHGEw==}
     hasBin: true
     peerDependencies:
       vue: ^3.5.25
@@ -9080,7 +9076,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@movk/core@1.2.1(vue@3.5.30(typescript@5.9.3))':
+  '@movk/core@1.2.2(vue@3.5.30(typescript@5.9.3))':
     dependencies:
       '@vueuse/core': 14.2.1(vue@3.5.30(typescript@5.9.3))
       tinyglobby: 0.2.15
@@ -9094,7 +9090,7 @@ snapshots:
       '@iconify-json/lucide': 1.2.96
       '@iconify-json/simple-icons': 1.2.72
       '@iconify-json/vscode-icons': 1.2.44
-      '@movk/core': 1.2.1(vue@3.5.30(typescript@5.9.3))
+      '@movk/core': 1.2.2(vue@3.5.30(typescript@5.9.3))
       '@nuxt/a11y': 1.0.0-alpha.1(magicast@0.5.2)(vite@7.3.1(@types/node@25.4.0)(jiti@2.6.1)(lightningcss@1.32.0)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.46.0)(yaml@2.8.2))
       '@nuxt/content': 3.12.0(better-sqlite3@12.6.2)(magicast@0.5.2)
       '@nuxt/image': 2.0.0(db0@0.3.4(better-sqlite3@12.6.2))(ioredis@5.10.0)(magicast@0.5.2)

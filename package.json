@@ -99,7 +99,7 @@
     "@iconify-json/ph": "^1.2.2",
     "@iconify-json/tabler": "^1.2.30",
     "@internationalized/date": "^3.12.0",
-    "@movk/core": "^1.2.1",
+    "@movk/core": "^1.2.2",
     "@nuxt/image": "^2.0.0",
     "@nuxt/ui": "^4.5.1",
     "@vueuse/core": "^14.2.1",

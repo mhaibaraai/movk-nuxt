@@ -35,12 +35,6 @@ export default defineNuxtConfig({
 
   compatibilityDate: 'latest',
 
-  vite: {
-    resolve: {
-      dedupe: ['reka-ui']
-    }
-  },
-
   aiChat: {
     model: 'zai/glm-4.7',
     models: [
