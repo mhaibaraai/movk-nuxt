@@ -23,6 +23,13 @@ export default defineNuxtConfig({
     name: 'Movk Nuxt'
   },
 
+  mdc: {
+    highlight: {
+      shikiEngine: 'javascript',
+      noApiRoute: false
+    }
+  },
+
   routeRules: {
     '/docs': { redirect: '/docs/getting-started', prerender: false },
     '/docs/components': { redirect: '/docs/components/with-character-limit', prerender: false },
