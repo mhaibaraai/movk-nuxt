@@ -10,11 +10,8 @@ RUN corepack install && pnpm install --frozen-lockfile
 
 FROM deps AS build
 WORKDIR /app
-ENV NODE_OPTIONS=--max-old-space-size=6144
 COPY . .
-RUN pnpm exec nuxt-module-build build --stub \
- && pnpm exec nuxt-module-build prepare \
- && pnpm exec nuxt build docs
+RUN pnpm docs:build
 
 FROM node:24-alpine AS runtime
 WORKDIR /app
