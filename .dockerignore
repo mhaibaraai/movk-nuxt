@@ -1,14 +1,32 @@
+# VCS
 .git
 .github
+
+# Dependencies (matched at any depth)
 node_modules
+
+# Build artifacts (matched at any depth)
 dist
-.nuxt
 .output
-playground/.nuxt
-playground/.output
-playground/node_modules
-docs/.nuxt
-docs/.output
-docs/node_modules
+.nuxt
+
+# Cache & temp
+.cache
+.temp
+.tmp
+.data
+
+# Tests
+test
+coverage
+reports
+*.lcov
+
+# Logs
 *.log
-*.md
+
+# Root-level markdown (not docs content)
+/*.md
+
+# Config not needed for build
+renovate.json
