@@ -1,0 +1,14 @@
+.git
+.github
+node_modules
+dist
+.nuxt
+.output
+playground/.nuxt
+playground/.output
+playground/node_modules
+docs/.nuxt
+docs/.output
+docs/node_modules
+*.log
+*.md
