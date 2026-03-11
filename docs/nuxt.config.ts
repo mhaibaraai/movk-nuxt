@@ -24,8 +24,7 @@ export default defineNuxtConfig({
   },
 
   runtimeConfig: {
-    githubToken: '',
-    aiGatewayApiKey: ''
+    aiGatewayApiKey: process.env.AI_GATEWAY_API_KEY
   },
 
   build: {
