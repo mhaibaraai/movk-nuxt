@@ -9,7 +9,7 @@ export default defineAppConfig({
     max: 5
   },
   vercelAnalytics: {
-    enable: true,
+    enable: false,
     debug: false
   },
   aiChat: {
