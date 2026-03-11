@@ -7,7 +7,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE: ghcr.io/${{ github.repository }}-docs
+  IMAGE: ghcr.io/${{ github.repository }}/docs
 
 permissions:
   contents: read
