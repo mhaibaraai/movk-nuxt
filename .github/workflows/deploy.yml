@@ -7,7 +7,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE: ghcr.io/${{ github.repository_owner }}/movk-nuxt-docs
+  IMAGE: ghcr.io/${{ github.repository }}
 
 permissions:
   contents: read
