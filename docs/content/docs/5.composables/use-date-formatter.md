@@ -421,4 +421,4 @@ async function handleSubmit() {
 
 ## Changelog
 
-:commit-changelog{prefix="/composables" suffix="ts"}
+:commit-changelog{prefix="composables" suffix="ts"}

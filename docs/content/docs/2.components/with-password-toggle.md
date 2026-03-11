@@ -78,4 +78,4 @@ name: 'components-with-password-toggle-custom-example'
 
 ## Changelog
 
-:commit-changelog{prefix="/components/input"}
+:commit-changelog{prefix="components/input"}

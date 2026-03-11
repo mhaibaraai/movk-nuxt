@@ -108,4 +108,4 @@ name: 'components-search-form-responsive-example'
 
 ## Changelog
 
-:commit-changelog{prefix="/components"}
+:commit-changelog{prefix="components"}

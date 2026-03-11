@@ -161,4 +161,4 @@ name: 'components-star-rating-slot-example'
 
 ## Changelog
 
-:commit-changelog{prefix="/components"}
+:commit-changelog{prefix="components"}

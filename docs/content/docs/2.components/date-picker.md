@@ -112,4 +112,4 @@ name: 'components-date-picker-button-example'
 
 ## Changelog
 
-:commit-changelog{prefix="/components"}
+:commit-changelog{prefix="components"}

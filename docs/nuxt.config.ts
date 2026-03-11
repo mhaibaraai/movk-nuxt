@@ -23,6 +23,11 @@ export default defineNuxtConfig({
     name: 'Movk Nuxt'
   },
 
+  runtimeConfig: {
+    githubToken: '',
+    aiGatewayApiKey: ''
+  },
+
   build: {
     transpile: ['reka-ui']
   },

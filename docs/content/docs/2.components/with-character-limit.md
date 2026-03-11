@@ -88,4 +88,4 @@ name: 'components-with-character-limit-form-example'
 
 ## Changelog
 
-:commit-changelog{prefix="/components/input"}
+:commit-changelog{prefix="components/input"}

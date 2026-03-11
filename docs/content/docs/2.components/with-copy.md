@@ -68,4 +68,4 @@ name: 'components-with-copy-event-example'
 
 ## Changelog
 
-:commit-changelog{prefix="/components/input"}
+:commit-changelog{prefix="components/input"}

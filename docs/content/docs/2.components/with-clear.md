@@ -78,4 +78,4 @@ name: 'components-with-clear-custom-example'
 
 ## Changelog
 
-:commit-changelog{prefix="/components/input"}
+:commit-changelog{prefix="components/input"}
