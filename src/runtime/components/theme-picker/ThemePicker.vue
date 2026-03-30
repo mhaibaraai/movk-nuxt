@@ -1,11 +1,10 @@
 <script setup lang="ts">
-import { useAppConfig, useColorMode } from '#imports'
+import { useColorMode } from '#imports'
 import { useClipboard } from '@vueuse/core'
 import { ref } from 'vue'
-import { useTheme } from '../../composables/useTheme'
+import { useTheme } from '../../composables'
 import ThemePickerButton from './ThemePickerButton.vue'
 
-const appConfig = useAppConfig()
 const colorMode = useColorMode()
 
 const open = ref(false)
@@ -18,7 +17,7 @@ const {
   neutral,
   primaryColors,
   primary,
-  setBlackAsPrimary,
+  blackAsPrimary,
   radiuses,
   radius,
   fonts,
@@ -36,10 +35,7 @@ const {
 </script>
 
 <template>
-  <UPopover
-    v-model:open="open"
-    :ui="{ content: 'w-72 px-6 py-4 flex flex-col gap-4 overflow-y-auto max-h-[calc(100vh-5rem)]' }"
-  >
+  <UPopover v-model:open="open" :ui="{ content: 'w-72 px-6 py-4 flex flex-col gap-4 overflow-y-auto max-h-[calc(100vh-5rem)]' }">
     <template #default>
       <UButton
         icon="i-lucide-swatch-book"
@@ -57,21 +53,24 @@ const {
           Primary
 
           <UButton
-            to="https://ui.nuxt.com/docs/getting-started/theme/css-variables#colors"
+            to="/docs/getting-started/theme/css-variables#colors"
             size="xs"
             color="neutral"
             variant="link"
-            target="_blank"
-            icon="i-lucide-circle-help"
+            icon="i-lucide-help-circle"
             class="p-0 -my-0.5"
             :ui="{ leadingIcon: 'size-3' }"
           />
         </legend>
 
         <div class="grid grid-cols-3 gap-1 -mx-2">
-          <ThemePickerButton label="Black" :selected="appConfig.theme.blackAsPrimary" @click="setBlackAsPrimary(true)">
+          <ThemePickerButton
+            label="Black"
+            :selected="blackAsPrimary"
+            @click="blackAsPrimary = true"
+          >
             <template #leading>
-              <span class="inline-block w-2 h-2 rounded-full bg-black dark:bg-white" />
+              <span class="inline-block size-2 rounded-full bg-black dark:bg-white" />
             </template>
           </ThemePickerButton>
 
@@ -80,7 +79,7 @@ const {
             :key="color"
             :label="color"
             :chip="color"
-            :selected="!appConfig.theme.blackAsPrimary && primary === color"
+            :selected="!blackAsPrimary && primary === color"
             @click="primary = color"
           />
         </div>
@@ -91,12 +90,11 @@ const {
           Neutral
 
           <UButton
-            to="https://ui.nuxt.com/docs/getting-started/theme/css-variables#text"
+            to="/docs/getting-started/theme/css-variables#text"
             size="xs"
             color="neutral"
             variant="link"
-            target="_blank"
-            icon="i-lucide-circle-help"
+            icon="i-lucide-help-circle"
             class="p-0 -my-0.5"
             :ui="{ leadingIcon: 'size-3' }"
           />
@@ -119,12 +117,11 @@ const {
           Radius
 
           <UButton
-            to="https://ui.nuxt.com/docs/getting-started/theme/css-variables#radius"
+            to="/docs/getting-started/theme/css-variables#radius"
             size="xs"
             color="neutral"
             variant="link"
-            target="_blank"
-            icon="i-lucide-circle-help"
+            icon="i-lucide-help-circle"
             class="p-0 -my-0.5"
             :ui="{ leadingIcon: 'size-3' }"
           />
@@ -147,12 +144,11 @@ const {
           Font
 
           <UButton
-            to="https://ui.nuxt.com/docs/getting-started/integrations/fonts"
+            to="/docs/getting-started/integrations/fonts"
             size="xs"
             color="neutral"
             variant="link"
-            target="_blank"
-            icon="i-lucide-circle-help"
+            icon="i-lucide-help-circle"
             class="p-0 -my-0.5"
             :ui="{ leadingIcon: 'size-3' }"
           />
@@ -176,12 +172,11 @@ const {
           Icons
 
           <UButton
-            to="https://ui.nuxt.com/docs/getting-started/integrations/icons"
+            to="/docs/getting-started/integrations/icons"
             size="xs"
             color="neutral"
             variant="link"
-            target="_blank"
-            icon="i-lucide-circle-help"
+            icon="i-lucide-help-circle"
             class="p-0 -my-0.5"
             :ui="{ leadingIcon: 'size-3' }"
           />
@@ -205,12 +200,11 @@ const {
           Color Mode
 
           <UButton
-            to="https://ui.nuxt.com/docs/getting-started/integrations/color-mode"
+            to="/docs/getting-started/integrations/color-mode"
             size="xs"
             color="neutral"
             variant="link"
-            target="_blank"
-            icon="i-lucide-circle-help"
+            icon="i-lucide-help-circle"
             class="p-0 -my-0.5"
             :ui="{ leadingIcon: 'size-3' }"
           />
@@ -240,7 +234,7 @@ const {
             size="sm"
             label="main.css"
             class="flex-1 text-[11px]"
-            :icon="copiedCSS ? appConfig.ui.icons.copyCheck : appConfig.ui.icons.copy"
+            :icon="copiedCSS ? 'i-lucide-copy-check' : 'i-lucide-copy'"
             @click="copyCSS(exportCSS())"
           />
           <UButton
@@ -249,7 +243,7 @@ const {
             variant="soft"
             size="sm"
             label="app.config.ts"
-            :icon="copiedAppConfig ? appConfig.ui.icons.copyCheck : appConfig.ui.icons.copy"
+            :icon="copiedAppConfig ? 'i-lucide-copy-check' : 'i-lucide-copy'"
             class="flex-1 text-[11px]"
             @click="copyAppConfig(exportAppConfig())"
           />

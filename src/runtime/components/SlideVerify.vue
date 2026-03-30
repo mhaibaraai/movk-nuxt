@@ -3,7 +3,7 @@ import { UIcon } from '#components'
 import { useElementSize } from '@vueuse/core'
 import { Motion } from 'motion-v'
 import { computed, ref, useTemplateRef } from 'vue'
-import type { ClassNameValue } from 'tailwind-merge'
+import type { ClassNameValue } from '../types'
 
 export interface SlideVerifyProps {
   /**

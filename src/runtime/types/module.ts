@@ -13,7 +13,7 @@ export interface ModuleOptions {
   api?: MovkApiFullConfig
 }
 
-declare module 'nuxt/app' {
+declare module '#app' {
   interface NuxtApp {
     $api: ApiInstance
   }
@@ -52,14 +52,5 @@ declare module 'nuxt/schema' {
 
   interface RuntimeConfig {
     movkApi: { endpoints?: Record<string, EndpointPrivateConfig> }
-  }
-
-  interface AppConfig {
-    theme: {
-      radius: number
-      blackAsPrimary: boolean
-      font: string
-      icons: string
-    }
   }
 }

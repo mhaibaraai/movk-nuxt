@@ -10,6 +10,7 @@ export default defineMcpTool({
   cache: '30m',
   async handler({ category, search }) {
     const event = useEvent()
+    const siteUrl = getRequestURL(event).origin
 
     let query = queryCollection(event, 'docs')
       .where('path', 'LIKE', '/docs/components/%')
@@ -28,11 +29,10 @@ export default defineMcpTool({
       description: component.description,
       category: component.category,
       path: component.path,
-      url: `https://nuxt.mhaibaraai.cn${component.path}`,
+      url: `${siteUrl}${component.path}`,
       links: component.links
     }))
 
-    // Apply search filter if provided
     if (search) {
       const searchLower = search.toLowerCase()
       results = results.filter(component =>
@@ -42,10 +42,10 @@ export default defineMcpTool({
       )
     }
 
-    return jsonResult({
+    return {
       components: results.sort((a, b) => (a.name || '').localeCompare(b.name || '')),
       total: results.length,
       filters: { category, search }
-    })
+    }
   }
 })

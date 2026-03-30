@@ -37,5 +37,9 @@ jobs:
           tags: |
             ${{ env.IMAGE }}:latest
             ${{ env.IMAGE }}:${{ github.sha }}
+          secrets: |
+            NUXT_GITHUB_TOKEN=${{ secrets.NUXT_GITHUB_TOKEN }}
+            AI_GATEWAY_API_KEY=${{ secrets.AI_GATEWAY_API_KEY }}
+            NUXT_SESSION_PASSWORD=${{ secrets.NUXT_SESSION_PASSWORD }}
           cache-from: type=gha
           cache-to: type=gha,mode=max

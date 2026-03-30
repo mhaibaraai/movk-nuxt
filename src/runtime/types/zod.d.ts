@@ -1,5 +1,4 @@
-import type { AutoFormFieldContext, AutoFormFieldSlots, AutoFormNestedCollapsible } from '#movk/types/auto-form'
-import type { ClassNameValue } from 'tailwind-merge'
+import type { AutoFormFieldContext, AutoFormFieldSlots, AutoFormNestedCollapsible, ClassNameValue } from '#movk/types'
 import type { ReactiveValue } from '@movk/core'
 
 type ZodValue<T, CTX = AutoFormFieldContext> = ReactiveValue<T, CTX>

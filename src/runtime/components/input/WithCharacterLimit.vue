@@ -3,7 +3,7 @@ import { UInput } from '#components'
 import { computed } from 'vue'
 import type { InputEmits, InputProps, InputSlots, InputValue } from '@nuxt/ui'
 import type { OmitByKey } from '@movk/core'
-import type { ClassNameValue } from 'tailwind-merge'
+import type { ClassNameValue } from '../../types'
 
 export interface WithCharacterLimitProps<T extends InputValue = InputValue> extends /** @vue-ignore */ OmitByKey<InputProps<T>, 'modelValue'> {
   /**

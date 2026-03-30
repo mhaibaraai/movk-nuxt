@@ -23,7 +23,7 @@ category: advanced
 
 - **Radius**：调整全局圆角大小（0-5 级别）
 - **Font**：选择字体系列
-- **Icons**：切换图标集（Lucide、Heroicons 等）
+- **Icons**：切换图标集（Lucide、Phosphor、Tabler）
 
 ### 颜色模式
 

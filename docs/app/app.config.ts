@@ -1,16 +1,7 @@
 export default defineAppConfig({
-  header: {
-    title: 'Movk Nuxt'
-  },
   toaster: {
-    expand: true,
     position: 'top-center' as const,
-    duration: 3000,
-    max: 5
-  },
-  vercelAnalytics: {
-    enable: false,
-    debug: false
+    duration: 3000
   },
   aiChat: {
     faqQuestions: [
@@ -81,7 +72,7 @@ export default defineAppConfig({
       base: 'space-y-4 min-w-0 sm:min-w-md'
     },
     colors: {
-      primary: 'emerald'
+      primary: 'sky'
     },
     prose: {
       codeIcon: {

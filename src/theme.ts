@@ -21,6 +21,11 @@ export function setupTheme(nuxt: Nuxt, resolve: Resolver['resolve']) {
     { name: 'viewport', content: 'width=device-width, initial-scale=1' }
   )
 
+  nuxt.options.app.head.htmlAttrs = defu(nuxt.options.app.head.htmlAttrs || {}, {
+    lang: 'zh-CN',
+    dir: 'ltr' as const
+  })
+
   addPlugin({
     src: resolve('runtime/plugins/theme'),
     mode: 'all'
