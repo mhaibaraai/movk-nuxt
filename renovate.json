@@ -21,20 +21,6 @@
       ]
     },
     {
-      "groupName": "shiki",
-      "matchPackageNames": [
-        "@shikijs/*",
-        "shiki-*"
-      ]
-    },
-    {
-      "groupName": "ai-sdk",
-      "matchPackageNames": [
-        "@ai-sdk/*",
-        "ai"
-      ]
-    },
-    {
       "groupName": "iconify",
       "matchPackageNames": [
         "@iconify-json/*"
@@ -66,7 +52,14 @@
       "matchPackageNames": [
         "nuxt-component-meta",
         "nuxt-llms",
-        "nuxt-og-image"
+        "nuxt-og-image",
+        "nuxt-auth-utils"
+      ]
+    },
+    {
+      "groupName": "movk",
+      "matchPackageNames": [
+        "@movk/*"
       ]
     },
     {
@@ -74,18 +67,6 @@
       "matchPackageNames": [
         "release-it",
         "@release-it/*"
-      ]
-    },
-    {
-      "groupName": "takumi",
-      "matchPackageNames": [
-        "@takumi-rs/*"
-      ]
-    },
-    {
-      "groupName": "octokit",
-      "matchPackageNames": [
-        "@octokit/*"
       ]
     },
     {

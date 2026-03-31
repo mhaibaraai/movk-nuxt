@@ -11,7 +11,7 @@ export function useTheme() {
   const site = useSiteConfig()
 
   const radius = useLocalStorage(`${site.name}-ui-radius`, 0.25)
-  const font = useLocalStorage(`${site.name}-ui-font`, 'Public Sans')
+  const font = useLocalStorage(`${site.name}-ui-font`, 'Alibaba PuHuiTi')
   const _iconSet = useLocalStorage(`${site.name}-ui-icons`, 'lucide')
   const blackAsPrimary = useLocalStorage(`${site.name}-ui-black-as-primary`, false)
 
@@ -40,7 +40,7 @@ export function useTheme() {
   })
 
   const radiuses = [0, 0.125, 0.25, 0.375, 0.5]
-  const fonts = ['Public Sans', 'DM Sans', 'Geist', 'Inter', 'Poppins', 'Outfit', 'Raleway']
+  const fonts = ['Alibaba PuHuiTi', 'Public Sans', 'DM Sans', 'Geist', 'Inter', 'Poppins', 'Outfit', 'Raleway']
 
   const icons = [{
     label: 'Lucide',
@@ -85,7 +85,7 @@ export function useTheme() {
 
   const link = computed(() => {
     const name = font.value
-    if (name === 'Public Sans') return []
+    if (name === 'Alibaba PuHuiTi') return []
     return [{
       rel: 'stylesheet' as const,
       href: `https://fonts.googleapis.com/css2?family=${encodeURIComponent(name)}:wght@400;500;600;700&display=swap`,
@@ -102,11 +102,11 @@ export function useTheme() {
   const hasCSSChanges = computed(() => {
     return radius.value !== 0.25
       || blackAsPrimary.value
-      || font.value !== 'Public Sans'
+      || font.value !== 'Alibaba PuHuiTi'
   })
 
   const hasAppConfigChanges = computed(() => {
-    return appConfig.ui.colors.primary !== 'green'
+    return appConfig.ui.colors.primary !== 'blue'
       || appConfig.ui.colors.neutral !== 'slate'
       || _iconSet.value !== 'lucide'
   })
@@ -117,7 +117,7 @@ export function useTheme() {
       '@import "@nuxt/ui";'
     ]
 
-    if (font.value !== 'Public Sans') {
+    if (font.value !== 'Alibaba PuHuiTi') {
       lines.push('', '@theme {', `  --font-sans: '${font.value}', sans-serif;`, '}')
     }
 
@@ -147,7 +147,7 @@ export function useTheme() {
   function exportAppConfig(): string {
     const config: Record<string, any> = {}
 
-    const defaultColors: Record<string, string> = { primary: 'green', neutral: 'slate', secondary: 'blue', success: 'green', info: 'blue', warning: 'yellow', error: 'red' }
+    const defaultColors: Record<string, string> = { primary: 'blue', neutral: 'slate', secondary: 'sky', success: 'green', info: 'teal', warning: 'yellow', error: 'red' }
     const colorEntries = Object.entries(defaultColors).filter(([key, def]) => (appConfig.ui.colors as any)[key] !== def)
     if (colorEntries.length) {
       config.ui = { colors: Object.fromEntries(colorEntries.map(([key]) => [key, (appConfig.ui.colors as any)[key]])) }
@@ -167,14 +167,14 @@ export function useTheme() {
   }
 
   function resetTheme() {
-    appConfig.ui.colors.primary = 'green'
+    appConfig.ui.colors.primary = 'blue'
     window.localStorage.removeItem(`${site.name}-ui-primary`)
 
     appConfig.ui.colors.neutral = 'slate'
     window.localStorage.removeItem(`${site.name}-ui-neutral`)
 
     radius.value = 0.25
-    font.value = 'Public Sans'
+    font.value = 'Alibaba PuHuiTi'
     _iconSet.value = 'lucide'
     appConfig.ui.icons = themeIcons.lucide as any
     blackAsPrimary.value = false

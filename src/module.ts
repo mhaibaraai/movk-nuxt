@@ -16,6 +16,7 @@ import {
 import type { MovkApiPublicConfig, ApiEndpointPublicConfig, EndpointPrivateConfig, MovkApiFullConfig, ModuleOptions } from './runtime/types'
 import { getPackageJsonMetadata } from './runtime/utils/meta'
 import { setupTheme } from './theme'
+import { setupFonts } from './fonts'
 
 export * from './runtime/types'
 
@@ -55,18 +56,30 @@ export default defineNuxtModule<ModuleOptions>({
     configKey: 'movk',
     compatibility: { nuxt: '>=4.4.2' }
   },
-  defaults: { prefix: 'M' },
+  defaults: {
+    prefix: 'M',
+    fonts: {
+      enabled: true,
+      alibabaPuhuiti: {
+        cdn: 'https://cdn.mhaibaraai.cn/fonts'
+      }
+    }
+  },
   moduleDependencies: {
+    '@vueuse/nuxt': { version: '>=14.2.1' },
     '@nuxt/image': { version: '>=2.0.0' },
     '@nuxt/ui': { version: '>=4.6.0' },
-    '@vueuse/nuxt': { version: '>=14.2.1' },
-    'nuxt-og-image': { version: '>=6.3.1', defaults: { zeroRuntime: true } },
+    'nuxt-og-image': {
+      version: '>=6.3.1',
+      defaults: { zeroRuntime: true }
+    },
     'nuxt-auth-utils': { version: '>=0.5.29' }
   },
   async setup(options, nuxt) {
     const { resolve } = createResolver(import.meta.url)
 
     setupTheme(nuxt, resolve)
+    setupFonts(options, nuxt)
 
     nuxt.options.alias['#movk'] = resolve('./runtime')
 

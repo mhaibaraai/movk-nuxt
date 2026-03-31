@@ -83,7 +83,9 @@ function forwardSessionCookies(
   if (!event) return
   for (const setCookieStr of headers.getSetCookie()) {
     appendResponseHeader(event, 'Set-Cookie', setCookieStr)
-    const { name, value } = parseSetCookie(setCookieStr)
+    const parsed = parseSetCookie(setCookieStr)
+    if (!parsed?.value) continue
+    const { name, value } = parsed
     if (name !== sessionName) continue
     const cookies = parse(event.headers.get('cookie') || '')
     cookies[name] = value

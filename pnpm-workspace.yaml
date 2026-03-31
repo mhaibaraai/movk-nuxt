@@ -1,5 +1,5 @@
 packages:
-  - playgrounds
+  - playgrounds/*
   - docs
 
 ignoredBuiltDependencies:

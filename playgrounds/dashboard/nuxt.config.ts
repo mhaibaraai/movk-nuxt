@@ -2,7 +2,7 @@ export default defineNuxtConfig({
   modules: ['@movk/nuxt'],
 
   imports: {
-    dirs: ['composables/modules/**']
+    dirs: ['composables/system/**']
   },
 
   css: ['~/assets/css/main.css'],

@@ -1,3 +1,5 @@
+import type { UserResp } from './system'
+
 export interface LoginPayload {
   /** 访问令牌 */
   access_token: string
@@ -11,22 +13,7 @@ export interface LoginPayload {
   refresh_expires_in: number
 }
 
-export interface AuthMePayload {
-  id: string
-  username: string
-  nickname: string | null
-  email: string | null
-  phone: string | null
-  gender?: 'UNKNOWN' | 'MALE' | 'FEMALE'
-  avatar?: string | null
-  status?: 'ACTIVE' | 'DISABLED' | 'LOCKED' | 'DELETED'
-  deptId?: string | null
-  deptName?: string | null
-  loginIp?: string | null
-  loginDate?: string | null
-  remark?: string | null
-  createdAt?: string | null
-  updatedAt?: string | null
+export interface AuthMePayload extends UserResp {
   roles?: string[]
   permissions?: string[]
 }

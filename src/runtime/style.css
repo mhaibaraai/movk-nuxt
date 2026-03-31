@@ -3,3 +3,7 @@
 
 @source "./components";
 @source "./constants";
+
+@theme static {
+  --font-sans: 'Alibaba PuHuiTi', sans-serif;
+}
