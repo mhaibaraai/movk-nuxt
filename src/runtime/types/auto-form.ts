@@ -1,5 +1,5 @@
 import type { CollapsibleRootProps, DateRange } from 'reka-ui'
-import type { ClassNameValue } from 'tailwind-merge'
+import type { ClassNameValue } from './theme'
 import type { z } from 'zod'
 import type {
   ArrayFieldKeys,

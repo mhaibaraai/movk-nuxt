@@ -5,12 +5,20 @@ export default defineMcpTool({
   cache: '1h',
   async handler() {
     const event = useEvent()
-    const apiDocs = await queryCollection(event, 'docs')
+    const siteUrl = getRequestURL(event).origin
+
+    const pages = await queryCollection(event, 'docs')
       .where('path', 'LIKE', '%/api/%')
       .where('extension', '=', 'md')
       .select('path', 'title', 'description')
       .all()
 
-    return jsonResult(apiDocs)
+    const results = pages.map(doc => ({
+      title: doc.title,
+      description: doc.description,
+      url: `${siteUrl}${doc.path}`
+    }))
+
+    return results
   }
 })

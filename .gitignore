@@ -20,12 +20,15 @@ dist
 .nuxt
 .output
 .data
+.vercel
 .vercel_build_output
 .build-*
 .netlify
 
 # Env
 .env
+.env.*
+!.env.example
 
 # Testing
 reports
@@ -55,4 +58,5 @@ Network Trash Folder
 Temporary Items
 .apdisk
 
-.claude
+.claude/settings.json
+.playwright-mcp

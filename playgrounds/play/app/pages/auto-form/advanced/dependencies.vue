@@ -1,4 +1,5 @@
-<script lang="tsx" setup>
+<script lang="ts" setup>
+import { h } from 'vue'
 import { UBadge } from '#components'
 import type { FormSubmitEvent } from '@nuxt/ui'
 import type { z } from 'zod'
@@ -92,11 +93,7 @@ const schema = afz.object({
         type: 'inputTags',
         controlProps: { placeholder: '输入姓名后按回车添加' },
         controlSlots: ({ value }) => ({
-          trailing: () => (
-            <UBadge icon="i-lucide-users" color="primary" variant="subtle">
-              {value?.length || 0}
-            </UBadge>
-          )
+          trailing: () => [h(UBadge, { icon: 'i-lucide-users', color: 'primary', variant: 'subtle' }, () => String(value?.length || 0))]
         })
       }).meta({
         label: '家庭成员姓名',

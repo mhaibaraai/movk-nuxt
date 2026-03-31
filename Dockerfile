@@ -5,13 +5,20 @@ FROM base AS deps
 WORKDIR /app
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY docs/package.json ./docs/
-COPY playground/package.json ./playground/
-RUN corepack install && pnpm install --frozen-lockfile
+COPY playgrounds/play/package.json ./playgrounds/play/
+COPY playgrounds/dashboard/package.json ./playgrounds/dashboard/
+RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
+    corepack install && pnpm install --frozen-lockfile --ignore-scripts
 
 FROM deps AS build
 WORKDIR /app
+ENV NODE_OPTIONS="--max-old-space-size=8192"
 COPY . .
-RUN pnpm docs:build
+RUN --mount=type=secret,id=NUXT_GITHUB_TOKEN \
+    --mount=type=secret,id=AI_GATEWAY_API_KEY \
+    --mount=type=secret,id=NUXT_SESSION_PASSWORD \
+    for f in /run/secrets/*; do echo "$(basename $f)=$(cat $f)"; done > docs/.env && \
+    pnpm dev:prepare && pnpm docs:build && rm -f docs/.env
 
 FROM node:24-alpine AS runtime
 WORKDIR /app

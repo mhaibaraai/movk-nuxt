@@ -1,5 +1,4 @@
 # VCS
-.git
 .github
 
 # Dependencies (matched at any depth)
@@ -24,9 +23,6 @@ reports
 
 # Logs
 *.log
-
-# Root-level markdown (not docs content)
-/*.md
 
 # Config not needed for build
 renovate.json

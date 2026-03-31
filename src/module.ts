@@ -14,7 +14,9 @@ import {
   DEFAULT_ENDPOINT
 } from './runtime/constants/api-defaults'
 import type { MovkApiPublicConfig, ApiEndpointPublicConfig, EndpointPrivateConfig, MovkApiFullConfig, ModuleOptions } from './runtime/types'
+import { getPackageJsonMetadata } from './runtime/utils/meta'
 import { setupTheme } from './theme'
+import { setupFonts } from './fonts'
 
 export * from './runtime/types'
 
@@ -52,20 +54,32 @@ export default defineNuxtModule<ModuleOptions>({
     name,
     version,
     configKey: 'movk',
-    compatibility: { nuxt: '>=4.2.0' }
+    compatibility: { nuxt: '>=4.4.2' }
   },
-  defaults: { prefix: 'M' },
+  defaults: {
+    prefix: 'M',
+    fonts: {
+      enabled: true,
+      alibabaPuhuiti: {
+        cdn: 'https://cdn.mhaibaraai.cn/fonts'
+      }
+    }
+  },
   moduleDependencies: {
+    '@vueuse/nuxt': { version: '>=14.2.1' },
     '@nuxt/image': { version: '>=2.0.0' },
-    '@nuxt/ui': { version: '>=4.3.0' },
-    '@vueuse/nuxt': { version: '>=14.1.0' },
-    'nuxt-og-image': { version: '>=5.1.13' },
-    'nuxt-auth-utils': { version: '>=0.5.27' }
+    '@nuxt/ui': { version: '>=4.6.0' },
+    'nuxt-og-image': {
+      version: '>=6.3.1',
+      defaults: { zeroRuntime: true }
+    },
+    'nuxt-auth-utils': { version: '>=0.5.29' }
   },
   async setup(options, nuxt) {
     const { resolve } = createResolver(import.meta.url)
 
     setupTheme(nuxt, resolve)
+    setupFonts(options, nuxt)
 
     nuxt.options.alias['#movk'] = resolve('./runtime')
 
@@ -76,7 +90,7 @@ export default defineNuxtModule<ModuleOptions>({
       path: resolve('runtime/components'),
       prefix: options.prefix,
       pathPrefix: false,
-      ignore: ['auto-form-renderer/**', 'theme-picker/ThemePickerButton.vue']
+      ignore: ['auto-form-renderer/**']
     })
 
     addImportsDir(resolve('runtime/composables'))
@@ -90,5 +104,11 @@ export default defineNuxtModule<ModuleOptions>({
 
       addPlugin({ src: resolve('runtime/plugins/api.factory'), mode: 'all' })
     }
+
+    const meta = await getPackageJsonMetadata(nuxt.options.rootDir)
+    // @ts-expect-error
+    nuxt.options.site = defu(nuxt.options.site, {
+      name: meta.name || 'movk-nuxt'
+    })
   }
 })

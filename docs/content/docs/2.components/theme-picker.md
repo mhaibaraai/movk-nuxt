@@ -22,8 +22,8 @@ category: advanced
 ### 样式配置
 
 - **Radius**：调整全局圆角大小（0-5 级别）
-- **Font**：选择字体系列
-- **Icons**：切换图标集（Lucide、Heroicons 等）
+- **Font**：选择字体系列（默认字体 Alibaba PuHuiTi）
+- **Icons**：切换图标集（Lucide、Phosphor、Tabler）
 
 ### 颜色模式
 

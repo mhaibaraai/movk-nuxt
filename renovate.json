@@ -1,12 +1,74 @@
 {
-  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
     "github>nuxt/renovate-config-nuxt"
   ],
+  "timezone": "Asia/Shanghai",
+  "schedule": ["* 6-9 * * 1"],
   "lockFileMaintenance": {
     "enabled": true
   },
   "packageRules": [
+    {
+      "groupName": "tailwindcss",
+      "matchPackageNames": [
+        "tailwindcss"
+      ]
+    },
+    {
+      "groupName": "reka-ui",
+      "matchPackageNames": [
+        "reka-ui"
+      ]
+    },
+    {
+      "groupName": "iconify",
+      "matchPackageNames": [
+        "@iconify-json/*"
+      ]
+    },
+    {
+      "groupName": "vueuse",
+      "matchPackageNames": [
+        "@vueuse/*"
+      ]
+    },
+    {
+      "groupName": "vue-tsc",
+      "matchPackageNames": [
+        "vue-tsc",
+        "vue-component-meta"
+      ]
+    },
+    {
+      "groupName": "nuxt",
+      "matchPackageNames": [
+        "nuxt",
+        "@nuxt/*",
+        "@nuxtjs/*"
+      ]
+    },
+    {
+      "groupName": "nuxt-modules",
+      "matchPackageNames": [
+        "nuxt-component-meta",
+        "nuxt-llms",
+        "nuxt-og-image",
+        "nuxt-auth-utils"
+      ]
+    },
+    {
+      "groupName": "movk",
+      "matchPackageNames": [
+        "@movk/*"
+      ]
+    },
+    {
+      "groupName": "release-it",
+      "matchPackageNames": [
+        "release-it",
+        "@release-it/*"
+      ]
+    },
     {
       "matchDepTypes": [
         "peerDependencies"

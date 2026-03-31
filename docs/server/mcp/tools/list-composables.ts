@@ -11,6 +11,6 @@ export default defineMcpTool({
       .select('path', 'title', 'description')
       .all()
 
-    return jsonResult(composables)
+    return composables
   }
 })

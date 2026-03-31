@@ -10,6 +10,7 @@ export default defineMcpTool({
   cache: '30m',
   async handler({ category, search }) {
     const event = useEvent()
+    const siteUrl = getRequestURL(event).origin
 
     let query = queryCollection(event, 'docs')
       .where('path', 'LIKE', '/docs/api/%')
@@ -28,7 +29,7 @@ export default defineMcpTool({
       description: doc.description,
       category: doc.category,
       path: doc.path,
-      url: `https://nuxt.mhaibaraai.cn${doc.path}`,
+      url: `${siteUrl}${doc.path}`,
       links: doc.links
     }))
 
@@ -41,10 +42,10 @@ export default defineMcpTool({
       )
     }
 
-    return jsonResult({
+    return {
       docs: results.sort((a, b) => (a.name || '').localeCompare(b.name || '')),
       total: results.length,
       filters: { category, search }
-    })
+    }
   }
 })

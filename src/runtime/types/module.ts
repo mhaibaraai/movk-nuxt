@@ -1,16 +1,41 @@
 import type { FetchContext, FetchResponse } from 'ofetch'
 import type { ApiInstance, MovkApiPublicConfig, EndpointPrivateConfig, MovkApiFullConfig } from './api'
 
+interface MovkFontProviderConfig {
+  /**
+   * CDN base URL
+   * @see 'https://fonts.nuxt.com/get-started/providers#custom-providers'
+   * @example 'https://cdn.org/my-font.woff2'
+   */
+  cdn: string
+  /**
+   * 需要加载的字重，默认全部加载
+   * @example [300, 400, 500, 700]
+   */
+  weights?: number[]
+}
+
 export interface ModuleOptions {
   /**
    * 组件前缀
-   * @default 'M'
+   * @defaultValue 'M'
    */
   prefix?: string
-  /**
-   * API 模块配置
-   */
+  /** API 模块配置 */
   api?: MovkApiFullConfig
+  /** 字体提供器配置 */
+  fonts?: {
+    /**
+     * 是否启用字体模块
+     * @defaultValue true
+     */
+    enabled?: boolean
+    /**
+     * 阿里巴巴普惠体字体
+     * @defaultValue 'https://cdn.mhaibaraai.cn/fonts'
+     */
+    alibabaPuhuiti?: MovkFontProviderConfig
+  }
 }
 
 declare module 'nuxt/app' {
@@ -52,14 +77,5 @@ declare module 'nuxt/schema' {
 
   interface RuntimeConfig {
     movkApi: { endpoints?: Record<string, EndpointPrivateConfig> }
-  }
-
-  interface AppConfig {
-    theme: {
-      radius: number
-      blackAsPrimary: boolean
-      font: string
-      icons: string
-    }
   }
 }

@@ -3,7 +3,7 @@ import { UIcon } from '#components'
 import { useElementSize } from '@vueuse/core'
 import { Motion } from 'motion-v'
 import { computed, ref, useTemplateRef } from 'vue'
-import type { ClassNameValue } from 'tailwind-merge'
+import type { ClassNameValue } from '../types'
 
 export interface SlideVerifyProps {
   /**
@@ -13,7 +13,7 @@ export interface SlideVerifyProps {
   sliderWidth?: number
   /**
    * 滑块高度
-   * @defaultValue 44
+   * @defaultValue 32
    */
   height?: number
   /**
@@ -74,7 +74,7 @@ defineOptions({ inheritAttrs: false })
 
 const props = withDefaults(defineProps<SlideVerifyProps>(), {
   sliderWidth: 50,
-  height: 44,
+  height: 32,
   disabled: false,
   text: '请向右滑动验证',
   successText: '验证成功',
