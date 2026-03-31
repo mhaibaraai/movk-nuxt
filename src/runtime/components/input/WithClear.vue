@@ -4,7 +4,7 @@ import { isEmpty, type OmitByKey } from '@movk/core'
 import type { ButtonProps, InputEmits, InputProps, InputSlots, InputValue } from '@nuxt/ui'
 
 export interface WithClearProps<T extends InputValue = InputValue> extends /** @vue-ignore */ OmitByKey<InputProps<T>, 'modelValue'> {
-  /** Custom props for the clear button */
+  /** 清除按钮的自定义属性 */
   buttonProps?: ButtonProps
 }
 
