@@ -18,31 +18,36 @@ const links = [[{
   icon: 'i-lucide-cog',
   defaultOpen: true,
   type: 'trigger',
-  children: [{
-    label: '用户管理',
-    to: '/system/user',
-    onSelect: () => {
-      open.value = false
+  children: [
+    {
+      label: '用户管理',
+      to: '/system/user',
+      onSelect: () => {
+        open.value = false
+      }
     }
-  }, {
-    label: '角色管理',
-    to: '/system/role',
-    onSelect: () => {
-      open.value = false
-    }
-  }, {
-    label: '部门管理',
-    to: '/system/dept',
-    onSelect: () => {
-      open.value = false
-    }
-  }, {
-    label: '菜单管理',
-    to: '/system/menu',
-    onSelect: () => {
-      open.value = false
-    }
-  }]
+    // {
+    //   label: '角色管理',
+    //   to: '/system/role',
+    //   onSelect: () => {
+    //     open.value = false
+    //   }
+    // },
+    // {
+    //   label: '部门管理',
+    //   to: '/system/dept',
+    //   onSelect: () => {
+    //     open.value = false
+    //   }
+    // },
+    // {
+    //   label: '菜单管理',
+    //   to: '/system/menu',
+    //   onSelect: () => {
+    //     open.value = false
+    //   }
+    // }
+  ]
 }], [{
   label: '反馈',
   icon: 'i-lucide-message-circle',

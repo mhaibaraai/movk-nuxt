@@ -2,5 +2,9 @@
 </script>
 
 <template>
-  <div>2</div>
+  <div class="flex flex-col gap-4">
+    <div class="">
+      <!-- <MSearchForm /> -->
+    </div>
+  </div>
 </template>
