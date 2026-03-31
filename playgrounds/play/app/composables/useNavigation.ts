@@ -116,23 +116,16 @@ const components: NavigationMenuItem[] = [
       { label: 'WithCopy', to: '/components/WithCopy' },
       { label: 'WithCharacterLimit', to: '/components/WithCharacterLimit' },
       { label: 'SlideVerify', to: '/components/SlideVerify' },
-      { label: 'ThemePicker', to: '/components/ThemePicker' }
+      { label: 'ThemePicker', to: '/components/ThemePicker' },
+      { label: 'WithFloatingLabel', to: '/components/WithFloatingLabel' },
+      { label: 'AsPhoneNumberInput', to: '/components/AsPhoneNumberInput' }
     ]
   }
 ]
 
-const composables: NavigationMenuItem[] = [
-  { label: 'useApiFetch', to: '/composables/useApiFetch' },
-  { label: 'useClientApiFetch', to: '/composables/useClientApiFetch' },
-  { label: 'useDateFormatter', to: '/composables/useDateFormatter' },
-  { label: 'useUploadWithProgress', to: '/composables/useUploadWithProgress' },
-  { label: 'useDownloadWithProgress', to: '/composables/useDownloadWithProgress' }
-]
-
 export const useNavigation = () => {
   const items = [
-    { label: 'Home', icon: 'i-lucide-house', to: '/' },
-    ...composables
+    { label: 'Home', icon: 'i-lucide-house', to: '/' }
   ]
 
   const groups = computed<CommandPaletteGroup<CommandPaletteItem>[]>(() => [

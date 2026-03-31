@@ -2,6 +2,7 @@
 import { zh_cn } from '@nuxt/ui/locale'
 import colors from 'tailwindcss/colors'
 
+const { style, link } = useTheme()
 const route = useRoute()
 const appConfig = useAppConfig()
 const colorMode = useColorMode()
@@ -11,9 +12,12 @@ const color = computed(() => colorMode.value === 'dark' ? (colors as any)[appCon
 useHead({
   title: 'Movk Nuxt - Playground',
   meta: [
-    { key: 'theme-color', name: 'theme-color', content: color },
-    { name: 'description', content: 'Explore and test all Movk Nuxt in an interactive environment' }
-  ]
+    { key: 'theme-color', name: 'theme-color', content: color }
+  ],
+  link: [
+    ...link.value
+  ],
+  style
 })
 
 const { components, groups, items } = useNavigation()

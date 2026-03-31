@@ -7,11 +7,11 @@ import type { ClassNameValue } from '../../types'
 
 export interface WithCharacterLimitProps<T extends InputValue = InputValue> extends /** @vue-ignore */ OmitByKey<InputProps<T>, 'modelValue'> {
   /**
-   * Maximum number of characters allowed
+   * 最大允许输入的字符数
    * @defaultValue 50
    */
   maxLength?: number
-  /** Custom class for the character counter */
+  /** 字符计数器的自定义样式类 */
   counterClass?: ClassNameValue
 }
 
