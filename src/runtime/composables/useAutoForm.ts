@@ -11,6 +11,8 @@ import WithClear from '../components/input/WithClear.vue'
 import WithPasswordToggle from '../components/input/WithPasswordToggle.vue'
 import WithCopy from '../components/input/WithCopy.vue'
 import WithCharacterLimit from '../components/input/WithCharacterLimit.vue'
+import AsPhoneNumberInput from '../components/input/AsPhoneNumberInput.vue'
+import WithFloatingLabel from '../components/input/WithFloatingLabel.vue'
 import DatePicker from '../components/DatePicker.vue'
 import ColorChooser from '../components/ColorChooser.vue'
 import StarRating from '../components/StarRating.vue'
@@ -311,6 +313,8 @@ const DEFAULT_CONTROLS: {
   readonly withPasswordToggle: AutoFormControl<typeof WithPasswordToggle>
   readonly withCopy: AutoFormControl<typeof WithCopy>
   readonly withCharacterLimit: AutoFormControl<typeof WithCharacterLimit>
+  readonly asPhoneNumberInput: AutoFormControl<typeof AsPhoneNumberInput>
+  readonly withFloatingLabel: AutoFormControl<typeof WithFloatingLabel>
   readonly colorChooser: AutoFormControl<typeof ColorChooser>
   readonly starRating: AutoFormControl<typeof StarRating>
   readonly slideVerify: AutoFormControl<typeof SlideVerify>
@@ -343,6 +347,8 @@ const DEFAULT_CONTROLS: {
   withCopy: defineControl({ component: WithCopy, controlProps: DEFAULT_CONTROL_PROPS }),
   withCharacterLimit: defineControl({ component: WithCharacterLimit, controlProps: DEFAULT_CONTROL_PROPS }),
   colorChooser: defineControl({ component: ColorChooser, controlProps: DEFAULT_CONTROL_PROPS }),
+  asPhoneNumberInput: defineControl({ component: AsPhoneNumberInput, controlProps: DEFAULT_CONTROL_PROPS }),
+  withFloatingLabel: defineControl({ component: WithFloatingLabel, controlProps: DEFAULT_CONTROL_PROPS }),
   starRating: defineControl({ component: StarRating, controlProps: DEFAULT_CONTROL_PROPS }),
   slideVerify: defineControl({ component: SlideVerify, controlProps: DEFAULT_CONTROL_PROPS })
 }
