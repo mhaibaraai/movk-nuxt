@@ -204,13 +204,43 @@ type _WidenForFactory<T> = {
   [K in keyof T]+?: WidenLiteral<T[K]>
 }
 
+type ResolveControlProps<
+  C extends IsComponent,
+  P
+> = [P] extends [_Unset]
+  ? StrictComponentProps<C>
+  : IsAny<P> extends true
+    ? StrictComponentProps<C>
+    : [unknown] extends [P]
+        ? StrictComponentProps<C>
+        : [keyof P] extends [never]
+            ? StrictComponentProps<C>
+            : Prettify<_WidenForFactory<P> & {}>
+
 type ExtractControlProps<T> = T extends AutoFormControl<infer C, infer P, any>
-  ? [P] extends [_Unset] ? StrictComponentProps<C> : Prettify<_WidenForFactory<P> & {}>
-  : {}
+  ? ResolveControlProps<C, P>
+  : T extends { component: infer C extends IsComponent }
+    ? StrictComponentProps<C>
+    : {}
+
+type ResolveControlSlots<
+  C extends IsComponent,
+  S
+> = [S] extends [_Unset]
+  ? StrictComponentSlots<C>
+  : IsAny<S> extends true
+    ? StrictComponentSlots<C>
+    : [unknown] extends [S]
+        ? StrictComponentSlots<C>
+        : [keyof S] extends [never]
+            ? StrictComponentSlots<C>
+            : S
 
 type ExtractControlSlots<T> = T extends AutoFormControl<infer C, any, infer S>
-  ? [S] extends [_Unset] ? StrictComponentSlots<C> : S
-  : {}
+  ? ResolveControlSlots<C, S>
+  : T extends { component: infer C extends IsComponent }
+    ? StrictComponentSlots<C>
+    : {}
 
 type FallbackToRecordIfEmpty<T> = [keyof T] extends [never]
   ? Record<string, unknown>

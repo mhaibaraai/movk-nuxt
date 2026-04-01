@@ -6,10 +6,10 @@ import { TagSelector } from '#components'
 const toast = useToast()
 
 const { afz, controls } = useAutoForm({
-  tagSelector: {
+  tagSelector: defineControl({
     component: TagSelector,
     controlProps: { class: 'w-full' }
-  }
+  })
 })
 
 const SKILL_OPTIONS = [

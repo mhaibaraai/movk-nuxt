@@ -19,12 +19,20 @@ category: customization
 import { TagSelector } from '#components'
 
 const { afz, controls } = useAutoForm({
-  tagSelector: {
+  tagSelector: defineControl({
     component: TagSelector,
     controlProps: { class: 'w-full' } // 全局 controlProps（可被字段级覆盖）
-  }
+  })
 })
 ```
+
+::tip
+推荐优先使用 `defineControl` 注册自定义控件，以获得更稳定的 `controlProps` / `controlSlots` 类型提示。
+::
+
+::note
+直接对象写法（`tagSelector: { component: TagSelector }`）仍然可用，且支持类型推导。
+::
 
 在 schema 中使用注册的控件类型：
 
