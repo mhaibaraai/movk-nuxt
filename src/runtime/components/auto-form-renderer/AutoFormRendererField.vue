@@ -5,8 +5,8 @@ import type { AnyObject } from '@movk/core'
 import type { AutoFormField } from '../../types'
 import { UFormField } from '#components'
 import { computed } from 'vue'
-import { useAutoFormInjector } from '../../internal/useAutoFormProvider'
-import { VNodeRender } from '../../utils/auto-form'
+import { useAutoFormInjector } from '../../auto-form/provider'
+import { VNodeRender } from '../../auto-form/reactive-utils'
 
 export interface AutoFormFieldProps<S extends z.ZodObject> extends Pick<AutoFormProps<S>, 'schema'> {
   field: AutoFormField

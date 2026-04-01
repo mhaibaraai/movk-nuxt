@@ -5,10 +5,11 @@ import type { AutoFormField } from '../../types/auto-form'
 import type { AnyObject } from '@movk/core'
 import type { AutoFormProps } from '../AutoForm.vue'
 import { UButton, UCollapsible } from '#components'
-import { computed, ref, unref } from 'vue'
-import { useAutoFormInjector } from '../../internal/useAutoFormProvider'
+import { computed, ref } from 'vue'
+import { useAutoFormInjector } from '../../auto-form/provider'
 import { joinPath } from '@movk/core'
-import { collectFieldDefaults, createHintSlotFactory, VNodeRender } from '../../utils/auto-form'
+import { collectFieldDefaults, createHintSlotFactory } from '../../auto-form/field-utils'
+import { VNodeRender } from '../../auto-form/reactive-utils'
 import AutoFormRendererField from './AutoFormRendererField.vue'
 import AutoFormRendererNested from './AutoFormRendererNested.vue'
 
@@ -33,26 +34,20 @@ const slotProps = computed(() => createSlotProps(field, extraProps))
 
 const elementTemplate = computed(() => field.arrayElement)
 
-const isObjectElement = computed(() => {
-  if (!elementTemplate.value)
-    return false
-  return elementTemplate.value.meta.type === 'object'
-})
+const isObjectElement = computed(() => elementTemplate.value?.meta.type === 'object')
 
 const arrayValue = computed<unknown[]>(() => {
   const value = context.value
   return Array.isArray(value) ? value : []
 })
 
-// 为每个数组项维护稳定的唯一标识
 const itemIds = ref<string[]>([])
-let idCounter = 0
+const idCounter = ref(0)
 
 function ensureItemIds() {
   const arr = arrayValue.value
-  // 确保 ID 数组长度与值数组一致
   while (itemIds.value.length < arr.length) {
-    itemIds.value.push(`${field.path}-${idCounter++}`)
+    itemIds.value.push(`${field.path}-${idCounter.value++}`)
   }
 }
 
@@ -93,7 +88,7 @@ function updateFieldPaths(template: AutoFormField, oldBasePath: string, newBaseP
 }
 
 const arrayItemFields = computed(() => {
-  const template = unref(elementTemplate)
+  const template = elementTemplate.value
   const arr = arrayValue.value
 
   if (!template || !arr.length)
@@ -108,13 +103,12 @@ const arrayItemFields = computed(() => {
 })
 
 function createDefaultValue() {
-  const template = unref(elementTemplate)
+  const template = elementTemplate.value
   return template ? collectFieldDefaults(template) : undefined
 }
 
 function addItem() {
-  const template = unref(elementTemplate)
-  if (!template)
+  if (!elementTemplate.value)
     return
 
   const newArray = [...arrayValue.value, createDefaultValue()]
@@ -128,7 +122,6 @@ function removeItem(count?: number) {
   const arr = arrayValue.value
   const newArray = [...arr.slice(0, count), ...arr.slice(count + 1)]
 
-  // 同步删除原始值类型的 ID
   itemIds.value = [...itemIds.value.slice(0, count), ...itemIds.value.slice(count + 1)]
 
   context.setValue(newArray)
@@ -159,11 +152,10 @@ const addButtonProps = computed(() => ({
       <VNodeRender v-if="slotResolver.hasSlot('before')" :node="slotResolver.renderSlot('before', slotProps)" />
       <VNodeRender v-if="slotResolver.hasSlot('content')" :node="slotResolver.renderSlot('content', slotProps)" />
       <template v-else>
-        <template v-for="(item, count) in arrayValue" :key="getItemId(item, count)">
+        <template v-for="(itemField, count) in arrayItemFields" :key="getItemId(arrayValue[count], count)">
           <component
             :is="isObjectElement ? AutoFormRendererNested : AutoFormRendererField"
-            v-if="arrayItemFields[count]"
-            :field="arrayItemFields[count]"
+            :field="itemField"
             :schema="schema"
             :extra-props="{ ...extraProps, count }"
           />
@@ -177,11 +169,10 @@ const addButtonProps = computed(() => ({
   </UCollapsible>
 
   <template v-else-if="elementTemplate">
-    <template v-for="(item, count) in arrayValue" :key="getItemId(item, count)">
+    <template v-for="(itemField, count) in arrayItemFields" :key="getItemId(arrayValue[count], count)">
       <component
         :is="isObjectElement ? AutoFormRendererNested : AutoFormRendererField"
-        v-if="arrayItemFields[count]"
-        :field="arrayItemFields[count]"
+        :field="itemField"
         :schema="schema"
         :extra-props="{ ...extraProps, count }"
       />

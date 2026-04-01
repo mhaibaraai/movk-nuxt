@@ -36,6 +36,8 @@ const autoFormNav: NavigationMenuItem = {
         { label: 'WithPasswordToggle', to: '/auto-form/controls/with-password-toggle' },
         { label: 'WithCopy', to: '/auto-form/controls/with-copy' },
         { label: 'WithCharacterLimit', to: '/auto-form/controls/with-character-limit' },
+        { label: 'AsPhoneNumberInput', to: '/auto-form/controls/as-phone-number-input' },
+        { label: 'WithFloatingLabel', to: '/auto-form/controls/with-floating-label' },
         { label: 'ColorChooser', to: '/auto-form/controls/color-chooser' },
         { label: 'InputTags', to: '/auto-form/controls/input-tags' },
         { label: 'SelectMenu', to: '/auto-form/controls/select-menu' },

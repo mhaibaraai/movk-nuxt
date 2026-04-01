@@ -4,17 +4,18 @@ import { UIcon } from '#components'
 import defu from 'defu'
 import { computed, h, inject, isVNode, provide, resolveDynamicComponent, unref } from 'vue'
 import { getPath, setPath } from '@movk/core'
-import { enhanceEventProps, resolveReactiveValue } from '../utils/auto-form'
+import { enhanceEventProps, resolveReactiveValue } from './reactive-utils'
 
 type AutoFormProvider = ReturnType<typeof useAutoFormProvider>
 
 const AUTO_FORM_CONTEXT_KEY: InjectionKey<AutoFormProvider> = Symbol('AUTO_FORM_CONTEXT_KEY')
 
+/** 初始化表单上下文工厂并通过 provide 注入给所有子渲染器 */
 export function useAutoFormProvider<T extends Record<string, any>>(
   state: Ref<T>,
   slots: Record<string, any>
 ) {
-  // 字段上下文创建
+  /** 为单个字段构建运行时上下文（value/setValue/errors/loading/open） */
   function createFieldContext(field: AutoFormField, extraProps?: Record<string, any>): AutoFormFieldContext {
     const path = field.path
 
@@ -29,8 +30,6 @@ export function useAutoFormProvider<T extends Record<string, any>>(
         else {
           const relativePath = String(pathOrValue)
 
-          // 如果相对路径以 [ 开头，说明是数组索引，直接拼接
-          // 否则，如果当前路径存在且相对路径不为空，用点号连接
           let fullPath: string
           if (relativePath.startsWith('[')) {
             fullPath = path ? `${path}${relativePath}` : relativePath
@@ -54,9 +53,7 @@ export function useAutoFormProvider<T extends Record<string, any>>(
     return context
   }
 
-  /**
-   * 解析字段属性
-   */
+  /** 读取字段 meta 中的属性，若为响应式值则以当前 context 求值 */
   function resolveFieldProp<T = any>(field: AutoFormField, prop: string, defaultValue?: T, extraProps?: Record<string, any>): T | undefined {
     const value = field.meta?.[prop]
     if (value === undefined)
@@ -72,30 +69,21 @@ export function useAutoFormProvider<T extends Record<string, any>>(
     return result ?? defaultValue
   }
 
-  /**
-   * 渲染字段插槽
-   */
   function renderFieldSlot(fn?: (props?: any) => any, slotProps?: any) {
     return fn ? fn(slotProps) : null
   }
 
-  /**
-   * 获取解析后的 fieldSlots
-   */
   function getResolvedFieldSlots(field: AutoFormField, extraProps?: Record<string, any>) {
     if (!field.meta?.fieldSlots)
       return undefined
     return resolveFieldProp(field, 'fieldSlots', undefined, extraProps)
   }
 
-  /**
-   * 渲染控件
-   */
+  /** 渲染字段对应的输入控件，合并 controlProps/controlSlots 并绑定双向绑定逻辑 */
   function renderControl(field: AutoFormField, extraProps?: Record<string, any>) {
     const controlMeta = field?.meta
     const comp = controlMeta?.component as any
 
-    // [object,array] 类型直接返回 null
     if (field.meta.type === 'object' || field.meta.type === 'array')
       return null
 
@@ -109,7 +97,6 @@ export function useAutoFormProvider<T extends Record<string, any>>(
     const component = typeof comp === 'string' ? resolveDynamicComponent(comp) : comp
     const context = createFieldContext(field, extraProps)
     const resolvedControlProps = resolveFieldProp(field, 'controlProps', undefined, extraProps) || {}
-    // 只读处理
     const isReadonly = field.decorators?.isReadonly
 
     const finalProps = defu(
@@ -126,7 +113,6 @@ export function useAutoFormProvider<T extends Record<string, any>>(
     const userOnUpdate = (finalProps as any)['onUpdate:modelValue']
     const wrappedProps = enhanceEventProps(finalProps, context)
 
-    // 移除 onUpdate:modelValue 避免冲突
     delete wrappedProps['onUpdate:modelValue']
 
     return h(
@@ -145,9 +131,7 @@ export function useAutoFormProvider<T extends Record<string, any>>(
     )
   }
 
-  /**
-   * 为字段创建插槽解析器
-   */
+  /** 创建字段插槽解析器，优先匹配 `field-name:path` 具名插槽，其次通用 `field-name` 插槽，最后 fieldSlots */
   function createSlotResolver(field: AutoFormField, extraProps?: Record<string, any>) {
     const keyPrefix = field.path
     const fieldSlots = getResolvedFieldSlots(field, extraProps)
@@ -167,7 +151,6 @@ export function useAutoFormProvider<T extends Record<string, any>>(
         const keySpecific = `field-${name}:${keyPrefix}`
         const keyGeneral = `field-${name}`
 
-        // 优先级：路径特定 > 通用 > 字段级
         if (slots?.[keySpecific]) {
           return slots[keySpecific](slotProps)
         }
@@ -185,9 +168,6 @@ export function useAutoFormProvider<T extends Record<string, any>>(
     }
   }
 
-  /**
-   * 创建插槽属性对象
-   */
   function createSlotProps(field: AutoFormField, extraProps: Record<string, any> = {}): AutoFormFieldContext {
     const context = createFieldContext(field, extraProps)
 
@@ -202,14 +182,11 @@ export function useAutoFormProvider<T extends Record<string, any>>(
     }
   }
 
-  /**
-   * 创建表单字段插槽
-   */
+  /** 为 UFormField 包装器生成 label/hint/description/help/error 标准插槽 */
   function createFormFieldSlots(field: AutoFormField, slotResolver: ReturnType<typeof createSlotResolver>, extraProps?: Record<string, any>) {
     const slots: Record<string, any> = {}
     const standardSlots = ['label', 'hint', 'description', 'help', 'error'] as const
 
-    // 只为存在的插槽创建函数
     for (const slotName of standardSlots) {
       if (slotResolver.hasSlot(slotName)) {
         slots[slotName] = (slotData: any) => {
@@ -225,10 +202,7 @@ export function useAutoFormProvider<T extends Record<string, any>>(
     return slots
   }
 
-  /**
-   * 为数组字段创建折叠功能增强器
-   * @param field - 目标字段
-   */
+  /** 为嵌套/数组字段注入折叠增强逻辑：默认 hint 图标、collapsible 开关、hidden 控制 */
   function createCollapsibleEnhancer(field: AutoFormField, extraProps?: Record<string, any>) {
     const collapsibleConfig = computed(() => resolveFieldProp(field, 'collapsible', undefined, extraProps))
 
@@ -264,7 +238,6 @@ export function useAutoFormProvider<T extends Record<string, any>>(
     }
   }
 
-  // 创建完整的上下文工厂对象
   const contextFactory = {
     createFieldContext,
     createSlotProps,
@@ -277,12 +250,12 @@ export function useAutoFormProvider<T extends Record<string, any>>(
     createCollapsibleEnhancer
   }
 
-  // 通过 provide 机制注入所有方法给子组件
   provide(AUTO_FORM_CONTEXT_KEY, contextFactory)
 
   return contextFactory
 }
 
+/** 注入表单上下文，必须在 AutoForm 子渲染器中调用 */
 export function useAutoFormInjector() {
   const contextFactory = inject(AUTO_FORM_CONTEXT_KEY)
 

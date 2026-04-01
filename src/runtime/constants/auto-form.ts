@@ -16,11 +16,3 @@ export const AUTOFORM_PATTERNS = {
   /** 事件属性检测正则，匹配 onClick、onChange 等 Vue/React 事件命名模式 */
   EVENT_PROP: /^on[A-Z]/
 } as const
-
-/** zod 克隆方法 */
-export const CLONE_METHODS = [
-  'meta',
-  'max', 'min', 'length', 'regex', 'startsWith', 'endsWith', 'includes', 'uppercase', 'lowercase',
-  'optional', 'nullable', 'nullish', 'describe', 'refine', 'superRefine', 'check', 'transform', 'default',
-  'mime', 'readonly', 'exclude', 'extract'
-] as const

@@ -3,9 +3,9 @@ import type { ApiInstance, MovkApiPublicConfig, EndpointPrivateConfig, MovkApiFu
 
 interface MovkFontProviderConfig {
   /**
-   * CDN base URL
+   * CDN 基础 URL
    * @see 'https://fonts.nuxt.com/get-started/providers#custom-providers'
-   * @example 'https://cdn.org/my-font.woff2'
+   * @example 'https://cdn.org/fonts'
    */
   cdn: string
   /**

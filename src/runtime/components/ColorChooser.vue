@@ -4,9 +4,9 @@ import type { ButtonProps, ColorPickerProps, PopoverEmits, PopoverProps } from '
 import { computed } from 'vue'
 
 export interface ColorChooserProps<P extends 'click' | 'hover' = 'click'> extends /** @vue-ignore */ ColorPickerProps {
-  /** Props for the popover component */
+  /** 弹出层组件属性 */
   popoverProps?: PopoverProps<P>
-  /** Props for the button component */
+  /** 按钮组件属性 */
   buttonProps?: ButtonProps
 }
 
