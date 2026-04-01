@@ -10,11 +10,11 @@ import { useDateFormatter } from '../composables/useDateFormatter'
 export type LabelFormat = 'iso' | 'formatted' | 'date' | 'timestamp' | 'unix'
 
 export interface DatePickerProps<R extends boolean, M extends boolean, P extends 'click' | 'hover' = 'click'> extends /** @vue-ignore */ OmitByKey<CalendarProps<R, M>, 'modelValue'>, DateFormatterOptions {
-  /** Props for the button component */
+  /** 按钮组件属性 */
   buttonProps?: ButtonProps
-  /** Props for the popover component */
+  /** 弹出层组件属性 */
   popoverProps?: PopoverProps<P>
-  /** Format for the label displayed on the button */
+  /** 按钮上展示文本的格式 */
   labelFormat?: LabelFormat | ((formatter: ReturnType<typeof useDateFormatter>, modelValue: CalendarProps<R, M>['modelValue']) => string)
 }
 

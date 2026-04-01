@@ -5,13 +5,13 @@ type ZodValue<T, CTX = AutoFormFieldContext> = ReactiveValue<T, CTX>
 
 export interface ZodAutoFormFieldMeta {
   /**
-   * The element or component this component should render as.
+   * 当前字段渲染使用的元素或组件。
    * @defaultValue 'div'
    */
   as?: ZodValue<any>
-  /** The name of the FormField. Also used to match form errors. */
+  /** 表单字段名，同时用于匹配表单错误。 */
   name?: ZodValue<string>
-  /** A regular expression to match form error names. */
+  /** 用于匹配表单错误名称的正则表达式。 */
   errorPattern?: ZodValue<RegExp>
   label?: ZodValue<string>
   description?: ZodValue<string>
@@ -19,17 +19,19 @@ export interface ZodAutoFormFieldMeta {
   error?: ZodValue<boolean | string>
   hint?: ZodValue<string>
   /**
+   * 字段尺寸。
    * @defaultValue 'md'
    */
   size?: ZodValue<'md' | 'xs' | 'sm' | 'lg' | 'xl'>
   /**
+   * 是否必填。
    * @defaultValue true
    */
   required?: ZodValue<boolean>
-  /** If true, validation on input will be active immediately instead of waiting for a blur event. */
+  /** 是否在输入时立即触发校验（而不是等待 blur 事件）。 */
   eagerValidation?: ZodValue<boolean>
   /**
-   * Delay in milliseconds before validating the form on input events.
+   * 输入事件触发后，延迟多少毫秒执行表单校验。
    * @defaultValue `300`
    */
   validateOnInputDelay?: ZodValue<number>
@@ -45,7 +47,7 @@ export interface ZodAutoFormFieldMeta {
   /** 是否隐藏 */
   hidden?: ZodValue<boolean>
   /**
-   * object field
+   * 对象字段折叠配置。
    */
   collapsible?: ZodValue<AutoFormNestedCollapsible>
 

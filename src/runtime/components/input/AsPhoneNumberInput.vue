@@ -8,13 +8,13 @@ import type { ClassNameValue } from '../../types'
 
 export interface AsPhoneNumberInputProps<T extends InputValue = InputValue> extends /** @vue-ignore */ OmitByKey<InputProps<T>, 'type' | 'modelValue'> {
   /**
-   * Input mask pattern, # represents a digit
+   * 输入掩码格式，`#` 表示一个数字位。
    * @defaultValue '(###) ###-####'
    */
   mask?: string
-  /** Dial code prefix, e.g. +86 */
+  /** 区号前缀，例如 `+86`。 */
   dialCode?: string
-  /** Custom class for the dial code prefix */
+  /** 区号前缀的自定义样式类。 */
   dialCodeClass?: ClassNameValue
 }
 
