@@ -31,7 +31,7 @@ const modelValue = defineModel<T>()
  * leading 区域宽度对应的 left 偏移，与 Nuxt UI Input compoundVariants 保持一致
  */
 const labelLeftClass = computed(() => {
-  const hasLeading = !!(attrs['leading-icon'] || attrs.avatar)
+  const hasLeading = !!(attrs['leading-icon'] || attrs.avatar || attrs.leadingIcon || slots.leading)
   if (!hasLeading) return 'left-0'
   // ps-N（input 文字起始）减去 label 自身 px-1.5(6px) + span px-1(4px) = N-10px，取最近标准值
   const offsetMap: Record<string, string> = {
