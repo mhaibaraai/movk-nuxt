@@ -5,11 +5,11 @@ import type { AutoFormField } from '../../types'
 import type { AnyObject } from '@movk/core'
 import { UCollapsible } from '#components'
 import { computed } from 'vue'
-import { useAutoFormInjector } from '../../internal/useAutoFormProvider'
-import { classifyFields, isLeafField, VNodeRender } from '../../utils/auto-form'
-import AutoFormRendererArray from './AutoFormRendererArray.vue'
+import { useAutoFormInjector } from '../../auto-form/provider'
+import { isLeafField } from '../../auto-form/field-utils'
+import { VNodeRender } from '../../auto-form/reactive-utils'
 import AutoFormRendererField from './AutoFormRendererField.vue'
-import AutoFormRendererLayout from './AutoFormRendererLayout.vue'
+import AutoFormRendererChildren from './AutoFormRendererChildren.vue'
 
 export interface AutoFormRendererNestedProps<S extends z.ZodObject> extends Pick<AutoFormProps<S>, 'schema'> {
   field: AutoFormField
@@ -24,19 +24,13 @@ const {
 
 const { createSlotResolver, createSlotProps, createCollapsibleEnhancer, resolveFieldProp } = useAutoFormInjector()
 
-const renderData = computed(() => {
+const visibleFields = computed(() => {
   if (isLeafField(field) || !field.children?.length) {
-    return null
+    return []
   }
-  const visibleFields = field.children.filter(f =>
+  return field.children.filter(f =>
     f && (f.meta?.if === undefined || resolveFieldProp<boolean>(f, 'if') === true)
   )
-
-  const classified = classifyFields(visibleFields)
-  return {
-    ...classified,
-    allFields: visibleFields
-  }
 })
 
 const slotResolver = computed(() => createSlotResolver(field, extraProps))
@@ -47,71 +41,22 @@ const slotProps = computed(() => createSlotProps(field, extraProps))
 </script>
 
 <template>
-  <UCollapsible v-if="shouldShowCollapsible && renderData" v-show="!isHidden" v-bind="collapsibleConfig || {}">
+  <UCollapsible v-if="shouldShowCollapsible && visibleFields.length" v-show="!isHidden" v-bind="collapsibleConfig || {}">
     <template #default="{ open }">
       <AutoFormRendererField :field="enhancedField" :schema="schema" :extra-props="{ ...extraProps, open }" />
     </template>
     <template #content>
       <VNodeRender v-if="slotResolver.hasSlot('before')" :node="slotResolver.renderSlot('before', slotProps)" />
       <VNodeRender v-if="slotResolver.hasSlot('content')" :node="slotResolver.renderSlot('content', slotProps)" />
-      <template v-else>
-        <template v-for="childField in renderData.allFields" :key="childField.path">
-          <AutoFormRendererField
-            v-if="renderData.leafFields.includes(childField)"
-            :field="childField"
-            :schema="schema"
-            :extra-props="extraProps"
-          />
-          <AutoFormRendererArray
-            v-else-if="renderData.arrayFields.includes(childField)"
-            :field="childField"
-            :schema="schema"
-            :extra-props="extraProps"
-          />
-          <AutoFormRendererLayout
-            v-else-if="renderData.layoutFields.includes(childField)"
-            :field="childField"
-            :schema="schema"
-            :extra-props="extraProps"
-          />
-          <AutoFormRendererNested
-            v-else
-            :field="childField"
-            :schema="schema"
-            :extra-props="extraProps"
-          />
-        </template>
-      </template>
+      <AutoFormRendererChildren v-else :fields="visibleFields" :schema="schema" :extra-props="extraProps" />
       <VNodeRender v-if="slotResolver.hasSlot('after')" :node="slotResolver.renderSlot('after', slotProps)" />
     </template>
   </UCollapsible>
 
-  <template v-else-if="renderData">
-    <template v-for="childField in renderData.allFields" :key="childField.path">
-      <AutoFormRendererField
-        v-if="renderData.leafFields.includes(childField)"
-        :field="childField"
-        :schema="schema"
-        :extra-props="extraProps"
-      />
-      <AutoFormRendererArray
-        v-else-if="renderData.arrayFields.includes(childField)"
-        :field="childField"
-        :schema="schema"
-        :extra-props="extraProps"
-      />
-      <AutoFormRendererLayout
-        v-else-if="renderData.layoutFields.includes(childField)"
-        :field="childField"
-        :schema="schema"
-        :extra-props="extraProps"
-      />
-      <AutoFormRendererNested
-        v-else
-        :field="childField"
-        :schema="schema"
-        :extra-props="extraProps"
-      />
-    </template>
-  </template>
+  <AutoFormRendererChildren
+    v-else-if="visibleFields.length"
+    :fields="visibleFields"
+    :schema="schema"
+    :extra-props="extraProps"
+  />
 </template>

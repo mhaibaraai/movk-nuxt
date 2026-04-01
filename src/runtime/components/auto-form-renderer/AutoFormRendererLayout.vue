@@ -4,12 +4,9 @@ import type { AutoFormField } from '../../types/auto-form'
 import type { AutoFormProps } from '../AutoForm.vue'
 import type { AnyObject } from '@movk/core'
 import { computed, resolveDynamicComponent } from 'vue'
-import { classifyFields } from '../../utils/auto-form'
-import { resolveReactiveValue } from '../../utils/reactive-utils'
-import { useAutoFormInjector } from '../../internal/useAutoFormProvider'
-import AutoFormRendererArray from './AutoFormRendererArray.vue'
-import AutoFormRendererField from './AutoFormRendererField.vue'
-import AutoFormRendererNested from './AutoFormRendererNested.vue'
+import { resolveReactiveValue } from '../../auto-form/reactive-utils'
+import { useAutoFormInjector } from '../../auto-form/provider'
+import AutoFormRendererChildren from './AutoFormRendererChildren.vue'
 
 export interface AutoFormRendererLayoutProps<S extends z.ZodObject> extends Pick<AutoFormProps<S>, 'schema'> {
   field: AutoFormField
@@ -24,24 +21,15 @@ const {
 
 const { createFieldContext, resolveFieldProp } = useAutoFormInjector()
 
-const context = createFieldContext(field)
-
-function getFieldName(field: AutoFormField) {
-  return field.path.split('.').pop() || field.path
+function getFieldName(f: AutoFormField) {
+  return f.path.split('.').pop() || f.path
 }
 
-const renderData = computed(() => {
-  if (!field.children?.length) return null
-
-  const visibleFields = field.children.filter(f =>
+const visibleFields = computed(() => {
+  if (!field.children?.length) return []
+  return field.children.filter(f =>
     f && (f.meta?.if === undefined || resolveFieldProp<boolean>(f, 'if') === true)
   )
-
-  const classified = classifyFields(visibleFields)
-  return {
-    ...classified,
-    allFields: visibleFields
-  }
 })
 
 const layoutComponent = computed(() => {
@@ -55,6 +43,7 @@ const layoutProps = computed(() => {
   const config = field.meta.layout
   if (!config) return {}
 
+  const context = createFieldContext(field)
   return {
     ...resolveReactiveValue(config.props, context),
     ...(config.class && { class: resolveReactiveValue(config.class, context) })
@@ -65,6 +54,7 @@ const layoutSlots = computed(() => {
   const config = field.meta.layout
   if (!config?.slots) return {}
 
+  const context = createFieldContext(field)
   const resolvedSlots = resolveReactiveValue(config.slots, context)
 
   return Object.entries(resolvedSlots).reduce((acc, [name, fn]) => {
@@ -73,79 +63,47 @@ const layoutSlots = computed(() => {
   }, {} as Record<string, any>)
 })
 
-const fieldSlotMapping = computed(() => {
+const fieldsBySlot = computed(() => {
   const config = field.meta.layout
-  if (!config || !renderData.value) return new Map<string, string>()
+  const fields = visibleFields.value
+  if (!config || !fields.length) return new Map<string, AutoFormField[]>()
 
-  const mapping = new Map<string, string>()
+  const context = createFieldContext(field)
+  let slotMapping: Map<string, string> | undefined
 
   if (config.fieldSlots) {
     const resolved = resolveReactiveValue(config.fieldSlots, context)
-    Object.entries(resolved).forEach(([name, slot]) => {
-      if (slot && typeof slot === 'string') mapping.set(name, slot)
-    })
-    return mapping
-  }
-
-  if (config.fieldSlot) {
+    slotMapping = new Map<string, string>()
+    for (const [name, slot] of Object.entries(resolved)) {
+      if (slot && typeof slot === 'string') slotMapping.set(name, slot)
+    }
+  } else if (config.fieldSlot) {
     const slot = resolveReactiveValue(config.fieldSlot, context)
     if (slot && typeof slot === 'string') {
-      renderData.value.allFields.forEach((f) => {
-        mapping.set(getFieldName(f), slot)
-      })
+      slotMapping = new Map<string, string>()
+      for (const f of fields) {
+        slotMapping.set(getFieldName(f), slot)
+      }
     }
   }
 
-  return mapping
-})
-
-const fieldsBySlot = computed(() => {
-  if (!renderData.value) return new Map<string, AutoFormField[]>()
-
-  const grouped = renderData.value.allFields.reduce((map, field) => {
-    const slot = fieldSlotMapping.value.get(getFieldName(field)) || 'default'
+  return fields.reduce((map, f) => {
+    const slot = slotMapping?.get(getFieldName(f)) || 'default'
     if (!map.has(slot)) map.set(slot, [])
-    map.get(slot)!.push(field)
+    map.get(slot)!.push(f)
     return map
   }, new Map<string, AutoFormField[]>())
-
-  return grouped
 })
 </script>
 
 <template>
-  <component :is="layoutComponent" v-bind="layoutProps" v-if="renderData">
+  <component :is="layoutComponent" v-bind="layoutProps" v-if="visibleFields.length">
     <template v-for="(slotFn, slotName) in layoutSlots" :key="`slot-${slotName}`" #[slotName]>
       <component :is="slotFn" />
     </template>
 
     <template v-for="[slotName, fields] in fieldsBySlot.entries()" :key="`fields-${slotName}`" #[slotName]>
-      <template v-for="childField in fields" :key="childField.path">
-        <AutoFormRendererField
-          v-if="renderData.leafFields.includes(childField)"
-          :field="childField"
-          :schema="schema"
-          :extra-props="extraProps"
-        />
-        <AutoFormRendererArray
-          v-else-if="renderData.arrayFields.includes(childField)"
-          :field="childField"
-          :schema="schema"
-          :extra-props="extraProps"
-        />
-        <AutoFormRendererLayout
-          v-else-if="renderData.layoutFields.includes(childField)"
-          :field="childField"
-          :schema="schema"
-          :extra-props="extraProps"
-        />
-        <AutoFormRendererNested
-          v-else
-          :field="childField"
-          :schema="schema"
-          :extra-props="extraProps"
-        />
-      </template>
+      <AutoFormRendererChildren :fields="fields" :schema="schema" :extra-props="extraProps" />
     </template>
   </component>
 </template>

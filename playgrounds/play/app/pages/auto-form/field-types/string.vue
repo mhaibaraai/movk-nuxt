@@ -15,7 +15,9 @@ const schema = afz.object({
     controlProps: { maxLength: 50 }
   }).max(50),
   multiline: afz.string({ type: 'textarea' }).optional(),
-  placeholder: afz.string({ controlProps: { placeholder: '自定义占位符' } }).optional()
+  placeholder: afz.string({ controlProps: { placeholder: '自定义占位符' } }).optional(),
+  phone: afz.string({ type: 'asPhoneNumberInput' }),
+  floatLabel: afz.string({ type: 'withFloatingLabel' }).meta({ label: '浮动标签' })
 })
 
 type Schema = z.output<typeof schema>

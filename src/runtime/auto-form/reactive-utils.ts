@@ -4,7 +4,6 @@ import { isFunction, isObject } from '@movk/core'
 import { Fragment, h, isRef, isVNode, unref } from 'vue'
 import { AUTOFORM_LIMITS, AUTOFORM_PATTERNS } from '../constants/auto-form'
 
-// 输入验证工具
 function validateContext(context: AutoFormFieldContext): asserts context is AutoFormFieldContext {
   if (!context || typeof context !== 'object') {
     throw new TypeError('AutoFormFieldContext must be a valid object')
@@ -15,12 +14,7 @@ function validateReactiveValue(value: unknown): value is ReactiveValue<any, any>
   return value !== null && value !== undefined
 }
 
-/**
- * 响应式值解析
- * @param value - 响应式值
- * @param context - 表单字段上下文
- * @returns 解析后的值
- */
+/** 解析单个响应式值：函数则以 context 调用，ref 则解包，否则原样返回 */
 export function resolveReactiveValue(value: ReactiveValue<any, any>, context: AutoFormFieldContext): any {
   validateContext(context)
 
@@ -35,13 +29,7 @@ export function resolveReactiveValue(value: ReactiveValue<any, any>, context: Au
   return unref(value)
 }
 
-/**
- * 响应式对象解析
- * @param obj - 要解析的对象
- * @param context - 表单字段上下文
- * @param depth - 当前递归深度（防止无限递归）
- * @returns 解析后的对象
- */
+/** 递归解析对象/数组中所有响应式值，VNode 和 ref 不再展开以防止意外渲染 */
 export function resolveReactiveObject<T extends Record<string, any>>(
   obj: T,
   context: AutoFormFieldContext,
@@ -85,12 +73,7 @@ export function resolveReactiveObject<T extends Record<string, any>>(
   return result
 }
 
-/**
- * 增强的事件属性处理 - 提升性能和安全性
- * @param originalProps - 原始属性对象
- * @param ctx - 表单字段上下文
- * @returns 增强后的属性对象
- */
+/** 为 onXxx 事件 prop 自动追加 context 作为最后一个参数，方便用户在事件回调中访问表单状态 */
 export function enhanceEventProps(originalProps: AnyObject, ctx: AutoFormFieldContext): Record<string, any> {
   if (!originalProps || typeof originalProps !== 'object') {
     return {}
@@ -111,12 +94,7 @@ export function enhanceEventProps(originalProps: AnyObject, ctx: AutoFormFieldCo
   return result
 }
 
-/**
- * 节点标准化
- * @param node - 要标准化的节点
- * @param depth - 当前深度
- * @returns 标准化后的节点数组
- */
+/** 将任意节点规范化为 VNode 数组，过滤 null/false，展开嵌套数组 */
 function normalize(node: any, depth: number = 0): any[] {
   if (depth > AUTOFORM_LIMITS.MAX_RECURSION_DEPTH) {
     return []
@@ -150,9 +128,7 @@ function normalize(node: any, depth: number = 0): any[] {
   return []
 }
 
-/**
- * VNode 渲染组件 - 修复水合错误
- */
+/** 渲染任意 VNode 内容（slot 函数返回值、h() 结果等），单子节点直接返回，多个节点包入 Fragment */
 export function VNodeRender(props: { node: unknown }) {
   const children = normalize(props.node as any)
   const childCount = children.length

@@ -6,14 +6,13 @@ import type { AutoFormControls, AutoFormField, AutoFormSlotProps, DynamicFormSlo
 import type { Ref } from 'vue'
 import { UForm } from '#components'
 import { computed, onMounted, ref, useTemplateRef } from 'vue'
-import { useAutoFormProvider } from '../internal/useAutoFormProvider'
+import { useAutoFormProvider } from '../auto-form/provider'
 import { getPath, setPath } from '@movk/core'
-import { classifyFields, extractPureSchema, introspectSchema } from '../utils/auto-form'
-import AutoFormRendererArray from './auto-form-renderer/AutoFormRendererArray.vue'
-import AutoFormRendererField from './auto-form-renderer/AutoFormRendererField.vue'
-import AutoFormRendererLayout from './auto-form-renderer/AutoFormRendererLayout.vue'
-import AutoFormRendererNested from './auto-form-renderer/AutoFormRendererNested.vue'
+import { classifyFields } from '../auto-form/field-utils'
+import { extractPureSchema, introspectSchema } from '../auto-form/schema-introspector'
 import { useAutoForm } from '../composables/useAutoForm'
+import AutoFormRendererChildren from './auto-form-renderer/AutoFormRendererChildren.vue'
+import AutoFormRendererField from './auto-form-renderer/AutoFormRendererField.vue'
 
 export interface AutoFormProps<S extends z.ZodObject, T extends boolean = true, N extends boolean = false> extends FormProps<S, T, N> {
   /**
@@ -64,7 +63,6 @@ const formRef = useTemplateRef('formRef')
 const { DEFAULT_CONTROLS } = useAutoForm()
 const { resolveFieldProp } = useAutoFormProvider(state, _slots)
 
-// 提取纯净的数据 schema（去除所有布局标记）
 const pureSchema = computed(() => schema ? extractPureSchema(schema) as S : schema)
 
 const controlsMapping = computed(() => ({
@@ -76,8 +74,7 @@ const fields = computed(() => {
   if (!schema)
     return []
 
-  const items = introspectSchema(schema, controlsMapping.value, '', globalMeta)
-  return items
+  return introspectSchema(schema, controlsMapping.value, '', globalMeta)
 })
 
 function resolveDefaultValue(fields: AutoFormField[], stateValue: AutoFormStateType) {
@@ -133,11 +130,7 @@ onMounted(() => {
   resolveDefaultValue(fields.value, state.value)
 })
 
-/**
- * 重置表单到初始状态（包含默认值）
- */
 function reset() {
-  // 清空现有数据
   Object.keys(state.value).forEach((key) => {
     // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
     delete state.value[key as keyof AutoFormStateType]
@@ -151,9 +144,6 @@ function reset() {
   formRef.value?.clear()
 }
 
-/**
- * 清空表单所有字段
- */
 function clear() {
   Object.keys(state.value).forEach((key) => {
     // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
@@ -183,33 +173,11 @@ defineExpose({
       <slot name="header" v-bind="{ errors, loading, fields: visibleFields, state }" />
 
       <template v-if="renderData.hasComplexFields">
-        <template v-for="field in renderData.allFields" :key="field.path">
-          <AutoFormRendererField
-            v-if="renderData.leafFields.includes(field)"
-            :field="field"
-            :schema="schema"
-            :extra-props="{ errors, loading }"
-          />
-          <AutoFormRendererArray
-            v-else-if="renderData.arrayFields.includes(field)"
-            :field="field"
-            :schema="schema"
-            :extra-props="{ errors, loading }"
-            :add-button-props="addButtonProps"
-          />
-          <AutoFormRendererLayout
-            v-else-if="renderData.layoutFields.includes(field)"
-            :field="field"
-            :schema="schema"
-            :extra-props="{ errors, loading }"
-          />
-          <AutoFormRendererNested
-            v-else
-            :field="field"
-            :schema="schema"
-            :extra-props="{ errors, loading }"
-          />
-        </template>
+        <AutoFormRendererChildren
+          :fields="renderData.allFields"
+          :schema="schema"
+          :extra-props="{ errors, loading }"
+        />
       </template>
 
       <template v-else>

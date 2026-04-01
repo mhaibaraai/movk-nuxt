@@ -5,9 +5,7 @@ import { h } from 'vue'
 import { setPath } from '@movk/core'
 import { AUTOFORM_META } from '../constants/auto-form'
 
-/**
- * 字段分类
- */
+/** 将字段列表分类为叶子/嵌套/数组/布局四组 */
 export function classifyFields(fields: AutoFormField[]) {
   const leafFields: AutoFormField[] = []
   const nestedFields: AutoFormField[] = []
@@ -35,27 +33,15 @@ export function classifyFields(fields: AutoFormField[]) {
   }
 }
 
-/**
- * 优化的字段类型检测 - 基于 meta.type 判断
- * @param field - 自动表单字段
- * @returns 是否为叶子字段（非 object 和 array）
- */
 export function isLeafField(field: AutoFormField): boolean {
   return field.meta.type !== 'object' && field.meta.type !== 'array'
 }
 
-/**
- * 获取字段类型
- * @param field - 自动表单字段
- * @returns 字段类型
- */
 export function getFieldType(field: AutoFormField): 'leaf' | 'nested' {
   return isLeafField(field) ? 'leaf' : 'nested'
 }
 
-/**
- * 收集字段默认值
- */
+/** 递归收集字段的默认值，object 类型返回嵌套结构，叶子类型直接返回值 */
 export function collectFieldDefaults(field: AutoFormField) {
   if (field.meta?.type === 'object') {
     const result: Record<string, any> = {}
@@ -81,9 +67,7 @@ export function collectFieldDefaults(field: AutoFormField) {
     : undefined
 }
 
-/**
- * 从 SelectMenuItem 数组中提取枚举值
- */
+/** 从 items 选项中提取枚举值，支持对象格式（取 valueKey/value/label）和原始值 */
 export function extractEnumValuesFromItems(items: any, valueKey?: string): string[] {
   if (!items || !Array.isArray(items)) {
     return []
@@ -116,7 +100,7 @@ export function extractEnumValuesFromItems(items: any, valueKey?: string): strin
     .filter((value: any) => value !== undefined && value !== null) as string[]
 }
 
-/** 创建提示插槽工厂 */
+/** 创建数组项的 hint 插槽渲染函数，根据层级和字段类型组合删除按钮与折叠图标 */
 export function createHintSlotFactory(removeCallback: (count?: number) => void) {
   return (field: AutoFormField, path: string, open?: boolean, count?: number): VNode | undefined => {
     const isNested = path.includes('.')
