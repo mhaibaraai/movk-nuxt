@@ -19,10 +19,6 @@ export default defineNuxtConfig({
 
   css: ['~/assets/css/main.css'],
 
-  build: {
-    transpile: ['reka-ui']
-  },
-
   routeRules: {
     '/docs': { redirect: '/docs/getting-started', prerender: false },
     '/docs/components': { redirect: '/docs/components/as-phone-number-input', prerender: false },
