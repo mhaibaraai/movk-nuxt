@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@iconify-json/lucide':
-        specifier: ^1.2.100
-        version: 1.2.100
+        specifier: ^1.2.101
+        version: 1.2.101
       '@iconify-json/ph':
         specifier: ^1.2.2
         version: 1.2.2
@@ -808,8 +808,8 @@ packages:
   '@iarna/toml@3.0.0':
     resolution: {integrity: sha512-td6ZUkz2oS3VeleBcN+m//Q6HlCFCPrnI0FZhrt/h4XqLEdOyYp2u21nd8MdsR+WJy5r9PTDaHTDDfhf4H4l6Q==}
 
-  '@iconify-json/lucide@1.2.100':
-    resolution: {integrity: sha512-vCrhQ/6T530HEMkWOkSyedvMiuQdVU1tMHEs32k4tklJmCmjokH3Dej6ycvfLt7kftBSQ2kPSUiyOpoW3uOF5g==}
+  '@iconify-json/lucide@1.2.101':
+    resolution: {integrity: sha512-JUN7uuSLRG3GK/9c5b8cK9e7sL6EAWDaASIwBOd0zUeKS0ACcokJubo2RMQHyVUVpd8mYkrR3Zd2mkH9ghhw1Q==}
 
   '@iconify-json/ph@1.2.2':
     resolution: {integrity: sha512-PgkEZNtqa8hBGjHXQa4pMwZa93hmfu8FUSjs/nv4oUU6yLsgv+gh9nu28Kqi8Fz9CCVu4hj1MZs9/60J57IzFw==}
@@ -8427,7 +8427,7 @@ snapshots:
 
   '@iarna/toml@3.0.0': {}
 
-  '@iconify-json/lucide@1.2.100':
+  '@iconify-json/lucide@1.2.101':
     dependencies:
       '@iconify/types': 2.0.0
 
@@ -8789,7 +8789,7 @@ snapshots:
       '@ai-sdk/gateway': 3.0.83(zod@4.3.6)
       '@ai-sdk/mcp': 1.0.30(zod@4.3.6)
       '@ai-sdk/vue': 3.0.141(vue@3.5.31(typescript@5.9.3))(zod@4.3.6)
-      '@iconify-json/lucide': 1.2.100
+      '@iconify-json/lucide': 1.2.101
       '@iconify-json/simple-icons': 1.2.75
       '@iconify-json/vscode-icons': 1.2.45
       '@movk/core': 1.2.2(vue@3.5.31(typescript@5.9.3))
