@@ -58,6 +58,9 @@ export default defineNuxtModule<ModuleOptions>({
   },
   defaults: {
     prefix: 'M',
+    theme: {
+      enabled: true
+    },
     fonts: {
       enabled: true,
       alibabaPuhuiti: {
@@ -78,7 +81,9 @@ export default defineNuxtModule<ModuleOptions>({
   async setup(options, nuxt) {
     const { resolve } = createResolver(import.meta.url)
 
-    setupTheme(nuxt, resolve)
+    if (options.theme?.enabled !== false) {
+      setupTheme(nuxt, resolve)
+    }
     setupFonts(options, nuxt)
 
     nuxt.options.alias['#movk'] = resolve('./runtime')
@@ -86,11 +91,16 @@ export default defineNuxtModule<ModuleOptions>({
     nuxt.options.css = nuxt.options.css || []
     nuxt.options.css.push(resolve('runtime/style.css'))
 
+    const componentIgnore = ['auto-form-renderer/**']
+    if (options.theme?.enabled === false) {
+      componentIgnore.push('theme-picker/**')
+    }
+
     addComponentsDir({
       path: resolve('runtime/components'),
       prefix: options.prefix,
       pathPrefix: false,
-      ignore: ['auto-form-renderer/**']
+      ignore: componentIgnore
     })
 
     addImportsDir(resolve('runtime/composables'))
