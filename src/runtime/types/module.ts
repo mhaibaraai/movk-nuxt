@@ -23,6 +23,14 @@ export interface ModuleOptions {
   prefix?: string
   /** API 模块配置 */
   api?: MovkApiFullConfig
+  /** 主题系统配置 */
+  theme?: {
+    /**
+     * 是否启用主题模块（appConfig 默认值、theme plugin、ThemePicker 组件）
+     * @defaultValue true
+     */
+    enabled?: boolean
+  }
   /** 字体提供器配置 */
   fonts?: {
     /**
@@ -77,5 +85,13 @@ declare module 'nuxt/schema' {
 
   interface RuntimeConfig {
     movkApi: { endpoints?: Record<string, EndpointPrivateConfig> }
+  }
+
+  interface AppConfig {
+    ui: {
+      colors: { primary: string, neutral: string, [key: string]: string }
+      icons: Record<string, string>
+    }
+    toaster?: import('@nuxt/ui').ToasterProps | null
   }
 }

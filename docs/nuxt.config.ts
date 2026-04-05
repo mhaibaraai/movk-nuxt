@@ -13,6 +13,7 @@ export default defineNuxtConfig({
 
   $production: {
     site: {
+      name: 'Movk Nuxt',
       url: 'https://nuxt.mhaibaraai.cn'
     }
   },

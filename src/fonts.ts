@@ -17,6 +17,8 @@ const FONT_PROVIDERS = [
 const BUNNY_FONT_NAMES = ['Public Sans', 'DM Sans', 'Geist', 'Inter', 'Poppins', 'Outfit', 'Raleway']
 
 export function setupFonts(options: ModuleOptions, nuxt: Nuxt) {
+  if (options.fonts?.enabled === false) return
+
   // fonts 由 @nuxtjs/fonts 模块注入，NuxtOptions 类型中无此属性
   const nuxtOpts = nuxt.options as typeof nuxt.options & { fonts: { families: Array<{ name: string, provider?: string }> } }
 
@@ -31,8 +33,6 @@ export function setupFonts(options: ModuleOptions, nuxt: Nuxt) {
       nuxtOpts.fonts.families.push({ name, provider: 'bunny' })
     }
   }
-
-  if (options.fonts?.enabled === false) return
 
   const active = FONT_PROVIDERS.filter(fp => options.fonts?.[fp.key]?.cdn)
   if (!active.length) return

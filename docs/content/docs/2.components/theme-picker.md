@@ -8,8 +8,12 @@ category: advanced
 
 `ThemePicker` 是一个可视化的主题配置组件，允许用户实时预览和自定义应用主题。用户可以调整主色调、中性色、圆角、字体、图标集和颜色模式，并导出配置代码。
 
-::callout{color="info" to="https://github.com/nuxt/ui/tree/v4/docs/app/components/theme-picker"}
+::note{to="https://github.com/nuxt/ui/tree/v4/docs/app/components/theme-picker"}
 配置变更会存储在本地，下次访问时自动恢复。组件源码来自 Nuxt UI
+::
+
+::note
+`ThemePicker` 属于主题模块的一部分。若将 [`movk.theme.enabled`](/docs/getting-started/configuration#theme) 设为 `false`，该组件将不会被注册。
 ::
 
 ## 功能特性
