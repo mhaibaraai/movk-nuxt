@@ -4,148 +4,42 @@
 
 ### ⚠ BREAKING CHANGES
 
-* 移除 useApiAuth composable 和 /api/_movk/session 路由
-
-- 删除 src/runtime/composables/useApiAuth.ts
-- 删除 src/runtime/server/api/_movk/session.post.ts
-- 删除 src/utils/meta.ts（未被使用的工具函数）
-- 移除 types/api.ts 中的 LoginOptions、LoginResult、UseApiAuthReturn 类型
-- 移除 module.ts 中的 session route 注册和 session 配置
-- 更新所有文档引用（README.md、CLAUDE.md、docs/）
-- 移除 playground 示例页面和导航项
-
-注意：ApiAuthConfig（token 注入、401 处理）保留，这些是 API 系统的基础设施，
-由 api.factory.ts 使用，与 useApiAuth composable 无关。
+- 移除 `useApiAuth` composable，认证流程统一通过 `nuxt-auth-utils` 与 API 插件拦截器处理。
+- API 文档分组重构为独立 `4.api` 章节，原有部分文档路径已调整。
+- playground 目录升级为多实例结构（`playgrounds/play`、`playgrounds/dashboard`），旧 `playground/` 路径不再作为主入口。
 
 ### ✨ Features
 
-* **api-auth:** 增强 useApiAuth 功能并优化类型定义 ([c9866f4](https://github.com/mhaibaraai/movk-nuxt/commit/c9866f4f2fde819847f33688fd97fda883d60317))
-* **auth:** 支持传递部分 Session 配置项 ([4b76175](https://github.com/mhaibaraai/movk-nuxt/commit/4b76175f4f8c223c09de6efdb935ac0c6e313d8a))
-* **auth:** 支持自定义 Session 配置 ([56c8340](https://github.com/mhaibaraai/movk-nuxt/commit/56c83404091626da94b5d58f232c14391a518298))
-* **docs:** 新增 MCP server 资源和工具，升级依赖 ([2c7438f](https://github.com/mhaibaraai/movk-nuxt/commit/2c7438fc74a4c50275322ccdb25d33d2d076c3cb))
-* **docs:** 添加 FileTree 组件并重构文档目录结构展示 ([5a9c52c](https://github.com/mhaibaraai/movk-nuxt/commit/5a9c52c734c5d91202752de1fd6a2d1636eb753e))
-* **search-form:** 优化展开收起按钮交互体验 ([22eb150](https://github.com/mhaibaraai/movk-nuxt/commit/22eb1500e97b87a762e58093848a795e718c5ba5))
-* **search-form:** 新增 actions 操作区及 v-model 支持 ([1b12e21](https://github.com/mhaibaraai/movk-nuxt/commit/1b12e2145d09b5d2d172139d9c4970188b1a19b8))
-* **theme:** theme 和 fonts 模块支持 enabled 开关 ([aa12e86](https://github.com/mhaibaraai/movk-nuxt/commit/aa12e8649cce7387bd1c80eea859cb729171a18f))
-* **theme:** 优化主题系统并更新文档与示例配置 ([02d0448](https://github.com/mhaibaraai/movk-nuxt/commit/02d044849d3643e12e36c791f93f48a4afc19ce2))
-* 增加 WithFloatingLabel 与 AsPhoneNumberInput 组件及文档/示例 ([c5799d5](https://github.com/mhaibaraai/movk-nuxt/commit/c5799d57f6047a9d9e66c084252da70f7e97a023))
-* 增强 AutoForm 组件，新增字符串字段类型及重构渲染逻辑 ([6ee1d27](https://github.com/mhaibaraai/movk-nuxt/commit/6ee1d2768d4874bc78406a92432071db5b7de1b8))
-* 增强自定义控件类型推导并统一 defineControl 示例 ([8d2d289](https://github.com/mhaibaraai/movk-nuxt/commit/8d2d289a3a4d7992f36fa082d32b6fa44533943e))
-* 新增 SearchForm 组件 ([a2b04f0](https://github.com/mhaibaraai/movk-nuxt/commit/a2b04f0f0fbfd430baf8d672e1afae326faf40b9))
-* 新增 useLazyApiFetch 并重构文档结构 ([dba0cde](https://github.com/mhaibaraai/movk-nuxt/commit/dba0cde2ce64599cbf48a95c5cf5924c219bf821))
-* 新增全局 API Hooks 系统并优化 401 处理配置 ([58178ea](https://github.com/mhaibaraai/movk-nuxt/commit/58178ea0b000aa41dfbf5c4e918f0c348e1b8588))
-* 新增字体系统、主题增强及 dashboard playground 重构 ([9a3de13](https://github.com/mhaibaraai/movk-nuxt/commit/9a3de13a4dd5be5492f200ab6b56e65ab9c20a28))
-* 新增站点元数据推断工具模块 ([dbaf40a](https://github.com/mhaibaraai/movk-nuxt/commit/dbaf40ad146b1af5ede1b20712b6c48f029b914c))
-* 注册新输入控件并更新文档组件路由 ([2219e3c](https://github.com/mhaibaraai/movk-nuxt/commit/2219e3ca42c9d90dbf5871b041b2f44cbf4fa798))
-* 添加用户列表查询接口及更新系统管理页面结构 ([8b0a079](https://github.com/mhaibaraai/movk-nuxt/commit/8b0a079a69c2e22b0642788f2a97bb3f3acca2d6))
-* 补充字符串字段手机号与浮动标签控件示例 ([f4c717d](https://github.com/mhaibaraai/movk-nuxt/commit/f4c717dce60a27ca23daf3c4d5b8e0eccebe26ea))
-
-### 🐛 Bug Fixes
-
-* **aiChat:** 更新 AI 模型为 deepseek/deepseek-v3.2-thinking ([16eee15](https://github.com/mhaibaraai/movk-nuxt/commit/16eee1516ddf2a09f492a906cd6aaf67c6082b43))
-* **api:** 修复 debug 日志序列化 Headers 对象导致的警告 ([c40057b](https://github.com/mhaibaraai/movk-nuxt/commit/c40057bd2f1ff7f35518fbfa3f49e75e3431a4cd))
-* **api:** 将 showToast/getAuthHeaders 等工具函数改为异步 ([93ef73d](https://github.com/mhaibaraai/movk-nuxt/commit/93ef73d456534ae10fed22434293203fd3740d8e))
-* **docs:** 修复 Vercel SSR 500 错误 ([38f0cf6](https://github.com/mhaibaraai/movk-nuxt/commit/38f0cf6bee05a3adf2a712311f9edb82779dd022))
-* **search-form:** 修复隐藏 bug 并优化组件逻辑 ([cd4435a](https://github.com/mhaibaraai/movk-nuxt/commit/cd4435a0b392aaad71056e0cd1cf24d670b7b66d))
-* **slide-verify:** 修复拖拽初始化和动画过渡问题 ([c073f60](https://github.com/mhaibaraai/movk-nuxt/commit/c073f60ba2dfb55b295752d9688f20bd9a250dfc))
-* **slide-verify:** 恢复拖拽期间 animate 同步 dragX 逻辑 ([832d104](https://github.com/mhaibaraai/movk-nuxt/commit/832d104e6400b54962a5715245a730cc3038befc))
-* 修复 401 处理后会话状态同步问题并改进调试日志 ([38eedb9](https://github.com/mhaibaraai/movk-nuxt/commit/38eedb914d0338d3a4238fe3a13090b69cc4bcd1))
-* 修复 docs:prepare 脚本，添加 --stub 参数以确保构建准备正确 ([8c780d1](https://github.com/mhaibaraai/movk-nuxt/commit/8c780d17a75542696b2d5d11e36250243e1200b5))
-* 增大 Docker 构建阶段 Node.js 堆内存上限 ([6431b32](https://github.com/mhaibaraai/movk-nuxt/commit/6431b32272dcc67ed153378b27df2acb46b7ffb1))
-* 声明运行时环境变量并修复文档 changelog 前缀格式 ([2e5b7bb](https://github.com/mhaibaraai/movk-nuxt/commit/2e5b7bb495b88978cf77d9a0bf29d4ddd228d6ff))
-* 将内存配置与构建准备步骤统一至 docs:build 脚本 ([ee41eba](https://github.com/mhaibaraai/movk-nuxt/commit/ee41eba16f7eb7d6a3f8f6189cf11263caab6438))
-* 将构建堆内存上限提高至 6144MB ([d6ed7ff](https://github.com/mhaibaraai/movk-nuxt/commit/d6ed7ff29e6a5cac3502d5f6a3539a994100853e))
-* 更新默认控件属性类名为 'w-full' ([9f21d3b](https://github.com/mhaibaraai/movk-nuxt/commit/9f21d3bbc6d18d18c3dd70afc403ea17068c0bf7))
-* 添加 reka-ui 到文档站点构建转译列表 ([bc15bb4](https://github.com/mhaibaraai/movk-nuxt/commit/bc15bb4c754634446872cd04b70c70f2b77fab01))
-* 移除文档站点 githubToken 运行时配置，改用 nuxt-auth-utils 自动注入 ([8fd9cc3](https://github.com/mhaibaraai/movk-nuxt/commit/8fd9cc3d030ebad1c617c9dacea855f0df1ee373))
-* 简化构建脚本，移除不必要的准备步骤 ([f8dbc26](https://github.com/mhaibaraai/movk-nuxt/commit/f8dbc26bda75977c182f791c7d1d1fc929a3a7b3))
-
-### 📝 Documentation
-
-* **api-auth:** 重写 useApiAuth 文档结构 ([9f2e092](https://github.com/mhaibaraai/movk-nuxt/commit/9f2e092566801c68e378c0ea5c72533d171716a5))
-* **auto-form:** 同步 playground 和文档以适配 Zod v4 原生 meta() API ([8c96150](https://github.com/mhaibaraai/movk-nuxt/commit/8c96150f45b15b8d6249f29339ce7920122d3a4a))
-* 统一组件与元数据类型注释中文表述 ([0ebf024](https://github.com/mhaibaraai/movk-nuxt/commit/0ebf02498f95cf6bd642ba4d4b60def8dbbf98a7))
-* 补充 AutoForm 配置页新增控件映射 ([8eac30a](https://github.com/mhaibaraai/movk-nuxt/commit/8eac30a0b916e914901ad462f0b45467774f6639))
-
-### 💄 Styles
-
-* **search-form:** 优化 UButton 组件的格式 ([547e0a8](https://github.com/mhaibaraai/movk-nuxt/commit/547e0a8ce7ecc33847cafe5ef13e9fda99266a47))
+- **AutoForm 能力增强**
+	- 基于 Zod v4 原生 `meta()` 重构元数据链路。
+	- 新增并统一输入增强控件：`AsPhoneNumberInput`、`WithFloatingLabel`。
+	- 增强字符串字段控件映射与类型推导，自定义控件示例与文档同步升级。
+- **SearchForm 组件上线**
+	- 新增可折叠搜索表单组件，支持 `actions` 操作区、`v-model`、响应式列布局与按钮行为定制。
+- **主题与字体系统升级**
+	- `theme` 与 `fonts` 模块新增 `enabled` 开关。
+	- 引入字体 provider 机制（含 Alibaba PuHuiTi），并完善主题示例与配置体验。
+- **API 与请求扩展**
+	- 新增 `useLazyApiFetch`。
+	- 引入全局 API Hook 扩展点（请求、响应、错误、未授权），便于业务侧统一拦截与扩展。
 
 ### ♻️ Code Refactoring
 
-* **api:** 用 vueApp.runWithContext 替代 nuxtApp.runWithContext ([b12fa4a](https://github.com/mhaibaraai/movk-nuxt/commit/b12fa4a8c6deb6fda8342ebfa7bcd3bb3cc223be))
-* **auto-form:** 使用 Zod v4 原生 meta() API 替代克隆方法拦截机制 ([528cf14](https://github.com/mhaibaraai/movk-nuxt/commit/528cf140c9fbf8cea8ee2fc965abaf53def116ef)), closes [#70](https://github.com/mhaibaraai/movk-nuxt/issues/70)
-* **docs/mcp:** 迁移至 @movk/nuxt-docs 内置 MCP 工具 ([e27a571](https://github.com/mhaibaraai/movk-nuxt/commit/e27a571a45860b6c90c593687a3121dc0f349755))
-* **docs:** 调整 AI 聊天 FAQ 问题以对齐实际文档结构 ([117c6a7](https://github.com/mhaibaraai/movk-nuxt/commit/117c6a7eb1982d66f2bc66aa5e39e1ec090c4a1d))
-* **input:** 使用 withDefaults 统一 WithCharacterLimit 的默认值处理 ([0767ba5](https://github.com/mhaibaraai/movk-nuxt/commit/0767ba50b7293e06c6507eff973bf3527bbf8503))
-* **search-form:** 重构 reset/clear 语义并补充 v-model 文档 ([66f4b27](https://github.com/mhaibaraai/movk-nuxt/commit/66f4b2773a3882c4a9a22a50b1d8f4822b996f70))
-* 优化模块初始化逻辑并改进 Session 配置 ([f4589b9](https://github.com/mhaibaraai/movk-nuxt/commit/f4589b948ce782af34946e1048e0240190634911))
-* 优化类型断言并修正 Session 配置路径 ([5c4d2da](https://github.com/mhaibaraai/movk-nuxt/commit/5c4d2dafd7f36b1dbb6c42e67c90fec169c09136))
-* 完善 useApiAuth Session 配置并修正类型导出 ([70c6d4f](https://github.com/mhaibaraai/movk-nuxt/commit/70c6d4feea71a302701a3810d014164be07d7cc2))
-* 移除 useApiAuth 过度封装 ([7f3ac9f](https://github.com/mhaibaraai/movk-nuxt/commit/7f3ac9fadb9fe8be62c8d4e1f01ef929e5fd005a))
-* 移除 Zod Schema 验证改用 defu 配置合并 ([cdff1c9](https://github.com/mhaibaraai/movk-nuxt/commit/cdff1c96ddca4732acba5b2fc42ab2c02a511275))
-* 自动推断站点配置并简化 Session 配置 ([91089f8](https://github.com/mhaibaraai/movk-nuxt/commit/91089f8d0de98187975f5faba3d3036a54588de4))
-* 重构 playground 为多 playground 结构并更新模块配置 ([b566813](https://github.com/mhaibaraai/movk-nuxt/commit/b5668138eda6cc949e8bd19f14338b3171a933da))
-* 重构类型导出结构 ([4b96a2e](https://github.com/mhaibaraai/movk-nuxt/commit/4b96a2e5f6fbe8bad4bbacf65976cf0fe9bfc879))
-* 重组项目结构以提升可维护性 ([30eadc3](https://github.com/mhaibaraai/movk-nuxt/commit/30eadc3d8173eabb20c422d962f69ea255da08da))
+- AutoForm 运行时逻辑重组到 `src/runtime/auto-form/*`，渲染器与元数据处理职责拆分更清晰。
+- 模块初始化与元信息推断流程优化，自动读取宿主 `package.json` 以补全站点元数据。
+- 项目结构重组为模块 + 文档 + 多 playground 协同架构，便于示例验证与场景化演示。
 
-### 👷 CI
+### 📝 Documentation
 
-* 优化部署工作流配置并升级 pnpm ([bc15337](https://github.com/mhaibaraai/movk-nuxt/commit/bc1533751cd1a829bbf970d99c657a24b30ae8f4))
-* 修正 Docker 镜像名称格式以匹配项目结构 ([3ea5a6a](https://github.com/mhaibaraai/movk-nuxt/commit/3ea5a6a383d87d889d827b6790d44beaa8382e37))
-* 更新 Docker 镜像名称以包含文档后缀 ([e54e17f](https://github.com/mhaibaraai/movk-nuxt/commit/e54e17f6b0126beb28ed3bbc346cef14600ef34a))
-* 更新 Docker 镜像名称以匹配项目结构 ([944fad5](https://github.com/mhaibaraai/movk-nuxt/commit/944fad55381022e5a80e1dfd258fa5b6acdbda2c))
-* 更新 Docker 镜像名称以匹配项目结构 ([5030f9f](https://github.com/mhaibaraai/movk-nuxt/commit/5030f9f540b5b97082d9c3e279d11054a8cbe6ff))
-* 添加 Docker 部署配置并更新文档站点设置 ([f7a80a8](https://github.com/mhaibaraai/movk-nuxt/commit/f7a80a82dafe402addefd0e0cc10ef658f77a518))
+- 文档目录按“组件 / AutoForm / API / Composables / Best Practices”重排，导航与示例关联更清晰。
+- MCP 资源与工具重构：新增 API 与最佳实践资源检索能力，移除冗余文档查询接口。
+- 新增并完善 `SearchForm`、`AsPhoneNumberInput`、`WithFloatingLabel` 等组件文档与示例。
 
-### 🔧 Chores
+### 🐛 Bug Fixes
 
-* **config:** 更新兼容性日期为最新版本 ([426b895](https://github.com/mhaibaraai/movk-nuxt/commit/426b89599d9a578153fafc6c896bad2e8764979e))
-* **config:** 更新兼容性日期并添加Nitro预渲染配置 ([5d44fcc](https://github.com/mhaibaraai/movk-nuxt/commit/5d44fcc41ba366068097a20fc3bf28e47cfa4f65))
-* **config:** 添加mdc高亮配置 ([ce22e52](https://github.com/mhaibaraai/movk-nuxt/commit/ce22e52596ffc3444cf388ec770d613a24bd95e1))
-* **deps:** lock file maintenance ([a09d9bc](https://github.com/mhaibaraai/movk-nuxt/commit/a09d9bc6c576c5e0bb9ce096b1e13d7b93bb7fe0))
-* **deps:** update all non-major dependencies ([8ab065f](https://github.com/mhaibaraai/movk-nuxt/commit/8ab065fdc544a0abde7a138ab636412fd4f81861))
-* **deps:** update all non-major dependencies ([807dfd7](https://github.com/mhaibaraai/movk-nuxt/commit/807dfd7aaa2795f59d2b1d3df3fd164de84da047))
-* **deps:** update all non-major dependencies ([c4acabb](https://github.com/mhaibaraai/movk-nuxt/commit/c4acabbf86a55e91460520a9543f974540034506))
-* **deps:** update all non-major dependencies ([5664607](https://github.com/mhaibaraai/movk-nuxt/commit/5664607820ae5bc38441c842bb8c2809613444a7))
-* **deps:** update all non-major dependencies ([5011c33](https://github.com/mhaibaraai/movk-nuxt/commit/5011c3348c5a1cadefcfc06079cbe90f835d1ad6))
-* **deps:** update all non-major dependencies ([5788624](https://github.com/mhaibaraai/movk-nuxt/commit/5788624d86193f9fde1c7ffa94d7bdec2a469f87))
-* **deps:** update all non-major dependencies ([84595e7](https://github.com/mhaibaraai/movk-nuxt/commit/84595e7c2ee51235f264ec0abf544100b87c9626))
-* **deps:** update all non-major dependencies ([6cb07db](https://github.com/mhaibaraai/movk-nuxt/commit/6cb07dbb469d6a1fe7f4ad05e6dd918bf15492e2))
-* **deps:** update all non-major dependencies ([f30e839](https://github.com/mhaibaraai/movk-nuxt/commit/f30e8392227c2fc0bf37d7a14e0c4c85a3bd97dd))
-* **deps:** update dependency @iconify-json/lucide to ^1.2.101 ([db668ef](https://github.com/mhaibaraai/movk-nuxt/commit/db668efb5abb88d9ecd348208795c69f0e8db050))
-* **deps:** update dependency @nuxt/ui to ^4.6.1 ([ec6955f](https://github.com/mhaibaraai/movk-nuxt/commit/ec6955f409c9d0341ccc1d17b284d7ebd283bcc9))
-* **deps:** update dependency nuxt-og-image to ^6.3.2 ([994071a](https://github.com/mhaibaraai/movk-nuxt/commit/994071a0a9a0317ea60f83dbe94d59822b58fd9e))
-* **deps:** update dependency nuxt-og-image to v6 ([d95da5c](https://github.com/mhaibaraai/movk-nuxt/commit/d95da5ca4c43123a57c15e3b8a7a6b2293b2448d))
-* **deps:** update dependency reka-ui to ^2.9.3 ([78fc5c3](https://github.com/mhaibaraai/movk-nuxt/commit/78fc5c3f25e4029212c67d92dbcf04e3f6a2db22))
-* **deps:** update devdependency @nuxt/test-utils to v4 ([321abdc](https://github.com/mhaibaraai/movk-nuxt/commit/321abdc10633d5bfab8ec4adb5f954b2557cb9f0))
-* **deps:** update devdependency jsdom to v28 ([3bf28c1](https://github.com/mhaibaraai/movk-nuxt/commit/3bf28c198edf6d716233a53aa59312156f637371))
-* **deps:** update devdependency vue-tsc to ^3.2.6 ([d29194a](https://github.com/mhaibaraai/movk-nuxt/commit/d29194a3d84974e2359c7142847680ffad284aeb))
-* **deps:** update nuxt framework to ^4.3.0 ([7e0a22c](https://github.com/mhaibaraai/movk-nuxt/commit/7e0a22c77ddfba22d336409ea12ebbb44910f8fb))
-* **deps:** update nuxt framework to ^4.3.1 ([fa1f0bb](https://github.com/mhaibaraai/movk-nuxt/commit/fa1f0bbce9d0e7c94c82023f1fd61789ca8e47ae))
-* **deps:** update nuxt framework to ^4.4.2 ([1c631bd](https://github.com/mhaibaraai/movk-nuxt/commit/1c631bdf4f1b00fd5f6882b48db54a6d853dadc4))
-* **deps:** update pnpm to v10.28.1 ([3578f8c](https://github.com/mhaibaraai/movk-nuxt/commit/3578f8c7850f3d5c2fa2bb5d0a685cf961e1a10f))
-* **deps:** update pnpm/action-setup action to v5 ([292bc14](https://github.com/mhaibaraai/movk-nuxt/commit/292bc141bf948905a3d558f74b2ae4b63e70e3f3))
-* **deps:** 升级 @movk/core 至 1.2.3，typescript 至 6.0.2 ([723bc95](https://github.com/mhaibaraai/movk-nuxt/commit/723bc951388e8b10863dcb27bbff134ebe16c4fd))
-* **deps:** 升级 @movk/nuxt-docs 到 1.7.5 ([7e84bdb](https://github.com/mhaibaraai/movk-nuxt/commit/7e84bdb268ded336a8d75e1411bdb48a24301fa8))
-* **deps:** 升级 @movk/nuxt-docs 到 1.8.0 ([72b651e](https://github.com/mhaibaraai/movk-nuxt/commit/72b651eba5c440c6a259cf910116304f2df77b51))
-* **deps:** 升级 @movk/nuxt-docs 至 ^1.12.3，增加构建内存限制 ([7139d70](https://github.com/mhaibaraai/movk-nuxt/commit/7139d702037e557b87de8b68adec683e407d1711))
-* **deps:** 升级 nuxt-auth-utils 至 0.5.27 ([935fc68](https://github.com/mhaibaraai/movk-nuxt/commit/935fc6868a3a5bab1f52b3d3c80625e769340f34))
-* **docs:** 升级 @movk/nuxt-docs 至 1.13.1 ([e3b92e5](https://github.com/mhaibaraai/movk-nuxt/commit/e3b92e5fe71778f9e378f1deb7f1768f8e578abb))
-* **docs:** 移除构建内存限制 ([0310175](https://github.com/mhaibaraai/movk-nuxt/commit/0310175e631a79af90b199c285c4d266f5c03899))
-* **playground:** 更新 useApiAuth 示例代码 ([0f7ad82](https://github.com/mhaibaraai/movk-nuxt/commit/0f7ad82a9351a2d2bb2fae76eed056caafa10498))
-* 修复 Docker 构建配置并优化安全性 ([f11eef6](https://github.com/mhaibaraai/movk-nuxt/commit/f11eef60ff5cc73da58530f0d12b4a154c48c692))
-* 升级 @movk/nuxt-docs 到 1.11.1 并调整标题 ([05e7c9f](https://github.com/mhaibaraai/movk-nuxt/commit/05e7c9f3dff00740f0aa5d8be56f454408fa10f0))
-* 升级依赖并优化性能 ([b0409b5](https://github.com/mhaibaraai/movk-nuxt/commit/b0409b5357d5af2c212eb063a83249ae84640eba))
-* 升级依赖并优化文档站点配置 ([dcfa8c5](https://github.com/mhaibaraai/movk-nuxt/commit/dcfa8c5d481e913c078816dfdf7f3610eaa7c5d0))
-* 升级依赖并修复类型问题 ([29974db](https://github.com/mhaibaraai/movk-nuxt/commit/29974db29439095ff53378759f1537b7b507d577))
-* 升级依赖并移除 reka-ui 直接依赖 ([a6f6d33](https://github.com/mhaibaraai/movk-nuxt/commit/a6f6d332e288ddafa888787850378acf9fba7ad7))
-* 更新VSCode设置，调整代码格式化和自动修复选项 ([673891f](https://github.com/mhaibaraai/movk-nuxt/commit/673891f817c9eb1bbee9454d14c4aebe51ca0277))
-* 更新依赖锁文件和工作区配置 ([ac40cee](https://github.com/mhaibaraai/movk-nuxt/commit/ac40ceecf39cccb0bd99f84be0426f5c84236da6))
-* 添加 MCP 配置文件 ([c3c8797](https://github.com/mhaibaraai/movk-nuxt/commit/c3c87974e14cdff4e13f834aec8aba197d2afa56))
-* 添加 reka-ui 到 docs 构建转译列表 ([66c248c](https://github.com/mhaibaraai/movk-nuxt/commit/66c248c12e6a12d259c952051dfa82f6ac0ea215))
-* 移除文档站点的 AI 聊天功能 ([9e168d7](https://github.com/mhaibaraai/movk-nuxt/commit/9e168d7eca2b1ee6f4c2093a265ebf630e282202))
-* 重构项目配置与依赖更新 ([e7bd6c5](https://github.com/mhaibaraai/movk-nuxt/commit/e7bd6c5f230879d41131e7cc3f67e984162506d1))
+- 修复 `useApiFetch` 调试日志序列化 `Headers` 产生的告警问题。
+- 修复 401 后会话状态同步与未授权处理链路。
+- 修复 `SlideVerify` 拖拽初始化与动画同步异常。
 
 ## [1.1.2](https://github.com/mhaibaraai/movk-nuxt/compare/v1.1.1...v1.1.2) (2026-01-19)
 
