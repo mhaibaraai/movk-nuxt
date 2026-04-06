@@ -81,9 +81,7 @@ export default defineNuxtModule<ModuleOptions>({
   async setup(options, nuxt) {
     const { resolve } = createResolver(import.meta.url)
 
-    if (options.theme?.enabled !== false) {
-      setupTheme(nuxt, resolve)
-    }
+    setupTheme(nuxt, resolve, options)
     setupFonts(options, nuxt)
 
     nuxt.options.alias['#movk'] = resolve('./runtime')

@@ -1,12 +1,16 @@
 import { addPlugin, type Resolver } from '@nuxt/kit'
 import type { Nuxt } from '@nuxt/schema'
 import defu from 'defu'
+import type { ModuleOptions } from './module'
 
 /**
  * 设置主题配置
  * 包括 appConfig.theme 默认值和 head 中的主题相关样式
  */
-export function setupTheme(nuxt: Nuxt, resolve: Resolver['resolve']) {
+export function setupTheme(nuxt: Nuxt, resolve: Resolver['resolve'], options: ModuleOptions) {
+  if (options.theme?.enabled === false) return
+
+  // 设置 appConfig.theme 默认值
   nuxt.options.appConfig.theme = defu(nuxt.options.appConfig.theme || {}, {
     radius: 0.25,
     blackAsPrimary: false,
