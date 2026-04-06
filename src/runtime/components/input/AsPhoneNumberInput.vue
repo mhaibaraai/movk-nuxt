@@ -1,5 +1,4 @@
 <script setup lang="ts" generic="T extends InputValue">
-import { computed } from 'vue'
 import { UInput } from '#components'
 import { vMaska } from 'maska/vue'
 import type { OmitByKey } from '@movk/core'
@@ -18,23 +17,23 @@ export interface AsPhoneNumberInputProps<T extends InputValue = InputValue> exte
   dialCodeClass?: ClassNameValue
 }
 
-const props = defineProps<AsPhoneNumberInputProps<T>>()
+const props = withDefaults(defineProps<AsPhoneNumberInputProps<T>>(), {
+  mask: '(###) ###-####'
+})
 const emit = defineEmits<InputEmits<T>>()
 const slots = defineSlots<OmitByKey<InputSlots, 'leading'>>()
 
 defineOptions({ inheritAttrs: false })
 
 const modelValue = defineModel<T>()
-
-const resolvedMask = computed(() => props.mask ?? '(###) ###-####')
 </script>
 
 <template>
   <UInput
     v-model="modelValue"
-    v-maska="resolvedMask"
+    v-maska="props.mask"
     type="tel"
-    :placeholder="props.placeholder ?? resolvedMask.replaceAll('#', '_')"
+    :placeholder="props.placeholder ?? props.mask.replaceAll('#', '_')"
     :style="props.dialCode ? { '--dial-code-length': `${props.dialCode.length + 1.5}ch` } : undefined"
     :ui="props.dialCode
       ? { base: 'ps-(--dial-code-length)', leading: 'pointer-events-none text-muted' }

@@ -11,7 +11,7 @@ import { extractPureSchema, introspectSchema } from '../auto-form/schema-introsp
 import { useAutoForm } from '../composables/useAutoForm'
 import AutoFormRendererField from './auto-form-renderer/AutoFormRendererField.vue'
 import { useAppConfig } from '#app'
-import { resolveGridClasses } from '../constants/grid-cols'
+import { resolveGridClasses, resolveMaxCols } from '../constants/grid-cols'
 
 export interface SearchFormProps<S extends z.ZodObject, T extends boolean = true, N extends boolean = false> extends FormProps<S, T, N> {
   /**
@@ -184,10 +184,7 @@ const fields = computed(() => {
 const gridClass = computed(() => resolveGridClasses(cols, gap))
 
 const visibleCount = computed(() => {
-  const maxCols = typeof cols === 'number'
-    ? cols
-    : Math.max(cols.sm ?? 1, cols.md ?? 1, cols.lg ?? 1, cols.xl ?? 1)
-  const base = maxCols * visibleRows
+  const base = resolveMaxCols(cols) * visibleRows
   return Math.max(0, showActionsCell.value ? base - 1 : base)
 })
 

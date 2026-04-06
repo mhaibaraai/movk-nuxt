@@ -13,12 +13,15 @@ export default defineNuxtConfig({
 
   $production: {
     site: {
-      name: 'Movk Nuxt',
       url: 'https://nuxt.mhaibaraai.cn'
     }
   },
 
   css: ['~/assets/css/main.css'],
+
+  site: {
+    name: 'Movk Nuxt'
+  },
 
   routeRules: {
     '/docs': { redirect: '/docs/getting-started', prerender: false },
@@ -57,5 +60,10 @@ export default defineNuxtConfig({
   mcp: {
     name: 'Movk Nuxt',
     browserRedirect: '/docs/getting-started/ai/mcp'
+  },
+
+  movk: {
+    theme: { enabled: false },
+    fonts: { enabled: false }
   }
 })

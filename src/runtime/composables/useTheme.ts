@@ -9,11 +9,12 @@ export function useTheme() {
   const appConfig = useAppConfig()
   const colorMode = useColorMode()
   const site = useSiteConfig()
+  const name = kebabCase(site.name)
 
-  const radius = useLocalStorage(`${site.name}-ui-radius`, 0.25)
-  const font = useLocalStorage(`${site.name}-ui-font`, 'Alibaba PuHuiTi')
-  const _iconSet = useLocalStorage(`${site.name}-ui-icons`, 'lucide')
-  const blackAsPrimary = useLocalStorage(`${site.name}-ui-black-as-primary`, false)
+  const radius = useLocalStorage(`${name}-ui-radius`, 0.25)
+  const font = useLocalStorage(`${name}-ui-font`, 'Alibaba PuHuiTi')
+  const _iconSet = useLocalStorage(`${name}-ui-icons`, 'lucide')
+  const blackAsPrimary = useLocalStorage(`${name}-ui-black-as-primary`, false)
 
   const neutralColors = ['slate', 'gray', 'zinc', 'neutral', 'stone', 'taupe', 'mauve', 'mist', 'olive']
   const neutral = computed({
@@ -22,7 +23,7 @@ export function useTheme() {
     },
     set(option) {
       appConfig.ui.colors.neutral = option
-      window.localStorage.setItem(`${site.name}-ui-neutral`, appConfig.ui.colors.neutral)
+      window.localStorage.setItem(`${name}-ui-neutral`, appConfig.ui.colors.neutral)
     }
   })
 
@@ -34,7 +35,7 @@ export function useTheme() {
     },
     set(option) {
       appConfig.ui.colors.primary = option
-      window.localStorage.setItem(`${site.name}-ui-primary`, appConfig.ui.colors.primary)
+      window.localStorage.setItem(`${name}-ui-primary`, appConfig.ui.colors.primary)
       blackAsPrimary.value = false
     }
   })
@@ -85,7 +86,7 @@ export function useTheme() {
 
   const link = computed(() => {
     const name = font.value
-    if (name === 'Alibaba PuHuiTi') return []
+    if (name === 'Alibaba PuHuiTi' || !fonts.includes(name)) return []
     return [{
       rel: 'stylesheet' as const,
       href: `https://fonts.googleapis.com/css2?family=${encodeURIComponent(name)}:wght@400;500;600;700&display=swap`,
@@ -94,9 +95,9 @@ export function useTheme() {
   })
 
   const style = [
-    { innerHTML: radiusStyle, id: `${site.name}-ui-radius`, tagPriority: -2 },
-    { innerHTML: blackAsPrimaryStyle, id: `${site.name}-ui-black-as-primary`, tagPriority: -2 },
-    { innerHTML: fontStyle, id: `${site.name}-ui-font`, tagPriority: -2 }
+    { innerHTML: radiusStyle, id: `${name}-ui-radius`, tagPriority: -2 },
+    { innerHTML: blackAsPrimaryStyle, id: `${name}-ui-black-as-primary`, tagPriority: -2 },
+    { innerHTML: fontStyle, id: `${name}-ui-font`, tagPriority: -2 }
   ]
 
   const hasCSSChanges = computed(() => {
@@ -106,7 +107,7 @@ export function useTheme() {
   })
 
   const hasAppConfigChanges = computed(() => {
-    return appConfig.ui.colors.primary !== 'blue'
+    return appConfig.ui.colors.primary !== 'sky'
       || appConfig.ui.colors.neutral !== 'slate'
       || _iconSet.value !== 'lucide'
   })
@@ -147,7 +148,7 @@ export function useTheme() {
   function exportAppConfig(): string {
     const config: Record<string, any> = {}
 
-    const defaultColors: Record<string, string> = { primary: 'blue', neutral: 'slate', secondary: 'sky', success: 'green', info: 'teal', warning: 'yellow', error: 'red' }
+    const defaultColors: Record<string, string> = { primary: 'sky', secondary: 'blue', success: 'green', info: 'blue', warning: 'yellow', error: 'red', neutral: 'slate' }
     const colorEntries = Object.entries(defaultColors).filter(([key, def]) => (appConfig.ui.colors as any)[key] !== def)
     if (colorEntries.length) {
       config.ui = { colors: Object.fromEntries(colorEntries.map(([key]) => [key, (appConfig.ui.colors as any)[key]])) }
@@ -167,11 +168,11 @@ export function useTheme() {
   }
 
   function resetTheme() {
-    appConfig.ui.colors.primary = 'blue'
-    window.localStorage.removeItem(`${site.name}-ui-primary`)
+    appConfig.ui.colors.primary = 'sky'
+    window.localStorage.removeItem(`${name}-ui-primary`)
 
     appConfig.ui.colors.neutral = 'slate'
-    window.localStorage.removeItem(`${site.name}-ui-neutral`)
+    window.localStorage.removeItem(`${name}-ui-neutral`)
 
     radius.value = 0.25
     font.value = 'Alibaba PuHuiTi'
@@ -179,9 +180,9 @@ export function useTheme() {
     appConfig.ui.icons = themeIcons.lucide as any
     blackAsPrimary.value = false
 
-    window.localStorage.removeItem(`${site.name}-ui-ai-theme`)
-    window.localStorage.removeItem(`${site.name}-ui-custom-colors`)
-    window.localStorage.removeItem(`${site.name}-ui-css-variables`)
+    window.localStorage.removeItem(`${name}-ui-ai-theme`)
+    window.localStorage.removeItem(`${name}-ui-custom-colors`)
+    window.localStorage.removeItem(`${name}-ui-css-variables`)
   }
 
   return {

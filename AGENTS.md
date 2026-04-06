@@ -8,6 +8,16 @@ This file provides guidance for AI coding agents working on this repository.
 
 **peerDependencies**：`@nuxt/ui >=4.6.0`、`zod >=4.3.6`
 
+**moduleDependencies**（模块会自动校验版本）：
+
+| 模块 | 最低版本 |
+| --- | --- |
+| `@vueuse/nuxt` | >=14.2.1 |
+| `@nuxt/image` | >=2.0.0 |
+| `@nuxt/ui` | >=4.6.0 |
+| `nuxt-og-image` | >=6.3.1（自动注入 `zeroRuntime: true`） |
+| `nuxt-auth-utils` | >=0.5.29 |
+
 ## 常用命令
 
 ```bash
@@ -54,22 +64,32 @@ src/
   module.ts              # 模块入口，defineNuxtModule + 配置处理
   theme.ts               # 主题初始化（appConfig.theme/ui 默认值 + theme plugin）
   fonts.ts               # 字体配置（Alibaba PuHuiTi CDN 注入）
+  providers/             # 自定义字体 provider（alibaba-puhuiti.ts）
   runtime/
+    style.css            # 模块全局样式（自动注入）
     types/               # 所有类型定义（api.ts、auto-form.ts、module.ts、theme.ts）
     constants/           # 运行时常量（api-defaults.ts、auto-form.ts、grid-cols.ts）
     plugins/
       api.factory.ts     # $fetch.create() 多端点实例，含认证/业务检查/Toast 拦截器
-      theme.ts           # 主题 plugin（运行时读取 appConfig.theme）
-    composables/         # 自动导入的 composables（useApiFetch、useAutoForm 等）
+      theme.ts           # 主题 plugin（客户端读 localStorage，SSR 注入 anti-flash 脚本）
+    composables/         # 自动导入的 composables（useApiFetch、useAutoForm、useTheme 等）
     components/
-      auto-form-renderer/ # AutoForm 内部渲染器（被 ignore 不注册为全局组件）
+      auto-form-renderer/ # AutoForm 内部渲染组件（被 ignore 不注册为全局组件）
       input/             # 输入增强组件（WithCopy、WithClear 等）
       theme-picker/      # ThemePicker 组件
+      SearchForm.vue     # 带折叠的搜索表单（复用 AutoForm 控件系统）
       AutoForm.vue、DatePicker.vue、StarRating.vue 等独立组件
+    auto-form/           # AutoForm 纯逻辑层（不含 Vue 组件）
+      schema-introspector.ts  # Zod Schema 解析（字段类型推断）
+      controls.ts        # 控件注册表
+      metadata.ts        # 字段元数据处理
+      field-utils.ts     # 字段工具函数
+      provider.ts        # AutoForm 上下文 Provider
+      reactive-utils.ts  # 响应式工具
     utils/
       api-utils.ts       # API 工具函数（认证头、Toast、业务检查、数据解包）
-      auto-form.ts       # AutoForm 工具函数
-      schema-introspector.ts  # Zod Schema 解析
+      theme.ts           # 主题工具（themeIcons 映射）
+      meta.ts            # package.json 元数据读取（自动设置 nuxt.options.site.name）
 playgrounds/
   play/                  # 基础功能验证 playground
   dashboard/             # 完整应用场景 playground（含系统管理模块）
@@ -81,12 +101,14 @@ test/                    # Vitest 单元测试
 
 ### 模块初始化流程（`src/module.ts`）
 
-1. `setupTheme()` — 设置 `appConfig.theme` 默认值，注册 theme plugin
-2. `setupFonts()` — 按配置注入字体 CSS
+1. `setupTheme()` — 设置 `appConfig.theme`/`appConfig.ui` 默认值，注册 theme plugin；`theme.enabled: false` 时跳过，且 `ThemePicker` 组件也被排除注册
+2. `setupFonts()` — 按配置注入字体；`fonts.enabled: false` 时跳过
 3. 注册 `#movk` 别名指向 `src/runtime/`（内部代码用 `#movk/types`、`#movk/utils` 等路径引用，避免相对路径嵌套）
-4. `addComponentsDir()` — 以 `options.prefix`（默认 `M`）为前缀注册组件，`auto-form-renderer/**` 除外
-5. `addImportsDir()` — 自动导入 `runtime/composables/`
-6. 构建 API 运行时配置，将私有字段（`headers`）拆分到 `runtimeConfig.movkApi`，公共字段到 `runtimeConfig.public.movkApi`
+4. 注入 `runtime/style.css`
+5. `addComponentsDir()` — 以 `options.prefix`（默认 `M`）为前缀注册组件，`auto-form-renderer/**` 始终排除
+6. `addImportsDir()` — 自动导入 `runtime/composables/`
+7. 若 `api.enabled !== false`：构建 API 运行时配置，将私有字段（`headers`）拆分到 `runtimeConfig.movkApi`，公共字段到 `runtimeConfig.public.movkApi`，注册 `api.factory` plugin
+8. 读取宿主 `package.json` 元数据，自动设置 `nuxt.options.site.name`（供 `useSiteConfig()` 使用）
 
 ### API 系统
 
@@ -107,11 +129,15 @@ test/                    # Vitest 单元测试
 
 ### AutoForm 系统
 
-`useAutoForm()` 返回 `afz`（扩展 Zod 实例，支持 `.meta()` 链式调用）。`afz.object({...})` 定义的 Schema 携带 UI 元数据，`AutoForm.vue` 通过 `schema-introspector.ts` 解析字段类型并渲染对应控件。
+`useAutoForm()` 返回 `afz`（扩展 Zod 实例，支持 `.meta()` 链式调用）。`afz.object({...})` 定义的 Schema 携带 UI 元数据，`AutoForm.vue` 通过 `auto-form/schema-introspector.ts` 解析字段类型并渲染对应控件。
+
+`SearchForm.vue` 是在 AutoForm 控件系统之上构建的带折叠搜索栏组件，通过 `cols`（支持响应式断点对象）和 `visibleRows` 控制布局，`grid-cols.ts` 中的 `GRID_COL_SAFELIST` 需要同步维护以保证 Tailwind 动态类不被清除。
 
 ### 主题系统
 
-`appConfig.theme` 包含 `radius`、`blackAsPrimary`、`font`、`icons`。`ThemePicker` 组件和 `useTheme()` composable 在运行时读写这些配置。
+`appConfig.ui.colors`（primary/neutral 等）和 CSS 变量（radius、font、blackAsPrimary）通过 `useTheme()` composable 读写，持久化到 `${kebabCase(site.name)}-ui-*` 格式的 localStorage 键。
+
+Theme plugin 采用 anti-flash 模式：SSR 阶段在 `<head>` 注入内联 `<script>`（`tagPriority: -1`），在 hydration 之前从 localStorage 读取并覆盖 CSS 变量，避免主题闪烁。客户端阶段直接修改 `appConfig.ui`。
 
 ## TypeScript 注意事项
 
