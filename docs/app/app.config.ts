@@ -6,54 +6,35 @@ export default defineAppConfig({
   aiChat: {
     faqQuestions: [
       {
-        category: '快速入门',
+        category: 'AutoForm',
         items: [
-          '如何安装 @movk/nuxt？',
-          '支持哪些 Nuxt 版本？',
-          '如何配置组件前缀？',
-          '模块需要哪些前置依赖？'
-        ]
-      },
-      {
-        category: 'AutoForm 表单',
-        items: [
-          '如何创建基础表单？',
-          '支持哪些字段类型？',
-          '如何自定义字段渲染？',
-          '如何使用 Slot 自定义布局？',
-          '如何处理嵌套对象和数组？'
+          'Schema 能同时定义验证规则和 UI 提示吗？',
+          '数组字段如何支持动态增删行？',
+          '如何用 Slot 替换某个字段的渲染？'
         ]
       },
       {
         category: 'API 系统',
         items: [
-          '如何配置多个 API 端点？',
-          'useApiFetch 和 useLazyApiFetch 有什么区别？',
-          '如何使用 Hooks 扩展请求流程？',
-          '如何监控上传/下载进度？'
+          '响应数据如何自动从信封结构中解包？',
+          '如何让某个请求跳过 Toast 提示？',
+          '上传进度如何实时回调？'
         ]
       },
       {
         category: '组件',
         items: [
-          '有哪些可用组件？',
-          'DatePicker 和 ColorChooser 如何使用？',
-          '输入增强组件（WithClear、WithCopy）怎么用？',
-          'SlideVerify 如何配置？'
+          'SearchForm 如何按行数自动折叠？',
+          'SlideVerify 阈值和动画如何配置？',
+          'DatePicker 输出格式如何指定？'
         ]
       },
       {
         category: 'Composables',
         items: [
-          'useDateFormatter 支持哪些日期格式？',
-          'useAutoForm 如何注册自定义控件？'
-        ]
-      },
-      {
-        category: '最佳实践',
-        items: [
-          '推荐的项目结构是什么？',
-          'Composable 设计有哪些常用模式？'
+          '如何避免主题切换时的 SSR 闪烁？',
+          '如何导出当前主题的 CSS 变量？',
+          'useDateFormatter 如何批量转换日期数组？'
         ]
       }
     ]
@@ -70,9 +51,6 @@ export default defineAppConfig({
     },
     form: {
       base: 'space-y-4 min-w-0 sm:min-w-md'
-    },
-    colors: {
-      primary: 'sky'
     },
     prose: {
       codeIcon: {
