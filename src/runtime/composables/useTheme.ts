@@ -107,7 +107,7 @@ export function useTheme() {
   })
 
   const hasAppConfigChanges = computed(() => {
-    return appConfig.ui.colors.primary !== 'sky'
+    return appConfig.ui.colors.primary !== 'blue'
       || appConfig.ui.colors.neutral !== 'slate'
       || _iconSet.value !== 'lucide'
   })
@@ -168,7 +168,7 @@ export function useTheme() {
   }
 
   function resetTheme() {
-    appConfig.ui.colors.primary = 'sky'
+    appConfig.ui.colors.primary = 'blue'
     window.localStorage.removeItem(`${name}-ui-primary`)
 
     appConfig.ui.colors.neutral = 'slate'

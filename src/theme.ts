@@ -21,7 +21,7 @@ export function setupTheme(nuxt: Nuxt, resolve: Resolver['resolve'], options: Mo
   // 修改 ui 模块的默认颜色配置
   nuxt.options.appConfig.ui = defu(nuxt.options.appConfig.ui || {}, {
     colors: {
-      primary: 'sky',
+      primary: 'blue',
       secondary: 'blue',
       success: 'green',
       info: 'blue',
