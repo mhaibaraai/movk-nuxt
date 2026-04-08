@@ -44,6 +44,9 @@ export default defineAppConfig({
     commitPath: 'src/runtime'
   },
   ui: {
+    colors: {
+      primary: 'blue'
+    },
     collapsible: {
       slots: {
         content: 'space-y-4'
