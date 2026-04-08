@@ -3,10 +3,20 @@ import { queryCollection } from '@nuxt/content/server'
 
 export default defineMcpTool({
   description: '按分类或文本筛选搜索自动表单组件',
+  annotations: {
+    readOnlyHint: true,
+    destructiveHint: false,
+    idempotentHint: true,
+    openWorldHint: false
+  },
   inputSchema: {
     category: z.string().optional().describe('按分类筛选组件'),
     search: z.string().optional().describe('用于按名称或描述筛选组件的搜索词')
   },
+  inputExamples: [
+    { category: 'field' },
+    { category: 'customization', search: 'custom' }
+  ],
   cache: '30m',
   async handler({ category, search }) {
     const event = useEvent()

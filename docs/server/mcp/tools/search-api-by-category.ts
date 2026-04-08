@@ -3,10 +3,20 @@ import { queryCollection } from '@nuxt/content/server'
 
 export default defineMcpTool({
   description: '按分类或文本筛选搜索 API 系统文档',
+  annotations: {
+    readOnlyHint: true,
+    destructiveHint: false,
+    idempotentHint: true,
+    openWorldHint: false
+  },
   inputSchema: {
     category: z.string().optional().describe('按分类筛选 API 文档'),
     search: z.string().optional().describe('用于按名称或描述筛选 API 文档的搜索词')
   },
+  inputExamples: [
+    { search: 'useApiFetch' },
+    { search: 'progress' }
+  ],
   cache: '30m',
   async handler({ category, search }) {
     const event = useEvent()
