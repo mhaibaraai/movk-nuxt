@@ -11,12 +11,6 @@ const teams = ref([{
     src: 'https://mhaibaraai.cn/logo.svg',
     alt: 'Movk'
   }
-}, {
-  label: 'Nuxt',
-  avatar: {
-    src: 'https://github.com/nuxt.png',
-    alt: 'Nuxt'
-  }
 }])
 const selectedTeam = ref(teams.value[0])
 
