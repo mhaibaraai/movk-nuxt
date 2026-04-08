@@ -94,6 +94,11 @@ export interface SearchFormProps<S extends z.ZodObject, T extends boolean = true
    * @defaultValue 'gap-4'
    */
   gap?: string
+  /**
+   * 按钮尺寸
+   * @defaultValue 'md'
+   */
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl'
 }
 
 export interface SearchFormActionSlots {
@@ -132,6 +137,7 @@ const {
   showResetButton = true,
   loading = false,
   state: _state,
+  size = 'md',
   ...restProps
 } = defineProps<SearchFormProps<S, T, N>>()
 
@@ -261,6 +267,7 @@ defineExpose({
                   icon="i-lucide-search"
                   :label="searchText"
                   :loading="loading"
+                  :size="size"
                   v-bind="searchButtonProps"
                 />
                 <UButton
@@ -269,6 +276,7 @@ defineExpose({
                   color="neutral"
                   variant="outline"
                   icon="i-lucide-rotate-ccw"
+                  :size="size"
                   v-bind="resetButtonProps"
                   @click="reset"
                 />

@@ -9,23 +9,35 @@ import { useDateFormatter } from '../composables/useDateFormatter'
 
 export type LabelFormat = 'iso' | 'formatted' | 'date' | 'timestamp' | 'unix'
 
-export interface DatePickerProps<R extends boolean, M extends boolean, P extends 'click' | 'hover' = 'click'> extends /** @vue-ignore */ OmitByKey<CalendarProps<R, M>, 'modelValue'>, DateFormatterOptions {
+export interface DatePickerProps<R extends boolean, M extends boolean, P extends 'click' | 'hover' = 'click'> extends /** @vue-ignore */ OmitByKey<CalendarProps<R, M>, 'modelValue' | 'placeholder'>, DateFormatterOptions {
+  /**
+   * 输入框占位文本
+   * @defaultValue '选择日期'
+   */
+  placeholder?: string
   /** 按钮组件属性 */
   buttonProps?: ButtonProps
   /** 弹出层组件属性 */
   popoverProps?: PopoverProps<P>
   /** 按钮上展示文本的格式 */
   labelFormat?: LabelFormat | ((formatter: ReturnType<typeof useDateFormatter>, modelValue: CalendarProps<R, M>['modelValue']) => string)
+  /**
+   * 组件尺寸
+   * @defaultValue 'md'
+   */
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl'
 }
 
 const LABEL_FORMATS: LabelFormat[] = ['iso', 'formatted', 'date', 'timestamp', 'unix']
 
 const {
-  buttonProps = { label: '选择日期' },
+  buttonProps,
   popoverProps,
   formatOptions = { dateStyle: 'medium' },
   locale,
-  labelFormat = 'formatted'
+  labelFormat = 'formatted',
+  size = 'md',
+  placeholder = '选择日期'
 } = defineProps<DatePickerProps<R, M, P>>()
 
 const emit = defineEmits<PopoverEmits & CalendarEmits<R, M>>()
@@ -50,17 +62,17 @@ const convertArray = (dates: DateValue[], format: LabelFormat) =>
   dates.map(d => convertSingle(d, format)).join(', ')
 
 const convertRange = (range: { start?: DateValue | null, end?: DateValue | null }, format: LabelFormat) => {
-  if (!range.start || !range.end) return buttonProps.label || ''
+  if (!range.start || !range.end) return placeholder || buttonProps?.label || ''
   return `${convertSingle(range.start, format)} - ${convertSingle(range.end, format)}`
 }
 
 const convertToLabel = (value: CalendarProps<R, M>['modelValue']): string => {
-  if (!value) return buttonProps.label || ''
+  if (!value) return placeholder || buttonProps?.label || ''
 
   const format = LABEL_FORMATS.includes(labelFormat as LabelFormat) ? labelFormat as LabelFormat : 'formatted'
 
   if (Array.isArray(value)) {
-    return value.length > 0 ? convertArray(value, format) : buttonProps.label || ''
+    return value.length > 0 ? convertArray(value, format) : placeholder || buttonProps?.label || ''
   }
 
   if (typeof value === 'object' && 'start' in value && 'end' in value) {
@@ -85,6 +97,7 @@ const formattedDate = computed<string>(() => {
           variant="subtle"
           icon="i-lucide-calendar"
           class="w-full"
+          :size="size"
           v-bind="buttonProps"
         >
           {{ formattedDate }}
@@ -107,6 +120,7 @@ const formattedDate = computed<string>(() => {
         v-model="modelValue"
         class="p-2"
         v-bind="$attrs"
+        :size="size"
         @update:placeholder="(e: any) => emit('update:placeholder', e)"
         @update:start-value="emit('update:startValue', $event)"
         @update:valid-model-value="emit('update:validModelValue', $event)"
