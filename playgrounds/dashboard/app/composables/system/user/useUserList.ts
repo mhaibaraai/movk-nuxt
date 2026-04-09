@@ -17,8 +17,7 @@ export function useUserList() {
     email: afz.string({ type: 'withFloatingLabel', controlProps: { label: '邮箱', icon: 'i-lucide-mail' } }),
     status: afz.enum(USER_STATUS, { controlProps: { placeholder: '状态' } }),
     deptId: afz.string({ type: 'withFloatingLabel', controlProps: { label: '部门ID', icon: 'i-lucide-building' } }),
-    createdAtStart: afz.calendarDate({ controlProps: { range: true, numberOfMonths: 2, labelFormat: 'iso', placeholder: '创建时间' } }).transform(date => formatter.convertToISO(date)),
-    sort: afz.array(afz.string())
+    createdAtStart: afz.calendarDate({ controlProps: { range: true, numberOfMonths: 2, labelFormat: 'iso', placeholder: '创建时间' } }).transform(date => formatter.convertToISO(date))
   })
 
   const { pending, refresh } = useApiFetch<PageResp<UserResp>>(

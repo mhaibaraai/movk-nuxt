@@ -5,7 +5,7 @@ const { searchSchema } = useUserList()
 <template>
   <div class="flex flex-col gap-4">
     <div class="">
-      <MSearchForm :cols="5" :schema="searchSchema" :global-meta="{ label: '', required: false }" />
+      <MSearchForm :cols="5" :schema="searchSchema" :global-meta="{ size: 'xs', label: '', required: false }" />
     </div>
   </div>
 </template>
