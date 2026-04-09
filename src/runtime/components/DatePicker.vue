@@ -4,7 +4,7 @@ import type { DateValue } from '@internationalized/date'
 import type { DateFormatterOptions } from '../composables/useDateFormatter'
 import type { ButtonProps, CalendarEmits, CalendarProps, PopoverEmits, PopoverProps } from '@nuxt/ui'
 import type { OmitByKey } from '@movk/core'
-import { computed } from 'vue'
+import { computed, useAttrs } from 'vue'
 import { useDateFormatter } from '../composables/useDateFormatter'
 
 export type LabelFormat = 'iso' | 'formatted' | 'date' | 'timestamp' | 'unix'
@@ -21,11 +21,6 @@ export interface DatePickerProps<R extends boolean, M extends boolean, P extends
   popoverProps?: PopoverProps<P>
   /** 按钮上展示文本的格式 */
   labelFormat?: LabelFormat | ((formatter: ReturnType<typeof useDateFormatter>, modelValue: CalendarProps<R, M>['modelValue']) => string)
-  /**
-   * 组件尺寸
-   * @defaultValue 'md'
-   */
-  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl'
 }
 
 const LABEL_FORMATS: LabelFormat[] = ['iso', 'formatted', 'date', 'timestamp', 'unix']
@@ -36,7 +31,6 @@ const {
   formatOptions = { dateStyle: 'medium' },
   locale,
   labelFormat = 'formatted',
-  size = 'md',
   placeholder = '选择日期'
 } = defineProps<DatePickerProps<R, M, P>>()
 
@@ -44,6 +38,7 @@ const emit = defineEmits<PopoverEmits & CalendarEmits<R, M>>()
 
 defineOptions({ inheritAttrs: false })
 
+const attrs = useAttrs()
 const modelValue = defineModel<CalendarProps<R, M>['modelValue']>()
 
 const formatter = useDateFormatter({ locale, formatOptions })
@@ -97,7 +92,7 @@ const formattedDate = computed<string>(() => {
           variant="subtle"
           icon="i-lucide-calendar"
           class="w-full"
-          :size="size"
+          :size="(attrs.size as ButtonProps['size'])"
           v-bind="buttonProps"
         >
           {{ formattedDate }}

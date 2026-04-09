@@ -3,6 +3,7 @@ import { UInput, UButton } from '#components'
 import type { OmitByKey } from '@movk/core'
 import type { ButtonProps, InputEmits, InputProps, InputSlots, InputValue } from '@nuxt/ui'
 import { useToggle } from '@vueuse/core'
+import { useAttrs } from 'vue'
 
 export interface WithPasswordToggleProps<T extends InputValue = InputValue> extends /** @vue-ignore */ OmitByKey<InputProps<T>, 'type' | 'modelValue'> {
   /** 切换按钮的自定义属性 */
@@ -15,6 +16,7 @@ const slots = defineSlots<OmitByKey<InputSlots, 'trailing'>>()
 
 defineOptions({ inheritAttrs: false })
 
+const attrs = useAttrs()
 const modelValue = defineModel<T>()
 
 const [value, toggle] = useToggle(false)
@@ -37,7 +39,7 @@ const [value, toggle] = useToggle(false)
       <UButton
         color="neutral"
         variant="link"
-        size="sm"
+        :size="(attrs.size as ButtonProps['size'])"
         :icon="value ? 'i-lucide-eye-off' : 'i-lucide-eye'"
         :aria-label="value ? 'Hide password' : 'Show password'"
         :aria-pressed="value"

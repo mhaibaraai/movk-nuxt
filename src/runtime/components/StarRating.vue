@@ -55,7 +55,7 @@ export interface StarRatingProps {
   color?: ButtonProps['color']
   /**
    * 星星大小
-   * @defaultValue 'sm'
+   * @defaultValue 'md'
    */
   size?: ButtonProps['size']
   /**
@@ -88,7 +88,7 @@ const props = withDefaults(defineProps<StarRatingProps>(), {
   filledIcon: 'i-lucide-star',
   halfIcon: 'i-lucide-star-half',
   color: 'warning',
-  size: 'sm',
+  size: 'md',
   allowHalf: false,
   clearable: false
 })
@@ -302,7 +302,7 @@ const badgeLabel = computed(() => `${props.modelValue}/${props.max}`)
         :label="badgeLabel"
         color="primary"
         variant="subtle"
-        size="xs"
+        :size="props.size"
       />
     </slot>
 

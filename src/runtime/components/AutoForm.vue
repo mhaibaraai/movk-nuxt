@@ -5,9 +5,9 @@ import type { ZodAutoFormFieldMeta } from '../types/zod'
 import type { AutoFormControls, AutoFormField, AutoFormSlotProps, DynamicFormSlots } from '../types/auto-form'
 import type { Ref } from 'vue'
 import { UForm } from '#components'
-import { computed, onMounted, ref, useTemplateRef } from 'vue'
+import { computed, onMounted, ref, unref, useTemplateRef } from 'vue'
+import { getPath, isFunction, setPath } from '@movk/core'
 import { useAutoFormProvider } from '../auto-form/provider'
-import { getPath, setPath } from '@movk/core'
 import { classifyFields } from '../auto-form/field-utils'
 import { extractPureSchema, introspectSchema } from '../auto-form/schema-introspector'
 import { useAutoForm } from '../composables/useAutoForm'
@@ -50,6 +50,7 @@ const {
   addButtonProps,
   state: _state,
   loadingAuto = true,
+  validateOn = [],
   ...restProps
 } = defineProps<AutoFormProps<S, T, N>>()
 
@@ -62,6 +63,12 @@ const state = ref(_state || {}) as Ref<AutoFormStateType>
 const formRef = useTemplateRef('formRef')
 const { DEFAULT_CONTROLS } = useAutoForm()
 const { resolveFieldProp } = useAutoFormProvider(state, _slots)
+
+const resolvedButtonSize = computed(() => {
+  const size = globalMeta?.size
+  if (size === undefined || isFunction(size)) return undefined
+  return unref(size)
+})
 
 const pureSchema = computed(() => schema ? extractPureSchema(schema) as S : schema)
 
@@ -167,6 +174,7 @@ defineExpose({
     :state="state"
     :schema="pureSchema"
     :loading-auto="loadingAuto"
+    :validate-on="validateOn"
     v-bind="restProps"
   >
     <template #default="{ errors, loading }">
@@ -200,6 +208,7 @@ defineExpose({
           label="提交"
           loading-auto
           block
+          :size="resolvedButtonSize"
           v-bind="submitButtonProps"
         />
       </slot>

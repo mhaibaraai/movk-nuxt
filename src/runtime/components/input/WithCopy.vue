@@ -3,6 +3,7 @@ import { UInput, UButton, UTooltip } from '#components'
 import { useClipboard } from '@vueuse/core'
 import { isEmpty, type OmitByKey } from '@movk/core'
 import type { ButtonProps, InputEmits, InputProps, InputSlots, InputValue, TooltipProps } from '@nuxt/ui'
+import { useAttrs } from 'vue'
 
 export interface WithCopyProps<T extends InputValue = InputValue> extends /** @vue-ignore */ OmitByKey<InputProps<T>, 'modelValue'> {
   /** 复制按钮的自定义属性 */
@@ -21,6 +22,7 @@ const slots = defineSlots<OmitByKey<InputSlots, 'trailing'>>()
 
 defineOptions({ inheritAttrs: false })
 
+const attrs = useAttrs()
 const modelValue = defineModel<T>()
 
 const { copy, copied } = useClipboard()
@@ -51,7 +53,7 @@ function handleCopy() {
         <UButton
           :color="copied ? 'success' : 'neutral'"
           variant="link"
-          size="sm"
+          :size="(attrs.size as ButtonProps['size'])"
           :icon="copied ? 'i-lucide-copy-check' : 'i-lucide-copy'"
           aria-label="Copy to clipboard"
           v-bind="props.buttonProps"

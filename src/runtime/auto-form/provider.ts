@@ -98,11 +98,13 @@ export function useAutoFormProvider<T extends Record<string, any>>(
     const context = createFieldContext(field, extraProps)
     const resolvedControlProps = resolveFieldProp(field, 'controlProps', undefined, extraProps) || {}
     const isReadonly = field.decorators?.isReadonly
+    const resolvedSize = resolveFieldProp(field, 'size', undefined, extraProps)
 
     const finalProps = defu(
       resolvedControlProps,
       isReadonly ? { disabled: true } : {},
-      controlMeta?.mapped?.controlProps || {}
+      controlMeta?.mapped?.controlProps || {},
+      resolvedSize !== undefined ? { size: resolvedSize } : {}
     )
 
     const slots = defu(

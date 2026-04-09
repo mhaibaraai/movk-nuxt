@@ -74,6 +74,6 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 <template>
   <Navbar />
   <Matrix :form="form" title="枚举字段类型" description="演示枚举字段，可以渲染为选择框、单选组等。">
-    <MAutoForm :schema="schema" :state="form" @submit="onSubmit" />
+    <MAutoForm :validate-on="['blur', 'change', 'input']" :schema="schema" :state="form" @submit="onSubmit" />
   </Matrix>
 </template>

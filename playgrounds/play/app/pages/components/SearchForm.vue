@@ -2,13 +2,13 @@
 const { afz } = useAutoForm()
 
 const schema = afz.object({
-  name: afz.string({ controlProps: { placeholder: '请输入姓名' } }).meta({ label: '姓名' }).optional(),
-  status: afz.enum(['启用', '禁用', '待审核']).meta({ label: '状态' }).optional(),
-  department: afz.string({ controlProps: { placeholder: '请输入部门' } }).meta({ label: '部门' }).optional(),
-  keyword: afz.string({ controlProps: { placeholder: '请输入关键词' } }).meta({ label: '关键词' }).optional(),
-  email: afz.email({ controlProps: { placeholder: '请输入邮箱' } }).meta({ label: '邮箱' }).optional(),
-  phone: afz.string({ controlProps: { placeholder: '请输入手机号' } }).meta({ label: '手机号' }).optional(),
-  role: afz.enum(['管理员', '编辑', '查看者']).meta({ label: '角色' }).optional()
+  name: afz.string({ controlProps: { placeholder: '请输入姓名' } }).meta({ label: '姓名' }),
+  status: afz.enum(['启用', '禁用', '待审核']).meta({ label: '状态' }),
+  department: afz.string({ controlProps: { placeholder: '请输入部门' } }).meta({ label: '部门' }),
+  keyword: afz.string({ controlProps: { placeholder: '请输入关键词' } }).meta({ label: '关键词' }),
+  email: afz.email({ controlProps: { placeholder: '请输入邮箱' } }).meta({ label: '邮箱' }),
+  phone: afz.string({ controlProps: { placeholder: '请输入手机号' } }).meta({ label: '手机号' }),
+  role: afz.enum(['管理员', '编辑', '查看者']).meta({ label: '角色' })
 })
 
 const searchParams = ref({})
@@ -47,6 +47,7 @@ function handleReset() {
       <MSearchForm
         v-model="searchParams"
         :schema="schema"
+        :global-meta="{ size: 'xs', required: false }"
         :cols="3"
         :loading="searchLoading"
         @search="handleSearch"
