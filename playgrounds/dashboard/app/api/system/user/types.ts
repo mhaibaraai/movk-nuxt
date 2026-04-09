@@ -9,4 +9,5 @@ export interface UserListQuery {
   createdAtEnd?: string
   page?: number
   size?: number
+  sort?: string
 }

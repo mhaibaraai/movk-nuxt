@@ -14,7 +14,7 @@ const halfRating = ref(2.5)
       </UFormField>
 
       <UFormField label="最大 10 星" hint="自定义最大评分">
-        <MStarRating v-model="ratingMax" :max-rating="10" />
+        <MStarRating v-model="ratingMax" size="xs" :max-rating="10" />
       </UFormField>
     </div>
 

@@ -26,7 +26,7 @@ const {
   addButtonProps: customAddButtonProps
 } = defineProps<AutoFormRendererArrayProps<S>>()
 
-const { createCollapsibleEnhancer, createFieldContext, createSlotResolver, createSlotProps } = useAutoFormInjector()
+const { createCollapsibleEnhancer, createFieldContext, createSlotResolver, createSlotProps, resolveFieldProp } = useAutoFormInjector()
 const context = createFieldContext(field)
 
 const slotResolver = computed(() => createSlotResolver(field, extraProps))
@@ -138,6 +138,7 @@ const DEFAULT_ADD_BUTTON_PROPS = {
 
 const addButtonProps = computed(() => ({
   ...DEFAULT_ADD_BUTTON_PROPS,
+  size: resolveFieldProp(field, 'size', 'sm', extraProps),
   ...customAddButtonProps
 }))
 </script>

@@ -1,4 +1,4 @@
-// 通用分页响应（Spring Data Page 结构）
+// 通用分页响应
 export interface PageResp<T> {
   content: T[]
   page: {

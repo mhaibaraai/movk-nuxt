@@ -27,11 +27,13 @@ defineOptions({ inheritAttrs: false })
 const attrs = useAttrs()
 const modelValue = defineModel<T>()
 
+const size = computed(() => (attrs.size as string) ?? 'md')
+
 /**
  * leading 区域宽度对应的 left 偏移，与 Nuxt UI Input compoundVariants 保持一致
  */
 const labelLeftClass = computed(() => {
-  const hasLeading = !!(attrs['leading-icon'] || attrs.avatar || attrs.leadingIcon || slots.leading)
+  const hasLeading = !!(attrs['leading-icon'] || attrs.avatar || attrs.leadingIcon || attrs.icon || slots.leading)
   if (!hasLeading) return 'left-0'
   // ps-N（input 文字起始）减去 label 自身 px-1.5(6px) + span px-1(4px) = N-10px，取最近标准值
   const offsetMap: Record<string, string> = {
@@ -41,7 +43,26 @@ const labelLeftClass = computed(() => {
     lg: 'left-8',
     xl: 'left-9'
   }
-  return offsetMap[(attrs.size as string) ?? 'md'] ?? 'left-7'
+  return offsetMap[size.value] ?? 'left-7'
+})
+
+/**
+ * 各 size 对应的完整 label 状态类
+ */
+const labelSizeClass = computed(() => {
+  const placeholderTextMap: Record<string, string> = {
+    xs: 'peer-placeholder-shown:text-xs',
+    sm: 'peer-placeholder-shown:text-xs',
+    md: 'peer-placeholder-shown:text-sm',
+    lg: 'peer-placeholder-shown:text-sm',
+    xl: 'peer-placeholder-shown:text-base'
+  }
+  return [
+    'peer-placeholder-shown:top-1/2',
+    'peer-placeholder-shown:-translate-y-1/2',
+    'peer-focus:translate-y-0',
+    placeholderTextMap[size.value] ?? 'peer-placeholder-shown:text-sm'
+  ]
 })
 
 function handleClear() {
@@ -65,8 +86,8 @@ function handleClear() {
 
     <template v-if="props.label" #default>
       <label
-        class="pointer-events-none absolute -top-2.5 text-highlighted text-xs font-medium px-1.5 transition-all peer-focus:-top-2.5 peer-focus:text-highlighted peer-focus:text-xs peer-focus:font-medium peer-placeholder-shown:text-sm peer-placeholder-shown:text-dimmed peer-placeholder-shown:top-1.5 peer-placeholder-shown:font-normal"
-        :class="[labelLeftClass, props.labelClass]"
+        class="pointer-events-none absolute -top-2.5 text-highlighted text-xs font-medium px-1.5 transition-all peer-focus:-top-2.5 peer-focus:text-highlighted peer-focus:text-xs peer-focus:font-medium peer-placeholder-shown:text-dimmed peer-placeholder-shown:font-normal"
+        :class="[labelLeftClass, labelSizeClass, props.labelClass]"
       >
         <span class="inline-flex bg-default px-1">{{ props.label }}</span>
       </label>
@@ -76,7 +97,7 @@ function handleClear() {
       <UButton
         color="neutral"
         variant="link"
-        size="sm"
+        :size="size"
         icon="i-lucide-circle-x"
         aria-label="Clear input"
         v-bind="props.clearButtonProps"

@@ -2,6 +2,7 @@
 import { UInput, UButton } from '#components'
 import { isEmpty, type OmitByKey } from '@movk/core'
 import type { ButtonProps, InputEmits, InputProps, InputSlots, InputValue } from '@nuxt/ui'
+import { useAttrs } from 'vue'
 
 export interface WithClearProps<T extends InputValue = InputValue> extends /** @vue-ignore */ OmitByKey<InputProps<T>, 'modelValue'> {
   /** 清除按钮的自定义属性 */
@@ -18,6 +19,7 @@ const slots = defineSlots<OmitByKey<InputSlots, 'trailing'>>()
 
 defineOptions({ inheritAttrs: false })
 
+const attrs = useAttrs()
 const modelValue = defineModel<InputProps<T>['modelValue']>()
 
 function handleClear() {
@@ -42,7 +44,7 @@ function handleClear() {
       <UButton
         color="neutral"
         variant="link"
-        size="sm"
+        :size="(attrs.size as ButtonProps['size'])"
         icon="i-lucide-circle-x"
         aria-label="Clear input"
         v-bind="props.buttonProps"

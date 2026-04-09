@@ -5,7 +5,8 @@ import type { ZodAutoFormFieldMeta } from '../types/zod'
 import type { AutoFormControls, DynamicFormSlots } from '../types/auto-form'
 import { UButton, UCollapsible, UForm } from '#components'
 import type { Ref } from 'vue'
-import { computed, ref, useTemplateRef, watch } from 'vue'
+import { computed, ref, unref, useTemplateRef, watch } from 'vue'
+import { isFunction } from '@movk/core'
 import { useAutoFormProvider } from '../auto-form/provider'
 import { extractPureSchema, introspectSchema } from '../auto-form/schema-introspector'
 import { useAutoForm } from '../composables/useAutoForm'
@@ -131,6 +132,7 @@ const {
   showSearchButton = true,
   showResetButton = true,
   loading = false,
+  validateOn = [],
   state: _state,
   ...restProps
 } = defineProps<SearchFormProps<S, T, N>>()
@@ -166,6 +168,12 @@ const expanded = ref(defaultExpanded)
 
 const { DEFAULT_CONTROLS } = useAutoForm()
 useAutoFormProvider(state, _slots)
+
+const resolvedButtonSize = computed(() => {
+  const size = globalMeta?.size
+  if (size === undefined || isFunction(size)) return undefined
+  return unref(size)
+})
 
 const showActionsCell = computed(() => showSearchButton || showResetButton || !!_slots.actions || !!_slots.extraActions)
 
@@ -230,6 +238,7 @@ defineExpose({
     ref="formRef"
     :state="state"
     :schema="pureSchema"
+    :validate-on="validateOn"
     v-bind="restProps"
     @submit="handleSearch"
   >
@@ -261,6 +270,7 @@ defineExpose({
                   icon="i-lucide-search"
                   :label="searchText"
                   :loading="loading"
+                  :size="resolvedButtonSize"
                   v-bind="searchButtonProps"
                 />
                 <UButton
@@ -269,6 +279,7 @@ defineExpose({
                   color="neutral"
                   variant="outline"
                   icon="i-lucide-rotate-ccw"
+                  :size="resolvedButtonSize"
                   v-bind="resetButtonProps"
                   @click="reset"
                 />
@@ -284,7 +295,7 @@ defineExpose({
             <UButton
               :icon="icon || appConfig.ui.icons.chevronDown"
               color="neutral"
-              size="xs"
+              :size="resolvedButtonSize ?? 'xs'"
               variant="ghost"
               :data-state="expanded ? 'open' : 'closed'"
               :label="expanded ? collapseText : expandText"
