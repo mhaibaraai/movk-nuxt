@@ -1,7 +1,7 @@
 ---
 seo:
   title: Nuxt 4 模块化工程套件 — Schema 驱动表单、API 集成、UI 组件
-  description: 基于 Zod v4 的 Schema 驱动自动表单生成、带认证与进度追踪的 API 集成系统、10+ 独立 UI 组件和通用 Composables 工具函数。
+  description: 基于 Zod v4 的 Schema 驱动自动表单生成、带认证与进度追踪的 API 集成系统、独立 UI 组件和通用 Composables 工具函数。
 ---
 
 ::u-page-hero{class="dark:bg-gradient-to-b from-neutral-900 to-neutral-950"}
@@ -21,7 +21,7 @@ Nuxt 4 模块化[工程套件]{.text-primary}
 ---
 transition: { duration: 0.6, delay: 0.3 }
 ---
-基于 Nuxt UI 和 Zod v4 构建，提供 Schema 驱动的自动表单生成、带认证与进度追踪的 API 集成系统、10+ 独立 UI 组件和通用 Composables。
+基于 Nuxt UI 和 Zod v4 构建，提供 Schema 驱动的自动表单生成、带认证与进度追踪的 API 集成系统、独立 UI 组件和通用 Composables。
 :::
 
 #links
@@ -92,7 +92,7 @@ transition: { duration: 0.6, delay: 0.5 }
   独立组件库
 
   #description
-  10+ 个高质量 UI 组件，无需依赖 AutoForm 即可独立使用。
+  高质量 UI 组件，无需依赖 AutoForm 即可独立使用。
   :::
 
   :::u-page-feature{icon="i-lucide-shield-check"}
