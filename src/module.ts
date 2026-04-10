@@ -69,14 +69,11 @@ export default defineNuxtModule<ModuleOptions>({
     }
   },
   moduleDependencies: {
-    '@vueuse/nuxt': { version: '>=14.2.1' },
     '@nuxt/image': { version: '>=2.0.0' },
     '@nuxt/ui': { version: '>=4.6.0' },
-    'nuxt-og-image': {
-      version: '>=6.3.1',
-      defaults: { zeroRuntime: true }
-    },
-    'nuxt-auth-utils': { version: '>=0.5.29' }
+    '@vueuse/nuxt': { version: '>=14.2.1' },
+    'nuxt-auth-utils': { version: '>=0.5.29' },
+    'nuxt-site-config': { version: '>=4.0.8' }
   },
   async setup(options, nuxt) {
     const { resolve } = createResolver(import.meta.url)

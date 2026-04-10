@@ -15,7 +15,6 @@ This file provides guidance for AI coding agents working on this repository.
 | `@vueuse/nuxt` | >=14.2.1 |
 | `@nuxt/image` | >=2.0.0 |
 | `@nuxt/ui` | >=4.6.0 |
-| `nuxt-og-image` | >=6.3.1（自动注入 `zeroRuntime: true`） |
 | `nuxt-auth-utils` | >=0.5.29 |
 
 ## 常用命令

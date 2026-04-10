@@ -52,7 +52,6 @@
       "matchPackageNames": [
         "nuxt-component-meta",
         "nuxt-llms",
-        "nuxt-og-image",
         "nuxt-auth-utils"
       ]
     },
