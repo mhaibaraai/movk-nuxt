@@ -115,7 +115,6 @@ const formattedDate = computed<string>(() => {
         v-model="modelValue"
         class="p-2"
         v-bind="$attrs"
-        :size="size"
         @update:placeholder="(e: any) => emit('update:placeholder', e)"
         @update:start-value="emit('update:startValue', $event)"
         @update:valid-model-value="emit('update:validModelValue', $event)"
