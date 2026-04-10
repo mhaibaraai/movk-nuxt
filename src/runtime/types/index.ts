@@ -1,4 +1,5 @@
 export * from './auto-form'
+export * from './data-table'
 export * from './zod.d'
 export * from './api'
 export * from './module'
