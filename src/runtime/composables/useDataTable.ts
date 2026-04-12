@@ -1,16 +1,15 @@
 import type { ComputedRef, MaybeRefOrGetter, Ref, ShallowRef } from 'vue'
 import type {
+  ColumnPinningState,
+  ColumnSizingState,
+  RowPinningState,
   SortingState,
   VisibilityState
 } from '@tanstack/vue-table'
 import type { DataTableColumn, DataTableExpose } from '../types/data-table'
 import type { UseApiFetchOptions } from '../types/api'
-import { computed, ref, shallowRef, toValue, unref, watch } from 'vue'
+import { computed, isRef, ref, shallowRef, toValue, unref, watch } from 'vue'
 import { useSelectedRows } from '../components/data-table/selection-helpers'
-
-// ---------------------------------------------------------------------------
-// Options
-// ---------------------------------------------------------------------------
 
 export interface UseDataTableOptions<T, TResponse = unknown> {
   /** API 路径（启用后自动用 useApiFetch 获取数据） */
@@ -40,10 +39,6 @@ export interface UseDataTableOptions<T, TResponse = unknown> {
   totalExtractor?: (response: TResponse) => number
 }
 
-// ---------------------------------------------------------------------------
-// Return type
-// ---------------------------------------------------------------------------
-
 export interface UseDataTableReturn<T> {
   /** 可直接 v-bind 到 MDataTable 的 props 对象 */
   tableProps: ComputedRef<{
@@ -55,6 +50,9 @@ export interface UseDataTableReturn<T> {
     pageSize: number
     sorting: SortingState
     columnVisibility: VisibilityState
+    columnPinning: ColumnPinningState
+    columnSizing: ColumnSizingState
+    rowPinning: RowPinningState
     selectedKeys: (string | number)[]
     rowKey: string
   }>
@@ -72,14 +70,13 @@ export interface UseDataTableReturn<T> {
 
   sorting: Ref<SortingState>
   columnVisibility: Ref<VisibilityState>
+  columnPinning: Ref<ColumnPinningState>
+  columnSizing: Ref<ColumnSizingState>
+  rowPinning: Ref<RowPinningState>
 
   refresh: () => Promise<void>
   tableRef: ShallowRef<DataTableExpose<T> | null>
 }
-
-// ---------------------------------------------------------------------------
-// Default extractors (PageResp<T> format)
-// ---------------------------------------------------------------------------
 
 function defaultDataExtractor<T>(resp: unknown): T[] {
   if (resp && typeof resp === 'object' && 'content' in resp) {
@@ -95,10 +92,6 @@ function defaultTotalExtractor(resp: unknown): number {
   }
   return 0
 }
-
-// ---------------------------------------------------------------------------
-// Composable
-// ---------------------------------------------------------------------------
 
 export function useDataTable<T extends Record<string, unknown>, TResponse = unknown>(
   options: UseDataTableOptions<T, TResponse>
@@ -118,6 +111,11 @@ export function useDataTable<T extends Record<string, unknown>, TResponse = unkn
 
   // Column visibility
   const columnVisibility = ref<VisibilityState>({})
+
+  // Pinning and sizing state
+  const columnPinning = ref<ColumnPinningState>({ left: [], right: [] })
+  const columnSizing = ref<ColumnSizingState>({})
+  const rowPinning = ref<RowPinningState>({ top: [], bottom: [] })
 
   // Selection state
   const selectedKeys = ref<(string | number)[]>([])
@@ -200,7 +198,7 @@ export function useDataTable<T extends Record<string, unknown>, TResponse = unkn
   const data = computed<T[]>(() => {
     if (options.api) return responseData.value
     const localData = options.data
-    return localData ? (typeof localData === 'object' && 'value' in localData ? localData.value : localData as T[]) : []
+    return localData ? (isRef(localData) ? localData.value : localData) : []
   })
 
   const total = computed(() => {
@@ -235,12 +233,18 @@ export function useDataTable<T extends Record<string, unknown>, TResponse = unkn
     'pageSize': pageSize.value,
     'sorting': sorting.value,
     'columnVisibility': columnVisibility.value,
+    'columnPinning': columnPinning.value,
+    'columnSizing': columnSizing.value,
+    'rowPinning': rowPinning.value,
     'selectedKeys': selectedKeys.value,
     'rowKey': rowKey as string,
     'onUpdate:page': (v: number) => { page.value = v },
     'onUpdate:pageSize': (v: number) => { pageSize.value = v },
     'onUpdate:sorting': (v: SortingState) => { sorting.value = v },
     'onUpdate:columnVisibility': (v: VisibilityState) => { columnVisibility.value = v },
+    'onUpdate:columnPinning': (v: ColumnPinningState) => { columnPinning.value = v },
+    'onUpdate:columnSizing': (v: ColumnSizingState) => { columnSizing.value = v },
+    'onUpdate:rowPinning': (v: RowPinningState) => { rowPinning.value = v },
     'onUpdate:selectedKeys': (v: (string | number)[]) => { selectedKeys.value = v }
   }))
 
@@ -256,6 +260,9 @@ export function useDataTable<T extends Record<string, unknown>, TResponse = unkn
     clearSelection,
     sorting,
     columnVisibility,
+    columnPinning,
+    columnSizing,
+    rowPinning,
     refresh,
     tableRef
   }

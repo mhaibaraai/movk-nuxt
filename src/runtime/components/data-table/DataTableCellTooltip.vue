@@ -1,14 +1,22 @@
 <script setup lang="ts">
 import { UTooltip } from '#components'
-import { onMounted, onUnmounted, ref, useTemplateRef, watch } from 'vue'
+import { nextTick, onMounted, onUnmounted, ref, useAttrs, useTemplateRef, watch } from 'vue'
 import { isOverflowing, isMultilineOverflowing } from '../../utils/data-table-utils'
 
+defineOptions({ inheritAttrs: false })
+
 const props = defineProps<{
+  /**
+   * 单元格显示文本，溢出时作为 Tooltip 内容
+   */
   text: string
-  /** true = 单行截断, number = 多行截断行数 */
+  /**
+   * true = 单行截断，number = 多行截断行数（-webkit-line-clamp）
+   */
   lines?: boolean | number
 }>()
 
+const attrs = useAttrs()
 const cellRef = useTemplateRef<HTMLDivElement>('cellRef')
 const overflowed = ref(false)
 
@@ -23,7 +31,8 @@ function checkOverflow() {
     : isOverflowing(cellRef.value)
 }
 
-onMounted(() => {
+onMounted(async () => {
+  await nextTick()
   checkOverflow()
   if (cellRef.value) {
     observer = new ResizeObserver(checkOverflow)
@@ -36,33 +45,24 @@ onUnmounted(() => {
 })
 
 watch(() => props.text, checkOverflow)
+
+const multilineStyle = isMultiline
+  ? { '-webkit-line-clamp': props.lines, 'display': '-webkit-box', '-webkit-box-orient': 'vertical', 'overflow': 'hidden', 'white-space': 'normal' }
+  : undefined
 </script>
 
 <template>
   <UTooltip
-    v-if="overflowed"
+    :disabled="!overflowed"
     :text="text"
+    v-bind="attrs"
   >
     <div
       ref="cellRef"
-      class="truncate"
-      :class="{
-        'line-clamp': isMultiline
-      }"
-      :style="isMultiline ? { '-webkit-line-clamp': lines, 'display': '-webkit-box', '-webkit-box-orient': 'vertical', 'overflow': 'hidden' } : undefined"
+      :class="isMultiline ? 'overflow-hidden' : 'truncate'"
+      :style="multilineStyle"
     >
       {{ text }}
     </div>
   </UTooltip>
-  <div
-    v-else
-    ref="cellRef"
-    class="truncate"
-    :class="{
-      'line-clamp': isMultiline
-    }"
-    :style="isMultiline ? { '-webkit-line-clamp': lines, 'display': '-webkit-box', '-webkit-box-orient': 'vertical', 'overflow': 'hidden' } : undefined"
-  >
-    {{ text }}
-  </div>
 </template>

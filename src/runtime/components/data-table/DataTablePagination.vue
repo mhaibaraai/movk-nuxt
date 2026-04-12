@@ -4,9 +4,19 @@ import { UPagination, USelect } from '#components'
 import { computed } from 'vue'
 
 const props = withDefaults(defineProps<{
+  /** 总数据条数 */
   total: number
+  /**
+   * 可选每页条数列表，长度大于 1 时显示切换器
+   * @defaultValue []
+   */
   pageSizes?: number[]
+  /** UPagination 额外 props 透传 */
   paginationProps?: DataTablePaginationPassthrough
+  /**
+   * 当前已选行数，用于分页栏显示
+   * @defaultValue 0
+   */
   selectedCount?: number
 }>(), {
   pageSizes: () => [],

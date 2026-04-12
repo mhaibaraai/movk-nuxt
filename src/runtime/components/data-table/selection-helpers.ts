@@ -1,10 +1,17 @@
 import type { ColumnDef, RowSelectionState } from '@tanstack/vue-table'
 import type { Ref } from 'vue'
-import { computed, watch } from 'vue'
+import { resolveComponent } from 'vue'
+import { computed, h, watch } from 'vue'
+import {
+  keysToRowSelection,
+  rowSelectionToKeys
+} from './selection-state'
 
-// ---------------------------------------------------------------------------
-// Create selection column definition
-// ---------------------------------------------------------------------------
+export {
+  areSameKeys,
+  keysToRowSelection,
+  rowSelectionToKeys
+} from './selection-state'
 
 export function createSelectionColumnDef<T>(
   id: string,
@@ -17,18 +24,16 @@ export function createSelectionColumnDef<T>(
     enableSorting: false,
     enableResizing: false,
     header: mode === 'multiple'
-      ? ({ table }) => ({
-          component: 'selection-header',
-          checked: table.getIsAllPageRowsSelected(),
-          indeterminate: table.getIsSomePageRowsSelected(),
-          onChange: () => table.toggleAllPageRowsSelected()
+      ? ({ table }) => h(resolveComponent('UCheckbox'), {
+          'modelValue': table.getIsAllPageRowsSelected(),
+          'indeterminate': table.getIsSomePageRowsSelected(),
+          'onUpdate:modelValue': () => table.toggleAllPageRowsSelected()
         })
       : '',
-    cell: ({ row, table }) => ({
-      component: mode === 'multiple' ? 'selection-cell' : 'selection-cell-radio',
-      checked: row.getIsSelected(),
-      disabled: !row.getCanSelect(),
-      onChange: () => {
+    cell: ({ row, table }) => h(resolveComponent('UCheckbox'), {
+      'modelValue': row.getIsSelected(),
+      'disabled': !row.getCanSelect(),
+      'onUpdate:modelValue': () => {
         if (mode === 'single') {
           if (row.getIsSelected()) {
             row.toggleSelected(false)
@@ -47,44 +52,17 @@ export function createSelectionColumnDef<T>(
       class: {
         td: 'text-center',
         th: 'text-center'
+      },
+      style: {
+        th: (ctx: { column: { getSize: () => number } }) => ({ width: `${ctx.column.getSize()}px` }),
+        td: (ctx: { column: { getSize: () => number } }) => ({ width: `${ctx.column.getSize()}px` })
       }
     }
   } as ColumnDef<T, unknown>
 }
 
-// ---------------------------------------------------------------------------
-// Key ↔ RowSelectionState mapping
-// ---------------------------------------------------------------------------
-
 /**
- * 从 selectedKeys 构建 RowSelectionState
- *
- * TanStack 的 RowSelectionState 是 { [rowId: string]: boolean }
- * 当使用 getRowId 时，rowId 就是我们的 key
- */
-export function keysToRowSelection(keys: (string | number)[]): RowSelectionState {
-  const state: RowSelectionState = {}
-  for (const key of keys) {
-    state[String(key)] = true
-  }
-  return state
-}
-
-/**
- * 从 RowSelectionState 提取 selectedKeys
- */
-export function rowSelectionToKeys(state: RowSelectionState): (string | number)[] {
-  return Object.entries(state)
-    .filter(([, selected]) => selected)
-    .map(([key]) => key)
-}
-
-// ---------------------------------------------------------------------------
-// Bidirectional sync composable
-// ---------------------------------------------------------------------------
-
-/**
- * 建立 selectedKeys ↔ RowSelectionState 双向同步
+ * 建立 selectedKeys <-> RowSelectionState 双向同步
  */
 export function useSyncSelection(
   selectedKeys: Ref<(string | number)[]>,
@@ -113,11 +91,33 @@ export function useSyncSelection(
 export function useSelectedRows<T extends Record<string, unknown>>(
   data: Ref<T[]> | (() => T[]),
   selectedKeys: Ref<(string | number)[]>,
-  rowKey: string
+  rowKey: string,
+  childrenKey?: string
 ) {
   return computed(() => {
     const rows = typeof data === 'function' ? data() : data.value
     const keySet = new Set(selectedKeys.value.map(String))
-    return rows.filter(row => keySet.has(String(row[rowKey])))
+
+    if (!childrenKey) {
+      return rows.filter(row => keySet.has(String(row[rowKey])))
+    }
+
+    const selectedRows: T[] = []
+
+    const walk = (items: T[]) => {
+      for (const item of items) {
+        if (keySet.has(String(item[rowKey]))) {
+          selectedRows.push(item)
+        }
+
+        const children = item[childrenKey]
+        if (Array.isArray(children) && children.length > 0) {
+          walk(children as T[])
+        }
+      }
+    }
+
+    walk(rows)
+    return selectedRows
   })
 }

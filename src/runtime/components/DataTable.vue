@@ -1,96 +1,50 @@
-<script setup lang="ts" generic="T extends Record<string, unknown>">
+<script setup lang="ts" generic="T extends TableData">
 import type {
+  ColumnPinningState,
   ColumnDef,
+  ColumnSizingState,
   ExpandedState,
+  RowPinningState,
   RowSelectionState,
   SortingState,
   VisibilityState
 } from '@tanstack/vue-table'
-import type {
-  DataTableAction,
-  DataTableColumn,
-  DataTablePaginationPassthrough
-} from '../types/data-table'
-import { UButton, UCheckbox, UDropdownMenu, UTable, UTooltip } from '#components'
-import { computed, h, ref, useTemplateRef, watch } from 'vue'
-import { isFunction } from '@movk/core'
-import { DATA_TABLE_DEFAULTS } from '../constants/data-table'
+import type { DataTableProps } from '../types/data-table'
+import { UTable } from '#components'
+import { computed, ref, useSlots, useTemplateRef, watch } from 'vue'
 import { resolveCallbackValue, collectTreeKeys } from '../utils/data-table-utils'
 import { resolveColumns } from './data-table/column-helpers'
 import {
+  areSameKeys,
   keysToRowSelection,
   rowSelectionToKeys,
   useSelectedRows
 } from './data-table/selection-helpers'
-import DataTableCellTooltip from './data-table/DataTableCellTooltip.vue'
 import DataTableColumnToggle from './data-table/DataTableColumnToggle.vue'
 import DataTablePagination from './data-table/DataTablePagination.vue'
+import type { TableData } from '@nuxt/ui'
 
-// ---------------------------------------------------------------------------
-// Props
-// ---------------------------------------------------------------------------
-
-const props = withDefaults(defineProps<{
-  data: T[]
-  columns: DataTableColumn<T>[]
-  rowKey?: keyof T & string
-  loading?: boolean
-  empty?: string
-  sticky?: boolean | 'header' | 'footer'
-  virtualize?: boolean | { estimateSize?: number, overscan?: number }
-  stripe?: boolean
-  bordered?: boolean
-  resizable?: boolean
-  emptyCell?: string | false
-  rowClass?: string | ((row: T) => string)
-  rowStyle?: string | Record<string, string> | ((row: T) => string | Record<string, string>)
-  childrenKey?: keyof T & string
-  defaultExpandAll?: boolean
-  indentSize?: number
-  total?: number
-  page?: number
-  pageSize?: number
-  pageSizes?: number[]
-  showPagination?: boolean
-  paginationProps?: DataTablePaginationPassthrough
-  columnToggle?: boolean
-  onRowClick?: (row: T, index: number) => void
-  onRowContextmenu?: (e: Event, row: T) => void
-  ui?: Record<string, unknown>
-}>(), {
-  rowKey: 'id' as never,
-  emptyCell: DATA_TABLE_DEFAULTS.emptyCell,
-  indentSize: DATA_TABLE_DEFAULTS.indentSize,
-  resizable: false,
-  stripe: false,
-  bordered: false,
-  defaultExpandAll: false,
-  columnToggle: false
+const props = withDefaults(defineProps<DataTableProps<T>>(), {
+  emptyCell: '-',
+  indentSize: '1rem',
+  stripeClass: 'even:bg-elevated/30'
 })
 
-// ---------------------------------------------------------------------------
-// v-model
-// ---------------------------------------------------------------------------
+// const selectedKeys = defineModel<(string | number)[]>('selectedKeys', { default: () => [] })
+// const sortingModel = defineModel<SortingState>('sorting', { default: () => [] })
+// const columnVisibilityModel = defineModel<VisibilityState>('columnVisibility', { default: () => ({}) })
+// const expandedModel = defineModel<ExpandedState>('expanded', { default: () => ({}) })
+// const columnPinningModel = defineModel<ColumnPinningState>('columnPinning', { default: () => ({ left: [], right: [] }) })
+// const columnSizingModel = defineModel<ColumnSizingState>('columnSizing', { default: () => ({}) })
+// const rowPinningModel = defineModel<RowPinningState>('rowPinning', { default: () => ({ top: [], bottom: [] }) })
+// const pageModel = defineModel<number>('page', { default: 1 })
+// const pageSizeModel = defineModel<number>('pageSize', { default: 20 })
 
-const selectedKeys = defineModel<(string | number)[]>('selectedKeys', { default: () => [] })
-const sortingModel = defineModel<SortingState>('sorting', { default: () => [] })
-const columnVisibilityModel = defineModel<VisibilityState>('columnVisibility', { default: () => ({}) })
-const expandedModel = defineModel<ExpandedState>('expanded', { default: () => ({}) })
-const pageModel = defineModel<number>('page', { default: 1 })
-const pageSizeModel = defineModel<number>('pageSize', { default: 20 })
-
-// ---------------------------------------------------------------------------
-// Emits
-// ---------------------------------------------------------------------------
-
-const emit = defineEmits<{
-  'selection-change': [rows: T[]]
-  'sort-change': [column: string, order: 'asc' | 'desc' | false]
-}>()
-
-// ---------------------------------------------------------------------------
-// Slots
-// ---------------------------------------------------------------------------
+// const emit = defineEmits<{
+//   'selection-change': [rows: T[]]
+//   'sort-change': [column: string, order: 'asc' | 'desc' | false]
+//   'load-more': []
+// }>()
 
 defineSlots<{
   'toolbar': (props: {
@@ -111,232 +65,365 @@ defineSlots<{
   [key: string]: unknown
 }>()
 
-// ---------------------------------------------------------------------------
-// Refs
-// ---------------------------------------------------------------------------
-
 const tableRef = useTemplateRef('tableRef')
+const slots = useSlots()
+// const infiniteLoadingTriggered = ref(false)
 
-// ---------------------------------------------------------------------------
-// Row selection state (internal TanStack format)
-// ---------------------------------------------------------------------------
+// const rowSelection = computed<RowSelectionState>(() =>
+//   keysToRowSelection(selectedKeys.value)
+// )
 
-const rowSelection = ref<RowSelectionState>(keysToRowSelection(selectedKeys.value))
+// const rowIdToKeyMap = computed(() => {
+//   const map = new Map<string, string | number>()
+//   const rowKey = props.rowKey as string
+//   const childrenKey = props.childrenKey as string | undefined
 
-let updatingSelection = false
-watch(selectedKeys, (keys) => {
-  if (updatingSelection) return
-  updatingSelection = true
-  rowSelection.value = keysToRowSelection(keys)
-  updatingSelection = false
-}, { deep: true })
+//   const walk = (rows: T[]) => {
+//     for (const row of rows) {
+//       const keyValue = row[rowKey]
+//       if (typeof keyValue === 'string' || typeof keyValue === 'number') {
+//         map.set(String(keyValue), keyValue)
+//       }
 
-watch(rowSelection, (state) => {
-  if (updatingSelection) return
-  updatingSelection = true
-  selectedKeys.value = rowSelectionToKeys(state)
-  updatingSelection = false
-}, { deep: true })
+//       if (!childrenKey) continue
+//       const children = row[childrenKey]
+//       if (Array.isArray(children) && children.length > 0) {
+//         walk(children as T[])
+//       }
+//     }
+//   }
 
-const selectedRowsComputed = useSelectedRows(
-  () => props.data,
-  selectedKeys,
-  props.rowKey as string
-)
+//   walk(props.data)
+//   return map
+// })
 
-watch(selectedKeys, () => {
-  emit('selection-change', selectedRowsComputed.value)
-})
+// function updateSelectedKeysFromRowSelection(state: RowSelectionState | undefined) {
+//   if (!state) return
 
-function clearSelection() {
-  selectedKeys.value = []
-  rowSelection.value = {}
-}
+//   const nextKeys = rowSelectionToKeys(state, rowIdToKeyMap.value)
+//   if (areSameKeys(nextKeys, selectedKeys.value)) return
 
-// ---------------------------------------------------------------------------
-// Sorting
-// ---------------------------------------------------------------------------
+//   selectedKeys.value = nextKeys
+// }
 
-watch(sortingModel, (state) => {
-  if (state.length > 0) {
-    const s = state[0]!
-    emit('sort-change', s.id, s.desc ? 'desc' : 'asc')
-  }
-  else {
-    emit('sort-change', '', false)
-  }
-})
+// const selectedRowsComputed = useSelectedRows(
+//   () => props.data,
+//   selectedKeys,
+//   props.rowKey as string,
+//   props.childrenKey as string | undefined
+// )
 
-// ---------------------------------------------------------------------------
-// Column resolution
-// ---------------------------------------------------------------------------
+// watch(selectedKeys, () => {
+//   emit('selection-change', selectedRowsComputed.value)
+// })
 
-const pageOffset = computed(() => {
-  const p = pageModel.value ?? 1
-  const s = pageSizeModel.value ?? 20
-  return (p - 1) * s
-})
+// function clearSelection() {
+//   selectedKeys.value = []
+// }
+
+// watch(sortingModel, (state) => {
+//   if (state.length > 0) {
+//     const s = state[0]!
+//     emit('sort-change', s.id, s.desc ? 'desc' : 'asc')
+//   }
+//   else {
+//     emit('sort-change', '', false)
+//   }
+// })
+
+// const pageOffset = computed(() => {
+//   const p = pageModel.value ?? 1
+//   const s = pageSizeModel.value ?? 20
+//   return (p - 1) * s
+// })
+
+// const effectiveTotal = computed(() => props.total ?? props.data.length)
+
+// const useClientPagination = computed(() => props.total == null && !props.infiniteScroll)
+
+// const tableData = computed(() => {
+//   if (!useClientPagination.value) return props.data
+
+//   const size = Math.max(1, pageSizeModel.value ?? 20)
+//   return props.data.slice(pageOffset.value, pageOffset.value + size)
+// })
 
 const resolved = computed(() =>
-  resolveColumns<T>(props.columns, {
-    rowKey: props.rowKey as string,
-    pageOffset: pageOffset.value,
+  resolveColumns<T>(props.columns || [], {
+    // pageOffset: pageOffset.value,
     emptyCell: props.emptyCell,
-    resizable: props.resizable
+    resizable: props.resizable,
+    pinable: props.pinable,
+    indentSize: props.indentSize,
+    tooltip: props.tooltip,
+    tooltipProps: props.tooltipProps,
+    sortable: props.sortable
   })
 )
 
-const columnDefs = computed(() => resolved.value.columnDefs)
+// const initialStatesApplied = ref(false)
 
-// Apply initial states on first resolve
-const initialStatesApplied = ref(false)
-watch(resolved, (r) => {
-  if (initialStatesApplied.value) return
-  initialStatesApplied.value = true
+// function isColumnPinningEmpty(state: ColumnPinningState | undefined): boolean {
+//   if (!state) return true
+//   return (state.left?.length ?? 0) === 0 && (state.right?.length ?? 0) === 0
+// }
 
-  // Merge initial pinning/visibility/sizing (don't overwrite user-provided v-model values)
-  if (Object.keys(columnVisibilityModel.value).length === 0) {
-    columnVisibilityModel.value = r.initialVisibility
-  }
-}, { immediate: true })
+// watch(resolved, (r) => {
+//   if (initialStatesApplied.value) return
+//   initialStatesApplied.value = true
 
-// ---------------------------------------------------------------------------
-// Column labels for toggle
-// ---------------------------------------------------------------------------
+//   if (Object.keys(columnVisibilityModel.value).length === 0) {
+//     columnVisibilityModel.value = { ...r.initialVisibility }
+//   }
 
-const columnLabels = computed(() => {
-  const labels: Record<string, string> = {}
-  for (const col of props.columns) {
-    if ('key' in col && !('type' in col) && !('children' in col)) {
-      labels[col.key as string] = col.label ?? (col.key as string)
-    }
-  }
-  return labels
-})
+//   if (isColumnPinningEmpty(columnPinningModel.value)) {
+//     columnPinningModel.value = {
+//       left: [...(r.initialPinning.left ?? [])],
+//       right: [...(r.initialPinning.right ?? [])]
+//     }
+//   }
 
-// ---------------------------------------------------------------------------
-// Tree support
-// ---------------------------------------------------------------------------
+//   if (Object.keys(columnSizingModel.value).length === 0) {
+//     columnSizingModel.value = { ...r.initialSizing }
+//   }
+// }, { immediate: true })
 
-const getSubRows = computed(() => {
-  if (!props.childrenKey) return undefined
-  const key = props.childrenKey as string
-  return (row: T) => (row[key] as T[] | undefined)
-})
+// const columnLabels = computed(() => {
+//   const labels: Record<string, string> = {}
+//   for (const col of props.columns) {
+//     if ('key' in col && !('type' in col) && !('children' in col)) {
+//       labels[col.key as string] = col.label ?? (col.key as string)
+//     }
+//   }
+//   return labels
+// })
 
-// Default expand all
-watch(() => props.data, (data) => {
-  if (props.defaultExpandAll && props.childrenKey && data.length > 0) {
-    const allKeys = collectTreeKeys(data, props.childrenKey as string, props.rowKey as string)
-    const expanded: Record<string, boolean> = {}
-    for (const key of allKeys) {
-      expanded[String(key)] = true
-    }
-    expandedModel.value = expanded
-  }
-}, { immediate: true })
+// const getSubRows = computed(() => {
+//   if (!props.childrenKey) return undefined
+//   const key = props.childrenKey as string
+//   return (row: T) => {
+//     const children = row[key]
+//     return Array.isArray(children) && children.length > 0
+//       ? (children as T[])
+//       : undefined
+//   }
+// })
 
-// ---------------------------------------------------------------------------
-// UTable meta (row class/style + stripe + border)
-// ---------------------------------------------------------------------------
+// const isTreeMode = computed(() => Boolean(props.childrenKey))
 
-const tableMeta = computed(() => ({
-  class: {
-    tr: (context: { original: T }) => {
-      const classes: string[] = []
-      if (props.stripe) classes.push('even:bg-elevated/30')
-      if (props.rowClass) {
-        const resolved = resolveCallbackValue(
-          props.rowClass,
-          context.original
-        )
-        if (resolved) classes.push(resolved as string)
-      }
-      return classes.join(' ')
-    }
-  }
-}))
+// const enableExpandedSlot = computed(() => Boolean(slots.expanded) && !isTreeMode.value)
 
-// ---------------------------------------------------------------------------
-// UTable props passthrough
-// ---------------------------------------------------------------------------
+// watch(() => props.data, (data) => {
+//   if (!props.preserveSelectionOnDataChange) {
+//     const validIds = new Set(rowIdToKeyMap.value.keys())
+//     const nextSelected = selectedKeys.value.filter(key => validIds.has(String(key)))
+
+//     if (!areSameKeys(nextSelected, selectedKeys.value)) {
+//       selectedKeys.value = nextSelected
+//     }
+//   }
+
+//   if (props.defaultExpandAll && props.childrenKey && data.length > 0) {
+//     const allKeys = collectTreeKeys(
+//       data,
+//       props.childrenKey as string,
+//       props.rowKey as string,
+//       true
+//     )
+//     const expanded: Record<string, boolean> = {}
+//     for (const key of allKeys) {
+//       expanded[String(key)] = true
+//     }
+//     expandedModel.value = expanded
+//   }
+// }, { immediate: true })
+
+// watch([effectiveTotal, pageSizeModel], () => {
+//   const currentPageSize = Math.max(1, pageSizeModel.value ?? 20)
+//   const maxPage = Math.max(1, Math.ceil(effectiveTotal.value / currentPageSize))
+//   if (pageModel.value > maxPage) {
+//     pageModel.value = maxPage
+//   }
+// }, { immediate: true })
+
+// watch(() => props.loading, (loading) => {
+//   if (!loading) {
+//     infiniteLoadingTriggered.value = false
+//   }
+// })
+
+// function handleTableScroll(event: Event) {
+//   if (!props.infiniteScroll || !props.canLoadMore || props.loading || infiniteLoadingTriggered.value) {
+//     return
+//   }
+
+//   const target = event.target
+//   if (!(target instanceof HTMLElement)) return
+
+//   const distanceToBottom = target.scrollHeight - target.scrollTop - target.clientHeight
+//   if (distanceToBottom > props.infiniteScrollDistance) return
+
+//   infiniteLoadingTriggered.value = true
+//   emit('load-more')
+// }
+
+// function hasSubRows(row: T): boolean {
+//   if (!props.childrenKey) return false
+//   const children = row[props.childrenKey as string]
+//   return Array.isArray(children) && children.length > 0
+// }
+
+// function toggleExpandedByRow(row: T) {
+//   if (!hasSubRows(row)) return
+
+//   const rowIdValue = row[props.rowKey as string]
+//   if (rowIdValue == null) return
+
+//   const rowId = String(rowIdValue)
+//   const current = expandedModel.value
+
+//   if (current === true) return
+
+//   const nextExpanded = typeof current === 'object' && current
+//     ? { ...(current as Record<string, boolean>) }
+//     : {}
+
+//   nextExpanded[rowId] = !nextExpanded[rowId]
+//   expandedModel.value = nextExpanded
+// }
+
+// const forwardedSlotNames = computed(() => {
+//   return Object.keys(slots).filter(name => /-(?:cell|header|footer)$/.test(name))
+// })
+
+// const tableMeta = computed(() => ({
+//   class: {
+//     tr: (context: { original: T }) => {
+//       const classes: string[] = []
+//       if (props.stripe) classes.push(props.stripeClass)
+//       if (props.rowClass) {
+//         const resolved = resolveCallbackValue(
+//           props.rowClass,
+//           context.original
+//         )
+//         if (resolved) classes.push(resolved as string)
+//       }
+//       return classes.join(' ')
+//     }
+//   },
+//   ...(props.rowStyle && {
+//     style: {
+//       tr: (context: { original: T }) =>
+//         resolveCallbackValue(props.rowStyle!, context.original)
+//     }
+//   })
+// }))
+
+// const tableContainerStyle = computed(() => {
+//   if (!props.infiniteScroll) return undefined
+
+//   return {
+//     maxHeight: props.infiniteScrollHeight,
+//     overflowY: 'auto'
+//   }
+// })
 
 const uTableProps = computed(() => ({
-  'data': props.data,
-  'columns': columnDefs.value as ColumnDef<T, unknown>[],
-  'loading': props.loading,
-  'empty': props.empty,
-  'sticky': props.sticky,
-  'virtualize': props.virtualize,
-  'meta': tableMeta.value,
-  'ui': props.ui,
-  'sorting': sortingModel.value,
-  'onUpdate:sorting': (v: SortingState | undefined) => { if (v) sortingModel.value = v },
-  'columnVisibility': columnVisibilityModel.value,
-  'onUpdate:columnVisibility': (v: VisibilityState | undefined) => { if (v) columnVisibilityModel.value = v },
-  'columnPinning': resolved.value.initialPinning,
-  'columnSizing': resolved.value.initialSizing,
-  'rowSelection': rowSelection.value,
-  'onUpdate:rowSelection': (v: RowSelectionState | undefined) => { if (v) rowSelection.value = v },
-  'expanded': expandedModel.value,
-  'onUpdate:expanded': (v: ExpandedState | undefined) => { if (v) expandedModel.value = v },
-  ...(getSubRows.value && { getSubRows: getSubRows.value }),
-  ...(props.rowKey && {
-    getRowId: (row: T) => String(row[props.rowKey!])
-  }),
-  ...(props.onRowClick && {
-    onSelect: (_e: Event, row: { original: T }) => {
-      const idx = props.data.indexOf(row.original)
-      props.onRowClick!(row.original, idx)
-    }
-  }),
-  ...(props.onRowContextmenu && {
-    onContextmenu: (e: Event, row: { original: T }) => {
-      props.onRowContextmenu!(e, row.original)
-    }
-  }),
-  ...(props.resizable && {
-    columnSizingOptions: {
-      enableColumnResizing: true
-    }
-  }),
-  'sortingOptions': {
-    enableSorting: true
-  }
+  ...props,
+  columns: resolved.value.columnDefs
+  // 'data': tableData.value,
+  // 'loading': props.loading,
+  // 'empty': props.empty,
+  // 'sticky': props.sticky,
+  // 'virtualize': props.virtualize,
+  // 'meta': tableMeta.value,
+  // 'ui': props.fixedLayout
+  //   ? { ...props.ui, base: ['table-fixed w-fit', (props.ui as Record<string, unknown>)?.base].filter(Boolean).join(' ') }
+  //   : props.ui,
+  // 'sorting': sortingModel.value,
+  // 'onUpdate:sorting': (v: SortingState | undefined) => { if (v) sortingModel.value = v },
+  // 'columnVisibility': columnVisibilityModel.value,
+  // 'onUpdate:columnVisibility': (v: VisibilityState | undefined) => { if (v) columnVisibilityModel.value = v },
+  // 'columnPinning': columnPinningModel.value,
+  // 'onUpdate:columnPinning': (v: ColumnPinningState | undefined) => {
+  //   if (!v) return
+  //   columnPinningModel.value = {
+  //     left: [...(v.left ?? [])],
+  //     right: [...(v.right ?? [])]
+  //   }
+  // },
+  // 'columnSizing': columnSizingModel.value,
+  // 'onUpdate:columnSizing': (v: ColumnSizingState | undefined) => {
+  //   if (!v) return
+  //   columnSizingModel.value = { ...v }
+  // },
+  // 'rowSelection': rowSelection.value,
+  // 'onUpdate:rowSelection': updateSelectedKeysFromRowSelection,
+  // 'expanded': expandedModel.value,
+  // 'onUpdate:expanded': (v: ExpandedState | undefined) => { if (v) expandedModel.value = v },
+  // 'rowPinning': rowPinningModel.value,
+  // 'onUpdate:rowPinning': (v: RowPinningState | undefined) => {
+  //   if (!v) return
+  //   rowPinningModel.value = {
+  //     top: [...(v.top ?? [])],
+  //     bottom: [...(v.bottom ?? [])]
+  //   }
+  // },
+  // ...(getSubRows.value && { getSubRows: getSubRows.value }),
+  // ...(props.rowKey && {
+  //   getRowId: (row: T) => String(row[props.rowKey!])
+  // }),
+  // ...((props.onRowClick || props.expandOnRowClick) && {
+  //   onSelect: (_e: Event, row: { original: T }) => {
+  //     const idx = props.data.indexOf(row.original)
+  //     props.onRowClick?.(row.original, idx)
+
+  //     if (props.expandOnRowClick) {
+  //       toggleExpandedByRow(row.original)
+  //     }
+  //   }
+  // }),
+  // ...(props.onRowContextmenu && {
+  //   onContextmenu: (e: Event, row: { original: T }) => {
+  //     props.onRowContextmenu!(e, row.original)
+  //   }
+  // }),
+  // ...(props.resizable && {
+  //   columnSizingOptions: {
+  //     enableColumnResizing: true
+  //   }
+  // }),
+  // 'sortingOptions': {
+  //   enableSorting: true
+  // }
 }))
 
-// ---------------------------------------------------------------------------
-// Pagination
-// ---------------------------------------------------------------------------
+// const showPagination = computed(() => {
+//   if (props.infiniteScroll) return false
+//   if (props.showPagination != null) return props.showPagination
+//   return effectiveTotal.value > Math.max(1, pageSizeModel.value ?? 20)
+// })
 
-const showPagination = computed(() => {
-  if (props.showPagination != null) return props.showPagination
-  return (props.total ?? 0) > 0
-})
-
-// ---------------------------------------------------------------------------
-// Expose
-// ---------------------------------------------------------------------------
-
-defineExpose({
-  get tableRef() {
-    return tableRef.value?.tableRef ?? null
-  },
-  get tableApi() {
-    return tableRef.value?.tableApi ?? null
-  },
-  clearSelection
-})
+// defineExpose({
+//   get tableRef() {
+//     return tableRef.value?.tableRef ?? null
+//   },
+//   get tableApi() {
+//     return tableRef.value?.tableApi ?? null
+//   },
+//   clearSelection
+// })
 </script>
 
 <template>
   <div
     class="data-table"
     :class="{
-      'data-table--bordered': bordered
+      // 'data-table--bordered': bordered
+      // 'data-table--tree': isTreeMode
     }"
   >
-    <div
+    <!-- <div
       v-if="$slots.toolbar || columnToggle"
       class="flex items-center justify-between mb-3"
     >
@@ -355,15 +442,21 @@ defineExpose({
           :column-labels="columnLabels"
         />
       </div>
-    </div>
+    </div> -->
 
+    <!-- <div :style="tableContainerStyle" @scroll.passive="handleTableScroll"> -->
     <UTable
       ref="tableRef"
+      :columns="[
+        { cell(props) {
+
+        } }
+      ]"
       v-bind="uTableProps"
     >
-      <template v-if="$slots.expanded" #expanded="slotProps">
+      <!-- <template v-if="enableExpandedSlot" #expanded="slotProps">
         <slot name="expanded" :row="slotProps.row.original as T" />
-      </template>
+      </template> -->
 
       <template v-if="$slots.empty" #empty>
         <slot name="empty" />
@@ -385,23 +478,23 @@ defineExpose({
         <slot name="body-bottom" />
       </template>
 
-      <!-- Forward dynamic column slots -->
-      <template
-        v-for="(_, slotName) in $slots"
+      <!-- <template
+        v-for="slotName in forwardedSlotNames"
         :key="slotName"
         #[slotName]="slotProps"
       >
         <slot :name="slotName" v-bind="slotProps" />
-      </template>
+      </template> -->
     </UTable>
+    <!-- </div> -->
 
-    <slot name="table-footer" :data="data" />
+    <!-- <slot name="table-footer" :data="data" /> -->
 
-    <DataTablePagination
+    <!-- <DataTablePagination
       v-if="showPagination"
       v-model:page="pageModel"
       v-model:page-size="pageSizeModel"
-      :total="total ?? 0"
+      :total="effectiveTotal"
       :page-sizes="pageSizes"
       :pagination-props="paginationProps"
       :selected-count="selectedKeys.length"
@@ -412,6 +505,6 @@ defineExpose({
       <template v-if="$slots['pagination-right']" #right="paginationSlotProps">
         <slot name="pagination-right" v-bind="paginationSlotProps" />
       </template>
-    </DataTablePagination>
+    </DataTablePagination> -->
   </div>
 </template>

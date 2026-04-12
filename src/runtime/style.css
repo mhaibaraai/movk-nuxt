@@ -7,3 +7,8 @@
 @theme static {
   --font-sans: 'Alibaba PuHuiTi', sans-serif;
 }
+
+/* DataTable Tree mode hidden expanded empty row */
+.data-table--tree [data-slot="tbody"] tr[data-slot="tr"]:not([data-expanded]) {
+  display: none;
+}
