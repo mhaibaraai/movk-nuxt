@@ -21,5 +21,6 @@ export const DATA_TABLE_DEFAULTS = {
   actionConfirmIcon: 'i-lucide-circle-question-mark',
   cancelButton: '取消',
   confirmButton: '确定',
-  indentSize: '1rem'
+  indentSize: '1rem',
+  stripeClass: 'even:bg-elevated/30'
 } as const

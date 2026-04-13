@@ -21,7 +21,7 @@ import { h, ref, resolveComponent } from 'vue'
 import { isFunction, isString } from '@movk/core'
 // import { isDataColumn, isGroupColumn } from '../../types/data-table'
 import { DATA_TABLE_DEFAULTS } from '../../constants/data-table'
-import { resolveCallbackValue, resolvePresetSize } from '../../utils/data-table-utils'
+import { resolveCallbackValue, resolvePresetSize, resolveTemplate } from '../../utils/data-table-utils'
 import DataTableCellTooltip from './DataTableCellTooltip.vue'
 import { createSelectionColumnDef } from './selection-helpers'
 
@@ -122,11 +122,11 @@ function resolveDataColumn<T>(
         const emptyText = col.emptyCell !== undefined ? col.emptyCell : options.emptyCell
 
         if ((raw == null || raw === '') && emptyText !== false) {
-          return emptyText ?? null
+          return emptyText != null ? resolveTemplate(emptyText, ctx) : null
         }
 
-        const formatted = col.formatter
-          ? col.formatter(raw as T[keyof T & string], ctx.row.original, ctx.row.index)
+        const formatted = col.cell
+          ? resolveTemplate(col.cell, ctx)
           : String(raw ?? '')
 
         if (!effectiveTooltip) return formatted
@@ -138,7 +138,7 @@ function resolveDataColumn<T>(
         }
 
         return h(DataTableCellTooltip, {
-          text: formatted,
+          text: String(formatted ?? ''),
           lines,
           ...effectiveTooltipProps
         })

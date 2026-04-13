@@ -80,8 +80,8 @@ const treeData: TableTreeNode[] = [
 
 const basicColumns: DataTableColumn<TableUser>[] = [
   { accessorKey: 'name', header: '姓名', fixed: 'left', size: 100 },
-  { accessorKey: 'email', header: '邮箱', fixed: 'left' },
-  { accessorKey: 'department', header: '部门', size: 50 },
+  { accessorKey: 'email', header: '邮箱', tooltip: 2, maxSize: 100 },
+  { accessorKey: 'department', header: '部门', minSize: 100 },
   { accessorKey: 'role', header: '职位', size: 140 }
 ]
 

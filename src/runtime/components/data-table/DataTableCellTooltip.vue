@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { UTooltip } from '#components'
-import { nextTick, onMounted, onUnmounted, ref, useAttrs, useTemplateRef, watch } from 'vue'
-import { isOverflowing, isMultilineOverflowing } from '../../utils/data-table-utils'
+import { computed, useAttrs, useTemplateRef } from 'vue'
+import { useOverflowDetection } from './useOverflowDetection'
 
 defineOptions({ inheritAttrs: false })
 
@@ -17,38 +17,22 @@ const props = defineProps<{
 }>()
 
 const attrs = useAttrs()
-const cellRef = useTemplateRef<HTMLDivElement>('cellRef')
-const overflowed = ref(false)
+const cellRef = useTemplateRef('cellRef')
+const { overflowed } = useOverflowDetection(cellRef)
 
-let observer: ResizeObserver | null = null
-
-const isMultiline = typeof props.lines === 'number' && props.lines > 1
-
-function checkOverflow() {
-  if (!cellRef.value) return
-  overflowed.value = isMultiline
-    ? isMultilineOverflowing(cellRef.value)
-    : isOverflowing(cellRef.value)
-}
-
-onMounted(async () => {
-  await nextTick()
-  checkOverflow()
-  if (cellRef.value) {
-    observer = new ResizeObserver(checkOverflow)
-    observer.observe(cellRef.value)
-  }
-})
-
-onUnmounted(() => {
-  observer?.disconnect()
-})
-
-watch(() => props.text, checkOverflow)
-
-const multilineStyle = isMultiline
-  ? { '-webkit-line-clamp': props.lines, 'display': '-webkit-box', '-webkit-box-orient': 'vertical', 'overflow': 'hidden', 'white-space': 'normal' }
-  : undefined
+const isMultiline = computed(() => typeof props.lines === 'number' && props.lines > 1)
+const multilineStyle = computed(() =>
+  isMultiline.value
+    ? {
+        '-webkit-line-clamp': props.lines,
+        'display': '-webkit-box',
+        '-webkit-box-orient': 'vertical',
+        'overflow': 'hidden',
+        'white-space': 'normal',
+        'word-break': 'break-all'
+      }
+    : undefined
+)
 </script>
 
 <template>

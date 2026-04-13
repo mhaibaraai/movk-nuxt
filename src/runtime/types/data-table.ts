@@ -1,8 +1,17 @@
 import type { ButtonProps, IconProps, PopoverProps, TableColumn, TableData, TableProps, TooltipProps } from '@nuxt/ui'
 import type { OmitByKey, Suggest } from '@movk/core'
-import type { ColumnDef, ColumnPinningState, ColumnSizingState, RowPinningState, VisibilityState } from '@tanstack/vue-table'
+import type { CellContext, ColumnDef, ColumnDefTemplate, ColumnPinningState, ColumnSizingState, RowPinningState, TableMeta, VisibilityState } from '@tanstack/vue-table'
 
 export type DataTableSizePreset = 'xs' | 'sm' | 'md' | 'lg' | 'xl'
+
+export interface DataTableBorderedOptions {
+  /** 边框颜色，支持 CSS 颜色值或 CSS var，默认 var(--ui-border) */
+  color?: string
+  /** 边框宽度，默认 '1px' */
+  width?: string
+  /** 边框样式，默认 'solid' */
+  style?: 'solid' | 'dashed' | 'dotted' | 'double'
+}
 
 export interface DataTableBaseColumn {
   /** 列头文本 */
@@ -33,17 +42,16 @@ export interface DataTableDataColumn<T> extends DataTableBaseColumn {
   pinable?: boolean
   /** 是否可拖拽调整宽度，默认跟随全局 resizable */
   resizable?: boolean
-  /**
-   * 空值占位文本，false 禁用
-   * @defaultValue DATA_TABLE_DEFAULTS.emptyCell
-   */
+  /** 空值占位文本，false 禁用 */
   emptyCell?: string | false
   /** Tooltip，true = 单行截断，number = 多行截断行数 */
   tooltip?: boolean | number
   /** UTooltip 额外 props 透传（tooltip 启用时生效） */
   tooltipProps?: TooltipProps
-  /** 单元格值格式化 */
+  /** 单元格自定义渲染，string 直接显示，函数接收 CellContext */
   cell?: TableColumn<T>['cell']
+  /** TanStack ColumnDef 透传（逃生舱） */
+  _raw?: Partial<ColumnDef<T, unknown>>
 }
 
 export interface DataTableGroupColumn<T> extends DataTableBaseColumn {
@@ -62,7 +70,7 @@ export interface DataTableSelectionColumn {
   fixed?: 'left' | 'right'
   /**
    * 列宽
-   * @defaultValue DATA_TABLE_DEFAULTS.selectionSize
+   * @defaultValue 48
    */
   size?: number
 }
@@ -72,13 +80,13 @@ export interface DataTableIndexColumn {
   type: 'index'
   /**
    * 表头文本
-   * @defaultValue DATA_TABLE_DEFAULTS.indexLabel
+   * @defaultValue '#'
    */
   header?: string
   fixed?: 'left' | 'right'
   /**
    * 列宽
-   * @defaultValue DATA_TABLE_DEFAULTS.indexSize
+   * @defaultValue 60
    */
   size?: number
 }
@@ -89,7 +97,7 @@ export interface DataTableExpandColumn {
   fixed?: 'left' | 'right'
   /**
    * 列宽
-   * @defaultValue DATA_TABLE_DEFAULTS.expandSize
+   * @defaultValue 48
    */
   size?: number
 }
@@ -100,7 +108,7 @@ export interface DataTableRowPinningColumn {
   fixed?: 'left' | 'right'
   /**
    * 列宽
-   * @defaultValue DATA_TABLE_DEFAULTS.rowPinningSize
+   * @defaultValue 48
    */
   size?: number
   /**
@@ -115,7 +123,7 @@ export interface DataTableActionsColumn<T> {
   type: 'actions'
   /**
    * 表头文本
-   * @defaultValue DATA_TABLE_DEFAULTS.actionsLabel
+   * @defaultValue '操作'
    */
   header?: string
   fixed?: 'left' | 'right'
@@ -138,27 +146,27 @@ export interface DataTableAction<T> extends OmitByKey<ButtonProps, 'onClick' | '
   popoverProps?: PopoverProps & {
     /**
      * 弹窗标题
-     * @defaultValue DATA_TABLE_DEFAULTS.actionConfirmTitle
+     * @defaultValue '确认操作'
      */
     title?: string
     /**
      * 弹窗描述
-     * @defaultValue DATA_TABLE_DEFAULTS.actionConfirmDescription
+     * @defaultValue '请确认是否执行此操作'
      */
     description?: string
     /**
      * 弹窗图标
-     * @defaultValue DATA_TABLE_DEFAULTS.actionConfirmIcon
+     * @defaultValue 'i-lucide-circle-question-mark'
      */
     icon?: IconProps['name']
     /**
      * 取消按钮
-     * @defaultValue DATA_TABLE_DEFAULTS.cancelButton
+     * @defaultValue '取消'
      */
     cancelButton?: string | ButtonProps
     /**
      * 确认按钮
-     * @defaultValue DATA_TABLE_DEFAULTS.confirmButton
+     * @defaultValue '确定'
      */
     confirmButton?: string | ButtonProps
   }
@@ -176,27 +184,22 @@ export type DataTableColumn<T>
 
 type DataTableInheritedTableProps<T extends TableData> = OmitByKey<
   TableProps<T>,
-  'columns'
+  'columns' | 'meta' | 'ui'
 >
 
-export interface DataTableProps<T extends TableData> extends DataTableInheritedTableProps<T> {
+export interface DataTableProps<T extends TableData> extends /* @vue-ignore */ DataTableInheritedTableProps<T> {
   /** 列定义 */
   columns?: DataTableColumn<T>[]
   /**
-   * 斑马纹
+   * 是否为斑马纹、（默认 'even:bg-elevated/30'）
    * @defaultValue false
    */
   stripe?: boolean
   /**
-   * 斑马纹 class（stripe = true 时生效）
-   * @defaultValue 'even:bg-elevated/30'
-   */
-  stripeClass?: string
-  /**
-   * 显示边框
+   * 是否带有纵向边框，传 true 使用默认样式，传对象可定制颜色/粗细/线型
    * @defaultValue false
    */
-  bordered?: boolean
+  bordered?: boolean | DataTableBorderedOptions
   /**
    * 固定表格布局（table-layout: fixed），启用后列宽严格按 size 分配
    * @defaultValue false
@@ -221,11 +224,13 @@ export interface DataTableProps<T extends TableData> extends DataTableInheritedT
    * 空值占位符，null/undefined/'' 时显示
    * @defaultValue '-'
    */
-  emptyCell?: string | false
+  emptyCell?: false | string | ColumnDefTemplate<CellContext<T, unknown>>
+  /** 表格元数据 */
+  meta?: TableMeta<T>
   /** 行条件 class */
-  rowClass?: string | ((row: T) => string)
+  rowClass?: NonNullable<TableMeta<T>['class']>['tr']
   /** 行条件 style */
-  rowStyle?: string | Record<string, string> | ((row: T) => string | Record<string, string>)
+  rowStyle?: NonNullable<TableMeta<T>['style']>['tr']
   /** 子行字段名，设置后启用树形模式 */
   childrenKey?: Suggest<keyof T & string>
   /**
@@ -306,6 +311,9 @@ export interface DataTableProps<T extends TableData> extends DataTableInheritedT
   // onRowClick?: (row: T, index: number) => void
   // /** 行右键回调 */
   // onRowContextmenu?: (e: Event, row: T) => void
+
+  /** 表格 UI 配置 */
+  ui?: TableProps<T>['ui']
 }
 
 // export function isSpecialColumn<T>(col: DataTableColumn<T>): col is
@@ -337,7 +345,7 @@ export interface DataTableExpose<T = unknown> {
 }
 
 export function isDataColumn<T>(col: DataTableColumn<T>): col is DataTableDataColumn<T> {
-  return 'key' in col && !('children' in col) && !('type' in col)
+  return 'accessorKey' in col && !('children' in col) && !('type' in col)
 }
 
 export function isGroupColumn<T>(col: DataTableColumn<T>): col is DataTableGroupColumn<T> {

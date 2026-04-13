@@ -7,11 +7,12 @@ import type {
   RowPinningState,
   RowSelectionState,
   SortingState,
-  VisibilityState
+  VisibilityState,
+  TableMeta
 } from '@tanstack/vue-table'
 import type { DataTableProps } from '../types/data-table'
 import { UTable } from '#components'
-import { computed, ref, useSlots, useTemplateRef, watch } from 'vue'
+import { computed, ref, useAttrs, useSlots, useTemplateRef, watch } from 'vue'
 import { resolveCallbackValue, collectTreeKeys } from '../utils/data-table-utils'
 import { resolveColumns } from './data-table/column-helpers'
 import {
@@ -26,8 +27,7 @@ import type { TableData } from '@nuxt/ui'
 
 const props = withDefaults(defineProps<DataTableProps<T>>(), {
   emptyCell: '-',
-  indentSize: '1rem',
-  stripeClass: 'even:bg-elevated/30'
+  indentSize: '1rem'
 })
 
 // const selectedKeys = defineModel<(string | number)[]>('selectedKeys', { default: () => [] })
@@ -64,6 +64,10 @@ defineSlots<{
   'body-bottom': () => unknown
   [key: string]: unknown
 }>()
+
+defineOptions({ inheritAttrs: false })
+
+const attrs = useAttrs()
 
 const tableRef = useTemplateRef('tableRef')
 const slots = useSlots()
@@ -296,28 +300,39 @@ const resolved = computed(() =>
 //   return Object.keys(slots).filter(name => /-(?:cell|header|footer)$/.test(name))
 // })
 
-// const tableMeta = computed(() => ({
-//   class: {
-//     tr: (context: { original: T }) => {
-//       const classes: string[] = []
-//       if (props.stripe) classes.push(props.stripeClass)
-//       if (props.rowClass) {
-//         const resolved = resolveCallbackValue(
-//           props.rowClass,
-//           context.original
-//         )
-//         if (resolved) classes.push(resolved as string)
-//       }
-//       return classes.join(' ')
-//     }
-//   },
-//   ...(props.rowStyle && {
-//     style: {
-//       tr: (context: { original: T }) =>
-//         resolveCallbackValue(props.rowStyle!, context.original)
-//     }
-//   })
-// }))
+const tableMeta = computed((): TableMeta<T> => ({
+  ...((props.stripe || props.rowClass || props.meta?.class?.tr) && {
+    class: {
+      tr: row => [
+        props.stripe && 'even:bg-elevated/30',
+        props.rowClass && resolveCallbackValue(props.rowClass, row),
+        props.meta?.class?.tr && resolveCallbackValue(props.meta.class.tr, row)
+      ].filter(Boolean).join(' ')
+    }
+  }),
+  ...((props.rowStyle || props.meta?.style?.tr) && {
+    style: {
+      tr: !props.rowStyle
+        ? props.meta!.style!.tr!
+        : !props.meta?.style?.tr
+            ? props.rowStyle
+            : (row) => {
+                const a = resolveCallbackValue(props.rowStyle, row)
+                const b = resolveCallbackValue(props.meta!.style!.tr!, row)
+                return typeof a === 'object' && typeof b === 'object' ? { ...a, ...b } : b
+              }
+    }
+  })
+}))
+
+const borderedStyle = computed(() => {
+  if (!props.bordered || typeof props.bordered === 'boolean') return undefined
+  return {
+    '--m-dt-border-color': props.bordered.color,
+    '--m-dt-border-width': props.bordered.width,
+    '--m-dt-border-style': props.bordered.style
+  }
+})
 
 // const tableContainerStyle = computed(() => {
 //   if (!props.infiniteScroll) return undefined
@@ -329,17 +344,17 @@ const resolved = computed(() =>
 // })
 
 const uTableProps = computed(() => ({
-  ...props,
-  columns: resolved.value.columnDefs
+  ...attrs,
+  columns: resolved.value.columnDefs,
   // 'data': tableData.value,
   // 'loading': props.loading,
   // 'empty': props.empty,
   // 'sticky': props.sticky,
   // 'virtualize': props.virtualize,
-  // 'meta': tableMeta.value,
-  // 'ui': props.fixedLayout
-  //   ? { ...props.ui, base: ['table-fixed w-fit', (props.ui as Record<string, unknown>)?.base].filter(Boolean).join(' ') }
-  //   : props.ui,
+  meta: tableMeta.value,
+  ui: props.fixedLayout
+    ? { ...props.ui, base: ['table-fixed w-fit', props.ui?.base].filter(Boolean).join(' ') }
+    : props.ui,
   // 'sorting': sortingModel.value,
   // 'onUpdate:sorting': (v: SortingState | undefined) => { if (v) sortingModel.value = v },
   // 'columnVisibility': columnVisibilityModel.value,
@@ -352,6 +367,7 @@ const uTableProps = computed(() => ({
   //     right: [...(v.right ?? [])]
   //   }
   // },
+  columnSizing: resolved.value.initialSizing
   // 'columnSizing': columnSizingModel.value,
   // 'onUpdate:columnSizing': (v: ColumnSizingState | undefined) => {
   //   if (!v) return
@@ -419,9 +435,10 @@ const uTableProps = computed(() => ({
   <div
     class="data-table"
     :class="{
-      // 'data-table--bordered': bordered
-      // 'data-table--tree': isTreeMode
+      'data-table--bordered': !!bordered
+    // 'data-table--tree': isTreeMode
     }"
+    :style="borderedStyle"
   >
     <!-- <div
       v-if="$slots.toolbar || columnToggle"
@@ -443,17 +460,8 @@ const uTableProps = computed(() => ({
         />
       </div>
     </div> -->
-
     <!-- <div :style="tableContainerStyle" @scroll.passive="handleTableScroll"> -->
-    <UTable
-      ref="tableRef"
-      :columns="[
-        { cell(props) {
-
-        } }
-      ]"
-      v-bind="uTableProps"
-    >
+    <UTable ref="tableRef" v-bind="uTableProps">
       <!-- <template v-if="enableExpandedSlot" #expanded="slotProps">
         <slot name="expanded" :row="slotProps.row.original as T" />
       </template> -->

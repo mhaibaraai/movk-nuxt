@@ -14,8 +14,7 @@ const { users, basicColumns } = useTableExamples()
     </div>
 
     <MDataTable
-      class="w-sm"
-      fixed-layout
+      :data="users"
       :columns="basicColumns"
     />
   </div>

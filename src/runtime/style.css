@@ -8,7 +8,32 @@
   --font-sans: 'Alibaba PuHuiTi', sans-serif;
 }
 
-/* DataTable Tree mode hidden expanded empty row */
-.data-table--tree [data-slot="tbody"] tr[data-slot="tr"]:not([data-expanded]) {
-  display: none;
+/* DataTable bordered */
+.data-table--bordered {
+  border: var(--m-dt-border-width, 1px) var(--m-dt-border-style, solid) var(--m-dt-border-color, var(--ui-border));
+  overflow: hidden;
 }
+
+/* 纵向分割线 */
+.data-table--bordered [data-slot="th"]:not(:last-child),
+.data-table--bordered [data-slot="td"]:not(:last-child) {
+  border-right: var(--m-dt-border-width, 1px) var(--m-dt-border-style, solid) var(--m-dt-border-color, var(--ui-border));
+}
+
+/* 横向行间分割线（覆盖 divide-y 的颜色与样式） */
+.data-table--bordered [data-slot="tbody"] > [data-slot="tr"] {
+  border-top-width: var(--m-dt-border-width, 1px);
+  border-top-style: var(--m-dt-border-style, solid);
+  border-top-color: var(--m-dt-border-color, var(--ui-border));
+}
+
+/* 表头与 tbody 之间的分割线（背景色模拟，不支持 border-style） */
+.data-table--bordered [data-slot="separator"] {
+  height: var(--m-dt-border-width, 1px);
+  background-color: var(--m-dt-border-color, var(--ui-border-accented));
+}
+
+/* DataTable Tree mode hidden expanded empty row */
+/* .data-table--tree [data-slot="tbody"] tr[data-slot="tr"]:not([data-expanded]) {
+  display: none;
+} */
