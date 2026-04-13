@@ -81,8 +81,9 @@ const treeData: TableTreeNode[] = [
 const basicColumns: DataTableColumn<TableUser>[] = [
   { accessorKey: 'name', header: '姓名', fixed: 'left', size: 100 },
   { accessorKey: 'email', header: '邮箱', tooltip: 2, maxSize: 100 },
-  { accessorKey: 'department', header: '部门', minSize: 100 },
-  { accessorKey: 'role', header: '职位', size: 140 }
+  { accessorKey: 'department', header: '部门' },
+  { accessorKey: 'role', header: '职位' },
+  { accessorKey: 'bio', header: '简介', size: 200, fixed: 'right' }
 ]
 
 const formattingColumns: DataTableColumn<TableUser>[] = [
@@ -92,13 +93,13 @@ const formattingColumns: DataTableColumn<TableUser>[] = [
     accessorKey: 'salary',
     header: '薪资',
     align: 'right',
-    formatter: v => v != null ? `¥${(v as number).toLocaleString()}` : '',
-    emptyText: '保密'
+    cell: v => v != null ? `¥${(v as number).toLocaleString()}` : '',
+    emptyCell: '保密'
   },
   {
     accessorKey: 'status',
     header: '状态',
-    formatter: v => statusMap[v as string] ?? String(v)
+    cell: v => statusMap[v as string] ?? String(v)
   },
   { accessorKey: 'bio', header: '简介', tooltip: 2, size: 100 }
 ]
@@ -112,7 +113,7 @@ const selectionColumns: DataTableColumn<TableUser>[] = [
   {
     accessorKey: 'status',
     header: '状态',
-    formatter: v => statusMap[v as string] ?? String(v)
+    cell: v => statusMap[v as string] ?? String(v)
   }
 ]
 
@@ -156,15 +157,15 @@ const sortingColumns: DataTableColumn<TableUser>[] = [
     header: '薪资',
     align: 'right',
     sortable: true,
-    formatter: v => v != null ? `¥${(v as number).toLocaleString()}` : '',
-    emptyText: '保密'
+    cell: v => v != null ? `¥${(v as number).toLocaleString()}` : '',
+    emptyCell: '保密'
   },
   { accessorKey: 'joinDate', header: '入职日期', sortable: true },
   {
     accessorKey: 'status',
     header: '状态',
     visible: false,
-    formatter: v => statusMap[v as string] ?? String(v)
+    cell: v => statusMap[v as string] ?? String(v)
   }
 ]
 
@@ -181,10 +182,10 @@ const pinningColumns: DataTableColumn<TableUser>[] = [
     size: 140,
     sortable: true,
     pinable: true,
-    formatter: v => v != null ? `¥${(v as number).toLocaleString()}` : '',
-    emptyText: '保密'
+    cell: v => v != null ? `¥${(v as number).toLocaleString()}` : '',
+    emptyCell: '保密'
   },
-  { accessorKey: 'status', header: '状态', size: 110, pinable: true, formatter: v => statusMap[v as string] ?? String(v) }
+  { accessorKey: 'status', header: '状态', size: 110, pinable: true, cell: v => statusMap[v as string] ?? String(v) }
 ]
 
 const sizingColumns: DataTableColumn<TableUser>[] = [
@@ -226,8 +227,8 @@ const treeColumns: DataTableColumn<TableTreeNode>[] = [
     header: '大小',
     align: 'right',
     size: 100,
-    formatter: v => v != null ? `${(v as number / 1024).toFixed(1)} KB` : '',
-    emptyText: '—'
+    cell: v => v != null ? `${(v as number / 1024).toFixed(1)} KB` : '',
+    emptyCell: '—'
   }
 ]
 

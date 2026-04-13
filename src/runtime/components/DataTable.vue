@@ -26,16 +26,18 @@ import DataTablePagination from './data-table/DataTablePagination.vue'
 import type { TableData } from '@nuxt/ui'
 
 const props = withDefaults(defineProps<DataTableProps<T>>(), {
+  fixedLayout: true,
   emptyCell: '-',
-  indentSize: '1rem'
+  indentSize: '1rem',
+  tooltip: true
 })
 
 // const selectedKeys = defineModel<(string | number)[]>('selectedKeys', { default: () => [] })
 // const sortingModel = defineModel<SortingState>('sorting', { default: () => [] })
 // const columnVisibilityModel = defineModel<VisibilityState>('columnVisibility', { default: () => ({}) })
 // const expandedModel = defineModel<ExpandedState>('expanded', { default: () => ({}) })
-// const columnPinningModel = defineModel<ColumnPinningState>('columnPinning', { default: () => ({ left: [], right: [] }) })
-// const columnSizingModel = defineModel<ColumnSizingState>('columnSizing', { default: () => ({}) })
+const columnPinningModel = defineModel<ColumnPinningState>('columnPinning', { default: () => ({ left: [], right: [] }) })
+const columnSizingModel = defineModel<ColumnSizingState>('columnSizing', { default: () => ({}) })
 // const rowPinningModel = defineModel<RowPinningState>('rowPinning', { default: () => ({ top: [], bottom: [] }) })
 // const pageModel = defineModel<number>('page', { default: 1 })
 // const pageSizeModel = defineModel<number>('pageSize', { default: 20 })
@@ -165,32 +167,32 @@ const resolved = computed(() =>
   })
 )
 
-// const initialStatesApplied = ref(false)
+const initialStatesApplied = ref(false)
 
-// function isColumnPinningEmpty(state: ColumnPinningState | undefined): boolean {
-//   if (!state) return true
-//   return (state.left?.length ?? 0) === 0 && (state.right?.length ?? 0) === 0
-// }
+function isColumnPinningEmpty(state: ColumnPinningState | undefined): boolean {
+  if (!state) return true
+  return (state.left?.length ?? 0) === 0 && (state.right?.length ?? 0) === 0
+}
 
-// watch(resolved, (r) => {
-//   if (initialStatesApplied.value) return
-//   initialStatesApplied.value = true
+watch(resolved, (r) => {
+  if (initialStatesApplied.value) return
+  initialStatesApplied.value = true
 
-//   if (Object.keys(columnVisibilityModel.value).length === 0) {
-//     columnVisibilityModel.value = { ...r.initialVisibility }
-//   }
+  // if (Object.keys(columnVisibilityModel.value).length === 0) {
+  //   columnVisibilityModel.value = { ...r.initialVisibility }
+  // }
 
-//   if (isColumnPinningEmpty(columnPinningModel.value)) {
-//     columnPinningModel.value = {
-//       left: [...(r.initialPinning.left ?? [])],
-//       right: [...(r.initialPinning.right ?? [])]
-//     }
-//   }
+  if (isColumnPinningEmpty(columnPinningModel.value)) {
+    columnPinningModel.value = {
+      left: [...(r.initialPinning.left ?? [])],
+      right: [...(r.initialPinning.right ?? [])]
+    }
+  }
 
-//   if (Object.keys(columnSizingModel.value).length === 0) {
-//     columnSizingModel.value = { ...r.initialSizing }
-//   }
-// }, { immediate: true })
+  if (Object.keys(columnSizingModel.value).length === 0) {
+    columnSizingModel.value = { ...r.initialSizing }
+  }
+}, { immediate: true })
 
 // const columnLabels = computed(() => {
 //   const labels: Record<string, string> = {}
@@ -345,34 +347,36 @@ const borderedStyle = computed(() => {
 
 const uTableProps = computed(() => ({
   ...attrs,
-  columns: resolved.value.columnDefs,
+  'columns': resolved.value.columnDefs,
   // 'data': tableData.value,
   // 'loading': props.loading,
   // 'empty': props.empty,
   // 'sticky': props.sticky,
   // 'virtualize': props.virtualize,
-  meta: tableMeta.value,
-  ui: props.fixedLayout
-    ? { ...props.ui, base: ['table-fixed w-fit', props.ui?.base].filter(Boolean).join(' ') }
+  'meta': tableMeta.value,
+  'ui': props.fixedLayout
+    ? {
+        ...props.ui,
+        base: ['table-fixed w-fit', props.ui?.base].filter(Boolean).join(' ')
+      }
     : props.ui,
   // 'sorting': sortingModel.value,
   // 'onUpdate:sorting': (v: SortingState | undefined) => { if (v) sortingModel.value = v },
   // 'columnVisibility': columnVisibilityModel.value,
   // 'onUpdate:columnVisibility': (v: VisibilityState | undefined) => { if (v) columnVisibilityModel.value = v },
-  // 'columnPinning': columnPinningModel.value,
-  // 'onUpdate:columnPinning': (v: ColumnPinningState | undefined) => {
-  //   if (!v) return
-  //   columnPinningModel.value = {
-  //     left: [...(v.left ?? [])],
-  //     right: [...(v.right ?? [])]
-  //   }
-  // },
-  columnSizing: resolved.value.initialSizing
-  // 'columnSizing': columnSizingModel.value,
-  // 'onUpdate:columnSizing': (v: ColumnSizingState | undefined) => {
-  //   if (!v) return
-  //   columnSizingModel.value = { ...v }
-  // },
+  'columnPinning': columnPinningModel.value,
+  'onUpdate:columnPinning': (v: ColumnPinningState | undefined) => {
+    if (!v) return
+    columnPinningModel.value = {
+      left: [...(v.left ?? [])],
+      right: [...(v.right ?? [])]
+    }
+  },
+  'columnSizing': columnSizingModel.value,
+  'onUpdate:columnSizing': (v: ColumnSizingState | undefined) => {
+    if (!v) return
+    columnSizingModel.value = { ...v }
+  }
   // 'rowSelection': rowSelection.value,
   // 'onUpdate:rowSelection': updateSelectedKeysFromRowSelection,
   // 'expanded': expandedModel.value,

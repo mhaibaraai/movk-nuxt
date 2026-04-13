@@ -202,14 +202,9 @@ export interface DataTableProps<T extends TableData> extends /* @vue-ignore */ D
   bordered?: boolean | DataTableBorderedOptions
   /**
    * 固定表格布局（table-layout: fixed），启用后列宽严格按 size 分配
-   * @defaultValue false
+   * @defaultValue true
    */
   fixedLayout?: boolean
-  /**
-   * 启用列拖拽调整宽度
-   * @defaultValue false
-   */
-  resizable?: boolean
   /**
    * 全局启用数据列 pin 按钮
    * @defaultValue false
@@ -224,6 +219,11 @@ export interface DataTableProps<T extends TableData> extends /* @vue-ignore */ D
    * 空值占位符，null/undefined/'' 时显示
    * @defaultValue '-'
    */
+  /**
+   * 启用列拖拽调整宽度
+   * @defaultValue false
+   */
+  resizable?: boolean
   emptyCell?: false | string | ColumnDefTemplate<CellContext<T, unknown>>
   /** 表格元数据 */
   meta?: TableMeta<T>

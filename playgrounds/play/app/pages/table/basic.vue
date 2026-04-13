@@ -3,7 +3,7 @@ const { users, basicColumns } = useTableExamples()
 </script>
 
 <template>
-  <div class="space-y-4 p-6 overflow-auto">
+  <div class="space-y-4 p-6 overflow-auto max-w-xl">
     <div>
       <h2 class="text-xl font-semibold mb-1">
         DataTable / Basic
@@ -13,9 +13,6 @@ const { users, basicColumns } = useTableExamples()
       </p>
     </div>
 
-    <MDataTable
-      :data="users"
-      :columns="basicColumns"
-    />
+    <MDataTable :data="users" :columns="basicColumns" />
   </div>
 </template>
