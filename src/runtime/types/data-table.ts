@@ -26,6 +26,13 @@ export interface DataTableBaseColumn {
   minSize?: number
   /** 最大宽度 */
   maxSize?: number
+  /**
+   * 单元格文本溢出截断，优先级高于全局 truncate
+   * - true = 单行截断
+   * - number > 1 = 多行截断行数
+   * - false = 禁用截断
+   */
+  truncate?: boolean | number
 }
 
 export interface DataTableDataColumn<T> extends DataTableBaseColumn {
@@ -36,16 +43,22 @@ export interface DataTableDataColumn<T> extends DataTableBaseColumn {
    * @defaultValue true
    */
   visibility?: boolean
-  /** 启用排序 */
+  /** 启用排序，优先级高于全局 sortable */
   sortable?: boolean
-  /** 允许通过表头交互切换列固定（left -> right -> none） */
+  /** 允许通过表头交互切换列固定（left -> right -> none），优先级高于全局 pinable */
   pinable?: boolean
-  /** 是否可拖拽调整宽度，默认跟随全局 resizable */
+  /** 是否可拖拽调整宽度，优先级高于全局 resizable */
   resizable?: boolean
   /** 空值占位文本，false 禁用 */
   emptyCell?: string | false
-  /** Tooltip，true = 单行截断，number = 多行截断行数 */
-  tooltip?: boolean | number
+  /**
+   * 溢出 Tooltip，优先级高于全局 tooltip
+   * - true = 溢出时单行显示
+   * - number = 溢出时多行显示（行数）
+   * - false = 禁用
+   * - 函数 = 按 cell 上下文动态决定
+   */
+  tooltip?: boolean | number | ((ctx: CellContext<T, unknown>) => boolean | number)
   /** UTooltip 额外 props 透传（tooltip 启用时生效） */
   tooltipProps?: TooltipProps
   /** 单元格自定义渲染，string 直接显示，函数接收 CellContext */
@@ -206,25 +219,25 @@ export interface DataTableProps<T extends TableData> extends /* @vue-ignore */ D
    */
   fixedLayout?: boolean
   /**
-   * 全局启用数据列 pin 按钮
+   * 全局启用数据列 pin 按钮，传函数可按列定义动态决定
    * @defaultValue false
    */
-  pinable?: boolean
+  pinable?: boolean | ((col: DataTableDataColumn<T>) => boolean)
   /**
-   * 全局数据列可排序
+   * 全局数据列可排序，传函数可按列定义动态决定
    * @defaultValue false
    */
-  sortable?: boolean
+  sortable?: boolean | ((col: DataTableDataColumn<T>) => boolean)
   /**
    * 空值占位符，null/undefined/'' 时显示
    * @defaultValue '-'
    */
+  emptyCell?: false | string | ColumnDefTemplate<CellContext<T, unknown>>
   /**
-   * 启用列拖拽调整宽度
+   * 启用列拖拽调整宽度，传函数可按列定义动态决定
    * @defaultValue false
    */
-  resizable?: boolean
-  emptyCell?: false | string | ColumnDefTemplate<CellContext<T, unknown>>
+  resizable?: boolean | ((col: DataTableDataColumn<T>) => boolean)
   /** 表格元数据 */
   meta?: TableMeta<T>
   /** 行条件 class */
@@ -239,19 +252,39 @@ export interface DataTableProps<T extends TableData> extends /* @vue-ignore */ D
    */
   defaultExpandAll?: boolean
   /**
-   * 树形缩进宽度
-   * @defaultValue `${row.depth}rem`
+   * 树形缩进宽度，传函数可按行/深度动态计算
+   * - number = 每层缩进量（px），乘以 depth 得到实际 marginLeft
+   * - string = 直接作为 CSS 值（调用方自行处理深度逻辑）
+   * - 函数 = 按 cell 上下文动态计算，返回 CSS 字符串（如 '24px'）
+   * @defaultValue '1rem'
    */
-  indentSize?: number | string
+  indentSize?: number | string | ((ctx: CellContext<T, unknown>) => string)
   /**
    * 点击行时切换树形展开状态
    * @defaultValue false
    */
   expandOnRowClick?: boolean
-  /** 全局数据列溢出 Tooltip，true = 单行截断，number = 多行截断行数 */
-  tooltip?: boolean | number
+  /**
+   * 全局数据列溢出 Tooltip，传函数可按 cell 上下文动态决定
+   * - true = 溢出时显示（单行截断）
+   * - number = 溢出时显示（多行截断行数）
+   * - false = 禁用
+   * - 函数 = 按 cell 上下文动态决定
+   * @defaultValue false
+   */
+  tooltip?: boolean | number | ((ctx: CellContext<T, unknown>) => boolean | number)
   /** 全局 Tooltip 透传 props（tooltip 启用时生效） */
   tooltipProps?: Omit<TooltipProps, 'text'>
+  /**
+   * 全局单元格文本溢出截断，传函数可按 cell 上下文动态决定
+   * - true = 单行截断
+   * - number > 1 = 多行截断行数
+   * - false = 禁用
+   * - 函数 = 按 cell 上下文动态决定
+   * @defaultValue true
+   */
+  truncate?: boolean | number | ((ctx: CellContext<T, unknown>) => boolean | number)
+
   /** 列固定状态（v-model:columnPinning） */
   columnPinning?: ColumnPinningState
   /** 列宽状态（v-model:columnSizing） */

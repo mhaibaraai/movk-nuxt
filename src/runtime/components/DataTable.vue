@@ -29,7 +29,8 @@ const props = withDefaults(defineProps<DataTableProps<T>>(), {
   fixedLayout: true,
   emptyCell: '-',
   indentSize: '1rem',
-  tooltip: true
+  tooltip: false,
+  truncate: true
 })
 
 // const selectedKeys = defineModel<(string | number)[]>('selectedKeys', { default: () => [] })
@@ -154,18 +155,7 @@ const slots = useSlots()
 //   return props.data.slice(pageOffset.value, pageOffset.value + size)
 // })
 
-const resolved = computed(() =>
-  resolveColumns<T>(props.columns || [], {
-    // pageOffset: pageOffset.value,
-    emptyCell: props.emptyCell,
-    resizable: props.resizable,
-    pinable: props.pinable,
-    indentSize: props.indentSize,
-    tooltip: props.tooltip,
-    tooltipProps: props.tooltipProps,
-    sortable: props.sortable
-  })
-)
+const resolved = computed(() => resolveColumns<T>(props.columns || [], props))
 
 const initialStatesApplied = ref(false)
 

@@ -7,21 +7,18 @@ import type {
   VisibilityState
 } from '@tanstack/vue-table'
 import type { VNodeChild } from 'vue'
-import {
-  isDataColumn,
-  isGroupColumn,
-  type DataTableColumn,
-  type DataTableDataColumn,
-  type DataTableGroupColumn,
-  type DataTableProps,
-  type ResolvedColumnState
+import type {
+  DataTableColumn,
+  DataTableDataColumn,
+  DataTableGroupColumn,
+  DataTableProps,
+  ResolvedColumnState
 } from '../../types/data-table'
-
 import { h, ref, resolveComponent } from 'vue'
 import { isFunction, isString } from '@movk/core'
-// import { isDataColumn, isGroupColumn } from '../../types/data-table'
+import { isDataColumn, isGroupColumn } from '../../types/data-table'
 import { DATA_TABLE_DEFAULTS } from '../../constants/data-table'
-import { resolveCallbackValue, resolvePresetSize, resolveTemplate } from '../../utils/data-table-utils'
+import { resolveCallbackValue, resolveColumnFlag, resolvePresetSize, resolveTemplate } from '../../utils/data-table-utils'
 import DataTableCellTooltip from './DataTableCellTooltip.vue'
 import { createSelectionColumnDef } from './selection-helpers'
 
@@ -86,8 +83,9 @@ function resolveDataColumn<T>(
   sizing: ColumnSizingState
 ): ColumnDef<T, unknown> {
   const id = col.accessorKey
-  const effectiveSortable = col.sortable ?? options.sortable ?? false
-  const effectivePinable = col.pinable ?? options.pinable ?? false
+  const effectiveSortable = resolveColumnFlag(col.sortable, options.sortable, col)
+  const effectivePinable = resolveColumnFlag(col.pinable, options.pinable, col)
+  const effectiveResizable = resolveColumnFlag(col.resizable, options.resizable, col)
 
   if (col.fixed) {
     pinning[col.fixed === 'left' ? 'left' : 'right']!.push(id)
@@ -101,9 +99,11 @@ function resolveDataColumn<T>(
     sizing[id] = isString(col.size) ? resolvePresetSize(col.size) : col.size
   }
 
-  const effectiveTooltip = col.tooltip ?? options.tooltip
-  const effectiveResizable = col.resizable ?? options.resizable
-  const needCustomCell = !!(col.cell || effectiveTooltip || col.emptyCell !== undefined || options.emptyCell !== false)
+  // 列定义期判断：只要全局或列级有可能启用 tooltip/truncate，就进入自定义 cell 路径
+  // 函数形式恒为 truthy，静态 false 则跳过
+  const maybeTooltip = col.tooltip !== undefined ? !!col.tooltip : !!options.tooltip
+  const maybeTruncate = col.truncate !== undefined ? !!col.truncate : !!options.truncate
+  const needCustomCell = !!(col.cell || maybeTooltip || maybeTruncate || col.emptyCell !== undefined || options.emptyCell !== false)
 
   const def: ColumnDef<T, unknown> = {
     accessorKey: id,
@@ -115,7 +115,7 @@ function resolveDataColumn<T>(
     ...(col.size != null && { size: isString(col.size) ? resolvePresetSize(col.size) : col.size }),
     enableSorting: effectiveSortable,
     enablePinning: effectivePinable,
-    enableResizing: col.resizable ?? options.resizable,
+    enableResizing: effectiveResizable,
     ...(needCustomCell && {
       cell: (ctx: CellContext<T, unknown>) => {
         const raw = ctx.getValue()
@@ -129,19 +129,43 @@ function resolveDataColumn<T>(
           ? resolveTemplate(col.cell, ctx)
           : String(raw ?? '')
 
-        if (!effectiveTooltip) return formatted
+        // cell 渲染期：按上下文求值 tooltip 与 truncate
+        const tooltipRaw = col.tooltip !== undefined ? col.tooltip : options.tooltip
+        const tooltipVal = typeof tooltipRaw === 'function' ? tooltipRaw(ctx) : tooltipRaw
 
-        const lines = effectiveTooltip === true ? undefined : effectiveTooltip
-        const effectiveTooltipProps = {
-          ...(options.tooltipProps ?? {}),
-          ...(col.tooltipProps ?? {})
+        const truncateRaw = col.truncate !== undefined ? col.truncate : options.truncate
+        const truncateVal = typeof truncateRaw === 'function' ? truncateRaw(ctx) : truncateRaw
+
+        if (tooltipVal) {
+          const lines = tooltipVal === true ? undefined : tooltipVal
+          const effectiveTooltipProps = {
+            ...(options.tooltipProps ?? {}),
+            ...(col.tooltipProps ?? {})
+          }
+          return h(DataTableCellTooltip, {
+            text: String(formatted ?? ''),
+            lines,
+            ...effectiveTooltipProps
+          })
         }
 
-        return h(DataTableCellTooltip, {
-          text: String(formatted ?? ''),
-          lines,
-          ...effectiveTooltipProps
-        })
+        if (truncateVal) {
+          if (truncateVal === true) {
+            return h('div', { class: 'truncate' }, String(formatted ?? ''))
+          }
+          return h('div', {
+            style: {
+              '-webkit-line-clamp': truncateVal,
+              'display': '-webkit-box',
+              '-webkit-box-orient': 'vertical',
+              'overflow': 'hidden',
+              'white-space': 'normal',
+              'word-break': 'break-all'
+            }
+          }, String(formatted ?? ''))
+        }
+
+        return formatted
       }
     }),
     meta: {
