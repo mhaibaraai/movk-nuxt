@@ -8,7 +8,7 @@
   --font-sans: 'Alibaba PuHuiTi', sans-serif;
 }
 
-/* DataTable bordered */
+/* 边框 */
 .data-table--bordered {
   border: var(--m-dt-border-width, 1px) var(--m-dt-border-style, solid) var(--m-dt-border-color, var(--ui-border));
   overflow: hidden;
@@ -33,7 +33,36 @@
   background-color: var(--m-dt-border-color, var(--ui-border-accented));
 }
 
-/* DataTable Tree mode hidden expanded empty row */
-/* .data-table--tree [data-slot="tbody"] tr[data-slot="tr"]:not([data-expanded]) {
-  display: none;
-} */
+/* 固定列 sticky + 不透明背景 */
+.data-table [data-pinned="left"],
+.data-table [data-pinned="right"] {
+  position: sticky;
+  z-index: 2;
+  @apply bg-default!;
+}
+
+/* 左固定列右侧阴影（伪元素避免被相邻 cell 背景遮盖） */
+.data-table [data-pinned="left"]:has(+ :not([data-pinned="left"]))::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 6px;
+  transform: translateX(100%);
+  pointer-events: none;
+  background: linear-gradient(to right, rgba(0, 0, 0, 0.06), transparent);
+}
+
+/* 右固定列左侧阴影 */
+.data-table :not([data-pinned="right"]) + [data-pinned="right"]::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 6px;
+  transform: translateX(-100%);
+  pointer-events: none;
+  background: linear-gradient(to left, rgba(0, 0, 0, 0.06), transparent);
+}

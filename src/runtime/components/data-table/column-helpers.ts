@@ -6,10 +6,11 @@ import type {
   HeaderContext,
   VisibilityState
 } from '@tanstack/vue-table'
-import type { VNodeChild } from 'vue'
+import type { VNode } from 'vue'
 import type {
   DataTableColumn,
   DataTableDataColumn,
+  DataTableDensityOptions,
   DataTableGroupColumn,
   DataTableProps,
   ResolvedColumnState
@@ -17,10 +18,17 @@ import type {
 import { h, ref, resolveComponent } from 'vue'
 import { isFunction, isString } from '@movk/core'
 import { isDataColumn, isGroupColumn } from '../../types/data-table'
-import { DATA_TABLE_DEFAULTS } from '../../constants/data-table'
+import { DATA_TABLE_DEFAULTS, DENSITY_PRESETS } from '../../constants/data-table'
 import { resolveCallbackValue, resolveColumnFlag, resolvePresetSize, resolveTemplate } from '../../utils/data-table-utils'
 import DataTableCellTooltip from './DataTableCellTooltip.vue'
 import { createSelectionColumnDef } from './selection-helpers'
+import { UButton } from '#components'
+
+interface HeaderAction<T> {
+  id: 'sort' | 'pin' | string
+  position: 'leading' | 'trailing'
+  render: (ctx: HeaderContext<T, unknown>) => VNode | null
+}
 
 export function resolveColumns<T>(
   columns: DataTableColumn<T>[],
@@ -105,10 +113,12 @@ function resolveDataColumn<T>(
   const maybeTruncate = col.truncate !== undefined ? !!col.truncate : !!options.truncate
   const needCustomCell = !!(col.cell || maybeTooltip || maybeTruncate || col.emptyCell !== undefined || options.emptyCell !== false)
 
+  const densityClass = resolveDensityClass(options)
+
   const def: ColumnDef<T, unknown> = {
     accessorKey: id,
     header: (effectiveSortable || effectivePinable || effectiveResizable)
-      ? (ctx: HeaderContext<T, unknown>) => renderHeaderActions(ctx, col.header ?? id, effectiveSortable, effectivePinable, effectiveResizable)
+      ? (ctx: HeaderContext<T, unknown>) => renderHeaderActions(ctx, col, options, effectiveSortable, effectivePinable, effectiveResizable)
       : (col.header ?? id),
     ...(col.minSize != null && { minSize: col.minSize }),
     ...(col.maxSize != null && { maxSize: col.maxSize }),
@@ -170,8 +180,8 @@ function resolveDataColumn<T>(
     }),
     meta: {
       class: {
-        td: resolveAlignClass(col.align),
-        ...(effectiveResizable && { th: 'relative' })
+        td: [resolveAlignClass(col.align), densityClass?.td].filter(Boolean).join(' ') || undefined,
+        th: [effectiveResizable ? 'relative' : '', densityClass?.th].filter(Boolean).join(' ') || undefined
       },
       style: columnSizeStyle()
     }
@@ -344,10 +354,6 @@ function resolveRowPinningColumn<T>(
   } as ColumnDef<T, unknown>
 }
 
-/**
- * 渲染带二次确认气泡的操作按钮
- * 使用 UPopover 包裹触发按钮，content slot 提供确认面板
- */
 function renderConfirmAction<T>(
   action: import('../../types/data-table').DataTableAction<T>,
   row: T,
@@ -474,6 +480,11 @@ function resolveAlignClass(align?: 'left' | 'center' | 'right'): string {
   }
 }
 
+function resolveDensityClass<T>(options: DataTableProps<T>): DataTableDensityOptions | null {
+  if (options.density == null) return null
+  return isString(options.density) ? DENSITY_PRESETS[options.density] : options.density
+}
+
 function columnSizeStyle() {
   return {
     th: (ctx: { column: { getSize: () => number } }) => ({ width: `${ctx.column.getSize()}px` }),
@@ -481,72 +492,107 @@ function columnSizeStyle() {
   }
 }
 
+function buildSortAction<T>(
+  col: DataTableDataColumn<T>,
+  options: DataTableProps<T>
+): HeaderAction<T> {
+  return {
+    id: 'sort',
+    position: 'trailing',
+    render: (ctx) => {
+      const isSorted = ctx.column.getIsSorted()
+      const icon = isSorted === 'asc'
+        ? 'i-lucide-arrow-up-narrow-wide'
+        : isSorted === 'desc'
+          ? 'i-lucide-arrow-down-wide-narrow'
+          : 'i-lucide-arrow-up-down'
+      return h(UButton, {
+        size: 'xs',
+        variant: 'ghost',
+        color: 'neutral',
+        class: isSorted ? 'opacity-100' : 'opacity-60 group-hover:opacity-100',
+        ...(options.sortButtonProps ?? {}),
+        ...(col.sortButtonProps ?? {}),
+        icon,
+        onClick: ctx.column.getToggleSortingHandler()
+      })
+    }
+  }
+}
+
+function buildPinAction<T>(
+  col: DataTableDataColumn<T>,
+  options: DataTableProps<T>
+): HeaderAction<T> {
+  return {
+    id: 'pin',
+    position: 'leading',
+    render: (ctx) => {
+      const pinned = ctx.column.getIsPinned()
+      return h(UButton, {
+        'size': 'xs',
+        'variant': 'ghost',
+        'color': pinned ? 'primary' : 'neutral',
+        'class': pinned ? 'opacity-100' : 'opacity-60 group-hover:opacity-100',
+        ...(options.pinButtonProps ?? {}),
+        ...(col.pinButtonProps ?? {}),
+        'icon': pinned ? 'i-lucide-pin-off' : 'i-lucide-pin',
+        'aria-label': pinned ? '取消固定列' : '固定列',
+        'onClick': (event: Event) => {
+          event.stopPropagation()
+          if (pinned === 'left') {
+            ctx.column.pin('right')
+            return
+          }
+          if (pinned === 'right') {
+            ctx.column.pin(false)
+            return
+          }
+          ctx.column.pin('left')
+        }
+      })
+    }
+  }
+}
+
 function renderHeaderActions<T>(
   ctx: HeaderContext<T, unknown>,
-  label: string,
+  col: DataTableDataColumn<T>,
+  options: DataTableProps<T>,
   sortable: boolean,
   pinable: boolean,
   resizable: boolean
 ) {
-  const nodes: VNodeChild[] = []
+  const actions: HeaderAction<T>[] = []
+  if (pinable) actions.push(buildPinAction(col, options))
+  if (sortable) actions.push(buildSortAction(col, options))
 
-  if (sortable) {
-    const isSorted = ctx.column.getIsSorted()
-    nodes.push(h(resolveComponent('UButton'), {
-      color: 'neutral',
-      variant: 'ghost',
-      label,
-      icon: isSorted
-        ? (isSorted === 'asc'
-            ? 'i-lucide-arrow-up-narrow-wide'
-            : 'i-lucide-arrow-down-wide-narrow')
-        : 'i-lucide-arrow-up-down',
-      class: '-mx-2.5',
-      onClick: () => ctx.column.toggleSorting(ctx.column.getIsSorted() === 'asc')
-    }))
-  }
-  else {
-    nodes.push(h('span', label))
-  }
+  const label = col.header ?? (col.accessorKey as string)
+  const leading = actions.filter(a => a.position === 'leading').map(a => a.render(ctx))
+  const trailing = actions.filter(a => a.position === 'trailing').map(a => a.render(ctx))
 
-  if (pinable) {
-    const pinned = ctx.column.getIsPinned()
-    nodes.push(h(resolveComponent('UButton'), {
-      'color': pinned ? 'primary' : 'neutral',
-      'variant': 'ghost',
-      'size': 'xs',
-      'icon': pinned ? 'i-lucide-pin-off' : 'i-lucide-pin',
-      'aria-label': pinned ? '取消固定列' : '固定列',
-      'onClick': (event: Event) => {
-        event.stopPropagation()
-        if (pinned === 'left') {
-          ctx.column.pin('right')
-          return
-        }
+  const resizeHandle = resizable
+    ? h('div', {
+        class: 'absolute top-0 bottom-0 right-0 w-4 -mr-2 cursor-col-resize select-none touch-none flex items-center justify-center',
+        onMousedown: ctx.header.getResizeHandler(),
+        onTouchstart: ctx.header.getResizeHandler(),
+        onClick: (e: Event) => e.stopPropagation()
+      }, [
+        h('div', {
+          class: [
+            'w-px h-full transition-colors',
+            ctx.column.getIsResizing()
+              ? 'bg-primary'
+              : 'opacity-0 group-hover:opacity-100 bg-(--ui-border-accented)'
+          ].join(' ')
+        })
+      ])
+    : null
 
-        if (pinned === 'right') {
-          ctx.column.pin(false)
-          return
-        }
-
-        ctx.column.pin('left')
-      }
-    }))
-  }
-
-  if (resizable) {
-    const handler = ctx.header.getResizeHandler()
-    nodes.push(h('div', {
-      class: 'absolute right-0 top-0 bottom-0 w-1 cursor-col-resize select-none touch-none opacity-0 hover:opacity-100 bg-accented',
-      onMousedown: handler,
-      onTouchstart: handler,
-      onClick: (e: Event) => e.stopPropagation()
-    }))
-  }
-
-  if (nodes.length === 1 && !resizable) {
-    return nodes[0]
-  }
-
-  return h('div', { class: 'flex items-center gap-1' }, nodes)
+  return h('div', { class: 'flex items-center gap-1 relative group' }, [
+    ...leading,
+    h('span', { class: 'truncate' }, String(label)),
+    ...trailing,
+    resizeHandle
+  ])
 }

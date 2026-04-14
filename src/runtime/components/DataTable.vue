@@ -29,13 +29,13 @@ const props = withDefaults(defineProps<DataTableProps<T>>(), {
   fixedLayout: true,
   emptyCell: '-',
   indentSize: '1rem',
-  tooltip: false,
-  truncate: true
+  truncate: true,
+  columnResizeMode: 'onChange'
 })
 
 // const selectedKeys = defineModel<(string | number)[]>('selectedKeys', { default: () => [] })
-// const sortingModel = defineModel<SortingState>('sorting', { default: () => [] })
-// const columnVisibilityModel = defineModel<VisibilityState>('columnVisibility', { default: () => ({}) })
+const sortingModel = defineModel<SortingState>('sorting', { default: () => [] })
+const columnVisibilityModel = defineModel<VisibilityState>('columnVisibility', { default: () => ({}) })
 // const expandedModel = defineModel<ExpandedState>('expanded', { default: () => ({}) })
 const columnPinningModel = defineModel<ColumnPinningState>('columnPinning', { default: () => ({ left: [], right: [] }) })
 const columnSizingModel = defineModel<ColumnSizingState>('columnSizing', { default: () => ({}) })
@@ -43,11 +43,11 @@ const columnSizingModel = defineModel<ColumnSizingState>('columnSizing', { defau
 // const pageModel = defineModel<number>('page', { default: 1 })
 // const pageSizeModel = defineModel<number>('pageSize', { default: 20 })
 
-// const emit = defineEmits<{
-//   'selection-change': [rows: T[]]
-//   'sort-change': [column: string, order: 'asc' | 'desc' | false]
-//   'load-more': []
-// }>()
+const emit = defineEmits<{
+  'selection-change': [rows: T[]]
+  'sort-change': [column: string, order: 'asc' | 'desc' | false]
+  'load-more': []
+}>()
 
 defineSlots<{
   'toolbar': (props: {
@@ -128,15 +128,15 @@ const slots = useSlots()
 //   selectedKeys.value = []
 // }
 
-// watch(sortingModel, (state) => {
-//   if (state.length > 0) {
-//     const s = state[0]!
-//     emit('sort-change', s.id, s.desc ? 'desc' : 'asc')
-//   }
-//   else {
-//     emit('sort-change', '', false)
-//   }
-// })
+watch(sortingModel, (state) => {
+  if (state.length > 0) {
+    const s = state[0]!
+    emit('sort-change', s.id, s.desc ? 'desc' : 'asc')
+  }
+  else {
+    emit('sort-change', '', false)
+  }
+})
 
 // const pageOffset = computed(() => {
 //   const p = pageModel.value ?? 1
@@ -168,9 +168,9 @@ watch(resolved, (r) => {
   if (initialStatesApplied.value) return
   initialStatesApplied.value = true
 
-  // if (Object.keys(columnVisibilityModel.value).length === 0) {
-  //   columnVisibilityModel.value = { ...r.initialVisibility }
-  // }
+  if (Object.keys(columnVisibilityModel.value).length === 0) {
+    columnVisibilityModel.value = { ...r.initialVisibility }
+  }
 
   if (isColumnPinningEmpty(columnPinningModel.value)) {
     columnPinningModel.value = {
@@ -304,15 +304,13 @@ const tableMeta = computed((): TableMeta<T> => ({
   }),
   ...((props.rowStyle || props.meta?.style?.tr) && {
     style: {
-      tr: !props.rowStyle
-        ? props.meta!.style!.tr!
-        : !props.meta?.style?.tr
-            ? props.rowStyle
-            : (row) => {
-                const a = resolveCallbackValue(props.rowStyle, row)
-                const b = resolveCallbackValue(props.meta!.style!.tr!, row)
-                return typeof a === 'object' && typeof b === 'object' ? { ...a, ...b } : b
-              }
+      tr: props.rowStyle && props.meta?.style?.tr
+        ? (row) => {
+            const a = resolveCallbackValue(props.rowStyle!, row)
+            const b = resolveCallbackValue(props.meta!.style!.tr!, row)
+            return typeof a === 'object' && typeof b === 'object' ? { ...a, ...b } : b
+          }
+        : (props.rowStyle ?? props.meta!.style!.tr!)
     }
   })
 }))
@@ -335,78 +333,87 @@ const borderedStyle = computed(() => {
 //   }
 // })
 
-const uTableProps = computed(() => ({
-  ...attrs,
-  'columns': resolved.value.columnDefs,
-  // 'data': tableData.value,
-  // 'loading': props.loading,
-  // 'empty': props.empty,
-  // 'sticky': props.sticky,
-  // 'virtualize': props.virtualize,
-  'meta': tableMeta.value,
-  'ui': props.fixedLayout
-    ? {
-        ...props.ui,
-        base: ['table-fixed w-fit', props.ui?.base].filter(Boolean).join(' ')
-      }
-    : props.ui,
-  // 'sorting': sortingModel.value,
-  // 'onUpdate:sorting': (v: SortingState | undefined) => { if (v) sortingModel.value = v },
-  // 'columnVisibility': columnVisibilityModel.value,
-  // 'onUpdate:columnVisibility': (v: VisibilityState | undefined) => { if (v) columnVisibilityModel.value = v },
-  'columnPinning': columnPinningModel.value,
-  'onUpdate:columnPinning': (v: ColumnPinningState | undefined) => {
-    if (!v) return
-    columnPinningModel.value = {
-      left: [...(v.left ?? [])],
-      right: [...(v.right ?? [])]
-    }
-  },
-  'columnSizing': columnSizingModel.value,
-  'onUpdate:columnSizing': (v: ColumnSizingState | undefined) => {
-    if (!v) return
-    columnSizingModel.value = { ...v }
+const uTableProps = computed(() => {
+  const mergedColumnSizingOptions = {
+    enableColumnResizing: !!props.resizable,
+    ...(props.columnResizeMode && { columnResizeMode: props.columnResizeMode }),
+    ...props.columnSizingOptions
   }
-  // 'rowSelection': rowSelection.value,
-  // 'onUpdate:rowSelection': updateSelectedKeysFromRowSelection,
-  // 'expanded': expandedModel.value,
-  // 'onUpdate:expanded': (v: ExpandedState | undefined) => { if (v) expandedModel.value = v },
-  // 'rowPinning': rowPinningModel.value,
-  // 'onUpdate:rowPinning': (v: RowPinningState | undefined) => {
-  //   if (!v) return
-  //   rowPinningModel.value = {
-  //     top: [...(v.top ?? [])],
-  //     bottom: [...(v.bottom ?? [])]
-  //   }
-  // },
-  // ...(getSubRows.value && { getSubRows: getSubRows.value }),
-  // ...(props.rowKey && {
-  //   getRowId: (row: T) => String(row[props.rowKey!])
-  // }),
-  // ...((props.onRowClick || props.expandOnRowClick) && {
-  //   onSelect: (_e: Event, row: { original: T }) => {
-  //     const idx = props.data.indexOf(row.original)
-  //     props.onRowClick?.(row.original, idx)
 
-  //     if (props.expandOnRowClick) {
-  //       toggleExpandedByRow(row.original)
-  //     }
-  //   }
-  // }),
-  // ...(props.onRowContextmenu && {
-  //   onContextmenu: (e: Event, row: { original: T }) => {
-  //     props.onRowContextmenu!(e, row.original)
-  //   }
-  // }),
-  // ...(props.resizable && {
-  //   columnSizingOptions: {
-  //     enableColumnResizing: true
-  //   }
-  // }),
-  // 'sortingOptions': {
-  //   enableSorting: true
-  // }
-}))
+  const mergedSortingOptions = {
+    enableSorting: !!props.sortable,
+    ...props.sortingOptions
+  }
+
+  const mergedColumnPinningOptions = {
+    enableColumnPinning: !!props.pinable,
+    ...props.columnPinningOptions
+  }
+
+  return {
+    ...attrs,
+    'columns': resolved.value.columnDefs,
+    // 'data': tableData.value,
+    'meta': tableMeta.value,
+    'ui': props.fixedLayout
+      ? {
+          ...props.ui,
+          base: ['table-fixed w-fit', props.ui?.base].filter(Boolean).join(' ')
+        }
+      : props.ui,
+    'sorting': sortingModel.value,
+    'onUpdate:sorting': (v: SortingState | undefined) => { if (v) sortingModel.value = v },
+    'columnVisibility': columnVisibilityModel.value,
+    'onUpdate:columnVisibility': (v: VisibilityState | undefined) => { if (v) columnVisibilityModel.value = v },
+    'columnPinning': columnPinningModel.value,
+    'onUpdate:columnPinning': (v: ColumnPinningState | undefined) => {
+      if (!v) return
+      columnPinningModel.value = {
+        left: [...(v.left ?? [])],
+        right: [...(v.right ?? [])]
+      }
+    },
+    'columnSizing': columnSizingModel.value,
+    'onUpdate:columnSizing': (v: ColumnSizingState | undefined) => {
+      if (!v) return
+      columnSizingModel.value = { ...v }
+    },
+    'columnSizingOptions': mergedColumnSizingOptions,
+    'sortingOptions': mergedSortingOptions,
+    'columnPinningOptions': mergedColumnPinningOptions
+    // 'rowSelection': rowSelection.value,
+    // 'onUpdate:rowSelection': updateSelectedKeysFromRowSelection,
+    // 'expanded': expandedModel.value,
+    // 'onUpdate:expanded': (v: ExpandedState | undefined) => { if (v) expandedModel.value = v },
+    // 'rowPinning': rowPinningModel.value,
+    // 'onUpdate:rowPinning': (v: RowPinningState | undefined) => {
+    //   if (!v) return
+    //   rowPinningModel.value = {
+    //     top: [...(v.top ?? [])],
+    //     bottom: [...(v.bottom ?? [])]
+    //   }
+    // },
+    // ...(getSubRows.value && { getSubRows: getSubRows.value }),
+    // ...(props.rowKey && {
+    //   getRowId: (row: T) => String(row[props.rowKey!])
+    // }),
+    // ...((props.onRowClick || props.expandOnRowClick) && {
+    //   onSelect: (_e: Event, row: { original: T }) => {
+    //     const idx = props.data.indexOf(row.original)
+    //     props.onRowClick?.(row.original, idx)
+
+    //     if (props.expandOnRowClick) {
+    //       toggleExpandedByRow(row.original)
+    //     }
+    //   }
+    // }),
+    // ...(props.onRowContextmenu && {
+    //   onContextmenu: (e: Event, row: { original: T }) => {
+    //     props.onRowContextmenu!(e, row.original)
+    //   }
+    // }),
+  }
+})
 
 // const showPagination = computed(() => {
 //   if (props.infiniteScroll) return false

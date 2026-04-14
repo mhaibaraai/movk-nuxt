@@ -80,10 +80,12 @@ const treeData: TableTreeNode[] = [
 
 const basicColumns: DataTableColumn<TableUser>[] = [
   { accessorKey: 'name', header: '姓名', fixed: 'left', size: 100 },
-  { accessorKey: 'email', header: '邮箱', tooltip: 2, maxSize: 100 },
+  { accessorKey: 'email', header: '邮箱', tooltip: 2, maxSize: 100, resizable: true },
   { accessorKey: 'department', header: '部门' },
-  { accessorKey: 'role', header: '职位' },
-  { accessorKey: 'bio', header: '简介', size: 200, fixed: 'right' }
+  { accessorKey: 'role', header: '职位', _raw: { header: () => 'haha' } },
+  { accessorKey: 'salary', header: '薪资', sortable: true },
+  { accessorKey: 'joinDate', header: '入职日期' },
+  { accessorKey: 'bio', header: '简介', size: 200, pinable: true, tooltip: 2 }
 ]
 
 const formattingColumns: DataTableColumn<TableUser>[] = [

@@ -1,7 +1,6 @@
 import type { ColumnDef, RowSelectionState } from '@tanstack/vue-table'
 import type { Ref } from 'vue'
-import { resolveComponent } from 'vue'
-import { computed, h, watch } from 'vue'
+import { resolveComponent, computed, h, watch } from 'vue'
 import {
   keysToRowSelection,
   rowSelectionToKeys

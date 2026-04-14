@@ -4,6 +4,15 @@ import type { CellContext, ColumnDef, ColumnDefTemplate, ColumnPinningState, Col
 
 export type DataTableSizePreset = 'xs' | 'sm' | 'md' | 'lg' | 'xl'
 
+export type DataTableDensityPreset = 'compact' | 'normal' | 'comfortable'
+
+export interface DataTableDensityOptions {
+  /** td 的 Tailwind padding class，例如 'px-4 py-2' */
+  td?: string
+  /** th 的 Tailwind padding class */
+  th?: string
+}
+
 export interface DataTableBorderedOptions {
   /** 边框颜色，支持 CSS 颜色值或 CSS var，默认 var(--ui-border) */
   color?: string
@@ -43,10 +52,14 @@ export interface DataTableDataColumn<T> extends DataTableBaseColumn {
    * @defaultValue true
    */
   visibility?: boolean
-  /** 启用排序，优先级高于全局 sortable */
-  sortable?: boolean
   /** 允许通过表头交互切换列固定（left -> right -> none），优先级高于全局 pinable */
   pinable?: boolean
+  /** 固定列按钮 props 透传，列级可覆盖全局 pinButtonProps */
+  pinButtonProps?: ButtonProps
+  /** 启用排序，优先级高于全局 sortable */
+  sortable?: boolean
+  /** 排序按钮 props 透传，列级可覆盖全局 sortButtonProps */
+  sortButtonProps?: ButtonProps
   /** 是否可拖拽调整宽度，优先级高于全局 resizable */
   resizable?: boolean
   /** 空值占位文本，false 禁用 */
@@ -197,7 +210,7 @@ export type DataTableColumn<T>
 
 type DataTableInheritedTableProps<T extends TableData> = OmitByKey<
   TableProps<T>,
-  'columns' | 'meta' | 'ui'
+  'columns' | 'meta' | 'ui' | 'sortingOptions' | 'columnSizingOptions' | 'columnPinningOptions'
 >
 
 export interface DataTableProps<T extends TableData> extends /* @vue-ignore */ DataTableInheritedTableProps<T> {
@@ -219,25 +232,42 @@ export interface DataTableProps<T extends TableData> extends /* @vue-ignore */ D
    */
   fixedLayout?: boolean
   /**
-   * 全局启用数据列 pin 按钮，传函数可按列定义动态决定
-   * @defaultValue false
-   */
-  pinable?: boolean | ((col: DataTableDataColumn<T>) => boolean)
-  /**
-   * 全局数据列可排序，传函数可按列定义动态决定
-   * @defaultValue false
-   */
-  sortable?: boolean | ((col: DataTableDataColumn<T>) => boolean)
-  /**
    * 空值占位符，null/undefined/'' 时显示
    * @defaultValue '-'
    */
   emptyCell?: false | string | ColumnDefTemplate<CellContext<T, unknown>>
   /**
+   * 全局启用数据列 pin 按钮，传函数可按列定义动态决定
+   * @defaultValue false
+   */
+  pinable?: boolean | ((col: DataTableDataColumn<T>) => boolean)
+  /** 固定列按钮 props 透传 */
+  pinButtonProps?: ButtonProps
+  /**
+   * 全局数据列可排序，传函数可按列定义动态决定
+   * @defaultValue false
+   */
+  sortable?: boolean | ((col: DataTableDataColumn<T>) => boolean)
+  /** 排序按钮 props 透传 */
+  sortButtonProps?: ButtonProps
+  /**
    * 启用列拖拽调整宽度，传函数可按列定义动态决定
    * @defaultValue false
    */
   resizable?: boolean | ((col: DataTableDataColumn<T>) => boolean)
+  /**
+   * 列宽拖动模式
+   * - 'onChange' = 拖动中实时重排（流畅但大表性能差）
+   * - 'onEnd' = 释放鼠标后才更新（性能好）
+   * @defaultValue 'onChange'
+   */
+  columnResizeMode?: 'onChange' | 'onEnd'
+  /**
+   * 表格密度，控制单元格与表头内边距
+   * - 'compact' / 'normal' / 'comfortable' = 预设（compact: 12/6·12/8，normal: 16/10·16/12，comfortable: 16/16 = Nuxt UI 默认）
+   * - 对象 = 自定义 Tailwind padding class（td / th 分别指定）
+   */
+  density?: DataTableDensityPreset | DataTableDensityOptions
   /** 表格元数据 */
   meta?: TableMeta<T>
   /** 行条件 class */
@@ -289,6 +319,18 @@ export interface DataTableProps<T extends TableData> extends /* @vue-ignore */ D
   columnPinning?: ColumnPinningState
   /** 列宽状态（v-model:columnSizing） */
   columnSizing?: ColumnSizingState
+  /**
+   * 排序配置，默认：`{ enableSorting: !!sortable }`
+   */
+  sortingOptions?: TableProps<T>['sortingOptions']
+  /**
+   * 列尺寸配置， 默认：`{ enableColumnResizing: !!resizable, columnResizeMode }`
+   */
+  columnSizingOptions?: TableProps<T>['columnSizingOptions']
+  /**
+   * 列固定配置，默认：`{ enableColumnPinning: !!pinable }`
+   */
+  columnPinningOptions?: TableProps<T>['columnPinningOptions']
   /** 行固定状态（v-model:rowPinning） */
   rowPinning?: RowPinningState
 
