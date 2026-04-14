@@ -15,6 +15,7 @@ import { UTable } from '#components'
 import { computed, ref, useAttrs, useSlots, useTemplateRef, watch } from 'vue'
 import { resolveCallbackValue, collectTreeKeys } from '../utils/data-table-utils'
 import { resolveColumns } from './data-table/column-helpers'
+import { useScroll } from '@vueuse/core'
 import {
   areSameKeys,
   keysToRowSelection,
@@ -73,7 +74,21 @@ defineOptions({ inheritAttrs: false })
 const attrs = useAttrs()
 
 const tableRef = useTemplateRef('tableRef')
+const wrapperRef = useTemplateRef('wrapperRef')
 const slots = useSlots()
+
+const scrollContainer = computed(() =>
+  wrapperRef.value?.querySelector<HTMLElement>('[data-slot="root"]') ?? null
+)
+const { arrivedState } = useScroll(scrollContainer)
+
+const scrollingClass = computed(() => {
+  const { left, right } = arrivedState
+  if (left && right) return 'data-table--scrolling-none'
+  if (left) return 'data-table--scrolling-left'
+  if (right) return 'data-table--scrolling-right'
+  return 'data-table--scrolling-middle'
+})
 // const infiniteLoadingTriggered = ref(false)
 
 // const rowSelection = computed<RowSelectionState>(() =>
@@ -434,11 +449,15 @@ const uTableProps = computed(() => {
 
 <template>
   <div
+    ref="wrapperRef"
     class="data-table"
-    :class="{
-      'data-table--bordered': !!bordered
-    // 'data-table--tree': isTreeMode
-    }"
+    :class="[
+      scrollingClass,
+      {
+        'data-table--bordered': !!bordered
+      // 'data-table--tree': isTreeMode
+      }
+    ]"
     :style="borderedStyle"
   >
     <!-- <div

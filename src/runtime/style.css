@@ -41,8 +41,9 @@
   @apply bg-default!;
 }
 
-/* 左固定列右侧阴影（伪元素避免被相邻 cell 背景遮盖） */
-.data-table [data-pinned="left"]:has(+ :not([data-pinned="left"]))::after {
+/* 左固定列右侧阴影（仅滚动偏移后显示） */
+.data-table:is(.data-table--scrolling-right, .data-table--scrolling-middle)
+  [data-pinned="left"]:has(+ :not([data-pinned="left"]))::after {
   content: '';
   position: absolute;
   top: 0;
@@ -54,8 +55,9 @@
   background: linear-gradient(to right, rgba(0, 0, 0, 0.06), transparent);
 }
 
-/* 右固定列左侧阴影 */
-.data-table :not([data-pinned="right"]) + [data-pinned="right"]::before {
+/* 右固定列左侧阴影（仅未滚到底时显示） */
+.data-table:is(.data-table--scrolling-left, .data-table--scrolling-middle)
+  :not([data-pinned="right"]) + [data-pinned="right"]::before {
   content: '';
   position: absolute;
   top: 0;
