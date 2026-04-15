@@ -388,7 +388,12 @@ const uTableProps = computed(() => {
     'columnSizing': columnSizingModel.value,
     'onUpdate:columnSizing': (v: ColumnSizingState | undefined) => {
       if (!v) return
-      columnSizingModel.value = { ...v }
+      const rounded: ColumnSizingState = {}
+      for (const key in v) {
+        const size = v[key]
+        if (typeof size === 'number') rounded[key] = Math.round(size)
+      }
+      columnSizingModel.value = rounded
     },
     'columnSizingOptions': mergedColumnSizingOptions,
     'sortingOptions': mergedSortingOptions,

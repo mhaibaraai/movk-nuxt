@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import type { DataTableDensityPreset } from '#movk/types/data-table'
 
-const { users, basicColumns } = useTableExamples()
+const { users, groupingColumns } = useTableExamples()
 
-const density = ref<DataTableDensityPreset>('normal')
-const resizeMode = ref<'onChange' | 'onEnd'>('onEnd')
+const density = ref<DataTableDensityPreset>('compact')
+const resizeMode = ref<'onChange' | 'onEnd'>('onChange')
 
 const densityOptions = [
   { label: 'compact', value: 'compact' },
@@ -54,12 +54,14 @@ const resizeModeOptions = [
 
     <MDataTable
       :data="users"
-      :columns="basicColumns"
+      :columns="groupingColumns"
       :density="density"
       :column-resize-mode="resizeMode"
-      resizable
-      sortable
-      pinable
+      :resizable="true"
+      :sortable="false"
+      :pinable="false"
+      :bordered="true"
+      :fixed-layout="true"
     />
   </div>
 </template>

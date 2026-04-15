@@ -3,16 +3,23 @@ import type {
   ColumnDef,
   ColumnPinningState,
   ColumnSizingState,
+  Header,
   HeaderContext,
   VisibilityState
 } from '@tanstack/vue-table'
 import type { VNode } from 'vue'
 import type {
+  DataTableActionsColumn,
   DataTableColumn,
   DataTableDataColumn,
   DataTableDensityOptions,
+  DataTableExpandColumn,
   DataTableGroupColumn,
+  DataTableIndexColumn,
   DataTableProps,
+  DataTableRowPinningColumn,
+  DataTableSelectionColumn,
+  DataTableSizePreset,
   ResolvedColumnState
 } from '../../types/data-table'
 import { h, ref, resolveComponent } from 'vue'
@@ -28,6 +35,36 @@ interface HeaderAction<T> {
   id: 'sort' | 'pin' | string
   position: 'leading' | 'trailing'
   render: (ctx: HeaderContext<T, unknown>) => VNode | null
+}
+
+interface BaseStateInput {
+  id: string
+  fixed?: 'left' | 'right'
+  defaultFixed?: 'left' | 'right'
+  size?: number | DataTableSizePreset
+  defaultSize?: number
+}
+
+function applyBaseState(
+  input: BaseStateInput,
+  pinning: ColumnPinningState,
+  sizing: ColumnSizingState
+): { resolvedSize: number | undefined } {
+  const effectiveFixed = input.fixed ?? input.defaultFixed
+  if (effectiveFixed) {
+    pinning[effectiveFixed === 'left' ? 'left' : 'right']!.push(input.id)
+  }
+
+  const rawSize = input.size ?? input.defaultSize
+  const resolvedSize = rawSize != null
+    ? (isString(rawSize) ? resolvePresetSize(rawSize) : rawSize)
+    : undefined
+
+  if (resolvedSize != null) {
+    sizing[input.id] = resolvedSize
+  }
+
+  return { resolvedSize }
 }
 
 export function resolveColumns<T>(
@@ -55,20 +92,21 @@ function resolveColumn<T>(
   options: DataTableProps<T>,
   pinning: ColumnPinningState,
   visibility: VisibilityState,
-  sizing: ColumnSizingState
+  sizing: ColumnSizingState,
+  inheritedFixed?: 'left' | 'right'
 ): ColumnDef<T, unknown> {
   if (isGroupColumn(col)) {
-    return resolveGroupColumn(col, options, pinning, visibility, sizing)
+    return resolveGroupColumn(col, options, pinning, visibility, sizing, inheritedFixed)
   }
 
   if (isDataColumn(col)) {
-    return resolveDataColumn(col, options, pinning, visibility, sizing)
+    return resolveDataColumn(col, options, pinning, visibility, sizing, inheritedFixed)
   }
 
   // if ('type' in col) {
   //   switch (col.type) {
   //     case 'selection':
-  //       return resolveSelectionColumn<T>(col as DataTableSelectionColumn, pinning)
+  //       return resolveSelectionColumn<T>(col as DataTableSelectionColumn, pinning, sizing)
   //     case 'index':
   //       return resolveIndexColumn(col, options, pinning, sizing)
   //     case 'expand':
@@ -88,23 +126,22 @@ function resolveDataColumn<T>(
   options: DataTableProps<T>,
   pinning: ColumnPinningState,
   visibility: VisibilityState,
-  sizing: ColumnSizingState
+  sizing: ColumnSizingState,
+  inheritedFixed?: 'left' | 'right'
 ): ColumnDef<T, unknown> {
   const id = col.accessorKey
   const effectiveSortable = resolveColumnFlag(col.sortable, options.sortable, col)
   const effectivePinable = resolveColumnFlag(col.pinable, options.pinable, col)
   const effectiveResizable = resolveColumnFlag(col.resizable, options.resizable, col)
 
-  if (col.fixed) {
-    pinning[col.fixed === 'left' ? 'left' : 'right']!.push(id)
-  }
+  const { resolvedSize } = applyBaseState(
+    { id, fixed: col.fixed ?? inheritedFixed, size: col.size },
+    pinning,
+    sizing
+  )
 
   if (col.visibility === false) {
     visibility[id] = false
-  }
-
-  if (col.size != null) {
-    sizing[id] = isString(col.size) ? resolvePresetSize(col.size) : col.size
   }
 
   // 列定义期判断：只要全局或列级有可能启用 tooltip/truncate，就进入自定义 cell 路径
@@ -122,7 +159,7 @@ function resolveDataColumn<T>(
       : (col.header ?? id),
     ...(col.minSize != null && { minSize: col.minSize }),
     ...(col.maxSize != null && { maxSize: col.maxSize }),
-    ...(col.size != null && { size: isString(col.size) ? resolvePresetSize(col.size) : col.size }),
+    ...(resolvedSize != null && { size: resolvedSize }),
     enableSorting: effectiveSortable,
     enablePinning: effectivePinable,
     enableResizing: effectiveResizable,
@@ -199,32 +236,51 @@ function resolveGroupColumn<T>(
   options: DataTableProps<T>,
   pinning: ColumnPinningState,
   visibility: VisibilityState,
-  sizing: ColumnSizingState
+  sizing: ColumnSizingState,
+  inheritedFixed?: 'left' | 'right'
 ): ColumnDef<T, unknown> {
+  const effectiveFixed = col.fixed ?? inheritedFixed
+  const resolvedSize = col.size != null
+    ? (isString(col.size) ? resolvePresetSize(col.size) : col.size)
+    : undefined
+
   return {
     id: `group-${col.header ?? 'unnamed'}`,
     header: col.header ?? '',
+    ...(resolvedSize != null && { size: resolvedSize }),
+    ...(col.minSize != null && { minSize: col.minSize }),
+    ...(col.maxSize != null && { maxSize: col.maxSize }),
     columns: col.children?.map(child =>
-      resolveColumn(child, options, pinning, visibility, sizing)
-    )
+      resolveColumn(child, options, pinning, visibility, sizing, effectiveFixed)
+    ),
+    meta: {
+      class: {
+        th: [
+          resolveAlignClass(col.align),
+          effectiveFixed && `group-pinned-${effectiveFixed}`
+        ].filter(Boolean).join(' ') || undefined
+      },
+      style: {
+        th: (header: Header<T, unknown>) => groupHeaderStyle(header, effectiveFixed)
+      }
+    }
   } as ColumnDef<T, unknown>
 }
 
 function resolveSelectionColumn<T>(
   col: DataTableSelectionColumn,
-  pinning: ColumnPinningState
+  pinning: ColumnPinningState,
+  sizing: ColumnSizingState
 ): ColumnDef<T, unknown> {
   const id = '__selection'
-  const size = col.size ?? DATA_TABLE_DEFAULTS.selectionSize
 
-  if (col.fixed) {
-    pinning[col.fixed === 'left' ? 'left' : 'right']!.push(id)
-  }
-  else {
-    pinning.left!.push(id)
-  }
+  const { resolvedSize } = applyBaseState(
+    { id, fixed: col.fixed, defaultFixed: 'left', size: col.size, defaultSize: DATA_TABLE_DEFAULTS.selectionSize },
+    pinning,
+    sizing
+  )
 
-  return createSelectionColumnDef<T>(id, size, col.mode ?? 'multiple')
+  return createSelectionColumnDef<T>(id, resolvedSize ?? DATA_TABLE_DEFAULTS.selectionSize, col.mode ?? 'multiple')
 }
 
 function resolveIndexColumn<T>(
@@ -234,18 +290,17 @@ function resolveIndexColumn<T>(
   sizing: ColumnSizingState
 ): ColumnDef<T, unknown> {
   const id = '__index'
-  const size = col.size ?? DATA_TABLE_DEFAULTS.indexSize
 
-  sizing[id] = size
-
-  if (col.fixed) {
-    pinning[col.fixed === 'left' ? 'left' : 'right']!.push(id)
-  }
+  const { resolvedSize } = applyBaseState(
+    { id, fixed: col.fixed, size: col.size, defaultSize: DATA_TABLE_DEFAULTS.indexSize },
+    pinning,
+    sizing
+  )
 
   return {
     id,
     header: col.label ?? DATA_TABLE_DEFAULTS.indexLabel,
-    size,
+    size: resolvedSize,
     enableSorting: false,
     enableResizing: false,
     cell: (ctx: CellContext<T, unknown>) => {
@@ -268,18 +323,17 @@ function resolveExpandColumn<T>(
   sizing: ColumnSizingState
 ): ColumnDef<T, unknown> {
   const id = '__expand'
-  const size = col.size ?? DATA_TABLE_DEFAULTS.expandSize
 
-  sizing[id] = size
-
-  if (col.fixed) {
-    pinning[col.fixed === 'left' ? 'left' : 'right']!.push(id)
-  }
+  const { resolvedSize } = applyBaseState(
+    { id, fixed: col.fixed, size: col.size, defaultSize: DATA_TABLE_DEFAULTS.expandSize },
+    pinning,
+    sizing
+  )
 
   return {
     id,
     header: '',
-    size,
+    size: resolvedSize,
     enableSorting: false,
     enableResizing: false,
     cell: (ctx: CellContext<T, unknown>) => {
@@ -306,21 +360,17 @@ function resolveRowPinningColumn<T>(
   sizing: ColumnSizingState
 ): ColumnDef<T, unknown> {
   const id = '__row_pinning'
-  const size = col.size ?? DATA_TABLE_DEFAULTS.selectionSize
 
-  sizing[id] = size
-
-  if (col.fixed) {
-    pinning[col.fixed === 'left' ? 'left' : 'right']!.push(id)
-  }
-  else {
-    pinning.left!.push(id)
-  }
+  const { resolvedSize } = applyBaseState(
+    { id, fixed: col.fixed, defaultFixed: 'left', size: col.size, defaultSize: DATA_TABLE_DEFAULTS.selectionSize },
+    pinning,
+    sizing
+  )
 
   return {
     id,
     header: '',
-    size,
+    size: resolvedSize,
     enableSorting: false,
     enableResizing: false,
     cell: (ctx: CellContext<T, unknown>) => {
@@ -418,16 +468,11 @@ function resolveActionsColumn<T>(
 ): ColumnDef<T, unknown> {
   const id = '__actions'
 
-  if (col.size != null) {
-    sizing[id] = col.size
-  }
-
-  if (col.fixed) {
-    pinning[col.fixed === 'left' ? 'left' : 'right']!.push(id)
-  }
-  else {
-    pinning.right!.push(id)
-  }
+  const { resolvedSize } = applyBaseState(
+    { id, fixed: col.fixed, defaultFixed: 'right', size: col.size },
+    pinning,
+    sizing
+  )
 
   // 每个 action 实例独立的 open 状态，key = "${rowIndex}-${actionIndex}"
   const confirmStateMap = new Map<string, ReturnType<typeof ref<boolean>>>()
@@ -437,7 +482,7 @@ function resolveActionsColumn<T>(
     header: col.label ?? DATA_TABLE_DEFAULTS.actionsLabel,
     enableSorting: false,
     enableResizing: false,
-    ...(col.size != null && { size: col.size }),
+    ...(resolvedSize != null && { size: resolvedSize }),
     cell: (ctx: CellContext<T, unknown>) => {
       const row = ctx.row.original
       const index = ctx.row.index
@@ -464,11 +509,9 @@ function resolveActionsColumn<T>(
         )
       )
     },
-    ...(col.size != null && {
-      meta: {
-        style: columnSizeStyle()
-      }
-    })
+    meta: {
+      style: columnSizeStyle()
+    }
   } as ColumnDef<T, unknown>
 }
 
@@ -487,9 +530,43 @@ function resolveDensityClass<T>(options: DataTableProps<T>): DataTableDensityOpt
 
 function columnSizeStyle() {
   return {
-    th: (ctx: { column: { getSize: () => number } }) => ({ width: `${ctx.column.getSize()}px` }),
-    td: (ctx: { column: { getSize: () => number } }) => ({ width: `${ctx.column.getSize()}px` })
+    th: (ctx: { column: { getSize: () => number } }) => ({ width: `${Math.round(ctx.column.getSize())}px` }),
+    td: (ctx: { column: { getSize: () => number } }) => ({ width: `${Math.round(ctx.column.getSize())}px` })
   }
+}
+
+function getFirstLeafHeader<T>(header: Header<T, unknown>): Header<T, unknown> {
+  return header.subHeaders.length
+    ? getFirstLeafHeader(header.subHeaders[0]!)
+    : header
+}
+
+function getLastLeafHeader<T>(header: Header<T, unknown>): Header<T, unknown> {
+  return header.subHeaders.length
+    ? getLastLeafHeader(header.subHeaders[header.subHeaders.length - 1]!)
+    : header
+}
+
+function groupHeaderStyle<T>(header: Header<T, unknown>, fixed?: 'left' | 'right'): Record<string, string> {
+  const style: Record<string, string> = {
+    width: `${Math.round(header.getSize())}px`
+  }
+  const pinned = fixed ?? header.column.getIsPinned()
+  if (pinned === 'left') {
+    const first = getFirstLeafHeader(header)
+    style.position = 'sticky'
+    style.left = `${Math.round(first.column.getStart('left'))}px`
+    style.zIndex = '2'
+    style.backgroundColor = 'var(--ui-bg)'
+  }
+  else if (pinned === 'right') {
+    const last = getLastLeafHeader(header)
+    style.position = 'sticky'
+    style.right = `${Math.round(last.column.getAfter('right'))}px`
+    style.zIndex = '2'
+    style.backgroundColor = 'var(--ui-bg)'
+  }
+  return style
 }
 
 function buildSortAction<T>(

@@ -87,6 +87,22 @@ const basicColumns: DataTableColumn<TableUser>[] = [
   { accessorKey: 'bio', header: '简介', size: 200, pinable: true, tooltip: 2 }
 ]
 
+const groupingColumns: DataTableColumn<TableUser>[] = [
+  { accessorKey: 'name', header: '姓名', fixed: 'left', minSize: 100 },
+  { accessorKey: 'email', header: '邮箱', tooltip: 2, size: 150 },
+  { accessorKey: 'salary', header: '薪资' },
+  {
+    header: '工作信息',
+    size: 300,
+    fixed: 'left',
+    children: [
+      { accessorKey: 'department', header: '部门' },
+      { accessorKey: 'role', header: '职位' }
+    ]
+  },
+  { accessorKey: 'bio', header: '简介', size: 200, tooltip: 2 }
+]
+
 const formattingColumns: DataTableColumn<TableUser>[] = [
   { accessorKey: 'name', header: '姓名', fixed: 'left' },
   { accessorKey: 'email', header: '邮箱' },
@@ -94,27 +110,27 @@ const formattingColumns: DataTableColumn<TableUser>[] = [
     accessorKey: 'salary',
     header: '薪资',
     align: 'right',
-    cell: v => v != null ? `¥${(v as number).toLocaleString()}` : '',
+    cell: ({ row }) => `¥${row.getValue('salary')?.toLocaleString() ?? ''}`,
     emptyCell: '保密'
   },
   {
     accessorKey: 'status',
     header: '状态',
-    cell: v => statusMap[v as string] ?? String(v)
+    cell: ({ getValue }) => statusMap[getValue() as string] ?? String(getValue())
   },
   { accessorKey: 'bio', header: '简介', tooltip: 2, size: 100 }
 ]
 
 const selectionColumns: DataTableColumn<TableUser>[] = [
-  { type: 'selection', fixed: 'left' },
-  { type: 'index', fixed: 'left' },
+  // { type: 'selection', fixed: 'left' },
+  // { type: 'index', fixed: 'left' },
   { accessorKey: 'name', header: '姓名' },
   { accessorKey: 'department', header: '部门' },
   { accessorKey: 'role', header: '职位' },
   {
     accessorKey: 'status',
     header: '状态',
-    cell: v => statusMap[v as string] ?? String(v)
+    cell: ({ getValue }) => statusMap[getValue() as string] ?? String(getValue())
   }
 ]
 
@@ -158,15 +174,15 @@ const sortingColumns: DataTableColumn<TableUser>[] = [
     header: '薪资',
     align: 'right',
     sortable: true,
-    cell: v => v != null ? `¥${(v as number).toLocaleString()}` : '',
+    cell: ({ row }) => `¥${row.getValue('salary')?.toLocaleString() ?? ''}`,
     emptyCell: '保密'
   },
   { accessorKey: 'joinDate', header: '入职日期', sortable: true },
   {
     accessorKey: 'status',
     header: '状态',
-    visible: false,
-    cell: v => statusMap[v as string] ?? String(v)
+    visibility: false,
+    cell: ({ getValue }) => statusMap[getValue() as string] ?? String(getValue())
   }
 ]
 
@@ -183,10 +199,10 @@ const pinningColumns: DataTableColumn<TableUser>[] = [
     size: 140,
     sortable: true,
     pinable: true,
-    cell: v => v != null ? `¥${(v as number).toLocaleString()}` : '',
+    cell: ({ row }) => `¥${row.getValue('salary')?.toLocaleString() ?? ''}`,
     emptyCell: '保密'
   },
-  { accessorKey: 'status', header: '状态', size: 110, pinable: true, cell: v => statusMap[v as string] ?? String(v) }
+  { accessorKey: 'status', header: '状态', size: 110, pinable: true, cell: ({ getValue }) => statusMap[getValue() as string] ?? String(getValue()) }
 ]
 
 const sizingColumns: DataTableColumn<TableUser>[] = [
@@ -228,7 +244,10 @@ const treeColumns: DataTableColumn<TableTreeNode>[] = [
     header: '大小',
     align: 'right',
     size: 100,
-    cell: v => v != null ? `${(v as number / 1024).toFixed(1)} KB` : '',
+    cell: ({ row }) => {
+      const size = row.getValue('size')
+      return size != null ? `${(size as number / 1024).toFixed(1)} KB` : ''
+    },
     emptyCell: '—'
   }
 ]
@@ -239,6 +258,7 @@ export const useTableExamples = () => {
     largeUsers,
     treeData,
     basicColumns,
+    groupingColumns,
     formattingColumns,
     selectionColumns,
     actionsColumns,
