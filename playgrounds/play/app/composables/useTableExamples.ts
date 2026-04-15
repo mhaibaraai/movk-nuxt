@@ -10,7 +10,6 @@ export interface TableUser {
   joinDate: string
   status: 'active' | 'inactive' | 'pending'
   bio: string
-  [accessorKey: string]: unknown
 }
 
 export interface TableTreeNode {

@@ -46,7 +46,7 @@ export interface DataTableBaseColumn {
 
 export interface DataTableDataColumn<T> extends DataTableBaseColumn {
   /** 数据字段键 */
-  accessorKey: keyof T & string
+  accessorKey: Suggest<keyof T & string>
   /**
    * 默认是否可见
    * @defaultValue true
