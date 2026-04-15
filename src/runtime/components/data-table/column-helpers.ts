@@ -240,14 +240,10 @@ function resolveGroupColumn<T>(
   inheritedFixed?: 'left' | 'right'
 ): ColumnDef<T, unknown> {
   const effectiveFixed = col.fixed ?? inheritedFixed
-  const resolvedSize = col.size != null
-    ? (isString(col.size) ? resolvePresetSize(col.size) : col.size)
-    : undefined
 
   return {
     id: `group-${col.header ?? 'unnamed'}`,
     header: col.header ?? '',
-    ...(resolvedSize != null && { size: resolvedSize }),
     ...(col.minSize != null && { minSize: col.minSize }),
     ...(col.maxSize != null && { maxSize: col.maxSize }),
     columns: col.children?.map(child =>
@@ -255,10 +251,7 @@ function resolveGroupColumn<T>(
     ),
     meta: {
       class: {
-        th: [
-          resolveAlignClass(col.align),
-          effectiveFixed && `group-pinned-${effectiveFixed}`
-        ].filter(Boolean).join(' ') || undefined
+        th: [resolveAlignClass(col.align)].filter(Boolean).join(' ') || undefined
       },
       style: {
         th: (header: Header<T, unknown>) => groupHeaderStyle(header, effectiveFixed)
@@ -267,253 +260,253 @@ function resolveGroupColumn<T>(
   } as ColumnDef<T, unknown>
 }
 
-function resolveSelectionColumn<T>(
-  col: DataTableSelectionColumn,
-  pinning: ColumnPinningState,
-  sizing: ColumnSizingState
-): ColumnDef<T, unknown> {
-  const id = '__selection'
+// function resolveSelectionColumn<T>(
+//   col: DataTableSelectionColumn,
+//   pinning: ColumnPinningState,
+//   sizing: ColumnSizingState
+// ): ColumnDef<T, unknown> {
+//   const id = '__selection'
 
-  const { resolvedSize } = applyBaseState(
-    { id, fixed: col.fixed, defaultFixed: 'left', size: col.size, defaultSize: DATA_TABLE_DEFAULTS.selectionSize },
-    pinning,
-    sizing
-  )
+//   const { resolvedSize } = applyBaseState(
+//     { id, fixed: col.fixed, defaultFixed: 'left', size: col.size, defaultSize: DATA_TABLE_DEFAULTS.selectionSize },
+//     pinning,
+//     sizing
+//   )
 
-  return createSelectionColumnDef<T>(id, resolvedSize ?? DATA_TABLE_DEFAULTS.selectionSize, col.mode ?? 'multiple')
-}
+//   return createSelectionColumnDef<T>(id, resolvedSize ?? DATA_TABLE_DEFAULTS.selectionSize, col.mode ?? 'multiple')
+// }
 
-function resolveIndexColumn<T>(
-  col: DataTableIndexColumn,
-  options: DataTableProps<T>,
-  pinning: ColumnPinningState,
-  sizing: ColumnSizingState
-): ColumnDef<T, unknown> {
-  const id = '__index'
+// function resolveIndexColumn<T>(
+//   col: DataTableIndexColumn,
+//   options: DataTableProps<T>,
+//   pinning: ColumnPinningState,
+//   sizing: ColumnSizingState
+// ): ColumnDef<T, unknown> {
+//   const id = '__index'
 
-  const { resolvedSize } = applyBaseState(
-    { id, fixed: col.fixed, size: col.size, defaultSize: DATA_TABLE_DEFAULTS.indexSize },
-    pinning,
-    sizing
-  )
+//   const { resolvedSize } = applyBaseState(
+//     { id, fixed: col.fixed, size: col.size, defaultSize: DATA_TABLE_DEFAULTS.indexSize },
+//     pinning,
+//     sizing
+//   )
 
-  return {
-    id,
-    header: col.label ?? DATA_TABLE_DEFAULTS.indexLabel,
-    size: resolvedSize,
-    enableSorting: false,
-    enableResizing: false,
-    cell: (ctx: CellContext<T, unknown>) => {
-      const rowIndex = ctx.table.getRowModel().rows.indexOf(ctx.row)
-      return rowIndex + 1 + options.pageOffset
-    },
-    meta: {
-      class: {
-        td: 'text-center text-muted'
-      },
-      style: columnSizeStyle()
-    }
-  } as ColumnDef<T, unknown>
-}
+//   return {
+//     id,
+//     header: col.label ?? DATA_TABLE_DEFAULTS.indexLabel,
+//     size: resolvedSize,
+//     enableSorting: false,
+//     enableResizing: false,
+//     cell: (ctx: CellContext<T, unknown>) => {
+//       const rowIndex = ctx.table.getRowModel().rows.indexOf(ctx.row)
+//       return rowIndex + 1 + options.pageOffset
+//     },
+//     meta: {
+//       class: {
+//         td: 'text-center text-muted'
+//       },
+//       style: columnSizeStyle()
+//     }
+//   } as ColumnDef<T, unknown>
+// }
 
-function resolveExpandColumn<T>(
-  col: DataTableExpandColumn,
-  options: DataTableProps<T>,
-  pinning: ColumnPinningState,
-  sizing: ColumnSizingState
-): ColumnDef<T, unknown> {
-  const id = '__expand'
+// function resolveExpandColumn<T>(
+//   col: DataTableExpandColumn,
+//   options: DataTableProps<T>,
+//   pinning: ColumnPinningState,
+//   sizing: ColumnSizingState
+// ): ColumnDef<T, unknown> {
+//   const id = '__expand'
 
-  const { resolvedSize } = applyBaseState(
-    { id, fixed: col.fixed, size: col.size, defaultSize: DATA_TABLE_DEFAULTS.expandSize },
-    pinning,
-    sizing
-  )
+//   const { resolvedSize } = applyBaseState(
+//     { id, fixed: col.fixed, size: col.size, defaultSize: DATA_TABLE_DEFAULTS.expandSize },
+//     pinning,
+//     sizing
+//   )
 
-  return {
-    id,
-    header: '',
-    size: resolvedSize,
-    enableSorting: false,
-    enableResizing: false,
-    cell: (ctx: CellContext<T, unknown>) => {
-      if (!ctx.row.getCanExpand()) return null
-      return h(resolveComponent('UButton'), {
-        icon: ctx.row.getIsExpanded() ? 'i-lucide-chevron-down' : 'i-lucide-chevron-right',
-        variant: 'ghost',
-        size: 'xs',
-        color: 'neutral',
-        style: { marginLeft: `${ctx.row.depth * options.indentSize}px` },
-        onClick: (event: Event) => {
-          event.stopPropagation()
-          ctx.row.toggleExpanded()
-        }
-      })
-    },
-    meta: { style: columnSizeStyle() }
-  } as ColumnDef<T, unknown>
-}
+//   return {
+//     id,
+//     header: '',
+//     size: resolvedSize,
+//     enableSorting: false,
+//     enableResizing: false,
+//     cell: (ctx: CellContext<T, unknown>) => {
+//       if (!ctx.row.getCanExpand()) return null
+//       return h(resolveComponent('UButton'), {
+//         icon: ctx.row.getIsExpanded() ? 'i-lucide-chevron-down' : 'i-lucide-chevron-right',
+//         variant: 'ghost',
+//         size: 'xs',
+//         color: 'neutral',
+//         style: { marginLeft: `${ctx.row.depth * options.indentSize}px` },
+//         onClick: (event: Event) => {
+//           event.stopPropagation()
+//           ctx.row.toggleExpanded()
+//         }
+//       })
+//     },
+//     meta: { style: columnSizeStyle() }
+//   } as ColumnDef<T, unknown>
+// }
 
-function resolveRowPinningColumn<T>(
-  col: DataTableRowPinningColumn,
-  pinning: ColumnPinningState,
-  sizing: ColumnSizingState
-): ColumnDef<T, unknown> {
-  const id = '__row_pinning'
+// function resolveRowPinningColumn<T>(
+//   col: DataTableRowPinningColumn,
+//   pinning: ColumnPinningState,
+//   sizing: ColumnSizingState
+// ): ColumnDef<T, unknown> {
+//   const id = '__row_pinning'
 
-  const { resolvedSize } = applyBaseState(
-    { id, fixed: col.fixed, defaultFixed: 'left', size: col.size, defaultSize: DATA_TABLE_DEFAULTS.selectionSize },
-    pinning,
-    sizing
-  )
+//   const { resolvedSize } = applyBaseState(
+//     { id, fixed: col.fixed, defaultFixed: 'left', size: col.size, defaultSize: DATA_TABLE_DEFAULTS.selectionSize },
+//     pinning,
+//     sizing
+//   )
 
-  return {
-    id,
-    header: '',
-    size: resolvedSize,
-    enableSorting: false,
-    enableResizing: false,
-    cell: (ctx: CellContext<T, unknown>) => {
-      const pinned = ctx.row.getIsPinned()
-      const defaultPosition = col.position ?? 'top'
+//   return {
+//     id,
+//     header: '',
+//     size: resolvedSize,
+//     enableSorting: false,
+//     enableResizing: false,
+//     cell: (ctx: CellContext<T, unknown>) => {
+//       const pinned = ctx.row.getIsPinned()
+//       const defaultPosition = col.position ?? 'top'
 
-      return h(resolveComponent('UButton'), {
-        'icon': pinned ? 'i-lucide-pin-off' : 'i-lucide-pin',
-        'variant': 'ghost',
-        'size': 'xs',
-        'color': pinned ? 'primary' : 'neutral',
-        'aria-label': pinned ? '取消固定行' : '固定行',
-        'onClick': (event: Event) => {
-          event.stopPropagation()
-          if (pinned) {
-            ctx.row.pin(false)
-            return
-          }
+//       return h(resolveComponent('UButton'), {
+//         'icon': pinned ? 'i-lucide-pin-off' : 'i-lucide-pin',
+//         'variant': 'ghost',
+//         'size': 'xs',
+//         'color': pinned ? 'primary' : 'neutral',
+//         'aria-label': pinned ? '取消固定行' : '固定行',
+//         'onClick': (event: Event) => {
+//           event.stopPropagation()
+//           if (pinned) {
+//             ctx.row.pin(false)
+//             return
+//           }
 
-          ctx.row.pin(defaultPosition)
-        }
-      })
-    },
-    meta: {
-      class: {
-        td: 'text-center',
-        th: 'text-center'
-      },
-      style: columnSizeStyle()
-    }
-  } as ColumnDef<T, unknown>
-}
+//           ctx.row.pin(defaultPosition)
+//         }
+//       })
+//     },
+//     meta: {
+//       class: {
+//         td: 'text-center',
+//         th: 'text-center'
+//       },
+//       style: columnSizeStyle()
+//     }
+//   } as ColumnDef<T, unknown>
+// }
 
-function renderConfirmAction<T>(
-  action: import('../../types/data-table').DataTableAction<T>,
-  row: T,
-  rowIndex: number,
-  actionIndex: number,
-  stateMap: Map<string, ReturnType<typeof ref<boolean>>>
-) {
-  const key = `${rowIndex}-${actionIndex}`
-  if (!stateMap.has(key)) {
-    stateMap.set(key, ref(false))
-  }
-  const open = stateMap.get(key)!
+// function renderConfirmAction<T>(
+//   action: import('../../types/data-table').DataTableAction<T>,
+//   row: T,
+//   rowIndex: number,
+//   actionIndex: number,
+//   stateMap: Map<string, ReturnType<typeof ref<boolean>>>
+// ) {
+//   const key = `${rowIndex}-${actionIndex}`
+//   if (!stateMap.has(key)) {
+//     stateMap.set(key, ref(false))
+//   }
+//   const open = stateMap.get(key)!
 
-  const confirmConfig = typeof action.confirm === 'string'
-    ? { title: action.confirm, description: undefined }
-    : action.confirm!
+//   const confirmConfig = typeof action.confirm === 'string'
+//     ? { title: action.confirm, description: undefined }
+//     : action.confirm!
 
-  return h(resolveComponent('UPopover'), {
-    'open': open.value,
-    'onUpdate:open': (v: boolean) => { open.value = v }
-  }, {
-    default: () => h(resolveComponent('UButton'), {
-      label: action.label,
-      icon: action.icon,
-      color: (action.color ?? 'neutral') as 'neutral',
-      variant: 'ghost',
-      size: 'xs',
-      disabled: resolveCallbackValue(action.disabled ?? false, row),
-      onClick: () => { open.value = true }
-    }),
-    content: () => h('div', { class: 'p-3 flex flex-col gap-2 max-w-55' }, [
-      h('p', { class: 'text-sm font-medium text-highlighted' }, confirmConfig.title),
-      confirmConfig.description
-        ? h('p', { class: 'text-xs text-muted' }, confirmConfig.description)
-        : null,
-      h('div', { class: 'flex justify-end gap-2 mt-1' }, [
-        h(resolveComponent('UButton'), {
-          label: '取消',
-          color: 'neutral',
-          variant: 'ghost',
-          size: 'xs',
-          onClick: () => { open.value = false }
-        }),
-        h(resolveComponent('UButton'), {
-          label: '确认',
-          color: (action.color ?? 'primary') as 'primary',
-          size: 'xs',
-          onClick: () => {
-            open.value = false
-            action.onClick(row, rowIndex)
-          }
-        })
-      ])
-    ])
-  })
-}
+//   return h(resolveComponent('UPopover'), {
+//     'open': open.value,
+//     'onUpdate:open': (v: boolean) => { open.value = v }
+//   }, {
+//     default: () => h(resolveComponent('UButton'), {
+//       label: action.label,
+//       icon: action.icon,
+//       color: (action.color ?? 'neutral') as 'neutral',
+//       variant: 'ghost',
+//       size: 'xs',
+//       disabled: resolveCallbackValue(action.disabled ?? false, row),
+//       onClick: () => { open.value = true }
+//     }),
+//     content: () => h('div', { class: 'p-3 flex flex-col gap-2 max-w-55' }, [
+//       h('p', { class: 'text-sm font-medium text-highlighted' }, confirmConfig.title),
+//       confirmConfig.description
+//         ? h('p', { class: 'text-xs text-muted' }, confirmConfig.description)
+//         : null,
+//       h('div', { class: 'flex justify-end gap-2 mt-1' }, [
+//         h(resolveComponent('UButton'), {
+//           label: '取消',
+//           color: 'neutral',
+//           variant: 'ghost',
+//           size: 'xs',
+//           onClick: () => { open.value = false }
+//         }),
+//         h(resolveComponent('UButton'), {
+//           label: '确认',
+//           color: (action.color ?? 'primary') as 'primary',
+//           size: 'xs',
+//           onClick: () => {
+//             open.value = false
+//             action.onClick(row, rowIndex)
+//           }
+//         })
+//       ])
+//     ])
+//   })
+// }
 
-function resolveActionsColumn<T>(
-  col: DataTableActionsColumn<T>,
-  pinning: ColumnPinningState,
-  sizing: ColumnSizingState
-): ColumnDef<T, unknown> {
-  const id = '__actions'
+// function resolveActionsColumn<T>(
+//   col: DataTableActionsColumn<T>,
+//   pinning: ColumnPinningState,
+//   sizing: ColumnSizingState
+// ): ColumnDef<T, unknown> {
+//   const id = '__actions'
 
-  const { resolvedSize } = applyBaseState(
-    { id, fixed: col.fixed, defaultFixed: 'right', size: col.size },
-    pinning,
-    sizing
-  )
+//   const { resolvedSize } = applyBaseState(
+//     { id, fixed: col.fixed, defaultFixed: 'right', size: col.size },
+//     pinning,
+//     sizing
+//   )
 
-  // 每个 action 实例独立的 open 状态，key = "${rowIndex}-${actionIndex}"
-  const confirmStateMap = new Map<string, ReturnType<typeof ref<boolean>>>()
+//   // 每个 action 实例独立的 open 状态，key = "${rowIndex}-${actionIndex}"
+//   const confirmStateMap = new Map<string, ReturnType<typeof ref<boolean>>>()
 
-  return {
-    id,
-    header: col.label ?? DATA_TABLE_DEFAULTS.actionsLabel,
-    enableSorting: false,
-    enableResizing: false,
-    ...(resolvedSize != null && { size: resolvedSize }),
-    cell: (ctx: CellContext<T, unknown>) => {
-      const row = ctx.row.original
-      const index = ctx.row.index
-      const actionList = isFunction(col.actions) ? col.actions(row) : col.actions
-      const visibleActions = actionList.filter(a =>
-        !resolveCallbackValue(a.hidden ?? false, row)
-      )
+//   return {
+//     id,
+//     header: col.label ?? DATA_TABLE_DEFAULTS.actionsLabel,
+//     enableSorting: false,
+//     enableResizing: false,
+//     ...(resolvedSize != null && { size: resolvedSize }),
+//     cell: (ctx: CellContext<T, unknown>) => {
+//       const row = ctx.row.original
+//       const index = ctx.row.index
+//       const actionList = isFunction(col.actions) ? col.actions(row) : col.actions
+//       const visibleActions = actionList.filter(a =>
+//         !resolveCallbackValue(a.hidden ?? false, row)
+//       )
 
-      if (visibleActions.length === 0) return null
+//       if (visibleActions.length === 0) return null
 
-      return h('div', { class: 'flex items-center gap-1' },
-        visibleActions.map((action, actionIndex) =>
-          action.confirm
-            ? renderConfirmAction(action, row, index, actionIndex, confirmStateMap)
-            : h(resolveComponent('UButton'), {
-                label: action.label,
-                icon: action.icon,
-                color: (action.color ?? 'neutral') as 'neutral',
-                variant: 'ghost',
-                size: 'xs',
-                disabled: resolveCallbackValue(action.disabled ?? false, row),
-                onClick: () => action.onClick(row, index)
-              })
-        )
-      )
-    },
-    meta: {
-      style: columnSizeStyle()
-    }
-  } as ColumnDef<T, unknown>
-}
+//       return h('div', { class: 'flex items-center gap-1' },
+//         visibleActions.map((action, actionIndex) =>
+//           action.confirm
+//             ? renderConfirmAction(action, row, index, actionIndex, confirmStateMap)
+//             : h(resolveComponent('UButton'), {
+//                 label: action.label,
+//                 icon: action.icon,
+//                 color: (action.color ?? 'neutral') as 'neutral',
+//                 variant: 'ghost',
+//                 size: 'xs',
+//                 disabled: resolveCallbackValue(action.disabled ?? false, row),
+//                 onClick: () => action.onClick(row, index)
+//               })
+//         )
+//       )
+//     },
+//     meta: {
+//       style: columnSizeStyle()
+//     }
+//   } as ColumnDef<T, unknown>
+// }
 
 function resolveAlignClass(align?: 'left' | 'center' | 'right'): string {
   switch (align) {
@@ -530,8 +523,8 @@ function resolveDensityClass<T>(options: DataTableProps<T>): DataTableDensityOpt
 
 function columnSizeStyle() {
   return {
-    th: (ctx: { column: { getSize: () => number } }) => ({ width: `${Math.round(ctx.column.getSize())}px` }),
-    td: (ctx: { column: { getSize: () => number } }) => ({ width: `${Math.round(ctx.column.getSize())}px` })
+    th: (ctx: { column: { getSize: () => number } }) => ({ width: `${ctx.column.getSize()}px` }),
+    td: (ctx: { column: { getSize: () => number } }) => ({ width: `${ctx.column.getSize()}px` })
   }
 }
 
@@ -549,22 +542,18 @@ function getLastLeafHeader<T>(header: Header<T, unknown>): Header<T, unknown> {
 
 function groupHeaderStyle<T>(header: Header<T, unknown>, fixed?: 'left' | 'right'): Record<string, string> {
   const style: Record<string, string> = {
-    width: `${Math.round(header.getSize())}px`
+    width: `${header.getSize()}px`
   }
   const pinned = fixed ?? header.column.getIsPinned()
   if (pinned === 'left') {
     const first = getFirstLeafHeader(header)
     style.position = 'sticky'
-    style.left = `${Math.round(first.column.getStart('left'))}px`
-    style.zIndex = '2'
-    style.backgroundColor = 'var(--ui-bg)'
+    style.left = `${first.column.getStart('left')}px`
   }
   else if (pinned === 'right') {
     const last = getLastLeafHeader(header)
     style.position = 'sticky'
-    style.right = `${Math.round(last.column.getAfter('right'))}px`
-    style.zIndex = '2'
-    style.backgroundColor = 'var(--ui-bg)'
+    style.right = `${last.column.getAfter('right')}px`
   }
   return style
 }

@@ -19,7 +19,7 @@ const resizeModeOptions = [
 </script>
 
 <template>
-  <div class="space-y-4 p-6 overflow-auto max-w-3xl">
+  <div class="space-y-4 p-6 overflow-auto max-w-3xl bg-amber-50">
     <div>
       <h2 class="text-xl font-semibold mb-1">
         DataTable / Basic

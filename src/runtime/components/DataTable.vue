@@ -77,16 +77,6 @@ const tableRef = useTemplateRef('tableRef')
 const wrapperRef = useTemplateRef('wrapperRef')
 const slots = useSlots()
 
-const scrollContainer = ref<HTMLElement | null>(null)
-const { arrivedState } = useScroll(scrollContainer)
-
-const scrollingClass = computed(() => {
-  const { left, right } = arrivedState
-  if (left && right) return 'data-table--scrolling-none'
-  if (left) return 'data-table--scrolling-left'
-  if (right) return 'data-table--scrolling-right'
-  return 'data-table--scrolling-middle'
-})
 // const infiniteLoadingTriggered = ref(false)
 
 // const rowSelection = computed<RowSelectionState>(() =>
@@ -437,14 +427,6 @@ const tableResetKey = computed(() =>
   `${props.columnResizeMode}|${!!props.resizable}|${!!props.sortable}|${!!props.pinable}`
 )
 
-watch(
-  [tableResetKey, wrapperRef],
-  () => {
-    scrollContainer.value = wrapperRef.value?.querySelector<HTMLElement>('[data-slot="root"]') ?? null
-  },
-  { flush: 'post', immediate: true }
-)
-
 // const showPagination = computed(() => {
 //   if (props.infiniteScroll) return false
 //   if (props.showPagination != null) return props.showPagination
@@ -467,7 +449,6 @@ watch(
     ref="wrapperRef"
     class="data-table"
     :class="[
-      scrollingClass,
       {
         'data-table--bordered': !!bordered
       // 'data-table--tree': isTreeMode
