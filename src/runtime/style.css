@@ -8,59 +8,50 @@
   --font-sans: 'Alibaba PuHuiTi', sans-serif;
 }
 
-/* 边框 */
+/* 外边框 */
 .data-table--bordered {
   border: var(--m-dt-border-width, 1px) var(--m-dt-border-style, solid) var(--m-dt-border-color, var(--ui-border));
+  border-radius: var(--ui-radius);
   overflow: hidden;
 }
 
-/* 纵向分割线 */
-.data-table--bordered [data-slot="th"]:not(:last-child),
-.data-table--bordered [data-slot="td"]:not(:last-child) {
+/* 纵向分割线（固定列不加 border-right，改用 box-shadow 防止被滚动列遮挡） */
+.data-table--bordered [data-slot="th"]:not(:last-child):not([data-pinned="left"]):not([data-pinned="right"]),
+.data-table--bordered [data-slot="td"]:not(:last-child):not([data-pinned="left"]):not([data-pinned="right"]) {
   border-right: var(--m-dt-border-width, 1px) var(--m-dt-border-style, solid) var(--m-dt-border-color, var(--ui-border));
 }
 
-/* 横向行间分割线（覆盖 divide-y 的颜色与样式） */
+/* 固定列用 box-shadow 模拟分割线，始终绘制在最顶层 */
+.data-table--bordered [data-slot="th"][data-pinned="left"],
+.data-table--bordered [data-slot="td"][data-pinned="left"] {
+  box-shadow: inset -1px 0 0 var(--m-dt-border-color, var(--ui-border));
+}
+
+.data-table--bordered [data-slot="th"][data-pinned="right"],
+.data-table--bordered [data-slot="td"][data-pinned="right"] {
+  box-shadow: inset 1px 0 0 var(--m-dt-border-color, var(--ui-border));
+}
+
+/* 横向行间分割线 */
 .data-table--bordered [data-slot="tbody"] > [data-slot="tr"] {
   border-top-width: var(--m-dt-border-width, 1px);
   border-top-style: var(--m-dt-border-style, solid);
   border-top-color: var(--m-dt-border-color, var(--ui-border));
 }
 
-/* 表头与 tbody 之间的分割线（背景色模拟，不支持 border-style） */
+/* 表头与 tbody 分割线（背景色模拟） */
 .data-table--bordered [data-slot="separator"] {
-  height: var(--m-dt-border-width, 1px);
+  /* height: var(--m-dt-border-width, 1px); */
   background-color: var(--m-dt-border-color, var(--ui-border-accented));
 }
 
-/* 分组表头 group row 底边框 */
+/* 分组表头底边框 */
 .data-table--bordered [data-slot="thead"] [data-slot="tr"]:has([colspan]) {
   border-bottom: var(--m-dt-border-width, 1px) var(--m-dt-border-style, solid) var(--m-dt-border-color, var(--ui-border));
 }
 
-/* 固定列 sticky + 不透明背景 */
+/* 固定列 sticky */
 .data-table [data-pinned="left"],
 .data-table [data-pinned="right"] {
   position: sticky;
-  z-index: 2;
-  background-color: var(--ui-bg) !important;
-}
-
-/* 左固定列右侧：1px 实线 + 滚动阴影。
-   实线靠 inset box-shadow 画在 sticky cell 自身上，跟着 sticky 一起平移，
-   避免 border-collapse + sticky 在滚动时出现 1px 裂缝且 border 被吃掉。
-   :is() 同时匹配 data-pinned（叶子列）和 .group-pinned-*（分组表头）。 */
-.data-table:is(.data-table--scrolling-right, .data-table--scrolling-middle)
-  :is([data-pinned="left"], .group-pinned-left):has(+ :not([data-pinned="left"]):not(.group-pinned-left)) {
-  box-shadow:
-    inset -1px 0 0 0 var(--m-dt-border-color, var(--ui-border)),
-    inset -10px 0 10px -10px var(--ui-bg-accented);
-}
-
-/* 右固定列左侧：同上，1px 实线 + 滚动阴影 */
-.data-table:is(.data-table--scrolling-left, .data-table--scrolling-middle)
-  :not([data-pinned="right"]):not(.group-pinned-right) + :is([data-pinned="right"], .group-pinned-right) {
-  box-shadow:
-    inset 1px 0 0 0 var(--m-dt-border-color, var(--ui-border)),
-    inset 10px 0 10px -10px var(--ui-bg-accented);
 }
