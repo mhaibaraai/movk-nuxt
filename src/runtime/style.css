@@ -52,7 +52,7 @@
   width: 6px;
   transform: translateX(100%);
   pointer-events: none;
-  background: linear-gradient(to right, rgba(0, 0, 0, 0.06), transparent);
+  background: linear-gradient(to right, var(--ui-bg-accented), transparent);
 }
 
 /* 右固定列左侧阴影（仅未滚到底时显示） */
@@ -66,5 +66,5 @@
   width: 6px;
   transform: translateX(-100%);
   pointer-events: none;
-  background: linear-gradient(to left, rgba(0, 0, 0, 0.06), transparent);
+  background: linear-gradient(to left, var(--ui-bg-accented), transparent);
 }

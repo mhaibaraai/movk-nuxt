@@ -77,9 +77,7 @@ const tableRef = useTemplateRef('tableRef')
 const wrapperRef = useTemplateRef('wrapperRef')
 const slots = useSlots()
 
-const scrollContainer = computed(() =>
-  wrapperRef.value?.querySelector<HTMLElement>('[data-slot="root"]') ?? null
-)
+const scrollContainer = ref<HTMLElement | null>(null)
 const { arrivedState } = useScroll(scrollContainer)
 
 const scrollingClass = computed(() => {
@@ -432,6 +430,14 @@ const uTableProps = computed(() => {
 
 const tableResetKey = computed(() =>
   `${props.columnResizeMode}|${!!props.resizable}|${!!props.sortable}|${!!props.pinable}`
+)
+
+watch(
+  [tableResetKey, wrapperRef],
+  () => {
+    scrollContainer.value = wrapperRef.value?.querySelector<HTMLElement>('[data-slot="root"]') ?? null
+  },
+  { flush: 'post', immediate: true }
 )
 
 // const showPagination = computed(() => {
