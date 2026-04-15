@@ -314,7 +314,6 @@ export interface DataTableProps<T extends TableData> extends /* @vue-ignore */ D
    * @defaultValue true
    */
   truncate?: boolean | number | ((ctx: CellContext<T, unknown>) => boolean | number)
-
   /** 列固定状态（v-model:columnPinning） */
   columnPinning?: ColumnPinningState
   /** 列宽状态（v-model:columnSizing） */

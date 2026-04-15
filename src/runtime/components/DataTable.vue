@@ -368,7 +368,6 @@ const uTableProps = computed(() => {
   return {
     ...attrs,
     'columns': resolved.value.columnDefs,
-    // 'data': tableData.value,
     'meta': tableMeta.value,
     'ui': props.fixedLayout
       ? {
@@ -396,6 +395,7 @@ const uTableProps = computed(() => {
     'columnSizingOptions': mergedColumnSizingOptions,
     'sortingOptions': mergedSortingOptions,
     'columnPinningOptions': mergedColumnPinningOptions
+    // 'data': tableData.value,
     // 'rowSelection': rowSelection.value,
     // 'onUpdate:rowSelection': updateSelectedKeysFromRowSelection,
     // 'expanded': expandedModel.value,
@@ -429,6 +429,10 @@ const uTableProps = computed(() => {
     // }),
   }
 })
+
+const tableResetKey = computed(() =>
+  `${props.columnResizeMode}|${!!props.resizable}|${!!props.sortable}|${!!props.pinable}`
+)
 
 // const showPagination = computed(() => {
 //   if (props.infiniteScroll) return false
@@ -481,7 +485,7 @@ const uTableProps = computed(() => {
       </div>
     </div> -->
     <!-- <div :style="tableContainerStyle" @scroll.passive="handleTableScroll"> -->
-    <UTable ref="tableRef" v-bind="uTableProps">
+    <UTable :key="tableResetKey" ref="tableRef" v-bind="uTableProps">
       <!-- <template v-if="enableExpandedSlot" #expanded="slotProps">
         <slot name="expanded" :row="slotProps.row.original as T" />
       </template> -->
