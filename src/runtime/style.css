@@ -61,6 +61,11 @@
   box-shadow: var(--m-dt-pin-shadow);
 }
 
+/* 斑马纹*/
+.data-table--striped [data-slot="tbody"] [data-slot="tr"]:nth-child(even) [data-slot="td"][data-pinned] {
+  background-color: color-mix(in oklab, var(--ui-bg-elevated) 30%, transparent);
+}
+
 /* 最后一个左固定列 */
 .data-table [data-pinned="left"]:has(+ :not([data-pinned="left"])),
 .data-table [data-pinned="left"]:last-child {
