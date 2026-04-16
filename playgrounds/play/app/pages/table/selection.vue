@@ -1,7 +1,11 @@
 <script setup lang="ts">
+import type { RowSelectionState } from '@tanstack/vue-table'
+
 const { users, selectionColumns } = useTableExamples()
 
-const selectedKeys = ref<(string | number)[]>([])
+const rowSelection = ref<RowSelectionState>({
+  李四: true
+})
 </script>
 
 <template>
@@ -16,15 +20,15 @@ const selectedKeys = ref<(string | number)[]>([])
     </div>
 
     <MDataTable
-      v-model:selected-keys="selectedKeys"
+      v-model:row-selection="rowSelection"
       :data="users"
+      row-key="name"
       :columns="selectionColumns"
       stripe
-      @selection-change="(rows) => console.log('已选', rows)"
     />
 
-    <p v-if="selectedKeys.length > 0" class="text-sm text-muted">
-      已选 ID：{{ selectedKeys.join('、') }}
+    <p class="text-sm text-muted">
+      {{ rowSelection }}
     </p>
   </div>
 </template>

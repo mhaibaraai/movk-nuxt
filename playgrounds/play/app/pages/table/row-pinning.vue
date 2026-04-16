@@ -4,7 +4,7 @@ import type { RowPinningState } from '@tanstack/vue-table'
 const { users, pinningColumns } = useTableExamples()
 
 const rowPinning = ref<RowPinningState>({
-  top: [],
+  top: ['李四'],
   bottom: []
 })
 </script>
@@ -22,11 +22,12 @@ const rowPinning = ref<RowPinningState>({
 
     <MDataTable
       v-model:row-pinning="rowPinning"
+      row-key="name"
       :data="users"
       :columns="pinningColumns"
       stripe
     />
-
+    {{ rowPinning }}
     <p class="text-sm text-muted">
       top：{{ rowPinning.top?.join('、') || '无' }}
     </p>

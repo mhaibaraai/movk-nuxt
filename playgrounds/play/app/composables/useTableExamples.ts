@@ -121,8 +121,8 @@ const formattingColumns: DataTableColumn<TableUser>[] = [
 ]
 
 const selectionColumns: DataTableColumn<TableUser>[] = [
-  // { type: 'selection', fixed: 'left' },
-  // { type: 'index', fixed: 'left' },
+  { type: 'selection', fixed: 'left', mode: 'single' },
+  { type: 'index', fixed: 'left' },
   { accessorKey: 'name', header: '姓名' },
   { accessorKey: 'department', header: '部门' },
   { accessorKey: 'role', header: '职位' },
