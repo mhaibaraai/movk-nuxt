@@ -31,8 +31,7 @@ import { DENSITY_PRESETS, SPECIAL_COLUMN_DEFAULTS } from '../../constants/data-t
 import { resolveCallbackValue, resolveColumnFlag, resolvePresetSize, resolveTemplate } from '../../utils/data-table-utils'
 import DataTableCellTooltip from './DataTableCellTooltip.vue'
 import DataTableActionConfirm from './DataTableActionConfirm.vue'
-import { createSelectionRenders } from './selection-helpers'
-import { UButton } from '#components'
+import { UButton, UCheckbox } from '#components'
 
 interface HeaderAction<T> {
   id: string
@@ -47,6 +46,7 @@ interface ResolveContext<T> {
   visibility: VisibilityState
   sizing: ColumnSizingState
   flags: { hasPinning: boolean, hasResizing: boolean, hasSort: boolean }
+  selectionMode?: 'single' | 'multiple'
   nextGroupId: () => number
 }
 
@@ -140,7 +140,8 @@ export function resolveColumns<T>(
     initialSizing: ctx.sizing,
     hasColumnPinning: ctx.flags.hasPinning,
     hasColumnResizing: ctx.flags.hasResizing,
-    hasColumnSort: ctx.flags.hasSort
+    hasColumnSort: ctx.flags.hasSort,
+    selectionMode: ctx.selectionMode
   }
 }
 
@@ -370,9 +371,24 @@ function resolveSelectionColumn<T>(
   col: DataTableSelectionColumn,
   ctx: ResolveContext<T>
 ): ColumnDef<T, unknown> {
+  ctx.selectionMode = col.mode ?? 'multiple'
   return buildSpecialColumnDef(
-    col, 'selection', ctx,
-    createSelectionRenders<T>(col.mode ?? 'multiple', col.checkboxProps)
+    col, 'selection', ctx, {
+      header: ctx.selectionMode === 'multiple'
+        ? ({ table }: HeaderContext<T, unknown>) => h(UCheckbox, {
+            ...(col.checkboxProps ?? {}),
+            'aria-label': '选择所有行',
+            'modelValue': table.getIsSomePageRowsSelected() ? 'indeterminate' : table.getIsAllPageRowsSelected(),
+            'onUpdate:modelValue': (value: unknown) => table.toggleAllPageRowsSelected(!!(value as boolean | 'indeterminate'))
+          })
+        : col.header ?? SPECIAL_COLUMN_DEFAULTS.selection.header!,
+      cell: ({ row }: CellContext<T, unknown>) => h(UCheckbox, {
+        ...(col.checkboxProps ?? {}),
+        'modelValue': row.getIsSelected(),
+        'aria-label': `选择行`,
+        'onUpdate:modelValue': (value: unknown) => row.toggleSelected(!!(value as boolean | 'indeterminate'))
+      })
+    }
   )
 }
 

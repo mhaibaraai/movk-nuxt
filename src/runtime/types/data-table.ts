@@ -1,6 +1,6 @@
 import type { ButtonProps, CheckboxProps, IconProps, PopoverProps, TableColumn, TableData, TableProps, TooltipProps } from '@nuxt/ui'
 import type { OmitByKey, Suggest } from '@movk/core'
-import type { CellContext, ColumnDef, ColumnDefTemplate, ColumnPinningState, ColumnSizingState, RowPinningState, TableMeta, VisibilityState } from '@tanstack/vue-table'
+import type { CellContext, ColumnDef, ColumnDefTemplate, ColumnPinningState, ColumnSizingState, TableMeta, VisibilityState } from '@tanstack/vue-table'
 
 export type DataTableSizePreset = 'xs' | 'sm' | 'md' | 'lg' | 'xl'
 
@@ -120,6 +120,8 @@ export interface DataTableSelectionColumn extends DataTableSpecialColumnBase {
    * @defaultValue 'multiple'
    */
   mode?: 'single' | 'multiple'
+  /** 单选模式下的表头文本 */
+  header?: string
   /** UCheckbox props 透传 */
   checkboxProps?: CheckboxProps
 }
@@ -225,10 +227,19 @@ export type DataTableColumn<T>
 
 type DataTableInheritedTableProps<T extends TableData> = OmitByKey<
   TableProps<T>,
-  'columns' | 'meta' | 'ui' | 'sortingOptions' | 'columnSizingOptions' | 'columnPinningOptions'
+  'columns' | 'meta' | 'ui' | 'columnSizingOptions' | 'columnPinningOptions' | 'rowSelectionOptions' | 'sortingOptions'
 >
 
+// @vue-ignore 的配置导致 DataTableInheritedTableProps 只会存在 attrs 中
 export interface DataTableProps<T extends TableData> extends /* @vue-ignore */ DataTableInheritedTableProps<T> {
+  /**
+   * 行唯一标识字段，作为 getRowId 的声明式简写
+   *
+   * 提供后自动派生 `getRowId: (row) => String(row[rowKey])`；
+   * 同时传入 `getRowId` 时后者优先。未提供且未传入 `getRowId` 时，
+   * TanStack Table 默认使用行索引作为 ID。
+   */
+  rowKey?: Suggest<keyof T & string>
   /** 列定义 */
   columns?: DataTableColumn<T>[]
   /**
@@ -289,26 +300,6 @@ export interface DataTableProps<T extends TableData> extends /* @vue-ignore */ D
   rowClass?: NonNullable<TableMeta<T>['class']>['tr']
   /** 行条件 style */
   rowStyle?: NonNullable<TableMeta<T>['style']>['tr']
-  /** 子行字段名，设置后启用树形模式 */
-  childrenKey?: Suggest<keyof T & string>
-  /**
-   * 默认展开所有行
-   * @defaultValue false
-   */
-  defaultExpandAll?: boolean
-  /**
-   * 树形缩进宽度，传函数可按行/深度动态计算
-   * - number = 每层缩进量（px），乘以 depth 得到实际 marginLeft
-   * - string = 直接作为 CSS 值（调用方自行处理深度逻辑）
-   * - 函数 = 按 cell 上下文动态计算，返回 CSS 字符串（如 '24px'）
-   * @defaultValue '1rem'
-   */
-  indentSize?: number | string | ((ctx: CellContext<T, unknown>) => string)
-  /**
-   * 点击行时切换树形展开状态
-   * @defaultValue false
-   */
-  expandOnRowClick?: boolean
   /**
    * 全局数据列溢出 Tooltip，传函数可按 cell 上下文动态决定
    * - true = 溢出时显示（单行截断）
@@ -329,10 +320,6 @@ export interface DataTableProps<T extends TableData> extends /* @vue-ignore */ D
    * @defaultValue true
    */
   truncate?: boolean | number | ((ctx: CellContext<T, unknown>) => boolean | number)
-  /** 列固定状态（v-model:columnPinning） */
-  columnPinning?: ColumnPinningState
-  /** 列宽状态（v-model:columnSizing） */
-  columnSizing?: ColumnSizingState
   /**
    * 排序配置，默认：`{ enableSorting: !!sortable }`
    */
@@ -345,8 +332,31 @@ export interface DataTableProps<T extends TableData> extends /* @vue-ignore */ D
    * 列固定配置，默认：`{ enableColumnPinning: !!pinable }`
    */
   columnPinningOptions?: TableProps<T>['columnPinningOptions']
-  /** 行固定状态（v-model:rowPinning） */
-  rowPinning?: RowPinningState
+  /**
+   * 行选择配置，默认：`{ enableMultiRowSelection: true }`
+   */
+  rowSelectionOptions?: TableProps<T>['rowSelectionOptions']
+
+  /** 子行字段名，设置后启用树形模式 */
+  childrenKey?: Suggest<keyof T & string>
+  /**
+   * 默认展开所有行
+   * @defaultValue false
+   */
+  defaultExpandAll?: boolean
+  /**
+   * 树形缩进宽度，传函数可按行/深度动态计算
+   * - number = 每层缩进量（px），乘以 depth 得到实际 marginLeft
+   * - string = 直接作为 CSS 值（调用方自行处理深度逻辑）
+   * - 函数 = 按 cell 上下文动态计算，返回 CSS 字符串（如 '24px'）
+   * @defaultValue '1rem'
+   */
+  indentSize?: number | string | ((ctx: CellContext<T, unknown>) => string)
+  /**
+   * 点击行时切换树形展开状态
+   * @defaultValue false
+   */
+  expandOnRowClick?: boolean
 
   // /** 总条数，不传时根据 data.length 计算；大于每页条数时自动显示分页 */
   // total?: number
@@ -424,6 +434,8 @@ export interface ResolvedColumnState<T> {
   hasColumnResizing: boolean
   /** 是否有任何列启用了排序 */
   hasColumnSort: boolean
+  /** selection 列的选择模式，无 selection 列时为 undefined */
+  selectionMode?: 'single' | 'multiple'
 }
 
 // export type DataTablePaginationPassthrough = Partial<
