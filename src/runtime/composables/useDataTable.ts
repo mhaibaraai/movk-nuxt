@@ -96,7 +96,7 @@ function defaultTotalExtractor(resp: unknown): number {
 export function useDataTable<T extends Record<string, unknown>, TResponse = unknown>(
   options: UseDataTableOptions<T, TResponse>
 ): UseDataTableReturn<T> {
-  const rowKey = options.rowKey ?? 'id' as keyof T & string
+  const rowKey = options.rowKey
 
   // Pagination state
   const page = ref(options.pagination?.page ?? 1)
@@ -210,7 +210,7 @@ export function useDataTable<T extends Record<string, unknown>, TResponse = unkn
   const selectedRows = useSelectedRows(
     () => data.value,
     selectedKeys,
-    rowKey as string
+    (rowKey ?? 'id') as string
   )
 
   function clearSelection() {
@@ -237,7 +237,7 @@ export function useDataTable<T extends Record<string, unknown>, TResponse = unkn
     'columnSizing': columnSizing.value,
     'rowPinning': rowPinning.value,
     'selectedKeys': selectedKeys.value,
-    'rowKey': rowKey as string,
+    ...(rowKey && { rowKey: rowKey as string }),
     'onUpdate:page': (v: number) => { page.value = v },
     'onUpdate:pageSize': (v: number) => { pageSize.value = v },
     'onUpdate:sorting': (v: SortingState) => { sorting.value = v },

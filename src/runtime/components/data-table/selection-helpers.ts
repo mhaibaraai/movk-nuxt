@@ -1,57 +1,44 @@
-import type { CellContext, HeaderContext, RowSelectionState } from '@tanstack/vue-table'
-import type { CheckboxProps } from '@nuxt/ui'
+import type { RowSelectionState } from '@tanstack/vue-table'
 import type { Ref } from 'vue'
-import { resolveComponent, computed, h, watch } from 'vue'
-import {
-  keysToRowSelection,
-  rowSelectionToKeys
-} from './selection-state'
+import { computed, watch } from 'vue'
 
-export {
-  areSameKeys,
-  keysToRowSelection,
-  rowSelectionToKeys
-} from './selection-state'
-
-export function createSelectionRenders<T>(
-  mode: 'single' | 'multiple',
-  checkboxProps?: CheckboxProps
-) {
-  const header: string | ((ctx: HeaderContext<T, unknown>) => ReturnType<typeof h>) = mode === 'multiple'
-    ? ({ table }: HeaderContext<T, unknown>) => h(resolveComponent('UCheckbox'), {
-        ...(checkboxProps ?? {}),
-        'modelValue': table.getIsAllPageRowsSelected(),
-        'indeterminate': table.getIsSomePageRowsSelected(),
-        'onUpdate:modelValue': () => table.toggleAllPageRowsSelected()
-      })
-    : ''
-
-  const cell = ({ row, table }: CellContext<T, unknown>) => h(resolveComponent('UCheckbox'), {
-    ...(checkboxProps ?? {}),
-    'modelValue': row.getIsSelected(),
-    'disabled': !row.getCanSelect(),
-    'onUpdate:modelValue': () => {
-      if (mode === 'single') {
-        if (row.getIsSelected()) {
-          row.toggleSelected(false)
-        }
-        else {
-          table.resetRowSelection()
-          row.toggleSelected(true)
-        }
-      }
-      else {
-        row.toggleSelected()
-      }
-    }
-  })
-
-  return { cell, header }
+function keysToRowSelection(keys: (string | number)[]): RowSelectionState {
+  const state: RowSelectionState = {}
+  for (const key of keys) {
+    state[String(key)] = true
+  }
+  return state
 }
 
-/**
- * 建立 selectedKeys <-> RowSelectionState 双向同步
- */
+function rowSelectionToKeys(
+  state: RowSelectionState,
+  idMap?: ReadonlyMap<string, string | number>
+): (string | number)[] {
+  return Object.entries(state)
+    .filter(([, selected]) => selected)
+    .map(([key]) => {
+      if (!idMap) return key
+      return idMap.get(key)
+    })
+    .filter((key): key is string | number => key !== undefined)
+}
+
+function _areSameKeys(
+  a: (string | number)[],
+  b: (string | number)[]
+): boolean {
+  if (a.length !== b.length) return false
+
+  const aSet = new Set(a.map(String))
+  for (const key of b) {
+    if (!aSet.has(String(key))) {
+      return false
+    }
+  }
+
+  return true
+}
+
 export function useSyncSelection(
   selectedKeys: Ref<(string | number)[]>,
   rowSelection: Ref<RowSelectionState>
@@ -73,9 +60,6 @@ export function useSyncSelection(
   }, { deep: true })
 }
 
-/**
- * 从 data + rowSelection 提取选中的行对象
- */
 export function useSelectedRows<T extends Record<string, unknown>>(
   data: Ref<T[]> | (() => T[]),
   selectedKeys: Ref<(string | number)[]>,

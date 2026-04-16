@@ -1,18 +1,16 @@
 <script setup lang="ts" generic="T extends TableData">
 import type {
   ColumnPinningState,
-  // ColumnDef,
   ColumnSizingState,
-  // ExpandedState,
   RowPinningState,
-  // RowSelectionState,
   SortingState,
   VisibilityState,
-  TableMeta
+  TableMeta,
+  RowSelectionState
 } from '@tanstack/vue-table'
 import type { DataTableProps } from '../types/data-table'
 import { UTable } from '#components'
-import { computed, nextTick, useAttrs, useTemplateRef, watch, watchEffect } from 'vue'
+import { computed, nextTick, useAttrs, useTemplateRef, watchEffect } from 'vue'
 import { resolveCallbackValue } from '../utils/data-table-utils'
 import { resolveColumns } from './data-table/column-helpers'
 // import { useScroll } from '@vueuse/core'
@@ -24,7 +22,7 @@ import { resolveColumns } from './data-table/column-helpers'
 // } from './data-table/selection-helpers'
 // import DataTableColumnToggle from './data-table/DataTableColumnToggle.vue'
 // import DataTablePagination from './data-table/DataTablePagination.vue'
-import type { TableData } from '@nuxt/ui'
+import type { TableData, TableProps } from '@nuxt/ui'
 
 const props = withDefaults(defineProps<DataTableProps<T>>(), {
   fitContent: true,
@@ -34,51 +32,37 @@ const props = withDefaults(defineProps<DataTableProps<T>>(), {
   columnResizeMode: 'onChange'
 })
 
-// const selectedKeys = defineModel<(string | number)[]>('selectedKeys', { default: () => [] })
+// const globalFilterState = defineModel<string>('globalFilter')
+// const columnFiltersState = defineModel<ColumnFiltersState>('columnFilters')
+// const columnOrderState = defineModel<ColumnOrderState>('columnOrder')
+// const columnVisibilityState = defineModel<VisibilityState>('columnVisibility')
+// const columnPinningState = defineModel<ColumnPinningState>('columnPinning')
+// const columnSizingState = defineModel<ColumnSizingState>('columnSizing')
+// const columnSizingInfoState = defineModel<ColumnSizingInfoState>('columnSizingInfo')
+// const rowSelectionState = defineModel<RowSelectionState>('rowSelection')
+// const rowPinningState = defineModel<RowPinningState>('rowPinning')
+// const sortingState = defineModel<SortingState>('sorting')
+// const groupingState = defineModel<GroupingState>('grouping')
+// const expandedState = defineModel<ExpandedState>('expanded')
+// const paginationState = defineModel<PaginationState>('pagination')
+
 // const expandedModel = defineModel<ExpandedState>('expanded', { default: () => ({}) })
-const sortingModel = defineModel<SortingState>('sorting', { default: () => [] })
-const columnVisibilityModel = defineModel<VisibilityState>('columnVisibility', { default: () => ({}) })
-const columnPinningModel = defineModel<ColumnPinningState>('columnPinning', { default: () => ({ left: [], right: [] }) })
-const columnSizingModel = defineModel<ColumnSizingState>('columnSizing', { default: () => ({}) })
-const rowPinningModel = defineModel<RowPinningState>('rowPinning', { default: () => ({ top: [], bottom: [] }) })
+const columnVisibilityState = defineModel<VisibilityState>('columnVisibility')
+const columnPinningState = defineModel<ColumnPinningState>('columnPinning')
+const columnSizingState = defineModel<ColumnSizingState>('columnSizing')
+const rowSelectionState = defineModel<RowSelectionState>('rowSelection')
+const rowPinningState = defineModel<RowPinningState>('rowPinning')
+const sortingState = defineModel<SortingState>('sorting')
+// TODO: 需要 v-model 的分页状态、tree 展开状态、分组状态等
+// const selectedKeys = defineModel<(string | number)[]>('selectedKeys')
 // const pageModel = defineModel<number>('page', { default: 1 })
 // const pageSizeModel = defineModel<number>('pageSize', { default: 20 })
 
-const columnPinningProxy = computed({
-  get: () => columnPinningModel.value,
-  set: (v: ColumnPinningState | undefined) => {
-    if (!v) return
-    columnPinningModel.value = {
-      left: [...(v.left ?? [])],
-      right: [...(v.right ?? [])]
-    }
-  }
-})
-
-const columnSizingProxy = computed({
-  get: () => columnSizingModel.value,
-  set: (v: ColumnSizingState | undefined) => {
-    if (!v) return
-    columnSizingModel.value = { ...v }
-  }
-})
-
-const rowPinningProxy = computed({
-  get: () => rowPinningModel.value,
-  set: (v: RowPinningState | undefined) => {
-    if (!v) return
-    rowPinningModel.value = {
-      top: [...(v.top ?? [])],
-      bottom: [...(v.bottom ?? [])]
-    }
-  }
-})
-
-const emit = defineEmits<{
-  'selection-change': [rows: T[]]
-  'sort-change': [column: string, order: 'asc' | 'desc' | false]
-  'load-more': []
-}>()
+// const emit = defineEmits<{
+//   'selection-change': [rows: T[]]
+//   'sort-change': [column: string, order: 'asc' | 'desc' | false]
+//   'load-more': []
+// }>()
 
 defineSlots<{
   'toolbar': (props: {
@@ -107,10 +91,6 @@ const tableRef = useTemplateRef('tableRef')
 const wrapperRef = useTemplateRef('wrapperRef')
 
 // const infiniteLoadingTriggered = ref(false)
-
-// const rowSelection = computed<RowSelectionState>(() =>
-//   keysToRowSelection(selectedKeys.value)
-// )
 
 // const rowIdToKeyMap = computed(() => {
 //   const map = new Map<string, string | number>()
@@ -160,16 +140,6 @@ const wrapperRef = useTemplateRef('wrapperRef')
 //   selectedKeys.value = []
 // }
 
-watch(sortingModel, (state) => {
-  if (state.length > 0) {
-    const s = state[0]!
-    emit('sort-change', s.id, s.desc ? 'desc' : 'asc')
-  }
-  else {
-    emit('sort-change', '', false)
-  }
-})
-
 // const pageOffset = computed(() => {
 //   const p = pageModel.value ?? 1
 //   const s = pageSizeModel.value ?? 20
@@ -197,19 +167,19 @@ function isColumnPinningEmpty(state: ColumnPinningState | undefined): boolean {
 const stopInitWatcher = watchEffect(() => {
   const r = resolved.value
 
-  if (Object.keys(columnVisibilityModel.value).length === 0) {
-    columnVisibilityModel.value = { ...r.initialVisibility }
+  if (!columnVisibilityState.value || Object.keys(columnVisibilityState.value).length === 0) {
+    columnVisibilityState.value = { ...r.initialVisibility }
   }
 
-  if (isColumnPinningEmpty(columnPinningModel.value)) {
-    columnPinningModel.value = {
+  if (isColumnPinningEmpty(columnPinningState.value)) {
+    columnPinningState.value = {
       left: [...(r.initialPinning.left ?? [])],
       right: [...(r.initialPinning.right ?? [])]
     }
   }
 
-  if (Object.keys(columnSizingModel.value).length === 0) {
-    columnSizingModel.value = { ...r.initialSizing }
+  if (!columnSizingState.value || Object.keys(columnSizingState.value).length === 0) {
+    columnSizingState.value = { ...r.initialSizing }
   }
 
   nextTick(() => stopInitWatcher())
@@ -380,7 +350,17 @@ const uTableProps = computed(() => {
     ...props.columnPinningOptions
   }
 
+  const mergedRowSelectionOptions = resolved.value.selectionMode
+    ? {
+        ...(resolved.value.selectionMode === 'single' && { enableMultiRowSelection: false }),
+        ...props.rowSelectionOptions
+      }
+    : props.rowSelectionOptions
+
   return {
+    ...(props.rowKey && {
+      getRowId: (row => String(row[props.rowKey as keyof T])) as TableProps<T>['getRowId']
+    }),
     ...attrs,
     columns: resolved.value.columnDefs,
     meta: tableMeta.value,
@@ -391,11 +371,9 @@ const uTableProps = computed(() => {
     },
     columnSizingOptions: mergedColumnSizingOptions,
     sortingOptions: mergedSortingOptions,
-    columnPinningOptions: mergedColumnPinningOptions
+    columnPinningOptions: mergedColumnPinningOptions,
+    rowSelectionOptions: mergedRowSelectionOptions
     // ...(getSubRows.value && { getSubRows: getSubRows.value }),
-    // ...(props.rowKey && {
-    //   getRowId: (row: T) => String(row[props.rowKey!])
-    // }),
     // ...((props.onRowClick || props.expandOnRowClick) && {
     //   onSelect: (_e: Event, row: { original: T }) => {
     //     const idx = props.data.indexOf(row.original)
@@ -472,11 +450,12 @@ const tableResetKey = computed(() =>
     <UTable
       :key="tableResetKey"
       ref="tableRef"
-      v-model:sorting="sortingModel"
-      v-model:column-visibility="columnVisibilityModel"
-      v-model:column-pinning="columnPinningProxy"
-      v-model:column-sizing="columnSizingProxy"
-      v-model:row-pinning="rowPinningProxy"
+      v-model:column-visibility="columnVisibilityState"
+      v-model:column-pinning="columnPinningState"
+      v-model:column-sizing="columnSizingState"
+      v-model:row-selection="rowSelectionState"
+      v-model:row-pinning="rowPinningState"
+      v-model:sorting="sortingState"
       v-bind="uTableProps"
     >
       <!-- <template v-if="enableExpandedSlot" #expanded="slotProps">
