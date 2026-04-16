@@ -227,10 +227,10 @@ export interface DataTableProps<T extends TableData> extends /* @vue-ignore */ D
    */
   bordered?: boolean | DataTableBorderedOptions
   /**
-   * 固定表格布局（table-layout: fixed），启用后列宽严格按 size 分配
+   * 表格宽度由列宽内容决定（w-fit），关闭后表格撑满容器
    * @defaultValue true
    */
-  fixedLayout?: boolean
+  fitContent?: boolean
   /**
    * 空值占位符，null/undefined/'' 时显示
    * @defaultValue '-'

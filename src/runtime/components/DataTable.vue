@@ -27,7 +27,7 @@ import DataTablePagination from './data-table/DataTablePagination.vue'
 import type { TableData } from '@nuxt/ui'
 
 const props = withDefaults(defineProps<DataTableProps<T>>(), {
-  fixedLayout: true,
+  fitContent: true,
   emptyCell: '-',
   indentSize: '1rem',
   truncate: true,
@@ -357,12 +357,11 @@ const uTableProps = computed(() => {
     ...attrs,
     'columns': resolved.value.columnDefs,
     'meta': tableMeta.value,
-    'ui': props.fixedLayout
-      ? {
-          ...props.ui,
-          base: ['table-fixed w-fit', props.ui?.base].filter(Boolean).join(' ')
-        }
-      : props.ui,
+    'ui': {
+      ...props.ui,
+      ...(props.fitContent && { base: ['w-fit min-w-0', props.ui?.base].filter(Boolean).join(' ') }),
+      tbody: ['divide-y-0', props.ui?.tbody].filter(Boolean).join(' ')
+    },
     'sorting': sortingModel.value,
     'onUpdate:sorting': (v: SortingState | undefined) => { if (v) sortingModel.value = v },
     'columnVisibility': columnVisibilityModel.value,
