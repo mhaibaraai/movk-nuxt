@@ -7,7 +7,7 @@ import type {
   HeaderContext,
   VisibilityState
 } from '@tanstack/vue-table'
-import type { VNode } from 'vue'
+import type { Component, VNode } from 'vue'
 import type {
   DataTableActionsColumn,
   DataTableColumn,
@@ -20,146 +20,239 @@ import type {
   DataTableRowPinningColumn,
   DataTableSelectionColumn,
   DataTableSizePreset,
+  DataTableSpecialColumnBase,
   ResolvedColumnState
 } from '../../types/data-table'
-import { h, ref, resolveComponent } from 'vue'
+import type { SpecialColumnType } from '../../constants/data-table'
+import { h } from 'vue'
 import { isFunction, isString } from '@movk/core'
 import { isDataColumn, isGroupColumn } from '../../types/data-table'
-import { DATA_TABLE_DEFAULTS, DENSITY_PRESETS } from '../../constants/data-table'
+import { DENSITY_PRESETS, SPECIAL_COLUMN_DEFAULTS } from '../../constants/data-table'
 import { resolveCallbackValue, resolveColumnFlag, resolvePresetSize, resolveTemplate } from '../../utils/data-table-utils'
 import DataTableCellTooltip from './DataTableCellTooltip.vue'
-import { createSelectionColumnDef } from './selection-helpers'
+import DataTableActionConfirm from './DataTableActionConfirm.vue'
+import { createSelectionRenders } from './selection-helpers'
 import { UButton } from '#components'
 
 interface HeaderAction<T> {
-  id: 'sort' | 'pin' | string
+  id: string
   position: 'leading' | 'trailing'
   render: (ctx: HeaderContext<T, unknown>) => VNode | null
 }
 
-interface BaseStateInput {
-  id: string
-  fixed?: 'left' | 'right'
-  defaultFixed?: 'left' | 'right'
-  size?: number | DataTableSizePreset
-  defaultSize?: number
+interface ResolveContext<T> {
+  options: DataTableProps<T>
+  density: DataTableDensityOptions | null
+  pinning: ColumnPinningState
+  visibility: VisibilityState
+  sizing: ColumnSizingState
+  flags: { hasPinning: boolean, hasResizing: boolean, hasSort: boolean }
+  nextGroupId: () => number
 }
 
-// 将列的 fixed/size 写入 pinning/sizing 初始状态
-function applyBaseState(
-  input: BaseStateInput,
-  pinning: ColumnPinningState,
-  sizing: ColumnSizingState
-): { resolvedSize: number | undefined } {
-  const effectiveFixed = input.fixed ?? input.defaultFixed
-  if (effectiveFixed) {
-    pinning[effectiveFixed === 'left' ? 'left' : 'right']!.push(input.id)
+interface ColumnSizeCtx {
+  column: {
+    getSize: () => number
+    columnDef: { size?: number, minSize?: number, maxSize?: number, enableResizing?: boolean }
+  }
+}
+
+function resolveColumnSize(ctx: ColumnSizeCtx): Record<string, string> {
+  const { columnDef } = ctx.column
+
+  if (columnDef.size != null || columnDef.enableResizing === true) {
+    const w = `${ctx.column.getSize()}px`
+    return { width: w, minWidth: w, maxWidth: w }
   }
 
-  const rawSize = input.size ?? input.defaultSize
-  const resolvedSize = rawSize != null
-    ? (isString(rawSize) ? resolvePresetSize(rawSize) : rawSize)
+  const style: Record<string, string> = {}
+  if (columnDef.minSize != null) style.minWidth = `${columnDef.minSize}px`
+  if (columnDef.maxSize != null) style.maxWidth = `${columnDef.maxSize}px`
+  return style
+}
+
+const COLUMN_SIZE_STYLE = { th: resolveColumnSize, td: resolveColumnSize }
+
+function applyBaseState(
+  id: string,
+  fixed: 'left' | 'right' | undefined,
+  size: number | string | undefined,
+  ctx: ResolveContext<unknown>
+): number | undefined {
+  if (fixed) {
+    ctx.pinning[fixed]!.push(id)
+  }
+
+  const resolvedSize = size != null
+    ? (isString(size) ? resolvePresetSize(size as DataTableSizePreset) : size)
     : undefined
 
   if (resolvedSize != null) {
-    sizing[input.id] = resolvedSize
+    ctx.sizing[id] = resolvedSize
   }
 
-  return { resolvedSize }
+  return resolvedSize
 }
 
-// 将用户定义的列数组解析为 TanStack ColumnDef 及初始状态
+function resolveAlignClass(align?: 'left' | 'center' | 'right'): string {
+  switch (align) {
+    case 'center': return 'text-center'
+    case 'right': return 'text-right'
+    default: return ''
+  }
+}
+
+function buildClassMeta(
+  density: DataTableDensityOptions | null,
+  align?: string,
+  resizable?: boolean,
+  tdClass?: string
+): { td?: string, th?: string } {
+  return {
+    td: [align, density?.td, tdClass].filter(Boolean).join(' ') || undefined,
+    th: [resizable ? 'relative' : '', align, density?.th].filter(Boolean).join(' ') || undefined
+  }
+}
+
 export function resolveColumns<T>(
   columns: DataTableColumn<T>[],
   options: DataTableProps<T>
 ): ResolvedColumnState<T> {
-  const pinning: ColumnPinningState = { left: [], right: [] }
-  const visibility: VisibilityState = {}
-  const sizing: ColumnSizingState = {}
+  let groupCounter = 0
+  const ctx: ResolveContext<T> = {
+    options,
+    density: options.density
+      ? (isString(options.density) ? DENSITY_PRESETS[options.density] : options.density)
+      : null,
+    pinning: { left: [], right: [] },
+    visibility: {},
+    sizing: {},
+    flags: { hasPinning: false, hasResizing: false, hasSort: false },
+    nextGroupId: () => groupCounter++
+  }
 
-  const columnDefs = columns.map(col =>
-    resolveColumn(col, options, pinning, visibility, sizing)
-  )
+  const columnDefs = columns.map(col => resolveColumn(col, ctx))
 
   return {
     columnDefs,
-    initialPinning: pinning,
-    initialVisibility: visibility,
-    initialSizing: sizing
+    initialPinning: ctx.pinning,
+    initialVisibility: ctx.visibility,
+    initialSizing: ctx.sizing,
+    hasColumnPinning: ctx.flags.hasPinning,
+    hasColumnResizing: ctx.flags.hasResizing,
+    hasColumnSort: ctx.flags.hasSort
   }
 }
 
-// 按列类型分发到对应的解析函数
 function resolveColumn<T>(
   col: DataTableColumn<T>,
-  options: DataTableProps<T>,
-  pinning: ColumnPinningState,
-  visibility: VisibilityState,
-  sizing: ColumnSizingState,
+  ctx: ResolveContext<T>,
   inheritedFixed?: 'left' | 'right'
 ): ColumnDef<T, unknown> {
-  if (isGroupColumn(col)) {
-    return resolveGroupColumn(col, options, pinning, visibility, sizing, inheritedFixed)
-  }
+  if (isGroupColumn(col)) return resolveGroupColumn(col, ctx, inheritedFixed)
+  if (isDataColumn(col)) return resolveDataColumn(col, ctx, inheritedFixed)
 
-  if (isDataColumn(col)) {
-    return resolveDataColumn(col, options, pinning, visibility, sizing, inheritedFixed)
+  if ('type' in col) {
+    switch (col.type) {
+      case 'selection':
+        return resolveSelectionColumn(col as DataTableSelectionColumn, ctx)
+      case 'index':
+        return resolveIndexColumn(col as DataTableIndexColumn, ctx)
+      case 'expand':
+        return resolveExpandColumn(col as DataTableExpandColumn, ctx)
+      case 'row-pinning':
+        return resolveRowPinningColumn(col as DataTableRowPinningColumn, ctx)
+      case 'actions':
+        return resolveActionsColumn(col as DataTableActionsColumn<T>, ctx)
+    }
   }
-
-  // if ('type' in col) {
-  //   switch (col.type) {
-  //     case 'selection':
-  //       return resolveSelectionColumn<T>(col as DataTableSelectionColumn, pinning, sizing)
-  //     case 'index':
-  //       return resolveIndexColumn(col, options, pinning, sizing)
-  //     case 'expand':
-  //       return resolveExpandColumn(col, options, pinning, sizing)
-  //     case 'row-pinning':
-  //       return resolveRowPinningColumn(col, pinning, sizing)
-  //     case 'actions':
-  //       return resolveActionsColumn(col as DataTableActionsColumn<T>, pinning, sizing)
-  //   }
-  // }
 
   return col as ColumnDef<T, unknown>
 }
 
-// 将数据列配置解析为带 cell/header/meta 的 ColumnDef
+function buildDataCellRenderer<T>(
+  col: DataTableDataColumn<T>,
+  options: DataTableProps<T>
+): ((ctx: CellContext<T, unknown>) => unknown) | undefined {
+  const maybeTooltip = col.tooltip !== undefined ? !!col.tooltip : !!options.tooltip
+  const maybeTruncate = col.truncate !== undefined ? !!col.truncate : !!options.truncate
+  const needCustomCell = !!(col.cell || maybeTooltip || maybeTruncate || col.emptyCell !== undefined || options.emptyCell !== false)
+  if (!needCustomCell) return undefined
+
+  return (ctx: CellContext<T, unknown>) => {
+    const raw = ctx.getValue()
+    const emptyText = col.emptyCell !== undefined ? col.emptyCell : options.emptyCell
+
+    if ((raw == null || raw === '') && emptyText !== false) {
+      return emptyText != null ? resolveTemplate(emptyText, ctx) : null
+    }
+
+    const formatted = col.cell
+      ? resolveTemplate(col.cell, ctx)
+      : String(raw ?? '')
+
+    const tooltipRaw = col.tooltip !== undefined ? col.tooltip : options.tooltip
+    const tooltipVal = resolveCallbackValue(tooltipRaw, ctx)
+
+    if (tooltipVal) {
+      return h(DataTableCellTooltip, {
+        text: String(formatted ?? ''),
+        lines: tooltipVal === true ? undefined : tooltipVal,
+        ...(options.tooltipProps ?? {}),
+        ...(col.tooltipProps ?? {})
+      })
+    }
+
+    const truncateRaw = col.truncate !== undefined ? col.truncate : options.truncate
+    const truncateVal = resolveCallbackValue(truncateRaw, ctx)
+
+    if (truncateVal) {
+      if (truncateVal === true) {
+        return h('div', { class: 'truncate' }, String(formatted ?? ''))
+      }
+      return h('div', {
+        style: {
+          '-webkit-line-clamp': truncateVal,
+          'display': '-webkit-box',
+          '-webkit-box-orient': 'vertical',
+          'overflow': 'hidden',
+          'white-space': 'normal',
+          'word-break': 'break-all'
+        }
+      }, String(formatted ?? ''))
+    }
+
+    return formatted
+  }
+}
+
 function resolveDataColumn<T>(
   col: DataTableDataColumn<T>,
-  options: DataTableProps<T>,
-  pinning: ColumnPinningState,
-  visibility: VisibilityState,
-  sizing: ColumnSizingState,
+  ctx: ResolveContext<T>,
   inheritedFixed?: 'left' | 'right'
 ): ColumnDef<T, unknown> {
+  const { options, density } = ctx
   const id = col.accessorKey
   const effectiveSortable = resolveColumnFlag(col.sortable, options.sortable, col)
   const effectivePinable = resolveColumnFlag(col.pinable, options.pinable, col)
   const effectiveResizable = resolveColumnFlag(col.resizable, options.resizable, col)
 
-  const { resolvedSize } = applyBaseState(
-    { id, fixed: col.fixed ?? inheritedFixed, size: col.size },
-    pinning,
-    sizing
-  )
+  ctx.flags.hasPinning ||= effectivePinable
+  ctx.flags.hasResizing ||= effectiveResizable
+  ctx.flags.hasSort ||= effectiveSortable
+
+  const resolvedSize = applyBaseState(id, col.fixed ?? inheritedFixed, col.size, ctx as ResolveContext<unknown>)
 
   if (col.visibility === false) {
-    visibility[id] = false
+    ctx.visibility[id] = false
   }
 
-  // 列定义期判断：只要全局或列级有可能启用 tooltip/truncate，就进入自定义 cell 路径
-  // 函数形式恒为 truthy，静态 false 则跳过
-  const maybeTooltip = col.tooltip !== undefined ? !!col.tooltip : !!options.tooltip
-  const maybeTruncate = col.truncate !== undefined ? !!col.truncate : !!options.truncate
-  const needCustomCell = !!(col.cell || maybeTooltip || maybeTruncate || col.emptyCell !== undefined || options.emptyCell !== false)
-
-  const densityClass = resolveDensityClass(options)
+  const cellRenderer = buildDataCellRenderer(col, options)
 
   const def: ColumnDef<T, unknown> = {
     accessorKey: id,
     header: (effectiveSortable || effectivePinable || effectiveResizable)
-      ? (ctx: HeaderContext<T, unknown>) => renderHeaderActions(ctx, col, options, effectiveSortable, effectivePinable, effectiveResizable)
+      ? (hctx: HeaderContext<T, unknown>) => renderHeaderActions(hctx, col, options, col.header ?? id, effectiveSortable, effectivePinable, effectiveResizable)
       : (col.header ?? id),
     ...(col.minSize != null && { minSize: col.minSize }),
     ...(col.maxSize != null && { maxSize: col.maxSize }),
@@ -167,64 +260,10 @@ function resolveDataColumn<T>(
     enableSorting: effectiveSortable,
     enablePinning: effectivePinable,
     enableResizing: effectiveResizable,
-    ...(needCustomCell && {
-      cell: (ctx: CellContext<T, unknown>) => {
-        const raw = ctx.getValue()
-        const emptyText = col.emptyCell !== undefined ? col.emptyCell : options.emptyCell
-
-        if ((raw == null || raw === '') && emptyText !== false) {
-          return emptyText != null ? resolveTemplate(emptyText, ctx) : null
-        }
-
-        const formatted = col.cell
-          ? resolveTemplate(col.cell, ctx)
-          : String(raw ?? '')
-
-        // cell 渲染期：按上下文求值 tooltip 与 truncate
-        const tooltipRaw = col.tooltip !== undefined ? col.tooltip : options.tooltip
-        const tooltipVal = typeof tooltipRaw === 'function' ? tooltipRaw(ctx) : tooltipRaw
-
-        const truncateRaw = col.truncate !== undefined ? col.truncate : options.truncate
-        const truncateVal = typeof truncateRaw === 'function' ? truncateRaw(ctx) : truncateRaw
-
-        if (tooltipVal) {
-          const lines = tooltipVal === true ? undefined : tooltipVal
-          const effectiveTooltipProps = {
-            ...(options.tooltipProps ?? {}),
-            ...(col.tooltipProps ?? {})
-          }
-          return h(DataTableCellTooltip, {
-            text: String(formatted ?? ''),
-            lines,
-            ...effectiveTooltipProps
-          })
-        }
-
-        if (truncateVal) {
-          if (truncateVal === true) {
-            return h('div', { class: 'truncate' }, String(formatted ?? ''))
-          }
-          return h('div', {
-            style: {
-              '-webkit-line-clamp': truncateVal,
-              'display': '-webkit-box',
-              '-webkit-box-orient': 'vertical',
-              'overflow': 'hidden',
-              'white-space': 'normal',
-              'word-break': 'break-all'
-            }
-          }, String(formatted ?? ''))
-        }
-
-        return formatted
-      }
-    }),
+    ...(cellRenderer && { cell: cellRenderer }),
     meta: {
-      class: {
-        td: [resolveAlignClass(col.align), densityClass?.td].filter(Boolean).join(' ') || undefined,
-        th: [effectiveResizable ? 'relative' : '', densityClass?.th].filter(Boolean).join(' ') || undefined
-      },
-      style: columnSizeStyle()
+      class: buildClassMeta(density, resolveAlignClass(col.align), effectiveResizable),
+      style: COLUMN_SIZE_STYLE
     }
   }
 
@@ -235,13 +274,9 @@ function resolveDataColumn<T>(
   return def
 }
 
-// 将分组列配置解析为带子列的 ColumnDef（colspan 表头）
 function resolveGroupColumn<T>(
   col: DataTableGroupColumn<T>,
-  options: DataTableProps<T>,
-  pinning: ColumnPinningState,
-  visibility: VisibilityState,
-  sizing: ColumnSizingState,
+  ctx: ResolveContext<T>,
   inheritedFixed?: 'left' | 'right'
 ): ColumnDef<T, unknown> {
   const effectiveFixed = col.fixed ?? inheritedFixed
@@ -250,17 +285,17 @@ function resolveGroupColumn<T>(
     : undefined
 
   return {
-    id: `group-${col.header ?? 'unnamed'}`,
+    id: `group-${ctx.nextGroupId()}-${col.header ?? 'unnamed'}`,
     header: col.header ?? '',
     ...(resolvedSize != null && { size: resolvedSize }),
     ...(col.minSize != null && { minSize: col.minSize }),
     ...(col.maxSize != null && { maxSize: col.maxSize }),
     columns: col.children?.map(child =>
-      resolveColumn(child, options, pinning, visibility, sizing, effectiveFixed)
+      resolveColumn(child, ctx, effectiveFixed)
     ),
     meta: {
       class: {
-        th: [resolveAlignClass(col.align)].filter(Boolean).join(' ') || undefined
+        th: resolveAlignClass(col.align) || undefined
       },
       style: {
         th: (header: Header<T, unknown>) => groupHeaderStyle(header, effectiveFixed)
@@ -269,327 +304,203 @@ function resolveGroupColumn<T>(
   } as ColumnDef<T, unknown>
 }
 
-// function resolveSelectionColumn<T>(
-//   col: DataTableSelectionColumn,
-//   pinning: ColumnPinningState,
-//   sizing: ColumnSizingState
-// ): ColumnDef<T, unknown> {
-//   const id = '__selection'
-
-//   const { resolvedSize } = applyBaseState(
-//     { id, fixed: col.fixed, defaultFixed: 'left', size: col.size, defaultSize: DATA_TABLE_DEFAULTS.selectionSize },
-//     pinning,
-//     sizing
-//   )
-
-//   return createSelectionColumnDef<T>(id, resolvedSize ?? DATA_TABLE_DEFAULTS.selectionSize, col.mode ?? 'multiple')
-// }
-
-// function resolveIndexColumn<T>(
-//   col: DataTableIndexColumn,
-//   options: DataTableProps<T>,
-//   pinning: ColumnPinningState,
-//   sizing: ColumnSizingState
-// ): ColumnDef<T, unknown> {
-//   const id = '__index'
-
-//   const { resolvedSize } = applyBaseState(
-//     { id, fixed: col.fixed, size: col.size, defaultSize: DATA_TABLE_DEFAULTS.indexSize },
-//     pinning,
-//     sizing
-//   )
-
-//   return {
-//     id,
-//     header: col.label ?? DATA_TABLE_DEFAULTS.indexLabel,
-//     size: resolvedSize,
-//     enableSorting: false,
-//     enableResizing: false,
-//     cell: (ctx: CellContext<T, unknown>) => {
-//       const rowIndex = ctx.table.getRowModel().rows.indexOf(ctx.row)
-//       return rowIndex + 1 + options.pageOffset
-//     },
-//     meta: {
-//       class: {
-//         td: 'text-center text-muted'
-//       },
-//       style: columnSizeStyle()
-//     }
-//   } as ColumnDef<T, unknown>
-// }
-
-// function resolveExpandColumn<T>(
-//   col: DataTableExpandColumn,
-//   options: DataTableProps<T>,
-//   pinning: ColumnPinningState,
-//   sizing: ColumnSizingState
-// ): ColumnDef<T, unknown> {
-//   const id = '__expand'
-
-//   const { resolvedSize } = applyBaseState(
-//     { id, fixed: col.fixed, size: col.size, defaultSize: DATA_TABLE_DEFAULTS.expandSize },
-//     pinning,
-//     sizing
-//   )
-
-//   return {
-//     id,
-//     header: '',
-//     size: resolvedSize,
-//     enableSorting: false,
-//     enableResizing: false,
-//     cell: (ctx: CellContext<T, unknown>) => {
-//       if (!ctx.row.getCanExpand()) return null
-//       return h(resolveComponent('UButton'), {
-//         icon: ctx.row.getIsExpanded() ? 'i-lucide-chevron-down' : 'i-lucide-chevron-right',
-//         variant: 'ghost',
-//         size: 'xs',
-//         color: 'neutral',
-//         style: { marginLeft: `${ctx.row.depth * options.indentSize}px` },
-//         onClick: (event: Event) => {
-//           event.stopPropagation()
-//           ctx.row.toggleExpanded()
-//         }
-//       })
-//     },
-//     meta: { style: columnSizeStyle() }
-//   } as ColumnDef<T, unknown>
-// }
-
-// function resolveRowPinningColumn<T>(
-//   col: DataTableRowPinningColumn,
-//   pinning: ColumnPinningState,
-//   sizing: ColumnSizingState
-// ): ColumnDef<T, unknown> {
-//   const id = '__row_pinning'
-
-//   const { resolvedSize } = applyBaseState(
-//     { id, fixed: col.fixed, defaultFixed: 'left', size: col.size, defaultSize: DATA_TABLE_DEFAULTS.selectionSize },
-//     pinning,
-//     sizing
-//   )
-
-//   return {
-//     id,
-//     header: '',
-//     size: resolvedSize,
-//     enableSorting: false,
-//     enableResizing: false,
-//     cell: (ctx: CellContext<T, unknown>) => {
-//       const pinned = ctx.row.getIsPinned()
-//       const defaultPosition = col.position ?? 'top'
-
-//       return h(resolveComponent('UButton'), {
-//         'icon': pinned ? 'i-lucide-pin-off' : 'i-lucide-pin',
-//         'variant': 'ghost',
-//         'size': 'xs',
-//         'color': pinned ? 'primary' : 'neutral',
-//         'aria-label': pinned ? '取消固定行' : '固定行',
-//         'onClick': (event: Event) => {
-//           event.stopPropagation()
-//           if (pinned) {
-//             ctx.row.pin(false)
-//             return
-//           }
-
-//           ctx.row.pin(defaultPosition)
-//         }
-//       })
-//     },
-//     meta: {
-//       class: {
-//         td: 'text-center',
-//         th: 'text-center'
-//       },
-//       style: columnSizeStyle()
-//     }
-//   } as ColumnDef<T, unknown>
-// }
-
-// function renderConfirmAction<T>(
-//   action: import('../../types/data-table').DataTableAction<T>,
-//   row: T,
-//   rowIndex: number,
-//   actionIndex: number,
-//   stateMap: Map<string, ReturnType<typeof ref<boolean>>>
-// ) {
-//   const key = `${rowIndex}-${actionIndex}`
-//   if (!stateMap.has(key)) {
-//     stateMap.set(key, ref(false))
-//   }
-//   const open = stateMap.get(key)!
-
-//   const confirmConfig = typeof action.confirm === 'string'
-//     ? { title: action.confirm, description: undefined }
-//     : action.confirm!
-
-//   return h(resolveComponent('UPopover'), {
-//     'open': open.value,
-//     'onUpdate:open': (v: boolean) => { open.value = v }
-//   }, {
-//     default: () => h(resolveComponent('UButton'), {
-//       label: action.label,
-//       icon: action.icon,
-//       color: (action.color ?? 'neutral') as 'neutral',
-//       variant: 'ghost',
-//       size: 'xs',
-//       disabled: resolveCallbackValue(action.disabled ?? false, row),
-//       onClick: () => { open.value = true }
-//     }),
-//     content: () => h('div', { class: 'p-3 flex flex-col gap-2 max-w-55' }, [
-//       h('p', { class: 'text-sm font-medium text-highlighted' }, confirmConfig.title),
-//       confirmConfig.description
-//         ? h('p', { class: 'text-xs text-muted' }, confirmConfig.description)
-//         : null,
-//       h('div', { class: 'flex justify-end gap-2 mt-1' }, [
-//         h(resolveComponent('UButton'), {
-//           label: '取消',
-//           color: 'neutral',
-//           variant: 'ghost',
-//           size: 'xs',
-//           onClick: () => { open.value = false }
-//         }),
-//         h(resolveComponent('UButton'), {
-//           label: '确认',
-//           color: (action.color ?? 'primary') as 'primary',
-//           size: 'xs',
-//           onClick: () => {
-//             open.value = false
-//             action.onClick(row, rowIndex)
-//           }
-//         })
-//       ])
-//     ])
-//   })
-// }
-
-// function resolveActionsColumn<T>(
-//   col: DataTableActionsColumn<T>,
-//   pinning: ColumnPinningState,
-//   sizing: ColumnSizingState
-// ): ColumnDef<T, unknown> {
-//   const id = '__actions'
-
-//   const { resolvedSize } = applyBaseState(
-//     { id, fixed: col.fixed, defaultFixed: 'right', size: col.size },
-//     pinning,
-//     sizing
-//   )
-
-//   // 每个 action 实例独立的 open 状态，key = "${rowIndex}-${actionIndex}"
-//   const confirmStateMap = new Map<string, ReturnType<typeof ref<boolean>>>()
-
-//   return {
-//     id,
-//     header: col.label ?? DATA_TABLE_DEFAULTS.actionsLabel,
-//     enableSorting: false,
-//     enableResizing: false,
-//     ...(resolvedSize != null && { size: resolvedSize }),
-//     cell: (ctx: CellContext<T, unknown>) => {
-//       const row = ctx.row.original
-//       const index = ctx.row.index
-//       const actionList = isFunction(col.actions) ? col.actions(row) : col.actions
-//       const visibleActions = actionList.filter(a =>
-//         !resolveCallbackValue(a.hidden ?? false, row)
-//       )
-
-//       if (visibleActions.length === 0) return null
-
-//       return h('div', { class: 'flex items-center gap-1' },
-//         visibleActions.map((action, actionIndex) =>
-//           action.confirm
-//             ? renderConfirmAction(action, row, index, actionIndex, confirmStateMap)
-//             : h(resolveComponent('UButton'), {
-//                 label: action.label,
-//                 icon: action.icon,
-//                 color: (action.color ?? 'neutral') as 'neutral',
-//                 variant: 'ghost',
-//                 size: 'xs',
-//                 disabled: resolveCallbackValue(action.disabled ?? false, row),
-//                 onClick: () => action.onClick(row, index)
-//               })
-//         )
-//       )
-//     },
-//     meta: {
-//       style: columnSizeStyle()
-//     }
-//   } as ColumnDef<T, unknown>
-// }
-
-// 将对齐方式映射为 Tailwind 文本对齐类
-function resolveAlignClass(align?: 'left' | 'center' | 'right'): string {
-  switch (align) {
-    case 'center': return 'text-center'
-    case 'right': return 'text-right'
-    default: return ''
+function buildSpecialColumnDef<T>(
+  col: DataTableSpecialColumnBase,
+  type: SpecialColumnType,
+  ctx: ResolveContext<T>,
+  render: {
+    cell: (cellCtx: CellContext<T, unknown>) => unknown
+    header: string | ((hctx: HeaderContext<T, unknown>) => unknown)
   }
-}
+): ColumnDef<T, unknown> {
+  const defaults = SPECIAL_COLUMN_DEFAULTS[type]
+  const { options, density } = ctx
+  const { id } = defaults
 
-// 将 density 配置解析为 th/td padding 类名
-function resolveDensityClass<T>(options: DataTableProps<T>): DataTableDensityOptions | null {
-  if (options.density == null) return null
-  return isString(options.density) ? DENSITY_PRESETS[options.density] : options.density
-}
+  const resolvedSize = applyBaseState(
+    id,
+    col.fixed ?? defaults.fixed,
+    col.size ?? defaults.size,
+    ctx as ResolveContext<unknown>
+  )
 
-interface ColumnSizeCtx {
-  column: {
-    getSize: () => number
-    columnDef: {
-      size?: number
-      minSize?: number
-      maxSize?: number
-      enableResizing?: boolean
+  if (col.visibility === false) {
+    ctx.visibility[id] = false
+  }
+
+  const effectivePinable = col.pinable ?? (options.pinable === true)
+  const effectiveResizable = col.resizable ?? (options.resizable === true)
+
+  ctx.flags.hasPinning ||= effectivePinable
+  ctx.flags.hasResizing ||= effectiveResizable
+
+  const alignClass = resolveAlignClass(col.align ?? defaults.align)
+
+  const resolvedHeader = (effectivePinable || effectiveResizable)
+    ? (hctx: HeaderContext<T, unknown>) => {
+        const label = isString(render.header) ? render.header : ''
+        return renderHeaderActions(hctx, col, options, label, false, effectivePinable, effectiveResizable)
+      }
+    : render.header
+
+  const def: ColumnDef<T, unknown> = {
+    id,
+    header: resolvedHeader,
+    ...(resolvedSize != null && { size: resolvedSize }),
+    ...(col.minSize != null && { minSize: col.minSize }),
+    ...(col.maxSize != null && { maxSize: col.maxSize }),
+    enableSorting: false,
+    enableResizing: effectiveResizable,
+    enablePinning: effectivePinable,
+    cell: render.cell,
+    meta: {
+      class: buildClassMeta(density, alignClass, effectiveResizable, defaults.tdClass),
+      style: COLUMN_SIZE_STYLE
     }
   }
+
+  if (col._raw) {
+    Object.assign(def, col._raw)
+  }
+
+  return def
 }
 
-// 返回 th/td 的内联尺寸样式：有显式 size 或开启 resizing 时三值锁定，否则仅设约束
-function columnSizeStyle() {
-  const resolve = (ctx: ColumnSizeCtx): Record<string, string> => {
-    const { columnDef } = ctx.column
-    const hasExplicitSize = columnDef.size != null
-    const isResizable = columnDef.enableResizing === true
+function resolveSelectionColumn<T>(
+  col: DataTableSelectionColumn,
+  ctx: ResolveContext<T>
+): ColumnDef<T, unknown> {
+  return buildSpecialColumnDef(
+    col, 'selection', ctx,
+    createSelectionRenders<T>(col.mode ?? 'multiple', col.checkboxProps)
+  )
+}
 
-    if (hasExplicitSize || isResizable) {
-      const w = `${ctx.column.getSize()}px`
-      return { width: w, minWidth: w, maxWidth: w }
+function resolveIndexColumn<T>(
+  col: DataTableIndexColumn,
+  ctx: ResolveContext<T>
+): ColumnDef<T, unknown> {
+  return buildSpecialColumnDef(col, 'index', ctx, {
+    header: col.header ?? SPECIAL_COLUMN_DEFAULTS.index.header!,
+    cell: (cellCtx: CellContext<T, unknown>) => cellCtx.row.index + 1
+  })
+}
+
+function resolveExpandColumn<T>(
+  col: DataTableExpandColumn,
+  ctx: ResolveContext<T>
+): ColumnDef<T, unknown> {
+  return buildSpecialColumnDef(col, 'expand', ctx, {
+    header: '',
+    cell: (cellCtx: CellContext<T, unknown>) => {
+      if (!cellCtx.row.getCanExpand()) return null
+
+      const indentSize = ctx.options.indentSize ?? '1rem'
+      const marginLeft = isFunction(indentSize)
+        ? indentSize(cellCtx)
+        : typeof indentSize === 'number'
+          ? `${cellCtx.row.depth * indentSize}px`
+          : cellCtx.row.depth > 0 ? `calc(${cellCtx.row.depth} * ${indentSize})` : '0px'
+
+      return h(UButton, {
+        variant: 'ghost',
+        size: 'xs',
+        color: 'neutral',
+        ...(col.buttonProps ?? {}),
+        icon: cellCtx.row.getIsExpanded() ? 'i-lucide-chevron-down' : 'i-lucide-chevron-right',
+        style: { marginLeft },
+        onClick: (event: Event) => {
+          event.stopPropagation()
+          cellCtx.row.toggleExpanded()
+        }
+      })
     }
-
-    const style: Record<string, string> = {}
-    if (columnDef.minSize != null) style.minWidth = `${columnDef.minSize}px`
-    if (columnDef.maxSize != null) style.maxWidth = `${columnDef.maxSize}px`
-    return style
-  }
-
-  return {
-    th: resolve,
-    td: resolve
-  }
+  })
 }
 
-// 递归获取分组表头最左侧的叶子列（用于计算 sticky left 偏移）
+function resolveRowPinningColumn<T>(
+  col: DataTableRowPinningColumn,
+  ctx: ResolveContext<T>
+): ColumnDef<T, unknown> {
+  return buildSpecialColumnDef(col, 'row-pinning', ctx, {
+    header: col.header ?? SPECIAL_COLUMN_DEFAULTS['row-pinning'].header!,
+    cell: (cellCtx: CellContext<T, unknown>) => {
+      const pinned = cellCtx.row.getIsPinned()
+      const position = col.position ?? 'top'
+
+      return h(UButton, {
+        'variant': 'ghost',
+        'size': 'xs',
+        'color': pinned ? 'primary' : 'neutral',
+        ...(col.buttonProps ?? {}),
+        'icon': 'i-lucide-star',
+        'aria-label': pinned ? '取消固定行' : '固定行',
+        'onClick': (event: Event) => {
+          event.stopPropagation()
+          if (pinned) {
+            cellCtx.row.pin(false)
+            return
+          }
+          cellCtx.row.pin(position)
+        }
+      })
+    }
+  })
+}
+
+function resolveActionsColumn<T>(
+  col: DataTableActionsColumn<T>,
+  ctx: ResolveContext<T>
+): ColumnDef<T, unknown> {
+  return buildSpecialColumnDef(col, 'actions', ctx, {
+    header: col.header ?? SPECIAL_COLUMN_DEFAULTS.actions.header!,
+    cell: (cellCtx: CellContext<T, unknown>) => {
+      const row = cellCtx.row.original
+      const index = cellCtx.row.index
+      const actionList = resolveCallbackValue(col.actions, row)
+      const visibleActions = actionList.filter(a =>
+        resolveCallbackValue(a.visibility ?? true, row)
+      )
+
+      if (visibleActions.length === 0) return null
+
+      return h('div', { class: 'flex items-center gap-1' },
+        visibleActions.map((action) => {
+          if (action.popover) {
+            return h(DataTableActionConfirm as Component, { action, row, rowIndex: index })
+          }
+          const { onClick: _click, disabled: _disabled, visibility: _vis, popover: _pop, popoverProps: _pProps, ...buttonProps } = action
+          return h(UButton, {
+            variant: 'ghost',
+            size: 'xs',
+            color: 'neutral',
+            ...buttonProps,
+            disabled: resolveCallbackValue(action.disabled ?? false, row),
+            onClick: () => action.onClick(row, index)
+          })
+        })
+      )
+    }
+  })
+}
+
 function getFirstLeafHeader<T>(header: Header<T, unknown>): Header<T, unknown> {
   return header.subHeaders.length
     ? getFirstLeafHeader(header.subHeaders[0]!)
     : header
 }
 
-// 递归获取分组表头最右侧的叶子列（用于计算 sticky right 偏移）
 function getLastLeafHeader<T>(header: Header<T, unknown>): Header<T, unknown> {
   return header.subHeaders.length
     ? getLastLeafHeader(header.subHeaders[header.subHeaders.length - 1]!)
     : header
 }
 
-// 计算分组表头 th 的内联样式：宽度 + sticky 固定列偏移
 function groupHeaderStyle<T>(header: Header<T, unknown>, fixed?: 'left' | 'right'): Record<string, string> {
   const w = `${header.getSize()}px`
-  const style: Record<string, string> = {
-    width: w,
-    minWidth: w
-  }
+  const style: Record<string, string> = { width: w, minWidth: w }
   const pinned = fixed ?? header.column.getIsPinned()
+
   if (pinned === 'left') {
     const first = getFirstLeafHeader(header)
     style.position = 'sticky'
@@ -600,12 +511,12 @@ function groupHeaderStyle<T>(header: Header<T, unknown>, fixed?: 'left' | 'right
     style.position = 'sticky'
     style.right = `${last.column.getAfter('right')}px`
   }
+
   return style
 }
 
-// 构建列头排序按钮 action（点击切换升降序）
 function buildSortAction<T>(
-  col: DataTableDataColumn<T>,
+  col: Pick<DataTableDataColumn<T>, 'sortButtonProps'>,
   options: DataTableProps<T>
 ): HeaderAction<T> {
   return {
@@ -632,9 +543,8 @@ function buildSortAction<T>(
   }
 }
 
-// 构建列头固定按钮 action（循环切换 left → right → 取消）
 function buildPinAction<T>(
-  col: DataTableDataColumn<T>,
+  col: Pick<DataTableDataColumn<T>, 'pinButtonProps'>,
   options: DataTableProps<T>
 ): HeaderAction<T> {
   return {
@@ -668,11 +578,11 @@ function buildPinAction<T>(
   }
 }
 
-// 渲染带排序/固定按钮及 resize 拖拽手柄的列头单元格
 function renderHeaderActions<T>(
   ctx: HeaderContext<T, unknown>,
-  col: DataTableDataColumn<T>,
+  col: Pick<DataTableDataColumn<T>, 'pinButtonProps' | 'sortButtonProps'>,
   options: DataTableProps<T>,
+  label: string,
   sortable: boolean,
   pinable: boolean,
   resizable: boolean
@@ -680,8 +590,6 @@ function renderHeaderActions<T>(
   const actions: HeaderAction<T>[] = []
   if (pinable) actions.push(buildPinAction(col, options))
   if (sortable) actions.push(buildSortAction(col, options))
-
-  const label = col.header ?? (col.accessorKey as string)
   const leading = actions.filter(a => a.position === 'leading').map(a => a.render(ctx))
   const trailing = actions.filter(a => a.position === 'trailing').map(a => a.render(ctx))
 

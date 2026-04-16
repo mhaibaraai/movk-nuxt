@@ -14,19 +14,21 @@ export const SIZE_PRESET_MAP: Record<DataTableSizePreset, number> = {
   xl: 400
 } as const
 
-export const DATA_TABLE_DEFAULTS = {
-  emptyCell: '-',
-  selectionSize: 48,
-  indexLabel: '#',
-  indexSize: 60,
-  expandSize: 48,
-  rowPinningSize: 48,
-  actionsLabel: '操作',
-  actionConfirmTitle: '确认操作',
-  actionConfirmDescription: '请确认是否执行此操作',
-  actionConfirmIcon: 'i-lucide-circle-question-mark',
-  cancelButton: '取消',
-  confirmButton: '确定',
-  indentSize: '1rem',
-  stripeClass: 'even:bg-elevated/30'
+export interface SpecialColumnDefaults {
+  id: string
+  fixed?: 'left' | 'right'
+  size?: number
+  align?: 'left' | 'center' | 'right'
+  header?: string
+  tdClass?: string
+}
+
+export type SpecialColumnType = 'selection' | 'index' | 'expand' | 'row-pinning' | 'actions'
+
+export const SPECIAL_COLUMN_DEFAULTS: Record<SpecialColumnType, SpecialColumnDefaults> = {
+  'selection': { id: '__selection', fixed: 'left', size: 48, align: 'center' },
+  'index': { id: '__index', size: 60, align: 'center', header: '#', tdClass: 'text-muted' },
+  'expand': { id: '__expand', size: 48 },
+  'row-pinning': { id: '__row_pinning', fixed: 'left', size: 48, align: 'center', header: '' },
+  'actions': { id: '__actions', fixed: 'right', header: '操作' }
 } as const

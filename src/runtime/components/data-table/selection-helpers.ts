@@ -1,4 +1,5 @@
-import type { ColumnDef, RowSelectionState } from '@tanstack/vue-table'
+import type { CellContext, HeaderContext, RowSelectionState } from '@tanstack/vue-table'
+import type { CheckboxProps } from '@nuxt/ui'
 import type { Ref } from 'vue'
 import { resolveComponent, computed, h, watch } from 'vue'
 import {
@@ -12,52 +13,40 @@ export {
   rowSelectionToKeys
 } from './selection-state'
 
-export function createSelectionColumnDef<T>(
-  id: string,
-  size: number,
-  mode: 'single' | 'multiple'
-): ColumnDef<T, unknown> {
-  return {
-    id,
-    size,
-    enableSorting: false,
-    enableResizing: false,
-    header: mode === 'multiple'
-      ? ({ table }) => h(resolveComponent('UCheckbox'), {
-          'modelValue': table.getIsAllPageRowsSelected(),
-          'indeterminate': table.getIsSomePageRowsSelected(),
-          'onUpdate:modelValue': () => table.toggleAllPageRowsSelected()
-        })
-      : '',
-    cell: ({ row, table }) => h(resolveComponent('UCheckbox'), {
-      'modelValue': row.getIsSelected(),
-      'disabled': !row.getCanSelect(),
-      'onUpdate:modelValue': () => {
-        if (mode === 'single') {
-          if (row.getIsSelected()) {
-            row.toggleSelected(false)
-          }
-          else {
-            table.resetRowSelection()
-            row.toggleSelected(true)
-          }
+export function createSelectionRenders<T>(
+  mode: 'single' | 'multiple',
+  checkboxProps?: CheckboxProps
+) {
+  const header: string | ((ctx: HeaderContext<T, unknown>) => ReturnType<typeof h>) = mode === 'multiple'
+    ? ({ table }: HeaderContext<T, unknown>) => h(resolveComponent('UCheckbox'), {
+        ...(checkboxProps ?? {}),
+        'modelValue': table.getIsAllPageRowsSelected(),
+        'indeterminate': table.getIsSomePageRowsSelected(),
+        'onUpdate:modelValue': () => table.toggleAllPageRowsSelected()
+      })
+    : ''
+
+  const cell = ({ row, table }: CellContext<T, unknown>) => h(resolveComponent('UCheckbox'), {
+    ...(checkboxProps ?? {}),
+    'modelValue': row.getIsSelected(),
+    'disabled': !row.getCanSelect(),
+    'onUpdate:modelValue': () => {
+      if (mode === 'single') {
+        if (row.getIsSelected()) {
+          row.toggleSelected(false)
         }
         else {
-          row.toggleSelected()
+          table.resetRowSelection()
+          row.toggleSelected(true)
         }
       }
-    }),
-    meta: {
-      class: {
-        td: 'text-center',
-        th: 'text-center'
-      },
-      style: {
-        th: (ctx: { column: { getSize: () => number } }) => ({ width: `${ctx.column.getSize()}px` }),
-        td: (ctx: { column: { getSize: () => number } }) => ({ width: `${ctx.column.getSize()}px` })
+      else {
+        row.toggleSelected()
       }
     }
-  } as ColumnDef<T, unknown>
+  })
+
+  return { cell, header }
 }
 
 /**

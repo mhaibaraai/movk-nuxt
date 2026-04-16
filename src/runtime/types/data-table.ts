@@ -1,4 +1,4 @@
-import type { ButtonProps, IconProps, PopoverProps, TableColumn, TableData, TableProps, TooltipProps } from '@nuxt/ui'
+import type { ButtonProps, CheckboxProps, IconProps, PopoverProps, TableColumn, TableData, TableProps, TooltipProps } from '@nuxt/ui'
 import type { OmitByKey, Suggest } from '@movk/core'
 import type { CellContext, ColumnDef, ColumnDefTemplate, ColumnPinningState, ColumnSizingState, RowPinningState, TableMeta, VisibilityState } from '@tanstack/vue-table'
 
@@ -35,13 +35,6 @@ export interface DataTableBaseColumn {
   minSize?: number
   /** 最大宽度 */
   maxSize?: number
-  /**
-   * 单元格文本溢出截断，优先级高于全局 truncate
-   * - true = 单行截断
-   * - number > 1 = 多行截断行数
-   * - false = 禁用截断
-   */
-  truncate?: boolean | number
 }
 
 export interface DataTableDataColumn<T> extends DataTableBaseColumn {
@@ -62,8 +55,19 @@ export interface DataTableDataColumn<T> extends DataTableBaseColumn {
   sortButtonProps?: ButtonProps
   /** 是否可拖拽调整宽度，优先级高于全局 resizable */
   resizable?: boolean
-  /** 空值占位文本，false 禁用 */
-  emptyCell?: string | false
+  /**
+   * 单元格文本溢出截断，优先级高于全局 truncate
+   * - true = 单行截断
+   * - number > 1 = 多行截断行数
+   * - false = 禁用截断
+   * - 函数 = 按 cell 上下文动态决定
+   */
+  truncate?: boolean | number | ((ctx: CellContext<T, unknown>) => boolean | number)
+  /**
+   * 空值占位，false 禁用，函数接收 CellContext 动态渲染
+   * @defaultValue 继承全局 emptyCell
+   */
+  emptyCell?: string | false | ColumnDefTemplate<CellContext<T, unknown>>
   /**
    * 溢出 Tooltip，优先级高于全局 tooltip
    * - true = 溢出时单行显示
@@ -85,7 +89,30 @@ export interface DataTableGroupColumn<T> extends DataTableBaseColumn {
   children: (DataTableDataColumn<T> | DataTableGroupColumn<T>)[]
 }
 
-export interface DataTableSelectionColumn {
+export interface DataTableSpecialColumnBase extends Omit<DataTableBaseColumn, 'header' | 'truncate'> {
+  /**
+   * 默认是否可见
+   * @defaultValue true
+   */
+  visibility?: boolean
+  /**
+   * 允许通过表头交互切换列固定位置（left -> right -> none）
+   * @defaultValue false
+   */
+  pinable?: boolean
+  /**
+   * 是否可拖拽调整宽度
+   * @defaultValue false
+   */
+  resizable?: boolean
+  /** 固定列按钮 props 透传，列级可覆盖全局 pinButtonProps */
+  pinButtonProps?: ButtonProps
+  /** TanStack ColumnDef 透传（逃生舱） */
+  _raw?: Partial<ColumnDef<any, unknown>>
+}
+
+/** @defaultValue size=48, fixed='left', align='center' */
+export interface DataTableSelectionColumn extends DataTableSpecialColumnBase {
   /** 选择列，显示复选框/单选框用于行选择 */
   type: 'selection'
   /**
@@ -93,15 +120,12 @@ export interface DataTableSelectionColumn {
    * @defaultValue 'multiple'
    */
   mode?: 'single' | 'multiple'
-  fixed?: 'left' | 'right'
-  /**
-   * 列宽
-   * @defaultValue 48
-   */
-  size?: number
+  /** UCheckbox props 透传 */
+  checkboxProps?: CheckboxProps
 }
 
-export interface DataTableIndexColumn {
+/** @defaultValue size=60, align='center' */
+export interface DataTableIndexColumn extends DataTableSpecialColumnBase {
   /** 索引列，显示行索引 */
   type: 'index'
   /**
@@ -109,42 +133,36 @@ export interface DataTableIndexColumn {
    * @defaultValue '#'
    */
   header?: string
-  fixed?: 'left' | 'right'
-  /**
-   * 列宽
-   * @defaultValue 60
-   */
-  size?: number
 }
 
-export interface DataTableExpandColumn {
+/** @defaultValue size=48 */
+export interface DataTableExpandColumn extends DataTableSpecialColumnBase {
   /** 展开列，显示展开图标用于树形表格 */
   type: 'expand'
-  fixed?: 'left' | 'right'
-  /**
-   * 列宽
-   * @defaultValue 48
-   */
-  size?: number
+  /** 展开/折叠按钮 props 透传 */
+  buttonProps?: ButtonProps
 }
 
-export interface DataTableRowPinningColumn {
+/** @defaultValue size=48, fixed='left', align='center' */
+export interface DataTableRowPinningColumn extends DataTableSpecialColumnBase {
   /** 行固定列，显示图标用于行固定 */
   type: 'row-pinning'
-  fixed?: 'left' | 'right'
-  /**
-   * 列宽
-   * @defaultValue 48
-   */
-  size?: number
   /**
    * 行固定位置
    * @defaultValue 'top'
    */
   position?: 'top' | 'bottom'
+  /**
+   * 表头文本
+   * @defaultValue '#'
+   */
+  header?: string
+  /** 行固定/取消固定按钮 props 透传 */
+  buttonProps?: ButtonProps
 }
 
-export interface DataTableActionsColumn<T> {
+/** @defaultValue fixed='right' */
+export interface DataTableActionsColumn<T> extends DataTableSpecialColumnBase {
   /** 操作列，显示操作按钮 */
   type: 'actions'
   /**
@@ -152,9 +170,6 @@ export interface DataTableActionsColumn<T> {
    * @defaultValue '操作'
    */
   header?: string
-  fixed?: 'left' | 'right'
-  /** 列宽 */
-  size?: number
   /** 操作按钮列表 */
   actions: DataTableAction<T>[] | ((row: T) => DataTableAction<T>[])
 }
@@ -403,6 +418,12 @@ export interface ResolvedColumnState<T> {
   initialPinning: ColumnPinningState
   initialVisibility: VisibilityState
   initialSizing: ColumnSizingState
+  /** 是否有任何列启用了列固定交互 */
+  hasColumnPinning: boolean
+  /** 是否有任何列启用了列宽拖拽 */
+  hasColumnResizing: boolean
+  /** 是否有任何列启用了排序 */
+  hasColumnSort: boolean
 }
 
 // export type DataTablePaginationPassthrough = Partial<
