@@ -45,6 +45,7 @@ interface BaseStateInput {
   defaultSize?: number
 }
 
+// 将列的 fixed/size 写入 pinning/sizing 初始状态
 function applyBaseState(
   input: BaseStateInput,
   pinning: ColumnPinningState,
@@ -67,6 +68,7 @@ function applyBaseState(
   return { resolvedSize }
 }
 
+// 将用户定义的列数组解析为 TanStack ColumnDef 及初始状态
 export function resolveColumns<T>(
   columns: DataTableColumn<T>[],
   options: DataTableProps<T>
@@ -87,6 +89,7 @@ export function resolveColumns<T>(
   }
 }
 
+// 按列类型分发到对应的解析函数
 function resolveColumn<T>(
   col: DataTableColumn<T>,
   options: DataTableProps<T>,
@@ -121,6 +124,7 @@ function resolveColumn<T>(
   return col as ColumnDef<T, unknown>
 }
 
+// 将数据列配置解析为带 cell/header/meta 的 ColumnDef
 function resolveDataColumn<T>(
   col: DataTableDataColumn<T>,
   options: DataTableProps<T>,
@@ -231,6 +235,7 @@ function resolveDataColumn<T>(
   return def
 }
 
+// 将分组列配置解析为带子列的 ColumnDef（colspan 表头）
 function resolveGroupColumn<T>(
   col: DataTableGroupColumn<T>,
   options: DataTableProps<T>,
@@ -240,10 +245,14 @@ function resolveGroupColumn<T>(
   inheritedFixed?: 'left' | 'right'
 ): ColumnDef<T, unknown> {
   const effectiveFixed = col.fixed ?? inheritedFixed
+  const resolvedSize = col.size != null
+    ? (isString(col.size) ? resolvePresetSize(col.size) : col.size)
+    : undefined
 
   return {
     id: `group-${col.header ?? 'unnamed'}`,
     header: col.header ?? '',
+    ...(resolvedSize != null && { size: resolvedSize }),
     ...(col.minSize != null && { minSize: col.minSize }),
     ...(col.maxSize != null && { maxSize: col.maxSize }),
     columns: col.children?.map(child =>
@@ -508,6 +517,7 @@ function resolveGroupColumn<T>(
 //   } as ColumnDef<T, unknown>
 // }
 
+// 将对齐方式映射为 Tailwind 文本对齐类
 function resolveAlignClass(align?: 'left' | 'center' | 'right'): string {
   switch (align) {
     case 'center': return 'text-center'
@@ -516,33 +526,68 @@ function resolveAlignClass(align?: 'left' | 'center' | 'right'): string {
   }
 }
 
+// 将 density 配置解析为 th/td padding 类名
 function resolveDensityClass<T>(options: DataTableProps<T>): DataTableDensityOptions | null {
   if (options.density == null) return null
   return isString(options.density) ? DENSITY_PRESETS[options.density] : options.density
 }
 
-function columnSizeStyle() {
-  return {
-    th: (ctx: { column: { getSize: () => number } }) => ({ width: `${ctx.column.getSize()}px` }),
-    td: (ctx: { column: { getSize: () => number } }) => ({ width: `${ctx.column.getSize()}px` })
+interface ColumnSizeCtx {
+  column: {
+    getSize: () => number
+    columnDef: {
+      size?: number
+      minSize?: number
+      maxSize?: number
+      enableResizing?: boolean
+    }
   }
 }
 
+// 返回 th/td 的内联尺寸样式：有显式 size 或开启 resizing 时三值锁定，否则仅设约束
+function columnSizeStyle() {
+  const resolve = (ctx: ColumnSizeCtx): Record<string, string> => {
+    const { columnDef } = ctx.column
+    const hasExplicitSize = columnDef.size != null
+    const isResizable = columnDef.enableResizing === true
+
+    if (hasExplicitSize || isResizable) {
+      const w = `${ctx.column.getSize()}px`
+      return { width: w, minWidth: w, maxWidth: w }
+    }
+
+    const style: Record<string, string> = {}
+    if (columnDef.minSize != null) style.minWidth = `${columnDef.minSize}px`
+    if (columnDef.maxSize != null) style.maxWidth = `${columnDef.maxSize}px`
+    return style
+  }
+
+  return {
+    th: resolve,
+    td: resolve
+  }
+}
+
+// 递归获取分组表头最左侧的叶子列（用于计算 sticky left 偏移）
 function getFirstLeafHeader<T>(header: Header<T, unknown>): Header<T, unknown> {
   return header.subHeaders.length
     ? getFirstLeafHeader(header.subHeaders[0]!)
     : header
 }
 
+// 递归获取分组表头最右侧的叶子列（用于计算 sticky right 偏移）
 function getLastLeafHeader<T>(header: Header<T, unknown>): Header<T, unknown> {
   return header.subHeaders.length
     ? getLastLeafHeader(header.subHeaders[header.subHeaders.length - 1]!)
     : header
 }
 
+// 计算分组表头 th 的内联样式：宽度 + sticky 固定列偏移
 function groupHeaderStyle<T>(header: Header<T, unknown>, fixed?: 'left' | 'right'): Record<string, string> {
+  const w = `${header.getSize()}px`
   const style: Record<string, string> = {
-    width: `${header.getSize()}px`
+    width: w,
+    minWidth: w
   }
   const pinned = fixed ?? header.column.getIsPinned()
   if (pinned === 'left') {
@@ -558,6 +603,7 @@ function groupHeaderStyle<T>(header: Header<T, unknown>, fixed?: 'left' | 'right
   return style
 }
 
+// 构建列头排序按钮 action（点击切换升降序）
 function buildSortAction<T>(
   col: DataTableDataColumn<T>,
   options: DataTableProps<T>
@@ -586,6 +632,7 @@ function buildSortAction<T>(
   }
 }
 
+// 构建列头固定按钮 action（循环切换 left → right → 取消）
 function buildPinAction<T>(
   col: DataTableDataColumn<T>,
   options: DataTableProps<T>
@@ -621,6 +668,7 @@ function buildPinAction<T>(
   }
 }
 
+// 渲染带排序/固定按钮及 resize 拖拽手柄的列头单元格
 function renderHeaderActions<T>(
   ctx: HeaderContext<T, unknown>,
   col: DataTableDataColumn<T>,
