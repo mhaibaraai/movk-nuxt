@@ -186,22 +186,20 @@ const sortingColumns: DataTableColumn<TableUser>[] = [
 ]
 
 const pinningColumns: DataTableColumn<TableUser>[] = [
-  { type: 'row-pinning', fixed: 'left', size: 44 },
-  { accessorKey: 'name', header: '姓名', fixed: 'left', size: 120, sortable: true, pinable: true },
-  { accessorKey: 'email', header: '邮箱', size: 240, pinable: true, tooltip: true },
-  { accessorKey: 'department', header: '部门', size: 120, pinable: true },
-  { accessorKey: 'role', header: '职位', size: 150, pinable: true },
+  { type: 'index', fixed: 'left', resizable: true, enableResizing: true, align: 'left' },
+  { type: 'row-pinning', fixed: 'right', position: 'bottom', visibility: true, resizable: true },
+  { accessorKey: 'name', header: '姓名', fixed: 'left', resizable: true, pinable: true, pinButtonProps: { icon: 'i-lucide-star' } },
+  { accessorKey: 'email', header: '邮箱', size: 240 },
+  { accessorKey: 'department', header: '部门', visibility: false },
+  { accessorKey: 'role', header: '职位' },
   {
     accessorKey: 'salary',
     header: '薪资',
     align: 'right',
-    size: 140,
-    sortable: true,
-    pinable: true,
     cell: ({ row }) => `¥${row.getValue('salary')?.toLocaleString() ?? ''}`,
     emptyCell: '保密'
   },
-  { accessorKey: 'status', header: '状态', size: 110, pinable: true, cell: ({ getValue }) => statusMap[getValue() as string] ?? String(getValue()) }
+  { accessorKey: 'status', header: '状态', cell: ({ getValue }) => statusMap[getValue() as string] ?? String(getValue()) }
 ]
 
 const sizingColumns: DataTableColumn<TableUser>[] = [

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { RowPinningState } from '#movk/types/data-table'
+import type { RowPinningState } from '@tanstack/vue-table'
 
 const { users, pinningColumns } = useTableExamples()
 
@@ -24,8 +24,6 @@ const rowPinning = ref<RowPinningState>({
       v-model:row-pinning="rowPinning"
       :data="users"
       :columns="pinningColumns"
-      :pinable="true"
-      bordered
       stripe
     />
 
