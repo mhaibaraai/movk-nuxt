@@ -59,9 +59,8 @@ const resizeModeOptions = [
       :column-resize-mode="resizeMode"
       :resizable="true"
       :sortable="false"
-      :pinable="false"
+      :pinable="true"
       :bordered="true"
-      :fixed-layout="true"
     />
   </div>
 </template>

@@ -89,14 +89,13 @@ const basicColumns: DataTableColumn<TableUser>[] = [
 
 const groupingColumns: DataTableColumn<TableUser>[] = [
   { accessorKey: 'name', header: '姓名', fixed: 'left', size: 100 },
-  { accessorKey: 'email', header: '邮箱', tooltip: 2, size: 150 },
+  { accessorKey: 'email', header: '邮箱', tooltip: 2 },
   { accessorKey: 'salary', header: '薪资' },
   {
     header: '工作信息',
-    size: 300,
     fixed: 'left',
     children: [
-      { accessorKey: 'department', header: '部门' },
+      { accessorKey: 'department', header: '部门', size: 'md' },
       { accessorKey: 'role', header: '职位' }
     ]
   },
