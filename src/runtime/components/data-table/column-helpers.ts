@@ -45,7 +45,7 @@ interface ResolveContext<T> {
   pinning: ColumnPinningState
   visibility: VisibilityState
   sizing: ColumnSizingState
-  flags: { hasPinning: boolean, hasResizing: boolean, hasSort: boolean }
+  flags: { hasPinning: boolean, hasResizing: boolean, hasSort: boolean, hasExpand: boolean }
   selectionMode?: 'single' | 'multiple'
   nextGroupId: () => number
 }
@@ -127,7 +127,7 @@ export function resolveColumns<T>(
     pinning: { left: [], right: [] },
     visibility: {},
     sizing: {},
-    flags: { hasPinning: false, hasResizing: false, hasSort: false },
+    flags: { hasPinning: false, hasResizing: false, hasSort: false, hasExpand: false },
     nextGroupId: () => groupCounter++
   }
 
@@ -141,6 +141,7 @@ export function resolveColumns<T>(
     hasColumnPinning: ctx.flags.hasPinning,
     hasColumnResizing: ctx.flags.hasResizing,
     hasColumnSort: ctx.flags.hasSort,
+    hasExpandColumn: ctx.flags.hasExpand,
     selectionMode: ctx.selectionMode
   }
 }
@@ -406,6 +407,7 @@ function resolveExpandColumn<T>(
   col: DataTableExpandColumn,
   ctx: ResolveContext<T>
 ): ColumnDef<T, unknown> {
+  ctx.flags.hasExpand = true
   return buildSpecialColumnDef(col, 'expand', ctx, {
     header: undefined,
     cell: (cellCtx: CellContext<T, unknown>) => {

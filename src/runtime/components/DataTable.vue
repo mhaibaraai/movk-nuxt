@@ -2,11 +2,13 @@
 import type {
   ColumnPinningState,
   ColumnSizingState,
+  Row,
   RowPinningState,
   SortingState,
   VisibilityState,
   TableMeta,
-  RowSelectionState
+  RowSelectionState,
+  ExpandedState
 } from '@tanstack/vue-table'
 import type { DataTableProps } from '../types/data-table'
 import { UTable } from '#components'
@@ -46,7 +48,6 @@ const props = withDefaults(defineProps<DataTableProps<T>>(), {
 // const expandedState = defineModel<ExpandedState>('expanded')
 // const paginationState = defineModel<PaginationState>('pagination')
 
-// const expandedModel = defineModel<ExpandedState>('expanded', { default: () => ({}) })
 const columnVisibilityState = defineModel<VisibilityState>('columnVisibility')
 const columnPinningState = defineModel<ColumnPinningState>('columnPinning')
 const columnSizingState = defineModel<ColumnSizingState>('columnSizing')
@@ -55,6 +56,7 @@ const rowPinningState = defineModel<RowPinningState>('rowPinning')
 const sortingState = defineModel<SortingState>('sorting')
 // TODO: 需要 v-model 的分页状态、tree 展开状态、分组状态等
 // const selectedKeys = defineModel<(string | number)[]>('selectedKeys')
+const expandedState = defineModel<ExpandedState>('expanded')
 // const pageModel = defineModel<number>('page', { default: 1 })
 // const pageSizeModel = defineModel<number>('pageSize', { default: 20 })
 
@@ -206,7 +208,7 @@ const stopInitWatcher = watchEffect(() => {
 //   }
 // })
 
-// const isTreeMode = computed(() => Boolean(props.childrenKey))
+const isTreeMode = computed(() => Boolean(props.childrenKey))
 
 // const enableExpandedSlot = computed(() => Boolean(slots.expanded) && !isTreeMode.value)
 
@@ -334,32 +336,19 @@ const borderedStyle = computed(() => {
 // })
 
 const uTableProps = computed(() => {
-  const mergedColumnSizingOptions = {
-    enableColumnResizing: !!props.resizable || resolved.value.hasColumnResizing,
-    ...(props.columnResizeMode && { columnResizeMode: props.columnResizeMode }),
-    ...props.columnSizingOptions
-  }
-
-  const mergedSortingOptions = {
-    enableSorting: !!props.sortable || resolved.value.hasColumnSort,
-    ...props.sortingOptions
-  }
-
-  const mergedColumnPinningOptions = {
-    enableColumnPinning: !!props.pinable || resolved.value.hasColumnPinning,
-    ...props.columnPinningOptions
-  }
-
-  const mergedRowSelectionOptions = resolved.value.selectionMode
-    ? {
-        ...(resolved.value.selectionMode === 'single' && { enableMultiRowSelection: false }),
-        ...props.rowSelectionOptions
-      }
-    : props.rowSelectionOptions
+  const hasRowClickBehavior = props.expandOnRowClick || props.selectOnRowClick || !!props.onSelect
 
   return {
     ...(props.rowKey && {
       getRowId: (row => String(row[props.rowKey as keyof T])) as TableProps<T>['getRowId']
+    }),
+    ...(props.childrenKey && {
+      getSubRows: (row: T) => {
+        const children = row[props.childrenKey as keyof T]
+        return Array.isArray(children) && children.length > 0
+          ? (children as T[])
+          : undefined
+      }
     }),
     ...attrs,
     columns: resolved.value.columnDefs,
@@ -369,26 +358,36 @@ const uTableProps = computed(() => {
       ...(props.fitContent && { base: ['w-fit min-w-0', props.ui?.base].filter(Boolean).join(' ') }),
       tbody: ['divide-y-0', props.ui?.tbody].filter(Boolean).join(' ')
     },
-    columnSizingOptions: mergedColumnSizingOptions,
-    sortingOptions: mergedSortingOptions,
-    columnPinningOptions: mergedColumnPinningOptions,
-    rowSelectionOptions: mergedRowSelectionOptions
-    // ...(getSubRows.value && { getSubRows: getSubRows.value }),
-    // ...((props.onRowClick || props.expandOnRowClick) && {
-    //   onSelect: (_e: Event, row: { original: T }) => {
-    //     const idx = props.data.indexOf(row.original)
-    //     props.onRowClick?.(row.original, idx)
-
-    //     if (props.expandOnRowClick) {
-    //       toggleExpandedByRow(row.original)
-    //     }
-    //   }
-    // }),
-    // ...(props.onRowContextmenu && {
-    //   onContextmenu: (e: Event, row: { original: T }) => {
-    //     props.onRowContextmenu!(e, row.original)
-    //   }
-    // }),
+    columnSizingOptions: {
+      enableColumnResizing: !!props.resizable || resolved.value.hasColumnResizing,
+      ...(props.columnResizeMode && { columnResizeMode: props.columnResizeMode }),
+      ...props.columnSizingOptions
+    },
+    sortingOptions: {
+      enableSorting: !!props.sortable || resolved.value.hasColumnSort,
+      ...props.sortingOptions
+    },
+    columnPinningOptions: {
+      enableColumnPinning: !!props.pinable || resolved.value.hasColumnPinning,
+      ...props.columnPinningOptions
+    },
+    rowSelectionOptions: resolved.value.selectionMode
+      ? {
+          ...(resolved.value.selectionMode === 'single' && { enableMultiRowSelection: false }),
+          ...props.rowSelectionOptions
+        }
+      : props.rowSelectionOptions,
+    expandedOptions: {
+      ...(resolved.value.hasExpandColumn && { enableExpanding: true }),
+      ...props.expandedOptions
+    },
+    ...(hasRowClickBehavior && {
+      onSelect: (e: Event, row: Row<T>) => {
+        if (props.expandOnRowClick && row.getCanExpand()) row.toggleExpanded()
+        if (props.selectOnRowClick) row.toggleSelected()
+        ;(props.onSelect as DataTableProps<T>['onSelect'])?.(e, row)
+      }
+    })
   }
 })
 
@@ -420,8 +419,8 @@ const tableResetKey = computed(() =>
     :class="[
       {
         'data-table--bordered': !!bordered,
-        'data-table--striped': !!stripe
-      // 'data-table--tree': isTreeMode
+        'data-table--striped': !!stripe,
+        'data-table--tree': isTreeMode
       }
     ]"
     :style="borderedStyle"
@@ -456,6 +455,7 @@ const tableResetKey = computed(() =>
       v-model:row-selection="rowSelectionState"
       v-model:row-pinning="rowPinningState"
       v-model:sorting="sortingState"
+      v-model:expanded="expandedState"
       v-bind="uTableProps"
     >
       <!-- <template v-if="enableExpandedSlot" #expanded="slotProps">

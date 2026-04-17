@@ -227,17 +227,27 @@ export type DataTableColumn<T>
 
 type DataTableInheritedTableProps<T extends TableData> = OmitByKey<
   TableProps<T>,
-  'columns' | 'meta' | 'ui' | 'columnSizingOptions' | 'columnPinningOptions' | 'rowSelectionOptions' | 'sortingOptions'
+  'columns'
+  | 'meta'
+  | 'ui'
+  | 'columnSizingOptions'
+  | 'columnPinningOptions'
+  | 'rowSelectionOptions'
+  | 'sortingOptions'
+  | 'expandedOptions'
+  | 'onSelect'
 >
 
 // @vue-ignore 的配置导致 DataTableInheritedTableProps 只会存在 attrs 中
 export interface DataTableProps<T extends TableData> extends /* @vue-ignore */ DataTableInheritedTableProps<T> {
   /**
-   * 行唯一标识字段，作为 getRowId 的声明式简写
+   * 行唯一标识字段
    *
    * 提供后自动派生 `getRowId: (row) => String(row[rowKey])`；
    * 同时传入 `getRowId` 时后者优先。未提供且未传入 `getRowId` 时，
    * TanStack Table 默认使用行索引作为 ID。
+   *
+   * @example 'id'
    */
   rowKey?: Suggest<keyof T & string>
   /** 列定义 */
@@ -283,14 +293,14 @@ export interface DataTableProps<T extends TableData> extends /* @vue-ignore */ D
   resizable?: boolean | ((col: DataTableDataColumn<T>) => boolean)
   /**
    * 列宽拖动模式
-   * - 'onChange' = 拖动中实时重排（流畅但大表性能差）
-   * - 'onEnd' = 释放鼠标后才更新（性能好）
+   * - 'onChange' = 拖动中实时重排
+   * - 'onEnd' = 释放鼠标后才更新
    * @defaultValue 'onChange'
    */
   columnResizeMode?: 'onChange' | 'onEnd'
   /**
    * 表格密度，控制单元格与表头内边距
-   * - 'compact' / 'normal' / 'comfortable' = 预设（compact: 12/6·12/8，normal: 16/10·16/12，comfortable: 16/16 = Nuxt UI 默认）
+   * - 'compact' / 'normal' / 'comfortable'
    * - 对象 = 自定义 Tailwind padding class（td / th 分别指定）
    */
   density?: DataTableDensityPreset | DataTableDensityOptions
@@ -337,13 +347,11 @@ export interface DataTableProps<T extends TableData> extends /* @vue-ignore */ D
    */
   rowSelectionOptions?: TableProps<T>['rowSelectionOptions']
 
-  /** 子行字段名，设置后启用树形模式 */
-  childrenKey?: Suggest<keyof T & string>
   /**
-   * 默认展开所有行
-   * @defaultValue false
+   * 子行字段名，设置后启用树形模式
+   * @example 'children'
    */
-  defaultExpandAll?: boolean
+  childrenKey?: Suggest<keyof T & string>
   /**
    * 树形缩进宽度，传函数可按行/深度动态计算
    * - number = 每层缩进量（px），乘以 depth 得到实际 marginLeft
@@ -352,11 +360,20 @@ export interface DataTableProps<T extends TableData> extends /* @vue-ignore */ D
    * @defaultValue '1rem'
    */
   indentSize?: number | string | ((ctx: CellContext<T, unknown>) => string)
+  /** 展开行配置 */
+  expandedOptions?: TableProps<T>['expandedOptions']
+  /** 行选择回调 */
+  onSelect?: TableProps<T>['onSelect']
   /**
    * 点击行时切换树形展开状态
    * @defaultValue false
    */
   expandOnRowClick?: boolean
+  /**
+   * 点击行时切换行选择状态（与 v-model:row-selection 联动）
+   * @defaultValue false
+   */
+  selectOnRowClick?: boolean
 
   // /** 总条数，不传时根据 data.length 计算；大于每页条数时自动显示分页 */
   // total?: number
@@ -434,6 +451,8 @@ export interface ResolvedColumnState<T> {
   hasColumnResizing: boolean
   /** 是否有任何列启用了排序 */
   hasColumnSort: boolean
+  /** 是否存在 expand 列 */
+  hasExpandColumn: boolean
   /** selection 列的选择模式，无 selection 列时为 undefined */
   selectionMode?: 'single' | 'multiple'
 }
