@@ -82,3 +82,12 @@
 .data-table [data-pinned="right"]:first-child {
   --m-dt-pin-shadow: 4px 0 4px -4px var(--ui-bg-accented) inset;
 }
+
+.data-table--tree [data-slot="tbody"] [data-slot="tr"]:has(> [data-slot="td"]:only-child:empty) {
+  display: none;
+}
+
+/* 展开列在叶节点单元格为空时消除 padding */
+.data-table [data-slot="td"]:empty {
+  padding: 0;
+}
