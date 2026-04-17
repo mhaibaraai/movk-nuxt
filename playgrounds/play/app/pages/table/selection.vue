@@ -4,7 +4,7 @@ import type { RowSelectionState } from '@tanstack/vue-table'
 const { users, selectionColumns } = useTableExamples()
 
 const rowSelection = ref<RowSelectionState>({
-  李四: true
+  王五: true
 })
 </script>
 

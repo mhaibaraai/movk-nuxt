@@ -287,7 +287,7 @@ function resolveGroupColumn<T>(
 
   return {
     id: `group-${ctx.nextGroupId()}-${col.header ?? 'unnamed'}`,
-    header: col.header ?? '',
+    header: col.header,
     ...(resolvedSize != null && { size: resolvedSize }),
     ...(col.minSize != null && { minSize: col.minSize }),
     ...(col.maxSize != null && { maxSize: col.maxSize }),
@@ -311,7 +311,7 @@ function buildSpecialColumnDef<T>(
   ctx: ResolveContext<T>,
   render: {
     cell: (cellCtx: CellContext<T, unknown>) => unknown
-    header: string | ((hctx: HeaderContext<T, unknown>) => unknown)
+    header: string | undefined | ((hctx: HeaderContext<T, unknown>) => unknown)
   }
 ): ColumnDef<T, unknown> {
   const defaults = SPECIAL_COLUMN_DEFAULTS[type]
@@ -407,7 +407,7 @@ function resolveExpandColumn<T>(
   ctx: ResolveContext<T>
 ): ColumnDef<T, unknown> {
   return buildSpecialColumnDef(col, 'expand', ctx, {
-    header: '',
+    header: undefined,
     cell: (cellCtx: CellContext<T, unknown>) => {
       if (!cellCtx.row.getCanExpand()) return null
 
