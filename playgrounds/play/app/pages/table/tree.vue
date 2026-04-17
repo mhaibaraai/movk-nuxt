@@ -1,6 +1,14 @@
 <script setup lang="ts">
+import type { ExpandedState } from '@tanstack/vue-table'
+
 const { treeData, treeColumns } = useTableExamples()
 const indentSize = ref(24)
+
+const expanded = ref<ExpandedState>(true)
+
+function onClick(row: any) {
+  console.log('Row clicked:', row)
+}
 </script>
 
 <template>
@@ -19,20 +27,21 @@ const indentSize = ref(24)
     </UFormField>
 
     <MDataTable
+      v-model:expanded="expanded"
       :data="treeData"
       :columns="treeColumns"
-      children-key="children"
-      row-key="id"
-      default-expand-all
       expand-on-row-click
       :indent-size="indentSize"
+      children-key="children"
+      @select="onClick"
     >
-      <template #expand-icon="{ expanded }">
+      <!-- <template #expand-icon="{ expanded }">
         <UIcon
           :name="expanded ? 'i-lucide-folder-open' : 'i-lucide-folder'"
           class="size-4"
         />
-      </template>
+      </template> -->
     </MDataTable>
+    {{ expanded }}
   </div>
 </template>

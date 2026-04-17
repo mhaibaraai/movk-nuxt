@@ -18,7 +18,6 @@ export interface TableTreeNode {
   type: string
   size: number | null
   children?: TableTreeNode[]
-  [accessorKey: string]: unknown
 }
 
 const statusMap: Record<string, string> = {
@@ -233,7 +232,7 @@ const largeUsers: TableUser[] = Array.from({ length: 80 }, (_, index) => {
 })
 
 const treeColumns: DataTableColumn<TableTreeNode>[] = [
-  { type: 'expand', fixed: 'left', size: 40 },
+  { type: 'expand', fixed: 'left', size: 80 },
   { accessorKey: 'name', header: '名称' },
   { accessorKey: 'type', header: '类型', size: 120 },
   {
@@ -244,8 +243,7 @@ const treeColumns: DataTableColumn<TableTreeNode>[] = [
     cell: ({ row }) => {
       const size = row.getValue('size')
       return size != null ? `${(size as number / 1024).toFixed(1)} KB` : ''
-    },
-    emptyCell: '—'
+    }
   }
 ]
 

@@ -25,6 +25,7 @@ const rowSelection = ref<RowSelectionState>({
       row-key="name"
       :columns="selectionColumns"
       stripe
+      select-on-row-click
     />
 
     <p class="text-sm text-muted">
