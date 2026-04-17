@@ -63,7 +63,12 @@
 
 /* 斑马纹*/
 .data-table--striped [data-slot="tbody"] [data-slot="tr"]:nth-child(even) [data-slot="td"][data-pinned] {
-  background-color: color-mix(in oklab, var(--ui-bg-elevated) 30%, transparent);
+  background-color: color-mix(in oklab, var(--ui-bg-accented) 10%, transparent);
+}
+
+/* 固定列选中背景色 */
+.data-table [data-slot="tbody"] [data-slot="tr"][data-selected="true"] [data-slot="td"][data-pinned] {
+  background-color: color-mix(in oklab, var(--ui-bg-elevated) 50%, transparent);
 }
 
 /* 最后一个左固定列 */
