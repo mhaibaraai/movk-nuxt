@@ -26,9 +26,9 @@ export interface SpecialColumnDefaults {
 export type SpecialColumnType = 'selection' | 'index' | 'expand' | 'row-pinning' | 'actions'
 
 export const SPECIAL_COLUMN_DEFAULTS: Record<SpecialColumnType, SpecialColumnDefaults> = {
-  'selection': { id: '__selection', fixed: 'left', size: 48, align: 'center' },
+  'selection': { id: '__selection', size: 48, align: 'center' },
   'index': { id: '__index', size: 60, align: 'center', header: '#', tdClass: 'text-muted' },
-  'expand': { id: '__expand', size: 48 },
-  'row-pinning': { id: '__row_pinning', fixed: 'left', size: 48, align: 'center' },
-  'actions': { id: '__actions', fixed: 'right', header: '操作' }
+  'expand': { id: '__expand', size: 48, align: 'center' },
+  'row-pinning': { id: '__row_pinning', size: 48, align: 'center' },
+  'actions': { id: '__actions', size: 60, header: '操作', align: 'center' }
 } as const

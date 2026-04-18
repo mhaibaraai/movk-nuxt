@@ -264,7 +264,7 @@ export interface DataTableProps<T extends TableData> extends /* @vue-ignore */ D
   bordered?: boolean | DataTableBorderedOptions
   /**
    * 表格宽度由列宽内容决定（w-fit），关闭后表格撑满容器
-   * @defaultValue true
+   * @defaultValue false
    */
   fitContent?: boolean
   /**
