@@ -12,12 +12,12 @@ export interface TableUser {
   bio: string
 }
 
-export interface TableTreeNode {
-  id: number
-  name: string
-  type: string
-  size: number | null
-  children?: TableTreeNode[]
+type Payment = {
+  id: string
+  date: string
+  email: string
+  amount: number
+  children?: Payment[]
 }
 
 const statusMap: Record<string, string> = {
@@ -36,43 +36,72 @@ const users: TableUser[] = [
   { id: 5, name: '钱七', email: 'qianqi@example.com', department: '运营部', role: '运营专员', salary: 12000, joinDate: '2023-08-05', status: 'active', bio: '负责用户增长与活动运营。' }
 ]
 
-const treeData: TableTreeNode[] = [
+const treeData: Payment[] = [
   {
-    id: 1,
-    name: 'src',
-    type: '目录',
-    size: null,
+    id: '4600',
+    date: '2024-03-11T15:30:00',
+    email: 'james.anderson@example.com',
+    amount: 594,
     children: [
       {
-        id: 2,
-        name: 'components',
-        type: '目录',
-        size: null,
-        children: [
-          { id: 3, name: 'DataTable.vue', type: 'Vue 文件', size: 12800 },
-          { id: 4, name: 'SearchForm.vue', type: 'Vue 文件', size: 8400 }
-        ]
+        id: '4599',
+        date: '2024-03-11T10:10:00',
+        email: 'mia.white@example.com',
+        amount: 276
       },
       {
-        id: 5,
-        name: 'composables',
-        type: '目录',
-        size: null,
-        children: [
-          { id: 6, name: 'useDataTable.ts', type: 'TypeScript', size: 6200 }
-        ]
+        id: '4598',
+        date: '2024-03-11T08:50:00',
+        email: 'william.brown@example.com',
+        amount: 315
       },
-      { id: 7, name: 'style.css', type: 'CSS', size: 1200 }
+      {
+        id: '4597',
+        date: '2024-03-10T19:45:00',
+        email: 'emma.davis@example.com',
+        amount: 529,
+        children: [
+          {
+            id: '4592',
+            date: '2024-03-09T18:45:00',
+            email: 'benjamin.jackson@example.com',
+            amount: 851
+          },
+          {
+            id: '4591',
+            date: '2024-03-09T16:05:00',
+            email: 'sophia.miller@example.com',
+            amount: 762
+          },
+          {
+            id: '4590',
+            date: '2024-03-09T14:20:00',
+            email: 'noah.clark@example.com',
+            amount: 573,
+            children: [
+              {
+                id: '4596',
+                date: '2024-03-10T15:55:00',
+                email: 'ethan.harris@example.com',
+                amount: 639
+              },
+              {
+                id: '4595',
+                date: '2024-03-10T13:40:00',
+                email: 'ava.thomas@example.com',
+                amount: 428
+              }
+            ]
+          }
+        ]
+      }
     ]
   },
   {
-    id: 8,
-    name: 'docs',
-    type: '目录',
-    size: null,
-    children: [
-      { id: 9, name: 'README.md', type: 'Markdown', size: 3400 }
-    ]
+    id: '4589',
+    date: '2024-03-09T11:35:00',
+    email: 'isabella.lee@example.com',
+    amount: 389
   }
 ]
 
@@ -231,18 +260,29 @@ const largeUsers: TableUser[] = Array.from({ length: 80 }, (_, index) => {
   }
 })
 
-const treeColumns: DataTableColumn<TableTreeNode>[] = [
-  { type: 'expand', fixed: 'left', size: 80 },
-  { accessorKey: 'name', header: '名称' },
-  { accessorKey: 'type', header: '类型', size: 120 },
+const treeColumns: DataTableColumn<Payment>[] = [
+  { type: 'selection', mode: 'multiple', size: 40 },
+  { type: 'expand' },
+  { accessorKey: 'date', header: '日期', cell: ({ row }) => {
+    return new Date(row.getValue('date')).toLocaleString('en-US', {
+      day: 'numeric',
+      month: 'short',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    })
+  } },
+  { accessorKey: 'email', header: '邮箱' },
   {
-    accessorKey: 'size',
-    header: '大小',
+    accessorKey: 'amount',
+    header: '金额',
     align: 'right',
-    size: 100,
     cell: ({ row }) => {
-      const size = row.getValue('size')
-      return size != null ? `${(size as number / 1024).toFixed(1)} KB` : ''
+      const amount = Number.parseFloat(row.getValue('amount'))
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'EUR'
+      }).format(amount)
     }
   }
 ]

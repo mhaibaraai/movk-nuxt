@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import type { ExpandedState } from '@tanstack/vue-table'
+import type { ExpandedState, RowSelectionState } from '@tanstack/vue-table'
 
 const { treeData, treeColumns } = useTableExamples()
-const indentSize = ref(24)
 
-const expanded = ref<ExpandedState>(true)
+const expanded = ref<ExpandedState>({ 0: true })
+const selection = ref<RowSelectionState>()
 
 function onClick(row: any) {
   console.log('Row clicked:', row)
@@ -22,16 +22,12 @@ function onClick(row: any) {
       </p>
     </div>
 
-    <UFormField label="缩进宽度（indentSize）">
-      <USlider v-model="indentSize" :min="12" :max="40" :step="2" />
-    </UFormField>
-
     <MDataTable
+      v-model:row-selection="selection"
       v-model:expanded="expanded"
       :data="treeData"
       :columns="treeColumns"
       expand-on-row-click
-      :indent-size="indentSize"
       children-key="children"
       @select="onClick"
     >
@@ -43,5 +39,6 @@ function onClick(row: any) {
       </template> -->
     </MDataTable>
     {{ expanded }}
+    {{ selection }}
   </div>
 </template>
