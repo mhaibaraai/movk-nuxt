@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { ColumnSizingState } from '#movk/types/data-table'
+import type { ColumnSizingState } from '@tanstack/vue-table'
 
 const { users, sizingColumns } = useTableExamples()
 

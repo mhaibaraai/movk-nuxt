@@ -36,54 +36,33 @@ const props = withDefaults(defineProps<DataTableProps<T>>(), {
 // const globalFilterState = defineModel<string>('globalFilter')
 // const columnFiltersState = defineModel<ColumnFiltersState>('columnFilters')
 // const columnOrderState = defineModel<ColumnOrderState>('columnOrder')
-// const columnVisibilityState = defineModel<VisibilityState>('columnVisibility')
-// const columnPinningState = defineModel<ColumnPinningState>('columnPinning')
-// const columnSizingState = defineModel<ColumnSizingState>('columnSizing')
 // const columnSizingInfoState = defineModel<ColumnSizingInfoState>('columnSizingInfo')
-// const rowSelectionState = defineModel<RowSelectionState>('rowSelection')
-// const rowPinningState = defineModel<RowPinningState>('rowPinning')
-// const sortingState = defineModel<SortingState>('sorting')
 // const groupingState = defineModel<GroupingState>('grouping')
-// const expandedState = defineModel<ExpandedState>('expanded')
 // const paginationState = defineModel<PaginationState>('pagination')
 
-// defineModel 的 default 工厂函数会被 hoist 到 setup() 外，不能引用局部变量
-// column 相关三个 model 不设 default，改用可写 computed 在本地提供 fallback
+// column 相关三个 model 不设 default（defineModel default 被 hoist 到 setup 外，无法引用局部变量）
+// 在 setup 同步阶段直接初始化：本地 ref 立即可用（UTable 首次渲染无闪烁），同步 emit 给父级
 const columnVisibilityState = defineModel<VisibilityState>('columnVisibility')
 const columnPinningState = defineModel<ColumnPinningState>('columnPinning')
 const columnSizingState = defineModel<ColumnSizingState>('columnSizing')
-const rowSelectionState = defineModel<RowSelectionState>('rowSelection', {
-  default: () => ({})
-})
-const rowPinningState = defineModel<RowPinningState>('rowPinning', {
-  default: () => ({ top: [], bottom: [] })
-})
-const sortingState = defineModel<SortingState>('sorting', {
-  default: () => []
-})
+const rowSelectionState = defineModel<RowSelectionState>('rowSelection', { default: () => ({}) })
+const rowPinningState = defineModel<RowPinningState>('rowPinning', { default: () => ({ top: [], bottom: [] }) })
+const sortingState = defineModel<SortingState>('sorting', { default: () => [] })
 // TODO: 需要 v-model 的分页状态、分组状态等
 // const selectedKeys = defineModel<(string | number)[]>('selectedKeys')
-const expandedState = defineModel<ExpandedState>('expanded', {
-  default: () => ({})
-})
+const expandedState = defineModel<ExpandedState>('expanded', { default: () => ({}) })
 
 const resolved = computed(() => resolveColumns<T>(props.columns || [], props))
 
-const effectiveColumnVisibility = computed({
-  get: () => columnVisibilityState.value ?? { ...resolved.value.initialVisibility },
-  set: (v) => { columnVisibilityState.value = v }
-})
-const effectiveColumnPinning = computed({
-  get: () => columnPinningState.value ?? {
+if (columnVisibilityState.value === undefined)
+  columnVisibilityState.value = { ...resolved.value.initialVisibility }
+if (columnPinningState.value === undefined)
+  columnPinningState.value = {
     left: [...(resolved.value.initialPinning.left ?? [])],
     right: [...(resolved.value.initialPinning.right ?? [])]
-  },
-  set: (v) => { columnPinningState.value = v }
-})
-const effectiveColumnSizing = computed({
-  get: () => columnSizingState.value ?? { ...resolved.value.initialSizing },
-  set: (v) => { columnSizingState.value = v }
-})
+  }
+if (columnSizingState.value === undefined)
+  columnSizingState.value = { ...resolved.value.initialSizing }
 // const pageModel = defineModel<number>('page', { default: 1 })
 // const pageSizeModel = defineModel<number>('pageSize', { default: 20 })
 
@@ -222,9 +201,9 @@ const tableResetKey = computed(() =>
     <UTable
       :key="tableResetKey"
       ref="tableRef"
-      v-model:column-visibility="effectiveColumnVisibility"
-      v-model:column-pinning="effectiveColumnPinning"
-      v-model:column-sizing="effectiveColumnSizing"
+      v-model:column-visibility="columnVisibilityState"
+      v-model:column-pinning="columnPinningState"
+      v-model:column-sizing="columnSizingState"
       v-model:row-selection="rowSelectionState"
       v-model:row-pinning="rowPinningState"
       v-model:sorting="sortingState"

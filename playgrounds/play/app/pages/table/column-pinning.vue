@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { ColumnPinningState } from '#movk/types/data-table'
+import type { ColumnPinningState } from '@tanstack/vue-table'
 
 const { users, sortingColumns } = useTableExamples()
 

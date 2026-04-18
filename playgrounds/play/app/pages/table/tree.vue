@@ -5,6 +5,7 @@ const { treeData, treeColumns } = useTableExamples()
 
 const expanded = ref<ExpandedState>({ 0: true })
 const selection = ref<RowSelectionState>()
+const visibility = ref()
 
 function onClick(row: any) {
   console.log('Row clicked:', row)
@@ -25,10 +26,12 @@ function onClick(row: any) {
     <MDataTable
       v-model:row-selection="selection"
       v-model:expanded="expanded"
+      v-model:column-visibility="visibility"
       :data="treeData"
       :columns="treeColumns"
       expand-on-row-click
       children-key="children"
+      row-key="id"
       @select="onClick"
     >
       <!-- <template #expand-icon="{ expanded }">
@@ -40,5 +43,6 @@ function onClick(row: any) {
     </MDataTable>
     {{ expanded }}
     {{ selection }}
+    {{ visibility }}
   </div>
 </template>
