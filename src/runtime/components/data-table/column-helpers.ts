@@ -1,4 +1,5 @@
 import type {
+  Cell,
   CellContext,
   ColumnDef,
   ColumnPinningState,
@@ -50,17 +51,10 @@ interface ResolveContext<T> {
   nextGroupId: () => number
 }
 
-interface ColumnSizeCtx {
-  column: {
-    getSize: () => number
-    columnDef: { size?: number, minSize?: number, maxSize?: number, enableResizing?: boolean }
-  }
-}
-
-function resolveColumnSize(ctx: ColumnSizeCtx): Record<string, string> {
+function resolveColumnSize<T>(ctx: Header<T, unknown> | Cell<T, unknown>): Record<string, string> {
   const { columnDef } = ctx.column
 
-  if (columnDef.size != null || columnDef.enableResizing === true) {
+  if (columnDef.size != ctx.getContext().table._getDefaultColumnDef().size || columnDef.enableResizing === true) {
     const w = `${ctx.column.getSize()}px`
     return { width: w, minWidth: w, maxWidth: w }
   }
@@ -385,8 +379,8 @@ function resolveSelectionColumn<T>(
         : col.header ?? SPECIAL_COLUMN_DEFAULTS.selection.header!,
       cell: ({ row }: CellContext<T, unknown>) => h(UCheckbox, {
         ...(col.checkboxProps ?? {}),
-        'modelValue': row.getIsSelected(),
         'aria-label': `选择行`,
+        'modelValue': row.getIsSelected() ? true : row.getIsSomeSelected() ? 'indeterminate' : false,
         'onUpdate:modelValue': (value: unknown) => row.toggleSelected(!!(value as boolean | 'indeterminate'))
       })
     }
