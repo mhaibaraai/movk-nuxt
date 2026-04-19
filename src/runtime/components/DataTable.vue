@@ -13,15 +13,18 @@ import type {
 import type { DataTableProps } from '../types/data-table'
 import { UTable } from '#components'
 import { computed, useAttrs } from 'vue'
-import { resolveCallbackValue } from '../utils/data-table-utils'
+import {
+  expandedToKeys,
+  keysToExpanded,
+  keysToRowSelection,
+  keysToVisibility,
+  resolveCallbackValue,
+  rowSelectionToKeys,
+  useSyncKeys,
+  visibilityToKeys
+} from '../utils/data-table-utils'
 import { resolveColumns } from './data-table/column-helpers'
 // import { useScroll } from '@vueuse/core'
-// import {
-//   areSameKeys,
-//   keysToRowSelection,
-//   rowSelectionToKeys,
-//   useSelectedRows
-// } from './data-table/selection-helpers'
 // import DataTableColumnToggle from './data-table/DataTableColumnToggle.vue'
 // import DataTablePagination from './data-table/DataTablePagination.vue'
 import type { TableData, TableProps } from '@nuxt/ui'
@@ -40,29 +43,81 @@ const props = withDefaults(defineProps<DataTableProps<T>>(), {
 // const groupingState = defineModel<GroupingState>('grouping')
 // const paginationState = defineModel<PaginationState>('pagination')
 
-// column 相关三个 model 不设 default（defineModel default 被 hoist 到 setup 外，无法引用局部变量）
-// 在 setup 同步阶段直接初始化：本地 ref 立即可用（UTable 首次渲染无闪烁），同步 emit 给父级
 const columnVisibilityState = defineModel<VisibilityState>('columnVisibility')
 const columnPinningState = defineModel<ColumnPinningState>('columnPinning')
 const columnSizingState = defineModel<ColumnSizingState>('columnSizing')
-const rowSelectionState = defineModel<RowSelectionState>('rowSelection', { default: () => ({}) })
+const rowSelectionState = defineModel<RowSelectionState>('rowSelection')
 const rowPinningState = defineModel<RowPinningState>('rowPinning', { default: () => ({ top: [], bottom: [] }) })
 const sortingState = defineModel<SortingState>('sorting', { default: () => [] })
-// TODO: 需要 v-model 的分页状态、分组状态等
-// const selectedKeys = defineModel<(string | number)[]>('selectedKeys')
-const expandedState = defineModel<ExpandedState>('expanded', { default: () => ({}) })
+const expandedState = defineModel<ExpandedState>('expanded')
+
+const columnVisibilityKeysState = defineModel<string[]>('columnVisibilityKeys')
+const rowSelectionKeysState = defineModel<string[]>('rowSelectionKeys')
+const expandedKeysState = defineModel<string[]>('expandedKeys')
 
 const resolved = computed(() => resolveColumns<T>(props.columns || [], props))
 
-if (columnVisibilityState.value === undefined)
-  columnVisibilityState.value = { ...resolved.value.initialVisibility }
-if (columnPinningState.value === undefined)
-  columnPinningState.value = {
+const effectiveVisibility = computed<VisibilityState>({
+  get: () => {
+    if (columnVisibilityState.value !== undefined) return columnVisibilityState.value
+    if (columnVisibilityKeysState.value !== undefined) {
+      return keysToVisibility(columnVisibilityKeysState.value, resolved.value.allColumnIds)
+    }
+    return { ...resolved.value.initialVisibility }
+  },
+  set: (v) => { columnVisibilityState.value = v }
+})
+
+const effectivePinning = computed<ColumnPinningState>({
+  get: () => columnPinningState.value ?? {
     left: [...(resolved.value.initialPinning.left ?? [])],
     right: [...(resolved.value.initialPinning.right ?? [])]
-  }
-if (columnSizingState.value === undefined)
-  columnSizingState.value = { ...resolved.value.initialSizing }
+  },
+  set: (v) => { columnPinningState.value = v }
+})
+
+const effectiveSizing = computed<ColumnSizingState>({
+  get: () => columnSizingState.value ?? { ...resolved.value.initialSizing },
+  set: (v) => { columnSizingState.value = v }
+})
+
+const effectiveRowSelection = computed<RowSelectionState>({
+  get: () => {
+    if (rowSelectionState.value !== undefined) return rowSelectionState.value
+    if (rowSelectionKeysState.value !== undefined) return keysToRowSelection(rowSelectionKeysState.value)
+    return {}
+  },
+  set: (v) => { rowSelectionState.value = v }
+})
+
+const effectiveExpanded = computed<ExpandedState>({
+  get: () => {
+    if (expandedState.value !== undefined) return expandedState.value
+    if (expandedKeysState.value !== undefined) return keysToExpanded(expandedKeysState.value)
+    return {}
+  },
+  set: (v) => { expandedState.value = v }
+})
+
+// useSyncKeys 的 watch 默认 immediate: false，在 onMounted 后首次触发，不参与 SSR hydration
+useSyncKeys(
+  columnVisibilityKeysState,
+  columnVisibilityState,
+  keys => keysToVisibility(keys, resolved.value.allColumnIds),
+  state => visibilityToKeys(state, resolved.value.allColumnIds)
+)
+useSyncKeys(
+  rowSelectionKeysState,
+  rowSelectionState,
+  keys => keysToRowSelection(keys) as RowSelectionState,
+  state => rowSelectionToKeys(state).map(String)
+)
+useSyncKeys(
+  expandedKeysState,
+  expandedState,
+  keys => keysToExpanded(keys),
+  state => expandedToKeys(state)
+)
 // const pageModel = defineModel<number>('page', { default: 1 })
 // const pageSizeModel = defineModel<number>('pageSize', { default: 20 })
 
@@ -201,13 +256,13 @@ const tableResetKey = computed(() =>
     <UTable
       :key="tableResetKey"
       ref="tableRef"
-      v-model:column-visibility="columnVisibilityState"
-      v-model:column-pinning="columnPinningState"
-      v-model:column-sizing="columnSizingState"
-      v-model:row-selection="rowSelectionState"
+      v-model:column-visibility="effectiveVisibility"
+      v-model:column-pinning="effectivePinning"
+      v-model:column-sizing="effectiveSizing"
+      v-model:row-selection="effectiveRowSelection"
       v-model:row-pinning="rowPinningState"
       v-model:sorting="sortingState"
-      v-model:expanded="expandedState"
+      v-model:expanded="effectiveExpanded"
       v-bind="uTableProps"
     >
       <!-- <template v-if="enableExpandedSlot" #expanded="slotProps">

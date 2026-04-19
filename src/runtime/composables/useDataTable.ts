@@ -9,7 +9,7 @@ import type {
 import type { DataTableColumn, DataTableExpose } from '../types/data-table'
 import type { UseApiFetchOptions } from '../types/api'
 import { computed, isRef, ref, shallowRef, toValue, unref, watch } from 'vue'
-import { useSelectedRows } from '../components/data-table/selection-helpers'
+import { useSelectedRows } from '../utils/data-table-utils'
 
 export interface UseDataTableOptions<T, TResponse = unknown> {
   /** API 路径（启用后自动用 useApiFetch 获取数据） */

@@ -3,7 +3,7 @@ import type { ExpandedState, RowSelectionState } from '@tanstack/vue-table'
 
 const { treeData, treeColumns } = useTableExamples()
 
-const expanded = ref<ExpandedState>({ 0: true })
+const expanded = ref<ExpandedState>()
 const selection = ref<RowSelectionState>()
 const visibility = ref()
 
@@ -32,6 +32,7 @@ function onClick(row: any) {
       expand-on-row-click
       children-key="children"
       row-key="id"
+      :expanded-keys="['4597']"
       @select="onClick"
     >
       <!-- <template #expand-icon="{ expanded }">

@@ -49,6 +49,7 @@ interface ResolveContext<T> {
   flags: { hasPinning: boolean, hasResizing: boolean, hasSort: boolean, hasExpand: boolean }
   selectionMode?: 'single' | 'multiple'
   nextGroupId: () => number
+  allColumnIds: string[]
 }
 
 function resolveColumnSize<T>(ctx: Header<T, unknown> | Cell<T, unknown>): Record<string, string> {
@@ -122,7 +123,8 @@ export function resolveColumns<T>(
     visibility: {},
     sizing: {},
     flags: { hasPinning: false, hasResizing: false, hasSort: false, hasExpand: false },
-    nextGroupId: () => groupCounter++
+    nextGroupId: () => groupCounter++,
+    allColumnIds: []
   }
 
   const columnDefs = columns.map(col => resolveColumn(col, ctx))
@@ -136,7 +138,8 @@ export function resolveColumns<T>(
     hasColumnResizing: ctx.flags.hasResizing,
     hasColumnSort: ctx.flags.hasSort,
     hasExpandColumn: ctx.flags.hasExpand,
-    selectionMode: ctx.selectionMode
+    selectionMode: ctx.selectionMode,
+    allColumnIds: ctx.allColumnIds
   }
 }
 
@@ -242,6 +245,7 @@ function resolveDataColumn<T>(
   if (col.visibility === false) {
     ctx.visibility[id] = false
   }
+  ctx.allColumnIds.push(id)
 
   const cellRenderer = buildDataCellRenderer(col, options)
 
@@ -323,6 +327,7 @@ function buildSpecialColumnDef<T>(
   if (col.visibility === false) {
     ctx.visibility[id] = false
   }
+  ctx.allColumnIds.push(id)
 
   const effectivePinable = col.pinable ?? (options.pinable === true)
   const effectiveResizable = col.resizable ?? (options.resizable === true)

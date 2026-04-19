@@ -370,10 +370,17 @@ export interface DataTableProps<T extends TableData> extends /* @vue-ignore */ D
    */
   expandOnRowClick?: boolean
   /**
-   * 点击行时切换行选择状态（与 v-model:row-selection 联动）
+   * 点击行时切换行选择状态
    * @defaultValue false
    */
   selectOnRowClick?: boolean
+
+  /** 数组形可见列白名单 */
+  columnVisibilityKeys?: string[]
+  /** 数组形选中行 id 列表 */
+  rowSelectionKeys?: string[]
+  /** 数组形展开行 id 列表 */
+  expandedKeys?: string[]
 
   // /** 总条数，不传时根据 data.length 计算；大于每页条数时自动显示分页 */
   // total?: number
@@ -455,6 +462,8 @@ export interface ResolvedColumnState<T> {
   hasExpandColumn: boolean
   /** selection 列的选择模式，无 selection 列时为 undefined */
   selectionMode?: 'single' | 'multiple'
+  /** 所有叶子列（data 列 + special 列）的 id 扁平列表，供可见性数组白名单使用 */
+  allColumnIds: string[]
 }
 
 // export type DataTablePaginationPassthrough = Partial<
