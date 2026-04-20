@@ -272,7 +272,7 @@ const treeColumns: DataTableColumn<Payment>[] = [
       hour12: false
     })
   } },
-  { accessorKey: 'email', header: '邮箱', visibility: false },
+  { accessorKey: 'email', header: '邮箱' },
   {
     accessorKey: 'amount',
     header: '金额',

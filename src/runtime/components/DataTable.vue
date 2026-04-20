@@ -18,9 +18,12 @@ import {
   keysToExpanded,
   keysToRowSelection,
   keysToVisibility,
+  keysToVisibilityExclude,
   resolveCallbackValue,
   rowSelectionToKeys,
+  useEffectiveModel,
   useSyncKeys,
+  visibilityToExcludeKeys,
   visibilityToKeys
 } from '../utils/data-table-utils'
 import { resolveColumns } from './data-table/column-helpers'
@@ -52,52 +55,62 @@ const sortingState = defineModel<SortingState>('sorting', { default: () => [] })
 const expandedState = defineModel<ExpandedState>('expanded')
 
 const columnVisibilityKeysState = defineModel<string[]>('columnVisibilityKeys')
+const columnVisibilityExcludeKeysState = defineModel<string[]>('columnVisibilityExcludeKeys')
 const rowSelectionKeysState = defineModel<string[]>('rowSelectionKeys')
 const expandedKeysState = defineModel<string[]>('expandedKeys')
 
 const resolved = computed(() => resolveColumns<T>(props.columns || [], props))
 
-const effectiveVisibility = computed<VisibilityState>({
-  get: () => {
-    if (columnVisibilityState.value !== undefined) return columnVisibilityState.value
+function hasEntries(v: unknown): boolean {
+  return typeof v === 'object' && v !== null && Object.keys(v).length > 0
+}
+
+const effectiveVisibility = useEffectiveModel(
+  columnVisibilityState,
+  () => {
     if (columnVisibilityKeysState.value !== undefined) {
       return keysToVisibility(columnVisibilityKeysState.value, resolved.value.allColumnIds)
     }
+    if (columnVisibilityExcludeKeysState.value !== undefined) {
+      return keysToVisibilityExclude(columnVisibilityExcludeKeysState.value, resolved.value.allColumnIds)
+    }
     return { ...resolved.value.initialVisibility }
   },
-  set: (v) => { columnVisibilityState.value = v }
-})
+  hasEntries
+)
 
-const effectivePinning = computed<ColumnPinningState>({
-  get: () => columnPinningState.value ?? {
+const effectivePinning = useEffectiveModel(
+  columnPinningState,
+  () => ({
     left: [...(resolved.value.initialPinning.left ?? [])],
     right: [...(resolved.value.initialPinning.right ?? [])]
-  },
-  set: (v) => { columnPinningState.value = v }
-})
+  }),
+  v => (v.left?.length ?? 0) + (v.right?.length ?? 0) > 0
+)
 
-const effectiveSizing = computed<ColumnSizingState>({
-  get: () => columnSizingState.value ?? { ...resolved.value.initialSizing },
-  set: (v) => { columnSizingState.value = v }
-})
+const effectiveSizing = useEffectiveModel(
+  columnSizingState,
+  () => ({ ...resolved.value.initialSizing }),
+  hasEntries
+)
 
-const effectiveRowSelection = computed<RowSelectionState>({
-  get: () => {
-    if (rowSelectionState.value !== undefined) return rowSelectionState.value
+const effectiveRowSelection = useEffectiveModel(
+  rowSelectionState,
+  () => {
     if (rowSelectionKeysState.value !== undefined) return keysToRowSelection(rowSelectionKeysState.value)
     return {}
   },
-  set: (v) => { rowSelectionState.value = v }
-})
+  hasEntries
+)
 
-const effectiveExpanded = computed<ExpandedState>({
-  get: () => {
-    if (expandedState.value !== undefined) return expandedState.value
+const effectiveExpanded = useEffectiveModel(
+  expandedState,
+  () => {
     if (expandedKeysState.value !== undefined) return keysToExpanded(expandedKeysState.value)
     return {}
   },
-  set: (v) => { expandedState.value = v }
-})
+  hasEntries
+)
 
 // useSyncKeys 的 watch 默认 immediate: false，在 onMounted 后首次触发，不参与 SSR hydration
 useSyncKeys(
@@ -105,6 +118,12 @@ useSyncKeys(
   columnVisibilityState,
   keys => keysToVisibility(keys, resolved.value.allColumnIds),
   state => visibilityToKeys(state, resolved.value.allColumnIds)
+)
+useSyncKeys(
+  columnVisibilityExcludeKeysState,
+  columnVisibilityState,
+  keys => keysToVisibilityExclude(keys, resolved.value.allColumnIds),
+  state => visibilityToExcludeKeys(state, resolved.value.allColumnIds)
 )
 useSyncKeys(
   rowSelectionKeysState,

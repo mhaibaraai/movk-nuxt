@@ -377,6 +377,8 @@ export interface DataTableProps<T extends TableData> extends /* @vue-ignore */ D
 
   /** 数组形可见列白名单 */
   columnVisibilityKeys?: string[]
+  /** 数组形隐藏列黑名单，与 columnVisibilityKeys 互斥，同时传入时 columnVisibilityKeys 优先 */
+  columnVisibilityExcludeKeys?: string[]
   /** 数组形选中行 id 列表 */
   rowSelectionKeys?: string[]
   /** 数组形展开行 id 列表 */

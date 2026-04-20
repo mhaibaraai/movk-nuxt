@@ -1,11 +1,14 @@
 <script setup lang="ts">
-import type { ExpandedState, RowSelectionState } from '@tanstack/vue-table'
+import type { ExpandedState, RowSelectionState, VisibilityState } from '@tanstack/vue-table'
 
 const { treeData, treeColumns } = useTableExamples()
 
 const expanded = ref<ExpandedState>()
 const selection = ref<RowSelectionState>()
-const visibility = ref()
+const visibility = ref<VisibilityState>()
+const expandedKeys = ref(['4600'])
+const rowSelectionKeys = ref(['4600'])
+const visibilityExcludeKeys = ref(['email'])
 
 function onClick(row: any) {
   console.log('Row clicked:', row)
@@ -27,12 +30,14 @@ function onClick(row: any) {
       v-model:row-selection="selection"
       v-model:expanded="expanded"
       v-model:column-visibility="visibility"
+      v-model:expanded-keys="expandedKeys"
+      v-model:row-selection-keys="rowSelectionKeys"
+      v-model:column-visibility-exclude-keys="visibilityExcludeKeys"
       :data="treeData"
       :columns="treeColumns"
       expand-on-row-click
       children-key="children"
       row-key="id"
-      :expanded-keys="['4597']"
       @select="onClick"
     >
       <!-- <template #expand-icon="{ expanded }">
@@ -42,8 +47,9 @@ function onClick(row: any) {
         />
       </template> -->
     </MDataTable>
-    {{ expanded }}
-    {{ selection }}
-    {{ visibility }}
+    expanded: {{ expanded }}
+    expandedKeys: {{ expandedKeys }}
+    selection: {{ selection }}
+    visibilityExcludeKeys: {{ visibilityExcludeKeys }}
   </div>
 </template>

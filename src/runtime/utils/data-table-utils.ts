@@ -1,6 +1,6 @@
 import type { ColumnDefTemplate, ExpandedState, RowSelectionState, VisibilityState } from '@tanstack/vue-table'
-import type { Ref } from 'vue'
-import { computed, watch } from 'vue'
+import type { Ref, WritableComputedRef } from 'vue'
+import { computed, onMounted, watch } from 'vue'
 import { isFunction, isString } from '@movk/core'
 import type { DataTableDataColumn, DataTableSizePreset } from '../types/data-table'
 import { SIZE_PRESET_MAP } from '../constants/data-table'
@@ -111,6 +111,29 @@ export function visibilityToKeys(state: VisibilityState, allColumnIds: string[])
 }
 
 /**
+ * 可见列黑名单数组 → TanStack VisibilityState
+ *
+ * 遍历 `allColumnIds`，命中 `excludeKeys` 的置 false，未命中的显式置 true。
+ */
+export function keysToVisibilityExclude(excludeKeys: string[], allColumnIds: string[]): VisibilityState {
+  const set = new Set(excludeKeys)
+  const state: VisibilityState = {}
+  for (const id of allColumnIds) {
+    state[id] = !set.has(id)
+  }
+  return state
+}
+
+/**
+ * VisibilityState → 可见列黑名单数组
+ *
+ * 遍历 `allColumnIds`，`state[id] === false` 视为隐藏。
+ */
+export function visibilityToExcludeKeys(state: VisibilityState, allColumnIds: string[]): string[] {
+  return allColumnIds.filter(id => state[id] === false)
+}
+
+/**
  * 展开行 id 数组 → Record<id, true>
  */
 export function keysToExpanded(keys: string[]): Record<string, boolean> {
@@ -135,6 +158,38 @@ export function expandedToKeys(state: ExpandedState): string[] {
   return Object.entries(state)
     .filter(([, expanded]) => expanded)
     .map(([key]) => key)
+}
+
+/**
+ * 通用的「model 回退到默认值 + mount 时回写」
+ *
+ * 解决 writable computed 的 get 回退到 fallback 时，TanStack 内部不会触发 set，
+ * 导致父组件 model 始终为 undefined 的问题。
+ *
+ * `syncBack` 为 true 或返回 true 时，mount 阶段主动将默认值写入 model。
+ */
+export function useEffectiveModel<T>(
+  model: Ref<T | undefined>,
+  getDefault: () => T,
+  syncBack?: boolean | ((value: T) => boolean)
+): WritableComputedRef<T> {
+  const effective = computed<T>({
+    get: () => model.value !== undefined ? model.value : getDefault(),
+    set: (v) => { model.value = v }
+  })
+
+  if (syncBack !== undefined) {
+    onMounted(() => {
+      if (model.value !== undefined) return
+      const defaults = getDefault()
+      const shouldSync = typeof syncBack === 'function' ? syncBack(defaults) : syncBack
+      if (shouldSync) {
+        model.value = defaults
+      }
+    })
+  }
+
+  return effective
 }
 
 /**
