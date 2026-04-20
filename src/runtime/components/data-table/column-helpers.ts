@@ -22,6 +22,7 @@ import type {
   DataTableSelectionColumn,
   DataTableSizePreset,
   DataTableSpecialColumnBase,
+  DataTableTreeSelectionStrategy,
   ResolvedColumnState
 } from '../../types/data-table'
 import type { SpecialColumnType } from '../../constants/data-table'
@@ -48,6 +49,8 @@ interface ResolveContext<T> {
   sizing: ColumnSizingState
   flags: { hasPinning: boolean, hasResizing: boolean, hasSort: boolean, hasExpand: boolean }
   selectionMode?: 'single' | 'multiple'
+  selectionStrategy?: DataTableTreeSelectionStrategy
+  subRowSelection?: boolean
   nextGroupId: () => number
   allColumnIds: string[]
 }
@@ -139,6 +142,8 @@ export function resolveColumns<T>(
     hasColumnSort: ctx.flags.hasSort,
     hasExpandColumn: ctx.flags.hasExpand,
     selectionMode: ctx.selectionMode,
+    selectionStrategy: ctx.selectionStrategy,
+    subRowSelection: ctx.subRowSelection,
     allColumnIds: ctx.allColumnIds
   }
 }
@@ -372,6 +377,15 @@ function resolveSelectionColumn<T>(
   ctx: ResolveContext<T>
 ): ColumnDef<T, unknown> {
   ctx.selectionMode = col.mode ?? 'multiple'
+  const isTree = !!ctx.options.childrenKey
+  const strategy: DataTableTreeSelectionStrategy = col.strategy ?? 'cascade'
+  ctx.selectionStrategy = strategy
+  if (isTree && strategy !== 'cascade') {
+    ctx.subRowSelection = false
+  }
+
+  const isLeafStrategy = isTree && strategy === 'leaf'
+
   return buildSpecialColumnDef(
     col, 'selection', ctx, {
       header: ctx.selectionMode === 'multiple'
@@ -382,14 +396,46 @@ function resolveSelectionColumn<T>(
             'onUpdate:modelValue': (value: unknown) => table.toggleAllPageRowsSelected(!!(value as boolean | 'indeterminate'))
           })
         : col.header ?? SPECIAL_COLUMN_DEFAULTS.selection.header!,
-      cell: ({ row }: CellContext<T, unknown>) => h(UCheckbox, {
-        ...(col.checkboxProps ?? {}),
-        'aria-label': `选择行`,
-        'modelValue': row.getIsSelected() ? true : row.getIsSomeSelected() ? 'indeterminate' : false,
-        'onUpdate:modelValue': (value: unknown) => row.toggleSelected(!!(value as boolean | 'indeterminate'))
-      })
+      cell: ({ row }: CellContext<T, unknown>) => {
+        if (isLeafStrategy && row.subRows.length > 0) {
+          const { all, some } = computeLeafAggregate(row)
+          return h(UCheckbox, {
+            ...(col.checkboxProps ?? {}),
+            'aria-label': '父行（仅叶子可选）',
+            'disabled': true,
+            'modelValue': all ? true : some ? 'indeterminate' : false
+          })
+        }
+        return h(UCheckbox, {
+          ...(col.checkboxProps ?? {}),
+          'aria-label': `选择行`,
+          'modelValue': row.getIsSelected() ? true : row.getIsSomeSelected() ? 'indeterminate' : false,
+          'onUpdate:modelValue': (value: unknown) => row.toggleSelected(!!(value as boolean | 'indeterminate'))
+        })
+      }
     }
   )
+}
+
+interface LeafAggregate { all: boolean, some: boolean }
+
+function computeLeafAggregate(row: { subRows: Array<{ subRows: unknown[], getIsSelected: () => boolean }> }): LeafAggregate {
+  let total = 0
+  let selected = 0
+  const walk = (rows: typeof row.subRows): void => {
+    for (const r of rows) {
+      if (r.subRows.length === 0) {
+        total++
+        if (r.getIsSelected()) selected++
+      }
+      else {
+        walk(r.subRows as typeof row.subRows)
+      }
+    }
+  }
+  walk(row.subRows)
+  if (total === 0) return { all: false, some: false }
+  return { all: selected === total, some: selected > 0 && selected < total }
 }
 
 function resolveIndexColumn<T>(

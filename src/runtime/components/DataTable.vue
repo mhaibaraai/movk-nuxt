@@ -216,9 +216,13 @@ const uTableProps = computed(() => {
     rowSelectionOptions: resolved.value.selectionMode
       ? {
           ...(resolved.value.selectionMode === 'single' && { enableMultiRowSelection: false }),
+          ...(resolved.value.subRowSelection === false && { enableSubRowSelection: false }),
           ...props.rowSelectionOptions
         }
-      : props.rowSelectionOptions,
+      : {
+          ...(resolved.value.subRowSelection === false && { enableSubRowSelection: false }),
+          ...props.rowSelectionOptions
+        },
     expandedOptions: {
       ...(resolved.value.hasExpandColumn && { enableExpanding: true }),
       ...props.expandedOptions

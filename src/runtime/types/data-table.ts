@@ -120,11 +120,21 @@ export interface DataTableSelectionColumn extends DataTableSpecialColumnBase {
    * @defaultValue 'multiple'
    */
   mode?: 'single' | 'multiple'
+  /**
+   * 树形勾选策略，仅在 childrenKey 启用时生效
+   * - 'cascade'  父子级联（默认，=TanStack enableSubRowSelection: true）
+   * - 'isolated' 父子独立勾选（=enableSubRowSelection: false）
+   * - 'leaf'     仅叶子节点可勾选，父节点展示为子孙派生态（只读）
+   * @defaultValue 'cascade'
+   */
+  strategy?: DataTableTreeSelectionStrategy
   /** 单选模式下的表头文本 */
   header?: string
   /** UCheckbox props 透传 */
   checkboxProps?: CheckboxProps
 }
+
+export type DataTableTreeSelectionStrategy = 'cascade' | 'isolated' | 'leaf'
 
 /** @defaultValue size=60, align='center' */
 export interface DataTableIndexColumn extends DataTableSpecialColumnBase {
@@ -464,6 +474,13 @@ export interface ResolvedColumnState<T> {
   hasExpandColumn: boolean
   /** selection 列的选择模式，无 selection 列时为 undefined */
   selectionMode?: 'single' | 'multiple'
+  /** 树形勾选策略，无 selection 列时为 undefined */
+  selectionStrategy?: DataTableTreeSelectionStrategy
+  /**
+   * 是否启用 TanStack enableSubRowSelection。undefined = 不干预（TanStack 默认 true）。
+   * 'isolated' / 'leaf' 策略会显式置为 false。
+   */
+  subRowSelection?: boolean
   /** 所有叶子列（data 列 + special 列）的 id 扁平列表，供可见性数组白名单使用 */
   allColumnIds: string[]
 }

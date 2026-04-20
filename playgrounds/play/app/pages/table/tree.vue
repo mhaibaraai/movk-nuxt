@@ -1,55 +1,77 @@
 <script setup lang="ts">
-import type { ExpandedState, RowSelectionState, VisibilityState } from '@tanstack/vue-table'
-
-const { treeData, treeColumns } = useTableExamples()
-
-const expanded = ref<ExpandedState>()
-const selection = ref<RowSelectionState>()
-const visibility = ref<VisibilityState>()
-const expandedKeys = ref(['4600'])
-const rowSelectionKeys = ref(['4600'])
-const visibilityExcludeKeys = ref(['email'])
-
-function onClick(row: any) {
-  console.log('Row clicked:', row)
+interface Payment {
+  id: string
+  amount: number
+  status: string
+  email: string
+  date: string
+  children?: Payment[]
+  [k: string]: unknown
 }
+
+const { treeData } = useTableExamples()
+
+const strategy = ref<'cascade' | 'isolated' | 'leaf'>('cascade')
+const rowSelectionKeys = ref<string[]>([])
+const expandedKeys = ref(['4600'])
+
+const columns = computed(() => [
+  { type: 'selection' as const, mode: 'multiple' as const, size: 40, strategy: strategy.value },
+  { type: 'expand' as const },
+  { accessorKey: 'date', header: '日期' },
+  { accessorKey: 'email', header: '邮箱' },
+  { accessorKey: 'amount', header: '金额', align: 'right' as const }
+])
+
+const derived = useTreeRowSelection<Payment>(
+  () => treeData as Payment[],
+  rowSelectionKeys,
+  { rowKey: 'id', childrenKey: 'children', strategy: strategy.value }
+)
+
+const strategyOptions = [
+  { label: 'cascade（父子级联）', value: 'cascade' },
+  { label: 'isolated（父子独立）', value: 'isolated' },
+  { label: 'leaf（仅叶子可选）', value: 'leaf' }
+]
 </script>
 
 <template>
   <div class="space-y-4 p-6 overflow-auto">
     <div>
       <h2 class="text-xl font-semibold mb-1">
-        DataTable / Tree
+        DataTable / Tree Selection
       </h2>
       <p class="text-sm text-muted">
-        演示树形数据展示、展开列、默认展开、缩进宽度与行点击展开。
+        演示树形勾选的三种 strategy 与 useTreeRowSelection 派生分类。
       </p>
     </div>
 
+    <URadioGroup
+      v-model="strategy"
+      :items="strategyOptions"
+      orientation="horizontal"
+    />
+
     <MDataTable
-      v-model:row-selection="selection"
-      v-model:expanded="expanded"
-      v-model:column-visibility="visibility"
-      v-model:expanded-keys="expandedKeys"
+      :key="strategy"
       v-model:row-selection-keys="rowSelectionKeys"
-      v-model:column-visibility-exclude-keys="visibilityExcludeKeys"
+      v-model:expanded-keys="expandedKeys"
       :data="treeData"
-      :columns="treeColumns"
+      :columns="columns"
       expand-on-row-click
       children-key="children"
       row-key="id"
-      @select="onClick"
-    >
-      <!-- <template #expand-icon="{ expanded }">
-        <UIcon
-          :name="expanded ? 'i-lucide-folder-open' : 'i-lucide-folder'"
-          class="size-4"
-        />
-      </template> -->
-    </MDataTable>
-    expanded: {{ expanded }}
-    expandedKeys: {{ expandedKeys }}
-    selection: {{ selection }}
-    visibilityExcludeKeys: {{ visibilityExcludeKeys }}
+    />
+
+    <div class="text-sm space-y-1">
+      <div>strategy: {{ strategy }}</div>
+      <div>rowSelectionKeys: {{ rowSelectionKeys }}</div>
+      <div>selected({{ derived.selected.length }}): {{ derived.selected.map(r => r.id) }}</div>
+      <div>leaves({{ derived.leaves.length }}): {{ derived.leaves.map(r => r.id) }}</div>
+      <div>parents({{ derived.parents.length }}): {{ derived.parents.map(r => r.id) }}</div>
+      <div>halfSelected({{ derived.halfSelected.length }}): {{ derived.halfSelected.map(r => r.id) }}</div>
+      <div>strictlyChecked({{ derived.strictlyChecked.length }}): {{ derived.strictlyChecked.map(r => r.id) }}</div>
+    </div>
   </div>
 </template>
