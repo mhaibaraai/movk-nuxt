@@ -25,7 +25,7 @@ const columnPinning = ref<ColumnPinningState>({
       :data="users"
       :columns="sortingColumns"
       :pinable="true"
-      bordered
+      class="w-md"
     />
 
     <p class="text-sm text-muted">

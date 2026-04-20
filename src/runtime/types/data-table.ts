@@ -1,8 +1,54 @@
 import type { ButtonProps, CheckboxProps, IconProps, PopoverProps, TableColumn, TableData, TableProps, TooltipProps } from '@nuxt/ui'
 import type { OmitByKey, Suggest } from '@movk/core'
-import type { CellContext, ColumnDef, ColumnDefTemplate, ColumnPinningState, ColumnSizingState, TableMeta, VisibilityState } from '@tanstack/vue-table'
+import type { CellContext, ColumnDef, ColumnDefTemplate, ColumnPinningState, ColumnSizingState, HeaderContext, TableMeta, VisibilityState } from '@tanstack/vue-table'
 
 export type DataTableSizePreset = 'xs' | 'sm' | 'md' | 'lg' | 'xl'
+
+/** 排序按钮回调上下文 */
+export interface DataTableSortButtonContext<T> {
+  isSorted: 'asc' | 'desc' | false
+  headerContext: HeaderContext<T, unknown>
+}
+
+/** 列固定按钮回调上下文 */
+export interface DataTablePinButtonContext<T> {
+  pinned: 'left' | 'right' | false
+  headerContext: HeaderContext<T, unknown>
+}
+
+/** 选择列复选框回调上下文（表头 / 单元格共用，用 scope 区分） */
+export type DataTableCheckboxContext<T>
+  = | {
+    scope: 'header'
+    headerContext: HeaderContext<T, unknown>
+    isAllSelected: boolean
+    isIndeterminate: boolean
+  }
+  | {
+    scope: 'cell'
+    cellContext: CellContext<T, unknown>
+    isSelected: boolean
+    isIndeterminate: boolean
+    /** 是否为 leaf 策略下派生态的只读父行 */
+    isLeafAggregate: boolean
+  }
+
+/** 展开列按钮回调上下文 */
+export interface DataTableExpandButtonContext<T> {
+  cellContext: CellContext<T, unknown>
+  isExpanded: boolean
+  depth: number
+  canExpand: boolean
+}
+
+/** 行固定列按钮回调上下文 */
+export interface DataTableRowPinningButtonContext<T> {
+  cellContext: CellContext<T, unknown>
+  pinned: 'top' | 'bottom' | false
+  position: 'top' | 'bottom'
+}
+
+export type DataTableDynamic<V, Ctx> = V | ((ctx: Ctx) => V)
 
 export type DataTableDensityPreset = 'compact' | 'normal' | 'comfortable'
 
@@ -48,11 +94,11 @@ export interface DataTableDataColumn<T> extends DataTableBaseColumn {
   /** 允许通过表头交互切换列固定（left -> right -> none），优先级高于全局 pinable */
   pinable?: boolean
   /** 固定列按钮 props 透传，列级可覆盖全局 pinButtonProps */
-  pinButtonProps?: ButtonProps
+  pinButtonProps?: DataTableDynamic<ButtonProps, DataTablePinButtonContext<T>>
   /** 启用排序，优先级高于全局 sortable */
   sortable?: boolean
   /** 排序按钮 props 透传，列级可覆盖全局 sortButtonProps */
-  sortButtonProps?: ButtonProps
+  sortButtonProps?: DataTableDynamic<ButtonProps, DataTableSortButtonContext<T>>
   /** 是否可拖拽调整宽度，优先级高于全局 resizable */
   resizable?: boolean
   /**
@@ -89,7 +135,7 @@ export interface DataTableGroupColumn<T> extends DataTableBaseColumn {
   children: (DataTableDataColumn<T> | DataTableGroupColumn<T>)[]
 }
 
-export interface DataTableSpecialColumnBase extends Omit<DataTableBaseColumn, 'header' | 'truncate'> {
+export interface DataTableSpecialColumnBase<T = unknown> extends Omit<DataTableBaseColumn, 'header' | 'truncate'> {
   /**
    * 默认是否可见
    * @defaultValue true
@@ -106,13 +152,13 @@ export interface DataTableSpecialColumnBase extends Omit<DataTableBaseColumn, 'h
    */
   resizable?: boolean
   /** 固定列按钮 props 透传，列级可覆盖全局 pinButtonProps */
-  pinButtonProps?: ButtonProps
+  pinButtonProps?: DataTableDynamic<ButtonProps, DataTablePinButtonContext<T>>
   /** TanStack ColumnDef 透传（逃生舱） */
   _raw?: Partial<ColumnDef<any, unknown>>
 }
 
 /** @defaultValue size=48, fixed='left', align='center' */
-export interface DataTableSelectionColumn extends DataTableSpecialColumnBase {
+export interface DataTableSelectionColumn<T = unknown> extends DataTableSpecialColumnBase<T> {
   /** 选择列，显示复选框/单选框用于行选择 */
   type: 'selection'
   /**
@@ -131,13 +177,13 @@ export interface DataTableSelectionColumn extends DataTableSpecialColumnBase {
   /** 单选模式下的表头文本 */
   header?: string
   /** UCheckbox props 透传 */
-  checkboxProps?: CheckboxProps
+  checkboxProps?: DataTableDynamic<CheckboxProps, DataTableCheckboxContext<T>>
 }
 
 export type DataTableTreeSelectionStrategy = 'cascade' | 'isolated' | 'leaf'
 
 /** @defaultValue size=60, align='center' */
-export interface DataTableIndexColumn extends DataTableSpecialColumnBase {
+export interface DataTableIndexColumn<T = unknown> extends DataTableSpecialColumnBase<T> {
   /** 索引列，显示行索引 */
   type: 'index'
   /**
@@ -148,15 +194,15 @@ export interface DataTableIndexColumn extends DataTableSpecialColumnBase {
 }
 
 /** @defaultValue size=48 */
-export interface DataTableExpandColumn extends DataTableSpecialColumnBase {
+export interface DataTableExpandColumn<T = unknown> extends DataTableSpecialColumnBase<T> {
   /** 展开列，显示展开图标用于树形表格 */
   type: 'expand'
   /** 展开/折叠按钮 props 透传 */
-  buttonProps?: ButtonProps
+  buttonProps?: DataTableDynamic<ButtonProps, DataTableExpandButtonContext<T>>
 }
 
 /** @defaultValue size=48, fixed='left', align='center' */
-export interface DataTableRowPinningColumn extends DataTableSpecialColumnBase {
+export interface DataTableRowPinningColumn<T = unknown> extends DataTableSpecialColumnBase<T> {
   /** 行固定列，显示图标用于行固定 */
   type: 'row-pinning'
   /**
@@ -170,11 +216,11 @@ export interface DataTableRowPinningColumn extends DataTableSpecialColumnBase {
    */
   header?: string
   /** 行固定/取消固定按钮 props 透传 */
-  buttonProps?: ButtonProps
+  buttonProps?: DataTableDynamic<ButtonProps, DataTableRowPinningButtonContext<T>>
 }
 
 /** @defaultValue fixed='right' */
-export interface DataTableActionsColumn<T> extends DataTableSpecialColumnBase {
+export interface DataTableActionsColumn<T> extends DataTableSpecialColumnBase<T> {
   /** 操作列，显示操作按钮 */
   type: 'actions'
   /**
@@ -228,10 +274,10 @@ export interface DataTableAction<T> extends OmitByKey<ButtonProps, 'onClick' | '
 export type DataTableColumn<T>
   = | DataTableDataColumn<T>
     | DataTableGroupColumn<T>
-    | DataTableSelectionColumn
-    | DataTableIndexColumn
-    | DataTableExpandColumn
-    | DataTableRowPinningColumn
+    | DataTableSelectionColumn<T>
+    | DataTableIndexColumn<T>
+    | DataTableExpandColumn<T>
+    | DataTableRowPinningColumn<T>
     | DataTableActionsColumn<T>
     | TableColumn<T>
 
@@ -288,14 +334,14 @@ export interface DataTableProps<T extends TableData> extends /* @vue-ignore */ D
    */
   pinable?: boolean | ((col: DataTableDataColumn<T>) => boolean)
   /** 固定列按钮 props 透传 */
-  pinButtonProps?: ButtonProps
+  pinButtonProps?: DataTableDynamic<ButtonProps, DataTablePinButtonContext<T>>
   /**
    * 全局数据列可排序，传函数可按列定义动态决定
    * @defaultValue false
    */
   sortable?: boolean | ((col: DataTableDataColumn<T>) => boolean)
   /** 排序按钮 props 透传 */
-  sortButtonProps?: ButtonProps
+  sortButtonProps?: DataTableDynamic<ButtonProps, DataTableSortButtonContext<T>>
   /**
    * 启用列拖拽调整宽度，传函数可按列定义动态决定
    * @defaultValue false
@@ -507,10 +553,10 @@ export function isGroupColumn<T>(col: DataTableColumn<T>): col is DataTableGroup
 }
 
 export function isSpecialColumn<T>(col: DataTableColumn<T>): col is
-  | DataTableSelectionColumn
-  | DataTableIndexColumn
-  | DataTableExpandColumn
-  | DataTableRowPinningColumn
+  | DataTableSelectionColumn<T>
+  | DataTableIndexColumn<T>
+  | DataTableExpandColumn<T>
+  | DataTableRowPinningColumn<T>
   | DataTableActionsColumn<T> {
   return 'type' in col
 }

@@ -11,16 +11,21 @@ import type {
 import type { Component, VNode } from 'vue'
 import type {
   DataTableActionsColumn,
+  DataTableCheckboxContext,
   DataTableColumn,
   DataTableDataColumn,
   DataTableDensityOptions,
+  DataTableExpandButtonContext,
   DataTableExpandColumn,
   DataTableGroupColumn,
   DataTableIndexColumn,
+  DataTablePinButtonContext,
   DataTableProps,
+  DataTableRowPinningButtonContext,
   DataTableRowPinningColumn,
   DataTableSelectionColumn,
   DataTableSizePreset,
+  DataTableSortButtonContext,
   DataTableSpecialColumnBase,
   DataTableTreeSelectionStrategy,
   ResolvedColumnState
@@ -159,13 +164,13 @@ function resolveColumn<T>(
   if ('type' in col) {
     switch (col.type) {
       case 'selection':
-        return resolveSelectionColumn(col as DataTableSelectionColumn, ctx)
+        return resolveSelectionColumn(col as DataTableSelectionColumn<T>, ctx)
       case 'index':
-        return resolveIndexColumn(col as DataTableIndexColumn, ctx)
+        return resolveIndexColumn(col as DataTableIndexColumn<T>, ctx)
       case 'expand':
-        return resolveExpandColumn(col as DataTableExpandColumn, ctx)
+        return resolveExpandColumn(col as DataTableExpandColumn<T>, ctx)
       case 'row-pinning':
-        return resolveRowPinningColumn(col as DataTableRowPinningColumn, ctx)
+        return resolveRowPinningColumn(col as DataTableRowPinningColumn<T>, ctx)
       case 'actions':
         return resolveActionsColumn(col as DataTableActionsColumn<T>, ctx)
     }
@@ -310,7 +315,7 @@ function resolveGroupColumn<T>(
 }
 
 function buildSpecialColumnDef<T>(
-  col: DataTableSpecialColumnBase,
+  col: DataTableSpecialColumnBase<T>,
   type: SpecialColumnType,
   ctx: ResolveContext<T>,
   render: {
@@ -373,7 +378,7 @@ function buildSpecialColumnDef<T>(
 }
 
 function resolveSelectionColumn<T>(
-  col: DataTableSelectionColumn,
+  col: DataTableSelectionColumn<T>,
   ctx: ResolveContext<T>
 ): ColumnDef<T, unknown> {
   ctx.selectionMode = col.mode ?? 'multiple'
@@ -389,28 +394,54 @@ function resolveSelectionColumn<T>(
   return buildSpecialColumnDef(
     col, 'selection', ctx, {
       header: ctx.selectionMode === 'multiple'
-        ? ({ table }: HeaderContext<T, unknown>) => h(UCheckbox, {
-            ...(col.checkboxProps ?? {}),
-            'aria-label': '选择所有行',
-            'modelValue': table.getIsSomePageRowsSelected() ? 'indeterminate' : table.getIsAllPageRowsSelected(),
-            'onUpdate:modelValue': (value: unknown) => table.toggleAllPageRowsSelected(!!(value as boolean | 'indeterminate'))
-          })
+        ? (hctx: HeaderContext<T, unknown>) => {
+            const isIndeterminate = hctx.table.getIsSomePageRowsSelected()
+            const isAllSelected = hctx.table.getIsAllPageRowsSelected()
+            const cbCtx: DataTableCheckboxContext<T> = {
+              scope: 'header',
+              headerContext: hctx,
+              isAllSelected,
+              isIndeterminate
+            }
+            return h(UCheckbox, {
+              'aria-label': '选择所有行',
+              'modelValue': isIndeterminate ? 'indeterminate' : isAllSelected,
+              'onUpdate:modelValue': (value: unknown) => hctx.table.toggleAllPageRowsSelected(!!(value as boolean | 'indeterminate')),
+              ...resolveCallbackValue(col.checkboxProps ?? {}, cbCtx)
+            })
+          }
         : col.header ?? SPECIAL_COLUMN_DEFAULTS.selection.header!,
-      cell: ({ row }: CellContext<T, unknown>) => {
-        if (isLeafStrategy && row.subRows.length > 0) {
-          const { all, some } = computeLeafAggregate(row)
+      cell: (cellCtx: CellContext<T, unknown>) => {
+        if (isLeafStrategy && cellCtx.row.subRows.length > 0) {
+          const { all, some } = computeLeafAggregate(cellCtx.row)
+          const cbCtx: DataTableCheckboxContext<T> = {
+            scope: 'cell',
+            cellContext: cellCtx,
+            isSelected: all,
+            isIndeterminate: some,
+            isLeafAggregate: true
+          }
           return h(UCheckbox, {
-            ...(col.checkboxProps ?? {}),
             'aria-label': '父行（仅叶子可选）',
             'disabled': true,
-            'modelValue': all ? true : some ? 'indeterminate' : false
+            'modelValue': all ? true : some ? 'indeterminate' : false,
+            ...resolveCallbackValue(col.checkboxProps ?? {}, cbCtx)
           })
         }
+        const isSelected = cellCtx.row.getIsSelected()
+        const isIndeterminate = cellCtx.row.getIsSomeSelected()
+        const cbCtx: DataTableCheckboxContext<T> = {
+          scope: 'cell',
+          cellContext: cellCtx,
+          isSelected,
+          isIndeterminate,
+          isLeafAggregate: false
+        }
         return h(UCheckbox, {
-          ...(col.checkboxProps ?? {}),
           'aria-label': `选择行`,
-          'modelValue': row.getIsSelected() ? true : row.getIsSomeSelected() ? 'indeterminate' : false,
-          'onUpdate:modelValue': (value: unknown) => row.toggleSelected(!!(value as boolean | 'indeterminate'))
+          'modelValue': isSelected ? true : isIndeterminate ? 'indeterminate' : false,
+          'onUpdate:modelValue': (value: unknown) => cellCtx.row.toggleSelected(!!(value as boolean | 'indeterminate')),
+          ...resolveCallbackValue(col.checkboxProps ?? {}, cbCtx)
         })
       }
     }
@@ -439,7 +470,7 @@ function computeLeafAggregate(row: { subRows: Array<{ subRows: unknown[], getIsS
 }
 
 function resolveIndexColumn<T>(
-  col: DataTableIndexColumn,
+  col: DataTableIndexColumn<T>,
   ctx: ResolveContext<T>
 ): ColumnDef<T, unknown> {
   return buildSpecialColumnDef(col, 'index', ctx, {
@@ -449,7 +480,7 @@ function resolveIndexColumn<T>(
 }
 
 function resolveExpandColumn<T>(
-  col: DataTableExpandColumn,
+  col: DataTableExpandColumn<T>,
   ctx: ResolveContext<T>
 ): ColumnDef<T, unknown> {
   ctx.flags.hasExpand = true
@@ -465,24 +496,32 @@ function resolveExpandColumn<T>(
           ? `${cellCtx.row.depth * indentSize}px`
           : cellCtx.row.depth > 0 ? `calc(${cellCtx.row.depth} * ${indentSize})` : '0px'
 
+      const isExpanded = cellCtx.row.getIsExpanded()
+      const expandCtx: DataTableExpandButtonContext<T> = {
+        cellContext: cellCtx,
+        isExpanded,
+        depth: cellCtx.row.depth,
+        canExpand: true
+      }
+
       return h(UButton, {
         variant: 'ghost',
         size: 'xs',
         color: 'neutral',
-        ...(col.buttonProps ?? {}),
-        icon: cellCtx.row.getIsExpanded() ? 'i-lucide-chevron-down' : 'i-lucide-chevron-right',
+        icon: isExpanded ? 'i-lucide-chevron-down' : 'i-lucide-chevron-right',
         style: { marginLeft },
         onClick: (event: Event) => {
           event.stopPropagation()
           cellCtx.row.toggleExpanded()
-        }
+        },
+        ...resolveCallbackValue(col.buttonProps ?? {}, expandCtx)
       })
     }
   })
 }
 
 function resolveRowPinningColumn<T>(
-  col: DataTableRowPinningColumn,
+  col: DataTableRowPinningColumn<T>,
   ctx: ResolveContext<T>
 ): ColumnDef<T, unknown> {
   return buildSpecialColumnDef(col, 'row-pinning', ctx, {
@@ -490,12 +529,16 @@ function resolveRowPinningColumn<T>(
     cell: (cellCtx: CellContext<T, unknown>) => {
       const pinned = cellCtx.row.getIsPinned()
       const position = col.position ?? 'top'
+      const rpCtx: DataTableRowPinningButtonContext<T> = {
+        cellContext: cellCtx,
+        pinned,
+        position
+      }
 
       return h(UButton, {
         'variant': 'ghost',
         'size': 'xs',
         'color': pinned ? 'primary' : 'neutral',
-        ...(col.buttonProps ?? {}),
         'icon': 'i-lucide-star',
         'aria-label': pinned ? '取消固定行' : '固定行',
         'onClick': (event: Event) => {
@@ -505,7 +548,8 @@ function resolveRowPinningColumn<T>(
             return
           }
           cellCtx.row.pin(position)
-        }
+        },
+        ...resolveCallbackValue(col.buttonProps ?? {}, rpCtx)
       })
     }
   })
@@ -587,6 +631,10 @@ function buildSortAction<T>(
     position: 'trailing',
     render: (ctx) => {
       const isSorted = ctx.column.getIsSorted()
+      const sortCtx: DataTableSortButtonContext<T> = {
+        isSorted,
+        headerContext: ctx
+      }
       const icon = isSorted === 'asc'
         ? 'i-lucide-arrow-up-narrow-wide'
         : isSorted === 'desc'
@@ -597,10 +645,10 @@ function buildSortAction<T>(
         variant: 'ghost',
         color: 'neutral',
         class: isSorted ? 'opacity-100' : 'opacity-60 group-hover:opacity-100',
-        ...(options.sortButtonProps ?? {}),
-        ...(col.sortButtonProps ?? {}),
         icon,
-        onClick: ctx.column.getToggleSortingHandler()
+        onClick: ctx.column.getToggleSortingHandler(),
+        ...resolveCallbackValue(options.sortButtonProps ?? {}, sortCtx),
+        ...resolveCallbackValue(col.sortButtonProps ?? {}, sortCtx)
       })
     }
   }
@@ -615,13 +663,15 @@ function buildPinAction<T>(
     position: 'leading',
     render: (ctx) => {
       const pinned = ctx.column.getIsPinned()
+      const pinCtx: DataTablePinButtonContext<T> = {
+        pinned,
+        headerContext: ctx
+      }
       return h(UButton, {
         'size': 'xs',
         'variant': 'ghost',
         'color': pinned ? 'primary' : 'neutral',
         'class': pinned ? 'opacity-100' : 'opacity-60 group-hover:opacity-100',
-        ...(options.pinButtonProps ?? {}),
-        ...(col.pinButtonProps ?? {}),
         'icon': pinned ? 'i-lucide-pin-off' : 'i-lucide-pin',
         'aria-label': pinned ? '取消固定列' : '固定列',
         'onClick': (event: Event) => {
@@ -635,7 +685,9 @@ function buildPinAction<T>(
             return
           }
           ctx.column.pin('left')
-        }
+        },
+        ...resolveCallbackValue(options.pinButtonProps ?? {}, pinCtx),
+        ...resolveCallbackValue(col.pinButtonProps ?? {}, pinCtx)
       })
     }
   }
