@@ -60,7 +60,6 @@ const resizeModeOptions = [
       :resizable="true"
       :sortable="false"
       :pinable="true"
-      :bordered="true"
     />
   </div>
 </template>

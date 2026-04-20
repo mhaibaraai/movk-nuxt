@@ -162,33 +162,54 @@ const selectionColumns: DataTableColumn<TableUser>[] = [
 ]
 
 const actionsColumns: DataTableColumn<TableUser>[] = [
-  { accessorKey: 'name', header: '姓名' },
+  { accessorKey: 'name', header: '姓名', fixed: 'left' },
   { accessorKey: 'department', header: '部门' },
   { accessorKey: 'role', header: '职位' },
+  { accessorKey: 'status', header: '状态', cell: ({ getValue }) => statusMap[getValue() as string] ?? String(getValue()) },
   {
     type: 'actions',
-    fixed: 'right',
-    actions: row => [
+    minSize: 280,
+    actions: ({ row }) => [
       {
-        header: '编辑',
-        icon: 'i-lucide-pencil',
-        color: 'primary',
-        onClick: () => alert(`编辑：${row.name}`)
+        key: 'edit',
+        buttonProps: { label: '编辑', icon: 'i-lucide-pencil', color: 'primary' },
+        onClick: () => alert(`编辑：${row.original.name}`)
       },
       {
-        header: '禁用',
-        icon: 'i-lucide-ban',
-        color: 'error',
-        hidden: row.status === 'inactive',
-        onClick: () => alert(`禁用：${row.name}`)
+        key: 'toggle',
+        buttonProps: ctx => ({
+          label: ctx.row.status === 'inactive' ? '启用' : '禁用',
+          icon: ctx.row.status === 'inactive' ? 'i-lucide-check' : 'i-lucide-ban',
+          color: ctx.row.status === 'inactive' ? 'success' : 'warning'
+        }),
+        visibility: ctx => ctx.row.status !== 'pending',
+        onClick: ctx => alert(`切换状态：${ctx.row.name}`)
       },
       {
-        header: '删除',
-        icon: 'i-lucide-trash-2',
-        color: 'error',
-        onClick: () => alert(`删除：${row.name}`)
+        key: 'async-test',
+        buttonProps: { label: '异步', icon: 'i-lucide-loader' },
+        onClick: async () => {
+          await new Promise(r => setTimeout(r, 1500))
+          alert('异步操作完成')
+        }
+      },
+      {
+        key: 'download',
+        buttonProps: { label: '导出', icon: 'i-lucide-download' },
+        onClick: ctx => alert(`导出：${ctx.row.name}`)
+      },
+      {
+        key: 'delete',
+        buttonProps: { label: '删除', icon: 'i-lucide-trash-2', color: 'error' },
+        popover: true,
+        divider: true,
+        onClick: async (ctx) => {
+          await new Promise(r => setTimeout(r, 1000))
+          alert(`已删除：${ctx.row.name}`)
+        }
       }
-    ]
+    ],
+    maxInline: 3
   }
 ]
 

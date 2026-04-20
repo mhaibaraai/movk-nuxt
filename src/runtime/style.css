@@ -45,7 +45,7 @@
 
 .data-table--bordered [data-slot="th"][data-pinned="right"],
 .data-table--bordered [data-slot="td"][data-pinned="right"] {
-  box-shadow: inset 1px 0 0 var(--m-dt-border-color, var(--ui-border)), var(--m-dt-pin-shadow);
+  /* box-shadow: inset 1px 0 0 var(--m-dt-border-color, var(--ui-border)), var(--m-dt-pin-shadow); */
 }
 
 /* bordered 模式：分组表头底边框 */
@@ -69,18 +69,6 @@
 /* 固定列选中背景色 */
 .data-table [data-slot="tbody"] [data-slot="tr"][data-selected="true"] [data-slot="td"][data-pinned] {
   background-color: color-mix(in oklab, var(--ui-bg-elevated) 50%, transparent);
-}
-
-/* 最后一个左固定列 */
-.data-table [data-pinned="left"]:has(+ :not([data-pinned="left"])),
-.data-table [data-pinned="left"]:last-child {
-  --m-dt-pin-shadow: -4px 0 4px -4px var(--ui-bg-accented) inset;
-}
-
-/* 第一个右固定列 */
-.data-table :not([data-pinned="right"]) + [data-pinned="right"],
-.data-table [data-pinned="right"]:first-child {
-  --m-dt-pin-shadow: 4px 0 4px -4px var(--ui-bg-accented) inset;
 }
 
 .data-table--tree [data-slot="tbody"] [data-slot="tr"]:has(> [data-slot="td"]:only-child:empty) {
