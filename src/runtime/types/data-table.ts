@@ -1,4 +1,4 @@
-import type { ButtonProps, CheckboxProps, IconProps, PopoverProps, TableColumn, TableData, TableProps, TooltipProps } from '@nuxt/ui'
+import type { ButtonProps, CheckboxProps, DropdownMenuProps, IconProps, PopoverProps, TableColumn, TableData, TableProps, TooltipProps } from '@nuxt/ui'
 import type { OmitByKey, Suggest } from '@movk/core'
 import type { CellContext, ColumnDef, ColumnDefTemplate, ColumnPinningState, ColumnSizingState, HeaderContext, TableMeta, VisibilityState } from '@tanstack/vue-table'
 
@@ -219,8 +219,48 @@ export interface DataTableRowPinningColumn<T = unknown> extends DataTableSpecial
   buttonProps?: DataTableDynamic<ButtonProps, DataTableRowPinningButtonContext<T>>
 }
 
+/** 操作按钮回调上下文 */
+export interface DataTableActionButtonContext<T> {
+  cellContext: CellContext<T, unknown>
+  row: T
+  index: number
+  action: DataTableAction<T>
+}
+
+export interface DataTableActionPopoverProps extends PopoverProps {
+  /** @defaultValue '确认操作' */
+  title?: string
+  /** @defaultValue '请确认是否执行此操作' */
+  description?: string
+  /** @defaultValue 'i-lucide-circle-question-mark' */
+  icon?: IconProps['name']
+  /** @defaultValue '取消' */
+  cancelButton?: string | ButtonProps
+  /** @defaultValue '确认' */
+  confirmButton?: string | ButtonProps
+}
+
+export interface DataTableAction<T> {
+  /** 唯一 key，用于渲染稳定性与溢出菜单定位；未提供时回退到数组下标 */
+  key?: string | number
+  /** 按钮 props，支持整体回调按行动态计算 */
+  buttonProps?: DataTableDynamic<ButtonProps, DataTableActionButtonContext<T>>
+  /** 是否可见 */
+  visibility?: boolean | ((ctx: DataTableActionButtonContext<T>) => boolean)
+  /** 是否禁用（loading 中自动叠加） */
+  disabled?: boolean | ((ctx: DataTableActionButtonContext<T>) => boolean)
+  /** 点击回调，支持 async；返回 Promise 时自动维护 loading 状态 */
+  onClick: (ctx: DataTableActionButtonContext<T>) => void | Promise<void>
+  /** 触发前需要确认 */
+  popover?: boolean
+  /** 确认弹窗 props，支持回调 */
+  popoverProps?: DataTableDynamic<DataTableActionPopoverProps, DataTableActionButtonContext<T>>
+  /** 溢出菜单内在该项之前插入分隔线（仅 overflow 模式生效） */
+  divider?: boolean
+}
+
 /** @defaultValue fixed='right' */
-export interface DataTableActionsColumn<T> extends DataTableSpecialColumnBase<T> {
+export interface DataTableActionsColumn<T = unknown> extends DataTableSpecialColumnBase<T> {
   /** 操作列，显示操作按钮 */
   type: 'actions'
   /**
@@ -228,47 +268,19 @@ export interface DataTableActionsColumn<T> extends DataTableSpecialColumnBase<T>
    * @defaultValue '操作'
    */
   header?: string
-  /** 操作按钮列表 */
-  actions: DataTableAction<T>[] | ((row: T) => DataTableAction<T>[])
-}
-
-export interface DataTableAction<T> extends OmitByKey<ButtonProps, 'onClick' | 'disabled'> {
-  /** 是否可见 */
-  visibility?: boolean | ((row: T) => boolean)
-  /** 是否禁用 */
-  disabled?: boolean | ((row: T) => boolean)
-  /** 点击回调 */
-  onClick: (row: T, index: number) => void
-  /** 需要确认 */
-  popover?: boolean
-  /** 确认弹窗 props（popover = true 时生效） */
-  popoverProps?: PopoverProps & {
-    /**
-     * 弹窗标题
-     * @defaultValue '确认操作'
-     */
-    title?: string
-    /**
-     * 弹窗描述
-     * @defaultValue '请确认是否执行此操作'
-     */
-    description?: string
-    /**
-     * 弹窗图标
-     * @defaultValue 'i-lucide-circle-question-mark'
-     */
-    icon?: IconProps['name']
-    /**
-     * 取消按钮
-     * @defaultValue '取消'
-     */
-    cancelButton?: string | ButtonProps
-    /**
-     * 确认按钮
-     * @defaultValue '确定'
-     */
-    confirmButton?: string | ButtonProps
-  }
+  /** 操作按钮列表，支持整体回调 */
+  actions: DataTableAction<T>[] | ((ctx: CellContext<T, unknown>) => DataTableAction<T>[])
+  /**
+   * 最多平铺的 action 数；超出部分收纳到 UDropdownMenu
+   * @defaultValue 3
+   */
+  maxInline?: number
+  /** 溢出触发按钮 props */
+  overflowTrigger?: DataTableDynamic<ButtonProps, CellContext<T, unknown>>
+  /** 溢出菜单透传 props（UDropdownMenu） */
+  dropdownProps?: DataTableDynamic<Partial<DropdownMenuProps>, CellContext<T, unknown>>
+  /** 容器 class，默认 'flex items-center gap-1' */
+  wrapperClass?: string | ((ctx: CellContext<T, unknown>) => string)
 }
 
 export type DataTableColumn<T>
@@ -342,6 +354,15 @@ export interface DataTableProps<T extends TableData> extends /* @vue-ignore */ D
   sortable?: boolean | ((col: DataTableDataColumn<T>) => boolean)
   /** 排序按钮 props 透传 */
   sortButtonProps?: DataTableDynamic<ButtonProps, DataTableSortButtonContext<T>>
+  /** 全局 action 按钮 props，与列级 action.buttonProps 深度合并，列级优先 */
+  actionButtonProps?: DataTableDynamic<ButtonProps, DataTableActionButtonContext<T>>
+  /**
+   * 全局溢出阈值
+   * @defaultValue 3
+   */
+  actionsMaxInline?: number
+  /** 全局溢出按钮样式 */
+  actionsOverflowTrigger?: DataTableDynamic<ButtonProps, CellContext<T, unknown>>
   /**
    * 启用列拖拽调整宽度，传函数可按列定义动态决定
    * @defaultValue false

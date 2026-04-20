@@ -10,7 +10,9 @@ import type {
 } from '@tanstack/vue-table'
 import type { Component, VNode } from 'vue'
 import type {
+  DataTableAction,
   DataTableActionsColumn,
+  DataTableActionButtonContext,
   DataTableCheckboxContext,
   DataTableColumn,
   DataTableDataColumn,
@@ -38,7 +40,8 @@ import { DENSITY_PRESETS, SPECIAL_COLUMN_DEFAULTS } from '../../constants/data-t
 import { resolveCallbackValue, resolveColumnFlag, resolvePresetSize, resolveTemplate } from '../../utils/data-table-utils'
 import DataTableCellTooltip from './DataTableCellTooltip.vue'
 import DataTableActionConfirm from './DataTableActionConfirm.vue'
-import { UButton, UCheckbox } from '#components'
+import DataTableActionButton from './DataTableActionButton.vue'
+import { UButton, UCheckbox, UDropdownMenu } from '#components'
 
 interface HeaderAction<T> {
   id: string
@@ -62,9 +65,11 @@ interface ResolveContext<T> {
 
 function resolveColumnSize<T>(ctx: Header<T, unknown> | Cell<T, unknown>): Record<string, string> {
   const { columnDef } = ctx.column
+  const table = ctx.getContext().table
   const isPinned = ctx.column.getIsPinned()
+  const hasMeasuredSize = isPinned && (ctx.column.id in table.getState().columnSizing)
 
-  if (isPinned || columnDef.size != ctx.getContext().table._getDefaultColumnDef().size || columnDef.enableResizing === true) {
+  if (hasMeasuredSize || columnDef.size != table._getDefaultColumnDef().size || columnDef.enableResizing === true) {
     const w = `${ctx.column.getSize()}px`
     return { width: w, minWidth: w, maxWidth: w }
   }
@@ -565,29 +570,106 @@ function resolveActionsColumn<T>(
     cell: (cellCtx: CellContext<T, unknown>) => {
       const row = cellCtx.row.original
       const index = cellCtx.row.index
-      const actionList = resolveCallbackValue(col.actions, row)
-      const visibleActions = actionList.filter(a =>
-        resolveCallbackValue(a.visibility ?? true, row)
-      )
 
-      if (visibleActions.length === 0) return null
+      const actionList: DataTableAction<T>[] = isFunction(col.actions) ? col.actions(cellCtx) : col.actions
 
-      return h('div', { class: 'flex items-center gap-1' },
-        visibleActions.map((action) => {
-          if (action.popover) {
-            return h(DataTableActionConfirm as Component, { action, row, rowIndex: index })
-          }
-          const { onClick: _click, disabled: _disabled, visibility: _vis, popover: _pop, popoverProps: _pProps, ...buttonProps } = action
-          return h(UButton, {
-            variant: 'ghost',
-            size: 'xs',
-            color: 'neutral',
-            ...buttonProps,
-            disabled: resolveCallbackValue(action.disabled ?? false, row),
-            onClick: () => action.onClick(row, index)
+      const buildActionCtx = (action: DataTableAction<T>): DataTableActionButtonContext<T> => ({
+        cellContext: cellCtx,
+        row,
+        index,
+        action
+      })
+
+      const visible = actionList.filter((a) => {
+        return resolveCallbackValue(a.visibility ?? true, buildActionCtx(a))
+      })
+
+      if (visible.length === 0) return null
+
+      const maxInline = col.maxInline ?? ctx.options.actionsMaxInline ?? 3
+      const shouldOverflow = visible.length > maxInline
+      const inline = shouldOverflow ? visible.slice(0, maxInline - 1) : visible
+      const overflow = shouldOverflow ? visible.slice(maxInline - 1) : []
+
+      const wrapperClass = isFunction(col.wrapperClass)
+        ? col.wrapperClass(cellCtx)
+        : (col.wrapperClass ?? 'flex items-center gap-1')
+
+      const renderInline = (action: typeof visible[number], idx: number) => {
+        const actionCtx: DataTableActionButtonContext<T> = {
+          cellContext: cellCtx,
+          row,
+          index,
+          action
+        }
+        const key = action.key ?? `${idx}`
+
+        if (action.popover) {
+          return h(DataTableActionConfirm as Component, {
+            key,
+            action,
+            ctx: actionCtx,
+            globalButtonProps: ctx.options.actionButtonProps
           })
+        }
+        return h(DataTableActionButton as Component, {
+          key,
+          action,
+          ctx: actionCtx,
+          globalButtonProps: ctx.options.actionButtonProps
         })
-      )
+      }
+
+      const renderOverflow = (actions: typeof visible) => {
+        const groups: Record<string, unknown>[][] = []
+        let currentGroup: Record<string, unknown>[] = []
+
+        for (const action of actions) {
+          if (action.divider && currentGroup.length > 0) {
+            groups.push(currentGroup)
+            currentGroup = []
+          }
+          const actionCtx: DataTableActionButtonContext<T> = {
+            cellContext: cellCtx,
+            row,
+            index,
+            action
+          }
+          const resolved = resolveCallbackValue(action.buttonProps ?? {}, actionCtx)
+          const isDisabled = resolveCallbackValue(action.disabled ?? false, actionCtx)
+
+          currentGroup.push({
+            label: (resolved as any).label ?? '',
+            icon: (resolved as any).icon,
+            color: (resolved as any).color,
+            disabled: isDisabled,
+            onSelect: async (e: Event) => {
+              e.stopPropagation()
+              await action.onClick(actionCtx)
+            }
+          })
+        }
+        if (currentGroup.length > 0) groups.push(currentGroup)
+
+        const triggerProps = {
+          variant: 'ghost' as const,
+          size: 'xs' as const,
+          color: 'neutral' as const,
+          icon: 'i-lucide-ellipsis',
+          ...resolveCallbackValue(ctx.options.actionsOverflowTrigger ?? {}, cellCtx),
+          ...resolveCallbackValue(col.overflowTrigger ?? {}, cellCtx)
+        }
+        const dropdownProps = resolveCallbackValue(col.dropdownProps ?? {}, cellCtx)
+
+        return h(UDropdownMenu, { ...dropdownProps, items: groups }, {
+          default: () => h(UButton, { ...triggerProps, onClick: (e: Event) => e.stopPropagation() })
+        })
+      }
+
+      return h('div', { class: wrapperClass }, [
+        ...inline.map((action, idx) => renderInline(action, idx)),
+        overflow.length > 0 ? renderOverflow(overflow) : null
+      ])
     }
   })
 }
@@ -684,6 +766,13 @@ function buildPinAction<T>(
           if (pinned === 'right') {
             ctx.column.pin(false)
             return
+          }
+          const th = (event.target as HTMLElement).closest('th')
+          if (th) {
+            const w = Math.ceil(th.getBoundingClientRect().width)
+            if (w > 0) {
+              ctx.table.setColumnSizing(prev => ({ ...prev, [ctx.column.id]: w }))
+            }
           }
           ctx.column.pin('left')
         },
