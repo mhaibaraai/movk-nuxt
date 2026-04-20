@@ -9,7 +9,7 @@ export type { TreeRowSelectionOptions, TreeSelectionResult } from '../utils/tree
  * 树形选择派生 composable：把 rowSelectionKeys 与 data 组合为
  * selected / leaves / parents / halfSelected / strictlyChecked 五种语义分类。
  */
-export function useTreeRowSelection<T extends Record<string, unknown>>(
+export function useTreeRowSelection<T extends object>(
   data: MaybeRefOrGetter<T[]>,
   selectionKeys: Ref<string[] | undefined> | Ref<(string | number)[] | undefined>,
   options: TreeRowSelectionOptions = {}

@@ -193,7 +193,7 @@ const actionsColumns: DataTableColumn<TableUser>[] = [
 ]
 
 const sortingColumns: DataTableColumn<TableUser>[] = [
-  { accessorKey: 'name', header: '姓名', sortable: true, sortButtonProps({ isSorted }) {
+  { accessorKey: 'name', resizable: true, header: '姓名', sortable: true, sortButtonProps({ isSorted }) {
     const icon = isSorted === 'asc'
       ? 'i-lucide:bell-dot'
       : isSorted === 'desc'

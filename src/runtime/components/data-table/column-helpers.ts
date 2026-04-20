@@ -62,8 +62,9 @@ interface ResolveContext<T> {
 
 function resolveColumnSize<T>(ctx: Header<T, unknown> | Cell<T, unknown>): Record<string, string> {
   const { columnDef } = ctx.column
+  const isPinned = ctx.column.getIsPinned()
 
-  if (columnDef.size != ctx.getContext().table._getDefaultColumnDef().size || columnDef.enableResizing === true) {
+  if (isPinned || columnDef.size != ctx.getContext().table._getDefaultColumnDef().size || columnDef.enableResizing === true) {
     const w = `${ctx.column.getSize()}px`
     return { width: w, minWidth: w, maxWidth: w }
   }

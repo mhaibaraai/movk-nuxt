@@ -1,12 +1,12 @@
 <script setup lang="ts">
+import type { DataTableColumn } from '#movk/types/data-table'
+
 interface Payment {
   id: string
   amount: number
-  status: string
   email: string
   date: string
   children?: Payment[]
-  [k: string]: unknown
 }
 
 const { treeData } = useTableExamples()
@@ -16,12 +16,12 @@ const rowSelectionKeys = ref<string[]>([])
 const expandedKeys = ref(['4600'])
 
 const columns = computed(() => [
-  { type: 'selection' as const, mode: 'multiple' as const, size: 40, strategy: strategy.value },
-  { type: 'expand' as const },
+  { type: 'selection', mode: 'multiple', size: 40, strategy: strategy.value },
+  { type: 'expand', buttonProps: ({ isExpanded }) => ({ icon: isExpanded ? 'i-lucide:folder-open' : 'i-lucide:folder' }) },
   { accessorKey: 'date', header: '日期' },
   { accessorKey: 'email', header: '邮箱' },
-  { accessorKey: 'amount', header: '金额', align: 'right' as const }
-])
+  { accessorKey: 'amount', header: '金额', align: 'right' }
+] as DataTableColumn<Payment>[])
 
 const derived = useTreeRowSelection<Payment>(
   () => treeData as Payment[],

@@ -42,7 +42,7 @@ interface Node<T> {
  * 算法为一次 DFS：构建阶段后序归并 leafTotal/leafSelected，访问阶段前序
  * 收集 selected/leaves/parents/halfSelected/strictlyChecked，整体 O(n)。
  */
-export function computeTreeRowSelection<T extends Record<string, unknown>>(
+export function computeTreeRowSelection<T extends object>(
   rows: T[],
   keys: readonly (string | number)[],
   options: TreeRowSelectionOptions = {}
@@ -58,9 +58,11 @@ export function computeTreeRowSelection<T extends Record<string, unknown>>(
   const halfSelected: T[] = []
   const strictlyChecked: T[] = []
 
+  const readKey = (row: T, key: string): unknown => (row as Record<string, unknown>)[key]
+
   if (!childrenKey) {
     for (const row of rows) {
-      if (keySet.has(String(row[rowKey]))) {
+      if (keySet.has(String(readKey(row, rowKey)))) {
         selected.push(row)
         leaves.push(row)
         strictlyChecked.push(row)
@@ -72,7 +74,7 @@ export function computeTreeRowSelection<T extends Record<string, unknown>>(
   const build = (items: T[], parent: Node<T> | null): Node<T>[] => {
     const list: Node<T>[] = []
     for (const row of items) {
-      const id = String(row[rowKey])
+      const id = String(readKey(row, rowKey))
       const selfSelected = keySet.has(id)
       const node: Node<T> = {
         row,
@@ -83,7 +85,7 @@ export function computeTreeRowSelection<T extends Record<string, unknown>>(
         leafTotal: 0,
         leafSelected: 0
       }
-      const childArr = row[childrenKey]
+      const childArr = readKey(row, childrenKey)
       if (Array.isArray(childArr) && childArr.length > 0) {
         node.children = build(childArr as T[], node)
         for (const c of node.children) {
