@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import type { OmitByKey } from '@movk/core'
 import type { ModalProps, ButtonProps, IconProps } from '@nuxt/ui'
-import { computed, useAttrs } from 'vue'
 import type { SemanticColor } from '../types'
+import { computed, useAttrs } from 'vue'
 import { UModal, UButton, UIcon } from '#components'
 
 type MessageBoxMode = 'alert' | 'confirm'
@@ -73,6 +73,8 @@ const props = withDefaults(defineProps<MessageBoxProps>(), {
   cancelLabel: '取消'
 })
 
+const open = defineModel<boolean>('open')
+
 const emits = defineEmits<{
   /**
    * 模态框关闭时触发。
@@ -128,7 +130,7 @@ const resolvedUI = computed(() => ({
 </script>
 
 <template>
-  <UModal :dismissible="props.dismissible" v-bind="attrs" :ui="resolvedUI">
+  <UModal v-model:open="open" :dismissible="props.dismissible" v-bind="attrs" :ui="resolvedUI" @update:open="(val) => { if (!val) emits('close', false) }">
     <template #title>
       <UIcon :name="resolvedIcon" :class="resolvedIconColor" class="size-5 shrink-0" />
       <span>{{ props.title }}</span>
