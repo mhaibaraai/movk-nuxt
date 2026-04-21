@@ -50,6 +50,9 @@ function handleReset() {
         :global-meta="{ size: 'xs', required: false }"
         :cols="3"
         :loading="searchLoading"
+        :validate-on="[
+          'blur'
+        ]"
         @search="handleSearch"
         @reset="handleReset"
       />

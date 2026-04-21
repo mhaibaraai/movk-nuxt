@@ -3,12 +3,12 @@ import type { StarRatingProps } from '#movk/components/StarRating.vue'
 
 defineProps<Pick<StarRatingProps, 'modelValue' | 'max' | 'disabled'>>()
 
-const emit = defineEmits<{
+const emits = defineEmits<{
   'update:modelValue': [value: number]
 }>()
 
 function handleChange(value: number) {
-  emit('update:modelValue', value)
+  emits('update:modelValue', value)
 }
 </script>
 

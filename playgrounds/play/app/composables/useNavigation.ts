@@ -143,7 +143,9 @@ const components: NavigationMenuItem[] = [
       { label: 'SlideVerify', to: '/components/SlideVerify' },
       { label: 'ThemePicker', to: '/components/ThemePicker' },
       { label: 'WithFloatingLabel', to: '/components/WithFloatingLabel' },
-      { label: 'AsPhoneNumberInput', to: '/components/AsPhoneNumberInput' }
+      { label: 'AsPhoneNumberInput', to: '/components/AsPhoneNumberInput' },
+      { label: 'MessageBox', to: '/components/MessageBox' },
+      { label: 'Popconfirm', to: '/components/Popconfirm' }
     ]
   }
 ]
