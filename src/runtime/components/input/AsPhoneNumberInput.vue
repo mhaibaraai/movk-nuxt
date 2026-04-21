@@ -20,7 +20,7 @@ export interface AsPhoneNumberInputProps<T extends InputValue = InputValue> exte
 const props = withDefaults(defineProps<AsPhoneNumberInputProps<T>>(), {
   mask: '(###) ###-####'
 })
-const emit = defineEmits<InputEmits<T>>()
+const emits = defineEmits<InputEmits<T>>()
 const slots = defineSlots<OmitByKey<InputSlots, 'leading'>>()
 
 defineOptions({ inheritAttrs: false })
@@ -39,8 +39,8 @@ const modelValue = defineModel<T>()
       ? { base: 'ps-(--dial-code-length)', leading: 'pointer-events-none text-muted' }
       : {}"
     v-bind="$attrs"
-    @blur="emit('blur', $event)"
-    @change="emit('change', $event)"
+    @blur="emits('blur', $event)"
+    @change="emits('change', $event)"
   >
     <template v-for="(_, slotName) in slots" :key="slotName" #[slotName]="slotProps">
       <slot :name="slotName" v-bind="slotProps ?? {}" />

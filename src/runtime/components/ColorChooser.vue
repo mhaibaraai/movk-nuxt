@@ -11,7 +11,7 @@ export interface ColorChooserProps<P extends 'click' | 'hover' = 'click'> extend
 }
 
 const props = defineProps<ColorChooserProps<P>>()
-const emit = defineEmits<PopoverEmits>()
+const emits = defineEmits<PopoverEmits>()
 
 defineOptions({ inheritAttrs: false })
 
@@ -27,7 +27,7 @@ const chipStyle = computed(() => ({
 </script>
 
 <template>
-  <UPopover v-bind="props.popoverProps" @close:prevent="emit('close:prevent')" @update:open="emit('update:open', $event)">
+  <UPopover v-bind="props.popoverProps" @close:prevent="emits('close:prevent')" @update:open="emits('update:open', $event)">
     <template #default="defaultSlotProps">
       <slot v-bind="defaultSlotProps">
         <UButton

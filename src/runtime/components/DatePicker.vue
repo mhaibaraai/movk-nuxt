@@ -34,7 +34,7 @@ const {
   placeholder = '选择日期'
 } = defineProps<DatePickerProps<R, M, P>>()
 
-const emit = defineEmits<PopoverEmits & CalendarEmits<R, M>>()
+const emits = defineEmits<PopoverEmits & CalendarEmits<R, M>>()
 
 defineOptions({ inheritAttrs: false })
 
@@ -84,7 +84,7 @@ const formattedDate = computed<string>(() => {
 </script>
 
 <template>
-  <UPopover v-bind="popoverProps" @close:prevent="emit('close:prevent')" @update:open="emit('update:open', $event)">
+  <UPopover v-bind="popoverProps" @close:prevent="emits('close:prevent')" @update:open="emits('update:open', $event)">
     <template #default="defaultSlotProps">
       <slot v-bind="defaultSlotProps">
         <UButton
@@ -115,9 +115,9 @@ const formattedDate = computed<string>(() => {
         v-model="modelValue"
         class="p-2"
         v-bind="$attrs"
-        @update:placeholder="(e: any) => emit('update:placeholder', e)"
-        @update:start-value="emit('update:startValue', $event)"
-        @update:valid-model-value="emit('update:validModelValue', $event)"
+        @update:placeholder="(e: any) => emits('update:placeholder', e)"
+        @update:start-value="emits('update:startValue', $event)"
+        @update:valid-model-value="emits('update:validModelValue', $event)"
       >
         <template v-if="$slots.day" #day="day">
           <slot name="day" v-bind="day" />

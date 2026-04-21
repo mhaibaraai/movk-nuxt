@@ -92,7 +92,7 @@ const props = withDefaults(defineProps<StarRatingProps>(), {
   allowHalf: false,
   clearable: false
 })
-const emit = defineEmits<StarRatingEmits>()
+const emits = defineEmits<StarRatingEmits>()
 
 defineOptions({ inheritAttrs: false })
 
@@ -120,13 +120,13 @@ function calculateHalfStarValue(index: number, event: MouseEvent): number {
  */
 function updateValue(newValue: number) {
   if (props.clearable && newValue === props.modelValue) {
-    emit('update:modelValue', 0)
-    emit('change', 0)
+    emits('update:modelValue', 0)
+    emits('change', 0)
     return
   }
 
-  emit('update:modelValue', newValue)
-  emit('change', newValue)
+  emits('update:modelValue', newValue)
+  emits('change', newValue)
 }
 
 function handleClick(index: number, event?: MouseEvent) {
@@ -141,7 +141,7 @@ function handleMouseEnter(index: number, event?: MouseEvent) {
 
   const hoverValue = calculateHalfStarValue(index, event)
   hoveredStar.value = hoverValue - 1
-  emit('hover', hoverValue)
+  emits('hover', hoverValue)
 }
 
 function handleMouseMove(index: number, event: MouseEvent) {
@@ -152,14 +152,14 @@ function handleMouseMove(index: number, event: MouseEvent) {
 
   if (currentHover !== hoverValue) {
     hoveredStar.value = hoverValue - 1
-    emit('hover', hoverValue)
+    emits('hover', hoverValue)
   }
 }
 
 function handleMouseLeave() {
   if (!isInteractive.value) return
   hoveredStar.value = null
-  emit('hover', null)
+  emits('hover', null)
 }
 
 /**

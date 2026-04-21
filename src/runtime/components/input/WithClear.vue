@@ -14,7 +14,7 @@ export type WithClearEmits<T extends InputValue = InputValue> = InputEmits<T> & 
 }
 
 const props = defineProps<WithClearProps<T>>()
-const emit = defineEmits<WithClearEmits<T>>()
+const emits = defineEmits<WithClearEmits<T>>()
 const slots = defineSlots<OmitByKey<InputSlots, 'trailing'>>()
 
 defineOptions({ inheritAttrs: false })
@@ -24,7 +24,7 @@ const modelValue = defineModel<InputProps<T>['modelValue']>()
 
 function handleClear() {
   modelValue.value = undefined
-  emit('clear')
+  emits('clear')
 }
 </script>
 
@@ -33,8 +33,8 @@ function handleClear() {
     v-model="modelValue"
     :ui="{ trailing: 'pe-1' }"
     v-bind="$attrs"
-    @blur="emit('blur', $event)"
-    @change="emit('change', $event)"
+    @blur="emits('blur', $event)"
+    @change="emits('change', $event)"
   >
     <template v-for="(_, slotName) in slots" :key="slotName" #[slotName]="slotProps">
       <slot :name="slotName" v-bind="slotProps ?? {}" />

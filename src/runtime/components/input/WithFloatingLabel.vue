@@ -19,7 +19,7 @@ export type WithFloatingLabelEmits<T extends InputValue = InputValue> = InputEmi
 }
 
 const props = defineProps<WithFloatingLabelProps<T>>()
-const emit = defineEmits<WithFloatingLabelEmits<T>>()
+const emits = defineEmits<WithFloatingLabelEmits<T>>()
 const slots = defineSlots<OmitByKey<InputSlots, 'default' | 'trailing'>>()
 
 defineOptions({ inheritAttrs: false })
@@ -67,7 +67,7 @@ const labelSizeClass = computed(() => {
 
 function handleClear() {
   modelValue.value = undefined
-  emit('clear')
+  emits('clear')
 }
 </script>
 
@@ -77,8 +77,8 @@ function handleClear() {
     :placeholder="props.placeholder ?? ''"
     :ui="{ base: 'peer', trailing: 'pe-1' }"
     v-bind="$attrs"
-    @blur="emit('blur', $event)"
-    @change="emit('change', $event)"
+    @blur="emits('blur', $event)"
+    @change="emits('change', $event)"
   >
     <template v-for="(_, slotName) in slots" :key="slotName" #[slotName]="slotProps">
       <slot :name="slotName" v-bind="slotProps ?? {}" />

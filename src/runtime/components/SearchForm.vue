@@ -1,12 +1,12 @@
 <script setup lang="ts" generic="S extends z.ZodObject, T extends boolean = true, N extends boolean = false">
-import type { ButtonProps, FormProps, InferInput } from '@nuxt/ui'
+import type { ButtonProps, FormInputEvents, FormProps, InferInput } from '@nuxt/ui'
 import type { z } from 'zod'
 import type { ZodAutoFormFieldMeta } from '../types/zod'
 import type { AutoFormControls, DynamicFormSlots } from '../types/auto-form'
 import { UButton, UCollapsible, UForm } from '#components'
 import type { Ref } from 'vue'
 import { computed, ref, unref, useTemplateRef, watch } from 'vue'
-import { isFunction } from '@movk/core'
+import { isFunction, type OmitByKey } from '@movk/core'
 import { useAutoFormProvider } from '../auto-form/provider'
 import { extractPureSchema, introspectSchema } from '../auto-form/schema-introspector'
 import { useAutoForm } from '../composables/useAutoForm'
@@ -14,11 +14,15 @@ import AutoFormRendererField from './auto-form-renderer/AutoFormRendererField.vu
 import { useAppConfig } from '#app'
 import { resolveGridClasses, resolveMaxCols } from '../constants/grid-cols'
 
-export interface SearchFormProps<S extends z.ZodObject, T extends boolean = true, N extends boolean = false> extends FormProps<S, T, N> {
+export interface SearchFormProps<S extends z.ZodObject, T extends boolean = true, N extends boolean = false> extends /** @vue-ignore */ OmitByKey<FormProps<S, T, N>, 'schema' | 'state' | 'validateOn'> {
   /**
    * Zod 对象 schema，定义搜索字段
    */
   schema: S
+  /**
+   * 搜索表单的状态对象。
+   */
+  state?: N extends false ? Partial<InferInput<S>> : never
   /**
    * 网格列数
    * @defaultValue 3
@@ -95,6 +99,11 @@ export interface SearchFormProps<S extends z.ZodObject, T extends boolean = true
    * @defaultValue 'gap-4'
    */
   gap?: string
+  /**
+   * 表单验证时机，详见 UForm 的 validateOn 属性
+   * @defaultValue []
+   */
+  validateOn?: FormInputEvents[]
 }
 
 export interface SearchFormActionSlots {
@@ -114,85 +123,78 @@ type SearchFormStateType = Partial<InferInput<S>>
 
 type SearchFormSlotTypes = SearchFormActionSlots & DynamicFormSlots<SearchFormStateType>
 
-const {
-  schema,
-  controls,
-  globalMeta,
-  cols = 3,
-  visibleRows = 1,
-  icon = 'i-lucide-chevron-down',
-  expandText = '展开',
-  collapseText = '收起',
-  defaultExpanded = false,
-  gap = 'gap-4',
-  searchText = '搜索',
-  resetText = '重置',
-  searchButtonProps,
-  resetButtonProps,
-  showSearchButton = true,
-  showResetButton = true,
-  loading = false,
-  validateOn = [],
-  state: _state,
-  ...restProps
-} = defineProps<SearchFormProps<S, T, N>>()
+const props = withDefaults(defineProps<SearchFormProps<S, T, N>>(), {
+  cols: 3,
+  visibleRows: 1,
+  icon: 'i-lucide-chevron-down',
+  expandText: '展开',
+  collapseText: '收起',
+  defaultExpanded: false,
+  gap: 'gap-4',
+  searchText: '搜索',
+  resetText: '重置',
+  showSearchButton: true,
+  showResetButton: true,
+  loading: false,
+  validateOn: () => []
+})
 
-const emit = defineEmits<{
+const emits = defineEmits<{
   search: [value: SearchFormStateType]
   reset: []
   expand: [expanded: boolean]
 }>()
 
 const modelValue = defineModel<SearchFormStateType>()
-const _slots = defineSlots<SearchFormSlotTypes>()
+const slots = defineSlots<SearchFormSlotTypes>()
 defineOptions({ inheritAttrs: false })
 
-const state = ref(modelValue.value ?? _state ?? {}) as Ref<SearchFormStateType>
-const initialState = { ...(modelValue.value ?? _state ?? {}) } as SearchFormStateType
+const stateModel = ref(modelValue.value ?? props.state ?? {}) as Ref<SearchFormStateType>
+const initialState = { ...(modelValue.value ?? props.state ?? {}) } as SearchFormStateType
 
-watch(() => state.value, (val) => {
+watch(() => stateModel.value, (val) => {
   if (val !== modelValue.value) {
     modelValue.value = val
   }
 }, { deep: true })
 
 watch(() => modelValue.value, (val) => {
-  if (val !== undefined && val !== state.value) {
-    state.value = (val ?? {}) as SearchFormStateType
+  if (val !== undefined && val !== stateModel.value) {
+    stateModel.value = (val ?? {}) as SearchFormStateType
   }
 })
 
 const appConfig = useAppConfig()
 const formRef = useTemplateRef('formRef')
-const expanded = ref(defaultExpanded)
+const expanded = ref(props.defaultExpanded)
 
 const { DEFAULT_CONTROLS } = useAutoForm()
-useAutoFormProvider(state, _slots)
+useAutoFormProvider(stateModel, slots)
 
 const resolvedButtonSize = computed(() => {
-  const size = globalMeta?.size
+  const size = props.globalMeta?.size
   if (size === undefined || isFunction(size)) return undefined
   return unref(size)
 })
 
-const showActionsCell = computed(() => showSearchButton || showResetButton || !!_slots.actions || !!_slots.extraActions)
+const showActionsCell = computed(() => props.showSearchButton || props.showResetButton || !!slots.actions || !!slots.extraActions)
 
-const pureSchema = computed(() => schema ? extractPureSchema(schema) as S : schema)
+const pureSchema = computed(() => props.schema ? extractPureSchema(props.schema) as S : props.schema)
 
 const controlsMapping = computed(() => ({
   ...DEFAULT_CONTROLS,
-  ...controls
+  ...props.controls
 }))
 
 const fields = computed(() => {
-  if (!schema) return []
-  return introspectSchema(schema, controlsMapping.value, '', globalMeta)
+  if (!props.schema) return []
+  return introspectSchema(props.schema, controlsMapping.value, '', props.globalMeta)
 })
 
-const gridClass = computed(() => resolveGridClasses(cols, gap))
+const gridClass = computed(() => resolveGridClasses(props.cols, props.gap))
 
 const visibleCount = computed(() => {
-  const base = resolveMaxCols(cols) * visibleRows
+  const base = resolveMaxCols(props.cols) * props.visibleRows
   return Math.max(0, showActionsCell.value ? base - 1 : base)
 })
 
@@ -202,11 +204,11 @@ const needsCollapse = computed(() => collapsedFields.value.length > 0)
 
 function toggle() {
   expanded.value = !expanded.value
-  emit('expand', expanded.value)
+  emits('expand', expanded.value)
 }
 
 function handleSearch() {
-  emit('search', { ...state.value })
+  emits('search', { ...stateModel.value })
 }
 
 function triggerSearch() {
@@ -214,14 +216,14 @@ function triggerSearch() {
 }
 
 function clear() {
-  state.value = {} as SearchFormStateType
+  stateModel.value = {} as SearchFormStateType
   formRef.value?.clear()
 }
 
 function reset() {
-  state.value = { ...initialState }
+  stateModel.value = { ...initialState }
   formRef.value?.clear()
-  emit('reset')
+  emits('reset')
 }
 
 defineExpose({
@@ -236,10 +238,10 @@ defineExpose({
 <template>
   <UForm
     ref="formRef"
-    :state="state"
+    :state="stateModel"
     :schema="pureSchema"
-    :validate-on="validateOn"
-    v-bind="restProps"
+    :validate-on="props.validateOn"
+    v-bind="$attrs"
     @submit="handleSearch"
   >
     <template #default="{ errors, loading: formLoading }">
@@ -250,8 +252,8 @@ defineExpose({
               v-for="field in visibleFields"
               :key="field.path"
               :field="field"
-              :schema="schema"
-              :extra-props="{ errors, loading: formLoading }"
+              :schema="props.schema"
+              :extra-props="{ errors, loading: formLoading, state: stateModel }"
             />
 
             <slot
@@ -314,8 +316,8 @@ defineExpose({
                 v-for="field in collapsedFields"
                 :key="field.path"
                 :field="field"
-                :schema="schema"
-                :extra-props="{ errors, loading: formLoading }"
+                :schema="props.schema"
+                :extra-props="{ errors, loading: formLoading, state: stateModel }"
               />
             </div>
           </template>

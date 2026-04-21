@@ -17,7 +17,7 @@ export type WithCopyEmits<T extends InputValue = InputValue> = InputEmits<T> & {
 }
 
 const props = defineProps<WithCopyProps<T>>()
-const emit = defineEmits<WithCopyEmits<T>>()
+const emits = defineEmits<WithCopyEmits<T>>()
 const slots = defineSlots<OmitByKey<InputSlots, 'trailing'>>()
 
 defineOptions({ inheritAttrs: false })
@@ -31,7 +31,7 @@ function handleCopy() {
   if (modelValue.value) {
     const stringValue = String(modelValue.value)
     copy(stringValue)
-    emit('copy', stringValue)
+    emits('copy', stringValue)
   }
 }
 </script>
@@ -41,8 +41,8 @@ function handleCopy() {
     v-model="modelValue"
     :ui="{ trailing: 'pe-1' }"
     v-bind="$attrs"
-    @blur="emit('blur', $event)"
-    @change="emit('change', $event)"
+    @blur="emits('blur', $event)"
+    @change="emits('change', $event)"
   >
     <template v-for="(_, slotName) in slots" :key="slotName" #[slotName]="slotProps">
       <slot :name="slotName" v-bind="slotProps ?? {}" />

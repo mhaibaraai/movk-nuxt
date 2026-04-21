@@ -11,7 +11,7 @@ export interface WithPasswordToggleProps<T extends InputValue = InputValue> exte
 }
 
 const props = defineProps<WithPasswordToggleProps<T>>()
-const emit = defineEmits<InputEmits<T>>()
+const emits = defineEmits<InputEmits<T>>()
 const slots = defineSlots<OmitByKey<InputSlots, 'trailing'>>()
 
 defineOptions({ inheritAttrs: false })
@@ -28,8 +28,8 @@ const [value, toggle] = useToggle(false)
     :type="value ? 'text' : 'password'"
     :ui="{ trailing: 'pe-1' }"
     v-bind="$attrs"
-    @blur="emit('blur', $event)"
-    @change="emit('change', $event)"
+    @blur="emits('blur', $event)"
+    @change="emits('change', $event)"
   >
     <template v-for="(_, slotName) in slots" :key="slotName" #[slotName]="slotProps">
       <slot :name="slotName" v-bind="slotProps ?? {}" />

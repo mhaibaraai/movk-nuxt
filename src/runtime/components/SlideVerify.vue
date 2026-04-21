@@ -83,7 +83,7 @@ const props = withDefaults(defineProps<SlideVerifyProps>(), {
   threshold: 0.9
 })
 
-const emit = defineEmits<SlideVerifyEmits>()
+const emits = defineEmits<SlideVerifyEmits>()
 
 const isVerified = defineModel<boolean>({ default: false })
 const trackRef = useTemplateRef<HTMLElement>('track')
@@ -106,7 +106,7 @@ const springTransition = { type: 'spring' as const, stiffness: 400, damping: 30 
 function handleDragStart() {
   if (!canInteract.value) return
   isDragging.value = true
-  emit('dragStart')
+  emits('dragStart')
 }
 
 function handleDrag(_event: PointerEvent, info: { offset: { x: number } }) {
@@ -121,11 +121,11 @@ function handleDragEnd() {
   const success = progress.value >= props.threshold
   if (success) {
     isVerified.value = true
-    emit('success')
+    emits('success')
   } else {
     dragX.value = 0
   }
-  emit('dragEnd', success)
+  emits('dragEnd', success)
 }
 
 function reset() {

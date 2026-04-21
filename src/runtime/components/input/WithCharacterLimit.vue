@@ -18,7 +18,7 @@ export interface WithCharacterLimitProps<T extends InputValue = InputValue> exte
 const props = withDefaults(defineProps<WithCharacterLimitProps<T>>(), {
   maxLength: 50
 })
-const emit = defineEmits<InputEmits<T>>()
+const emits = defineEmits<InputEmits<T>>()
 const slots = defineSlots<OmitByKey<InputSlots, 'trailing'>>()
 
 defineOptions({ inheritAttrs: false })
@@ -37,8 +37,8 @@ const currentLength = computed(() => {
     aria-describedby="character-count"
     :ui="{ trailing: 'pointer-events-none' }"
     v-bind="$attrs"
-    @blur="emit('blur', $event)"
-    @change="emit('change', $event)"
+    @blur="emits('blur', $event)"
+    @change="emits('change', $event)"
   >
     <template v-for="(_, slotName) in slots" :key="slotName" #[slotName]="slotProps">
       <slot :name="slotName" v-bind="slotProps ?? {}" />
