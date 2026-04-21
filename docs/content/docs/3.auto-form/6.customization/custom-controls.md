@@ -104,7 +104,7 @@ const model = defineModel()
 
 // 或传统写法
 const props = defineProps(['modelValue'])
-const emit = defineEmits(['update:modelValue'])
+const emits = defineEmits(['update:modelValue'])
 </script>
 ```
 
