@@ -16,7 +16,7 @@ async function simulateAsync() {
     <div class="grid gap-8">
       <UFormField label="基础用法（同步）">
         <div class="flex items-center gap-4">
-          <MPopconfirm :on-confirm="() => { syncResult = '已确认' }" @cancel="syncResult = '已取消'">
+          <MPopconfirm @confirm="() => { syncResult = '已确认' }" @cancel="syncResult = '已取消'">
             <UButton color="neutral" variant="outline" label="删除" icon="i-lucide-trash" />
           </MPopconfirm>
           <span v-if="syncResult" class="text-sm text-muted">{{ syncResult }}</span>
@@ -25,11 +25,7 @@ async function simulateAsync() {
 
       <UFormField label="异步确认（loading 1.5s）">
         <div class="flex items-center gap-4">
-          <MPopconfirm
-            title="确认提交?"
-            description="提交后无法修改，请确认操作。"
-            :on-confirm="simulateAsync"
-          >
+          <MPopconfirm type="primary" title="确认提交?" description="提交后无法修改，请确认操作。" :on-confirm="simulateAsync">
             <UButton color="primary" label="提交" icon="i-lucide-send" />
           </MPopconfirm>
           <span v-if="asyncResult" class="text-sm text-success">{{ asyncResult }}</span>
@@ -43,7 +39,7 @@ async function simulateAsync() {
           icon="i-lucide-trash-2"
           :confirm-button="{ color: 'error', label: '确认删除' }"
           :cancel-button="{ label: '取消操作' }"
-          :on-confirm="() => { customResult = '已删除' }"
+          @confirm="() => { customResult = '已删除' }"
         >
           <UButton color="error" variant="soft" label="危险操作" icon="i-lucide-alert-triangle" />
         </MPopconfirm>
@@ -51,23 +47,14 @@ async function simulateAsync() {
       </UFormField>
 
       <UFormField label="禁用取消按钮">
-        <MPopconfirm
-          title="强制确认"
-          description="此操作必须确认，无法取消。"
-          :cancel-button="false"
-          :on-confirm="() => {}"
-        >
+        <MPopconfirm title="强制确认" description="此操作必须确认，无法取消。" :cancel-button="false">
           <UButton color="warning" variant="soft" label="强制操作" />
         </MPopconfirm>
       </UFormField>
 
       <UFormField label="自定义弹出方向（top）">
         <div class="flex items-center gap-4">
-          <MPopconfirm
-            :content="{ side: 'top' }"
-            title="从上方弹出"
-            :on-confirm="() => { sideResult = '从上方确认' }"
-          >
+          <MPopconfirm :content="{ side: 'top' }" title="从上方弹出" @confirm="() => { sideResult = '从上方确认' }">
             <UButton color="neutral" variant="outline" label="向上弹出" icon="i-lucide-arrow-up" />
           </MPopconfirm>
           <span v-if="sideResult" class="text-sm text-muted">{{ sideResult }}</span>

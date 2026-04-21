@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import type { OmitByKey } from '@movk/core'
-import type { ModalProps, ButtonProps } from '@nuxt/ui'
+import type { ModalProps, ButtonProps, IconProps } from '@nuxt/ui'
 import { computed, useAttrs } from 'vue'
+import type { SemanticColor } from '../types'
 import { UModal, UButton, UIcon } from '#components'
 
-type MessageBoxType = 'primary' | 'info' | 'success' | 'warning' | 'error'
 type MessageBoxMode = 'alert' | 'confirm'
 
 export interface MessageBoxProps extends /** @vue-ignore */ OmitByKey<ModalProps, 'title' | 'open' | 'defaultOpen' | 'dismissible'> {
@@ -18,7 +18,13 @@ export interface MessageBoxProps extends /** @vue-ignore */ OmitByKey<ModalProps
    * 会影响默认图标与确认按钮颜色。
    * @defaultValue 'primary'
    */
-  type?: MessageBoxType
+  type?: SemanticColor
+  /**
+   * 标题前展示的图标名称。
+   * @IconifyIcon
+   * @defaultValue 'i-lucide-circle-question-mark'
+   */
+  icon?: IconProps['name']
   /**
    * 控制消息框的操作模式。
    * `alert` 仅显示确认按钮，`confirm` 显示取消与确认按钮。
@@ -85,28 +91,30 @@ const iconMap = {
   info: 'i-lucide-info',
   success: 'i-lucide-circle-check',
   warning: 'i-lucide-triangle-alert',
-  error: 'i-lucide-circle-x'
-} satisfies Record<MessageBoxType, string>
+  error: 'i-lucide-circle-x',
+  neutral: 'i-lucide-circle-question-mark'
+} satisfies Record<SemanticColor, string>
 
 const iconColorMap = {
   primary: 'text-primary',
   info: 'text-info',
   success: 'text-success',
   warning: 'text-warning',
-  error: 'text-error'
-} satisfies Record<MessageBoxType, string>
+  error: 'text-error',
+  neutral: 'text-muted'
+} satisfies Record<SemanticColor, string>
 
-const resolvedIcon = computed(() => iconMap[props.type])
+const resolvedIcon = computed(() => props.icon ?? iconMap[props.type])
 const resolvedIconColor = computed(() => iconColorMap[props.type])
 
-const cancelButtonAttrs = computed(() => ({
+const cancelButtonAttrs = computed<ButtonProps>(() => ({
   color: 'neutral' as const,
   variant: 'outline' as const,
   label: props.cancelLabel,
   ...(props.cancelButton ?? {})
 }))
 
-const confirmButtonAttrs = computed(() => ({
+const confirmButtonAttrs = computed<ButtonProps>(() => ({
   color: props.type,
   label: props.mode === 'alert' ? props.alertConfirmLabel : props.confirmLabel,
   ...(props.confirmButton ?? {})

@@ -1,10 +1,10 @@
 <script setup lang="ts" generic="M extends 'click' | 'hover' = 'click'">
-import { UPopover, UButton, UIcon } from '#components'
 import type { VNode } from '#imports'
-import type { OmitByKey } from '@movk/core'
+import type { ClassNameValue, SemanticColor } from '../types'
 import type { PopoverProps, ButtonProps, LinkPropsKeys, IconProps } from '@nuxt/ui'
+import { isObject, type OmitByKey } from '@movk/core'
+import { UPopover, UButton, UIcon } from '#components'
 import { computed, ref, useAttrs } from 'vue'
-import type { ClassNameValue } from '../types'
 
 export interface PopconfirmProps<M extends 'click' | 'hover' = 'click'> extends /** @vue-ignore */ OmitByKey<PopoverProps<M>, 'open' | 'defaultOpen' | 'dismissible' | 'arrow' | 'ui'> {
   /**
@@ -18,6 +18,11 @@ export interface PopconfirmProps<M extends 'click' | 'hover' = 'click'> extends 
    * @defaultValue '请确认是否执行此操作?'
    */
   description?: string
+  /**
+   * 预设的语义化颜色主题，会影响图标。
+   * @defaultValue 'neutral'
+   */
+  type?: SemanticColor
   /**
    * 标题前展示的图标名称。
    * @IconifyIcon
@@ -37,8 +42,9 @@ export interface PopconfirmProps<M extends 'click' | 'hover' = 'click'> extends 
   /**
    * 透传给取消按钮的属性。
    * 传入 `false` 可完全隐藏取消按钮。
+   * @defaultValue true
    */
-  cancelButton?: ButtonProps | false
+  cancelButton?: ButtonProps | boolean
   /**
    * 禁用触发器并阻止弹层打开。
    */
@@ -49,10 +55,11 @@ export interface PopconfirmProps<M extends 'click' | 'hover' = 'click'> extends 
    */
   dismissible?: boolean
   /**
-   * 用户点击确认按钮时执行的同步或异步回调。
-   * 返回 Promise 时会自动显示 loading 并在完成后关闭弹层。
+   * 点击确认按钮时执行的回调。
+   * 支持返回 `Promise`，期间确认按钮自动进入 loading 状态。
+   * 回调成功完成后弹层自动关闭并触发 `confirm` 事件；抛错时保持弹层打开。
    */
-  onConfirm?: () => Promise<void> | void
+  onConfirm?: () => void | Promise<void>
   ui?: {
     header?: ClassNameValue
     title?: ClassNameValue
@@ -75,16 +82,20 @@ export interface PopconfirmSlots {
 const props = withDefaults(defineProps<PopconfirmProps>(), {
   title: '确认操作',
   description: '请确认是否执行此操作?',
+  type: 'neutral',
   icon: 'i-lucide-circle-question-mark',
   dismissible: false,
-  arrow: true
+  arrow: true,
+  cancelButton: true
 })
 
 const emits = defineEmits<{
-  /** 用户点击确认按钮且 onConfirm 回调成功执行后触发 */
+  /** 确认动作成功完成后触发。若 `onConfirm` 返回 Promise，则在其 resolve 后触发 */
   confirm: []
   /** 用户点击取消按钮时触发 */
   cancel: []
+  /** 确认回调抛出异常时触发，携带原始错误 */
+  error: [error: unknown]
 }>()
 
 const slots = defineSlots<PopconfirmSlots>()
@@ -92,27 +103,76 @@ const slots = defineSlots<PopconfirmSlots>()
 defineOptions({ inheritAttrs: false })
 
 const attrs = useAttrs()
+const openState = ref(false)
 const confirmLoading = ref(false)
 
-const cancelButtonAttrs = computed(() => {
-  const base = { color: 'neutral' as const, variant: 'outline' as const, size: 'xs' as const, label: '取消' }
-  if (!props.cancelButton) return base
-  return { ...base, ...props.cancelButton }
-})
+const iconMap = {
+  primary: 'i-lucide-bell',
+  info: 'i-lucide-info',
+  success: 'i-lucide-circle-check',
+  warning: 'i-lucide-triangle-alert',
+  error: 'i-lucide-circle-x',
+  neutral: 'i-lucide-circle-question-mark'
+} satisfies Record<SemanticColor, string>
 
-const confirmButtonAttrs = computed(() => ({
+const iconColorMap = {
+  primary: 'text-primary',
+  info: 'text-info',
+  success: 'text-success',
+  warning: 'text-warning',
+  error: 'text-error',
+  neutral: 'text-muted'
+} satisfies Record<SemanticColor, string>
+
+const resolvedIcon = computed(() => props.icon ?? iconMap[props.type])
+const resolvedIconColor = computed(() => iconColorMap[props.type])
+
+const cancelButtonAttrs = computed<ButtonProps>(() => ({
+  color: 'neutral' as const,
+  size: 'xs' as const,
+  label: '取消',
+  ...(isObject(props.cancelButton) ? props.cancelButton : {})
+}))
+
+const confirmButtonAttrs = computed<ButtonProps>(() => ({
   color: 'primary' as const,
   size: 'xs' as const,
   label: '确认',
   ...(props.confirmButton ?? {})
 }))
+
+function handleCancel(close: () => void) {
+  if (confirmLoading.value) return
+  emits('cancel')
+  close()
+}
+
+async function handleConfirm(close: () => void) {
+  if (confirmLoading.value) return
+  try {
+    const result = props.onConfirm?.()
+    if (result instanceof Promise) {
+      confirmLoading.value = true
+      await result
+    }
+    emits('confirm')
+    close()
+  }
+  catch (err) {
+    emits('error', err)
+  }
+  finally {
+    confirmLoading.value = false
+  }
+}
 </script>
 
 <template>
   <UPopover
+    v-bind="attrs"
+    v-model:open="openState"
     :dismissible="props.dismissible"
     :arrow="props.arrow"
-    v-bind="attrs"
     :ui="{
       content: `p-2 sm:px-4 flex flex-col gap-1.5 ${props.ui?.content ?? ''}`,
       arrow: props.ui?.arrow ?? ''
@@ -137,7 +197,7 @@ const confirmButtonAttrs = computed(() => ({
             :class="props.ui?.title ?? ''"
           >
             <slot name="title">
-              <UIcon :name="props.icon" class="size-4 shrink-0" />
+              <UIcon :name="resolvedIcon" :class="resolvedIconColor" class="size-4 shrink-0" />
               {{ props.title }}
             </slot>
           </span>
@@ -163,8 +223,16 @@ const confirmButtonAttrs = computed(() => ({
 
       <div data-slot="footer" class="flex items-center justify-end gap-1.5" :class="props.ui?.footer ?? ''">
         <slot name="footer" :close="close">
-          <UButton v-if="cancelButton !== false" v-bind="cancelButtonAttrs" :disabled="confirmLoading" />
-          <UButton v-bind="confirmButtonAttrs" :loading="confirmLoading" />
+          <UButton
+            v-if="props.cancelButton !== false"
+            v-bind="cancelButtonAttrs"
+            @click="handleCancel(close)"
+          />
+          <UButton
+            v-bind="confirmButtonAttrs"
+            :loading="confirmLoading"
+            @click="handleConfirm(close)"
+          />
         </slot>
       </div>
     </template>

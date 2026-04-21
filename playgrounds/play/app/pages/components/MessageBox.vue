@@ -1,11 +1,13 @@
 <script lang="ts" setup>
+import type { SemanticColor } from '#movk/types'
+
 const { alert, confirm } = useMessageBox()
 
 const alertResult = ref<string>('')
 const confirmResult = ref<string>('')
 const programmaticResult = ref<string>('')
 
-async function showAlert(type: 'primary' | 'info' | 'success' | 'warning' | 'error') {
+async function showAlert(type: SemanticColor) {
   await alert({
     type,
     title: `${type} 提示`,
@@ -22,6 +24,7 @@ async function showConfirm() {
   const confirmed = await confirm({
     type: 'warning',
     title: '确认删除',
+    icon: 'i-lucide-trash-2',
     description: '此操作将永久删除该记录，无法恢复，是否继续？'
   })
   confirmResult.value = confirmed ? '用户点击了确认' : '用户点击了取消'
@@ -42,13 +45,14 @@ async function showProgrammatic() {
   <Navbar />
   <Matrix title="消息框" description="`MMessageBox` 组件与 `useMessageBox()` 编程式用法。">
     <div class="grid gap-8">
-      <UFormField label="Alert 模式（五种 type）">
+      <UFormField label="Alert 模式（六种 type）">
         <div class="flex flex-wrap gap-2">
           <UButton color="primary" variant="soft" label="Primary" @click="showAlert('primary')" />
           <UButton color="info" variant="soft" label="Info" @click="showAlert('info')" />
           <UButton color="success" variant="soft" label="Success" @click="showAlert('success')" />
           <UButton color="warning" variant="soft" label="Warning" @click="showAlert('warning')" />
           <UButton color="error" variant="soft" label="Error" @click="showAlert('error')" />
+          <UButton color="neutral" variant="soft" label="Neutral" @click="showAlert('neutral')" />
         </div>
         <p v-if="alertResult" class="mt-2 text-sm text-muted">
           {{ alertResult }}
