@@ -1,43 +1,38 @@
 <script setup lang="ts">
-type MessageBoxType = 'primary' | 'info' | 'success' | 'warning' | 'error'
+import type { SemanticColor } from '#movk/types'
 
-const { alert } = useMessageBox()
-const lastClosed = ref('')
+const props = defineProps<{
+  type: SemanticColor
+  mode: 'alert' | 'confirm'
+}>()
 
-const types: Array<{ type: MessageBoxType, color: MessageBoxType, label: string }> = [
-  { type: 'primary', color: 'primary', label: 'Primary' },
-  { type: 'info', color: 'info', label: 'Info' },
-  { type: 'success', color: 'success', label: 'Success' },
-  { type: 'warning', color: 'warning', label: 'Warning' },
-  { type: 'error', color: 'error', label: 'Error' }
-]
+const { alert, confirm } = useMessageBox()
+const result = ref('')
 
-async function showType(type: MessageBoxType) {
-  await alert({
-    type,
-    title: `${type} 提示`,
-    description: `这是一条 ${type} 类型的消息提示。`
-  })
-
-  lastClosed.value = `${type} 示例已关闭`
+async function show() {
+  result.value = ''
+  if (props.mode === 'alert') {
+    await alert({
+      type: props.type,
+      title: `${props.type} 提示`,
+      description: `这是一条 ${props.type} 类型的 alert 消息。`
+    })
+    result.value = '已关闭'
+  }
+  else {
+    const ok = await confirm({
+      type: props.type,
+      title: `${props.type} 确认`,
+      description: `这是一条 ${props.type} 类型的 confirm 对话框，请选择操作。`
+    })
+    result.value = ok ? '已确认' : '已取消'
+  }
 }
 </script>
 
 <template>
-  <div class="space-y-3">
-    <div class="flex flex-wrap gap-2">
-      <UButton
-        v-for="item in types"
-        :key="item.type"
-        :color="item.color"
-        variant="soft"
-        :label="item.label"
-        @click="showType(item.type)"
-      />
-    </div>
-
-    <p v-if="lastClosed" class="text-sm text-muted">
-      {{ lastClosed }}
-    </p>
+  <div class="flex flex-wrap items-center gap-3">
+    <UButton :color="props.type" variant="soft" :label="`打开 ${props.type} ${props.mode}`" @click="show" />
+    <span v-if="result" class="text-sm text-muted">{{ result }}</span>
   </div>
 </template>
