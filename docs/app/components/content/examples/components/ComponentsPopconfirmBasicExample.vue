@@ -1,18 +1,15 @@
 <script setup lang="ts">
 const result = ref('')
-
-function handleConfirm() {
-  result.value = '已确认删除'
-}
-
-function handleCancel() {
-  result.value = '已取消操作'
-}
 </script>
 
 <template>
   <div class="flex flex-wrap items-center gap-3">
-    <MPopconfirm :on-confirm="handleConfirm" @cancel="handleCancel">
+    <MPopconfirm
+      title="确认删除？"
+      description="删除后数据将无法恢复。"
+      :on-confirm="() => { result = '已确认删除' }"
+      @cancel="result = '已取消'"
+    >
       <UButton color="neutral" variant="outline" label="删除记录" icon="i-lucide-trash" />
     </MPopconfirm>
 
