@@ -79,6 +79,15 @@ export interface PopconfirmSlots {
   footer?(props: { close: () => void }): VNode[]
 }
 
+export interface PopconfirmEmits {
+  /** 确认动作成功完成后触发。若 `onConfirm` 返回 Promise，则在其 resolve 后触发 */
+  confirm: []
+  /** 用户点击取消按钮时触发 */
+  cancel: []
+  /** 确认回调抛出异常时触发，携带原始错误 */
+  error: [error: unknown]
+}
+
 const props = withDefaults(defineProps<PopconfirmProps>(), {
   title: '确认操作',
   description: '请确认是否执行此操作?',
@@ -88,16 +97,7 @@ const props = withDefaults(defineProps<PopconfirmProps>(), {
   arrow: true,
   cancelButton: true
 })
-
-const emits = defineEmits<{
-  /** 确认动作成功完成后触发。若 `onConfirm` 返回 Promise，则在其 resolve 后触发 */
-  confirm: []
-  /** 用户点击取消按钮时触发 */
-  cancel: []
-  /** 确认回调抛出异常时触发，携带原始错误 */
-  error: [error: unknown]
-}>()
-
+const emits = defineEmits<PopconfirmEmits>()
 const slots = defineSlots<PopconfirmSlots>()
 
 defineOptions({ inheritAttrs: false })

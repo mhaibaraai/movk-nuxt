@@ -119,9 +119,23 @@ export interface SearchFormActionSlots {
   extraActions: (props: { expanded: boolean }) => any
 }
 
-type SearchFormStateType = Partial<InferInput<S>>
+export interface SearchFormEmits<S extends z.ZodObject> {
+  /**
+   * 搜索事件，参数为当前表单状态
+   */
+  search: [value: Partial<InferInput<S>>]
+  /**
+   * 重置事件，参数为空
+   */
+  reset: []
+  /**
+   * 展开/收起事件，参数为当前展开状态
+   */
+  expand: [expanded: boolean]
+}
 
-type SearchFormSlotTypes = SearchFormActionSlots & DynamicFormSlots<SearchFormStateType>
+type SearchFormSlotTypes = SearchFormActionSlots & DynamicFormSlots<Partial<InferInput<S>>>
+type SearchFormStateType = Partial<InferInput<S>>
 
 const props = withDefaults(defineProps<SearchFormProps<S, T, N>>(), {
   cols: 3,
@@ -138,14 +152,8 @@ const props = withDefaults(defineProps<SearchFormProps<S, T, N>>(), {
   loading: false,
   validateOn: () => []
 })
-
-const emits = defineEmits<{
-  search: [value: SearchFormStateType]
-  reset: []
-  expand: [expanded: boolean]
-}>()
-
 const modelValue = defineModel<SearchFormStateType>()
+const emits = defineEmits<SearchFormEmits<S>>()
 const slots = defineSlots<SearchFormSlotTypes>()
 defineOptions({ inheritAttrs: false })
 

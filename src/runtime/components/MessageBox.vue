@@ -63,6 +63,15 @@ export interface MessageBoxProps extends /** @vue-ignore */ OmitByKey<ModalProps
   cancelButton?: ButtonProps
 }
 
+export interface MessageBoxEmits {
+  /**
+   * 模态框关闭时触发。
+   * - `true`：用户点击了确认
+   * - `false`：用户点击了取消或通过其他方式关闭
+   */
+  close: [confirmed: boolean]
+}
+
 const props = withDefaults(defineProps<MessageBoxProps>(), {
   title: '提示',
   type: 'primary',
@@ -72,17 +81,8 @@ const props = withDefaults(defineProps<MessageBoxProps>(), {
   confirmLabel: '确认',
   cancelLabel: '取消'
 })
-
 const open = defineModel<boolean>('open')
-
-const emits = defineEmits<{
-  /**
-   * 模态框关闭时触发。
-   * - `true`：用户点击了确认
-   * - `false`：用户点击了取消或通过其他方式关闭
-   */
-  close: [confirmed: boolean]
-}>()
+const emits = defineEmits<MessageBoxEmits>()
 
 defineOptions({ inheritAttrs: false })
 
