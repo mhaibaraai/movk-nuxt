@@ -169,7 +169,19 @@ const actionsColumns: DataTableColumn<TableUser>[] = [
   {
     type: 'actions',
     minSize: 280,
+    dropdownProps: { arrow: true },
     actions: ({ row }) => [
+      {
+        key: 'delete',
+        buttonProps: { label: '删除', icon: 'i-lucide-trash-2', color: 'error' },
+        confirm: true,
+        confirmProps: { type: 'warning', description: `确定要删除 ${row.original.name} 吗？` },
+        disabled: row.getValue('status') === 'pending',
+        onClick: async (ctx) => {
+          await new Promise(r => setTimeout(r, 1000))
+          alert(`已删除：${ctx.row.name}`)
+        }
+      },
       {
         key: 'edit',
         buttonProps: { label: '编辑', icon: 'i-lucide-pencil', color: 'primary' },
@@ -201,7 +213,8 @@ const actionsColumns: DataTableColumn<TableUser>[] = [
       {
         key: 'delete',
         buttonProps: { label: '删除', icon: 'i-lucide-trash-2', color: 'error' },
-        popover: true,
+        confirm: true,
+        confirmProps: { type: 'error', description: `确定要删除 ${row.original.name} 吗？` },
         divider: true,
         onClick: async (ctx) => {
           await new Promise(r => setTimeout(r, 1000))
