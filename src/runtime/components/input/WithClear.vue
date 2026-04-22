@@ -9,7 +9,7 @@ export interface WithClearProps<T extends InputValue = InputValue> extends /** @
   buttonProps?: ButtonProps
 }
 
-export type WithClearEmits<T extends InputValue = InputValue> = InputEmits<T> & {
+export interface WithClearEmits<T extends InputValue = InputValue> extends InputEmits<T> {
   clear: []
 }
 
