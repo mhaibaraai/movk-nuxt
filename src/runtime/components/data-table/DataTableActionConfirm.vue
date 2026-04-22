@@ -55,7 +55,6 @@ const triggerDisabled = computed(() =>
     :icon="resolvedPopoverProps.icon"
     :cancel-button="resolvedPopoverProps.cancelButton"
     :confirm-button="resolvedPopoverProps.confirmButton"
-    :disabled="triggerDisabled"
     :on-confirm="() => action.onClick(ctx)"
   >
     <UButton
