@@ -8,11 +8,9 @@ import type {
   HeaderContext,
   VisibilityState
 } from '@tanstack/vue-table'
-import type { Component, VNode } from 'vue'
+import type { VNode } from 'vue'
 import type {
-  DataTableAction,
   DataTableActionsColumn,
-  DataTableActionButtonContext,
   DataTableCheckboxContext,
   DataTableColumn,
   DataTableDataColumn,
@@ -39,9 +37,8 @@ import { isDataColumn, isGroupColumn } from '../../types/data-table'
 import { DENSITY_PRESETS, SPECIAL_COLUMN_DEFAULTS } from '../../constants/data-table'
 import { resolveCallbackValue, resolveColumnFlag, resolvePresetSize, resolveTemplate } from '../../utils/data-table-utils'
 import DataTableCellTooltip from './DataTableCellTooltip.vue'
-import DataTableActionConfirm from './DataTableActionConfirm.vue'
-import DataTableActionButton from './DataTableActionButton.vue'
-import { UButton, UCheckbox, UDropdownMenu } from '#components'
+import DataTableActionsCell from './DataTableActionsCell.vue'
+import { UButton, UCheckbox } from '#components'
 
 interface HeaderAction<T> {
   id: string
@@ -567,110 +564,8 @@ function resolveActionsColumn<T>(
 ): ColumnDef<T, unknown> {
   return buildSpecialColumnDef(col, 'actions', ctx, {
     header: col.header ?? SPECIAL_COLUMN_DEFAULTS.actions.header!,
-    cell: (cellCtx: CellContext<T, unknown>) => {
-      const row = cellCtx.row.original
-      const index = cellCtx.row.index
-
-      const actionList: DataTableAction<T>[] = isFunction(col.actions) ? col.actions(cellCtx) : col.actions
-
-      const buildActionCtx = (action: DataTableAction<T>): DataTableActionButtonContext<T> => ({
-        cellContext: cellCtx,
-        row,
-        index,
-        action
-      })
-
-      const visible = actionList.filter((a) => {
-        return resolveCallbackValue(a.visibility ?? true, buildActionCtx(a))
-      })
-
-      if (visible.length === 0) return null
-
-      const maxInline = col.maxInline ?? ctx.options.actionsMaxInline ?? 3
-      const shouldOverflow = visible.length > maxInline
-      const inline = shouldOverflow ? visible.slice(0, maxInline - 1) : visible
-      const overflow = shouldOverflow ? visible.slice(maxInline - 1) : []
-
-      const wrapperClass = isFunction(col.wrapperClass)
-        ? col.wrapperClass(cellCtx)
-        : (col.wrapperClass ?? 'flex items-center gap-1')
-
-      const renderInline = (action: typeof visible[number], idx: number) => {
-        const actionCtx: DataTableActionButtonContext<T> = {
-          cellContext: cellCtx,
-          row,
-          index,
-          action
-        }
-        const key = action.key ?? `${idx}`
-
-        if (action.popover) {
-          return h(DataTableActionConfirm as Component, {
-            key,
-            action,
-            ctx: actionCtx,
-            globalButtonProps: ctx.options.actionButtonProps
-          })
-        }
-        return h(DataTableActionButton as Component, {
-          key,
-          action,
-          ctx: actionCtx,
-          globalButtonProps: ctx.options.actionButtonProps
-        })
-      }
-
-      const renderOverflow = (actions: typeof visible) => {
-        const groups: Record<string, unknown>[][] = []
-        let currentGroup: Record<string, unknown>[] = []
-
-        for (const action of actions) {
-          if (action.divider && currentGroup.length > 0) {
-            groups.push(currentGroup)
-            currentGroup = []
-          }
-          const actionCtx: DataTableActionButtonContext<T> = {
-            cellContext: cellCtx,
-            row,
-            index,
-            action
-          }
-          const resolved = resolveCallbackValue(action.buttonProps ?? {}, actionCtx)
-          const isDisabled = resolveCallbackValue(action.disabled ?? false, actionCtx)
-
-          currentGroup.push({
-            label: (resolved as any).label ?? '',
-            icon: (resolved as any).icon,
-            color: (resolved as any).color,
-            disabled: isDisabled,
-            onSelect: async (e: Event) => {
-              e.stopPropagation()
-              await action.onClick(actionCtx)
-            }
-          })
-        }
-        if (currentGroup.length > 0) groups.push(currentGroup)
-
-        const triggerProps = {
-          variant: 'ghost' as const,
-          size: 'xs' as const,
-          color: 'neutral' as const,
-          icon: 'i-lucide-ellipsis',
-          ...resolveCallbackValue(ctx.options.actionsOverflowTrigger ?? {}, cellCtx),
-          ...resolveCallbackValue(col.overflowTrigger ?? {}, cellCtx)
-        }
-        const dropdownProps = resolveCallbackValue(col.dropdownProps ?? {}, cellCtx)
-
-        return h(UDropdownMenu, { ...dropdownProps, items: groups }, {
-          default: () => h(UButton, { ...triggerProps, onClick: (e: Event) => e.stopPropagation() })
-        })
-      }
-
-      return h('div', { class: wrapperClass }, [
-        ...inline.map((action, idx) => renderInline(action, idx)),
-        overflow.length > 0 ? renderOverflow(overflow) : null
-      ])
-    }
+    cell: (cellCtx: CellContext<T, unknown>) =>
+      h(DataTableActionsCell, { col, cellCtx, options: ctx.options } as any)
   })
 }
 

@@ -1,6 +1,7 @@
-import type { ButtonProps, CheckboxProps, DropdownMenuProps, IconProps, PopoverProps, TableColumn, TableData, TableProps, TooltipProps } from '@nuxt/ui'
+import type { ButtonProps, CheckboxProps, DropdownMenuProps, TableColumn, TableData, TableProps, TooltipProps } from '@nuxt/ui'
 import type { OmitByKey, Suggest } from '@movk/core'
 import type { CellContext, ColumnDef, ColumnDefTemplate, ColumnPinningState, ColumnSizingState, HeaderContext, TableMeta, VisibilityState } from '@tanstack/vue-table'
+import type { MessageBoxProps } from '../components/MessageBox.vue'
 
 export type DataTableSizePreset = 'xs' | 'sm' | 'md' | 'lg' | 'xl'
 
@@ -227,18 +228,7 @@ export interface DataTableActionButtonContext<T> {
   action: DataTableAction<T>
 }
 
-export interface DataTableActionPopoverProps extends PopoverProps {
-  /** @defaultValue '确认操作' */
-  title?: string
-  /** @defaultValue '请确认是否执行此操作' */
-  description?: string
-  /** @defaultValue 'i-lucide-circle-question-mark' */
-  icon?: IconProps['name']
-  /** @defaultValue '取消' */
-  cancelButton?: string | ButtonProps
-  /** @defaultValue '确认' */
-  confirmButton?: string | ButtonProps
-}
+export type DataTableActionConfirmProps = OmitByKey<MessageBoxProps, 'mode'>
 
 export interface DataTableAction<T> {
   /** 唯一 key，用于渲染稳定性与溢出菜单定位；未提供时回退到数组下标 */
@@ -251,10 +241,10 @@ export interface DataTableAction<T> {
   disabled?: boolean | ((ctx: DataTableActionButtonContext<T>) => boolean)
   /** 点击回调，支持 async；返回 Promise 时自动维护 loading 状态 */
   onClick: (ctx: DataTableActionButtonContext<T>) => void | Promise<void>
-  /** 触发前需要确认 */
-  popover?: boolean
+  /** 触发前需要 MessageBox 确认 */
+  confirm?: boolean
   /** 确认弹窗 props，支持回调 */
-  popoverProps?: DataTableDynamic<DataTableActionPopoverProps, DataTableActionButtonContext<T>>
+  confirmProps?: DataTableDynamic<DataTableActionConfirmProps, DataTableActionButtonContext<T>>
   /** 溢出菜单内在该项之前插入分隔线（仅 overflow 模式生效） */
   divider?: boolean
 }
