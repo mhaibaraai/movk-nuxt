@@ -2,9 +2,13 @@
 import type { VNode } from '#imports'
 import type { ClassNameValue, SemanticColor } from '../types'
 import type { PopoverProps, ButtonProps, LinkPropsKeys, IconProps } from '@nuxt/ui'
-import { isObject, type OmitByKey } from '@movk/core'
+import type { OmitByKey } from '@movk/core'
+import { isObject } from '@movk/core'
 import { UPopover, UButton, UIcon } from '#components'
 import { computed, ref, useAttrs } from 'vue'
+import { useAppConfig } from '#imports'
+import theme from '../../themes/popconfirm'
+import { tv } from '@nuxt/ui/utils/tv'
 
 export interface PopconfirmProps<M extends 'click' | 'hover' = 'click'> extends /** @vue-ignore */ OmitByKey<PopoverProps<M>, 'open' | 'defaultOpen' | 'dismissible' | 'arrow' | 'ui'> {
   /**
@@ -45,10 +49,6 @@ export interface PopconfirmProps<M extends 'click' | 'hover' = 'click'> extends 
    * @defaultValue true
    */
   cancelButton?: ButtonProps | boolean
-  /**
-   * 禁用触发器并阻止弹层打开。
-   */
-  disabled?: boolean
   /**
    * 当 `false` 时，点击遮罩层或按下 `Esc` 键将不会关闭弹层。
    * @defaultValue false
@@ -103,7 +103,11 @@ const slots = defineSlots<PopconfirmSlots>()
 defineOptions({ inheritAttrs: false })
 
 const attrs = useAttrs()
+const appConfig = useAppConfig()
 const openState = ref(false)
+const uiCls = computed(() =>
+  tv({ extend: tv(theme), ...(appConfig.ui?.popconfirm || {}) })()
+)
 const confirmLoading = ref(false)
 
 const iconMap = {
@@ -131,6 +135,7 @@ const cancelButtonAttrs = computed<ButtonProps>(() => ({
   color: 'neutral' as const,
   size: 'xs' as const,
   label: '取消',
+  variant: 'soft' as const,
   ...(isObject(props.cancelButton) ? props.cancelButton : {})
 }))
 
@@ -174,8 +179,8 @@ async function handleConfirm(close: () => void) {
     :dismissible="props.dismissible"
     :arrow="props.arrow"
     :ui="{
-      content: `p-2 sm:px-4 flex flex-col gap-1.5 ${props.ui?.content ?? ''}`,
-      arrow: props.ui?.arrow ?? ''
+      content: uiCls.content({ class: props.ui?.content }),
+      arrow: uiCls.arrow({ class: props.ui?.arrow })
     }"
   >
     <template #default="{ open }">
@@ -186,15 +191,13 @@ async function handleConfirm(close: () => void) {
       <div
         v-if="!!slots.header || (props.title || !!slots.title) || (props.description || !!slots.description)"
         data-slot="header"
-        class="flex flex-col gap-1"
-        :class="props.ui?.header ?? ''"
+        :class="uiCls.header({ class: props.ui?.header })"
       >
         <slot name="header" :close="close">
           <span
             v-if="props.title || !!slots.title"
             data-slot="title"
-            class="flex gap-2 items-center text-sm text-highlighted font-semibold"
-            :class="props.ui?.title ?? ''"
+            :class="uiCls.title({ class: props.ui?.title })"
           >
             <slot name="title">
               <UIcon :name="resolvedIcon" :class="resolvedIconColor" class="size-4 shrink-0" />
@@ -205,8 +208,7 @@ async function handleConfirm(close: () => void) {
           <p
             v-if="props.description || !!slots.description"
             data-slot="description"
-            class="text-muted text-xs"
-            :class="props.ui?.description ?? ''"
+            :class="uiCls.description({ class: props.ui?.description })"
           >
             <slot name="description">
               {{ props.description }}
@@ -217,11 +219,11 @@ async function handleConfirm(close: () => void) {
         <slot name="actions" />
       </div>
 
-      <div v-if="!!slots.body" data-slot="body" :class="props.ui?.body ?? ''">
+      <div v-if="!!slots.body" data-slot="body" :class="uiCls.body({ class: props.ui?.body })">
         <slot name="body" :close="close" />
       </div>
 
-      <div data-slot="footer" class="flex items-center justify-end gap-1.5" :class="props.ui?.footer ?? ''">
+      <div data-slot="footer" :class="uiCls.footer({ class: props.ui?.footer })">
         <slot name="footer" :close="close">
           <UButton
             v-if="props.cancelButton !== false"

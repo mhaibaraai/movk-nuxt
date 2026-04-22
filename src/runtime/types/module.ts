@@ -1,5 +1,6 @@
 import type { FetchContext, FetchResponse } from 'ofetch'
 import type { ApiInstance, MovkApiPublicConfig, EndpointPrivateConfig, MovkApiFullConfig } from './api'
+import type { ToasterProps } from '@nuxt/ui'
 
 interface MovkFontProviderConfig {
   /**
@@ -91,7 +92,18 @@ declare module 'nuxt/schema' {
     ui: {
       colors: { primary: string, neutral: string, [key: string]: string }
       icons: Record<string, string>
+      toaster?: ToasterProps | null
+      popconfirm?: {
+        slots?: Partial<{
+          content: string
+          arrow: string
+          header: string
+          title: string
+          description: string
+          body: string
+          footer: string
+        }>
+      }
     }
-    toaster?: import('@nuxt/ui').ToasterProps | null
   }
 }
