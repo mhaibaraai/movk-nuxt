@@ -2,7 +2,7 @@
 import type { OmitByKey } from '@movk/core'
 import type { ModalProps, ButtonProps, IconProps } from '@nuxt/ui'
 import type { SemanticColor } from '../types'
-import { computed, useAttrs } from 'vue'
+import { computed, useAttrs, ref } from 'vue'
 import { UModal, UButton, UIcon } from '#components'
 
 type MessageBoxMode = 'alert' | 'confirm'
@@ -122,6 +122,23 @@ const confirmButtonAttrs = computed<ButtonProps>(() => ({
   ...(props.confirmButton ?? {})
 }))
 
+const closingFromButton = ref(false)
+
+function handleClose(confirmed: boolean) {
+  closingFromButton.value = true
+  emits('close', confirmed)
+  open.value = false
+}
+
+function handleUpdateOpen(val: boolean) {
+  if (val) return
+  if (closingFromButton.value) {
+    closingFromButton.value = false
+    return
+  }
+  emits('close', false)
+}
+
 const resolvedUI = computed(() => ({
   title: 'flex gap-2 items-center',
   footer: 'justify-end',
@@ -130,7 +147,7 @@ const resolvedUI = computed(() => ({
 </script>
 
 <template>
-  <UModal v-model:open="open" :dismissible="props.dismissible" v-bind="attrs" :ui="resolvedUI" @update:open="(val) => { if (!val) emits('close', false) }">
+  <UModal v-model:open="open" :dismissible="props.dismissible" v-bind="attrs" :ui="resolvedUI" @update:open="handleUpdateOpen">
     <template #title>
       <UIcon :name="resolvedIcon" :class="resolvedIconColor" class="size-5 shrink-0" />
       <span>{{ props.title }}</span>
@@ -141,8 +158,8 @@ const resolvedUI = computed(() => ({
     </template>
 
     <template #footer>
-      <UButton v-if="props.mode === 'confirm'" v-bind="cancelButtonAttrs" @click="emits('close', false)" />
-      <UButton v-bind="confirmButtonAttrs" @click="emits('close', true)" />
+      <UButton v-if="props.mode === 'confirm'" v-bind="cancelButtonAttrs" @click="handleClose(false)" />
+      <UButton v-bind="confirmButtonAttrs" @click="handleClose(true)" />
     </template>
   </UModal>
 </template>
