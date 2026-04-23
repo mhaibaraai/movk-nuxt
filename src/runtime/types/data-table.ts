@@ -1,7 +1,8 @@
-import type { ButtonProps, CheckboxProps, DropdownMenuProps, TableColumn, TableData, TableProps, TooltipProps } from '@nuxt/ui'
+import type { ButtonProps, CheckboxProps, DropdownMenuProps, PaginationProps, SelectProps, TableColumn, TableData, TableProps, TooltipProps } from '@nuxt/ui'
 import type { OmitByKey, Suggest } from '@movk/core'
 import type { CellContext, ColumnDef, ColumnDefTemplate, ColumnPinningState, ColumnSizingState, HeaderContext, TableMeta, VisibilityState } from '@tanstack/vue-table'
 import type { MessageBoxProps } from '../components/MessageBox.vue'
+import type { ClassNameValue } from './theme'
 
 export type DataTableSizePreset = 'xs' | 'sm' | 'md' | 'lg' | 'xl'
 
@@ -67,6 +68,65 @@ export interface DataTableBorderedOptions {
   width?: string
   /** 边框样式，默认 'solid' */
   style?: 'solid' | 'dashed' | 'dotted' | 'double'
+}
+
+export type DataTablePageSizeSelectProps = Omit<
+  SelectProps<Array<{ label: string, value: number }>>,
+  'items'
+  | 'modelValue'
+  | 'defaultValue'
+  | 'multiple'
+  | 'valueKey'
+  | 'labelKey'
+  | 'descriptionKey'
+  | 'onUpdate:modelValue'
+>
+
+export interface DataTablePaginationUiSlots {
+  root?: ClassNameValue
+  summary?: ClassNameValue
+  summaryText?: ClassNameValue
+  selectedCount?: ClassNameValue
+  actions?: ClassNameValue
+  pageSizeSelect?: ClassNameValue
+  pagination?: ClassNameValue
+}
+
+export interface DataTablePaginationUiText {
+  total?: string
+  item?: string
+  range?: string
+  selected?: string
+}
+
+export interface DataTablePaginationUi {
+  /**
+   * 是否显示分页栏。未传时按 `pageCount > 1 || pageSizes.length > 1` 自动判断
+   */
+  show?: boolean
+  /**
+   * 可选每页条数列表，长度大于 1 时显示切换器
+   * @defaultValue []
+   */
+  pageSizes?: number[]
+  /**
+   * 是否显示已选行数
+   * @defaultValue true
+   */
+  showSelectedCount?: boolean
+  /**
+   * 是否显示当前页区间
+   * @defaultValue true
+   */
+  showRowRange?: boolean
+  /** UPagination 透传 props */
+  paginationProps?: Partial<Omit<PaginationProps, 'page' | 'total' | 'itemsPerPage'>>
+  /** USelect 透传 props */
+  pageSizeSelectProps?: Partial<DataTablePageSizeSelectProps>
+  /** 默认分页栏文案 */
+  text?: DataTablePaginationUiText
+  /** 分页栏本体的 slot 样式 */
+  ui?: DataTablePaginationUiSlots
 }
 
 export interface DataTableBaseColumn {
@@ -293,6 +353,7 @@ type DataTableInheritedTableProps<T extends TableData> = OmitByKey<
   | 'rowSelectionOptions'
   | 'sortingOptions'
   | 'expandedOptions'
+  | 'paginationOptions'
   | 'onSelect'
 >
 
@@ -450,25 +511,16 @@ export interface DataTableProps<T extends TableData> extends /* @vue-ignore */ D
   rowSelectionKeys?: string[]
   /** 数组形展开行 id 列表 */
   expandedKeys?: string[]
-
-  // /** 总条数，不传时根据 data.length 计算；大于每页条数时自动显示分页 */
-  // total?: number
-  // /** 当前页（v-model:page） */
-  // page?: number
-  // /**
-  //  * 每页条数（v-model:pageSize）
-  //  * @defaultValue 20
-  //  */
-  // pageSize?: number
-  // /**
-  //  * 可选每页条数列表，长度大于 1 时显示切换器
-  //  * @defaultValue []
-  //  */
-  // pageSizes?: number[]
-  // /** 是否显示分页，默认 total > pageSize 时自动显示 */
-  // showPagination?: boolean
-  // /** UPagination props 透传 */
-  // paginationProps?: DataTablePaginationPassthrough
+  /**
+   * 分页配置，直接透传给 TanStack / UTable
+   * - 客户端分页：默认注入 `getPaginationRowModel()`
+   * - 服务端分页：设置 `manualPagination: true`，并提供 `rowCount` 或 `pageCount`
+   */
+  paginationOptions?: TableProps<T>['paginationOptions']
+  /**
+   * 分页栏展示配置，不承载分页状态
+   */
+  paginationUi?: DataTablePaginationUi
   // /**
   //  * 显示列可见性切换按钮
   //  * @defaultValue false
@@ -508,14 +560,6 @@ export interface DataTableProps<T extends TableData> extends /* @vue-ignore */ D
   ui?: TableProps<T>['ui']
 }
 
-// export function isSpecialColumn<T>(col: DataTableColumn<T>): col is
-//   | DataTableSelectionColumn
-//   | DataTableIndexColumn
-//   | DataTableExpandColumn
-//   | DataTableActionsColumn<T> {
-//   return 'type' in col
-// }
-
 export interface ResolvedColumnState<T> {
   columnDefs: ColumnDef<T, unknown>[]
   initialPinning: ColumnPinningState
@@ -541,10 +585,6 @@ export interface ResolvedColumnState<T> {
   /** 所有叶子列（data 列 + special 列）的 id 扁平列表，供可见性数组白名单使用 */
   allColumnIds: string[]
 }
-
-// export type DataTablePaginationPassthrough = Partial<
-//   Omit<PaginationProps, 'total' | 'page' | 'itemsPerPage'>
-// >
 
 export interface DataTableExpose<T = unknown> {
   /** UTable 的 DOM 引用 */

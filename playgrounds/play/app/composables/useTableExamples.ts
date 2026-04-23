@@ -33,7 +33,13 @@ const users: TableUser[] = [
   { id: 2, name: '李四', email: 'lisi@example.com', department: '产品部', role: '产品经理', salary: 20000, joinDate: '2022-06-01', status: 'active', bio: '拥有丰富的 ToB 产品经验。' },
   { id: 3, name: '王五', email: 'wangwu@example.com', department: '设计部', role: 'UI 设计师', salary: null, joinDate: '2023-01-10', status: 'inactive', bio: '' },
   { id: 4, name: '赵六', email: 'zhaoliu@example.com', department: '研发部', role: '后端工程师', salary: 22000, joinDate: '2020-11-20', status: 'pending', bio: '深耕 Java 生态，熟悉微服务架构与分布式系统设计，具备大规模系统调优经验。' },
-  { id: 5, name: '钱七', email: 'qianqi@example.com', department: '运营部', role: '运营专员', salary: 12000, joinDate: '2023-08-05', status: 'active', bio: '负责用户增长与活动运营。' }
+  { id: 5, name: '钱七', email: 'qianqi@example.com', department: '运营部', role: '运营专员', salary: 12000, joinDate: '2023-08-05', status: 'active', bio: '负责用户增长与活动运营。' },
+  { id: 6, name: '孙八', email: 'sunba@example.com', department: '市场部', role: '市场经理', salary: 18000, joinDate: '2021-09-12', status: 'active', bio: '擅长品牌推广与渠道拓展。' },
+  { id: 7, name: '周九', email: 'zhoujiu@example.com', department: '研发部', role: '前端工程师', salary: 21000, joinDate: '2022-03-18', status: 'active', bio: '专注 Vue 与可视化开发。' },
+  { id: 8, name: '吴十', email: 'wushi@example.com', department: '设计部', role: '交互设计师', salary: 17000, joinDate: '2021-12-25', status: 'inactive', bio: '关注用户体验与设计系统建设。' },
+  { id: 9, name: '郑十一', email: 'zhengshiyi@example.com', department: '产品部', role: '产品助理', salary: 13000, joinDate: '2023-05-09', status: 'pending', bio: '协助需求分析与文档整理。' },
+  { id: 10, name: '王十二', email: 'wangshier@example.com', department: '运营部', role: '内容运营', salary: 14000, joinDate: '2022-10-30', status: 'active', bio: '负责内容策划与社区维护。' },
+  { id: 11, name: '冯十三', email: 'fengshisan@example.com', department: '研发部', role: '测试工程师', salary: 16000, joinDate: '2020-07-14', status: 'active', bio: '专注自动化测试与质量保障。' }
 ]
 
 const treeData: Payment[] = [

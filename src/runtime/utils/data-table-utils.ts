@@ -1,8 +1,9 @@
-import type { ColumnDefTemplate, ExpandedState, RowSelectionState, VisibilityState } from '@tanstack/vue-table'
+import type { ColumnDefTemplate, ExpandedState, PaginationState, RowSelectionState, VisibilityState } from '@tanstack/vue-table'
 import type { Ref, WritableComputedRef } from 'vue'
 import { computed, onMounted, watch } from 'vue'
 import { isFunction, isString } from '@movk/core'
-import type { DataTableDataColumn, DataTableSizePreset } from '../types/data-table'
+import type { TableData } from '@nuxt/ui'
+import type { DataTableDataColumn, DataTablePaginationUi, DataTableSizePreset } from '../types/data-table'
 import { SIZE_PRESET_MAP } from '../constants/data-table'
 
 /**
@@ -45,6 +46,35 @@ export function resolveTemplate<TProps extends object>(
  */
 export function resolvePresetSize(size: number | DataTableSizePreset): number {
   return isString(size) ? SIZE_PRESET_MAP[size] : size
+}
+
+/**
+ * 生成用于强制重建 UTable 的紧凑 key
+ *
+ * `columnResizeMode` 直接编码为前缀，其余布尔开关用位掩码压缩，
+ * 避免在 DOM 中出现冗长的 `true|false|...` 字符串。
+ */
+export function resolveTableResetKey(options: {
+  columnResizeMode: 'onChange' | 'onEnd'
+  resizable: boolean
+  sortable: boolean
+  pinable: boolean
+  hasColumnPinning: boolean
+  hasColumnResizing: boolean
+  hasColumnSort: boolean
+  manualPagination: boolean
+}): string {
+  const flags = [
+    options.resizable,
+    options.sortable,
+    options.pinable,
+    options.hasColumnPinning,
+    options.hasColumnResizing,
+    options.hasColumnSort,
+    options.manualPagination
+  ].reduce((mask, enabled, index) => mask | ((enabled ? 1 : 0) << index), 0)
+
+  return `${options.columnResizeMode === 'onEnd' ? 'e' : 'c'}${flags.toString(36)}`
 }
 
 /**
@@ -259,4 +289,125 @@ export function useSelectedRows<T extends Record<string, unknown>>(
     walk(rows)
     return selectedRows
   })
+}
+
+const DEFAULT_PAGE_SIZE = 10
+
+interface DataTablePaginationSnapshot {
+  pagination?: Partial<PaginationState>
+  rowCount: number
+  pageCount: number
+  currentPageRowCount: number
+}
+
+interface DataTablePaginationSnapshotOptions {
+  manualPagination?: boolean
+  rowCount?: number
+  pageCount?: number
+}
+
+interface DataTablePaginationViewState {
+  pagination: PaginationState
+  page: number
+  rowCount: number
+  pageCount: number
+  currentPageRowCount: number
+  from: number
+  to: number
+  show: boolean
+}
+
+export function resolvePaginationViewState(
+  snapshot: DataTablePaginationSnapshot,
+  paginationUi?: DataTablePaginationUi
+): DataTablePaginationViewState {
+  const pageIndex = snapshot.pagination?.pageIndex ?? 0
+  const pageSize = snapshot.pagination?.pageSize ?? DEFAULT_PAGE_SIZE
+  const rowCount = Math.max(0, snapshot.rowCount)
+  const currentPageRowCount = Math.max(0, snapshot.currentPageRowCount)
+  const pageCount = Math.max(0, snapshot.pageCount)
+  const from = rowCount > 0 && currentPageRowCount > 0
+    ? pageIndex * pageSize + 1
+    : 0
+  const to = rowCount > 0 && currentPageRowCount > 0
+    ? Math.min(rowCount, from + currentPageRowCount - 1)
+    : 0
+
+  return {
+    pagination: {
+      pageIndex,
+      pageSize
+    },
+    page: pageIndex + 1,
+    rowCount,
+    pageCount,
+    currentPageRowCount,
+    from,
+    to,
+    show: paginationUi?.show ?? (pageCount > 1 || (paginationUi?.pageSizes?.length ?? 0) > 1)
+  }
+}
+
+export function resolveSelectedCount(
+  rowSelectionKeys?: string[],
+  rowSelectionState?: RowSelectionState
+): number {
+  if (rowSelectionKeys !== undefined) {
+    return rowSelectionKeys.length
+  }
+
+  return Object.keys(rowSelectionState ?? {}).length
+}
+
+export function resolvePageSizeValue(value: unknown): number | null {
+  if (value === '' || value === null || value === undefined) {
+    return null
+  }
+
+  const pageSize = Math.floor(Number(value))
+
+  if (!Number.isFinite(pageSize) || pageSize <= 0) {
+    return null
+  }
+
+  return pageSize
+}
+
+export function createPaginationSnapshot<T extends TableData>(
+  tableApi: import('@tanstack/vue-table').Table<T> | null,
+  options?: DataTablePaginationSnapshotOptions
+): DataTablePaginationSnapshot {
+  if (!tableApi) {
+    return {
+      pagination: undefined,
+      rowCount: Math.max(0, options?.rowCount ?? 0),
+      pageCount: Math.max(0, options?.pageCount ?? 0),
+      currentPageRowCount: 0
+    }
+  }
+
+  const pagination = tableApi.getState().pagination
+  const currentPageRowCount = tableApi.getRowModel().rows.length
+  const fallbackRowCount = tableApi.getRowCount()
+  const fallbackPageCount = tableApi.getPageCount()
+  const explicitRowCount = options?.rowCount
+  const explicitPageCount = options?.pageCount
+  const pageSize = pagination?.pageSize ?? DEFAULT_PAGE_SIZE
+  const rowCount = options?.manualPagination
+    ? Math.max(0, explicitRowCount ?? fallbackRowCount)
+    : fallbackRowCount
+  const pageCount = options?.manualPagination
+    ? Math.max(
+        0,
+        explicitPageCount
+        ?? (explicitRowCount !== undefined ? Math.ceil(Math.max(0, explicitRowCount) / pageSize) : fallbackPageCount)
+      )
+    : fallbackPageCount
+
+  return {
+    pagination,
+    rowCount,
+    pageCount,
+    currentPageRowCount
+  }
 }

@@ -103,6 +103,17 @@ declare module 'nuxt/schema' {
           footer: string
         }>
       }
+      dataTablePagination?: {
+        slots?: Partial<{
+          root: string
+          summary: string
+          summaryText: string
+          selectedCount: string
+          actions: string
+          pageSizeSelect: string
+          pagination: string
+        }>
+      }
     }
   }
 }

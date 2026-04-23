@@ -48,8 +48,7 @@ export interface AutoFormProps<S extends z.ZodObject, T extends boolean = true, 
   validateOn?: FormInputEvents[]
 }
 
-export interface AutoFormEmits<S extends z.ZodObject, T extends boolean = true> extends FormEmits<S, T> {
-}
+export type AutoFormEmits<S extends z.ZodObject, T extends boolean = true> = FormEmits<S, T>
 
 export type AutoFormSlots<T extends object> = {
   header: (props: AutoFormSlotProps<T>) => any

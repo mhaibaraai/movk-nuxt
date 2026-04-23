@@ -23,8 +23,7 @@ export interface DatePickerProps<R extends boolean, M extends boolean, P extends
   labelFormat?: LabelFormat | ((formatter: ReturnType<typeof useDateFormatter>, modelValue: CalendarProps<R, M>['modelValue']) => string)
 }
 
-export interface DatePickerEmits<R extends boolean, M extends boolean> extends PopoverEmits, CalendarEmits<R, M> {
-}
+export type DatePickerEmits<R extends boolean, M extends boolean> = PopoverEmits & CalendarEmits<R, M>
 
 const LABEL_FORMATS: LabelFormat[] = ['iso', 'formatted', 'date', 'timestamp', 'unix']
 

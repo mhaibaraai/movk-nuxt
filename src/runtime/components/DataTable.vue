@@ -2,24 +2,31 @@
 import type {
   ColumnPinningState,
   ColumnSizingState,
+  ExpandedState,
+  PaginationState,
   Row,
   RowPinningState,
-  SortingState,
-  VisibilityState,
-  TableMeta,
   RowSelectionState,
-  ExpandedState
+  SortingState,
+  Table,
+  TableMeta,
+  VisibilityState
 } from '@tanstack/vue-table'
 import type { DataTableProps } from '../types/data-table'
+import { getPaginationRowModel } from '@tanstack/vue-table'
 import { UTable } from '#components'
-import { computed, useAttrs } from 'vue'
+import { computed, useAttrs, useTemplateRef } from 'vue'
 import {
+  createPaginationSnapshot,
   expandedToKeys,
   keysToExpanded,
   keysToRowSelection,
   keysToVisibility,
   keysToVisibilityExclude,
+  resolvePaginationViewState,
+  resolveTableResetKey,
   resolveCallbackValue,
+  resolveSelectedCount,
   rowSelectionToKeys,
   useEffectiveModel,
   useSyncKeys,
@@ -27,10 +34,26 @@ import {
   visibilityToKeys
 } from '../utils/data-table-utils'
 import { resolveColumns } from './data-table/column-helpers'
-// import { useScroll } from '@vueuse/core'
-// import DataTableColumnToggle from './data-table/DataTableColumnToggle.vue'
-// import DataTablePagination from './data-table/DataTablePagination.vue'
+import DataTablePagination from './data-table/DataTablePagination.vue'
 import type { TableData, TableProps } from '@nuxt/ui'
+
+interface UTableExpose<TData extends TableData> {
+  tableApi: Table<TData>
+  tableRef: HTMLTableElement | null
+}
+
+interface PaginationSlotProps<TData extends TableData> {
+  tableApi: Table<TData>
+  pagination: PaginationState
+  page: number
+  rowCount: number
+  pageCount: number
+  currentPageRowCount: number
+  from: number
+  to: number
+  show: boolean
+  selectedCount: number
+}
 
 const props = withDefaults(defineProps<DataTableProps<T>>(), {
   emptyCell: '-',
@@ -39,13 +62,7 @@ const props = withDefaults(defineProps<DataTableProps<T>>(), {
   columnResizeMode: 'onChange'
 })
 
-// const globalFilterState = defineModel<string>('globalFilter')
-// const columnFiltersState = defineModel<ColumnFiltersState>('columnFilters')
-// const columnOrderState = defineModel<ColumnOrderState>('columnOrder')
-// const columnSizingInfoState = defineModel<ColumnSizingInfoState>('columnSizingInfo')
-// const groupingState = defineModel<GroupingState>('grouping')
-// const paginationState = defineModel<PaginationState>('pagination')
-
+const paginationState = defineModel<PaginationState>('pagination')
 const columnVisibilityState = defineModel<VisibilityState>('columnVisibility')
 const columnPinningState = defineModel<ColumnPinningState>('columnPinning')
 const columnSizingState = defineModel<ColumnSizingState>('columnSizing')
@@ -53,7 +70,6 @@ const rowSelectionState = defineModel<RowSelectionState>('rowSelection')
 const rowPinningState = defineModel<RowPinningState>('rowPinning', { default: () => ({ top: [], bottom: [] }) })
 const sortingState = defineModel<SortingState>('sorting', { default: () => [] })
 const expandedState = defineModel<ExpandedState>('expanded')
-
 const columnVisibilityKeysState = defineModel<string[]>('columnVisibilityKeys')
 const columnVisibilityExcludeKeysState = defineModel<string[]>('columnVisibilityExcludeKeys')
 const rowSelectionKeysState = defineModel<string[]>('rowSelectionKeys')
@@ -112,7 +128,6 @@ const effectiveExpanded = useEffectiveModel(
   hasEntries
 )
 
-// useSyncKeys 的 watch 默认 immediate: false，在 onMounted 后首次触发，不参与 SSR hydration
 useSyncKeys(
   columnVisibilityKeysState,
   columnVisibilityState,
@@ -137,14 +152,14 @@ useSyncKeys(
   keys => keysToExpanded(keys),
   state => expandedToKeys(state)
 )
-// const pageModel = defineModel<number>('page', { default: 1 })
-// const pageSizeModel = defineModel<number>('pageSize', { default: 20 })
 
 defineOptions({ inheritAttrs: false })
 
 const attrs = useAttrs()
+const tableRef = useTemplateRef<UTableExpose<T>>('tableRef')
 
 const isTreeMode = computed(() => Boolean(props.childrenKey))
+const isManualPagination = computed(() => props.paginationOptions?.manualPagination === true)
 
 const tableMeta = computed((): TableMeta<T> => ({
   ...((props.stripe || props.rowClass || props.meta?.class?.tr) && {
@@ -227,6 +242,12 @@ const uTableProps = computed(() => {
       ...(resolved.value.hasExpandColumn && { enableExpanding: true }),
       ...props.expandedOptions
     },
+    paginationOptions: {
+      ...(!isManualPagination.value && {
+        getPaginationRowModel: getPaginationRowModel()
+      }),
+      ...props.paginationOptions
+    },
     ...(hasRowClickBehavior && {
       onSelect: (e: Event, row: Row<T>) => {
         if (props.expandOnRowClick && row.getCanExpand()) row.toggleExpanded()
@@ -237,14 +258,56 @@ const uTableProps = computed(() => {
   }
 })
 
-const tableResetKey = computed(() =>
-  `${props.columnResizeMode}|${!!props.resizable}|${!!props.sortable}|${!!props.pinable}|${resolved.value.hasColumnPinning}|${resolved.value.hasColumnResizing}|${resolved.value.hasColumnSort}`
+const tableApi = computed<Table<T> | null>(() => tableRef.value?.tableApi ?? null)
+const selectedCount = computed(() => resolveSelectedCount(
+  rowSelectionKeysState.value,
+  rowSelectionState.value
+))
+const paginationView = computed(() =>
+  resolvePaginationViewState(
+    createPaginationSnapshot(tableApi.value, props.paginationOptions),
+    props.paginationUi
+  )
 )
+const paginationSlotProps = computed<PaginationSlotProps<T> | null>(() => {
+  if (!tableApi.value) return null
+
+  return {
+    tableApi: tableApi.value,
+    selectedCount: selectedCount.value,
+    ...paginationView.value
+  }
+})
+const showPagination = computed(() => paginationSlotProps.value?.show ?? false)
+
+function clearSelection() {
+  rowSelectionState.value = {}
+
+  if (rowSelectionKeysState.value !== undefined) {
+    rowSelectionKeysState.value = []
+  }
+}
+
+const tableResetKey = computed(() => resolveTableResetKey({
+  columnResizeMode: props.columnResizeMode,
+  resizable: !!props.resizable,
+  sortable: !!props.sortable,
+  pinable: !!props.pinable,
+  hasColumnPinning: resolved.value.hasColumnPinning,
+  hasColumnResizing: resolved.value.hasColumnResizing,
+  hasColumnSort: resolved.value.hasColumnSort,
+  manualPagination: isManualPagination.value
+}))
+
+defineExpose({
+  tableRef: computed(() => tableRef.value?.tableRef ?? null),
+  tableApi,
+  clearSelection
+})
 </script>
 
 <template>
   <div
-    ref="wrapperRef"
     class="data-table"
     :class="[
       {
@@ -255,30 +318,10 @@ const tableResetKey = computed(() =>
     ]"
     :style="borderedStyle"
   >
-    <!-- <div
-      v-if="$slots.toolbar || columnToggle"
-      class="flex items-center justify-between mb-3"
-    >
-      <div class="flex items-center gap-2">
-        <slot
-          name="toolbar"
-          :selected-rows="selectedRowsComputed"
-          :selected-keys="selectedKeys"
-          :clear-selection="clearSelection"
-        />
-      </div>
-
-      <div v-if="columnToggle" class="flex items-center gap-1">
-        <DataTableColumnToggle
-          v-model="columnVisibilityModel"
-          :column-labels="columnLabels"
-        />
-      </div>
-    </div> -->
-    <!-- <div :style="tableContainerStyle" @scroll.passive="handleTableScroll"> -->
     <UTable
       :key="tableResetKey"
       ref="tableRef"
+      v-model:pagination="paginationState"
       v-model:column-visibility="effectiveVisibility"
       v-model:column-pinning="effectivePinning"
       v-model:column-sizing="effectiveSizing"
@@ -288,10 +331,6 @@ const tableResetKey = computed(() =>
       v-model:expanded="effectiveExpanded"
       v-bind="uTableProps"
     >
-      <!-- <template v-if="enableExpandedSlot" #expanded="slotProps">
-        <slot name="expanded" :row="slotProps.row.original as T" />
-      </template> -->
-
       <template v-if="$slots.empty" #empty>
         <slot name="empty" />
       </template>
@@ -311,34 +350,43 @@ const tableResetKey = computed(() =>
       <template v-if="$slots['body-bottom']" #body-bottom>
         <slot name="body-bottom" />
       </template>
-
-      <!-- <template
-        v-for="slotName in forwardedSlotNames"
-        :key="slotName"
-        #[slotName]="slotProps"
-      >
-        <slot :name="slotName" v-bind="slotProps" />
-      </template> -->
     </UTable>
-    <!-- </div> -->
 
-    <!-- <slot name="table-footer" :data="data" /> -->
+    <template v-if="showPagination && paginationSlotProps">
+      <slot v-if="$slots.pagination" name="pagination" v-bind="paginationSlotProps" />
 
-    <!-- <DataTablePagination
-      v-if="showPagination"
-      v-model:page="pageModel"
-      v-model:page-size="pageSizeModel"
-      :total="effectiveTotal"
-      :page-sizes="pageSizes"
-      :pagination-props="paginationProps"
-      :selected-count="selectedKeys.length"
-    >
-      <template v-if="$slots['pagination-left']" #left="paginationSlotProps">
-        <slot name="pagination-left" v-bind="paginationSlotProps" />
-      </template>
-      <template v-if="$slots['pagination-right']" #right="paginationSlotProps">
-        <slot name="pagination-right" v-bind="paginationSlotProps" />
-      </template>
-    </DataTablePagination> -->
+      <DataTablePagination
+        v-else
+        :table-api="paginationSlotProps.tableApi"
+        :pagination="paginationSlotProps.pagination"
+        :page="paginationSlotProps.page"
+        :row-count="paginationSlotProps.rowCount"
+        :page-count="paginationSlotProps.pageCount"
+        :from="paginationSlotProps.from"
+        :to="paginationSlotProps.to"
+        :selected-count="paginationSlotProps.selectedCount"
+        :page-sizes="props.paginationUi?.pageSizes"
+        :show-selected-count="props.paginationUi?.showSelectedCount"
+        :show-row-range="props.paginationUi?.showRowRange"
+        :pagination-props="props.paginationUi?.paginationProps"
+        :page-size-select-props="props.paginationUi?.pageSizeSelectProps"
+        :text="props.paginationUi?.text"
+        :ui="props.paginationUi?.ui"
+      >
+        <template
+          v-if="$slots['pagination-summary']"
+          #summary="slotProps"
+        >
+          <slot name="pagination-summary" v-bind="slotProps" />
+        </template>
+
+        <template
+          v-if="$slots['pagination-actions']"
+          #actions="slotProps"
+        >
+          <slot name="pagination-actions" v-bind="slotProps" />
+        </template>
+      </DataTablePagination>
+    </template>
   </div>
 </template>
