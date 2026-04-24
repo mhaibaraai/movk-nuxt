@@ -1,0 +1,142 @@
+import type { VNode } from 'vue'
+import type { AutoFormField } from '../../types/auto-form'
+import { UButton, UIcon } from '#components'
+import { h } from 'vue'
+import { setPath } from '@movk/core'
+import { AUTOFORM_META } from '../../constants/auto-form'
+
+/** 将字段列表分类为叶子/嵌套/数组/布局四组 */
+export function classifyFields(fields: AutoFormField[]) {
+  const leafFields: AutoFormField[] = []
+  const nestedFields: AutoFormField[] = []
+  const arrayFields: AutoFormField[] = []
+  const layoutFields: AutoFormField[] = []
+
+  for (const field of fields) {
+    if (field.meta.type === AUTOFORM_META.LAYOUT_KEY) {
+      layoutFields.push(field)
+    } else if (field.meta.type === 'array') {
+      arrayFields.push(field)
+    } else if (isLeafField(field)) {
+      leafFields.push(field)
+    } else {
+      nestedFields.push(field)
+    }
+  }
+
+  return {
+    leafFields,
+    nestedFields,
+    arrayFields,
+    layoutFields,
+    hasComplexFields: nestedFields.length > 0 || arrayFields.length > 0 || layoutFields.length > 0
+  }
+}
+
+export function isLeafField(field: AutoFormField): boolean {
+  return field.meta.type !== 'object' && field.meta.type !== 'array'
+}
+
+export function getFieldType(field: AutoFormField): 'leaf' | 'nested' {
+  return isLeafField(field) ? 'leaf' : 'nested'
+}
+
+/** 递归收集字段的默认值，object 类型返回嵌套结构，叶子类型直接返回值 */
+export function collectFieldDefaults(field: AutoFormField) {
+  if (field.meta?.type === 'object') {
+    const result: Record<string, any> = {}
+    const basePath = field.path
+
+    function collect(currentField: AutoFormField) {
+      if (currentField.decorators?.defaultValue !== undefined) {
+        const relativePath = currentField.path.replace(`${basePath}.`, '')
+        setPath(result, relativePath, currentField.decorators.defaultValue)
+      }
+
+      if (currentField.children?.length) {
+        currentField.children.forEach(collect)
+      }
+    }
+
+    collect(field)
+    return result
+  }
+
+  return field.decorators?.defaultValue !== undefined
+    ? field.decorators.defaultValue
+    : undefined
+}
+
+/** 从 items 选项中提取枚举值，支持对象格式（取 valueKey/value/label）和原始值 */
+export function extractEnumValuesFromItems(items: any, valueKey?: string): string[] {
+  if (!items || !Array.isArray(items)) {
+    return []
+  }
+
+  const flatItems = items.flat()
+
+  return flatItems
+    .filter((item: any) => {
+      if (item && typeof item === 'object' && (item.type === 'separator' || item.type === 'label')) {
+        return false
+      }
+      return true
+    })
+    .map((item: any) => {
+      if (item && typeof item === 'object') {
+        if (valueKey && valueKey in item) {
+          return item[valueKey]
+        }
+        if ('value' in item) {
+          return item.value
+        }
+        if ('label' in item) {
+          return item.label
+        }
+        return String(item)
+      }
+      return item
+    })
+    .filter((value: any) => value !== undefined && value !== null) as string[]
+}
+
+/** 创建数组项的 hint 插槽渲染函数，根据层级和字段类型组合删除按钮与折叠图标 */
+export function createHintSlotFactory(removeCallback: (count?: number) => void) {
+  return (field: AutoFormField, path: string, open?: boolean, count?: number): VNode | undefined => {
+    const isNested = path.includes('.')
+    const isObject = field.meta?.type === 'object'
+
+    if (isNested && !isObject) {
+      return undefined
+    }
+
+    const chevronIcon = h(UIcon, {
+      name: open ? 'i-lucide-chevron-down' : 'i-lucide-chevron-right',
+      class: 'shrink-0 size-5 transition-transform duration-200'
+    })
+
+    if (isNested) {
+      return chevronIcon
+    }
+
+    const deleteButton = h(UButton, {
+      icon: 'i-lucide-trash-2',
+      color: 'error',
+      variant: 'ghost',
+      size: 'xs',
+      onClick: (event: Event) => {
+        event?.stopPropagation()
+        removeCallback(count)
+      }
+    })
+
+    if (!isObject) {
+      return deleteButton
+    }
+
+    return h('div', { class: 'flex items-center gap-1.5' }, [
+      deleteButton,
+      chevronIcon
+    ])
+  }
+}

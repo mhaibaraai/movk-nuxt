@@ -63,7 +63,7 @@ export interface MessageBoxProps extends /** @vue-ignore */ OmitByKey<ModalProps
   cancelButton?: ButtonProps
 }
 
-export interface MessageBoxEmits {
+interface MessageBoxEmits {
   /**
    * 模态框关闭时触发。
    * - `true`：用户点击了确认

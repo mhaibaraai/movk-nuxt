@@ -58,7 +58,6 @@ function toggleData() {
       empty="当前没有数据（empty prop）"
       :sticky="sticky"
       :virtualize="virtualize"
-      :ui="{}"
       :pagination-ui="{
         pageSizes: [3, 5, 10],
         paginationProps: {

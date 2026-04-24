@@ -1,6 +1,6 @@
 import { defineNuxtPlugin, useAppConfig, useHead, useSiteConfig } from '#imports'
 import { kebabCase } from '@movk/core'
-import { themeIcons } from '../utils/theme'
+import { themeIcons } from '../domains/theme/theme-icons'
 
 export default defineNuxtPlugin({
   enforce: 'post',

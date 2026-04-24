@@ -7,10 +7,10 @@ import { UButton, UCollapsible, UForm } from '#components'
 import type { Ref } from 'vue'
 import { computed, ref, unref, useTemplateRef, watch } from 'vue'
 import { isFunction, type OmitByKey } from '@movk/core'
-import { useAutoFormProvider } from '../auto-form/provider'
-import { extractPureSchema, introspectSchema } from '../auto-form/schema-introspector'
+import { useAutoFormProvider } from '../domains/auto-form/provider'
+import { extractPureSchema, introspectSchema } from '../domains/auto-form/schema'
 import { useAutoForm } from '../composables/useAutoForm'
-import AutoFormRendererField from './auto-form-renderer/AutoFormRendererField.vue'
+import AutoFormRendererField from '../domains/auto-form/renderers/AutoFormRendererField.vue'
 import { useAppConfig } from '#app'
 import { resolveGridClasses, resolveMaxCols } from '../constants/grid-cols'
 
@@ -106,7 +106,7 @@ export interface SearchFormProps<S extends z.ZodObject, T extends boolean = true
   validateOn?: FormInputEvents[]
 }
 
-export interface SearchFormActionSlots {
+interface SearchFormActionSlots {
   /** 替换默认按钮区域 */
   actions: (props: {
     expanded: boolean
@@ -119,7 +119,7 @@ export interface SearchFormActionSlots {
   extraActions: (props: { expanded: boolean }) => any
 }
 
-export interface SearchFormEmits<S extends z.ZodObject> {
+interface SearchFormEmits<S extends z.ZodObject> {
   /**
    * 搜索事件，参数为当前表单状态
    */

@@ -8,14 +8,15 @@ import type {
   EndpointPrivateConfig
 } from '../types/api'
 import {
-  showToast,
-  isBusinessSuccess,
-  extractMessage,
-  extractData,
-  createApiError,
-  extractToastMessage,
   getAuthHeaders
-} from '../utils/api-utils'
+} from '../domains/api/auth'
+import {
+  extractData,
+  extractMessage,
+  isBusinessSuccess
+} from '../domains/api/response'
+import { createApiError } from '../domains/api/errors'
+import { extractToastMessage, showToast } from '../domains/api/toast'
 import { defineNuxtPlugin, navigateTo, useNuxtApp, useUserSession, useRuntimeConfig } from '#imports'
 import defu from 'defu'
 

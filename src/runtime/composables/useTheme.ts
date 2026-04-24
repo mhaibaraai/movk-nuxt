@@ -1,5 +1,5 @@
 import { useAppConfig, useColorMode, useSiteConfig } from '#imports'
-import { themeIcons } from '../utils/theme'
+import { themeIcons } from '../domains/theme/theme-icons'
 import { omit, kebabCase } from '@movk/core'
 import { useLocalStorage } from '@vueuse/core'
 import colors from 'tailwindcss/colors'

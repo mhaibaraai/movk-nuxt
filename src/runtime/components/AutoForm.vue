@@ -7,12 +7,12 @@ import type { Ref } from 'vue'
 import { UForm } from '#components'
 import { computed, onMounted, ref, unref, useTemplateRef } from 'vue'
 import { getPath, isFunction, setPath, type OmitByKey } from '@movk/core'
-import { useAutoFormProvider } from '../auto-form/provider'
-import { classifyFields } from '../auto-form/field-utils'
-import { extractPureSchema, introspectSchema } from '../auto-form/schema-introspector'
+import { useAutoFormProvider } from '../domains/auto-form/provider'
+import { classifyFields } from '../domains/auto-form/fields'
+import { extractPureSchema, introspectSchema } from '../domains/auto-form/schema'
 import { useAutoForm } from '../composables/useAutoForm'
-import AutoFormRendererChildren from './auto-form-renderer/AutoFormRendererChildren.vue'
-import AutoFormRendererField from './auto-form-renderer/AutoFormRendererField.vue'
+import AutoFormRendererChildren from '../domains/auto-form/renderers/AutoFormRendererChildren.vue'
+import AutoFormRendererField from '../domains/auto-form/renderers/AutoFormRendererField.vue'
 
 export interface AutoFormProps<S extends z.ZodObject, T extends boolean = true, N extends boolean = false> extends /** @vue-ignore */ OmitByKey<FormProps<S, T, N>, 'schema' | 'state' | 'loadingAuto' | 'validateOn'> {
   /**
@@ -48,9 +48,9 @@ export interface AutoFormProps<S extends z.ZodObject, T extends boolean = true, 
   validateOn?: FormInputEvents[]
 }
 
-export type AutoFormEmits<S extends z.ZodObject, T extends boolean = true> = FormEmits<S, T>
+type AutoFormEmits<S extends z.ZodObject, T extends boolean = true> = FormEmits<S, T>
 
-export type AutoFormSlots<T extends object> = {
+type AutoFormSlots<T extends object> = {
   header: (props: AutoFormSlotProps<T>) => any
   footer: (props: AutoFormSlotProps<T>) => any
   submit: (props: AutoFormSlotProps<T>) => any

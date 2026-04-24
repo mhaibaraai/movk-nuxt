@@ -17,24 +17,30 @@ import { getPaginationRowModel } from '@tanstack/vue-table'
 import { UTable } from '#components'
 import { computed, useAttrs, useTemplateRef } from 'vue'
 import {
+  resolveCallbackValue,
+  resolveTableResetKey,
+  useEffectiveModel,
+  useSyncKeys
+} from '../domains/data-table/state/models'
+import {
   createPaginationSnapshot,
   expandedToKeys,
   keysToExpanded,
+  resolvePaginationViewState
+} from '../domains/data-table/state/pagination'
+import {
   keysToRowSelection,
+  resolveSelectedCount,
+  rowSelectionToKeys
+} from '../domains/data-table/state/selection'
+import {
   keysToVisibility,
   keysToVisibilityExclude,
-  resolvePaginationViewState,
-  resolveTableResetKey,
-  resolveCallbackValue,
-  resolveSelectedCount,
-  rowSelectionToKeys,
-  useEffectiveModel,
-  useSyncKeys,
   visibilityToExcludeKeys,
   visibilityToKeys
-} from '../utils/data-table-utils'
-import { resolveColumns } from './data-table/column-helpers'
-import DataTablePagination from './data-table/DataTablePagination.vue'
+} from '../domains/data-table/state/visibility'
+import { resolveColumns } from '../domains/data-table/columns/resolve-columns'
+import DataTablePagination from '../domains/data-table/components/DataTablePagination.vue'
 import type { TableData, TableProps } from '@nuxt/ui'
 
 interface UTableExpose<TData extends TableData> {
@@ -165,7 +171,7 @@ const tableMeta = computed((): TableMeta<T> => ({
   ...((props.stripe || props.rowClass || props.meta?.class?.tr) && {
     class: {
       tr: row => [
-        props.rowClass && resolveCallbackValue(props.rowClass, row),
+        props.rowClass && resolveCallbackValue(props.rowClass, row.original),
         props.meta?.class?.tr && resolveCallbackValue(props.meta.class.tr, row)
       ].filter(Boolean).join(' ')
     }
@@ -174,11 +180,13 @@ const tableMeta = computed((): TableMeta<T> => ({
     style: {
       tr: props.rowStyle && props.meta?.style?.tr
         ? (row) => {
-            const a = resolveCallbackValue(props.rowStyle!, row)
+            const a = resolveCallbackValue(props.rowStyle!, row.original)
             const b = resolveCallbackValue(props.meta!.style!.tr!, row)
             return typeof a === 'object' && typeof b === 'object' ? { ...a, ...b } : b
           }
-        : (props.rowStyle ?? props.meta!.style!.tr!)
+        : props.rowStyle
+          ? row => resolveCallbackValue(props.rowStyle!, row.original)
+          : props.meta!.style!.tr!
     }
   })
 }))
@@ -331,6 +339,10 @@ defineExpose({
       v-model:expanded="effectiveExpanded"
       v-bind="uTableProps"
     >
+      <template v-if="$slots.expanded" #expanded="{ row }">
+        <slot name="expanded" :row="row" />
+      </template>
+
       <template v-if="$slots.empty" #empty>
         <slot name="empty" />
       </template>

@@ -12,7 +12,7 @@ export interface WithCopyProps<T extends InputValue = InputValue> extends /** @v
   tooltipProps?: TooltipProps
 }
 
-export type WithCopyEmits<T extends InputValue = InputValue> = InputEmits<T> & {
+type WithCopyEmits<T extends InputValue = InputValue> = InputEmits<T> & {
   copy: [value: string]
 }
 

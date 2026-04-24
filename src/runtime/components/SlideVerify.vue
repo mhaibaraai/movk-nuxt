@@ -64,7 +64,7 @@ export interface SlideVerifyProps {
   class?: ClassNameValue
 }
 
-export interface SlideVerifyEmits {
+interface SlideVerifyEmits {
   success: []
   dragStart: []
   dragEnd: [success: boolean]

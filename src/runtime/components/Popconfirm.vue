@@ -69,7 +69,7 @@ export interface PopconfirmProps<M extends 'click' | 'hover' = 'click'> extends 
   } & PopoverProps<M>['ui']
 }
 
-export interface PopconfirmSlots {
+interface PopconfirmSlots {
   default?(props: { open: boolean }): VNode[]
   header?(props: { close: () => void }): VNode[]
   title?(props?: {}): VNode[]
@@ -79,7 +79,7 @@ export interface PopconfirmSlots {
   footer?(props: { close: () => void }): VNode[]
 }
 
-export interface PopconfirmEmits {
+interface PopconfirmEmits {
   /** 确认动作成功完成后触发。若 `onConfirm` 返回 Promise，则在其 resolve 后触发 */
   confirm: []
   /** 用户点击取消按钮时触发 */

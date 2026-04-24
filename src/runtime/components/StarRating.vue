@@ -70,7 +70,7 @@ export interface StarRatingProps {
   clearable?: boolean
 }
 
-export interface StarRatingEmits {
+interface StarRatingEmits {
   'update:modelValue': [value: number]
   /** 评分改变事件 */
   'change': [value: number]

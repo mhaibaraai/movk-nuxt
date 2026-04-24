@@ -14,7 +14,7 @@ export interface WithFloatingLabelProps<T extends InputValue = InputValue> exten
   clearButtonProps?: ButtonProps
 }
 
-export type WithFloatingLabelEmits<T extends InputValue = InputValue> = InputEmits<T> & {
+type WithFloatingLabelEmits<T extends InputValue = InputValue> = InputEmits<T> & {
   clear: []
 }
 
