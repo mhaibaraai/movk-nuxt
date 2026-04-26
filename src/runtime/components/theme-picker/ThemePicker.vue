@@ -1,13 +1,29 @@
-<script setup lang="ts">
-import { useColorMode } from '#imports'
+<script lang="ts">
+import type { ComponentConfig } from '@nuxt/ui'
+import type { AppConfig } from 'nuxt/schema'
+import theme from '#build/movk-ui/theme-picker'
+
+type ThemePicker = ComponentConfig<typeof theme, AppConfig, 'themePicker'>
+
+interface ThemePickerProps {
+  ui?: ThemePicker['slots']
+}
+</script>
+
+<script lang="ts" setup>
+import { useAppConfig, useColorMode } from '#imports'
 import { useClipboard } from '@vueuse/core'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useTheme } from '../../composables'
+import { tv } from '../../utils/tv'
 import ThemePickerButton from './ThemePickerButton.vue'
 
+const props = defineProps<ThemePickerProps>()
+const appConfig = useAppConfig() as ThemePicker['AppConfig']
 const colorMode = useColorMode()
 
 const open = ref(false)
+const uiCls = computed(() => tv({ extend: tv(theme), ...(appConfig.movk?.themePicker || {}) })())
 
 const { copy: copyCSS, copied: copiedCSS } = useClipboard()
 const { copy: copyAppConfig, copied: copiedAppConfig } = useClipboard()
@@ -35,7 +51,10 @@ const {
 </script>
 
 <template>
-  <UPopover v-model:open="open" :ui="{ content: 'w-72 px-6 py-4 flex flex-col gap-4 overflow-y-auto max-h-[calc(100vh-5rem)]' }">
+  <UPopover
+    v-model:open="open"
+    :ui="{ ...props.ui, content: uiCls.content({ class: props.ui?.content }) }"
+  >
     <template #default>
       <UButton
         icon="i-lucide-swatch-book"

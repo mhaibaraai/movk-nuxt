@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<script lang="ts">
 import type { ButtonProps } from '@nuxt/ui'
 import type { CellContext } from '@tanstack/vue-table'
 import type {
@@ -7,19 +7,24 @@ import type {
   DataTableActionsColumn,
   DataTableDynamic,
   DataTableProps
-} from '../../../types/data-table'
-import { h } from 'vue'
-import { isFunction } from '@movk/core'
-import { resolveCallbackValue } from '../state/models'
-import { useMessageBox } from '../../../composables/useMessageBox'
-import { UButton, UDropdownMenu } from '#components'
-import DataTableActionConfirm from './DataTableActionConfirm.vue'
+} from '../../types/data-table'
 
-const props = defineProps<{
+interface DataTableRendererActionsCellProps {
   col: DataTableActionsColumn<unknown>
   cellCtx: CellContext<unknown, unknown>
   options: DataTableProps<any>
-}>()
+}
+</script>
+
+<script lang="ts" setup>
+import { h } from 'vue'
+import { isFunction } from '@movk/core'
+import { resolveCallbackValue } from '../../domains/data-table/state/models'
+import { useMessageBox } from '../../composables/useMessageBox'
+import { UButton, UDropdownMenu } from '#components'
+import DataTableActionConfirm from './DataTableRendererActionConfirm.vue'
+
+const props = defineProps<DataTableRendererActionsCellProps>()
 
 const { confirm } = useMessageBox()
 

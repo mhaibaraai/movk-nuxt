@@ -1,7 +1,5 @@
-<script setup lang="ts">
+<script lang="ts">
 import type { ButtonProps } from '@nuxt/ui'
-import { UButton, UBadge } from '#components'
-import { computed, ref } from 'vue'
 
 export interface StarRatingProps {
   /**
@@ -70,13 +68,18 @@ export interface StarRatingProps {
   clearable?: boolean
 }
 
-interface StarRatingEmits {
+export interface StarRatingEmits {
   'update:modelValue': [value: number]
   /** 评分改变事件 */
   'change': [value: number]
   /** 悬停事件 */
   'hover': [value: number | null]
 }
+</script>
+
+<script lang="ts" setup>
+import { UButton, UBadge } from '#components'
+import { computed, ref } from 'vue'
 
 const props = withDefaults(defineProps<StarRatingProps>(), {
   modelValue: 0,

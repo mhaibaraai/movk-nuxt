@@ -1,12 +1,7 @@
-<script setup lang="ts">
-import { UTooltip } from '#components'
+<script lang="ts">
 import type { CSSProperties } from 'vue'
-import { computed, useAttrs, useTemplateRef } from 'vue'
-import { useOverflowDetection } from '../composables/useOverflowDetection'
 
-defineOptions({ inheritAttrs: false })
-
-const props = defineProps<{
+interface DataTableRendererCellTooltipProps {
   /**
    * 单元格显示文本，溢出时作为 Tooltip 内容
    */
@@ -15,7 +10,17 @@ const props = defineProps<{
    * true = 单行截断，number = 多行截断行数（-webkit-line-clamp）
    */
   lines?: boolean | number
-}>()
+}
+</script>
+
+<script lang="ts" setup>
+import { UTooltip } from '#components'
+import { computed, useAttrs, useTemplateRef } from 'vue'
+import { useOverflowDetection } from '../../domains/data-table/composables/useOverflowDetection'
+
+defineOptions({ inheritAttrs: false })
+
+const props = defineProps<DataTableRendererCellTooltipProps>()
 
 const attrs = useAttrs()
 const cellRef = useTemplateRef('cellRef')

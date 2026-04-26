@@ -1,6 +1,6 @@
 import type { Nuxt } from '@nuxt/schema'
-import { createAlibabaPuHuiTiProvider } from './providers/alibaba-puhuiti'
-import type { ModuleOptions } from './module'
+import { createAlibabaPuHuiTiProvider } from '../providers/alibaba-puhuiti'
+import type { ModuleOptions } from '../module'
 
 const FONT_PROVIDERS = [
   {

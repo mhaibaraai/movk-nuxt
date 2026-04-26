@@ -27,8 +27,7 @@ import type {
   DataTableSizePreset,
   DataTableSortButtonContext,
   DataTableSpecialColumnBase,
-  DataTableTreeSelectionStrategy,
-  ResolvedColumnState
+  DataTableTreeSelectionStrategy
 } from '../../../types/data-table'
 import type { SpecialColumnType } from './constants'
 import { h } from 'vue'
@@ -36,9 +35,24 @@ import { isFunction, isString } from '@movk/core'
 import { isDataColumn, isGroupColumn } from '../../../types/data-table'
 import { DENSITY_PRESETS, SPECIAL_COLUMN_DEFAULTS } from './constants'
 import { resolveCallbackValue, resolveColumnFlag, resolvePresetSize, resolveTemplate } from '../state/models'
-import DataTableCellTooltip from '../components/DataTableCellTooltip.vue'
-import DataTableActionsCell from '../components/DataTableActionsCell.vue'
+import DataTableCellTooltip from '../../../components/data-table-renderer/DataTableRendererCellTooltip.vue'
+import DataTableActionsCell from '../../../components/data-table-renderer/DataTableRendererActionsCell.vue'
 import { UButton, UCheckbox } from '#components'
+
+interface ResolvedColumnState<T> {
+  columnDefs: ColumnDef<T, unknown>[]
+  initialPinning: ColumnPinningState
+  initialVisibility: VisibilityState
+  initialSizing: ColumnSizingState
+  hasColumnPinning: boolean
+  hasColumnResizing: boolean
+  hasColumnSort: boolean
+  hasExpandColumn: boolean
+  selectionMode?: 'single' | 'multiple'
+  selectionStrategy?: DataTableTreeSelectionStrategy
+  subRowSelection?: boolean
+  allColumnIds: string[]
+}
 
 interface HeaderAction<T> {
   id: string

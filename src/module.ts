@@ -1,3 +1,5 @@
+import type { FetchContext, FetchResponse } from 'ofetch'
+import type { ApiInstance, EndpointPrivateConfig, MovkApiFullConfig, MovkApiPublicConfig } from './runtime/types'
 import {
   addComponentsDir,
   addImportsDir,
@@ -7,46 +9,96 @@ import {
 } from '@nuxt/kit'
 import { defu } from 'defu'
 import { name, version } from '../package.json'
-import {
-  DEFAULT_RESPONSE_CONFIG,
-  DEFAULT_AUTH_CONFIG,
-  DEFAULT_TOAST_CONFIG,
-  DEFAULT_ENDPOINT
-} from './runtime/constants/api-defaults'
-import type { MovkApiPublicConfig, ApiEndpointPublicConfig, EndpointPrivateConfig, MovkApiFullConfig, ModuleOptions } from './runtime/types'
+import { addTemplates } from './templates'
 import { getPackageJsonMetadata } from './runtime/utils/meta'
-import { setupTheme } from './theme'
-import { setupFonts } from './fonts'
+import { setupTheme } from './utils/theme'
+import { setupFonts } from './utils/fonts'
+import { buildApiRuntimeConfig } from './utils/api'
 
 export * from './runtime/types'
 
-function buildApiRuntimeConfig(apiConfig: MovkApiFullConfig) {
-  const publicEndpoints: Record<string, ApiEndpointPublicConfig> = {}
-  const privateEndpoints: Record<string, EndpointPrivateConfig> = {}
+interface MovkFontProviderConfig {
+  /**
+   * CDN 基础 URL
+   * @see 'https://fonts.nuxt.com/get-started/providers#custom-providers'
+   * @example 'https://cdn.org/fonts'
+   */
+  cdn: string
+  /**
+   * 需要加载的字重，默认全部加载
+   * @example [300, 400, 500, 700]
+   */
+  weights?: number[]
+}
 
-  if (apiConfig.endpoints) {
-    for (const [key, { headers, ...rest }] of Object.entries(apiConfig.endpoints)) {
-      publicEndpoints[key] = rest as ApiEndpointPublicConfig
-      if (headers) privateEndpoints[key] = { headers }
-    }
+export interface ModuleOptions {
+  /**
+   * 组件前缀
+   * @defaultValue 'M'
+   */
+  prefix?: string
+  /** API 模块配置 */
+  api?: MovkApiFullConfig
+  /**
+   * 是否启用主题模块（appConfig 默认值、theme plugin、ThemePicker 组件）
+   * @defaultValue true
+   */
+  theme?: boolean
+  /** 字体提供器配置 */
+  fonts?: {
+    /**
+     * 是否启用字体模块
+     * @defaultValue true
+     */
+    enabled?: boolean
+    /**
+     * 阿里巴巴普惠体字体
+     * @defaultValue 'https://cdn.mhaibaraai.cn/fonts'
+     */
+    alibabaPuhuiti?: MovkFontProviderConfig
+  }
+}
+
+declare module 'nuxt/app' {
+  interface NuxtApp {
+    $api: ApiInstance
   }
 
-  const hasEndpoints = Object.keys(publicEndpoints).length > 0
+  interface RuntimeNuxtHooks {
+    /** 请求发送前（认证注入后） */
+    'movk:api:request': (context: FetchContext) => void | Promise<void>
+    /** 响应成功（业务检查 + 解包后） */
+    'movk:api:response': (
+      context: FetchContext & { response: FetchResponse<any> }
+    ) => void | Promise<void>
+    /** 任何错误（业务错误 + HTTP 错误） */
+    'movk:api:error': (
+      context: FetchContext & { response: FetchResponse<any> }
+    ) => void | Promise<void>
+    /** 401 专用（支持 handled 标记跳过默认行为） */
+    'movk:api:unauthorized': (
+      context: FetchContext & { response: FetchResponse<any> },
+      result: { handled: boolean }
+    ) => void | Promise<void>
+  }
+}
 
-  const publicConfig: MovkApiPublicConfig = {
-    defaultEndpoint: apiConfig.defaultEndpoint ?? 'default',
-    debug: apiConfig.debug ?? false,
-    endpoints: hasEndpoints ? publicEndpoints : DEFAULT_ENDPOINT,
-    response: defu(apiConfig.response, DEFAULT_RESPONSE_CONFIG) as MovkApiPublicConfig['response'],
-    auth: defu(apiConfig.auth, DEFAULT_AUTH_CONFIG) as MovkApiPublicConfig['auth'],
-    toast: defu(apiConfig.toast, DEFAULT_TOAST_CONFIG) as MovkApiPublicConfig['toast']
+declare module 'nuxt/schema' {
+  interface NuxtConfig {
+    movk?: ModuleOptions
   }
 
-  const privateConfig = {
-    endpoints: Object.keys(privateEndpoints).length > 0 ? privateEndpoints : undefined
+  interface NuxtOptions {
+    movk: ModuleOptions
   }
 
-  return { publicConfig, privateConfig }
+  interface PublicRuntimeConfig {
+    movkApi: MovkApiPublicConfig
+  }
+
+  interface RuntimeConfig {
+    movkApi: { endpoints?: Record<string, EndpointPrivateConfig> }
+  }
 }
 
 export default defineNuxtModule<ModuleOptions>({
@@ -58,9 +110,7 @@ export default defineNuxtModule<ModuleOptions>({
   },
   defaults: {
     prefix: 'M',
-    theme: {
-      enabled: true
-    },
+    theme: true,
     fonts: {
       enabled: true,
       alibabaPuhuiti: {
@@ -78,16 +128,16 @@ export default defineNuxtModule<ModuleOptions>({
   async setup(options, nuxt) {
     const { resolve } = createResolver(import.meta.url)
 
+    nuxt.options.alias['#movk'] = resolve('./runtime')
+
     setupTheme(nuxt, resolve, options)
     setupFonts(options, nuxt)
 
-    nuxt.options.alias['#movk'] = resolve('./runtime')
-
     nuxt.options.css = nuxt.options.css || []
-    nuxt.options.css.push(resolve('runtime/style.css'))
+    nuxt.options.css.push(resolve('runtime/index.css'))
 
     const componentIgnore: string[] = []
-    if (options.theme?.enabled === false) {
+    if (options.theme === false) {
       componentIgnore.push('theme-picker/**')
     }
 
@@ -99,6 +149,7 @@ export default defineNuxtModule<ModuleOptions>({
     })
 
     addImportsDir(resolve('runtime/composables'))
+    addTemplates(options, nuxt)
 
     const apiConfig = options.api ?? {}
     if (apiConfig.enabled !== false) {

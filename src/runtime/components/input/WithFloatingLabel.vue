@@ -1,9 +1,11 @@
-<script setup lang="ts" generic="T extends InputValue">
-import { computed, useAttrs } from 'vue'
-import { UInput, UButton } from '#components'
-import { isEmpty, type OmitByKey } from '@movk/core'
-import type { ButtonProps, InputEmits, InputProps, InputSlots, InputValue } from '@nuxt/ui'
+<script lang="ts">
+import type { OmitByKey } from '@movk/core'
+import type { ButtonProps, ComponentConfig, InputEmits, InputProps, InputSlots, InputValue } from '@nuxt/ui'
 import type { ClassNameValue } from '../../types'
+import type { AppConfig } from 'nuxt/schema'
+import theme from '#build/movk-ui/with-floating-label'
+
+type WithFloatingLabel = ComponentConfig<typeof theme, AppConfig, 'withFloatingLabel'>
 
 export interface WithFloatingLabelProps<T extends InputValue = InputValue> extends /** @vue-ignore */ OmitByKey<InputProps<T>, 'modelValue'> {
   /** 浮动标签文本 */
@@ -17,6 +19,14 @@ export interface WithFloatingLabelProps<T extends InputValue = InputValue> exten
 type WithFloatingLabelEmits<T extends InputValue = InputValue> = InputEmits<T> & {
   clear: []
 }
+</script>
+
+<script lang="ts" setup generic="T extends InputValue">
+import { computed, useAttrs } from 'vue'
+import { UInput, UButton } from '#components'
+import { isEmpty } from '@movk/core'
+import { useAppConfig } from '#imports'
+import { tv } from '../../utils/tv'
 
 const props = defineProps<WithFloatingLabelProps<T>>()
 const emits = defineEmits<WithFloatingLabelEmits<T>>()
@@ -25,8 +35,10 @@ const slots = defineSlots<OmitByKey<InputSlots, 'default' | 'trailing'>>()
 defineOptions({ inheritAttrs: false })
 
 const attrs = useAttrs()
+const appConfig = useAppConfig() as WithFloatingLabel['AppConfig']
 const modelValue = defineModel<T>()
 
+const uiCls = computed(() => tv({ extend: tv(theme), ...(appConfig.movk?.withFloatingLabel || {}) })())
 const size = computed(() => (attrs.size as string) ?? 'md')
 
 /**
@@ -75,7 +87,11 @@ function handleClear() {
   <UInput
     v-model="modelValue"
     :placeholder="props.placeholder ?? ''"
-    :ui="{ base: 'peer', trailing: 'pe-1' }"
+    :ui="{
+      ...props.ui,
+      base: uiCls.base({ class: props.ui?.base }),
+      trailing: uiCls.trailing({ class: props.ui?.trailing })
+    }"
     v-bind="$attrs"
     @blur="emits('blur', $event)"
     @change="emits('change', $event)"

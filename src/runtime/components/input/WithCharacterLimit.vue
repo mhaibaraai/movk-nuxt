@@ -1,9 +1,11 @@
-<script setup lang="ts" generic="T extends InputValue">
-import { UInput } from '#components'
-import { computed } from 'vue'
-import type { InputEmits, InputProps, InputSlots, InputValue } from '@nuxt/ui'
+<script lang="ts">
+import type { ComponentConfig, InputEmits, InputProps, InputSlots, InputValue } from '@nuxt/ui'
 import type { OmitByKey } from '@movk/core'
 import type { ClassNameValue } from '../../types'
+import type { AppConfig } from 'nuxt/schema'
+import theme from '#build/movk-ui/with-character-limit'
+
+type WithCharacterLimit = ComponentConfig<typeof theme, AppConfig, 'withCharacterLimit'>
 
 export interface WithCharacterLimitProps<T extends InputValue = InputValue> extends /** @vue-ignore */ OmitByKey<InputProps<T>, 'modelValue'> {
   /**
@@ -14,6 +16,13 @@ export interface WithCharacterLimitProps<T extends InputValue = InputValue> exte
   /** 字符计数器的自定义样式类 */
   counterClass?: ClassNameValue
 }
+</script>
+
+<script lang="ts" setup generic="T extends InputValue">
+import { UInput } from '#components'
+import { computed } from 'vue'
+import { useAppConfig } from '#imports'
+import { tv } from '../../utils/tv'
 
 const props = withDefaults(defineProps<WithCharacterLimitProps<T>>(), {
   maxLength: 50
@@ -23,8 +32,10 @@ const slots = defineSlots<OmitByKey<InputSlots, 'trailing'>>()
 
 defineOptions({ inheritAttrs: false })
 
+const appConfig = useAppConfig() as WithCharacterLimit['AppConfig']
 const modelValue = defineModel<T>()
 
+const uiCls = computed(() => tv({ extend: tv(theme), ...(appConfig.movk?.withCharacterLimit || {}) })())
 const currentLength = computed(() => {
   return String(modelValue.value ?? '').length
 })
@@ -35,7 +46,7 @@ const currentLength = computed(() => {
     v-model="modelValue"
     :maxlength="props.maxLength"
     aria-describedby="character-count"
-    :ui="{ trailing: 'pointer-events-none' }"
+    :ui="{ ...props.ui, trailing: uiCls.trailing({ class: props.ui?.trailing }) }"
     v-bind="$attrs"
     @blur="emits('blur', $event)"
     @change="emits('change', $event)"

@@ -26,7 +26,7 @@ provide('components', components)
 </script>
 
 <template>
-  <UApp :toaster="appConfig.toaster as any" :locale="zh_cn">
+  <UApp :locale="zh_cn">
     <NuxtLoadingIndicator color="var(--ui-primary)" :height="2" />
 
     <UDashboardGroup unit="rem">

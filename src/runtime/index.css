@@ -1,8 +1,8 @@
 @import "tailwindcss" theme(static);
 @import "@nuxt/ui";
+@import '#build/movk-ui.css';
 
 @source "./components";
-@source "./constants";
 
 @theme static {
   --font-sans: 'Alibaba PuHuiTi', sans-serif;
@@ -41,11 +41,6 @@
 .data-table--bordered [data-slot="th"][data-pinned="left"],
 .data-table--bordered [data-slot="td"][data-pinned="left"] {
   box-shadow: inset -1px 0 0 var(--m-dt-border-color, var(--ui-border)), var(--m-dt-pin-shadow);
-}
-
-.data-table--bordered [data-slot="th"][data-pinned="right"],
-.data-table--bordered [data-slot="td"][data-pinned="right"] {
-  /* box-shadow: inset 1px 0 0 var(--m-dt-border-color, var(--ui-border)), var(--m-dt-pin-shadow); */
 }
 
 /* bordered 模式：分组表头底边框 */

@@ -1,18 +1,10 @@
-<script setup lang="ts" generic="S extends z.ZodObject, T extends boolean = true, N extends boolean = false">
+<script lang="ts">
 import type { ButtonProps, FormInputEvents, FormProps, InferInput } from '@nuxt/ui'
 import type { z } from 'zod'
 import type { ZodAutoFormFieldMeta } from '../types/zod'
 import type { AutoFormControls, DynamicFormSlots } from '../types/auto-form'
-import { UButton, UCollapsible, UForm } from '#components'
 import type { Ref } from 'vue'
-import { computed, ref, unref, useTemplateRef, watch } from 'vue'
-import { isFunction, type OmitByKey } from '@movk/core'
-import { useAutoFormProvider } from '../domains/auto-form/provider'
-import { extractPureSchema, introspectSchema } from '../domains/auto-form/schema'
-import { useAutoForm } from '../composables/useAutoForm'
-import AutoFormRendererField from '../domains/auto-form/renderers/AutoFormRendererField.vue'
-import { useAppConfig } from '#app'
-import { resolveGridClasses, resolveMaxCols } from '../constants/grid-cols'
+import type { OmitByKey } from '@movk/core'
 
 export interface SearchFormProps<S extends z.ZodObject, T extends boolean = true, N extends boolean = false> extends /** @vue-ignore */ OmitByKey<FormProps<S, T, N>, 'schema' | 'state' | 'validateOn'> {
   /**
@@ -106,7 +98,7 @@ export interface SearchFormProps<S extends z.ZodObject, T extends boolean = true
   validateOn?: FormInputEvents[]
 }
 
-interface SearchFormActionSlots {
+export interface SearchFormActionSlots {
   /** 替换默认按钮区域 */
   actions: (props: {
     expanded: boolean
@@ -119,7 +111,7 @@ interface SearchFormActionSlots {
   extraActions: (props: { expanded: boolean }) => any
 }
 
-interface SearchFormEmits<S extends z.ZodObject> {
+export interface SearchFormEmits<S extends z.ZodObject> {
   /**
    * 搜索事件，参数为当前表单状态
    */
@@ -134,8 +126,20 @@ interface SearchFormEmits<S extends z.ZodObject> {
   expand: [expanded: boolean]
 }
 
-type SearchFormSlotTypes = SearchFormActionSlots & DynamicFormSlots<Partial<InferInput<S>>>
-type SearchFormStateType = Partial<InferInput<S>>
+type SearchFormSlotTypes<S extends z.ZodObject> = SearchFormActionSlots & DynamicFormSlots<Partial<InferInput<S>>>
+type SearchFormStateType<S extends z.ZodObject> = Partial<InferInput<S>>
+</script>
+
+<script lang="ts" setup generic="S extends z.ZodObject, T extends boolean = true, N extends boolean = false">
+import { UButton, UCollapsible, UForm } from '#components'
+import { computed, ref, unref, useTemplateRef, watch } from 'vue'
+import { isFunction } from '@movk/core'
+import { useAutoFormProvider } from '../domains/auto-form/provider'
+import { extractPureSchema, introspectSchema } from '../domains/auto-form/schema'
+import { useAutoForm } from '../composables/useAutoForm'
+import AutoFormRendererField from './auto-form-renderer/AutoFormRendererField.vue'
+import { useAppConfig } from '#app'
+import { resolveGridClasses, resolveMaxCols } from '../constants/grid-cols'
 
 const props = withDefaults(defineProps<SearchFormProps<S, T, N>>(), {
   cols: 3,
@@ -152,13 +156,13 @@ const props = withDefaults(defineProps<SearchFormProps<S, T, N>>(), {
   loading: false,
   validateOn: () => []
 })
-const modelValue = defineModel<SearchFormStateType>()
+const modelValue = defineModel<SearchFormStateType<S>>()
 const emits = defineEmits<SearchFormEmits<S>>()
-const slots = defineSlots<SearchFormSlotTypes>()
+const slots = defineSlots<SearchFormSlotTypes<S>>()
 defineOptions({ inheritAttrs: false })
 
-const stateModel = ref(modelValue.value ?? props.state ?? {}) as Ref<SearchFormStateType>
-const initialState = { ...(modelValue.value ?? props.state ?? {}) } as SearchFormStateType
+const stateModel = ref(modelValue.value ?? props.state ?? {}) as Ref<SearchFormStateType<S>>
+const initialState = { ...(modelValue.value ?? props.state ?? {}) } as SearchFormStateType<S>
 
 watch(() => stateModel.value, (val) => {
   if (val !== modelValue.value) {
@@ -168,7 +172,7 @@ watch(() => stateModel.value, (val) => {
 
 watch(() => modelValue.value, (val) => {
   if (val !== undefined && val !== stateModel.value) {
-    stateModel.value = (val ?? {}) as SearchFormStateType
+    stateModel.value = (val ?? {}) as SearchFormStateType<S>
   }
 })
 
@@ -224,7 +228,7 @@ function triggerSearch() {
 }
 
 function clear() {
-  stateModel.value = {} as SearchFormStateType
+  stateModel.value = {} as SearchFormStateType<S>
   formRef.value?.clear()
 }
 

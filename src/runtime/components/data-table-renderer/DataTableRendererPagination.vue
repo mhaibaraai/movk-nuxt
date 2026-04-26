@@ -1,17 +1,15 @@
-<script setup lang="ts">
-import type { PaginationProps } from '@nuxt/ui'
+<script lang="ts">
+import type { ComponentConfig, PaginationProps } from '@nuxt/ui'
 import type { PaginationState, Table } from '@tanstack/vue-table'
-import { UPagination, USelect } from '#components'
-import { useAppConfig } from '#imports'
-import theme from '../../../../themes/data-table-pagination'
-import { computed } from 'vue'
-import { tv } from '@nuxt/ui/utils/tv'
-import { resolvePageSizeValue } from '../state/pagination'
+import type { AppConfig } from 'nuxt/schema'
+import theme from '#build/movk-ui/data-table-pagination'
 import type {
   DataTablePageSizeSelectProps,
   DataTablePaginationUiSlots,
   DataTablePaginationUiText
-} from '../../../types/data-table'
+} from '../../types/data-table'
+
+type DataTablePagination = ComponentConfig<typeof theme, AppConfig, 'dataTablePagination'>
 
 interface PageSizeOption {
   label: string
@@ -43,7 +41,7 @@ interface PaginationActionsSlotProps {
   setPageSize: (pageSize: unknown) => void
 }
 
-const props = withDefaults(defineProps<{
+interface DataTableRendererPaginationProps {
   tableApi: Table<any>
   pagination: PaginationState
   page: number
@@ -59,7 +57,22 @@ const props = withDefaults(defineProps<{
   showRowRange?: boolean
   text?: DataTablePaginationUiText
   ui?: DataTablePaginationUiSlots
-}>(), {
+}
+
+interface DataTableRendererPaginationSlots {
+  summary: (props: PaginationSummarySlotProps) => unknown
+  actions: (props: PaginationActionsSlotProps) => unknown
+}
+</script>
+
+<script lang="ts" setup>
+import { UPagination, USelect } from '#components'
+import { useAppConfig } from '#imports'
+import { computed } from 'vue'
+import { tv } from '@nuxt/ui/utils/tv'
+import { resolvePageSizeValue } from '../../domains/data-table/state/pagination'
+
+const props = withDefaults(defineProps<DataTableRendererPaginationProps>(), {
   pageSizes: () => [],
   paginationProps: undefined,
   pageSizeSelectProps: undefined,
@@ -70,14 +83,11 @@ const props = withDefaults(defineProps<{
   ui: undefined
 })
 
-defineSlots<{
-  summary: (props: PaginationSummarySlotProps) => unknown
-  actions: (props: PaginationActionsSlotProps) => unknown
-}>()
+defineSlots<DataTableRendererPaginationSlots>()
 
-const appConfig = useAppConfig()
+const appConfig = useAppConfig() as DataTablePagination['AppConfig']
 const uiCls = computed(() =>
-  tv({ extend: tv(theme), ...(appConfig.ui?.dataTablePagination || {}) })()
+  tv({ extend: tv(theme), ...(appConfig.movk?.dataTablePagination || {}) })()
 )
 
 const pageModel = computed({

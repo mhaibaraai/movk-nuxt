@@ -1,8 +1,10 @@
-<script setup lang="ts" generic="T extends InputValue">
-import { UInput, UButton } from '#components'
-import { isEmpty, type OmitByKey } from '@movk/core'
-import type { ButtonProps, InputEmits, InputProps, InputSlots, InputValue } from '@nuxt/ui'
-import { useAttrs } from 'vue'
+<script lang="ts">
+import type { OmitByKey } from '@movk/core'
+import type { ButtonProps, ComponentConfig, InputEmits, InputProps, InputSlots, InputValue } from '@nuxt/ui'
+import type { AppConfig } from 'nuxt/schema'
+import theme from '#build/movk-ui/with-clear'
+
+type WithClear = ComponentConfig<typeof theme, AppConfig, 'withClear'>
 
 export interface WithClearProps<T extends InputValue = InputValue> extends /** @vue-ignore */ OmitByKey<InputProps<T>, 'modelValue'> {
   /** 清除按钮的自定义属性 */
@@ -12,6 +14,14 @@ export interface WithClearProps<T extends InputValue = InputValue> extends /** @
 type WithClearEmits<T extends InputValue = InputValue> = InputEmits<T> & {
   clear: []
 }
+</script>
+
+<script lang="ts" setup generic="T extends InputValue">
+import { UInput, UButton } from '#components'
+import { isEmpty } from '@movk/core'
+import { computed, useAttrs } from 'vue'
+import { useAppConfig } from '#imports'
+import { tv } from '../../utils/tv'
 
 const props = defineProps<WithClearProps<T>>()
 const emits = defineEmits<WithClearEmits<T>>()
@@ -20,7 +30,10 @@ const slots = defineSlots<OmitByKey<InputSlots, 'trailing'>>()
 defineOptions({ inheritAttrs: false })
 
 const attrs = useAttrs()
+const appConfig = useAppConfig() as WithClear['AppConfig']
 const modelValue = defineModel<InputProps<T>['modelValue']>()
+
+const uiCls = computed(() => tv({ extend: tv(theme), ...(appConfig.movk?.withClear || {}) })())
 
 function handleClear() {
   modelValue.value = undefined
@@ -31,7 +44,7 @@ function handleClear() {
 <template>
   <UInput
     v-model="modelValue"
-    :ui="{ trailing: 'pe-1' }"
+    :ui="{ ...props.ui, trailing: uiCls.trailing({ class: props.ui?.trailing }) }"
     v-bind="$attrs"
     @blur="emits('blur', $event)"
     @change="emits('change', $event)"

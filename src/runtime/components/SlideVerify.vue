@@ -1,9 +1,10 @@
-<script setup lang="ts">
-import { UIcon } from '#components'
-import { useElementSize } from '@vueuse/core'
-import { Motion } from 'motion-v'
-import { computed, ref, useTemplateRef } from 'vue'
-import type { ClassNameValue } from '../types'
+<script lang="ts">
+import type { VNode } from '#imports'
+import type { ComponentConfig } from '@nuxt/ui'
+import type { AppConfig } from 'nuxt/schema'
+import theme from '#build/movk-ui/slide-verify'
+
+type SlideVerify = ComponentConfig<typeof theme, AppConfig, 'slideVerify'>
 
 export interface SlideVerifyProps {
   /**
@@ -47,28 +48,29 @@ export interface SlideVerifyProps {
    */
   threshold?: number
   /**
-   * 自定义轨道样式
+   * 自定义各区域样式
    */
-  trackClass?: ClassNameValue
-  /**
-   * 自定义滑块样式
-   */
-  sliderClass?: ClassNameValue
-  /**
-   * 自定义文本样式
-   */
-  textClass?: ClassNameValue
-  /**
-   * 自定义根元素样式
-   */
-  class?: ClassNameValue
+  ui?: SlideVerify['slots']
 }
 
-interface SlideVerifyEmits {
+export interface SlideVerifyEmits {
   success: []
   dragStart: []
   dragEnd: [success: boolean]
 }
+
+export interface SlideVerifySlots {
+  slider?(props: { verified: boolean, progress: number }): VNode[]
+}
+</script>
+
+<script lang="ts" setup>
+import { UIcon } from '#components'
+import { useAppConfig } from '#imports'
+import { useElementSize } from '@vueuse/core'
+import { Motion } from 'motion-v'
+import { computed, ref, useTemplateRef } from 'vue'
+import { tv } from '../utils/tv'
 
 defineOptions({ inheritAttrs: false })
 
@@ -84,12 +86,22 @@ const props = withDefaults(defineProps<SlideVerifyProps>(), {
 })
 
 const emits = defineEmits<SlideVerifyEmits>()
+defineSlots<SlideVerifySlots>()
 
 const isVerified = defineModel<boolean>({ default: false })
 const trackRef = useTemplateRef<HTMLElement>('track')
 const { width: trackWidth } = useElementSize(trackRef)
 const isDragging = ref(false)
 const dragX = ref(0)
+
+const appConfig = useAppConfig() as SlideVerify['AppConfig']
+
+const uiCls = computed(() =>
+  tv({ extend: tv(theme), ...((appConfig.movk?.slideVerify || {}) as typeof theme) })({
+    disabled: props.disabled,
+    verified: isVerified.value
+  })
+)
 
 const maxDragDistance = computed(() =>
   trackWidth.value ? Math.max(0, trackWidth.value - props.sliderWidth - 8) : 0
@@ -138,12 +150,7 @@ defineExpose({ reset })
 
 <template>
   <div
-    :class="[
-      'relative select-none overflow-hidden rounded-lg border transition-colors duration-300',
-      props.class,
-      disabled ? 'opacity-50 cursor-not-allowed' : '',
-      isVerified ? 'bg-success border-transparent' : 'bg-elevated border-default'
-    ]"
+    :class="uiCls.root({ class: props.ui?.root })"
     :style="{ height: `${height}px` }"
     role="slider"
     :aria-label="text"
@@ -152,7 +159,7 @@ defineExpose({ reset })
     aria-valuemax="100"
     :aria-disabled="disabled"
   >
-    <div ref="track" class="absolute inset-0" :class="trackClass">
+    <div ref="track" :class="uiCls.track({ class: props.ui?.track })">
       <Motion
         v-if="!isVerified"
         as="div"
@@ -161,10 +168,7 @@ defineExpose({ reset })
         :transition="isDragging ? { duration: 0 } : springTransition"
       />
 
-      <div
-        class="absolute inset-0 flex items-center justify-center text-sm font-medium pointer-events-none"
-        :class="textClass"
-      >
+      <div :class="uiCls.text({ class: props.ui?.text })">
         <Motion
           v-if="!isVerified"
           as="span"
@@ -204,15 +208,7 @@ defineExpose({ reset })
       @drag="handleDrag"
       @drag-end="handleDragEnd"
     >
-      <div
-        class="size-full flex items-center justify-center rounded-md shadow-sm transition-colors"
-        :class="[
-          sliderClass,
-          isVerified
-            ? 'bg-white/90'
-            : 'bg-default cursor-grab active:cursor-grabbing ring-1 ring-default'
-        ]"
-      >
+      <div :class="uiCls.slider({ class: props.ui?.slider })">
         <slot name="slider" :verified="isVerified" :progress="progress">
           <UIcon
             :name="isVerified ? successIcon : icon"

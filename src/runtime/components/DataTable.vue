@@ -1,4 +1,4 @@
-<script setup lang="ts" generic="T extends TableData">
+<script lang="ts">
 import type {
   ColumnPinningState,
   ColumnSizingState,
@@ -13,9 +13,37 @@ import type {
   VisibilityState
 } from '@tanstack/vue-table'
 import type { DataTableProps } from '../types/data-table'
+import type { ComponentConfig, TableData, TableProps } from '@nuxt/ui'
+import type { AppConfig } from 'nuxt/schema'
+import theme from '#build/movk-ui/data-table'
+
+type DataTable = ComponentConfig<typeof theme, AppConfig, 'dataTable'>
+
+interface UTableExpose<TData extends TableData> {
+  tableApi: Table<TData>
+  tableRef: HTMLTableElement | null
+}
+
+interface PaginationSlotProps<TData extends TableData> {
+  tableApi: Table<TData>
+  pagination: PaginationState
+  page: number
+  rowCount: number
+  pageCount: number
+  currentPageRowCount: number
+  from: number
+  to: number
+  show: boolean
+  selectedCount: number
+}
+</script>
+
+<script lang="ts" setup generic="T extends TableData">
 import { getPaginationRowModel } from '@tanstack/vue-table'
 import { UTable } from '#components'
+import { useAppConfig } from '#imports'
 import { computed, useAttrs, useTemplateRef } from 'vue'
+import { tv } from '../utils/tv'
 import {
   resolveCallbackValue,
   resolveTableResetKey,
@@ -40,26 +68,7 @@ import {
   visibilityToKeys
 } from '../domains/data-table/state/visibility'
 import { resolveColumns } from '../domains/data-table/columns/resolve-columns'
-import DataTablePagination from '../domains/data-table/components/DataTablePagination.vue'
-import type { TableData, TableProps } from '@nuxt/ui'
-
-interface UTableExpose<TData extends TableData> {
-  tableApi: Table<TData>
-  tableRef: HTMLTableElement | null
-}
-
-interface PaginationSlotProps<TData extends TableData> {
-  tableApi: Table<TData>
-  pagination: PaginationState
-  page: number
-  rowCount: number
-  pageCount: number
-  currentPageRowCount: number
-  from: number
-  to: number
-  show: boolean
-  selectedCount: number
-}
+import DataTablePagination from './data-table-renderer/DataTableRendererPagination.vue'
 
 const props = withDefaults(defineProps<DataTableProps<T>>(), {
   emptyCell: '-',
@@ -162,6 +171,7 @@ useSyncKeys(
 defineOptions({ inheritAttrs: false })
 
 const attrs = useAttrs()
+const appConfig = useAppConfig() as DataTable['AppConfig']
 const tableRef = useTemplateRef<UTableExpose<T>>('tableRef')
 
 const isTreeMode = computed(() => Boolean(props.childrenKey))
@@ -200,6 +210,12 @@ const borderedStyle = computed(() => {
   }
 })
 
+const uiCls = computed(() =>
+  tv({ extend: tv(theme), ...((appConfig.movk?.dataTable || {}) as typeof theme) })({
+    fitContent: !!props.fitContent
+  })
+)
+
 const uTableProps = computed(() => {
   const hasRowClickBehavior = props.expandOnRowClick || props.selectOnRowClick || !!props.onSelect
 
@@ -220,8 +236,8 @@ const uTableProps = computed(() => {
     meta: tableMeta.value,
     ui: {
       ...props.ui,
-      ...(props.fitContent && { base: ['w-fit min-w-0', props.ui?.base].filter(Boolean).join(' ') }),
-      tbody: ['divide-y-0', props.ui?.tbody].filter(Boolean).join(' ')
+      base: uiCls.value.base({ class: props.ui?.base }),
+      tbody: uiCls.value.tbody({ class: props.ui?.tbody })
     },
     columnSizingOptions: {
       enableColumnResizing: !!props.resizable || resolved.value.hasColumnResizing,

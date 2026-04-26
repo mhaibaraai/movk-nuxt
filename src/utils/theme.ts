@@ -1,24 +1,25 @@
-import { addPlugin, type Resolver } from '@nuxt/kit'
+import type { Resolver } from '@nuxt/kit'
 import type { Nuxt } from '@nuxt/schema'
+import type { ModuleOptions } from '../module'
+import { addPlugin } from '@nuxt/kit'
 import defu from 'defu'
-import type { ModuleOptions } from './module'
 
-/**
- * 设置主题配置
- * 包括 appConfig.theme 默认值和 head 中的主题相关样式
- */
 export function setupTheme(nuxt: Nuxt, resolve: Resolver['resolve'], options: ModuleOptions) {
-  if (options.theme?.enabled === false) return
+  if (options.theme === false) return
 
-  // 设置 appConfig.theme 默认值
-  nuxt.options.appConfig.theme = defu(nuxt.options.appConfig.theme || {}, {
+  nuxt.options.appConfig.movk = defu(nuxt.options.appConfig.movk || {}, {
     radius: 0.25,
     blackAsPrimary: false,
     font: 'Alibaba PuHuiTi',
-    icons: 'lucide'
+    icons: 'lucide',
+    prefix: options?.prefix,
+    tv: {
+      twMergeConfig: {
+        prefix: options?.prefix
+      }
+    }
   })
 
-  // 修改 ui 模块的默认颜色配置
   nuxt.options.appConfig.ui = defu(nuxt.options.appConfig.ui || {}, {
     colors: {
       primary: 'blue',

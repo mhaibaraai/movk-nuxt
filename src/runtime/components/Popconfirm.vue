@@ -1,16 +1,15 @@
-<script setup lang="ts" generic="M extends 'click' | 'hover' = 'click'">
+<script lang="ts">
 import type { VNode } from '#imports'
-import type { ClassNameValue, SemanticColor } from '../types'
-import type { PopoverProps, ButtonProps, LinkPropsKeys, IconProps } from '@nuxt/ui'
+import type { SemanticColor } from '../types'
+import type { PopoverProps, ButtonProps, LinkPropsKeys, IconProps, ComponentConfig, PopoverSlots } from '@nuxt/ui'
 import type { OmitByKey } from '@movk/core'
-import { isObject } from '@movk/core'
-import { UPopover, UButton, UIcon } from '#components'
-import { computed, ref, useAttrs } from 'vue'
-import { useAppConfig } from '#imports'
-import theme from '../../themes/popconfirm'
-import { tv } from '@nuxt/ui/utils/tv'
+import type { AppConfig } from 'nuxt/schema'
+import theme from '#build/movk-ui/popconfirm'
 
-export interface PopconfirmProps<M extends 'click' | 'hover' = 'click'> extends /** @vue-ignore */ OmitByKey<PopoverProps<M>, 'open' | 'defaultOpen' | 'dismissible' | 'arrow' | 'ui'> {
+type Popconfirm = ComponentConfig<typeof theme, AppConfig, 'popconfirm'>
+type PopoverMode = 'click' | 'hover'
+
+export interface PopconfirmProps<M extends PopoverMode = PopoverMode> extends /** @vue-ignore */ OmitByKey<PopoverProps<M>, 'open' | 'defaultOpen' | 'dismissible' | 'arrow' | 'ui'> {
   /**
    * 确认气泡的标题文本。
    * @defaultValue '确认操作'
@@ -60,33 +59,32 @@ export interface PopconfirmProps<M extends 'click' | 'hover' = 'click'> extends 
    * 回调成功完成后弹层自动关闭并触发 `confirm` 事件；抛错时保持弹层打开。
    */
   onConfirm?: () => void | Promise<void>
-  ui?: {
-    header?: ClassNameValue
-    title?: ClassNameValue
-    description?: ClassNameValue
-    body?: ClassNameValue
-    footer?: ClassNameValue
-  } & PopoverProps<M>['ui']
+  ui?: Popconfirm['slots']
 }
 
-interface PopconfirmSlots {
-  default?(props: { open: boolean }): VNode[]
-  header?(props: { close: () => void }): VNode[]
-  title?(props?: {}): VNode[]
-  description?(props?: {}): VNode[]
-  actions?(props?: {}): VNode[]
-  body?(props: { close: () => void }): VNode[]
-  footer?(props: { close: () => void }): VNode[]
-}
-
-interface PopconfirmEmits {
-  /** 确认动作成功完成后触发。若 `onConfirm` 返回 Promise，则在其 resolve 后触发 */
+export interface PopconfirmEmits {
   confirm: []
-  /** 用户点击取消按钮时触发 */
   cancel: []
-  /** 确认回调抛出异常时触发，携带原始错误 */
   error: [error: unknown]
 }
+
+export interface PopconfirmSlots<M extends PopoverMode = PopoverMode> {
+  default?(props: { open: boolean }): VNode[]
+  header?: PopoverSlots<M>['content']
+  title?: PopoverSlots<M>['content']
+  description?: PopoverSlots<M>['content']
+  actions?: PopoverSlots<M>['content']
+  body?: PopoverSlots<M>['content']
+  footer?: PopoverSlots<M>['content']
+}
+</script>
+
+<script lang="ts" setup generic="M extends PopoverMode">
+import { tv } from '../utils/tv'
+import { isObject } from '@movk/core'
+import { UPopover, UButton, UIcon } from '#components'
+import { computed, ref, useAttrs } from 'vue'
+import { useAppConfig } from '#imports'
 
 const props = withDefaults(defineProps<PopconfirmProps>(), {
   title: '确认操作',
@@ -103,11 +101,11 @@ const slots = defineSlots<PopconfirmSlots>()
 defineOptions({ inheritAttrs: false })
 
 const attrs = useAttrs()
-const appConfig = useAppConfig()
+const appConfig = useAppConfig() as Popconfirm['AppConfig']
+
 const openState = ref(false)
-const uiCls = computed(() =>
-  tv({ extend: tv(theme), ...(appConfig.ui?.popconfirm || {}) })()
-)
+
+const uiCls = computed(() => tv({ extend: tv(theme), ...(appConfig.movk?.popconfirm || {}) })())
 const confirmLoading = ref(false)
 
 const iconMap = {
@@ -199,7 +197,7 @@ async function handleConfirm(close: () => void) {
             data-slot="title"
             :class="uiCls.title({ class: props.ui?.title })"
           >
-            <slot name="title">
+            <slot name="title" :close="close">
               <UIcon :name="resolvedIcon" :class="resolvedIconColor" class="size-4 shrink-0" />
               {{ props.title }}
             </slot>
@@ -210,13 +208,13 @@ async function handleConfirm(close: () => void) {
             data-slot="description"
             :class="uiCls.description({ class: props.ui?.description })"
           >
-            <slot name="description">
+            <slot name="description" :close="close">
               {{ props.description }}
             </slot>
           </p>
         </slot>
 
-        <slot name="actions" />
+        <slot name="actions" :close="close" />
       </div>
 
       <div v-if="!!slots.body" data-slot="body" :class="uiCls.body({ class: props.ui?.body })">

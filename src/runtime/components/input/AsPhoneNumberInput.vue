@@ -1,9 +1,11 @@
-<script setup lang="ts" generic="T extends InputValue">
-import { UInput } from '#components'
-import { vMaska } from 'maska/vue'
+<script lang="ts">
 import type { OmitByKey } from '@movk/core'
-import type { InputEmits, InputProps, InputSlots, InputValue } from '@nuxt/ui'
+import type { ComponentConfig, InputEmits, InputProps, InputSlots, InputValue } from '@nuxt/ui'
 import type { ClassNameValue } from '../../types'
+import theme from '#build/movk-ui/as-phone-number-input'
+import type { AppConfig } from 'nuxt/schema'
+
+type AsPhoneNumberInput = ComponentConfig<typeof theme, AppConfig, 'asPhoneNumberInput'>
 
 export interface AsPhoneNumberInputProps<T extends InputValue = InputValue> extends /** @vue-ignore */ OmitByKey<InputProps<T>, 'type' | 'modelValue'> {
   /**
@@ -16,16 +18,31 @@ export interface AsPhoneNumberInputProps<T extends InputValue = InputValue> exte
   /** 区号前缀的自定义样式类。 */
   dialCodeClass?: ClassNameValue
 }
+</script>
+
+<script lang="ts" setup generic="T extends InputValue">
+import { UInput } from '#components'
+import { vMaska } from 'maska/vue'
+import { computed } from 'vue'
+import { tv } from '../../utils/tv'
+import { useAppConfig } from '#imports'
 
 const props = withDefaults(defineProps<AsPhoneNumberInputProps<T>>(), {
   mask: '(###) ###-####'
 })
+const modelValue = defineModel<T>()
 const emits = defineEmits<InputEmits<T>>()
 const slots = defineSlots<OmitByKey<InputSlots, 'leading'>>()
 
 defineOptions({ inheritAttrs: false })
 
-const modelValue = defineModel<T>()
+const appConfig = useAppConfig() as AsPhoneNumberInput['AppConfig']
+
+const uiCls = computed(() =>
+  tv({ extend: tv(theme), ...((appConfig.movk?.asPhoneNumberInput || {}) as typeof theme) })({
+    dialCode: !!props.dialCode
+  })
+)
 </script>
 
 <template>
@@ -35,9 +52,11 @@ const modelValue = defineModel<T>()
     type="tel"
     :placeholder="props.placeholder ?? props.mask.replaceAll('#', '_')"
     :style="props.dialCode ? { '--dial-code-length': `${props.dialCode.length + 1.5}ch` } : undefined"
-    :ui="props.dialCode
-      ? { base: 'ps-(--dial-code-length)', leading: 'pointer-events-none text-muted' }
-      : {}"
+    :ui="{
+      ...props.ui,
+      base: uiCls.base({ class: props.ui?.base }),
+      leading: uiCls.leading({ class: props.ui?.leading })
+    }"
     v-bind="$attrs"
     @blur="emits('blur', $event)"
     @change="emits('change', $event)"

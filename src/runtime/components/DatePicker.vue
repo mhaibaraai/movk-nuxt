@@ -1,15 +1,14 @@
-<script setup lang="ts" generic="R extends boolean, M extends boolean, P extends 'click' | 'hover' = 'click'">
-import { UPopover, UButton, UCalendar } from '#components'
+<script lang="ts">
 import type { DateValue } from '@internationalized/date'
 import type { DateFormatterOptions } from '../composables/useDateFormatter'
 import type { ButtonProps, CalendarEmits, CalendarProps, PopoverEmits, PopoverProps } from '@nuxt/ui'
 import type { OmitByKey } from '@movk/core'
-import { computed, useAttrs } from 'vue'
-import { useDateFormatter } from '../composables/useDateFormatter'
 
-export type LabelFormat = 'iso' | 'formatted' | 'date' | 'timestamp' | 'unix'
+type LabelFormat = 'iso' | 'formatted' | 'date' | 'timestamp' | 'unix'
+type DateFormatter = ReturnType<typeof import('../composables/useDateFormatter').useDateFormatter>
+type PopoverMode = 'click' | 'hover'
 
-export interface DatePickerProps<R extends boolean, M extends boolean, P extends 'click' | 'hover' = 'click'> extends /** @vue-ignore */ OmitByKey<CalendarProps<R, M>, 'modelValue' | 'placeholder'>, DateFormatterOptions {
+export interface DatePickerProps<R extends boolean, M extends boolean, P extends PopoverMode = PopoverMode> extends /** @vue-ignore */ OmitByKey<CalendarProps<R, M>, 'modelValue' | 'placeholder'>, DateFormatterOptions {
   /**
    * 输入框占位文本
    * @defaultValue '选择日期'
@@ -20,12 +19,16 @@ export interface DatePickerProps<R extends boolean, M extends boolean, P extends
   /** 弹出层组件属性 */
   popoverProps?: PopoverProps<P>
   /** 按钮上展示文本的格式 */
-  labelFormat?: LabelFormat | ((formatter: ReturnType<typeof useDateFormatter>, modelValue: CalendarProps<R, M>['modelValue']) => string)
+  labelFormat?: LabelFormat | ((formatter: DateFormatter, modelValue: CalendarProps<R, M>['modelValue']) => string)
 }
 
 type DatePickerEmits<R extends boolean, M extends boolean> = PopoverEmits & CalendarEmits<R, M>
+</script>
 
-const LABEL_FORMATS: LabelFormat[] = ['iso', 'formatted', 'date', 'timestamp', 'unix']
+<script lang="ts" setup generic="R extends boolean, M extends boolean, P extends PopoverMode">
+import { UPopover, UButton, UCalendar } from '#components'
+import { computed, useAttrs } from 'vue'
+import { useDateFormatter } from '../composables/useDateFormatter'
 
 const {
   buttonProps,
@@ -40,6 +43,7 @@ const emits = defineEmits<DatePickerEmits<R, M>>()
 
 defineOptions({ inheritAttrs: false })
 
+const LABEL_FORMATS: LabelFormat[] = ['iso', 'formatted', 'date', 'timestamp', 'unix']
 const attrs = useAttrs()
 const modelValue = defineModel<CalendarProps<R, M>['modelValue']>()
 

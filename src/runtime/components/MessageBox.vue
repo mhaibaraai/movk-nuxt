@@ -1,13 +1,14 @@
-<script setup lang="ts">
+<script lang="ts">
 import type { OmitByKey } from '@movk/core'
-import type { ModalProps, ButtonProps, IconProps } from '@nuxt/ui'
+import type { ModalProps, ButtonProps, ComponentConfig, IconProps } from '@nuxt/ui'
 import type { SemanticColor } from '../types'
-import { computed, useAttrs, ref } from 'vue'
-import { UModal, UButton, UIcon } from '#components'
+import type { AppConfig } from 'nuxt/schema'
+import theme from '#build/movk-ui/message-box'
 
 type MessageBoxMode = 'alert' | 'confirm'
+type MessageBox = ComponentConfig<typeof theme, AppConfig, 'messageBox'>
 
-export interface MessageBoxProps extends /** @vue-ignore */ OmitByKey<ModalProps, 'title' | 'open' | 'defaultOpen' | 'dismissible'> {
+export interface MessageBoxProps extends /** @vue-ignore */ OmitByKey<ModalProps, 'title' | 'open' | 'defaultOpen' | 'dismissible' | 'ui'> {
   /**
    * 模态框标题文本。
    * @defaultValue '提示'
@@ -61,9 +62,10 @@ export interface MessageBoxProps extends /** @vue-ignore */ OmitByKey<ModalProps
    * 仅在 `mode='confirm'` 时渲染。
    */
   cancelButton?: ButtonProps
+  ui?: MessageBox['slots']
 }
 
-interface MessageBoxEmits {
+export interface MessageBoxEmits {
   /**
    * 模态框关闭时触发。
    * - `true`：用户点击了确认
@@ -71,6 +73,13 @@ interface MessageBoxEmits {
    */
   close: [confirmed: boolean]
 }
+</script>
+
+<script lang="ts" setup>
+import { computed, useAttrs, ref } from 'vue'
+import { UModal, UButton, UIcon } from '#components'
+import { useAppConfig } from '#imports'
+import { tv } from '../utils/tv'
 
 const props = withDefaults(defineProps<MessageBoxProps>(), {
   title: '提示',
@@ -87,6 +96,7 @@ const emits = defineEmits<MessageBoxEmits>()
 defineOptions({ inheritAttrs: false })
 
 const attrs = useAttrs()
+const appConfig = useAppConfig() as MessageBox['AppConfig']
 
 const iconMap = {
   primary: 'i-lucide-bell',
@@ -139,10 +149,12 @@ function handleUpdateOpen(val: boolean) {
   emits('close', false)
 }
 
+const uiCls = computed(() => tv({ extend: tv(theme), ...(appConfig.movk?.messageBox || {}) })())
+
 const resolvedUI = computed(() => ({
-  title: 'flex gap-2 items-center',
-  footer: 'justify-end',
-  ...(attrs.ui as ModalProps['ui'] ?? {})
+  ...props.ui,
+  title: uiCls.value.title({ class: props.ui?.title }),
+  footer: uiCls.value.footer({ class: props.ui?.footer })
 }))
 </script>
 

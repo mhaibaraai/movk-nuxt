@@ -1,4 +1,4 @@
-export default {
+export default () => ({
   slots: {
     content: 'p-4 flex flex-col gap-2',
     arrow: '',
@@ -8,4 +8,4 @@ export default {
     body: '',
     footer: 'mt-1 flex items-center justify-end gap-1.5'
   }
-}
+})

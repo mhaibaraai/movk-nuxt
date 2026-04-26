@@ -1,15 +1,20 @@
-<script setup lang="ts">
+<script lang="ts">
 import type { ButtonProps } from '@nuxt/ui'
-import type { DataTableAction, DataTableActionButtonContext, DataTableDynamic } from '../../../types/data-table'
-import { computed, ref } from 'vue'
-import { resolveCallbackValue } from '../state/models'
-import { useMessageBox } from '../../../composables/useMessageBox'
+import type { DataTableAction, DataTableActionButtonContext, DataTableDynamic } from '../../types/data-table'
 
-const props = defineProps<{
+interface DataTableRendererActionConfirmProps {
   action: DataTableAction<unknown>
   ctx: DataTableActionButtonContext<unknown>
   globalButtonProps?: DataTableDynamic<ButtonProps, DataTableActionButtonContext<unknown>>
-}>()
+}
+</script>
+
+<script lang="ts" setup>
+import { computed, ref } from 'vue'
+import { resolveCallbackValue } from '../../domains/data-table/state/models'
+import { useMessageBox } from '../../composables/useMessageBox'
+
+const props = defineProps<DataTableRendererActionConfirmProps>()
 
 const { confirm } = useMessageBox()
 const loading = ref(false)
