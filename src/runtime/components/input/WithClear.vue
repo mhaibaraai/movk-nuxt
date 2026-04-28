@@ -3,12 +3,13 @@ import type { OmitByKey } from '@movk/core'
 import type { ButtonProps, ComponentConfig, InputEmits, InputProps, InputSlots, InputValue } from '@nuxt/ui'
 import type { AppConfig } from 'nuxt/schema'
 import theme from '#build/movk-ui/with-clear'
+import inputTheme from '#build/ui/input'
 
-type WithClear = ComponentConfig<typeof theme, AppConfig, 'withClear'>
+type WithClear = ComponentConfig<typeof inputTheme, AppConfig, 'withClear'>
 
-export interface WithClearProps<T extends InputValue = InputValue> extends /** @vue-ignore */ OmitByKey<InputProps<T>, 'modelValue'> {
-  /** 清除按钮的自定义属性 */
+export interface WithClearProps<T extends InputValue = InputValue> extends /** @vue-ignore */ OmitByKey<InputProps<T>, 'modelValue' | 'ui'> {
   buttonProps?: ButtonProps
+  ui?: WithClear['slots']
 }
 
 type WithClearEmits<T extends InputValue = InputValue> = InputEmits<T> & {
@@ -19,9 +20,9 @@ type WithClearEmits<T extends InputValue = InputValue> = InputEmits<T> & {
 <script lang="ts" setup generic="T extends InputValue">
 import { UInput, UButton } from '#components'
 import { isEmpty } from '@movk/core'
-import { computed, useAttrs } from 'vue'
+import { useAttrs } from 'vue'
 import { useAppConfig } from '#imports'
-import { tv } from '../../utils/tv'
+import { useExtendedTv } from '../../utils/extend-theme'
 
 const props = defineProps<WithClearProps<T>>()
 const emits = defineEmits<WithClearEmits<T>>()
@@ -33,7 +34,12 @@ const attrs = useAttrs()
 const appConfig = useAppConfig() as WithClear['AppConfig']
 const modelValue = defineModel<InputProps<T>['modelValue']>()
 
-const uiCls = computed(() => tv({ extend: tv(theme), ...(appConfig.movk?.withClear || {}) })())
+const { baseUi } = useExtendedTv(
+  inputTheme,
+  theme,
+  () => appConfig.movk?.withClear,
+  () => ({ ui: props.ui })
+)
 
 function handleClear() {
   modelValue.value = undefined
@@ -44,8 +50,8 @@ function handleClear() {
 <template>
   <UInput
     v-model="modelValue"
-    :ui="{ ...props.ui, trailing: uiCls.trailing({ class: props.ui?.trailing }) }"
-    v-bind="$attrs"
+    :ui="baseUi"
+    v-bind="attrs"
     @blur="emits('blur', $event)"
     @change="emits('change', $event)"
   >

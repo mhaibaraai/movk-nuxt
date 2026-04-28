@@ -3,21 +3,22 @@ import type { OmitByKey } from '@movk/core'
 import type { ButtonProps, ComponentConfig, InputEmits, InputProps, InputSlots, InputValue } from '@nuxt/ui'
 import type { AppConfig } from 'nuxt/schema'
 import theme from '#build/movk-ui/with-password-toggle'
+import inputTheme from '#build/ui/input'
 
-type WithPasswordToggle = ComponentConfig<typeof theme, AppConfig, 'withPasswordToggle'>
+type WithPasswordToggle = ComponentConfig<typeof inputTheme, AppConfig, 'withPasswordToggle'>
 
-export interface WithPasswordToggleProps<T extends InputValue = InputValue> extends /** @vue-ignore */ OmitByKey<InputProps<T>, 'type' | 'modelValue'> {
-  /** 切换按钮的自定义属性 */
+export interface WithPasswordToggleProps<T extends InputValue = InputValue> extends /** @vue-ignore */ OmitByKey<InputProps<T>, 'type' | 'modelValue' | 'ui'> {
   buttonProps?: ButtonProps
+  ui?: WithPasswordToggle['slots']
 }
 </script>
 
 <script lang="ts" setup generic="T extends InputValue">
 import { UInput, UButton } from '#components'
 import { useToggle } from '@vueuse/core'
-import { computed, useAttrs } from 'vue'
+import { useAttrs } from 'vue'
 import { useAppConfig } from '#imports'
-import { tv } from '../../utils/tv'
+import { useExtendedTv } from '../../utils/extend-theme'
 
 const props = defineProps<WithPasswordToggleProps<T>>()
 const emits = defineEmits<InputEmits<T>>()
@@ -29,7 +30,13 @@ const attrs = useAttrs()
 const appConfig = useAppConfig() as WithPasswordToggle['AppConfig']
 const modelValue = defineModel<T>()
 
-const uiCls = computed(() => tv({ extend: tv(theme), ...(appConfig.movk?.withPasswordToggle || {}) })())
+const { baseUi } = useExtendedTv(
+  inputTheme,
+  theme,
+  () => appConfig.movk?.withPasswordToggle,
+  () => ({ ui: props.ui })
+)
+
 const [value, toggle] = useToggle(false)
 </script>
 
@@ -37,8 +44,8 @@ const [value, toggle] = useToggle(false)
   <UInput
     v-model="modelValue"
     :type="value ? 'text' : 'password'"
-    :ui="{ ...props.ui, trailing: uiCls.trailing({ class: props.ui?.trailing }) }"
-    v-bind="$attrs"
+    :ui="baseUi"
+    v-bind="attrs"
     @blur="emits('blur', $event)"
     @change="emits('change', $event)"
   >

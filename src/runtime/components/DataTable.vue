@@ -16,8 +16,14 @@ import type { DataTableProps } from '../types/data-table'
 import type { ComponentConfig, TableData, TableProps } from '@nuxt/ui'
 import type { AppConfig } from 'nuxt/schema'
 import theme from '#build/movk-ui/data-table'
+import tableTheme from '#build/ui/table'
 
-type DataTable = ComponentConfig<typeof theme, AppConfig, 'dataTable'>
+type FullTheme = typeof tableTheme & {
+  variants: typeof tableTheme['variants'] & {
+    fitContent: { true: { base: string } }
+  }
+}
+type DataTable = ComponentConfig<FullTheme, AppConfig, 'dataTable'>
 
 interface UTableExpose<TData extends TableData> {
   tableApi: Table<TData>
@@ -43,7 +49,7 @@ import { getPaginationRowModel } from '@tanstack/vue-table'
 import { UTable } from '#components'
 import { useAppConfig } from '#imports'
 import { computed, useAttrs, useTemplateRef } from 'vue'
-import { tv } from '../utils/tv'
+import { useExtendedTv } from '../utils/extend-theme'
 import {
   resolveCallbackValue,
   resolveTableResetKey,
@@ -210,10 +216,11 @@ const borderedStyle = computed(() => {
   }
 })
 
-const uiCls = computed(() =>
-  tv({ extend: tv(theme), ...((appConfig.movk?.dataTable || {}) as typeof theme) })({
-    fitContent: !!props.fitContent
-  })
+const { ui: mergedUi } = useExtendedTv(
+  tableTheme,
+  theme,
+  () => appConfig.movk?.dataTable,
+  () => ({ ui: props.ui, variants: { fitContent: !!props.fitContent } })
 )
 
 const uTableProps = computed(() => {
@@ -234,11 +241,7 @@ const uTableProps = computed(() => {
     ...attrs,
     columns: resolved.value.columnDefs,
     meta: tableMeta.value,
-    ui: {
-      ...props.ui,
-      base: uiCls.value.base({ class: props.ui?.base }),
-      tbody: uiCls.value.tbody({ class: props.ui?.tbody })
-    },
+    ui: mergedUi.value,
     columnSizingOptions: {
       enableColumnResizing: !!props.resizable || resolved.value.hasColumnResizing,
       ...(props.columnResizeMode && { columnResizeMode: props.columnResizeMode }),

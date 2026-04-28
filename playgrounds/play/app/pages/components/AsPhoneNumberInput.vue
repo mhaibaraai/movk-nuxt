@@ -15,6 +15,9 @@ const phoneUS = ref('')
         dial-code="+1"
         mask="(###) ###-####"
         class="w-full"
+        :ui="{
+          leading: 'text-red-800'
+        }"
       />
     </UFormField>
   </Matrix>

@@ -85,7 +85,7 @@ export function useUploadWithProgress() {
     error.value = null
 
     return new Promise((resolve) => {
-      const authHeaders = getAuthHeaders(config)
+      const authHeaders = getAuthHeaders(config.auth)
       const xhr = new XMLHttpRequest()
       currentXhr = xhr
 

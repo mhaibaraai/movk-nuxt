@@ -63,7 +63,7 @@ export default defineNuxtConfig({
   },
 
   movk: {
-    theme: false,
+    theme: { enabled: false },
     fonts: { enabled: false }
   }
 })

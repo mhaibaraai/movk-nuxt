@@ -5,8 +5,18 @@ import type { PopoverProps, ButtonProps, LinkPropsKeys, IconProps, ComponentConf
 import type { OmitByKey } from '@movk/core'
 import type { AppConfig } from 'nuxt/schema'
 import theme from '#build/movk-ui/popconfirm'
+import type popoverTheme from '#build/ui/popover'
 
-type Popconfirm = ComponentConfig<typeof theme, AppConfig, 'popconfirm'>
+type FullTheme = typeof popoverTheme & {
+  slots: typeof popoverTheme['slots'] & {
+    header: string
+    title: string
+    description: string
+    body: string
+    footer: string
+  }
+}
+type Popconfirm = ComponentConfig<FullTheme, AppConfig, 'popconfirm'>
 type PopoverMode = 'click' | 'hover'
 
 export interface PopconfirmProps<M extends PopoverMode = PopoverMode> extends /** @vue-ignore */ OmitByKey<PopoverProps<M>, 'open' | 'defaultOpen' | 'dismissible' | 'arrow' | 'ui'> {
@@ -106,6 +116,7 @@ const appConfig = useAppConfig() as Popconfirm['AppConfig']
 const openState = ref(false)
 
 const uiCls = computed(() => tv({ extend: tv(theme), ...(appConfig.movk?.popconfirm || {}) })())
+
 const confirmLoading = ref(false)
 
 const iconMap = {

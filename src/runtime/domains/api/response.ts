@@ -1,4 +1,4 @@
-import type { ApiError, ApiResponse, ApiResponseConfig } from '../../types/api'
+import type { ApiResponse, ApiResponseConfig } from '../../types/api'
 
 export function isBusinessSuccess(
   response: ApiResponse,
@@ -16,8 +16,8 @@ export function extractMessage(
 ): string | undefined {
   const messageKey = config.messageKey || 'message'
   return (response[messageKey] as string | undefined)
-    || (response.message as string | undefined)
-    || (response.msg as string | undefined)
+    || response.message
+    || response.msg
 }
 
 export function extractData(
@@ -26,12 +26,4 @@ export function extractData(
 ): unknown {
   const dataKey = config.dataKey || 'data'
   return response[dataKey] ?? response
-}
-
-export function createApiError(response: ApiResponse, message?: string): ApiError {
-  const error = new Error(message || '请求失败') as ApiError
-  error.statusCode = Number(response.code || response.status || 500)
-  error.response = response
-  error.isBusinessError = true
-  return error
 }

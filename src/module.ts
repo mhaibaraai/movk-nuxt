@@ -1,5 +1,6 @@
-import type { FetchContext, FetchResponse } from 'ofetch'
-import type { ApiInstance, EndpointPrivateConfig, MovkApiFullConfig, MovkApiPublicConfig } from './runtime/types'
+import type {
+  MovkApiFullConfig
+} from './runtime/types'
 import {
   addComponentsDir,
   addImportsDir,
@@ -39,11 +40,20 @@ export interface ModuleOptions {
   prefix?: string
   /** API 模块配置 */
   api?: MovkApiFullConfig
-  /**
-   * 是否启用主题模块（appConfig 默认值、theme plugin、ThemePicker 组件）
-   * @defaultValue true
-   */
-  theme?: boolean
+  /** 主题模块配置 */
+  theme?: {
+    /**
+     * 是否启用主题模块（appConfig 默认值、theme plugin、ThemePicker 组件）
+     * @defaultValue true
+     */
+    enabled?: boolean
+    /**
+     * Prefix for Tailwind CSS utility classes
+     * @see https://ui.nuxt.com/docs/getting-started/installation/nuxt#themeprefix
+     * @example 'tw'
+     */
+    prefix?: string
+  }
   /** 字体提供器配置 */
   fonts?: {
     /**
@@ -59,48 +69,6 @@ export interface ModuleOptions {
   }
 }
 
-declare module 'nuxt/app' {
-  interface NuxtApp {
-    $api: ApiInstance
-  }
-
-  interface RuntimeNuxtHooks {
-    /** 请求发送前（认证注入后） */
-    'movk:api:request': (context: FetchContext) => void | Promise<void>
-    /** 响应成功（业务检查 + 解包后） */
-    'movk:api:response': (
-      context: FetchContext & { response: FetchResponse<any> }
-    ) => void | Promise<void>
-    /** 任何错误（业务错误 + HTTP 错误） */
-    'movk:api:error': (
-      context: FetchContext & { response: FetchResponse<any> }
-    ) => void | Promise<void>
-    /** 401 专用（支持 handled 标记跳过默认行为） */
-    'movk:api:unauthorized': (
-      context: FetchContext & { response: FetchResponse<any> },
-      result: { handled: boolean }
-    ) => void | Promise<void>
-  }
-}
-
-declare module 'nuxt/schema' {
-  interface NuxtConfig {
-    movk?: ModuleOptions
-  }
-
-  interface NuxtOptions {
-    movk: ModuleOptions
-  }
-
-  interface PublicRuntimeConfig {
-    movkApi: MovkApiPublicConfig
-  }
-
-  interface RuntimeConfig {
-    movkApi: { endpoints?: Record<string, EndpointPrivateConfig> }
-  }
-}
-
 export default defineNuxtModule<ModuleOptions>({
   meta: {
     name,
@@ -110,7 +78,9 @@ export default defineNuxtModule<ModuleOptions>({
   },
   defaults: {
     prefix: 'M',
-    theme: true,
+    theme: {
+      enabled: true
+    },
     fonts: {
       enabled: true,
       alibabaPuhuiti: {
@@ -130,14 +100,17 @@ export default defineNuxtModule<ModuleOptions>({
 
     nuxt.options.alias['#movk'] = resolve('./runtime')
 
-    setupTheme(nuxt, resolve, options)
+    setupTheme(nuxt, resolve, options['theme'])
     setupFonts(options, nuxt)
 
     nuxt.options.css = nuxt.options.css || []
     nuxt.options.css.push(resolve('runtime/index.css'))
 
-    const componentIgnore: string[] = []
-    if (options.theme === false) {
+    const componentIgnore: string[] = [
+      'auto-form-renderer/**',
+      'data-table-renderer/**'
+    ]
+    if (options.theme?.enabled === false) {
       componentIgnore.push('theme-picker/**')
     }
 
@@ -149,7 +122,7 @@ export default defineNuxtModule<ModuleOptions>({
     })
 
     addImportsDir(resolve('runtime/composables'))
-    addTemplates(options, nuxt)
+    addTemplates(options, nuxt, resolve)
 
     const apiConfig = options.api ?? {}
     if (apiConfig.enabled !== false) {

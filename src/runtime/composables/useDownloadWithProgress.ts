@@ -71,7 +71,7 @@ export function useDownloadWithProgress() {
 
     try {
       // 合并认证 headers
-      const authHeaders = getAuthHeaders(config)
+      const authHeaders = getAuthHeaders(config.auth)
 
       const response = await fetch(fullUrl, {
         method: 'GET',

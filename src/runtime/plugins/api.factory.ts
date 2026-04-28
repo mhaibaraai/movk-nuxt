@@ -1,7 +1,10 @@
-import type { $Fetch } from 'ofetch'
+import type { $Fetch, FetchContext } from 'ofetch'
 import type {
   ApiInstance,
   ApiResponse,
+  ApiAuthConfig,
+  ApiResponseConfig,
+  ApiToastConfig,
   ApiFetchContext,
   ResolvedEndpointConfig,
   MovkApiPublicConfig,
@@ -25,7 +28,7 @@ import defu from 'defu'
  * @internal
  */
 async function handleUnauthorized(
-  config: ResolvedEndpointConfig['auth'],
+  config: ApiAuthConfig,
   nuxtApp: ReturnType<typeof useNuxtApp>
 ): Promise<void> {
   const unauthorizedConfig = config.unauthorized
@@ -52,8 +55,8 @@ async function handleUnauthorized(
  * 从 Fetch 上下文中提取自定义 API 上下文
  * @internal
  */
-function getApiFetchContext(options: Record<string, any>): ApiFetchContext {
-  return (options as { context?: ApiFetchContext }).context || {}
+function getApiFetchContext(options: FetchContext['options']): ApiFetchContext {
+  return options.context || {}
 }
 
 /**
@@ -72,9 +75,8 @@ function createEndpointFetch(
     headers: resolvedConfig.headers,
 
     async onRequest(context) {
-      // 1. 认证 token 注入
       if (authConfig.enabled) {
-        const authHeaders = getAuthHeaders({ auth: authConfig })
+        const authHeaders = getAuthHeaders(authConfig)
         const headers = new Headers(context.options.headers as HeadersInit)
         for (const [key, value] of Object.entries(authHeaders)) {
           headers.set(key, value)
@@ -82,13 +84,12 @@ function createEndpointFetch(
         context.options.headers = headers
       }
 
-      // 2. Debug 日志
       if (publicConfig.debug) {
         const h = context.options.headers
         const headersLog = h instanceof Headers
           ? Object.fromEntries(h.entries())
           : h
-        console.log('[Movk API] Request:', {
+        console.info('[@movk/nuxt] Request:', {
           method: context.options.method || 'GET',
           url: `${resolvedConfig.baseURL}${context.request}`,
           headers: headersLog,
@@ -96,7 +97,6 @@ function createEndpointFetch(
         })
       }
 
-      // 3. 触发 Nuxt hook
       await nuxtApp.callHook('movk:api:request', context)
     },
 
@@ -104,19 +104,15 @@ function createEndpointFetch(
       const raw = context.response._data as ApiResponse
       const { toast, skipBusinessCheck } = getApiFetchContext(context.options)
 
-      // Debug 日志
       if (publicConfig.debug) {
-        console.log('[Movk API] Response:', raw)
+        console.info('[@movk/nuxt] Response:', raw)
       }
 
       if (skipBusinessCheck || isBusinessSuccess(raw, responseConfig)) {
-        // 业务成功：解包数据
         context.response._data = extractData(raw, responseConfig)
 
-        // 触发 Nuxt hook（用户可在此修改/读取解包后的数据）
-        await nuxtApp.callHook('movk:api:response', context as any)
+        await nuxtApp.callHook('movk:api:response', context as FetchContext)
 
-        // 成功 Toast
         if (import.meta.client) {
           const message = toast !== false
             ? extractToastMessage(toast, 'success', extractMessage(raw, responseConfig) || '')
@@ -125,10 +121,8 @@ function createEndpointFetch(
         }
       }
       else {
-        // 业务失败：触发 error hook
-        await nuxtApp.callHook('movk:api:error', context as any)
+        await nuxtApp.callHook('movk:api:error', context as FetchContext)
 
-        // 错误 Toast（先于 throw）
         if (import.meta.client) {
           const message = extractMessage(raw, responseConfig)
           const errorMessage = toast !== false
@@ -137,7 +131,6 @@ function createEndpointFetch(
           showToast('error', errorMessage, toast, toastConfig)
         }
 
-        // 抛出业务错误 → useFetch 自动设置到 error.value
         throw createApiError(raw, extractMessage(raw, responseConfig))
       }
     },
@@ -146,19 +139,16 @@ function createEndpointFetch(
       const { response } = context
       const { toast } = getApiFetchContext(context.options)
 
-      // 401 专用处理
       if (response.status === 401) {
         const result = { handled: false }
-        await nuxtApp.callHook('movk:api:unauthorized', context as any, result)
+        await nuxtApp.callHook('movk:api:unauthorized', context as FetchContext, result)
         if (!result.handled) {
           await handleUnauthorized(authConfig, nuxtApp)
         }
       }
 
-      // 触发通用 error hook
-      await nuxtApp.callHook('movk:api:error', context as any)
+      await nuxtApp.callHook('movk:api:error', context as FetchContext)
 
-      // 错误 Toast
       if (import.meta.client) {
         const data = response._data as ApiResponse | undefined
         const message = data ? extractMessage(data, responseConfig) : undefined
@@ -168,9 +158,8 @@ function createEndpointFetch(
         showToast('error', errorMessage, toast, toastConfig)
       }
 
-      // Debug 日志
       if (publicConfig.debug) {
-        console.error('[Movk API] Error:', response.status, response._data)
+        console.error('[@movk/nuxt] Error:', response.status, response._data)
       }
     }
   }) as $Fetch
@@ -179,7 +168,8 @@ function createEndpointFetch(
 export default defineNuxtPlugin(() => {
   const nuxtApp = useNuxtApp()
   const runtimeConfig = useRuntimeConfig()
-  const publicConfig = runtimeConfig.public.movkApi as MovkApiPublicConfig
+
+  const publicConfig = runtimeConfig.public.movkApi
   const privateConfig = import.meta.server
     ? (runtimeConfig.movkApi as { endpoints?: Record<string, EndpointPrivateConfig> } | undefined)
     : undefined
@@ -195,7 +185,7 @@ export default defineNuxtPlugin(() => {
     const endpointConfig = endpoints[endpointName]
 
     if (!endpointConfig) {
-      console.warn(`[Movk API] Endpoint "${endpointName}" not found, using default`)
+      console.warn(`[@movk/nuxt] Endpoint "${endpointName}" not found, using default`)
       return getOrCreateEndpoint(publicConfig.defaultEndpoint || 'default')
     }
 
@@ -204,14 +194,13 @@ export default defineNuxtPlugin(() => {
     const resolvedConfig: ResolvedEndpointConfig = {
       ...endpointConfig,
       headers: privateEndpointConfig?.headers,
-      auth: defu(endpointConfig.auth, publicConfig.auth) as ResolvedEndpointConfig['auth'],
-      toast: defu(endpointConfig.toast, publicConfig.toast) as ResolvedEndpointConfig['toast'],
-      response: defu(endpointConfig.response, publicConfig.response) as ResolvedEndpointConfig['response']
+      auth: defu(endpointConfig.auth, publicConfig.auth) as ApiAuthConfig,
+      toast: defu(endpointConfig.toast, publicConfig.toast) as ApiToastConfig,
+      response: defu(endpointConfig.response, publicConfig.response) as ApiResponseConfig
     }
 
     const $fetchInstance = createEndpointFetch(resolvedConfig, publicConfig, nuxtApp)
 
-    // 将 $fetch 实例扩展为 ApiInstance（附加 use() 方法）
     const apiInstance = Object.assign($fetchInstance, {
       use: (endpoint: string) => getOrCreateEndpoint(endpoint)
     }) as ApiInstance

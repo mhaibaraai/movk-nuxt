@@ -2,8 +2,10 @@
 import type { ComponentConfig } from '@nuxt/ui'
 import type { AppConfig } from 'nuxt/schema'
 import theme from '#build/movk-ui/theme-picker'
+import popoverTheme from '#build/ui/popover'
+import { useExtendedTv } from '../../utils/extend-theme'
 
-type ThemePicker = ComponentConfig<typeof theme, AppConfig, 'themePicker'>
+type ThemePicker = ComponentConfig<typeof popoverTheme, AppConfig, 'themePicker'>
 
 interface ThemePickerProps {
   ui?: ThemePicker['slots']
@@ -13,9 +15,8 @@ interface ThemePickerProps {
 <script lang="ts" setup>
 import { useAppConfig, useColorMode } from '#imports'
 import { useClipboard } from '@vueuse/core'
-import { computed, ref } from 'vue'
+import { ref } from 'vue'
 import { useTheme } from '../../composables'
-import { tv } from '../../utils/tv'
 import ThemePickerButton from './ThemePickerButton.vue'
 
 const props = defineProps<ThemePickerProps>()
@@ -23,7 +24,12 @@ const appConfig = useAppConfig() as ThemePicker['AppConfig']
 const colorMode = useColorMode()
 
 const open = ref(false)
-const uiCls = computed(() => tv({ extend: tv(theme), ...(appConfig.movk?.themePicker || {}) })())
+const { ui: mergedUi } = useExtendedTv(
+  popoverTheme,
+  theme,
+  () => appConfig.movk?.themePicker,
+  () => ({ ui: props.ui })
+)
 
 const { copy: copyCSS, copied: copiedCSS } = useClipboard()
 const { copy: copyAppConfig, copied: copiedAppConfig } = useClipboard()
@@ -51,10 +57,7 @@ const {
 </script>
 
 <template>
-  <UPopover
-    v-model:open="open"
-    :ui="{ ...props.ui, content: uiCls.content({ class: props.ui?.content }) }"
-  >
+  <UPopover v-model:open="open" :ui="mergedUi">
     <template #default>
       <UButton
         icon="i-lucide-swatch-book"
@@ -83,11 +86,7 @@ const {
         </legend>
 
         <div class="grid grid-cols-3 gap-1 -mx-2">
-          <ThemePickerButton
-            label="Black"
-            :selected="blackAsPrimary"
-            @click="blackAsPrimary = true"
-          >
+          <ThemePickerButton label="Black" :selected="blackAsPrimary" @click="blackAsPrimary = true">
             <template #leading>
               <span class="inline-block size-2 rounded-full bg-black dark:bg-white" />
             </template>

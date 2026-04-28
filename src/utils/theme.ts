@@ -4,18 +4,18 @@ import type { ModuleOptions } from '../module'
 import { addPlugin } from '@nuxt/kit'
 import defu from 'defu'
 
-export function setupTheme(nuxt: Nuxt, resolve: Resolver['resolve'], options: ModuleOptions) {
-  if (options.theme === false) return
+export function setupTheme(nuxt: Nuxt, resolve: Resolver['resolve'], theme?: ModuleOptions['theme']) {
+  if (theme?.enabled === false) return
 
   nuxt.options.appConfig.movk = defu(nuxt.options.appConfig.movk || {}, {
     radius: 0.25,
     blackAsPrimary: false,
     font: 'Alibaba PuHuiTi',
     icons: 'lucide',
-    prefix: options?.prefix,
+    prefix: theme?.prefix,
     tv: {
       twMergeConfig: {
-        prefix: options?.prefix
+        prefix: theme?.prefix
       }
     }
   })

@@ -3,14 +3,14 @@ import type { OmitByKey } from '@movk/core'
 import type { ButtonProps, ComponentConfig, InputEmits, InputProps, InputSlots, InputValue, TooltipProps } from '@nuxt/ui'
 import type { AppConfig } from 'nuxt/schema'
 import theme from '#build/movk-ui/with-copy'
+import inputTheme from '#build/ui/input'
 
-type WithCopy = ComponentConfig<typeof theme, AppConfig, 'withCopy'>
+type WithCopy = ComponentConfig<typeof inputTheme, AppConfig, 'withCopy'>
 
-export interface WithCopyProps<T extends InputValue = InputValue> extends /** @vue-ignore */ OmitByKey<InputProps<T>, 'modelValue'> {
-  /** 复制按钮的自定义属性 */
+export interface WithCopyProps<T extends InputValue = InputValue> extends /** @vue-ignore */ OmitByKey<InputProps<T>, 'modelValue' | 'ui'> {
   buttonProps?: ButtonProps
-  /** 提示框的自定义属性 */
   tooltipProps?: TooltipProps
+  ui?: WithCopy['slots']
 }
 
 type WithCopyEmits<T extends InputValue = InputValue> = InputEmits<T> & {
@@ -22,9 +22,9 @@ type WithCopyEmits<T extends InputValue = InputValue> = InputEmits<T> & {
 import { UInput, UButton, UTooltip } from '#components'
 import { useClipboard } from '@vueuse/core'
 import { isEmpty } from '@movk/core'
-import { computed, useAttrs } from 'vue'
+import { useAttrs } from 'vue'
 import { useAppConfig } from '#imports'
-import { tv } from '../../utils/tv'
+import { useExtendedTv } from '../../utils/extend-theme'
 
 const props = defineProps<WithCopyProps<T>>()
 const emits = defineEmits<WithCopyEmits<T>>()
@@ -36,7 +36,12 @@ const attrs = useAttrs()
 const appConfig = useAppConfig() as WithCopy['AppConfig']
 const modelValue = defineModel<T>()
 
-const uiCls = computed(() => tv({ extend: tv(theme), ...(appConfig.movk?.withCopy || {}) })())
+const { baseUi } = useExtendedTv(
+  inputTheme,
+  theme,
+  () => appConfig.movk?.withCopy,
+  () => ({ ui: props.ui })
+)
 const { copy, copied } = useClipboard()
 
 function handleCopy() {
@@ -51,8 +56,8 @@ function handleCopy() {
 <template>
   <UInput
     v-model="modelValue"
-    :ui="{ ...props.ui, trailing: uiCls.trailing({ class: props.ui?.trailing }) }"
-    v-bind="$attrs"
+    :ui="baseUi"
+    v-bind="attrs"
     @blur="emits('blur', $event)"
     @change="emits('change', $event)"
   >

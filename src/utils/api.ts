@@ -1,15 +1,21 @@
-import type {
-  ApiAuthConfig, ApiEndpointPublicConfig, ApiResponseConfig, ApiToastConfig, EndpointPrivateConfig, MovkApiFullConfig, MovkApiPublicConfig } from '../runtime/types/api'
 import defu from 'defu'
+import type {
+  ApiAuthConfig,
+  ApiEndpointPublicConfig,
+  ApiResponseConfig,
+  ApiToastConfig,
+  EndpointPrivateConfig,
+  MovkApiFullConfig
+} from '../runtime/types/api'
 
-const DEFAULT_RESPONSE_CONFIG: ApiResponseConfig = {
-  successCodes: [200, 0],
+const DEFAULT_RESPONSE_CONFIG = {
+  successCodes: [200, 0, '200', '0'] as (number | string)[],
   codeKey: 'code',
   messageKey: 'message',
   dataKey: 'data'
-}
+} satisfies ApiResponseConfig
 
-const DEFAULT_AUTH_CONFIG: ApiAuthConfig = {
+const DEFAULT_AUTH_CONFIG = {
   enabled: false,
   tokenSource: 'session',
   sessionTokenPath: 'token',
@@ -20,9 +26,9 @@ const DEFAULT_AUTH_CONFIG: ApiAuthConfig = {
     clearSession: true,
     loginPath: '/login'
   }
-}
+} satisfies ApiAuthConfig
 
-const DEFAULT_TOAST_CONFIG: ApiToastConfig = {
+const DEFAULT_TOAST_CONFIG = {
   enabled: true,
   success: {
     show: true,
@@ -34,9 +40,7 @@ const DEFAULT_TOAST_CONFIG: ApiToastConfig = {
     color: 'error',
     duration: 3000
   }
-}
-
-const DEFAULT_ENDPOINT = { default: { baseURL: '/api' } }
+} satisfies ApiToastConfig
 
 export function buildApiRuntimeConfig(apiConfig: MovkApiFullConfig) {
   const publicEndpoints: Record<string, ApiEndpointPublicConfig> = {}
@@ -49,15 +53,15 @@ export function buildApiRuntimeConfig(apiConfig: MovkApiFullConfig) {
     }
   }
 
-  const hasEndpoints = Object.keys(publicEndpoints).length > 0
+  const endpoints = { default: { baseURL: '/api' }, ...publicEndpoints }
 
-  const publicConfig: MovkApiPublicConfig = {
+  const publicConfig = {
     defaultEndpoint: apiConfig.defaultEndpoint ?? 'default',
     debug: apiConfig.debug ?? false,
-    endpoints: hasEndpoints ? publicEndpoints : DEFAULT_ENDPOINT,
-    response: defu(apiConfig.response, DEFAULT_RESPONSE_CONFIG) as MovkApiPublicConfig['response'],
-    auth: defu(apiConfig.auth, DEFAULT_AUTH_CONFIG) as MovkApiPublicConfig['auth'],
-    toast: defu(apiConfig.toast, DEFAULT_TOAST_CONFIG) as MovkApiPublicConfig['toast']
+    endpoints,
+    response: defu(apiConfig.response, DEFAULT_RESPONSE_CONFIG),
+    auth: defu(apiConfig.auth, DEFAULT_AUTH_CONFIG),
+    toast: defu(apiConfig.toast, DEFAULT_TOAST_CONFIG)
   }
 
   const privateConfig = {

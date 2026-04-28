@@ -1,5 +1,5 @@
 import type { NuxtTemplate, NuxtTypeTemplate } from '@nuxt/schema'
-import { addTemplate, addTypeTemplate, getLayerDirectories } from '@nuxt/kit'
+import { addTemplate, addTypeTemplate, getLayerDirectories, type Resolver } from '@nuxt/kit'
 import { kebabCase } from 'scule'
 import * as theme from './theme'
 import type { ModuleOptions } from './module'
@@ -94,6 +94,9 @@ export function getTemplates(options: ModuleOptions, nuxt?: Nuxt) {
       return `import * as movkUi from '#build/movk-ui'
 import type { TVConfig } from '@nuxt/ui'
 import type { defaultConfig } from 'tailwind-variants'
+import type { EndpointPrivateConfig, MovkApiPublicConfig, ApiInstance } from '@movk/nuxt'
+import type { HookResult } from '@nuxt/schema'
+import type { FetchContext } from 'ofetch'
 
 type Radius = 0 | 0.125 | 0.25 | 0.375 | 0.5
 type FontFamily = 'Alibaba PuHuiTi' | 'Public Sans' | 'DM Sans' | 'Geist' | 'Inter' | 'Poppins' | 'Outfit' | 'Raleway'
@@ -108,20 +111,41 @@ type AppConfigUI = {
   tv?: typeof defaultConfig
 } & TVConfig<typeof movkUi>
 
-declare module 'nuxt/schema' {
-  interface AppConfigInput {
-    /**
-     * Nuxt UI theme configuration
-     * @see https://nuxt.mhaibaraai.cn/docs/getting-started/theme
-     */
-    movk?: AppConfigUI
+declare module 'nuxt/app' {
+  interface NuxtApp {
+    $api: ApiInstance
+  }
+
+  interface RuntimeNuxtHooks {
+    'movk:api:request': (context: FetchContext) => HookResult
+    'movk:api:response': (context: FetchContext) => HookResult
+    'movk:api:error': (context: FetchContext) => HookResult
+    'movk:api:unauthorized': (context: FetchContext, result: { handled: boolean }) => HookResult
   }
 }
 
 declare module 'nuxt/schema' {
   interface AppConfig {
     /**
-     * Nuxt UI theme configuration
+     * Movk UI theme configuration
+     * @see https://nuxt.mhaibaraai.cn/docs/getting-started/theme
+     */
+    movk?: AppConfigUI
+  }
+
+  interface PublicRuntimeConfig {
+    movkApi: MovkApiPublicConfig
+  }
+
+  interface RuntimeConfig {
+    movkApi: { endpoints?: Record<string, EndpointPrivateConfig> }
+  }
+}
+
+declare module '@nuxt/schema' {
+  interface AppConfigInput {
+    /**
+     * Movk UI theme configuration
      * @see https://nuxt.mhaibaraai.cn/docs/getting-started/theme
      */
     movk?: AppConfigUI
@@ -136,7 +160,7 @@ export {}
   return templates
 }
 
-export function addTemplates(options: ModuleOptions, nuxt: Nuxt) {
+export function addTemplates(options: ModuleOptions, nuxt: Nuxt, resolve: Resolver['resolve']) {
   const templates = getTemplates(options, nuxt)
   for (const template of templates) {
     if (template.filename!.endsWith('.d.ts')) {
@@ -145,4 +169,8 @@ export function addTemplates(options: ModuleOptions, nuxt: Nuxt) {
       addTemplate(template)
     }
   }
+
+  nuxt.hook('prepare:types', ({ references }) => {
+    references.push({ path: resolve('./runtime/types/app.config.d.ts') })
+  })
 }

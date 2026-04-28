@@ -1,7 +1,8 @@
 export default () => ({
   slots: {
     base: '',
-    leading: ''
+    leading: '',
+    dialCode: ''
   },
   variants: {
     dialCode: {

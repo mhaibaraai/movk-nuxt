@@ -1,6 +1,9 @@
 import type { ExpandedState, PaginationState } from '@tanstack/vue-table'
 import type { TableData } from '@nuxt/ui'
 import type { DataTablePaginationUi } from '../../../types/data-table'
+import { logger } from '@nuxt/kit'
+
+const log = logger.withTag('@movk/nuxt-docs')
 
 const DEFAULT_PAGE_SIZE = 10
 
@@ -38,7 +41,7 @@ export function keysToExpanded(keys: string[]): Record<string, boolean> {
 
 export function expandedToKeys(state: ExpandedState): string[] {
   if (state === true) {
-    console.warn('[DataTable] expandedKeys cannot represent expanded=true; use v-model:expanded for expand-all')
+    log.warn('expandedKeys cannot represent expanded=true; use v-model:expanded for expand-all')
     return []
   }
   return Object.entries(state)

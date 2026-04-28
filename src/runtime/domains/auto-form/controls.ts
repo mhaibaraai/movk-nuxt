@@ -35,16 +35,12 @@ import {
 
 const DEFAULT_CONTROL_PROPS = { class: 'w-full' } as const
 
-/** 声明单个控件配置，恒等函数，仅用于保留精确的组件 props/slots 类型推断 */
 export function defineControl<C extends IsComponent, P = _Unset, S = _Unset>(
   e: AutoFormControl<C, P, S>
 ): AutoFormControl<C, P, S> {
   return e
 }
 
-/**
- * 从 key: Component 映射批量创建控件注册表
- */
 function createControlMap<const T extends Record<string, IsComponent>>(
   components: T,
   defaultProps: Record<string, unknown> = DEFAULT_CONTROL_PROPS

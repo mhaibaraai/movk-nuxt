@@ -1,4 +1,11 @@
-import type { DataTableDensityOptions, DataTableDensityPreset, DataTableSizePreset } from '../../../types/data-table'
+import type { ColumnDef, ColumnPinningState, ColumnSizingState, VisibilityState } from '@tanstack/vue-table'
+import type {
+  DataTableDensityOptions,
+  DataTableDensityPreset,
+  DataTableProps,
+  DataTableSizePreset,
+  DataTableTreeSelectionStrategy
+} from '../../../types/data-table'
 
 export const DENSITY_PRESETS: Record<DataTableDensityPreset, DataTableDensityOptions> = {
   compact: { td: 'px-3 py-1.5', th: 'px-3 py-2' },
@@ -32,3 +39,32 @@ export const SPECIAL_COLUMN_DEFAULTS: Record<SpecialColumnType, SpecialColumnDef
   'row-pinning': { id: '__row_pinning', size: 48, align: 'center' },
   'actions': { id: '__actions', size: 60, header: '操作', align: 'center' }
 } as const
+
+export interface ResolvedColumnState<T> {
+  columnDefs: ColumnDef<T, unknown>[]
+  initialPinning: ColumnPinningState
+  initialVisibility: VisibilityState
+  initialSizing: ColumnSizingState
+  hasColumnPinning: boolean
+  hasColumnResizing: boolean
+  hasColumnSort: boolean
+  hasExpandColumn: boolean
+  selectionMode?: 'single' | 'multiple'
+  selectionStrategy?: DataTableTreeSelectionStrategy
+  subRowSelection?: boolean
+  allColumnIds: string[]
+}
+
+export interface ResolveContext<T> {
+  options: DataTableProps<T>
+  density: DataTableDensityOptions | null
+  pinning: ColumnPinningState
+  visibility: VisibilityState
+  sizing: ColumnSizingState
+  flags: { hasPinning: boolean, hasResizing: boolean, hasSort: boolean, hasExpand: boolean }
+  selectionMode?: 'single' | 'multiple'
+  selectionStrategy?: DataTableTreeSelectionStrategy
+  subRowSelection?: boolean
+  nextGroupId: () => number
+  allColumnIds: string[]
+}

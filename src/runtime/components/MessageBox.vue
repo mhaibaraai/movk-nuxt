@@ -4,9 +4,11 @@ import type { ModalProps, ButtonProps, ComponentConfig, IconProps } from '@nuxt/
 import type { SemanticColor } from '../types'
 import type { AppConfig } from 'nuxt/schema'
 import theme from '#build/movk-ui/message-box'
+import modalTheme from '#build/ui/modal'
 
 type MessageBoxMode = 'alert' | 'confirm'
-type MessageBox = ComponentConfig<typeof theme, AppConfig, 'messageBox'>
+type FullTheme = typeof modalTheme
+type MessageBox = ComponentConfig<FullTheme, AppConfig, 'messageBox'>
 
 export interface MessageBoxProps extends /** @vue-ignore */ OmitByKey<ModalProps, 'title' | 'open' | 'defaultOpen' | 'dismissible' | 'ui'> {
   /**
@@ -79,7 +81,7 @@ export interface MessageBoxEmits {
 import { computed, useAttrs, ref } from 'vue'
 import { UModal, UButton, UIcon } from '#components'
 import { useAppConfig } from '#imports'
-import { tv } from '../utils/tv'
+import { useExtendedTv } from '../utils/extend-theme'
 
 const props = withDefaults(defineProps<MessageBoxProps>(), {
   title: '提示',
@@ -149,17 +151,16 @@ function handleUpdateOpen(val: boolean) {
   emits('close', false)
 }
 
-const uiCls = computed(() => tv({ extend: tv(theme), ...(appConfig.movk?.messageBox || {}) })())
-
-const resolvedUI = computed(() => ({
-  ...props.ui,
-  title: uiCls.value.title({ class: props.ui?.title }),
-  footer: uiCls.value.footer({ class: props.ui?.footer })
-}))
+const { ui: mergedUi } = useExtendedTv(
+  modalTheme,
+  theme,
+  () => appConfig.movk?.messageBox,
+  () => ({ ui: props.ui })
+)
 </script>
 
 <template>
-  <UModal v-model:open="open" :dismissible="props.dismissible" v-bind="attrs" :ui="resolvedUI" @update:open="handleUpdateOpen">
+  <UModal v-model:open="open" :dismissible="props.dismissible" :ui="mergedUi" v-bind="attrs" @update:open="handleUpdateOpen">
     <template #title>
       <UIcon :name="resolvedIcon" :class="resolvedIconColor" class="size-5 shrink-0" />
       <span>{{ props.title }}</span>

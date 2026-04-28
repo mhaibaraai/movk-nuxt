@@ -1,5 +1,6 @@
 export default () => ({
   slots: {
-    trailing: 'pointer-events-none'
+    trailing: 'pointer-events-none',
+    counter: 'text-xs text-muted tabular-nums'
   }
 })

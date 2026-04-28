@@ -1,4 +1,4 @@
-import type { ApiAuthConfig, ResolvedEndpointConfig } from '../../types/api'
+import type { ApiAuthConfig } from '../../types/api'
 import { getPath } from '@movk/core'
 import { useNuxtApp, useUserSession } from '#imports'
 
@@ -20,7 +20,7 @@ function getTokenFromSession(tokenPath: string): string | null {
   return (getPath(sessionData, tokenPath) as string) || null
 }
 
-function buildAuthHeaderValue(token: string, config: Partial<ApiAuthConfig>): string {
+function buildAuthHeaderValue(token: string, config: ApiAuthConfig): string {
   const tokenType = config.tokenType === 'Custom'
     ? (config.customTokenType || '')
     : (config.tokenType || 'Bearer')
@@ -28,18 +28,17 @@ function buildAuthHeaderValue(token: string, config: Partial<ApiAuthConfig>): st
   return tokenType ? `${tokenType} ${token}` : token
 }
 
-export function getAuthHeaders(config: Pick<ResolvedEndpointConfig, 'auth'>): Record<string, string> {
+export function getAuthHeaders(auth: ApiAuthConfig): Record<string, string> {
   const headers: Record<string, string> = {}
-  const authConfig = config.auth
 
-  if (!authConfig.enabled) return headers
+  if (!auth.enabled) return headers
 
-  const tokenPath = authConfig.sessionTokenPath || 'token'
+  const tokenPath = auth.sessionTokenPath || 'token'
   const token = getTokenFromSession(tokenPath)
 
   if (token) {
-    const headerName = authConfig.headerName || 'Authorization'
-    headers[headerName] = buildAuthHeaderValue(token, authConfig)
+    const headerName = auth.headerName || 'Authorization'
+    headers[headerName] = buildAuthHeaderValue(token, auth)
   }
 
   return headers
