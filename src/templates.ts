@@ -75,8 +75,8 @@ export function getTemplates(options: ModuleOptions, nuxt?: Nuxt) {
     write: true,
     getContents: async () => {
       const sources = await generateSources()
-
-      return `${sources}`
+      const inlineSafelist = '@source inline("{,sm:,md:,lg:,xl:}grid-cols-{1,2,3,4,5,6,7,8,9,10,11,12}");'
+      return `${sources}\n${inlineSafelist}`
     }
   })
 

@@ -5,7 +5,7 @@ import type { AppConfig } from 'nuxt/schema'
 import theme from '#build/movk-ui/with-password-toggle'
 import inputTheme from '#build/ui/input'
 
-type WithPasswordToggle = ComponentConfig<typeof inputTheme, AppConfig, 'withPasswordToggle'>
+type WithPasswordToggle = ComponentConfig<typeof inputTheme & typeof theme, AppConfig, 'withPasswordToggle'>
 
 export interface WithPasswordToggleProps<T extends InputValue = InputValue> extends /** @vue-ignore */ OmitByKey<InputProps<T>, 'type' | 'modelValue' | 'ui'> {
   buttonProps?: ButtonProps

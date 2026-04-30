@@ -48,7 +48,6 @@ function handleReset() {
         v-model="searchParams"
         :schema="schema"
         :global-meta="{ size: 'xs', required: false }"
-        :cols="3"
         :loading="searchLoading"
         :validate-on="[
           'blur'
@@ -66,8 +65,10 @@ function handleReset() {
         v-model="searchParams"
         :schema="schema"
         :cols="4"
-        :visible-rows="2"
         :loading="searchLoading"
+        :collapse-button-props="{
+          icon: 'i-lucide-arrow-big-down'
+        }"
         @search="handleSearch"
         @reset="handleReset"
       />

@@ -7,8 +7,7 @@ import theme from '#build/movk-ui/message-box'
 import modalTheme from '#build/ui/modal'
 
 type MessageBoxMode = 'alert' | 'confirm'
-type FullTheme = typeof modalTheme
-type MessageBox = ComponentConfig<FullTheme, AppConfig, 'messageBox'>
+type MessageBox = ComponentConfig<typeof modalTheme & typeof theme, AppConfig, 'messageBox'>
 
 export interface MessageBoxProps extends /** @vue-ignore */ OmitByKey<ModalProps, 'title' | 'open' | 'defaultOpen' | 'dismissible' | 'ui'> {
   /**
@@ -109,17 +108,7 @@ const iconMap = {
   neutral: 'i-lucide-circle-question-mark'
 } satisfies Record<SemanticColor, string>
 
-const iconColorMap = {
-  primary: 'text-primary',
-  info: 'text-info',
-  success: 'text-success',
-  warning: 'text-warning',
-  error: 'text-error',
-  neutral: 'text-muted'
-} satisfies Record<SemanticColor, string>
-
 const resolvedIcon = computed(() => props.icon ?? iconMap[props.type])
-const resolvedIconColor = computed(() => iconColorMap[props.type])
 
 const cancelButtonAttrs = computed<ButtonProps>(() => ({
   color: 'neutral' as const,
@@ -151,18 +140,18 @@ function handleUpdateOpen(val: boolean) {
   emits('close', false)
 }
 
-const { ui: mergedUi } = useExtendedTv(
+const { ui, extraUi } = useExtendedTv(
   modalTheme,
   theme,
   () => appConfig.movk?.messageBox,
-  () => ({ ui: props.ui })
+  () => ({ ui: props.ui, variants: { type: props.type } })
 )
 </script>
 
 <template>
-  <UModal v-model:open="open" :dismissible="props.dismissible" :ui="mergedUi" v-bind="attrs" @update:open="handleUpdateOpen">
+  <UModal v-model:open="open" :dismissible="props.dismissible" :ui="ui" v-bind="attrs" @update:open="handleUpdateOpen">
     <template #title>
-      <UIcon :name="resolvedIcon" :class="resolvedIconColor" class="size-5 shrink-0" />
+      <UIcon :name="resolvedIcon" :class="extraUi.icon" />
       <span>{{ props.title }}</span>
     </template>
 

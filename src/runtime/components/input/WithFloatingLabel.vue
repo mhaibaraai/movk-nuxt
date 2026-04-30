@@ -5,7 +5,7 @@ import type { AppConfig } from 'nuxt/schema'
 import theme from '#build/movk-ui/with-floating-label'
 import inputTheme from '#build/ui/input'
 
-type WithFloatingLabel = ComponentConfig<typeof inputTheme, AppConfig, 'withFloatingLabel'>
+type WithFloatingLabel = ComponentConfig<typeof inputTheme & typeof theme, AppConfig, 'withFloatingLabel'>
 
 export interface WithFloatingLabelProps<T extends InputValue = InputValue> extends /** @vue-ignore */ OmitByKey<InputProps<T>, 'modelValue' | 'size' | 'ui'> {
   label?: string

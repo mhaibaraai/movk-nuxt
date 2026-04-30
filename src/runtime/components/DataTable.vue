@@ -18,12 +18,7 @@ import type { AppConfig } from 'nuxt/schema'
 import theme from '#build/movk-ui/data-table'
 import tableTheme from '#build/ui/table'
 
-type FullTheme = typeof tableTheme & {
-  variants: typeof tableTheme['variants'] & {
-    fitContent: { true: { base: string } }
-  }
-}
-type DataTable = ComponentConfig<FullTheme, AppConfig, 'dataTable'>
+type DataTable = ComponentConfig<typeof tableTheme & typeof theme, AppConfig, 'dataTable'>
 
 interface UTableExpose<TData extends TableData> {
   tableApi: Table<TData>

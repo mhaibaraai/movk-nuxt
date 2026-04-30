@@ -5,12 +5,7 @@ import theme from '#build/movk-ui/as-phone-number-input'
 import inputTheme from '#build/ui/input'
 import type { AppConfig } from 'nuxt/schema'
 
-type FullTheme = typeof inputTheme & {
-  variants: typeof inputTheme['variants'] & {
-    dialCode: { true: { base: string, leading: string } }
-  }
-}
-type AsPhoneNumberInput = ComponentConfig<FullTheme, AppConfig, 'asPhoneNumberInput'>
+type AsPhoneNumberInput = ComponentConfig<typeof inputTheme & typeof theme, AppConfig, 'asPhoneNumberInput'>
 
 export interface AsPhoneNumberInputProps<T extends InputValue = InputValue> extends /** @vue-ignore */ OmitByKey<InputProps<T>, 'type' | 'modelValue' | 'ui'> {
   /**

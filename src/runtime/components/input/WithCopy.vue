@@ -5,7 +5,7 @@ import type { AppConfig } from 'nuxt/schema'
 import theme from '#build/movk-ui/with-copy'
 import inputTheme from '#build/ui/input'
 
-type WithCopy = ComponentConfig<typeof inputTheme, AppConfig, 'withCopy'>
+type WithCopy = ComponentConfig<typeof inputTheme & typeof theme, AppConfig, 'withCopy'>
 
 export interface WithCopyProps<T extends InputValue = InputValue> extends /** @vue-ignore */ OmitByKey<InputProps<T>, 'modelValue' | 'ui'> {
   buttonProps?: ButtonProps

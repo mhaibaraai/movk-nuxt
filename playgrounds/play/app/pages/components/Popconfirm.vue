@@ -44,6 +44,10 @@ function handleError(err: unknown) {
             :title="`${type} 确认`"
             :description="`这是一条 ${type} 类型的确认气泡。`"
             :on-confirm="() => { syncResult = `${type} 已确认` }"
+            :ui="{
+              content: 'p-4 py-3',
+              header: 'gap-1.5'
+            }"
           >
             <UButton :color="type" variant="soft" :label="type" size="sm" />
           </MPopconfirm>

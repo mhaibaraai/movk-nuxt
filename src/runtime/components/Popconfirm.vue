@@ -5,18 +5,9 @@ import type { PopoverProps, ButtonProps, LinkPropsKeys, IconProps, ComponentConf
 import type { OmitByKey } from '@movk/core'
 import type { AppConfig } from 'nuxt/schema'
 import theme from '#build/movk-ui/popconfirm'
-import type popoverTheme from '#build/ui/popover'
+import popoverTheme from '#build/ui/popover'
 
-type FullTheme = typeof popoverTheme & {
-  slots: typeof popoverTheme['slots'] & {
-    header: string
-    title: string
-    description: string
-    body: string
-    footer: string
-  }
-}
-type Popconfirm = ComponentConfig<FullTheme, AppConfig, 'popconfirm'>
+type Popconfirm = ComponentConfig<typeof popoverTheme & typeof theme, AppConfig, 'popconfirm'>
 type PopoverMode = 'click' | 'hover'
 
 export interface PopconfirmProps<M extends PopoverMode = PopoverMode> extends /** @vue-ignore */ OmitByKey<PopoverProps<M>, 'open' | 'defaultOpen' | 'dismissible' | 'arrow' | 'ui'> {
@@ -90,11 +81,11 @@ export interface PopconfirmSlots<M extends PopoverMode = PopoverMode> {
 </script>
 
 <script lang="ts" setup generic="M extends PopoverMode">
-import { tv } from '../utils/tv'
 import { isObject } from '@movk/core'
 import { UPopover, UButton, UIcon } from '#components'
 import { computed, ref, useAttrs } from 'vue'
 import { useAppConfig } from '#imports'
+import { useExtendedTv } from '../utils/extend-theme'
 
 const props = withDefaults(defineProps<PopconfirmProps>(), {
   title: '确认操作',
@@ -115,8 +106,12 @@ const appConfig = useAppConfig() as Popconfirm['AppConfig']
 
 const openState = ref(false)
 
-const uiCls = computed(() => tv({ extend: tv(theme), ...(appConfig.movk?.popconfirm || {}) })())
-
+const { ui, extraUi } = useExtendedTv(
+  popoverTheme,
+  theme,
+  () => appConfig.movk?.popconfirm,
+  () => ({ ui: props.ui, variants: { type: props.type } })
+)
 const confirmLoading = ref(false)
 
 const iconMap = {
@@ -128,17 +123,7 @@ const iconMap = {
   neutral: 'i-lucide-circle-question-mark'
 } satisfies Record<SemanticColor, string>
 
-const iconColorMap = {
-  primary: 'text-primary',
-  info: 'text-info',
-  success: 'text-success',
-  warning: 'text-warning',
-  error: 'text-error',
-  neutral: 'text-muted'
-} satisfies Record<SemanticColor, string>
-
 const resolvedIcon = computed(() => props.icon ?? iconMap[props.type])
-const resolvedIconColor = computed(() => iconColorMap[props.type])
 
 const cancelButtonAttrs = computed<ButtonProps>(() => ({
   color: 'neutral' as const,
@@ -187,10 +172,7 @@ async function handleConfirm(close: () => void) {
     v-model:open="openState"
     :dismissible="props.dismissible"
     :arrow="props.arrow"
-    :ui="{
-      content: uiCls.content({ class: props.ui?.content }),
-      arrow: uiCls.arrow({ class: props.ui?.arrow })
-    }"
+    :ui="ui"
   >
     <template #default="{ open }">
       <slot :open="open" />
@@ -200,16 +182,16 @@ async function handleConfirm(close: () => void) {
       <div
         v-if="!!slots.header || (props.title || !!slots.title) || (props.description || !!slots.description)"
         data-slot="header"
-        :class="uiCls.header({ class: props.ui?.header })"
+        :class="extraUi.header"
       >
         <slot name="header" :close="close">
           <span
             v-if="props.title || !!slots.title"
             data-slot="title"
-            :class="uiCls.title({ class: props.ui?.title })"
+            :class="extraUi.title"
           >
             <slot name="title" :close="close">
-              <UIcon :name="resolvedIcon" :class="resolvedIconColor" class="size-4 shrink-0" />
+              <UIcon :name="resolvedIcon" :class="extraUi.icon" />
               {{ props.title }}
             </slot>
           </span>
@@ -217,7 +199,7 @@ async function handleConfirm(close: () => void) {
           <p
             v-if="props.description || !!slots.description"
             data-slot="description"
-            :class="uiCls.description({ class: props.ui?.description })"
+            :class="extraUi.description"
           >
             <slot name="description" :close="close">
               {{ props.description }}
@@ -228,11 +210,11 @@ async function handleConfirm(close: () => void) {
         <slot name="actions" :close="close" />
       </div>
 
-      <div v-if="!!slots.body" data-slot="body" :class="uiCls.body({ class: props.ui?.body })">
+      <div v-if="!!slots.body" data-slot="body" :class="extraUi.body">
         <slot name="body" :close="close" />
       </div>
 
-      <div data-slot="footer" :class="uiCls.footer({ class: props.ui?.footer })">
+      <div data-slot="footer" :class="extraUi.footer">
         <slot name="footer" :close="close">
           <UButton
             v-if="props.cancelButton !== false"

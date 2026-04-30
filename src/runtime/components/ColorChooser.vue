@@ -4,9 +4,7 @@ import type { ButtonProps, ColorPickerProps, PopoverEmits, PopoverProps } from '
 type PopoverMode = 'click' | 'hover'
 
 export interface ColorChooserProps<P extends PopoverMode = PopoverMode> extends /** @vue-ignore */ ColorPickerProps {
-  /** 弹出层组件属性 */
   popoverProps?: PopoverProps<P>
-  /** 按钮组件属性 */
   buttonProps?: ButtonProps
 }
 </script>

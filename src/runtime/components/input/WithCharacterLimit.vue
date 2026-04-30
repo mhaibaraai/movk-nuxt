@@ -5,7 +5,7 @@ import type { AppConfig } from 'nuxt/schema'
 import theme from '#build/movk-ui/with-character-limit'
 import inputTheme from '#build/ui/input'
 
-type WithCharacterLimit = ComponentConfig<typeof inputTheme, AppConfig, 'withCharacterLimit'>
+type WithCharacterLimit = ComponentConfig<typeof inputTheme & typeof theme, AppConfig, 'withCharacterLimit'>
 
 export interface WithCharacterLimitProps<T extends InputValue = InputValue> extends /** @vue-ignore */ OmitByKey<InputProps<T>, 'modelValue' | 'ui'> {
   /**

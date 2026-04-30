@@ -7,13 +7,9 @@ import type { Ref } from 'vue'
 import type { OmitByKey } from '@movk/core'
 
 export interface AutoFormProps<S extends z.ZodObject, T extends boolean = true, N extends boolean = false> extends /** @vue-ignore */ OmitByKey<FormProps<S, T, N>, 'schema' | 'state' | 'loadingAuto' | 'validateOn'> {
-  /**
-   * Zod 对象 schema，定义表单字段
-   */
+  /** Zod 对象 schema，定义表单字段 */
   schema: S
-  /**
-   * 表单的状态对象。
-   */
+  /** 表单的状态对象。 */
   state?: N extends false ? Partial<InferInput<S>> : never
   /**
    * 是否显示默认提交按钮
@@ -51,7 +47,7 @@ export type AutoFormSlots<T extends object> = {
 
 <script lang="ts" setup generic="S extends z.ZodObject, T extends boolean = true, N extends boolean = false">
 import { UForm } from '#components'
-import { computed, onMounted, ref, unref, useTemplateRef } from 'vue'
+import { computed, onMounted, ref, unref, useAttrs, useTemplateRef } from 'vue'
 import { getPath, isFunction, setPath } from '@movk/core'
 import { useAutoFormProvider } from '../domains/auto-form/provider'
 import { classifyFields } from '../domains/auto-form/fields'
@@ -71,6 +67,8 @@ const props = withDefaults(defineProps<AutoFormProps<S, T, N>>(), {
 defineEmits<AutoFormEmits<S, T>>()
 const slots = defineSlots<AutoFormSlots<AutoFormStateType>>()
 defineOptions({ inheritAttrs: false })
+
+const attrs = useAttrs()
 
 const stateModel = ref(props.state || {}) as Ref<AutoFormStateType>
 
@@ -189,7 +187,7 @@ defineExpose({
     :schema="pureSchema"
     :loading-auto="loadingAuto"
     :validate-on="validateOn"
-    v-bind="$attrs"
+    v-bind="attrs"
   >
     <template #default="{ errors, loading }">
       <slot name="header" v-bind="{ errors, loading, fields: visibleFields, state: stateModel }" />

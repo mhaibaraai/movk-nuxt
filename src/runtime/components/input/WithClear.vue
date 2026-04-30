@@ -5,7 +5,7 @@ import type { AppConfig } from 'nuxt/schema'
 import theme from '#build/movk-ui/with-clear'
 import inputTheme from '#build/ui/input'
 
-type WithClear = ComponentConfig<typeof inputTheme, AppConfig, 'withClear'>
+type WithClear = ComponentConfig<typeof inputTheme & typeof theme, AppConfig, 'withClear'>
 
 export interface WithClearProps<T extends InputValue = InputValue> extends /** @vue-ignore */ OmitByKey<InputProps<T>, 'modelValue' | 'ui'> {
   buttonProps?: ButtonProps
