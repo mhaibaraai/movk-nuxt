@@ -1,5 +1,7 @@
 export default defineAppConfig({
   movk: {
+    picker: {
+    },
     asPhoneNumberInput: {
       variants: {
         dialCode: {

@@ -13,23 +13,18 @@ import { name, version } from '../package.json'
 import { addTemplates } from './templates'
 import { getPackageJsonMetadata } from './runtime/utils/meta'
 import { setupTheme } from './utils/theme'
-import { setupFonts } from './utils/fonts'
 import { buildApiRuntimeConfig } from './utils/api'
 
 export * from './runtime/types'
 
-interface MovkFontProviderConfig {
+export interface ThemeFontConfig {
+  /** 字体名称，与 CSS font-family 保持一致 */
+  name: string
   /**
-   * CDN 基础 URL
-   * @see 'https://fonts.nuxt.com/get-started/providers#custom-providers'
-   * @example 'https://cdn.org/fonts'
+   * 字体 CSS 文件的完整 URL；未提供时运行时回退到 Google Fonts URL
+   * @example 'https://cdn.mhaibaraai.cn/fonts/alibaba-puhuiti.css'
    */
-  cdn: string
-  /**
-   * 需要加载的字重，默认全部加载
-   * @example [300, 400, 500, 700]
-   */
-  weights?: number[]
+  href?: string
 }
 
 export interface ModuleOptions {
@@ -53,19 +48,12 @@ export interface ModuleOptions {
      * @example 'tw'
      */
     prefix?: string
-  }
-  /** 字体提供器配置 */
-  fonts?: {
-    /**
-     * 是否启用字体模块
-     * @defaultValue true
-     */
-    enabled?: boolean
-    /**
-     * 阿里巴巴普惠体字体
-     * @defaultValue 'https://cdn.mhaibaraai.cn/fonts'
-     */
-    alibabaPuhuiti?: MovkFontProviderConfig
+    /** ThemePicker 字体可选项；提供时完整替换内置列表 */
+    fonts?: ThemeFontConfig[]
+    /** ThemePicker 圆角可选项 */
+    radiuses?: number[]
+    /** ThemePicker neutral 颜色可选项 */
+    neutralColors?: string[]
   }
 }
 
@@ -80,17 +68,12 @@ export default defineNuxtModule<ModuleOptions>({
     prefix: 'M',
     theme: {
       enabled: true
-    },
-    fonts: {
-      enabled: true,
-      alibabaPuhuiti: {
-        cdn: 'https://cdn.mhaibaraai.cn/fonts'
-      }
     }
   },
   moduleDependencies: {
     '@nuxt/image': { version: '>=2.0.0' },
-    '@nuxt/ui': { version: '>=4.6.0' },
+    /** 默认禁用 @nuxt/ui 的 fonts 子模块（大陆地区无法访问 Google Fonts 时由本模块手动注入字体 link） */
+    '@nuxt/ui': { version: '>=4.6.0', defaults: { fonts: false } },
     '@vueuse/nuxt': { version: '>=14.2.1' },
     'nuxt-auth-utils': { version: '>=0.5.29' },
     'nuxt-site-config': { version: '>=4.0.8' }
@@ -101,7 +84,6 @@ export default defineNuxtModule<ModuleOptions>({
     nuxt.options.alias['#movk'] = resolve('./runtime')
 
     setupTheme(nuxt, resolve, options['theme'])
-    setupFonts(options, nuxt)
 
     nuxt.options.css = nuxt.options.css || []
     nuxt.options.css.push(resolve('runtime/index.css'))

@@ -1,11 +1,30 @@
 import type { Resolver } from '@nuxt/kit'
 import type { Nuxt } from '@nuxt/schema'
-import type { ModuleOptions } from '../module'
+import type { ModuleOptions, ThemeFontConfig } from '../module'
 import { addPlugin } from '@nuxt/kit'
 import defu from 'defu'
 
+const DEFAULT_FONTS: ThemeFontConfig[] = [
+  { name: 'Alibaba PuHuiTi', href: 'https://cdn.mhaibaraai.cn/fonts/alibaba-puhuiti.css' },
+  { name: 'Public Sans' },
+  { name: 'DM Sans' },
+  { name: 'Geist' },
+  { name: 'Inter' },
+  { name: 'Poppins' },
+  { name: 'Outfit' },
+  { name: 'Raleway' }
+]
+
+const DEFAULT_RADIUSES = [0, 0.125, 0.25, 0.375, 0.5]
+
+const DEFAULT_NEUTRAL_COLORS = ['slate', 'gray', 'zinc', 'neutral', 'stone', 'taupe', 'mauve', 'mist', 'olive']
+
 export function setupTheme(nuxt: Nuxt, resolve: Resolver['resolve'], theme?: ModuleOptions['theme']) {
   if (theme?.enabled === false) return
+
+  const pickerFonts = theme?.fonts ?? DEFAULT_FONTS
+  const pickerRadiuses = theme?.radiuses ?? DEFAULT_RADIUSES
+  const pickerNeutralColors = theme?.neutralColors ?? DEFAULT_NEUTRAL_COLORS
 
   nuxt.options.appConfig.movk = defu(nuxt.options.appConfig.movk || {}, {
     radius: 0.25,
@@ -17,6 +36,11 @@ export function setupTheme(nuxt: Nuxt, resolve: Resolver['resolve'], theme?: Mod
       twMergeConfig: {
         prefix: theme?.prefix
       }
+    },
+    picker: {
+      fonts: pickerFonts,
+      radiuses: pickerRadiuses,
+      neutralColors: pickerNeutralColors
     }
   })
 

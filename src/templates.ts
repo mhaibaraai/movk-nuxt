@@ -102,6 +102,11 @@ type Radius = 0 | 0.125 | 0.25 | 0.375 | 0.5
 type FontFamily = 'Alibaba PuHuiTi' | 'Public Sans' | 'DM Sans' | 'Geist' | 'Inter' | 'Poppins' | 'Outfit' | 'Raleway'
 type Icons = 'lucide' | 'phosphor' | 'tabler'
 
+interface PickerFontEntry {
+  name: string
+  href?: string
+}
+
 type AppConfigUI = {
   radius?: Radius | (number & {})
   blackAsPrimary?: boolean
@@ -109,6 +114,11 @@ type AppConfigUI = {
   icons?: Icons | (string & {})
   prefix?: string
   tv?: typeof defaultConfig
+  picker?: {
+    fonts?: PickerFontEntry[]
+    radiuses?: number[]
+    neutralColors?: string[]
+  }
 } & TVConfig<typeof movkUi>
 
 declare module 'nuxt/app' {
