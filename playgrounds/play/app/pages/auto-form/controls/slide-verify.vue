@@ -6,7 +6,7 @@ const { afz } = useAutoForm()
 const toast = useToast()
 
 const schema = afz.object({
-  slideVerify: afz.boolean({ type: 'slideVerify', controlProps: { height: 36, sliderWidth: 40 } })
+  slideVerify: afz.boolean({ type: 'slideVerify', controlProps: { size: 'lg' } })
     .meta({ hint: '滑动验证控件' })
 })
 

@@ -8,15 +8,10 @@ type SlideVerify = ComponentConfig<typeof theme, AppConfig, 'slideVerify'>
 
 export interface SlideVerifyProps {
   /**
-   * 滑块宽度
-   * @defaultValue 50
+   * 尺寸大小
+   * @defaultValue 'md'
    */
-  sliderWidth?: number
-  /**
-   * 滑块高度
-   * @defaultValue 32
-   */
-  height?: number
+  size?: SlideVerify['variants']['size']
   /**
    * 是否禁用
    * @defaultValue false
@@ -47,9 +42,6 @@ export interface SlideVerifyProps {
    * @defaultValue 0.9
    */
   threshold?: number
-  /**
-   * 自定义各区域样式
-   */
   ui?: SlideVerify['slots']
 }
 
@@ -60,7 +52,7 @@ export interface SlideVerifyEmits {
 }
 
 export interface SlideVerifySlots {
-  slider?(props: { verified: boolean, progress: number }): VNode[]
+  slider?(props: { verified?: boolean, progress: number }): VNode[]
 }
 </script>
 
@@ -68,15 +60,11 @@ export interface SlideVerifySlots {
 import { UIcon } from '#components'
 import { useAppConfig } from '#imports'
 import { useElementSize } from '@vueuse/core'
-import { Motion } from 'motion-v'
 import { computed, ref, useTemplateRef } from 'vue'
 import { tv } from '../utils/tv'
 
-defineOptions({ inheritAttrs: false })
-
 const props = withDefaults(defineProps<SlideVerifyProps>(), {
-  sliderWidth: 50,
-  height: 32,
+  size: 'md',
   disabled: false,
   text: '请向右滑动验证',
   successText: '验证成功',
@@ -87,49 +75,75 @@ const props = withDefaults(defineProps<SlideVerifyProps>(), {
 
 const emits = defineEmits<SlideVerifyEmits>()
 defineSlots<SlideVerifySlots>()
+defineOptions({ inheritAttrs: false })
 
 const isVerified = defineModel<boolean>({ default: false })
-const trackRef = useTemplateRef<HTMLElement>('track')
-const { width: trackWidth } = useElementSize(trackRef)
+const rootRef = useTemplateRef<HTMLElement>('root')
+const sliderRef = useTemplateRef<HTMLElement>('slider')
+const { width: rootWidth } = useElementSize(rootRef)
+const { width: sliderWidth } = useElementSize(sliderRef)
 const isDragging = ref(false)
 const dragX = ref(0)
+const pointerStartX = ref(0)
+const dragStartX = ref(0)
 
 const appConfig = useAppConfig() as SlideVerify['AppConfig']
 
 const uiCls = computed(() =>
   tv({ extend: tv(theme), ...((appConfig.movk?.slideVerify || {}) as typeof theme) })({
     disabled: props.disabled,
-    verified: isVerified.value
+    verified: isVerified.value,
+    size: props.size
   })
 )
 
+const rootPaddingX = computed(() => {
+  const root = rootRef.value
+  const size = props.size
+  if (!root || !size) return 0
+
+  const style = getComputedStyle(root)
+  return (Number.parseFloat(style.paddingLeft) || 0) + (Number.parseFloat(style.paddingRight) || 0)
+})
+
+const sliderOuterWidth = computed(() =>
+  sliderWidth.value ? (sliderRef.value?.offsetWidth || sliderWidth.value) : 0
+)
+
 const maxDragDistance = computed(() =>
-  trackWidth.value ? Math.max(0, trackWidth.value - props.sliderWidth - 8) : 0
+  rootWidth.value ? Math.max(0, (rootRef.value?.clientWidth || 0) - rootPaddingX.value - sliderOuterWidth.value) : 0
 )
 
 const progress = computed(() =>
   isVerified.value ? 1 : maxDragDistance.value ? Math.min(dragX.value / maxDragDistance.value, 1) : 0
 )
 
-const canInteract = computed(() => !props.disabled && !isVerified.value && trackWidth.value > 0)
+const canInteract = computed(() => !props.disabled && !isVerified.value && rootWidth.value > 0)
 
-const springTransition = { type: 'spring' as const, stiffness: 400, damping: 30 }
+const currentTranslateX = computed(() =>
+  isVerified.value ? maxDragDistance.value : dragX.value
+)
 
-function handleDragStart() {
+function handlePointerDown(e: PointerEvent) {
   if (!canInteract.value) return
+  pointerStartX.value = e.clientX
+  dragStartX.value = dragX.value
   isDragging.value = true
+  ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
   emits('dragStart')
 }
 
-function handleDrag(_event: PointerEvent, info: { offset: { x: number } }) {
-  if (!canInteract.value) return
-  dragX.value = Math.max(0, Math.min(info.offset.x, maxDragDistance.value))
+function handlePointerMove(e: PointerEvent) {
+  if (!isDragging.value || !canInteract.value) return
+  dragX.value = Math.max(0, Math.min(
+    dragStartX.value + (e.clientX - pointerStartX.value),
+    maxDragDistance.value
+  ))
 }
 
-function handleDragEnd() {
-  if (!canInteract.value) return
+function handlePointerUp() {
+  if (!isDragging.value) return
   isDragging.value = false
-
   const success = progress.value >= props.threshold
   if (success) {
     isVerified.value = true
@@ -150,8 +164,8 @@ defineExpose({ reset })
 
 <template>
   <div
+    ref="root"
     :class="uiCls.root({ class: props.ui?.root })"
-    :style="{ height: `${height}px` }"
     role="slider"
     :aria-label="text"
     :aria-valuenow="Math.round(progress * 100)"
@@ -160,62 +174,43 @@ defineExpose({ reset })
     :aria-disabled="disabled"
   >
     <div ref="track" :class="uiCls.track({ class: props.ui?.track })">
-      <Motion
+      <div
         v-if="!isVerified"
-        as="div"
-        class="absolute inset-y-0 left-0 bg-primary/20"
-        :animate="{ width: `${progress * 100}%`, opacity: 0.6 }"
-        :transition="isDragging ? { duration: 0 } : springTransition"
+        :class="[uiCls.fill({ class: props.ui?.fill }), isDragging ? 'transition-none' : 'transition-[width] duration-300']"
+        :style="{ width: `${progress * 100}%` }"
       />
 
       <div :class="uiCls.text({ class: props.ui?.text })">
-        <Motion
+        <span
           v-if="!isVerified"
-          as="span"
-          class="relative inline-block bg-size-[200%_100%] bg-clip-text text-transparent bg-no-repeat"
+          class="animate-[shimmer_2s_linear_infinite] [background-size:200%_100%] bg-clip-text text-transparent bg-no-repeat select-none"
           :style="{
-            backgroundImage: 'radial-gradient(circle at center, var(--color-gray-500), transparent), linear-gradient(var(--color-neutral-400), var(--color-neutral-400))',
+            backgroundImage: 'linear-gradient(90deg, var(--ui-text-dimmed) 0%, var(--ui-text-muted) 50%, var(--ui-text-dimmed) 100%)',
             opacity: 1 - progress * 0.5
           }"
-          :animate="{ backgroundPosition: '-200% 50%, 0 0' }"
-          :initial="{ backgroundPosition: '200% 50%, 0 0' }"
-          :transition="{
-            repeat: Infinity,
-            duration: 2,
-            ease: 'linear'
-          }"
-        >
-          {{ text }}
-        </Motion>
-        <span v-else class="text-inverted font-medium">{{ successText }}</span>
+        >{{ text }}</span>
+        <span v-else class="font-medium text-inverted">{{ successText }}</span>
       </div>
     </div>
 
-    <Motion
-      as="div"
-      class="absolute inset-1"
-      :style="{ width: `${sliderWidth}px` }"
-      :initial="{ x: 0 }"
-      :animate="{ x: isVerified ? maxDragDistance : isDragging ? dragX : 0 }"
-      :transition="isDragging ? { duration: 0 } : springTransition"
-      :while-hover="canInteract ? { scale: 1.02 } : undefined"
-      :while-tap="canInteract ? { scale: 0.98 } : undefined"
-      :drag="canInteract ? 'x' : false"
-      :drag-constraints="{ left: 0, right: maxDragDistance }"
-      :drag-elastic="0"
-      :drag-momentum="false"
-      @drag-start="handleDragStart"
-      @drag="handleDrag"
-      @drag-end="handleDragEnd"
+    <div
+      ref="slider"
+      :class="[
+        uiCls.slider({ class: props.ui?.slider }),
+        isDragging ? 'transition-none' : 'transition-transform duration-300 ease-out',
+        canInteract ? 'hover:scale-[1.02] active:scale-[0.98]' : ''
+      ]"
+      :style="{ transform: `translateX(${currentTranslateX}px)` }"
+      @pointerdown="handlePointerDown"
+      @pointermove="handlePointerMove"
+      @pointerup="handlePointerUp"
     >
-      <div :class="uiCls.slider({ class: props.ui?.slider })">
-        <slot name="slider" :verified="isVerified" :progress="progress">
-          <UIcon
-            :name="isVerified ? successIcon : icon"
-            :class="['size-5', isVerified ? 'text-success' : 'text-primary']"
-          />
-        </slot>
-      </div>
-    </Motion>
+      <slot name="slider" :verified="isVerified" :progress="progress">
+        <UIcon
+          :name="isVerified ? successIcon : icon"
+          :class="uiCls.icon({ class: props.ui?.icon })"
+        />
+      </slot>
+    </div>
   </div>
 </template>
