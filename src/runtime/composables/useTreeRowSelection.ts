@@ -1,9 +1,7 @@
 import type { ComputedRef, MaybeRefOrGetter, Ref } from 'vue'
 import { computed, toValue } from 'vue'
-import type { TreeRowSelectionOptions, TreeSelectionResult } from '../utils/tree-row-selection'
-import { computeTreeRowSelection } from '../utils/tree-row-selection'
-
-export type { TreeRowSelectionOptions, TreeSelectionResult } from '../utils/tree-row-selection'
+import type { TreeRowSelectionOptions, TreeSelectionResult } from '../types/data-table/selection'
+import { computeTreeRowSelection } from '../domains/data-table/state/tree-selection'
 
 /**
  * 树形选择派生 composable：把 rowSelectionKeys 与 data 组合为

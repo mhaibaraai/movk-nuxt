@@ -1,7 +1,9 @@
-<script setup lang="ts">
-import type { ButtonProps } from '@nuxt/ui'
-import { UButton, UBadge } from '#components'
-import { computed, ref } from 'vue'
+<script lang="ts">
+import type { ButtonProps, ComponentConfig } from '@nuxt/ui'
+import type { AppConfig } from 'nuxt/schema'
+import theme from '#build/movk-ui/star-rating'
+
+type StarRating = ComponentConfig<typeof theme, AppConfig, 'starRating'>
 
 export interface StarRatingProps {
   /**
@@ -29,9 +31,7 @@ export interface StarRatingProps {
    * @defaultValue true
    */
   showBadge?: boolean
-  /**
-   * 自定义星星按钮属性
-   */
+  /** 自定义星星按钮属性 */
   buttonProps?: Partial<ButtonProps>
   /**
    * 未选中星星的图标
@@ -68,15 +68,21 @@ export interface StarRatingProps {
    * @defaultValue false
    */
   clearable?: boolean
+  ui?: StarRating['slots']
 }
 
 export interface StarRatingEmits {
   'update:modelValue': [value: number]
-  /** 评分改变事件 */
   'change': [value: number]
-  /** 悬停事件 */
   'hover': [value: number | null]
 }
+</script>
+
+<script lang="ts" setup>
+import { UButton, UBadge } from '#components'
+import { computed, ref } from 'vue'
+import { useAppConfig } from '#imports'
+import { tv } from '../utils/tv'
 
 const props = withDefaults(defineProps<StarRatingProps>(), {
   modelValue: 0,
@@ -101,9 +107,16 @@ const focusedIndex = ref<number>(0)
 
 const isInteractive = computed(() => !props.disabled && !props.readonly)
 
-/**
- * 计算半星位置：根据鼠标/点击位置判断是否为半星
- */
+const appConfig = useAppConfig() as StarRating['AppConfig']
+
+const uiCls = computed(() =>
+  tv({ extend: tv(theme), ...((appConfig.movk?.starRating || {}) as typeof theme) })({
+    interactive: isInteractive.value,
+    disabled: props.disabled,
+    readonly: props.readonly && !props.disabled
+  })
+)
+
 function calculateHalfStarValue(index: number, event: MouseEvent): number {
   if (!props.allowHalf) return index + 1
 
@@ -115,9 +128,6 @@ function calculateHalfStarValue(index: number, event: MouseEvent): number {
   return posX < halfWidth ? index + 0.5 : index + 1
 }
 
-/**
- * 更新评分值
- */
 function updateValue(newValue: number) {
   if (props.clearable && newValue === props.modelValue) {
     emits('update:modelValue', 0)
@@ -162,9 +172,6 @@ function handleMouseLeave() {
   emits('hover', null)
 }
 
-/**
- * 键盘导航支持
- */
 function handleKeyDown(event: KeyboardEvent) {
   if (!isInteractive.value) return
 
@@ -211,7 +218,6 @@ function handleKeyDown(event: KeyboardEvent) {
       break
 
     default:
-      // 数字键快速设置评分
       if (event.key >= '0' && event.key <= '9') {
         const numValue = Number.parseInt(event.key)
         if (numValue <= props.max) {
@@ -254,7 +260,7 @@ const badgeLabel = computed(() => `${props.modelValue}/${props.max}`)
 
 <template>
   <div
-    class="inline-flex items-center gap-1"
+    :class="uiCls.root({ class: props.ui?.root })"
     role="slider"
     :aria-label="`评分 ${props.modelValue} / ${props.max}`"
     :aria-valuenow="props.modelValue"
@@ -266,7 +272,7 @@ const badgeLabel = computed(() => `${props.modelValue}/${props.max}`)
     @keydown="handleKeyDown"
   >
     <slot name="prefix" :value="props.modelValue" :max="props.max" />
-    <div class="flex items-center gap-0.5">
+    <div :class="uiCls.stars({ class: props.ui?.stars })">
       <UButton
         v-for="index in props.max"
         :key="index"
@@ -278,12 +284,7 @@ const badgeLabel = computed(() => `${props.modelValue}/${props.max}`)
         :aria-label="`${index} 星`"
         :tabindex="-1"
         v-bind="buttonProps"
-        class="transition-all duration-150"
-        :class="{
-          'cursor-pointer hover:scale-110': isInteractive,
-          'cursor-not-allowed opacity-50': props.disabled,
-          'cursor-default': props.readonly && !props.disabled
-        }"
+        :class="uiCls.star({ class: props.ui?.star })"
         @click="handleClick(index - 1, $event)"
         @mouseenter="handleMouseEnter(index - 1, $event)"
         @mousemove="handleMouseMove(index - 1, $event)"

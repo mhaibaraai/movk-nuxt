@@ -5,9 +5,9 @@ import type { DateRange } from 'reka-ui'
 import { z } from 'zod'
 import { isObject } from '@movk/core'
 import { AUTOFORM_META } from '../constants/auto-form'
-import { applyMeta, extractErrorAndMeta, getAutoFormMetadata } from '../auto-form/metadata'
-import { DEFAULT_CONTROLS, defineControl } from '../auto-form/controls'
-import { extractEnumValuesFromItems } from '../auto-form/field-utils'
+import { applyMeta, extractErrorAndMeta, getAutoFormMetadata } from '../domains/auto-form/metadata'
+import { DEFAULT_CONTROLS, defineControl } from '../domains/auto-form/controls'
+import { extractEnumValuesFromItems } from '../domains/auto-form/fields'
 import { useDateFormatter } from './useDateFormatter'
 
 /** 创建基础类型 schema 工厂，统一处理 error 字符串和 meta 对象两种入参形式 */

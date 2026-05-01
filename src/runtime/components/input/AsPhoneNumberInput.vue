@@ -1,31 +1,50 @@
-<script setup lang="ts" generic="T extends InputValue">
-import { UInput } from '#components'
-import { vMaska } from 'maska/vue'
+<script lang="ts">
 import type { OmitByKey } from '@movk/core'
-import type { InputEmits, InputProps, InputSlots, InputValue } from '@nuxt/ui'
-import type { ClassNameValue } from '../../types'
+import type { ComponentConfig, InputEmits, InputProps, InputSlots, InputValue } from '@nuxt/ui'
+import theme from '#build/movk-ui/as-phone-number-input'
+import inputTheme from '#build/ui/input'
+import type { AppConfig } from 'nuxt/schema'
 
-export interface AsPhoneNumberInputProps<T extends InputValue = InputValue> extends /** @vue-ignore */ OmitByKey<InputProps<T>, 'type' | 'modelValue'> {
+type AsPhoneNumberInput = ComponentConfig<typeof inputTheme & typeof theme, AppConfig, 'asPhoneNumberInput'>
+
+export interface AsPhoneNumberInputProps<T extends InputValue = InputValue> extends /** @vue-ignore */ OmitByKey<InputProps<T>, 'type' | 'modelValue' | 'ui'> {
   /**
    * 输入掩码格式，`#` 表示一个数字位。
    * @defaultValue '(###) ###-####'
    */
   mask?: string
-  /** 区号前缀，例如 `+86`。 */
+  /**
+   * 区号前缀
+   * @example '+86'、'+1'
+   */
   dialCode?: string
-  /** 区号前缀的自定义样式类。 */
-  dialCodeClass?: ClassNameValue
+  ui?: AsPhoneNumberInput['slots']
 }
+</script>
+
+<script lang="ts" setup generic="T extends InputValue">
+import { UInput } from '#components'
+import { vMaska } from 'maska/vue'
+import { useAppConfig } from '#imports'
+import { useExtendedTv } from '../../utils/extend-theme'
 
 const props = withDefaults(defineProps<AsPhoneNumberInputProps<T>>(), {
   mask: '(###) ###-####'
 })
+const modelValue = defineModel<T>()
 const emits = defineEmits<InputEmits<T>>()
 const slots = defineSlots<OmitByKey<InputSlots, 'leading'>>()
 
 defineOptions({ inheritAttrs: false })
 
-const modelValue = defineModel<T>()
+const appConfig = useAppConfig() as AsPhoneNumberInput['AppConfig']
+
+const { baseUi, extraUi } = useExtendedTv(
+  inputTheme,
+  theme,
+  () => appConfig.movk?.asPhoneNumberInput,
+  () => ({ ui: props.ui, variants: { dialCode: !!props.dialCode } })
+)
 </script>
 
 <template>
@@ -35,9 +54,7 @@ const modelValue = defineModel<T>()
     type="tel"
     :placeholder="props.placeholder ?? props.mask.replaceAll('#', '_')"
     :style="props.dialCode ? { '--dial-code-length': `${props.dialCode.length + 1.5}ch` } : undefined"
-    :ui="props.dialCode
-      ? { base: 'ps-(--dial-code-length)', leading: 'pointer-events-none text-muted' }
-      : {}"
+    :ui="baseUi"
     v-bind="$attrs"
     @blur="emits('blur', $event)"
     @change="emits('change', $event)"
@@ -47,7 +64,7 @@ const modelValue = defineModel<T>()
     </template>
 
     <template v-if="props.dialCode" #leading>
-      <span :class="props.dialCodeClass">{{ props.dialCode }}</span>
+      <span :class="extraUi.dialCode">{{ props.dialCode }}</span>
     </template>
   </UInput>
 </template>

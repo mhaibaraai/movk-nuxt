@@ -1,20 +1,30 @@
-<script setup lang="ts" generic="T extends InputValue">
-import { UInput, UButton, UTooltip } from '#components'
-import { useClipboard } from '@vueuse/core'
-import { isEmpty, type OmitByKey } from '@movk/core'
-import type { ButtonProps, InputEmits, InputProps, InputSlots, InputValue, TooltipProps } from '@nuxt/ui'
-import { useAttrs } from 'vue'
+<script lang="ts">
+import type { OmitByKey } from '@movk/core'
+import type { ButtonProps, ComponentConfig, InputEmits, InputProps, InputSlots, InputValue, TooltipProps } from '@nuxt/ui'
+import type { AppConfig } from 'nuxt/schema'
+import theme from '#build/movk-ui/with-copy'
+import inputTheme from '#build/ui/input'
 
-export interface WithCopyProps<T extends InputValue = InputValue> extends /** @vue-ignore */ OmitByKey<InputProps<T>, 'modelValue'> {
-  /** 复制按钮的自定义属性 */
+type WithCopy = ComponentConfig<typeof inputTheme & typeof theme, AppConfig, 'withCopy'>
+
+export interface WithCopyProps<T extends InputValue = InputValue> extends /** @vue-ignore */ OmitByKey<InputProps<T>, 'modelValue' | 'ui'> {
   buttonProps?: ButtonProps
-  /** 提示框的自定义属性 */
   tooltipProps?: TooltipProps
+  ui?: WithCopy['slots']
 }
 
-export type WithCopyEmits<T extends InputValue = InputValue> = InputEmits<T> & {
+type WithCopyEmits<T extends InputValue = InputValue> = InputEmits<T> & {
   copy: [value: string]
 }
+</script>
+
+<script lang="ts" setup generic="T extends InputValue">
+import { UInput, UButton, UTooltip } from '#components'
+import { useClipboard } from '@vueuse/core'
+import { isEmpty } from '@movk/core'
+import { useAttrs } from 'vue'
+import { useAppConfig } from '#imports'
+import { useExtendedTv } from '../../utils/extend-theme'
 
 const props = defineProps<WithCopyProps<T>>()
 const emits = defineEmits<WithCopyEmits<T>>()
@@ -23,8 +33,15 @@ const slots = defineSlots<OmitByKey<InputSlots, 'trailing'>>()
 defineOptions({ inheritAttrs: false })
 
 const attrs = useAttrs()
+const appConfig = useAppConfig() as WithCopy['AppConfig']
 const modelValue = defineModel<T>()
 
+const { baseUi } = useExtendedTv(
+  inputTheme,
+  theme,
+  () => appConfig.movk?.withCopy,
+  () => ({ ui: props.ui })
+)
 const { copy, copied } = useClipboard()
 
 function handleCopy() {
@@ -39,8 +56,8 @@ function handleCopy() {
 <template>
   <UInput
     v-model="modelValue"
-    :ui="{ trailing: 'pe-1' }"
-    v-bind="$attrs"
+    :ui="baseUi"
+    v-bind="attrs"
     @blur="emits('blur', $event)"
     @change="emits('change', $event)"
   >

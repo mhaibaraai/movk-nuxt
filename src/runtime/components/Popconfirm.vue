@@ -1,16 +1,16 @@
-<script setup lang="ts" generic="M extends 'click' | 'hover' = 'click'">
+<script lang="ts">
 import type { VNode } from '#imports'
-import type { ClassNameValue, SemanticColor } from '../types'
-import type { PopoverProps, ButtonProps, LinkPropsKeys, IconProps } from '@nuxt/ui'
+import type { SemanticColor } from '../types'
+import type { PopoverProps, ButtonProps, LinkPropsKeys, IconProps, ComponentConfig, PopoverSlots } from '@nuxt/ui'
 import type { OmitByKey } from '@movk/core'
-import { isObject } from '@movk/core'
-import { UPopover, UButton, UIcon } from '#components'
-import { computed, ref, useAttrs } from 'vue'
-import { useAppConfig } from '#imports'
-import theme from '../../themes/popconfirm'
-import { tv } from '@nuxt/ui/utils/tv'
+import type { AppConfig } from 'nuxt/schema'
+import theme from '#build/movk-ui/popconfirm'
+import popoverTheme from '#build/ui/popover'
 
-export interface PopconfirmProps<M extends 'click' | 'hover' = 'click'> extends /** @vue-ignore */ OmitByKey<PopoverProps<M>, 'open' | 'defaultOpen' | 'dismissible' | 'arrow' | 'ui'> {
+type Popconfirm = ComponentConfig<typeof popoverTheme & typeof theme, AppConfig, 'popconfirm'>
+type PopoverMode = 'click' | 'hover'
+
+export interface PopconfirmProps<M extends PopoverMode = PopoverMode> extends /** @vue-ignore */ OmitByKey<PopoverProps<M>, 'open' | 'defaultOpen' | 'dismissible' | 'arrow' | 'ui'> {
   /**
    * 确认气泡的标题文本。
    * @defaultValue '确认操作'
@@ -60,33 +60,32 @@ export interface PopconfirmProps<M extends 'click' | 'hover' = 'click'> extends 
    * 回调成功完成后弹层自动关闭并触发 `confirm` 事件；抛错时保持弹层打开。
    */
   onConfirm?: () => void | Promise<void>
-  ui?: {
-    header?: ClassNameValue
-    title?: ClassNameValue
-    description?: ClassNameValue
-    body?: ClassNameValue
-    footer?: ClassNameValue
-  } & PopoverProps<M>['ui']
-}
-
-export interface PopconfirmSlots {
-  default?(props: { open: boolean }): VNode[]
-  header?(props: { close: () => void }): VNode[]
-  title?(props?: {}): VNode[]
-  description?(props?: {}): VNode[]
-  actions?(props?: {}): VNode[]
-  body?(props: { close: () => void }): VNode[]
-  footer?(props: { close: () => void }): VNode[]
+  ui?: Popconfirm['slots']
 }
 
 export interface PopconfirmEmits {
-  /** 确认动作成功完成后触发。若 `onConfirm` 返回 Promise，则在其 resolve 后触发 */
   confirm: []
-  /** 用户点击取消按钮时触发 */
   cancel: []
-  /** 确认回调抛出异常时触发，携带原始错误 */
   error: [error: unknown]
 }
+
+export interface PopconfirmSlots<M extends PopoverMode = PopoverMode> {
+  default?(props: { open: boolean }): VNode[]
+  header?: PopoverSlots<M>['content']
+  title?: PopoverSlots<M>['content']
+  description?: PopoverSlots<M>['content']
+  actions?: PopoverSlots<M>['content']
+  body?: PopoverSlots<M>['content']
+  footer?: PopoverSlots<M>['content']
+}
+</script>
+
+<script lang="ts" setup generic="M extends PopoverMode">
+import { isObject } from '@movk/core'
+import { UPopover, UButton, UIcon } from '#components'
+import { computed, ref, useAttrs } from 'vue'
+import { useAppConfig } from '#imports'
+import { useExtendedTv } from '../utils/extend-theme'
 
 const props = withDefaults(defineProps<PopconfirmProps>(), {
   title: '确认操作',
@@ -103,10 +102,15 @@ const slots = defineSlots<PopconfirmSlots>()
 defineOptions({ inheritAttrs: false })
 
 const attrs = useAttrs()
-const appConfig = useAppConfig()
+const appConfig = useAppConfig() as Popconfirm['AppConfig']
+
 const openState = ref(false)
-const uiCls = computed(() =>
-  tv({ extend: tv(theme), ...(appConfig.ui?.popconfirm || {}) })()
+
+const { ui, extraUi } = useExtendedTv(
+  popoverTheme,
+  theme,
+  () => appConfig.movk?.popconfirm,
+  () => ({ ui: props.ui, variants: { type: props.type } })
 )
 const confirmLoading = ref(false)
 
@@ -119,17 +123,7 @@ const iconMap = {
   neutral: 'i-lucide-circle-question-mark'
 } satisfies Record<SemanticColor, string>
 
-const iconColorMap = {
-  primary: 'text-primary',
-  info: 'text-info',
-  success: 'text-success',
-  warning: 'text-warning',
-  error: 'text-error',
-  neutral: 'text-muted'
-} satisfies Record<SemanticColor, string>
-
 const resolvedIcon = computed(() => props.icon ?? iconMap[props.type])
-const resolvedIconColor = computed(() => iconColorMap[props.type])
 
 const cancelButtonAttrs = computed<ButtonProps>(() => ({
   color: 'neutral' as const,
@@ -178,10 +172,7 @@ async function handleConfirm(close: () => void) {
     v-model:open="openState"
     :dismissible="props.dismissible"
     :arrow="props.arrow"
-    :ui="{
-      content: uiCls.content({ class: props.ui?.content }),
-      arrow: uiCls.arrow({ class: props.ui?.arrow })
-    }"
+    :ui="ui"
   >
     <template #default="{ open }">
       <slot :open="open" />
@@ -191,16 +182,16 @@ async function handleConfirm(close: () => void) {
       <div
         v-if="!!slots.header || (props.title || !!slots.title) || (props.description || !!slots.description)"
         data-slot="header"
-        :class="uiCls.header({ class: props.ui?.header })"
+        :class="extraUi.header"
       >
         <slot name="header" :close="close">
           <span
             v-if="props.title || !!slots.title"
             data-slot="title"
-            :class="uiCls.title({ class: props.ui?.title })"
+            :class="extraUi.title"
           >
-            <slot name="title">
-              <UIcon :name="resolvedIcon" :class="resolvedIconColor" class="size-4 shrink-0" />
+            <slot name="title" :close="close">
+              <UIcon :name="resolvedIcon" :class="extraUi.icon" />
               {{ props.title }}
             </slot>
           </span>
@@ -208,22 +199,22 @@ async function handleConfirm(close: () => void) {
           <p
             v-if="props.description || !!slots.description"
             data-slot="description"
-            :class="uiCls.description({ class: props.ui?.description })"
+            :class="extraUi.description"
           >
-            <slot name="description">
+            <slot name="description" :close="close">
               {{ props.description }}
             </slot>
           </p>
         </slot>
 
-        <slot name="actions" />
+        <slot name="actions" :close="close" />
       </div>
 
-      <div v-if="!!slots.body" data-slot="body" :class="uiCls.body({ class: props.ui?.body })">
+      <div v-if="!!slots.body" data-slot="body" :class="extraUi.body">
         <slot name="body" :close="close" />
       </div>
 
-      <div data-slot="footer" :class="uiCls.footer({ class: props.ui?.footer })">
+      <div data-slot="footer" :class="extraUi.footer">
         <slot name="footer" :close="close">
           <UButton
             v-if="props.cancelButton !== false"

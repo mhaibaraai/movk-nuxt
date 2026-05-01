@@ -1,4 +1,4 @@
-<script setup lang="ts" generic="T extends TableData">
+<script lang="ts">
 import type {
   ColumnPinningState,
   ColumnSizingState,
@@ -13,29 +13,12 @@ import type {
   VisibilityState
 } from '@tanstack/vue-table'
 import type { DataTableProps } from '../types/data-table'
-import { getPaginationRowModel } from '@tanstack/vue-table'
-import { UTable } from '#components'
-import { computed, useAttrs, useTemplateRef } from 'vue'
-import {
-  createPaginationSnapshot,
-  expandedToKeys,
-  keysToExpanded,
-  keysToRowSelection,
-  keysToVisibility,
-  keysToVisibilityExclude,
-  resolvePaginationViewState,
-  resolveTableResetKey,
-  resolveCallbackValue,
-  resolveSelectedCount,
-  rowSelectionToKeys,
-  useEffectiveModel,
-  useSyncKeys,
-  visibilityToExcludeKeys,
-  visibilityToKeys
-} from '../utils/data-table-utils'
-import { resolveColumns } from './data-table/column-helpers'
-import DataTablePagination from './data-table/DataTablePagination.vue'
-import type { TableData, TableProps } from '@nuxt/ui'
+import type { ComponentConfig, TableData, TableProps } from '@nuxt/ui'
+import type { AppConfig } from 'nuxt/schema'
+import theme from '#build/movk-ui/data-table'
+import tableTheme from '#build/ui/table'
+
+type DataTable = ComponentConfig<typeof tableTheme & typeof theme, AppConfig, 'dataTable'>
 
 interface UTableExpose<TData extends TableData> {
   tableApi: Table<TData>
@@ -54,6 +37,39 @@ interface PaginationSlotProps<TData extends TableData> {
   show: boolean
   selectedCount: number
 }
+</script>
+
+<script lang="ts" setup generic="T extends TableData">
+import { getPaginationRowModel } from '@tanstack/vue-table'
+import { UTable } from '#components'
+import { useAppConfig } from '#imports'
+import { computed, useAttrs, useTemplateRef } from 'vue'
+import { useExtendedTv } from '../utils/extend-theme'
+import {
+  resolveCallbackValue,
+  resolveTableResetKey,
+  useEffectiveModel,
+  useSyncKeys
+} from '../domains/data-table/state/models'
+import {
+  createPaginationSnapshot,
+  expandedToKeys,
+  keysToExpanded,
+  resolvePaginationViewState
+} from '../domains/data-table/state/pagination'
+import {
+  keysToRowSelection,
+  resolveSelectedCount,
+  rowSelectionToKeys
+} from '../domains/data-table/state/selection'
+import {
+  keysToVisibility,
+  keysToVisibilityExclude,
+  visibilityToExcludeKeys,
+  visibilityToKeys
+} from '../domains/data-table/state/visibility'
+import { resolveColumns } from '../domains/data-table/columns/resolve-columns'
+import DataTablePagination from './data-table-renderer/DataTableRendererPagination.vue'
 
 const props = withDefaults(defineProps<DataTableProps<T>>(), {
   emptyCell: '-',
@@ -156,6 +172,7 @@ useSyncKeys(
 defineOptions({ inheritAttrs: false })
 
 const attrs = useAttrs()
+const appConfig = useAppConfig() as DataTable['AppConfig']
 const tableRef = useTemplateRef<UTableExpose<T>>('tableRef')
 
 const isTreeMode = computed(() => Boolean(props.childrenKey))
@@ -165,7 +182,7 @@ const tableMeta = computed((): TableMeta<T> => ({
   ...((props.stripe || props.rowClass || props.meta?.class?.tr) && {
     class: {
       tr: row => [
-        props.rowClass && resolveCallbackValue(props.rowClass, row),
+        props.rowClass && resolveCallbackValue(props.rowClass, row.original),
         props.meta?.class?.tr && resolveCallbackValue(props.meta.class.tr, row)
       ].filter(Boolean).join(' ')
     }
@@ -174,11 +191,13 @@ const tableMeta = computed((): TableMeta<T> => ({
     style: {
       tr: props.rowStyle && props.meta?.style?.tr
         ? (row) => {
-            const a = resolveCallbackValue(props.rowStyle!, row)
+            const a = resolveCallbackValue(props.rowStyle!, row.original)
             const b = resolveCallbackValue(props.meta!.style!.tr!, row)
             return typeof a === 'object' && typeof b === 'object' ? { ...a, ...b } : b
           }
-        : (props.rowStyle ?? props.meta!.style!.tr!)
+        : props.rowStyle
+          ? row => resolveCallbackValue(props.rowStyle!, row.original)
+          : props.meta!.style!.tr!
     }
   })
 }))
@@ -191,6 +210,13 @@ const borderedStyle = computed(() => {
     '--m-dt-border-style': props.bordered.style
   }
 })
+
+const { ui: mergedUi } = useExtendedTv(
+  tableTheme,
+  theme,
+  () => appConfig.movk?.dataTable,
+  () => ({ ui: props.ui, variants: { fitContent: !!props.fitContent } })
+)
 
 const uTableProps = computed(() => {
   const hasRowClickBehavior = props.expandOnRowClick || props.selectOnRowClick || !!props.onSelect
@@ -210,11 +236,7 @@ const uTableProps = computed(() => {
     ...attrs,
     columns: resolved.value.columnDefs,
     meta: tableMeta.value,
-    ui: {
-      ...props.ui,
-      ...(props.fitContent && { base: ['w-fit min-w-0', props.ui?.base].filter(Boolean).join(' ') }),
-      tbody: ['divide-y-0', props.ui?.tbody].filter(Boolean).join(' ')
-    },
+    ui: mergedUi.value,
     columnSizingOptions: {
       enableColumnResizing: !!props.resizable || resolved.value.hasColumnResizing,
       ...(props.columnResizeMode && { columnResizeMode: props.columnResizeMode }),
@@ -331,6 +353,10 @@ defineExpose({
       v-model:expanded="effectiveExpanded"
       v-bind="uTableProps"
     >
+      <template v-if="$slots.expanded" #expanded="{ row }">
+        <slot name="expanded" :row="row" />
+      </template>
+
       <template v-if="$slots.empty" #empty>
         <slot name="empty" />
       </template>

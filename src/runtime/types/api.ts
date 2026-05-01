@@ -28,44 +28,22 @@ export interface ApiResponseConfig {
    * 表示成功的业务状态码列表
    * @defaultValue [200, 0]
    */
-  successCodes: (number | string)[]
+  successCodes?: (number | string)[]
   /**
    * 响应中业务状态码的字段名
    * @defaultValue 'code'
    */
-  codeKey: string
+  codeKey?: string
   /**
    * 响应中消息内容的字段名
    * @defaultValue 'message'
    */
-  messageKey: string
+  messageKey?: string
   /**
    * 响应中业务数据的字段名
    * @defaultValue 'data'
    */
-  dataKey: string
-}
-
-/**
- * 401 未授权处理配置
- * @description 定义当接收到 401 响应时的自动处理行为
- */
-export interface ApiUnauthorizedConfig {
-  /**
-   * 是否自动重定向到登录页
-   * @defaultValue true
-   */
-  redirect?: boolean
-  /**
-   * 登录页路径
-   * @defaultValue '/login'
-   */
-  loginPath?: string
-  /**
-   * 是否清除用户会话
-   * @defaultValue true
-   */
-  clearSession?: boolean
+  dataKey?: string
 }
 
 /**
@@ -77,23 +55,23 @@ export interface ApiAuthConfig {
    * 是否启用认证
    * @defaultValue false
    */
-  enabled: boolean
+  enabled?: boolean
   /**
    * 令牌来源类型
    * @defaultValue 'session'
    */
-  tokenSource: 'session'
+  tokenSource?: 'session'
   /**
    * 令牌在会话对象中的路径（支持点号分隔的嵌套路径）
    * @defaultValue 'token'
    * @example 'token' | 'user.accessToken' | 'auth.credentials.token'
    */
-  sessionTokenPath: string
+  sessionTokenPath?: string
   /**
    * 令牌类型前缀
    * @defaultValue 'Bearer'
    */
-  tokenType: 'Bearer' | 'Basic' | 'Custom'
+  tokenType?: 'Bearer' | 'Basic' | 'Custom'
   /**
    * 自定义令牌类型前缀（当 tokenType 为 'Custom' 时使用）
    */
@@ -102,11 +80,18 @@ export interface ApiAuthConfig {
    * 认证请求头名称
    * @defaultValue 'Authorization'
    */
-  headerName: string
+  headerName?: string
   /**
    * 401 未授权处理配置
    */
-  unauthorized?: ApiUnauthorizedConfig
+  unauthorized?: {
+    /** 是否自动重定向到登录页 @defaultValue true */
+    redirect?: boolean
+    /** 登录页路径 @defaultValue '/login' */
+    loginPath?: string
+    /** 是否清除用户会话 @defaultValue true */
+    clearSession?: boolean
+  }
 }
 
 /**
@@ -118,7 +103,7 @@ export interface ApiToastConfig {
    * 是否启用 Toast 提示
    * @defaultValue true
    */
-  enabled: boolean
+  enabled?: boolean
   /**
    * 成功提示配置
    */
@@ -127,12 +112,12 @@ export interface ApiToastConfig {
      * 是否显示成功提示
      * @defaultValue true
      */
-    show: boolean
+    show?: boolean
     /**
      * 提示颜色
      * @defaultValue 'success'
      */
-    color: string
+    color?: string
     /**
      * 图标类名
      * @defaultValue 'i-lucide-circle-check'
@@ -142,7 +127,7 @@ export interface ApiToastConfig {
      * 显示时长（毫秒）
      * @defaultValue 3000
      */
-    duration: number
+    duration?: number
   }
   /**
    * 错误提示配置
@@ -152,12 +137,12 @@ export interface ApiToastConfig {
      * 是否显示错误提示
      * @defaultValue true
      */
-    show: boolean
+    show?: boolean
     /**
      * 提示颜色
      * @defaultValue 'error'
      */
-    color: string
+    color?: string
     /**
      * 图标类名
      * @defaultValue 'i-lucide-circle-x'
@@ -167,7 +152,7 @@ export interface ApiToastConfig {
      * 显示时长（毫秒）
      * @defaultValue 3000
      */
-    duration: number
+    duration?: number
   }
 }
 
@@ -187,15 +172,15 @@ export interface ApiEndpointPublicConfig {
   /**
    * 端点级别的认证配置（覆盖全局配置）
    */
-  auth?: Partial<ApiAuthConfig>
+  auth?: ApiAuthConfig
   /**
    * 端点级别的 Toast 配置（覆盖全局配置）
    */
-  toast?: Partial<ApiToastConfig>
+  toast?: ApiToastConfig
   /**
    * 端点级别的响应配置（覆盖全局配置）
    */
-  response?: Partial<ApiResponseConfig>
+  response?: ApiResponseConfig
 }
 
 /**
@@ -207,29 +192,29 @@ export interface MovkApiPublicConfig {
    * 默认使用的端点名称
    * @defaultValue 'default'
    */
-  defaultEndpoint: string
+  defaultEndpoint?: string
   /**
    * 是否启用调试模式（在控制台输出请求和响应日志）
    * @defaultValue false
    */
-  debug: boolean
+  debug?: boolean
   /**
    * 端点配置映射
    * @defaultValue { default: { baseURL: '/api' } }
    */
-  endpoints: Record<string, ApiEndpointPublicConfig>
+  endpoints?: Record<string, ApiEndpointPublicConfig>
   /**
    * 全局响应配置（已合并默认值，运行时必然存在）
    */
-  response: ApiResponseConfig
+  response?: ApiResponseConfig
   /**
    * 全局认证配置（已合并默认值，运行时必然存在）
    */
-  auth: ApiAuthConfig
+  auth?: ApiAuthConfig
   /**
    * 全局 Toast 配置（已合并默认值，运行时必然存在）
    */
-  toast: ApiToastConfig
+  toast?: ApiToastConfig
 }
 
 /**
@@ -269,15 +254,15 @@ export interface MovkApiFullConfig {
   /**
    * 全局响应配置
    */
-  response?: Partial<ApiResponseConfig>
+  response?: ApiResponseConfig
   /**
    * 全局认证配置
    */
-  auth?: Partial<ApiAuthConfig>
+  auth?: ApiAuthConfig
   /**
    * 全局 Toast 配置
    */
-  toast?: Partial<ApiToastConfig>
+  toast?: ApiToastConfig
 }
 
 /**
@@ -285,6 +270,11 @@ export interface MovkApiFullConfig {
  * @description 字段名通过 ApiResponseConfig 的 codeKey/messageKey/dataKey 配置化读取
  */
 export interface ApiResponse {
+  code?: number | string
+  message?: string
+  msg?: string
+  data?: unknown
+  status?: number
   [key: string]: unknown
 }
 
@@ -294,7 +284,7 @@ export interface ApiResponse {
  */
 export interface ApiError extends Error {
   /** HTTP 或业务状态码 */
-  statusCode: number
+  statusCode?: number
   /** 原始 API 响应数据 */
   response?: ApiResponse
   /** 是否为业务逻辑错误（非 HTTP 错误） */
@@ -305,12 +295,12 @@ export interface ApiError extends Error {
  * 已解析的端点配置
  * @description 合并全局配置和端点配置后的最终配置，供内部使用
  */
-export interface ResolvedEndpointConfig extends ApiEndpointPublicConfig {
-  /** 认证配置（已合并全局默认值） */
+export interface ResolvedEndpointConfig extends Omit<ApiEndpointPublicConfig, 'auth' | 'toast' | 'response'> {
+  /** 认证配置（已合并全局默认值，必然存在） */
   auth: ApiAuthConfig
-  /** Toast 配置（已合并全局默认值） */
+  /** Toast 配置（已合并全局默认值，必然存在） */
   toast: ApiToastConfig
-  /** 响应配置（已合并全局默认值） */
+  /** 响应配置（已合并全局默认值，必然存在） */
   response: ApiResponseConfig
   /** 自定义请求头（仅服务端配置） */
   headers?: Record<string, string>
@@ -322,9 +312,9 @@ export interface ResolvedEndpointConfig extends ApiEndpointPublicConfig {
  */
 export interface RequestToastOptions {
   /** 成功提示配置，设置为 false 禁用成功提示 */
-  success?: Partial<ToastProps> | false
+  success?: ToastProps | false
   /** 错误提示配置，设置为 false 禁用错误提示 */
-  error?: Partial<ToastProps> | false
+  error?: ToastProps | false
   /** 自定义成功消息 */
   successMessage?: string
   /** 自定义错误消息 */
@@ -341,25 +331,19 @@ export type ApiInstance = $Fetch & {
 }
 
 /**
- * useApiFetch 的扩展选项
- * @template T - 业务数据类型（已解包）
- */
-export interface ApiFetchExtras {
-  /** 使用的端点名称（默认使用 defaultEndpoint） */
-  endpoint?: string
-  /** Toast 提示配置，设置为 false 禁用提示 */
-  toast?: RequestToastOptions | false
-  /** 是否跳过业务状态码检查 */
-  skipBusinessCheck?: boolean
-}
-
-/**
  * useApiFetch 选项类型
  * @template T - 业务数据类型（已解包）
  * @template DataT - transform 转换后的类型（默认等于 T）
  */
 export type UseApiFetchOptions<T = unknown, DataT = T>
-  = Omit<NuxtUseFetchOptions<T, DataT>, '$fetch' | 'context'> & ApiFetchExtras
+  = Omit<NuxtUseFetchOptions<T, DataT>, '$fetch' | 'context'> & {
+    /** 使用的端点名称（默认使用 defaultEndpoint） */
+    endpoint?: string
+    /** Toast 提示配置，设置为 false 禁用提示 */
+    toast?: RequestToastOptions | false
+    /** 是否跳过业务状态码检查 */
+    skipBusinessCheck?: boolean
+  }
 
 /**
  * useApiFetch 返回值类型

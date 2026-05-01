@@ -1,23 +1,26 @@
-<script setup lang="ts" generic="S extends z.ZodObject">
+<script lang="ts">
 import type { z } from 'zod'
 import type { ButtonProps } from '@nuxt/ui'
 import type { AutoFormField } from '../../types/auto-form'
 import type { AnyObject } from '@movk/core'
 import type { AutoFormProps } from '../AutoForm.vue'
-import { UButton, UCollapsible } from '#components'
-import { computed, ref } from 'vue'
-import { useAutoFormInjector } from '../../auto-form/provider'
-import { joinPath } from '@movk/core'
-import { collectFieldDefaults, createHintSlotFactory } from '../../auto-form/field-utils'
-import { VNodeRender } from '../../auto-form/reactive-utils'
-import AutoFormRendererField from './AutoFormRendererField.vue'
-import AutoFormRendererNested from './AutoFormRendererNested.vue'
 
-export interface AutoFormRendererArrayProps<S extends z.ZodObject> extends Pick<AutoFormProps<S>, 'schema'> {
+interface AutoFormRendererArrayProps<S extends z.ZodObject> extends Pick<AutoFormProps<S>, 'schema'> {
   field: AutoFormField
   extraProps?: AnyObject
   addButtonProps?: Partial<ButtonProps>
 }
+</script>
+
+<script lang="ts" setup generic="S extends z.ZodObject">
+import { UButton, UCollapsible } from '#components'
+import { computed, ref } from 'vue'
+import { useAutoFormInjector } from '../../domains/auto-form/provider'
+import { joinPath } from '@movk/core'
+import { collectFieldDefaults, createHintSlotFactory } from '../../domains/auto-form/fields'
+import { VNodeRender } from '../../domains/auto-form/reactive'
+import AutoFormRendererField from './AutoFormRendererField.vue'
+import AutoFormRendererNested from './AutoFormRendererNested.vue'
 
 const {
   extraProps,

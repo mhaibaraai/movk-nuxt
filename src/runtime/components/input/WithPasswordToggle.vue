@@ -1,14 +1,24 @@
-<script setup lang="ts" generic="T extends InputValue">
-import { UInput, UButton } from '#components'
+<script lang="ts">
 import type { OmitByKey } from '@movk/core'
-import type { ButtonProps, InputEmits, InputProps, InputSlots, InputValue } from '@nuxt/ui'
+import type { ButtonProps, ComponentConfig, InputEmits, InputProps, InputSlots, InputValue } from '@nuxt/ui'
+import type { AppConfig } from 'nuxt/schema'
+import theme from '#build/movk-ui/with-password-toggle'
+import inputTheme from '#build/ui/input'
+
+type WithPasswordToggle = ComponentConfig<typeof inputTheme & typeof theme, AppConfig, 'withPasswordToggle'>
+
+export interface WithPasswordToggleProps<T extends InputValue = InputValue> extends /** @vue-ignore */ OmitByKey<InputProps<T>, 'type' | 'modelValue' | 'ui'> {
+  buttonProps?: ButtonProps
+  ui?: WithPasswordToggle['slots']
+}
+</script>
+
+<script lang="ts" setup generic="T extends InputValue">
+import { UInput, UButton } from '#components'
 import { useToggle } from '@vueuse/core'
 import { useAttrs } from 'vue'
-
-export interface WithPasswordToggleProps<T extends InputValue = InputValue> extends /** @vue-ignore */ OmitByKey<InputProps<T>, 'type' | 'modelValue'> {
-  /** 切换按钮的自定义属性 */
-  buttonProps?: ButtonProps
-}
+import { useAppConfig } from '#imports'
+import { useExtendedTv } from '../../utils/extend-theme'
 
 const props = defineProps<WithPasswordToggleProps<T>>()
 const emits = defineEmits<InputEmits<T>>()
@@ -17,7 +27,15 @@ const slots = defineSlots<OmitByKey<InputSlots, 'trailing'>>()
 defineOptions({ inheritAttrs: false })
 
 const attrs = useAttrs()
+const appConfig = useAppConfig() as WithPasswordToggle['AppConfig']
 const modelValue = defineModel<T>()
+
+const { baseUi } = useExtendedTv(
+  inputTheme,
+  theme,
+  () => appConfig.movk?.withPasswordToggle,
+  () => ({ ui: props.ui })
+)
 
 const [value, toggle] = useToggle(false)
 </script>
@@ -26,8 +44,8 @@ const [value, toggle] = useToggle(false)
   <UInput
     v-model="modelValue"
     :type="value ? 'text' : 'password'"
-    :ui="{ trailing: 'pe-1' }"
-    v-bind="$attrs"
+    :ui="baseUi"
+    v-bind="attrs"
     @blur="emits('blur', $event)"
     @change="emits('change', $event)"
   >

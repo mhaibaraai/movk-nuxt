@@ -1,19 +1,27 @@
-<script setup lang="ts" generic="T extends InputValue">
-import { UInput } from '#components'
-import { computed } from 'vue'
-import type { InputEmits, InputProps, InputSlots, InputValue } from '@nuxt/ui'
+<script lang="ts">
+import type { ComponentConfig, InputEmits, InputProps, InputSlots, InputValue } from '@nuxt/ui'
 import type { OmitByKey } from '@movk/core'
-import type { ClassNameValue } from '../../types'
+import type { AppConfig } from 'nuxt/schema'
+import theme from '#build/movk-ui/with-character-limit'
+import inputTheme from '#build/ui/input'
 
-export interface WithCharacterLimitProps<T extends InputValue = InputValue> extends /** @vue-ignore */ OmitByKey<InputProps<T>, 'modelValue'> {
+type WithCharacterLimit = ComponentConfig<typeof inputTheme & typeof theme, AppConfig, 'withCharacterLimit'>
+
+export interface WithCharacterLimitProps<T extends InputValue = InputValue> extends /** @vue-ignore */ OmitByKey<InputProps<T>, 'modelValue' | 'ui'> {
   /**
    * 最大允许输入的字符数
    * @defaultValue 50
    */
   maxLength?: number
-  /** 字符计数器的自定义样式类 */
-  counterClass?: ClassNameValue
+  ui?: WithCharacterLimit['slots']
 }
+</script>
+
+<script lang="ts" setup generic="T extends InputValue">
+import { UInput } from '#components'
+import { computed, useAttrs } from 'vue'
+import { useAppConfig } from '#imports'
+import { useExtendedTv } from '../../utils/extend-theme'
 
 const props = withDefaults(defineProps<WithCharacterLimitProps<T>>(), {
   maxLength: 50
@@ -23,11 +31,17 @@ const slots = defineSlots<OmitByKey<InputSlots, 'trailing'>>()
 
 defineOptions({ inheritAttrs: false })
 
+const attrs = useAttrs()
+const appConfig = useAppConfig() as WithCharacterLimit['AppConfig']
 const modelValue = defineModel<T>()
 
-const currentLength = computed(() => {
-  return String(modelValue.value ?? '').length
-})
+const { baseUi, extraUi } = useExtendedTv(
+  inputTheme,
+  theme,
+  () => appConfig.movk?.withCharacterLimit,
+  () => ({ ui: props.ui })
+)
+const currentLength = computed(() => String(modelValue.value ?? '').length)
 </script>
 
 <template>
@@ -35,8 +49,8 @@ const currentLength = computed(() => {
     v-model="modelValue"
     :maxlength="props.maxLength"
     aria-describedby="character-count"
-    :ui="{ trailing: 'pointer-events-none' }"
-    v-bind="$attrs"
+    :ui="baseUi"
+    v-bind="attrs"
     @blur="emits('blur', $event)"
     @change="emits('change', $event)"
   >
@@ -47,7 +61,7 @@ const currentLength = computed(() => {
     <template #trailing>
       <div
         id="character-count"
-        :class="[props.counterClass, 'text-xs text-muted tabular-nums']"
+        :class="extraUi.counter"
         aria-live="polite"
         role="status"
       >

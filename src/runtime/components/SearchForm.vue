@@ -1,27 +1,19 @@
-<script setup lang="ts" generic="S extends z.ZodObject, T extends boolean = true, N extends boolean = false">
-import type { ButtonProps, FormInputEvents, FormProps, InferInput } from '@nuxt/ui'
+<script lang="ts">
+import type { ButtonProps, ComponentConfig, FormInputEvents, FormProps, InferInput } from '@nuxt/ui'
 import type { z } from 'zod'
 import type { ZodAutoFormFieldMeta } from '../types/zod'
 import type { AutoFormControls, DynamicFormSlots } from '../types/auto-form'
-import { UButton, UCollapsible, UForm } from '#components'
 import type { Ref } from 'vue'
-import { computed, ref, unref, useTemplateRef, watch } from 'vue'
-import { isFunction, type OmitByKey } from '@movk/core'
-import { useAutoFormProvider } from '../auto-form/provider'
-import { extractPureSchema, introspectSchema } from '../auto-form/schema-introspector'
-import { useAutoForm } from '../composables/useAutoForm'
-import AutoFormRendererField from './auto-form-renderer/AutoFormRendererField.vue'
-import { useAppConfig } from '#app'
-import { resolveGridClasses, resolveMaxCols } from '../constants/grid-cols'
+import type { OmitByKey } from '@movk/core'
+import type { AppConfig } from 'nuxt/schema'
+import theme from '#build/movk-ui/search-form'
 
-export interface SearchFormProps<S extends z.ZodObject, T extends boolean = true, N extends boolean = false> extends /** @vue-ignore */ OmitByKey<FormProps<S, T, N>, 'schema' | 'state' | 'validateOn'> {
-  /**
-   * Zod 对象 schema，定义搜索字段
-   */
+type SearchForm = ComponentConfig<typeof theme, AppConfig, 'searchForm'>
+
+export interface SearchFormProps<S extends z.ZodObject, T extends boolean = true, N extends boolean = false> extends /** @vue-ignore */ OmitByKey<FormProps<S, T, N>, 'schema' | 'state' | 'validateOn' | 'ui'> {
+  /** Zod 对象 schema，定义搜索字段 */
   schema: S
-  /**
-   * 搜索表单的状态对象。
-   */
+  /** 搜索表单的状态对象。 */
   state?: N extends false ? Partial<InferInput<S>> : never
   /**
    * 网格列数
@@ -33,22 +25,16 @@ export interface SearchFormProps<S extends z.ZodObject, T extends boolean = true
    * @defaultValue 1
    */
   visibleRows?: number
-  /**
-   * 自定义控件映射（复用 AutoForm 的控件系统）
-   */
+  /** 自定义控件映射（复用 AutoForm 的控件系统） */
   controls?: AutoFormControls
-  /**
-   * 全局字段元数据
-   */
+  /** 全局字段元数据 */
   globalMeta?: ZodAutoFormFieldMeta
-  /**
-   * 搜索按钮属性
-   */
+  /** 搜索按钮属性 */
   searchButtonProps?: ButtonProps
-  /**
-   * 重置按钮属性
-   */
+  /**  重置按钮属性 */
   resetButtonProps?: ButtonProps
+  /** 收起按钮属性 */
+  collapseButtonProps?: ButtonProps
   /**
    * 搜索按钮文本
    * @defaultValue '搜索'
@@ -95,19 +81,14 @@ export interface SearchFormProps<S extends z.ZodObject, T extends boolean = true
    */
   defaultExpanded?: boolean
   /**
-   * 网格间距
-   * @defaultValue 'gap-4'
-   */
-  gap?: string
-  /**
    * 表单验证时机，详见 UForm 的 validateOn 属性
    * @defaultValue []
    */
   validateOn?: FormInputEvents[]
+  ui?: SearchForm['slots']
 }
 
 export interface SearchFormActionSlots {
-  /** 替换默认按钮区域 */
   actions: (props: {
     expanded: boolean
     toggle: () => void
@@ -115,27 +96,29 @@ export interface SearchFormActionSlots {
     reset: () => void
     loading: boolean
   }) => any
-  /** 追加在默认按钮后面 */
   extraActions: (props: { expanded: boolean }) => any
 }
 
 export interface SearchFormEmits<S extends z.ZodObject> {
-  /**
-   * 搜索事件，参数为当前表单状态
-   */
   search: [value: Partial<InferInput<S>>]
-  /**
-   * 重置事件，参数为空
-   */
   reset: []
-  /**
-   * 展开/收起事件，参数为当前展开状态
-   */
   expand: [expanded: boolean]
 }
 
-type SearchFormSlotTypes = SearchFormActionSlots & DynamicFormSlots<Partial<InferInput<S>>>
-type SearchFormStateType = Partial<InferInput<S>>
+type SearchFormSlotTypes<S extends z.ZodObject> = SearchFormActionSlots & DynamicFormSlots<Partial<InferInput<S>>>
+type SearchFormStateType<S extends z.ZodObject> = Partial<InferInput<S>>
+</script>
+
+<script lang="ts" setup generic="S extends z.ZodObject, T extends boolean = true, N extends boolean = false">
+import { UButton, UCollapsible, UForm } from '#components'
+import { computed, ref, unref, useAttrs, useTemplateRef, watch } from 'vue'
+import { isFunction } from '@movk/core'
+import { useAutoFormProvider } from '../domains/auto-form/provider'
+import { extractPureSchema, introspectSchema } from '../domains/auto-form/schema'
+import { useAutoForm } from '../composables/useAutoForm'
+import AutoFormRendererField from './auto-form-renderer/AutoFormRendererField.vue'
+import { useAppConfig } from '#app'
+import { tv } from '../utils/tv'
 
 const props = withDefaults(defineProps<SearchFormProps<S, T, N>>(), {
   cols: 3,
@@ -144,7 +127,6 @@ const props = withDefaults(defineProps<SearchFormProps<S, T, N>>(), {
   expandText: '展开',
   collapseText: '收起',
   defaultExpanded: false,
-  gap: 'gap-4',
   searchText: '搜索',
   resetText: '重置',
   showSearchButton: true,
@@ -152,13 +134,15 @@ const props = withDefaults(defineProps<SearchFormProps<S, T, N>>(), {
   loading: false,
   validateOn: () => []
 })
-const modelValue = defineModel<SearchFormStateType>()
+const modelValue = defineModel<SearchFormStateType<S>>()
 const emits = defineEmits<SearchFormEmits<S>>()
-const slots = defineSlots<SearchFormSlotTypes>()
+const slots = defineSlots<SearchFormSlotTypes<S>>()
 defineOptions({ inheritAttrs: false })
 
-const stateModel = ref(modelValue.value ?? props.state ?? {}) as Ref<SearchFormStateType>
-const initialState = { ...(modelValue.value ?? props.state ?? {}) } as SearchFormStateType
+const attrs = useAttrs()
+
+const stateModel = ref(modelValue.value ?? props.state ?? {}) as Ref<SearchFormStateType<S>>
+const initialState = { ...(modelValue.value ?? props.state ?? {}) } as SearchFormStateType<S>
 
 watch(() => stateModel.value, (val) => {
   if (val !== modelValue.value) {
@@ -168,13 +152,30 @@ watch(() => stateModel.value, (val) => {
 
 watch(() => modelValue.value, (val) => {
   if (val !== undefined && val !== stateModel.value) {
-    stateModel.value = (val ?? {}) as SearchFormStateType
+    stateModel.value = (val ?? {}) as SearchFormStateType<S>
   }
 })
 
-const appConfig = useAppConfig()
+const appConfig = useAppConfig() as SearchForm['AppConfig']
 const formRef = useTemplateRef('formRef')
 const expanded = ref(props.defaultExpanded)
+
+type ColsConfig = { sm?: number, md?: number, lg?: number, xl?: number }
+
+function maxCols(cols: number | ColsConfig): number {
+  if (typeof cols === 'number') return cols
+  return Math.max(cols.sm ?? 1, cols.md ?? 1, cols.lg ?? 1, cols.xl ?? 1)
+}
+
+const colsVariants = computed(() => {
+  const c = props.cols
+  if (typeof c === 'number') return { cols: c }
+  return { cols: 1, smCols: c.sm, mdCols: c.md, lgCols: c.lg, xlCols: c.xl }
+})
+
+const uiCls = computed(() =>
+  tv({ extend: tv(theme), ...(appConfig.movk?.searchForm || {}) })(colsVariants.value)
+)
 
 const { DEFAULT_CONTROLS } = useAutoForm()
 useAutoFormProvider(stateModel, slots)
@@ -199,10 +200,8 @@ const fields = computed(() => {
   return introspectSchema(props.schema, controlsMapping.value, '', props.globalMeta)
 })
 
-const gridClass = computed(() => resolveGridClasses(props.cols, props.gap))
-
 const visibleCount = computed(() => {
-  const base = resolveMaxCols(props.cols) * props.visibleRows
+  const base = maxCols(props.cols) * props.visibleRows
   return Math.max(0, showActionsCell.value ? base - 1 : base)
 })
 
@@ -224,7 +223,7 @@ function triggerSearch() {
 }
 
 function clear() {
-  stateModel.value = {} as SearchFormStateType
+  stateModel.value = {} as SearchFormStateType<S>
   formRef.value?.clear()
 }
 
@@ -249,13 +248,14 @@ defineExpose({
     :state="stateModel"
     :schema="pureSchema"
     :validate-on="props.validateOn"
-    v-bind="$attrs"
+    :ui="{ base: uiCls.base({ class: props.ui?.base }) }"
+    v-bind="attrs"
     @submit="handleSearch"
   >
     <template #default="{ errors, loading: formLoading }">
-      <div class="group/search pb-6 -mb-6">
-        <div class="relative">
-          <div :class="gridClass">
+      <div :class="uiCls.root({ class: props.ui?.root })">
+        <div :class="uiCls.inner({ class: props.ui?.inner })">
+          <div :class="uiCls.grid({ class: props.ui?.grid })">
             <AutoFormRendererField
               v-for="field in visibleFields"
               :key="field.path"
@@ -273,7 +273,7 @@ defineExpose({
               :reset="reset"
               :loading="loading"
             >
-              <div class="flex items-end gap-2 justify-end">
+              <div :class="uiCls.actionWrapper({ class: props.ui?.actionWrapper })">
                 <UButton
                   v-if="showSearchButton"
                   type="submit"
@@ -300,18 +300,19 @@ defineExpose({
 
           <div
             v-if="needsCollapse"
-            class="absolute inset-x-0 top-full flex justify-center pointer-events-none z-10"
+            :class="uiCls.toggleWrapper({ class: props.ui?.toggleWrapper })"
           >
             <UButton
               :icon="icon || appConfig.ui.icons.chevronDown"
               color="neutral"
-              :size="resolvedButtonSize ?? 'xs'"
+              :size="resolvedButtonSize"
               variant="ghost"
               :data-state="expanded ? 'open' : 'closed'"
               :label="expanded ? collapseText : expandText"
               tabindex="-1"
-              class="group pointer-events-auto opacity-30 group-hover/search:opacity-100 transition-opacity duration-200"
               :ui="{ leadingIcon: 'size-3.5 group-data-[state=open]:rotate-180 transition-transform duration-200' }"
+              :class="uiCls.toggle({ class: props.ui?.toggle })"
+              v-bind="collapseButtonProps"
               @click="toggle"
             />
           </div>
@@ -319,7 +320,7 @@ defineExpose({
 
         <UCollapsible v-if="needsCollapse" v-model:open="expanded">
           <template #content>
-            <div :class="gridClass" class="mt-4">
+            <div :class="[uiCls.grid({ class: props.ui?.grid }), uiCls.collapsedContent({ class: props.ui?.collapsedContent })]">
               <AutoFormRendererField
                 v-for="field in collapsedFields"
                 :key="field.path"

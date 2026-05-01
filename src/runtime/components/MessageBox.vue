@@ -1,13 +1,15 @@
-<script setup lang="ts">
+<script lang="ts">
 import type { OmitByKey } from '@movk/core'
-import type { ModalProps, ButtonProps, IconProps } from '@nuxt/ui'
+import type { ModalProps, ButtonProps, ComponentConfig, IconProps } from '@nuxt/ui'
 import type { SemanticColor } from '../types'
-import { computed, useAttrs, ref } from 'vue'
-import { UModal, UButton, UIcon } from '#components'
+import type { AppConfig } from 'nuxt/schema'
+import theme from '#build/movk-ui/message-box'
+import modalTheme from '#build/ui/modal'
 
 type MessageBoxMode = 'alert' | 'confirm'
+type MessageBox = ComponentConfig<typeof modalTheme & typeof theme, AppConfig, 'messageBox'>
 
-export interface MessageBoxProps extends /** @vue-ignore */ OmitByKey<ModalProps, 'title' | 'open' | 'defaultOpen' | 'dismissible'> {
+export interface MessageBoxProps extends /** @vue-ignore */ OmitByKey<ModalProps, 'title' | 'open' | 'defaultOpen' | 'dismissible' | 'ui'> {
   /**
    * 模态框标题文本。
    * @defaultValue '提示'
@@ -61,6 +63,7 @@ export interface MessageBoxProps extends /** @vue-ignore */ OmitByKey<ModalProps
    * 仅在 `mode='confirm'` 时渲染。
    */
   cancelButton?: ButtonProps
+  ui?: MessageBox['slots']
 }
 
 export interface MessageBoxEmits {
@@ -71,6 +74,13 @@ export interface MessageBoxEmits {
    */
   close: [confirmed: boolean]
 }
+</script>
+
+<script lang="ts" setup>
+import { computed, useAttrs, ref } from 'vue'
+import { UModal, UButton, UIcon } from '#components'
+import { useAppConfig } from '#imports'
+import { useExtendedTv } from '../utils/extend-theme'
 
 const props = withDefaults(defineProps<MessageBoxProps>(), {
   title: '提示',
@@ -87,6 +97,7 @@ const emits = defineEmits<MessageBoxEmits>()
 defineOptions({ inheritAttrs: false })
 
 const attrs = useAttrs()
+const appConfig = useAppConfig() as MessageBox['AppConfig']
 
 const iconMap = {
   primary: 'i-lucide-bell',
@@ -97,17 +108,7 @@ const iconMap = {
   neutral: 'i-lucide-circle-question-mark'
 } satisfies Record<SemanticColor, string>
 
-const iconColorMap = {
-  primary: 'text-primary',
-  info: 'text-info',
-  success: 'text-success',
-  warning: 'text-warning',
-  error: 'text-error',
-  neutral: 'text-muted'
-} satisfies Record<SemanticColor, string>
-
 const resolvedIcon = computed(() => props.icon ?? iconMap[props.type])
-const resolvedIconColor = computed(() => iconColorMap[props.type])
 
 const cancelButtonAttrs = computed<ButtonProps>(() => ({
   color: 'neutral' as const,
@@ -139,17 +140,18 @@ function handleUpdateOpen(val: boolean) {
   emits('close', false)
 }
 
-const resolvedUI = computed(() => ({
-  title: 'flex gap-2 items-center',
-  footer: 'justify-end',
-  ...(attrs.ui as ModalProps['ui'] ?? {})
-}))
+const { ui, extraUi } = useExtendedTv(
+  modalTheme,
+  theme,
+  () => appConfig.movk?.messageBox,
+  () => ({ ui: props.ui, variants: { type: props.type } })
+)
 </script>
 
 <template>
-  <UModal v-model:open="open" :dismissible="props.dismissible" v-bind="attrs" :ui="resolvedUI" @update:open="handleUpdateOpen">
+  <UModal v-model:open="open" :dismissible="props.dismissible" :ui="ui" v-bind="attrs" @update:open="handleUpdateOpen">
     <template #title>
-      <UIcon :name="resolvedIcon" :class="resolvedIconColor" class="size-5 shrink-0" />
+      <UIcon :name="resolvedIcon" :class="extraUi.icon" />
       <span>{{ props.title }}</span>
     </template>
 

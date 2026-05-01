@@ -1,6 +1,6 @@
-import { defineNuxtPlugin, useAppConfig, useHead, useSiteConfig } from '#imports'
 import { kebabCase } from '@movk/core'
-import { themeIcons } from '../utils/theme'
+import { defineNuxtPlugin, useAppConfig, useHead, useSiteConfig } from '#imports'
+import { themeIcons } from '../domains/theme/theme-icons'
 
 export default defineNuxtPlugin({
   enforce: 'post',
@@ -21,62 +21,76 @@ export default defineNuxtPlugin({
     }
 
     if (import.meta.server) {
+      const pickerFonts = (appConfig.movk?.picker?.fonts ?? []) as Array<{ name: string, href?: string }>
+      const fontHrefMap: Record<string, string> = {}
+      for (const f of pickerFonts) {
+        if (f.href) fontHrefMap[f.name] = f.href
+      }
+      const fontHrefMapJson = JSON.stringify(fontHrefMap)
+
       useHead({
         script: [{
           innerHTML: `
-            var colorsEl = document.querySelector('style#nuxt-ui-colors');
-            if (colorsEl) {
-              let html = colorsEl.innerHTML;
-              if (localStorage.getItem('${name}-ui-primary')) {
-                const primaryColor = localStorage.getItem('${name}-ui-primary');
-                if (primaryColor !== 'black') {
+            (function() {
+              var primaryColor = localStorage.getItem('${name}-ui-primary');
+              var neutralColor = localStorage.getItem('${name}-ui-neutral');
+              if (!primaryColor && !neutralColor) return;
+              function swapColors(el) {
+                var html = el.innerHTML;
+                if (primaryColor && primaryColor !== 'black') {
                   html = html.replace(
                     /(--ui-color-primary-\\d{2,3}:\\s*var\\(--color-)${appConfig.ui.colors.primary}(-\\d{2,3}.*?\\))/g,
                     \`$1\${primaryColor}$2\`
                   );
                 }
+                if (neutralColor) {
+                  html = html.replace(
+                    /(--ui-color-neutral-\\d{2,3}:\\s*var\\(--color-)${appConfig.ui.colors.neutral}(-\\d{2,3}.*?\\))/g,
+                    \`$1\${neutralColor === 'neutral' ? 'old-neutral' : neutralColor}$2\`
+                  );
+                }
+                el.innerHTML = html;
               }
-              if (localStorage.getItem('${name}-ui-neutral')) {
-                let neutralColor = localStorage.getItem('${name}-ui-neutral');
-                html = html.replace(
-                  /(--ui-color-neutral-\\d{2,3}:\\s*var\\(--color-)${appConfig.ui.colors.neutral}(-\\d{2,3}.*?\\))/g,
-                  \`$1\${neutralColor === 'neutral' ? 'old-neutral' : neutralColor}$2\`
-                );
+              var colorsEl = document.querySelector('style#nuxt-ui-colors');
+              if (colorsEl) {
+                swapColors(colorsEl);
+              } else {
+                requestAnimationFrame(function() {
+                  var el = document.getElementById('nuxt-ui-colors');
+                  if (el) swapColors(el);
+                });
               }
-
-              colorsEl.innerHTML = html;
-            }
+            })();
             `.replace(/\s+/g, ' '),
           type: 'text/javascript',
           tagPriority: -1
         }, {
           innerHTML: `
-            if (localStorage.getItem('${name}-ui-radius')) {
-              document.getElementById('${name}-ui-radius').innerHTML = ':root { --ui-radius: ' + localStorage.getItem('${name}-ui-radius') + 'rem; }';
-            }
+            var r = localStorage.getItem('${name}-ui-radius');
+            if (r) document.documentElement.style.setProperty('--ui-radius', r + 'rem');
           `.replace(/\s+/g, ' '),
           type: 'text/javascript',
           tagPriority: -1
         }, {
           innerHTML: `
             if (localStorage.getItem('${name}-ui-black-as-primary') === 'true') {
-              document.getElementById('${name}-ui-black-as-primary').innerHTML = ':root { --ui-primary: black; } .dark { --ui-primary: white; }';
-            } else {
-              document.getElementById('${name}-ui-black-as-primary').innerHTML = '';
+              var isDark = document.documentElement.classList.contains('dark');
+              document.documentElement.style.setProperty('--ui-primary', isDark ? 'white' : 'black');
             }
           `.replace(/\s+/g, ' ')
         }, {
           innerHTML: [
             `if (localStorage.getItem('${name}-ui-font')) {`,
             `var font = localStorage.getItem('${name}-ui-font');`,
-            `document.getElementById('${name}-ui-font').innerHTML = ':root { --font-sans: \\'' + font + '\\', sans-serif; }';`,
-            `if (font !== 'Alibaba PuHuiTi' && ['Alibaba PuHuiTi', 'Public Sans', 'DM Sans', 'Geist', 'Inter', 'Poppins', 'Outfit', 'Raleway'].includes(font)) {`,
+            `var fontEl = document.querySelector('style#nuxt-ui-font');`,
+            `if (fontEl) { fontEl.innerHTML = ':root { --font-sans: \\'' + font + '\\', sans-serif; }'; }`,
+            `var fontMap = ${fontHrefMapJson};`,
             `var lnk = document.createElement('link');`,
             `lnk.rel = 'stylesheet';`,
-            `lnk.href = 'https://fonts.googleapis.com/css2?family=' + encodeURIComponent(font) + ':wght@400;500;600;700&display=swap';`,
+            `lnk.href = fontMap[font] || ('https://fonts.googleapis.com/css2?family=' + encodeURIComponent(font) + ':wght@400;500;600;700&display=swap');`,
             `lnk.id = 'font-' + font.toLowerCase().replace(/\\s+/g, '-');`,
             `document.head.appendChild(lnk);`,
-            `}}`
+            `}`
           ].join(' ')
         }]
       })
