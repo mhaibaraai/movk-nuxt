@@ -1,5 +1,5 @@
-import type { Cell, Header } from '@tanstack/vue-table'
-import type { DataTableDensityOptions, DataTableSizePreset } from '../../../types/data-table'
+import type { Cell, ColumnMeta, Header } from '@tanstack/vue-table'
+import type { DataTableSizePreset } from '../../../types/data-table'
 import type { ResolveContext } from './constants'
 import { isString } from '@movk/core'
 import { resolvePresetSize } from '../state/models'
@@ -52,12 +52,12 @@ export function resolveAlignClass(align?: 'left' | 'center' | 'right'): string {
   }
 }
 
-export function buildClassMeta(
-  density: DataTableDensityOptions | null,
+export function buildClassMeta<T, V>(
+  density: ColumnMeta<T, unknown>['class'] | null,
   align?: string,
   resizable?: boolean,
   tdClass?: string
-): { td?: string, th?: string } {
+): ColumnMeta<T, V>['class'] {
   return {
     td: [align, density?.td, tdClass].filter(Boolean).join(' ') || undefined,
     th: [resizable ? 'relative' : '', align, density?.th].filter(Boolean).join(' ') || undefined

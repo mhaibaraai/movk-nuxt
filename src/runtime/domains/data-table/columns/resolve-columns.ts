@@ -4,12 +4,12 @@ import type {
   DataTableColumn,
   DataTableExpandColumn,
   DataTableIndexColumn,
-  DataTableProps,
   DataTableRowPinningColumn,
   DataTableSelectionColumn
 } from '../../../types/data-table'
 import type { ResolveContext, ResolvedColumnState } from './constants'
 import { isDataColumn, isGroupColumn } from '../../../types/data-table'
+import type { DataTableProps } from '../../../types'
 import { isString } from '@movk/core'
 import { DENSITY_PRESETS } from './constants'
 import { resolveDataColumn } from './resolve-data-column'

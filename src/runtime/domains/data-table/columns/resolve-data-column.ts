@@ -221,7 +221,7 @@ export function resolveDataColumn<T>(
     enableResizing: effectiveResizable,
     ...(cellRenderer && { cell: cellRenderer }),
     meta: {
-      class: buildClassMeta(density, resolveAlignClass(col.align), effectiveResizable),
+      class: buildClassMeta<T, unknown>(density, resolveAlignClass(col.align), effectiveResizable),
       style: COLUMN_SIZE_STYLE
     }
   }

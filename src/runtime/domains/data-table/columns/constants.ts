@@ -1,13 +1,12 @@
-import type { ColumnDef, ColumnPinningState, ColumnSizingState, VisibilityState } from '@tanstack/vue-table'
+import type { ColumnDef, ColumnMeta, ColumnPinningState, ColumnSizingState, VisibilityState } from '@tanstack/vue-table'
 import type {
-  DataTableDensityOptions,
   DataTableDensityPreset,
   DataTableProps,
   DataTableSizePreset,
   DataTableTreeSelectionStrategy
 } from '../../../types/data-table'
 
-export const DENSITY_PRESETS: Record<DataTableDensityPreset, DataTableDensityOptions> = {
+export const DENSITY_PRESETS: Record<DataTableDensityPreset, { th?: string, td?: string }> = {
   compact: { td: 'px-3 py-1.5', th: 'px-3 py-2' },
   normal: { td: 'px-4 py-2.5', th: 'px-4 py-3' },
   comfortable: { td: 'p-4', th: 'p-4' }
@@ -57,7 +56,7 @@ export interface ResolvedColumnState<T> {
 
 export interface ResolveContext<T> {
   options: DataTableProps<T>
-  density: DataTableDensityOptions | null
+  density: ColumnMeta<T, unknown>['class'] | null
   pinning: ColumnPinningState
   visibility: VisibilityState
   sizing: ColumnSizingState

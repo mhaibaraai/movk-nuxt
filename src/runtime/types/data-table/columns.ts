@@ -11,9 +11,11 @@ import type {
   DataTableSortButtonContext
 } from './contexts'
 
+export type DataTableDensityPreset = 'compact' | 'normal' | 'comfortable'
+
 export type DataTableTreeSelectionStrategy = 'cascade' | 'isolated' | 'leaf'
 
-export interface DataTableBaseColumn {
+interface DataTableBaseColumn {
   /** 列头文本 */
   header: string
   /** 固定到左/右侧 */
@@ -170,7 +172,7 @@ export interface DataTableActionButtonContext<T> {
   action: DataTableAction<T>
 }
 
-export interface DataTableActionConfirmProps extends OmitByKey<ModalProps, 'title' | 'open' | 'defaultOpen' | 'dismissible'> {
+interface DataTableActionConfirmProps extends OmitByKey<ModalProps, 'title' | 'open' | 'defaultOpen' | 'dismissible'> {
   title?: string
   type?: SemanticColor
   icon?: IconProps['name']

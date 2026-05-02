@@ -18,7 +18,7 @@ import { buildApiRuntimeConfig } from './utils/api'
 export * from './runtime/types'
 
 export interface ThemeFontConfig {
-  /** 字体名称，与 CSS font-family 保持一致 */
+  /** 字体名称 */
   name: string
   /**
    * 字体 CSS 文件的完整 URL；未提供时运行时回退到 Google Fonts URL
