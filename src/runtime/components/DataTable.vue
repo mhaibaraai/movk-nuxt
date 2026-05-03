@@ -410,11 +410,19 @@ const borderedStyle = computed(() => {
   }
 })
 
-const { baseUi, extraUi } = useExtendedTv(
+const { baseUi, ui } = useExtendedTv(
   tableTheme,
   theme,
   () => appConfig.movk?.dataTable,
-  () => ({ ui: props.ui, variants: { fitContent: !!props.fitContent } })
+  () => ({
+    ui: props.ui,
+    variants: {
+      fitContent: !!props.fitContent,
+      bordered: !!props.bordered,
+      striped: !!props.stripe,
+      tree: isTreeMode.value
+    }
+  })
 )
 
 const uTableProps = computed(() => {
@@ -528,17 +536,7 @@ defineExpose({
 </script>
 
 <template>
-  <div
-    class="data-table"
-    :class="[
-      {
-        'data-table--bordered': !!bordered,
-        'data-table--striped': !!stripe,
-        'data-table--tree': isTreeMode
-      }
-    ]"
-    :style="borderedStyle"
-  >
+  <div :class="ui.root">
     <UTable
       :key="tableResetKey"
       ref="tableRef"
@@ -550,6 +548,7 @@ defineExpose({
       v-model:row-pinning="rowPinningState"
       v-model:sorting="sortingState"
       v-model:expanded="effectiveExpanded"
+      :style="borderedStyle"
       v-bind="uTableProps"
     >
       <template v-if="$slots.expanded" #expanded="{ row }">
