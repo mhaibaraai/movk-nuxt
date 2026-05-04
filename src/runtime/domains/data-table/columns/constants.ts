@@ -1,10 +1,10 @@
 import type { ColumnDef, ColumnMeta, ColumnPinningState, ColumnSizingState, VisibilityState } from '@tanstack/vue-table'
 import type {
   DataTableDensityPreset,
-  DataTableProps,
   DataTableSizePreset,
   DataTableTreeSelectionStrategy
 } from '../../../types/data-table'
+import type { DataTableProps } from '../../../components/DataTable.vue'
 
 export const DENSITY_PRESETS: Record<DataTableDensityPreset, { th?: string, td?: string }> = {
   compact: { td: 'px-3 py-1.5', th: 'px-3 py-2' },

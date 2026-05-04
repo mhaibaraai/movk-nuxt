@@ -3,7 +3,6 @@ import type { VNode } from 'vue'
 import type {
   DataTableDataColumn,
   DataTablePinButtonContext,
-  DataTableProps,
   DataTableSortButtonContext
 } from '../../../types/data-table'
 import type { ResolveContext } from './constants'
@@ -12,6 +11,7 @@ import { resolveCallbackValue, resolveColumnFlag, resolveTemplate } from '../sta
 import DataTableCellTooltip from '../../../components/data-table-renderer/DataTableRendererCellTooltip.vue'
 import { UButton } from '#components'
 import { applyBaseState, buildClassMeta, COLUMN_SIZE_STYLE, resolveAlignClass } from './style'
+import type { DataTableProps } from '../../../components/DataTable.vue'
 
 interface HeaderAction<T> {
   id: string

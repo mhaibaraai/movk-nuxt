@@ -5,9 +5,9 @@ import type {
   DataTableAction,
   DataTableActionButtonContext,
   DataTableActionsColumn,
-  DataTableDynamic,
-  DataTableProps
+  DataTableDynamic
 } from '../../types/data-table'
+import type { DataTableProps } from '../DataTable.vue'
 
 interface DataTableRendererActionsCellProps {
   col: DataTableActionsColumn<unknown>

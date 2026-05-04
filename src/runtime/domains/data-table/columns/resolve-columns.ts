@@ -9,7 +9,7 @@ import type {
 } from '../../../types/data-table'
 import type { ResolveContext, ResolvedColumnState } from './constants'
 import { isDataColumn, isGroupColumn } from '../../../types/data-table'
-import type { DataTableProps } from '../../../types'
+import type { DataTableProps } from '../../../components/DataTable.vue'
 import { isString } from '@movk/core'
 import { DENSITY_PRESETS } from './constants'
 import { resolveDataColumn } from './resolve-data-column'

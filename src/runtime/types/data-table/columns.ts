@@ -2,7 +2,7 @@ import type { ButtonProps, CheckboxProps, DropdownMenuProps, IconProps, ModalPro
 import type { OmitByKey, Suggest } from '@movk/core'
 import type { CellContext, ColumnDef, ColumnDefTemplate } from '@tanstack/vue-table'
 import type { SemanticColor } from '../shared'
-import type { DataTableDynamic, DataTableSizePreset } from './table'
+import type { DataTableDynamic, DataTableSizePreset, DataTableTreeSelectionStrategy } from './table'
 import type {
   DataTableCheckboxContext,
   DataTableExpandButtonContext,
@@ -10,10 +10,6 @@ import type {
   DataTableRowPinningButtonContext,
   DataTableSortButtonContext
 } from './contexts'
-
-export type DataTableDensityPreset = 'compact' | 'normal' | 'comfortable'
-
-export type DataTableTreeSelectionStrategy = 'cascade' | 'isolated' | 'leaf'
 
 interface DataTableBaseColumn {
   /** 列头文本 */

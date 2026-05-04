@@ -1,4 +1,4 @@
-import type { DataTableTreeSelectionStrategy } from './columns'
+import type { DataTableTreeSelectionStrategy } from './table'
 
 export interface TreeSelectionResult<T> {
   /** TanStack 原生语义：所有 selected=true 的行对象 */

@@ -2,13 +2,9 @@
 import type { CSSProperties } from 'vue'
 
 interface DataTableRendererCellTooltipProps {
-  /**
-   * 单元格显示文本，溢出时作为 Tooltip 内容
-   */
+  /** 单元格显示文本，溢出时作为 Tooltip 内容 */
   text: string
-  /**
-   * true = 单行截断，number = 多行截断行数（-webkit-line-clamp）
-   */
+  /** true = 单行截断，number = 多行截断行数（-webkit-line-clamp） */
   lines?: boolean | number
 }
 </script>
