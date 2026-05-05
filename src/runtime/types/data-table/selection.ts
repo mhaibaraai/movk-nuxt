@@ -1,5 +1,3 @@
-import type { DataTableTreeSelectionStrategy } from './table'
-
 export interface TreeSelectionResult<T> {
   /** TanStack 原生语义：所有 selected=true 的行对象 */
   selected: T[]
@@ -15,13 +13,4 @@ export interface TreeSelectionResult<T> {
    * - 'cascade'：若自身被选且父节点也在 selected 中，视为级联产物，剔除
    */
   strictlyChecked: T[]
-}
-
-export interface TreeRowSelectionOptions {
-  /** 行唯一字段，默认 'id' */
-  rowKey?: string
-  /** 子节点字段；未提供时视为扁平数据 */
-  childrenKey?: string
-  /** 与组件 selection strategy 保持一致，决定 strictlyChecked 派生口径 */
-  strategy?: DataTableTreeSelectionStrategy
 }

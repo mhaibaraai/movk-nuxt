@@ -2,7 +2,7 @@ import type { ColumnDef, Header } from '@tanstack/vue-table'
 import type { DataTableColumn, DataTableGroupColumn } from '../../../types/data-table'
 import type { ResolveContext } from './constants'
 import { isString } from '@movk/core'
-import { resolvePresetSize } from '../state/models'
+import { resolvePresetSize } from './utils'
 import { groupHeaderStyle, resolveAlignClass } from './style'
 
 export function resolveGroupColumn<T>(

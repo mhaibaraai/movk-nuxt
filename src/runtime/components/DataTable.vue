@@ -20,29 +20,20 @@ import type { AppConfig } from 'nuxt/schema'
 import theme from '#build/movk-ui/data-table'
 import tableTheme from '#build/ui/table'
 import type { OmitByKey, Suggest } from '@movk/core'
-import type { DataTableActionButtonContext, DataTableColumn, DataTableDataColumn, DataTableDensityPreset, DataTableDynamic, DataTablePaginationUi, DataTablePinButtonContext, DataTableSortButtonContext } from '../types/data-table'
+import type {
+  DataTableActionButtonContext,
+  DataTableColumn,
+  DataTableDataColumn,
+  DataTableDensityPreset,
+  DataTableDynamic,
+  DataTablePinButtonContext,
+  DataTableSortButtonContext,
+  TreeSelectionResult
+} from '../types/data-table'
 
 type DataTable = ComponentConfig<typeof tableTheme & typeof theme, AppConfig, 'dataTable'>
 
-interface DataTableBorderedOptions {
-  /**
-   * 边框颜色，支持 CSS 颜色值或 CSS var
-   * @defaultValue 'var(--ui-border)'
-   */
-  color?: string
-  /**
-   * 边框宽度
-   * @defaultValue '1px'
-   */
-  width?: string
-  /**
-   * 边框样式
-   * @defaultValue 'solid'
-   */
-  style?: 'solid' | 'dashed' | 'dotted' | 'double'
-}
-
-type DataTableInheritedTableProps<T extends TableData> = OmitByKey<
+export interface DataTableProps<T extends TableData> extends /* @vue-ignore */ OmitByKey<
   TableProps<T>,
   'columns'
   | 'meta'
@@ -54,9 +45,7 @@ type DataTableInheritedTableProps<T extends TableData> = OmitByKey<
   | 'expandedOptions'
   | 'paginationOptions'
   | 'onSelect'
->
-
-export interface DataTableProps<T extends TableData> extends /* @vue-ignore */ DataTableInheritedTableProps<T> {
+> {
   /**
    * 行唯一标识字段
    *
@@ -76,9 +65,16 @@ export interface DataTableProps<T extends TableData> extends /* @vue-ignore */ D
   stripe?: boolean
   /**
    * 是否带有纵向边框，传 true 使用默认样式，传对象可定制颜色/粗细/线型
+   * - color: 边框颜色，支持 CSS 颜色值或 CSS var，默认 'var(--ui-border)'
+   * - width: 边框宽度，默认 '1px'
+   * - style: 边框样式，默认 'solid'
    * @defaultValue false
    */
-  bordered?: boolean | DataTableBorderedOptions
+  bordered?: boolean | {
+    color?: string
+    width?: string
+    style?: 'solid' | 'dashed' | 'dotted' | 'double'
+  }
   /**
    * 表格宽度由列宽内容决定（w-fit），关闭后表格撑满容器
    * @defaultValue false
@@ -155,19 +151,23 @@ export interface DataTableProps<T extends TableData> extends /* @vue-ignore */ D
    */
   truncate?: boolean | number | ((ctx: CellContext<T, unknown>) => boolean | number)
   /**
-   * 排序配置，默认：`{ enableSorting: !!sortable }`
+   * 排序配置
+   * @defaultValue `{ enableSorting: !!sortable }`
    */
   sortingOptions?: TableProps<T>['sortingOptions']
   /**
-   * 列尺寸配置， 默认：`{ enableColumnResizing: !!resizable, columnResizeMode }`
+   * 列尺寸配置
+   * @defaultValue `{ enableColumnResizing: !!resizable, columnResizeMode }`
    */
   columnSizingOptions?: TableProps<T>['columnSizingOptions']
   /**
-   * 列固定配置，默认：`{ enableColumnPinning: !!pinable }`
+   * 列固定配置
+   * @defaultValue `{ enableColumnPinning: !!pinable }`
    */
   columnPinningOptions?: TableProps<T>['columnPinningOptions']
   /**
-   * 行选择配置，默认：`{ enableMultiRowSelection: true }`
+   * 行选择配置
+   * @defaultValue `{ enableMultiRowSelection: true }`
    */
   rowSelectionOptions?: TableProps<T>['rowSelectionOptions']
   /**
@@ -211,30 +211,8 @@ export interface DataTableProps<T extends TableData> extends /* @vue-ignore */ D
    * - 服务端分页：设置 `manualPagination: true`，并提供 `rowCount` 或 `pageCount`
    */
   paginationOptions?: TableProps<T>['paginationOptions']
-  /**
-   * 分页栏展示配置，不承载分页状态
-   */
   paginationUi?: DataTablePaginationUi
-  /** 表格 UI 配置 */
-  ui?: DataTable['ui']
-}
-
-interface UTableExpose<TData extends TableData> {
-  tableApi: Table<TData>
-  tableRef: HTMLTableElement | null
-}
-
-interface PaginationSlotProps<TData extends TableData> {
-  tableApi: Table<TData>
-  pagination: PaginationState
-  page: number
-  rowCount: number
-  pageCount: number
-  currentPageRowCount: number
-  from: number
-  to: number
-  show: boolean
-  selectedCount: number
+  ui?: DataTable['slots']
 }
 </script>
 
@@ -242,33 +220,15 @@ interface PaginationSlotProps<TData extends TableData> {
 import { getPaginationRowModel } from '@tanstack/vue-table'
 import { UTable } from '#components'
 import { useAppConfig } from '#imports'
-import { computed, useAttrs, useTemplateRef } from 'vue'
+import type { Ref, WritableComputedRef } from 'vue'
+import { computed, onMounted, useAttrs, useTemplateRef, watch } from 'vue'
 import { useExtendedTv } from '../utils/extend-theme'
-import {
-  resolveCallbackValue,
-  resolveTableResetKey,
-  useEffectiveModel,
-  useSyncKeys
-} from '../domains/data-table/state/models'
-import {
-  createPaginationSnapshot,
-  expandedToKeys,
-  keysToExpanded,
-  resolvePaginationViewState
-} from '../domains/data-table/state/pagination'
-import {
-  keysToRowSelection,
-  resolveSelectedCount,
-  rowSelectionToKeys
-} from '../domains/data-table/state/selection'
-import {
-  keysToVisibility,
-  keysToVisibilityExclude,
-  visibilityToExcludeKeys,
-  visibilityToKeys
-} from '../domains/data-table/state/visibility'
 import { resolveColumns } from '../domains/data-table/columns/resolve-columns'
-import DataTablePagination from './data-table-renderer/DataTableRendererPagination.vue'
+import { resolveCallbackValue } from '../domains/data-table/columns/utils'
+import { computeTreeRowSelection } from '../domains/data-table/tree-selection'
+import DataTablePagination, { type DataTablePaginationUi } from './data-table-renderer/DataTableRendererPagination.vue'
+
+const DEFAULT_PAGE_SIZE = 10
 
 const props = withDefaults(defineProps<DataTableProps<T>>(), {
   emptyCell: '-',
@@ -294,6 +254,105 @@ const resolved = computed(() => resolveColumns<T>(props.columns || [], props))
 
 function hasEntries(v: unknown): boolean {
   return typeof v === 'object' && v !== null && Object.keys(v).length > 0
+}
+
+function keysToVisibility(keys: string[], allColumnIds: string[]): VisibilityState {
+  const set = new Set(keys)
+  const state: VisibilityState = {}
+  for (const id of allColumnIds) state[id] = set.has(id)
+  return state
+}
+
+function visibilityToKeys(state: VisibilityState, allColumnIds: string[]): string[] {
+  return allColumnIds.filter(id => state[id] !== false)
+}
+
+function keysToVisibilityExclude(excludeKeys: string[], allColumnIds: string[]): VisibilityState {
+  const set = new Set(excludeKeys)
+  const state: VisibilityState = {}
+  for (const id of allColumnIds) state[id] = !set.has(id)
+  return state
+}
+
+function visibilityToExcludeKeys(state: VisibilityState, allColumnIds: string[]): string[] {
+  return allColumnIds.filter(id => state[id] === false)
+}
+
+function keysToRowSelection(keys: string[]): RowSelectionState {
+  const state: RowSelectionState = {}
+  for (const key of keys) state[key] = true
+  return state
+}
+
+function rowSelectionToKeys(state: RowSelectionState): string[] {
+  return Object.entries(state).filter(([, s]) => s).map(([k]) => k)
+}
+
+function keysToExpanded(keys: string[]): Record<string, boolean> {
+  const state: Record<string, boolean> = {}
+  for (const key of keys) state[key] = true
+  return state
+}
+
+function expandedToKeys(state: ExpandedState): string[] {
+  if (state === true) return []
+  return Object.entries(state).filter(([, e]) => e).map(([k]) => k)
+}
+
+function areSameKeys(a: readonly (string | number)[], b: readonly (string | number)[]): boolean {
+  if (a.length !== b.length) return false
+  const set = new Set(a.map(String))
+  for (const key of b) if (!set.has(String(key))) return false
+  return true
+}
+
+function useEffectiveModel<V>(
+  model: Ref<V | undefined>,
+  getDefault: () => V,
+  syncBack?: (value: V) => boolean
+): WritableComputedRef<V> {
+  const effective = computed<V>({
+    get: () => model.value !== undefined ? model.value : getDefault(),
+    set: (value) => { model.value = value }
+  })
+
+  if (syncBack !== undefined) {
+    onMounted(() => {
+      if (model.value !== undefined) return
+      const defaults = getDefault()
+      if (syncBack(defaults)) model.value = defaults
+    })
+  }
+
+  return effective
+}
+
+function useSyncKeys<R>(
+  keys: Ref<string[] | undefined>,
+  record: Ref<R | undefined>,
+  toRecord: (keys: string[]) => R,
+  toKeys: (record: R) => string[]
+): void {
+  let updating = false
+
+  watch(keys, (next) => {
+    if (updating) return
+    const current = record.value !== undefined ? toKeys(record.value) : []
+    if (areSameKeys(current, next ?? [])) return
+    updating = true
+    record.value = toRecord(next ?? [])
+    updating = false
+  }, { deep: true })
+
+  watch(record, (next) => {
+    if (updating) return
+    if (next === undefined) return
+    const derived = toKeys(next)
+    if (areSameKeys(derived, keys.value ?? [])) return
+    updating = true
+    keys.value = derived
+    updating = false
+  }, { deep: true })
 }
 
 const effectiveVisibility = useEffectiveModel(
@@ -327,19 +386,17 @@ const effectiveSizing = useEffectiveModel(
 
 const effectiveRowSelection = useEffectiveModel(
   rowSelectionState,
-  () => {
-    if (rowSelectionKeysState.value !== undefined) return keysToRowSelection(rowSelectionKeysState.value)
-    return {}
-  },
+  () => rowSelectionKeysState.value !== undefined
+    ? keysToRowSelection(rowSelectionKeysState.value)
+    : {},
   hasEntries
 )
 
 const effectiveExpanded = useEffectiveModel(
   expandedState,
-  () => {
-    if (expandedKeysState.value !== undefined) return keysToExpanded(expandedKeysState.value)
-    return {}
-  },
+  () => expandedKeysState.value !== undefined
+    ? keysToExpanded(expandedKeysState.value)
+    : {},
   hasEntries
 )
 
@@ -358,21 +415,24 @@ useSyncKeys(
 useSyncKeys(
   rowSelectionKeysState,
   rowSelectionState,
-  keys => keysToRowSelection(keys) as RowSelectionState,
-  state => rowSelectionToKeys(state).map(String)
+  keysToRowSelection,
+  rowSelectionToKeys
 )
 useSyncKeys(
   expandedKeysState,
   expandedState,
-  keys => keysToExpanded(keys),
-  state => expandedToKeys(state)
+  keysToExpanded,
+  expandedToKeys
 )
 
 defineOptions({ inheritAttrs: false })
 
 const attrs = useAttrs()
 const appConfig = useAppConfig() as DataTable['AppConfig']
-const tableRef = useTemplateRef<UTableExpose<T>>('tableRef')
+const tableRef = useTemplateRef<{
+  tableApi: Table<T>
+  tableRef: HTMLTableElement | null
+}>('tableRef')
 
 const isTreeMode = computed(() => Boolean(props.childrenKey))
 const isManualPagination = computed(() => props.paginationOptions?.manualPagination === true)
@@ -488,19 +548,52 @@ const uTableProps = computed(() => {
 })
 
 const tableApi = computed<Table<T> | null>(() => tableRef.value?.tableApi ?? null)
-const selectedCount = computed(() => resolveSelectedCount(
-  rowSelectionKeysState.value,
-  rowSelectionState.value
-))
-const paginationView = computed(() =>
-  resolvePaginationViewState(
-    createPaginationSnapshot(tableApi.value, props.paginationOptions),
-    props.paginationUi
-  )
-)
-const paginationSlotProps = computed<PaginationSlotProps<T> | null>(() => {
-  if (!tableApi.value) return null
 
+const selectedCount = computed(() => {
+  if (rowSelectionKeysState.value !== undefined) return rowSelectionKeysState.value.length
+  return Object.keys(rowSelectionState.value ?? {}).length
+})
+
+const paginationView = computed(() => {
+  const api = tableApi.value
+  const manual = isManualPagination.value
+  const explicitRowCount = props.paginationOptions?.rowCount
+  const explicitPageCount = props.paginationOptions?.pageCount
+  const pagination = api?.getState().pagination
+  const pageIndex = pagination?.pageIndex ?? 0
+  const pageSize = pagination?.pageSize ?? DEFAULT_PAGE_SIZE
+  const currentPageRowCount = api ? api.getRowModel().rows.length : 0
+
+  const rowCount = api
+    ? (manual ? Math.max(0, explicitRowCount ?? api.getRowCount()) : api.getRowCount())
+    : Math.max(0, explicitRowCount ?? 0)
+
+  const fallbackManualPageCount = explicitRowCount !== undefined
+    ? Math.ceil(Math.max(0, explicitRowCount) / pageSize)
+    : (api?.getPageCount() ?? 0)
+  const pageCount = api
+    ? (manual ? Math.max(0, explicitPageCount ?? fallbackManualPageCount) : api.getPageCount())
+    : Math.max(0, explicitPageCount ?? 0)
+
+  const from = rowCount > 0 && currentPageRowCount > 0 ? pageIndex * pageSize + 1 : 0
+  const to = rowCount > 0 && currentPageRowCount > 0 ? Math.min(rowCount, from + currentPageRowCount - 1) : 0
+  const show = props.paginationUi?.show
+    ?? (pageCount > 1 || (props.paginationUi?.pageSizes?.length ?? 0) > 1)
+
+  return {
+    pagination: { pageIndex, pageSize },
+    page: pageIndex + 1,
+    rowCount,
+    pageCount,
+    currentPageRowCount,
+    from,
+    to,
+    show
+  }
+})
+
+const paginationSlotProps = computed(() => {
+  if (!tableApi.value) return null
   return {
     tableApi: tableApi.value,
     selectedCount: selectedCount.value,
@@ -509,29 +602,41 @@ const paginationSlotProps = computed<PaginationSlotProps<T> | null>(() => {
 })
 const showPagination = computed(() => paginationSlotProps.value?.show ?? false)
 
+const treeSelection = computed<TreeSelectionResult<T>>(() => {
+  const data = ((attrs as { data?: T[] }).data ?? []) as T[]
+  const keys = rowSelectionKeysState.value
+    ?? Object.keys(effectiveRowSelection.value).filter(k => effectiveRowSelection.value[k])
+  return computeTreeRowSelection(data, keys, {
+    rowKey: props.rowKey,
+    childrenKey: props.childrenKey,
+    strategy: resolved.value.selectionStrategy
+  })
+})
+
 function clearSelection() {
   rowSelectionState.value = {}
-
-  if (rowSelectionKeysState.value !== undefined) {
-    rowSelectionKeysState.value = []
-  }
+  if (rowSelectionKeysState.value !== undefined) rowSelectionKeysState.value = []
 }
 
-const tableResetKey = computed(() => resolveTableResetKey({
-  columnResizeMode: props.columnResizeMode,
-  resizable: !!props.resizable,
-  sortable: !!props.sortable,
-  pinable: !!props.pinable,
-  hasColumnPinning: resolved.value.hasColumnPinning,
-  hasColumnResizing: resolved.value.hasColumnResizing,
-  hasColumnSort: resolved.value.hasColumnSort,
-  manualPagination: isManualPagination.value
-}))
+const tableResetKey = computed(() => {
+  const flags = [
+    !!props.resizable,
+    !!props.sortable,
+    !!props.pinable,
+    resolved.value.hasColumnPinning,
+    resolved.value.hasColumnResizing,
+    resolved.value.hasColumnSort,
+    isManualPagination.value
+  ].reduce((mask, enabled, index) => mask | ((enabled ? 1 : 0) << index), 0)
+
+  return `${props.columnResizeMode === 'onEnd' ? 'e' : 'c'}${flags.toString(36)}`
+})
 
 defineExpose({
   tableRef: computed(() => tableRef.value?.tableRef ?? null),
   tableApi,
-  clearSelection
+  clearSelection,
+  treeSelection
 })
 </script>
 

@@ -7,7 +7,7 @@ import type {
 } from '../../../types/data-table'
 import type { ResolveContext } from './constants'
 import { h } from 'vue'
-import { resolveCallbackValue, resolveColumnFlag, resolveTemplate } from '../state/models'
+import { resolveCallbackValue, resolveColumnFlag, resolveTemplate } from './utils'
 import DataTableCellTooltip from '../../../components/data-table-renderer/DataTableRendererCellTooltip.vue'
 import { UButton } from '#components'
 import { applyBaseState, buildClassMeta, COLUMN_SIZE_STYLE, resolveAlignClass } from './style'
@@ -120,7 +120,7 @@ function buildPinAction<T>(
         'color': pinned ? 'primary' : 'neutral',
         'class': pinned ? 'opacity-100' : 'opacity-60 group-hover:opacity-100',
         'icon': pinned ? 'i-lucide-pin-off' : 'i-lucide-pin',
-        'aria-label': pinned ? '取消固定列' : '固定列',
+        'aria-label': pinned ? 'Cancel column pin' : 'Pin column',
         'onClick': (event: Event) => {
           event.stopPropagation()
           if (pinned === 'left') {

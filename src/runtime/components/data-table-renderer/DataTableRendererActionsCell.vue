@@ -19,7 +19,7 @@ interface DataTableRendererActionsCellProps {
 <script lang="ts" setup>
 import { h } from 'vue'
 import { isFunction } from '@movk/core'
-import { resolveCallbackValue } from '../../domains/data-table/state/models'
+import { resolveCallbackValue } from '../../domains/data-table/columns/utils'
 import { useMessageBox } from '../../composables/useMessageBox'
 import { UButton, UDropdownMenu } from '#components'
 import DataTableActionConfirm from './DataTableRendererActionConfirm.vue'

@@ -2,7 +2,7 @@ import type { Cell, ColumnMeta, Header } from '@tanstack/vue-table'
 import type { DataTableSizePreset } from '../../../types/data-table'
 import type { ResolveContext } from './constants'
 import { isString } from '@movk/core'
-import { resolvePresetSize } from '../state/models'
+import { resolvePresetSize } from './utils'
 
 export function resolveColumnSize<T>(ctx: Header<T, unknown> | Cell<T, unknown>): Record<string, string> {
   const { columnDef } = ctx.column

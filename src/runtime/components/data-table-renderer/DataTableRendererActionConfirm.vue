@@ -11,7 +11,7 @@ interface DataTableRendererActionConfirmProps {
 
 <script lang="ts" setup>
 import { computed, ref } from 'vue'
-import { resolveCallbackValue } from '../../domains/data-table/state/models'
+import { resolveCallbackValue } from '../../domains/data-table/columns/utils'
 import { useMessageBox } from '../../composables/useMessageBox'
 
 const props = defineProps<DataTableRendererActionConfirmProps>()

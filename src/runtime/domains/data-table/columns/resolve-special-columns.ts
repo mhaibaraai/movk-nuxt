@@ -15,7 +15,7 @@ import type { ResolveContext, SpecialColumnType } from './constants'
 import { h } from 'vue'
 import { isFunction, isString } from '@movk/core'
 import { SPECIAL_COLUMN_DEFAULTS } from './constants'
-import { resolveCallbackValue } from '../state/models'
+import { resolveCallbackValue } from './utils'
 import DataTableActionsCell from '../../../components/data-table-renderer/DataTableRendererActionsCell.vue'
 import { UButton, UCheckbox } from '#components'
 import { applyBaseState, buildClassMeta, COLUMN_SIZE_STYLE, resolveAlignClass } from './style'
@@ -125,7 +125,7 @@ export function resolveSelectionColumn<T>(
             isIndeterminate
           }
           return h(UCheckbox, {
-            'aria-label': '选择所有行',
+            'aria-label': 'Select all rows',
             'modelValue': isIndeterminate ? 'indeterminate' : isAllSelected,
             'onUpdate:modelValue': (value: unknown) => hctx.table.toggleAllPageRowsSelected(!!(value as boolean | 'indeterminate')),
             ...resolveCallbackValue(col.checkboxProps ?? {}, cbCtx)
@@ -143,7 +143,7 @@ export function resolveSelectionColumn<T>(
           isLeafAggregate: true
         }
         return h(UCheckbox, {
-          'aria-label': '父行（仅叶子可选）',
+          'aria-label': 'Select parent row',
           'disabled': true,
           'modelValue': all ? true : some ? 'indeterminate' : false,
           ...resolveCallbackValue(col.checkboxProps ?? {}, cbCtx)
@@ -159,7 +159,7 @@ export function resolveSelectionColumn<T>(
         isLeafAggregate: false
       }
       return h(UCheckbox, {
-        'aria-label': `选择行`,
+        'aria-label': 'Select row',
         'modelValue': isSelected ? true : isIndeterminate ? 'indeterminate' : false,
         'onUpdate:modelValue': (value: unknown) => cellCtx.row.toggleSelected(!!(value as boolean | 'indeterminate')),
         ...resolveCallbackValue(col.checkboxProps ?? {}, cbCtx)
@@ -235,7 +235,7 @@ export function resolveRowPinningColumn<T>(
         'size': 'xs',
         'color': pinned ? 'primary' : 'neutral',
         'icon': 'i-lucide-star',
-        'aria-label': pinned ? '取消固定行' : '固定行',
+        'aria-label': pinned ? 'Cancel row pin' : 'Pin row',
         'onClick': (event: Event) => {
           event.stopPropagation()
           if (pinned) {

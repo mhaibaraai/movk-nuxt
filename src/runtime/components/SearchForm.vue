@@ -88,7 +88,7 @@ export interface SearchFormProps<S extends z.ZodObject, T extends boolean = true
   ui?: SearchForm['slots']
 }
 
-export interface SearchFormActionSlots {
+interface SearchFormActionSlots {
   actions: (props: {
     expanded: boolean
     toggle: () => void
@@ -105,7 +105,7 @@ export interface SearchFormEmits<S extends z.ZodObject> {
   expand: [expanded: boolean]
 }
 
-type SearchFormSlotTypes<S extends z.ZodObject> = SearchFormActionSlots & DynamicFormSlots<Partial<InferInput<S>>>
+export type SearchFormSlots<S extends z.ZodObject> = SearchFormActionSlots & DynamicFormSlots<Partial<InferInput<S>>>
 type SearchFormStateType<S extends z.ZodObject> = Partial<InferInput<S>>
 </script>
 
@@ -136,7 +136,7 @@ const props = withDefaults(defineProps<SearchFormProps<S, T, N>>(), {
 })
 const modelValue = defineModel<SearchFormStateType<S>>()
 const emits = defineEmits<SearchFormEmits<S>>()
-const slots = defineSlots<SearchFormSlotTypes<S>>()
+const slots = defineSlots<SearchFormSlots<S>>()
 defineOptions({ inheritAttrs: false })
 
 const attrs = useAttrs()

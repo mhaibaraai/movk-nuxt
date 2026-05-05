@@ -240,12 +240,3 @@ export function isDataColumn<T>(col: DataTableColumn<T>): col is DataTableDataCo
 export function isGroupColumn<T>(col: DataTableColumn<T>): col is DataTableGroupColumn<T> {
   return 'children' in col && !('type' in col)
 }
-
-export function isSpecialColumn<T>(col: DataTableColumn<T>): col is
-  | DataTableSelectionColumn<T>
-  | DataTableIndexColumn<T>
-  | DataTableExpandColumn<T>
-  | DataTableRowPinningColumn<T>
-  | DataTableActionsColumn<T> {
-  return 'type' in col
-}

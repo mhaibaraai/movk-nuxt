@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import type { DataTableColumn } from '#movk/types/data-table'
+import type { ComputedRef } from 'vue'
+import type { DataTableColumn, TreeSelectionResult } from '#movk/types/data-table'
 
 interface Payment {
   id: string
@@ -23,11 +24,14 @@ const columns = computed(() => [
   { accessorKey: 'amount', header: '金额', align: 'right' }
 ] as DataTableColumn<Payment>[])
 
-const derived = useTreeRowSelection<Payment>(
-  () => treeData as Payment[],
-  rowSelectionKeys,
-  { rowKey: 'id', childrenKey: 'children', strategy: strategy.value }
-)
+const tableRef = useTemplateRef<{
+  treeSelection: ComputedRef<TreeSelectionResult<Payment>>
+}>('tableRef')
+
+const empty: TreeSelectionResult<Payment> = {
+  selected: [], leaves: [], parents: [], halfSelected: [], strictlyChecked: []
+}
+const derived = computed(() => tableRef.value?.treeSelection.value ?? empty)
 
 const strategyOptions = [
   { label: 'cascade（父子级联）', value: 'cascade' },
@@ -43,7 +47,7 @@ const strategyOptions = [
         DataTable / Tree Selection
       </h2>
       <p class="text-sm text-muted">
-        演示树形勾选的三种 strategy 与 useTreeRowSelection 派生分类。
+        演示树形勾选的三种 strategy 与组件 expose 的 treeSelection 派生分类。
       </p>
     </div>
 
@@ -54,6 +58,7 @@ const strategyOptions = [
     />
 
     <MDataTable
+      ref="tableRef"
       :key="strategy"
       v-model:row-selection-keys="rowSelectionKeys"
       v-model:expanded-keys="expandedKeys"

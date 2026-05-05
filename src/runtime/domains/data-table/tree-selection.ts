@@ -1,6 +1,11 @@
-import type { TreeRowSelectionOptions, TreeSelectionResult } from '../../../types/data-table/selection'
+import type { DataTableTreeSelectionStrategy } from '../../types/data-table'
+import type { TreeSelectionResult } from '../../types/data-table/selection'
 
-export type { TreeRowSelectionOptions, TreeSelectionResult }
+interface ComputeOptions {
+  rowKey?: string
+  childrenKey?: string
+  strategy?: DataTableTreeSelectionStrategy
+}
 
 interface Node<T> {
   row: T
@@ -12,16 +17,10 @@ interface Node<T> {
   leafSelected: number
 }
 
-/**
- * 纯函数派生：给定数据 + 选中 keys + 选项，返回树形选择分类结果。
- *
- * 算法为一次 DFS：构建阶段后序归并 leafTotal/leafSelected，访问阶段前序
- * 收集 selected/leaves/parents/halfSelected/strictlyChecked，整体 O(n)。
- */
-export function computeTreeRowSelection<T extends object>(
+export function computeTreeRowSelection<T>(
   rows: T[],
   keys: readonly (string | number)[],
-  options: TreeRowSelectionOptions = {}
+  options: ComputeOptions = {}
 ): TreeSelectionResult<T> {
   const rowKey = options.rowKey ?? 'id'
   const childrenKey = options.childrenKey
