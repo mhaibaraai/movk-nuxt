@@ -556,24 +556,26 @@ const selectedCount = computed(() => {
 
 const paginationView = computed(() => {
   const api = tableApi.value
+  if (!api) return null
+
   const manual = isManualPagination.value
   const explicitRowCount = props.paginationOptions?.rowCount
   const explicitPageCount = props.paginationOptions?.pageCount
-  const pagination = api?.getState().pagination
+  const pagination = api.getState().pagination
   const pageIndex = pagination?.pageIndex ?? 0
   const pageSize = pagination?.pageSize ?? DEFAULT_PAGE_SIZE
-  const currentPageRowCount = api ? api.getRowModel().rows.length : 0
+  const currentPageRowCount = api.getRowModel().rows.length
 
-  const rowCount = api
-    ? (manual ? Math.max(0, explicitRowCount ?? api.getRowCount()) : api.getRowCount())
-    : Math.max(0, explicitRowCount ?? 0)
+  const rowCount = manual
+    ? Math.max(0, explicitRowCount ?? api.getRowCount())
+    : api.getRowCount()
 
   const fallbackManualPageCount = explicitRowCount !== undefined
     ? Math.ceil(Math.max(0, explicitRowCount) / pageSize)
-    : (api?.getPageCount() ?? 0)
-  const pageCount = api
-    ? (manual ? Math.max(0, explicitPageCount ?? fallbackManualPageCount) : api.getPageCount())
-    : Math.max(0, explicitPageCount ?? 0)
+    : api.getPageCount()
+  const pageCount = manual
+    ? Math.max(0, explicitPageCount ?? fallbackManualPageCount)
+    : api.getPageCount()
 
   const from = rowCount > 0 && currentPageRowCount > 0 ? pageIndex * pageSize + 1 : 0
   const to = rowCount > 0 && currentPageRowCount > 0 ? Math.min(rowCount, from + currentPageRowCount - 1) : 0
@@ -581,6 +583,7 @@ const paginationView = computed(() => {
     ?? (pageCount > 1 || (props.paginationUi?.pageSizes?.length ?? 0) > 1)
 
   return {
+    tableApi: api,
     pagination: { pageIndex, pageSize },
     page: pageIndex + 1,
     rowCount,
@@ -592,15 +595,22 @@ const paginationView = computed(() => {
   }
 })
 
-const paginationSlotProps = computed(() => {
-  if (!tableApi.value) return null
+const paginationRendererProps = computed(() => {
+  const v = paginationView.value
+  if (!v) return null
   return {
-    tableApi: tableApi.value,
-    selectedCount: selectedCount.value,
-    ...paginationView.value
+    tableApi: v.tableApi,
+    pagination: v.pagination,
+    page: v.page,
+    rowCount: v.rowCount,
+    pageCount: v.pageCount,
+    from: v.from,
+    to: v.to,
+    selectedCount: selectedCount.value
   }
 })
-const showPagination = computed(() => paginationSlotProps.value?.show ?? false)
+
+const showPagination = computed(() => paginationView.value?.show ?? false)
 
 const treeSelection = computed<TreeSelectionResult<T>>(() => {
   const data = ((attrs as { data?: T[] }).data ?? []) as T[]
@@ -681,26 +691,17 @@ defineExpose({
       </template>
     </UTable>
 
-    <template v-if="showPagination && paginationSlotProps">
-      <slot v-if="$slots.pagination" name="pagination" v-bind="paginationSlotProps" />
+    <template v-if="showPagination && paginationView && paginationRendererProps">
+      <slot
+        v-if="$slots.pagination"
+        name="pagination"
+        v-bind="{ ...paginationView, selectedCount }"
+      />
 
       <DataTablePagination
         v-else
-        :table-api="paginationSlotProps.tableApi"
-        :pagination="paginationSlotProps.pagination"
-        :page="paginationSlotProps.page"
-        :row-count="paginationSlotProps.rowCount"
-        :page-count="paginationSlotProps.pageCount"
-        :from="paginationSlotProps.from"
-        :to="paginationSlotProps.to"
-        :selected-count="paginationSlotProps.selectedCount"
-        :page-sizes="props.paginationUi?.pageSizes"
-        :show-selected-count="props.paginationUi?.showSelectedCount"
-        :show-row-range="props.paginationUi?.showRowRange"
-        :pagination-props="props.paginationUi?.paginationProps"
-        :page-size-select-props="props.paginationUi?.pageSizeSelectProps"
-        :text="props.paginationUi?.text"
-        :ui="props.paginationUi?.ui"
+        v-bind="paginationRendererProps"
+        :ui-config="props.paginationUi"
       >
         <template
           v-if="$slots['pagination-summary']"

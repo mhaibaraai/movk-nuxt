@@ -60,17 +60,11 @@ export interface DataTablePaginationProps<TData extends RowData> {
   pageCount: number
   from: number
   to: number
-  pageSizes?: number[]
-  paginationProps?: Omit<PaginationProps, 'page' | 'total' | 'itemsPerPage'>
-  pageSizeSelectProps?: DataTablePageSizeSelectProps
-  selectedCount?: number
-  showSelectedCount?: boolean
-  showRowRange?: boolean
-  text?: DataTablePaginationUiText
-  ui?: DataTablePagination['slots']
+  selectedCount: number
+  uiConfig?: DataTablePaginationUi
 }
 
-export interface DataTablePaginationSlots {
+export interface DataTablePaginationSlots<TData extends RowData = RowData> {
   summary: (props: {
     summaryText: string
     selectedText: string
@@ -83,7 +77,7 @@ export interface DataTablePaginationSlots {
     showSelectedCount: boolean
   }) => unknown
   actions: (props: {
-    tableApi: Table<any>
+    tableApi: Table<TData>
     page: number
     pageCount: number
     pageSize: number
@@ -103,81 +97,61 @@ import { useAppConfig } from '#imports'
 import { computed } from 'vue'
 import { tv } from '@nuxt/ui/utils/tv'
 
-const props = withDefaults(defineProps<DataTablePaginationProps<T>>(), {
-  pageSizes: () => [],
-  selectedCount: 0,
-  showSelectedCount: true,
-  showRowRange: true
-})
+const props = defineProps<DataTablePaginationProps<T>>()
 
-defineSlots<{
-  summary: (props: {
-    summaryText: string
-    selectedText: string
-    selectedCount: number
-    rowCount: number
-    from: number
-    to: number
-    page: number
-    pageCount: number
-    showSelectedCount: boolean
-  }) => unknown
-  actions: (props: {
-    tableApi: Table<any>
-    page: number
-    pageCount: number
-    pageSize: number
-    rowCount: number
-    pageSizes: number[]
-    pageSizeOptions: { label: string, value: number }[]
-    showPageSizeSelect: boolean
-    setPage: (page: number) => void
-    setPageSize: (pageSize: unknown) => void
-  }) => unknown
-}>()
+defineSlots<DataTablePaginationSlots<T>>()
 
 const appConfig = useAppConfig() as DataTablePagination['AppConfig']
 const uiCls = computed(() =>
   tv({ extend: tv(theme), ...(appConfig.movk?.dataTablePagination || {}) })()
 )
 
-const pageModel = computed({
-  get: () => props.page,
-  set: (value: number) => setPage(value)
-})
+const cfg = computed(() => ({
+  pageSizes: props.uiConfig?.pageSizes ?? [],
+  showSelectedCount: props.uiConfig?.showSelectedCount ?? true,
+  showRowRange: props.uiConfig?.showRowRange ?? true,
+  paginationProps: props.uiConfig?.paginationProps,
+  pageSizeSelectProps: props.uiConfig?.pageSizeSelectProps,
+  ui: props.uiConfig?.ui
+}))
 
 const text = computed<Required<DataTablePaginationUiText>>(() => ({
-  total: props.text?.total ?? '共',
-  item: props.text?.item ?? '条',
-  range: props.text?.range ?? '显示',
-  selected: props.text?.selected ?? '已选'
+  total: props.uiConfig?.text?.total ?? '共',
+  item: props.uiConfig?.text?.item ?? '条',
+  range: props.uiConfig?.text?.range ?? '显示',
+  selected: props.uiConfig?.text?.selected ?? '已选'
 }))
 
 const pageSizeOptions = computed(() =>
-  props.pageSizes.map(size => ({
+  cfg.value.pageSizes.map(size => ({
     label: `${size} ${text.value.item}/页`,
     value: size
   }))
 )
 
-const showPageSizeSelect = computed(() => props.pageSizes.length > 1)
+const showPageSizeSelect = computed(() => cfg.value.pageSizes.length > 1)
+
 const pageSizeSelectAttrs = computed(() => ({
-  ...props.pageSizeSelectProps,
-  class: uiCls.value.pageSizeSelect({ class: props.pageSizeSelectProps?.class })
+  ...cfg.value.pageSizeSelectProps,
+  class: uiCls.value.pageSizeSelect({ class: cfg.value.pageSizeSelectProps?.class })
 }))
+
 const paginationAttrs = computed(() => ({
-  ...props.paginationProps,
-  class: uiCls.value.pagination({ class: props.paginationProps?.class })
+  ...cfg.value.paginationProps,
+  class: uiCls.value.pagination({ class: cfg.value.paginationProps?.class })
 }))
+
 const summaryText = computed(() => {
-  if (!props.showRowRange || props.rowCount === 0) {
+  if (!cfg.value.showRowRange || props.rowCount === 0) {
     return `${text.value.total} ${props.rowCount} ${text.value.item}`
   }
   return `${text.value.range} ${props.from}-${props.to}，${text.value.total} ${props.rowCount} ${text.value.item}`
 })
+
 const selectedText = computed(() =>
   `${text.value.selected} ${props.selectedCount} ${text.value.item}`
 )
+
 const summarySlotProps = computed(() => ({
   summaryText: summaryText.value,
   selectedText: selectedText.value,
@@ -187,15 +161,16 @@ const summarySlotProps = computed(() => ({
   to: props.to,
   page: props.page,
   pageCount: props.pageCount,
-  showSelectedCount: props.showSelectedCount
+  showSelectedCount: cfg.value.showSelectedCount
 }))
+
 const actionsSlotProps = computed(() => ({
   tableApi: props.tableApi,
   page: props.page,
   pageCount: props.pageCount,
   pageSize: props.pagination.pageSize,
   rowCount: props.rowCount,
-  pageSizes: props.pageSizes,
+  pageSizes: cfg.value.pageSizes,
   pageSizeOptions: pageSizeOptions.value,
   showPageSizeSelect: showPageSizeSelect.value,
   setPage,
@@ -218,20 +193,20 @@ function setPageSize(value: unknown) {
 </script>
 
 <template>
-  <div :class="uiCls.root({ class: props.ui?.root })">
-    <div :class="uiCls.summary({ class: props.ui?.summary })">
+  <div :class="uiCls.root({ class: cfg.ui?.root })">
+    <div :class="uiCls.summary({ class: cfg.ui?.summary })">
       <slot name="summary" v-bind="summarySlotProps">
-        <span :class="uiCls.summaryText({ class: props.ui?.summaryText })">{{ summaryText }}</span>
+        <span :class="uiCls.summaryText({ class: cfg.ui?.summaryText })">{{ summaryText }}</span>
         <span
-          v-if="showSelectedCount && selectedCount > 0"
-          :class="uiCls.selectedCount({ class: props.ui?.selectedCount })"
+          v-if="cfg.showSelectedCount && selectedCount > 0"
+          :class="uiCls.selectedCount({ class: cfg.ui?.selectedCount })"
         >
           {{ selectedText }}
         </span>
       </slot>
     </div>
 
-    <div :class="uiCls.actions({ class: props.ui?.actions })">
+    <div :class="uiCls.actions({ class: cfg.ui?.actions })">
       <slot name="actions" v-bind="actionsSlotProps">
         <USelect
           v-if="showPageSizeSelect"
@@ -242,10 +217,11 @@ function setPageSize(value: unknown) {
         />
 
         <UPagination
-          v-model:page="pageModel"
+          :page="page"
           :total="rowCount"
           :items-per-page="pagination.pageSize"
           v-bind="paginationAttrs"
+          @update:page="setPage"
         />
       </slot>
     </div>
