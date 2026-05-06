@@ -11,7 +11,7 @@ import { resolveCallbackValue, resolveColumnFlag, resolveTemplate } from './util
 import DataTableCellTooltip from '../../../components/data-table-renderer/DataTableRendererCellTooltip.vue'
 import { UButton } from '#components'
 import { applyBaseState, buildClassMeta, COLUMN_SIZE_STYLE, resolveAlignClass } from './style'
-import type { DataTableProps } from '../../../components/DataTable.vue'
+import type { DataTableProps } from '../../../types/data-table/component'
 
 interface HeaderAction<T> {
   id: string

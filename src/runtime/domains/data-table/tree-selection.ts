@@ -1,5 +1,5 @@
 import type { DataTableTreeSelectionStrategy } from '../../types/data-table'
-import type { TreeSelectionResult } from '../../types/data-table/selection'
+import type { TreeSelectionResult } from '../../types/data-table/columns'
 
 interface ComputeOptions {
   rowKey?: string

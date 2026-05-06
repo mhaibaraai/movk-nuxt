@@ -2,7 +2,7 @@
 import type { z } from 'zod'
 import type { AutoFormField } from '../../types/auto-form'
 import type { AnyObject } from '@movk/core'
-import type { AutoFormProps } from '../AutoForm.vue'
+import type { AutoFormProps } from '../../types/auto-form/component'
 
 interface AutoFormRendererChildrenProps<S extends z.ZodObject> extends Pick<AutoFormProps<S>, 'schema'> {
   fields: AutoFormField[]

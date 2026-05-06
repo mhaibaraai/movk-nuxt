@@ -1,5 +1,5 @@
 import type { IsComponent } from '@movk/core'
-import type { AutoFormControl, _Unset } from '../../types/auto-form'
+import type { AutoFormControl, _Unset } from '../../types/auto-form/controls'
 import type {
   InputProps, InputSlots,
   TextareaProps, TextareaSlots

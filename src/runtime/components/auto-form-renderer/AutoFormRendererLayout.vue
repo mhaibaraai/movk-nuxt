@@ -1,7 +1,7 @@
 <script lang="ts">
 import type { z } from 'zod'
 import type { AutoFormField } from '../../types/auto-form'
-import type { AutoFormProps } from '../AutoForm.vue'
+import type { AutoFormProps } from '../../types/auto-form/component'
 import type { AnyObject } from '@movk/core'
 
 interface AutoFormRendererLayoutProps<S extends z.ZodObject> extends Pick<AutoFormProps<S>, 'schema'> {

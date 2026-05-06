@@ -1,17 +1,8 @@
-<script lang="ts">
-import type { ButtonProps, ColorPickerProps, PopoverEmits, PopoverProps } from '@nuxt/ui'
-
-type PopoverMode = 'click' | 'hover'
-
-export interface ColorChooserProps<P extends PopoverMode = PopoverMode> extends /** @vue-ignore */ ColorPickerProps {
-  popoverProps?: PopoverProps<P>
-  buttonProps?: ButtonProps
-}
-</script>
-
-<script lang="ts" setup generic="P extends PopoverMode">
+<script lang="ts" setup generic="P extends 'click' | 'hover'">
+import type { PopoverEmits } from '@nuxt/ui'
 import { UPopover, UButton, UColorPicker, UIcon } from '#components'
 import { computed } from 'vue'
+import type { ColorChooserProps } from '../types/components/color-chooser'
 
 const props = defineProps<ColorChooserProps<P>>()
 const emits = defineEmits<PopoverEmits>()

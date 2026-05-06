@@ -1,93 +1,21 @@
-<script lang="ts">
-import type { VNode } from '#imports'
-import type { SemanticColor } from '../types'
-import type { PopoverProps, ButtonProps, LinkPropsKeys, IconProps, ComponentConfig, PopoverSlots } from '@nuxt/ui'
-import type { OmitByKey } from '@movk/core'
-import type { AppConfig } from 'nuxt/schema'
-import theme from '#build/movk-ui/popconfirm'
-import popoverTheme from '#build/ui/popover'
-
-type Popconfirm = ComponentConfig<typeof popoverTheme & typeof theme, AppConfig, 'popconfirm'>
-type PopoverMode = 'click' | 'hover'
-
-export interface PopconfirmProps<M extends PopoverMode = PopoverMode> extends /** @vue-ignore */ OmitByKey<PopoverProps<M>, 'open' | 'defaultOpen' | 'dismissible' | 'arrow' | 'ui'> {
-  /**
-   * 确认气泡的标题文本。
-   * @defaultValue '确认操作'
-   */
-  title?: string
-  /**
-   * 标题下方的补充说明。
-   * 传入空字符串时可隐藏描述区。
-   * @defaultValue '请确认是否执行此操作?'
-   */
-  description?: string
-  /**
-   * 预设的语义化颜色主题，会影响图标。
-   * @defaultValue 'neutral'
-   */
-  type?: SemanticColor
-  /**
-   * 标题前展示的图标名称。
-   * @IconifyIcon
-   * @defaultValue 'i-lucide-circle-question-mark'
-   */
-  icon?: IconProps['name']
-  /**
-   * 气泡内容与触发器之间的箭头指示。
-   * @defaultValue true
-   */
-  arrow?: boolean
-  /**
-   * 透传给确认按钮的属性。
-   * `loading` 状态由组件内部托管。
-   */
-  confirmButton?: Omit<ButtonProps, 'loading' | LinkPropsKeys>
-  /**
-   * 透传给取消按钮的属性。
-   * 传入 `false` 可完全隐藏取消按钮。
-   * @defaultValue true
-   */
-  cancelButton?: ButtonProps | boolean
-  /**
-   * 当 `false` 时，点击遮罩层或按下 `Esc` 键将不会关闭弹层。
-   * @defaultValue false
-   */
-  dismissible?: boolean
-  /**
-   * 点击确认按钮时执行的回调。
-   * 支持返回 `Promise`，期间确认按钮自动进入 loading 状态。
-   * 回调成功完成后弹层自动关闭并触发 `confirm` 事件；抛错时保持弹层打开。
-   */
-  onConfirm?: () => void | Promise<void>
-  ui?: Popconfirm['slots']
-}
-
-export interface PopconfirmEmits {
-  confirm: []
-  cancel: []
-  error: [error: unknown]
-}
-
-export interface PopconfirmSlots<M extends PopoverMode = PopoverMode> {
-  default?(props: { open: boolean }): VNode[]
-  header?: PopoverSlots<M>['content']
-  title?: PopoverSlots<M>['content']
-  description?: PopoverSlots<M>['content']
-  actions?: PopoverSlots<M>['content']
-  body?: PopoverSlots<M>['content']
-  footer?: PopoverSlots<M>['content']
-}
-</script>
-
-<script lang="ts" setup generic="M extends PopoverMode">
+<script lang="ts" setup generic="M extends 'click' | 'hover'">
+import type { ButtonProps, ComponentConfig } from '@nuxt/ui'
 import { isObject } from '@movk/core'
 import { UPopover, UButton, UIcon } from '#components'
 import { computed, ref, useAttrs } from 'vue'
 import { useAppConfig } from '#imports'
 import { useExtendedTv } from '../utils/extend-theme'
+import theme from '#build/movk-ui/popconfirm'
+import popoverTheme from '#build/ui/popover'
+import type { AppConfig } from 'nuxt/schema'
+import type { PopconfirmProps, PopconfirmEmits, PopconfirmSlots } from '../types/components/popconfirm'
+import type { SemanticColor } from '../types/shared'
 
-const props = withDefaults(defineProps<PopconfirmProps>(), {
+interface Props extends PopconfirmProps {
+  ui?: ComponentConfig<typeof popoverTheme & typeof theme, AppConfig, 'popconfirm'>['slots']
+}
+
+const props = withDefaults(defineProps<Props>(), {
   title: '确认操作',
   description: '请确认是否执行此操作?',
   type: 'neutral',
@@ -102,7 +30,7 @@ const slots = defineSlots<PopconfirmSlots>()
 defineOptions({ inheritAttrs: false })
 
 const attrs = useAttrs()
-const appConfig = useAppConfig() as Popconfirm['AppConfig']
+const appConfig = useAppConfig() as { movk?: { popconfirm?: unknown } }
 
 const openState = ref(false)
 

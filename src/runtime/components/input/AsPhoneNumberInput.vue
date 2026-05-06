@@ -1,34 +1,20 @@
-<script lang="ts">
-import type { OmitByKey } from '@movk/core'
-import type { ComponentConfig, InputEmits, InputProps, InputSlots, InputValue } from '@nuxt/ui'
-import theme from '#build/movk-ui/as-phone-number-input'
-import inputTheme from '#build/ui/input'
-import type { AppConfig } from 'nuxt/schema'
-
-type AsPhoneNumberInput = ComponentConfig<typeof inputTheme & typeof theme, AppConfig, 'asPhoneNumberInput'>
-
-export interface AsPhoneNumberInputProps<T extends InputValue = InputValue> extends /** @vue-ignore */ OmitByKey<InputProps<T>, 'type' | 'modelValue' | 'ui'> {
-  /**
-   * 输入掩码格式，`#` 表示一个数字位。
-   * @defaultValue '(###) ###-####'
-   */
-  mask?: string
-  /**
-   * 区号前缀
-   * @example '+86'、'+1'
-   */
-  dialCode?: string
-  ui?: AsPhoneNumberInput['slots']
-}
-</script>
-
 <script lang="ts" setup generic="T extends InputValue">
+import type { ComponentConfig, InputEmits, InputSlots, InputValue } from '@nuxt/ui'
+import type { OmitByKey } from '@movk/core'
 import { UInput } from '#components'
 import { vMaska } from 'maska/vue'
 import { useAppConfig } from '#imports'
+import theme from '#build/movk-ui/as-phone-number-input'
+import inputTheme from '#build/ui/input'
 import { useExtendedTv } from '../../utils/extend-theme'
+import type { AsPhoneNumberInputProps } from '../../types/components/input/as-phone-number-input'
+import type { AppConfig } from 'nuxt/schema'
 
-const props = withDefaults(defineProps<AsPhoneNumberInputProps<T>>(), {
+interface Props extends AsPhoneNumberInputProps<T> {
+  ui?: ComponentConfig<typeof inputTheme & typeof theme, AppConfig, 'asPhoneNumberInput'>['slots']
+}
+
+const props = withDefaults(defineProps<Props>(), {
   mask: '(###) ###-####'
 })
 const modelValue = defineModel<T>()
@@ -37,7 +23,7 @@ const slots = defineSlots<OmitByKey<InputSlots, 'leading'>>()
 
 defineOptions({ inheritAttrs: false })
 
-const appConfig = useAppConfig() as AsPhoneNumberInput['AppConfig']
+const appConfig = useAppConfig() as { movk?: { asPhoneNumberInput?: unknown } }
 
 const { baseUi, extraUi } = useExtendedTv(
   inputTheme,

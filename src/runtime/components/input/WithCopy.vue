@@ -1,39 +1,29 @@
-<script lang="ts">
-import type { OmitByKey } from '@movk/core'
-import type { ButtonProps, ComponentConfig, InputEmits, InputProps, InputSlots, InputValue, TooltipProps } from '@nuxt/ui'
-import type { AppConfig } from 'nuxt/schema'
-import theme from '#build/movk-ui/with-copy'
-import inputTheme from '#build/ui/input'
-
-type WithCopy = ComponentConfig<typeof inputTheme & typeof theme, AppConfig, 'withCopy'>
-
-export interface WithCopyProps<T extends InputValue = InputValue> extends /** @vue-ignore */ OmitByKey<InputProps<T>, 'modelValue' | 'ui'> {
-  buttonProps?: ButtonProps
-  tooltipProps?: TooltipProps
-  ui?: WithCopy['slots']
-}
-
-type WithCopyEmits<T extends InputValue = InputValue> = InputEmits<T> & {
-  copy: [value: string]
-}
-</script>
-
 <script lang="ts" setup generic="T extends InputValue">
+import type { ButtonProps, ComponentConfig, InputSlots, InputValue } from '@nuxt/ui'
+import type { OmitByKey } from '@movk/core'
+import { useAttrs } from 'vue'
 import { UInput, UButton, UTooltip } from '#components'
 import { useClipboard } from '@vueuse/core'
 import { isEmpty } from '@movk/core'
-import { useAttrs } from 'vue'
 import { useAppConfig } from '#imports'
+import theme from '#build/movk-ui/with-copy'
+import inputTheme from '#build/ui/input'
 import { useExtendedTv } from '../../utils/extend-theme'
+import type { WithCopyEmits, WithCopyProps } from '../../types/components/input/with-copy'
+import type { AppConfig } from 'nuxt/schema'
 
-const props = defineProps<WithCopyProps<T>>()
+interface Props extends WithCopyProps<T> {
+  ui?: ComponentConfig<typeof inputTheme & typeof theme, AppConfig, 'withCopy'>['slots']
+}
+
+const props = defineProps<Props>()
 const emits = defineEmits<WithCopyEmits<T>>()
 const slots = defineSlots<OmitByKey<InputSlots, 'trailing'>>()
 
 defineOptions({ inheritAttrs: false })
 
 const attrs = useAttrs()
-const appConfig = useAppConfig() as WithCopy['AppConfig']
+const appConfig = useAppConfig() as { movk?: { withCopy?: unknown } }
 const modelValue = defineModel<T>()
 
 const { baseUi } = useExtendedTv(

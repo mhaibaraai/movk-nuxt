@@ -1,88 +1,20 @@
-<script lang="ts">
-import type { OmitByKey } from '@movk/core'
-import type { ModalProps, ButtonProps, ComponentConfig, IconProps } from '@nuxt/ui'
-import type { SemanticColor } from '../types'
-import type { AppConfig } from 'nuxt/schema'
-import theme from '#build/movk-ui/message-box'
-import modalTheme from '#build/ui/modal'
-
-type MessageBoxMode = 'alert' | 'confirm'
-type MessageBox = ComponentConfig<typeof modalTheme & typeof theme, AppConfig, 'messageBox'>
-
-export interface MessageBoxProps extends /** @vue-ignore */ OmitByKey<ModalProps, 'title' | 'open' | 'defaultOpen' | 'dismissible' | 'ui'> {
-  /**
-   * 模态框标题文本。
-   * @defaultValue '提示'
-   */
-  title?: string
-  /**
-   * 控制消息框的语义类型。
-   * 会影响默认图标与确认按钮颜色。
-   * @defaultValue 'primary'
-   */
-  type?: SemanticColor
-  /**
-   * 标题前展示的图标名称。
-   * @IconifyIcon
-   * @defaultValue 'i-lucide-circle-question-mark'
-   */
-  icon?: IconProps['name']
-  /**
-   * 控制消息框的操作模式。
-   * `alert` 仅显示确认按钮，`confirm` 显示取消与确认按钮。
-   * @defaultValue 'alert'
-   */
-  mode?: MessageBoxMode
-  /**
-   * 当 `false` 时，点击遮罩层或按下 `Esc` 键将不会关闭模态框。
-   * @defaultValue false
-   */
-  dismissible?: boolean
-  /**
-   * alert 模式下的确认按钮文本。
-   * @defaultValue '知道了'
-   */
-  alertConfirmLabel?: string
-  /**
-   * 确认按钮文本。
-   * @defaultValue '确认'
-   */
-  confirmLabel?: string
-  /**
-   * 取消按钮文本。
-   * @defaultValue '取消'
-   */
-  cancelLabel?: string
-  /**
-   * 透传给确认按钮的属性。
-   * 未显式指定 `color` 时会默认继承当前 `type`。
-   */
-  confirmButton?: ButtonProps
-  /**
-   * 透传给取消按钮的属性。
-   * 仅在 `mode='confirm'` 时渲染。
-   */
-  cancelButton?: ButtonProps
-  ui?: MessageBox['slots']
-}
-
-export interface MessageBoxEmits {
-  /**
-   * 模态框关闭时触发。
-   * - `true`：用户点击了确认
-   * - `false`：用户点击了取消或通过其他方式关闭
-   */
-  close: [confirmed: boolean]
-}
-</script>
-
 <script lang="ts" setup>
-import { computed, useAttrs, ref } from 'vue'
+import type { ButtonProps, ComponentConfig } from '@nuxt/ui'
+import { computed, ref, useAttrs } from 'vue'
 import { UModal, UButton, UIcon } from '#components'
 import { useAppConfig } from '#imports'
 import { useExtendedTv } from '../utils/extend-theme'
+import theme from '#build/movk-ui/message-box'
+import modalTheme from '#build/ui/modal'
+import type { AppConfig } from 'nuxt/schema'
+import type { MessageBoxProps, MessageBoxEmits } from '../types/components/message-box'
+import type { SemanticColor } from '../types/shared'
 
-const props = withDefaults(defineProps<MessageBoxProps>(), {
+interface Props extends MessageBoxProps {
+  ui?: ComponentConfig<typeof modalTheme & typeof theme, AppConfig, 'messageBox'>['slots']
+}
+
+const props = withDefaults(defineProps<Props>(), {
   title: '提示',
   type: 'primary',
   mode: 'alert',
@@ -97,7 +29,7 @@ const emits = defineEmits<MessageBoxEmits>()
 defineOptions({ inheritAttrs: false })
 
 const attrs = useAttrs()
-const appConfig = useAppConfig() as MessageBox['AppConfig']
+const appConfig = useAppConfig() as { movk?: { messageBox?: unknown } }
 
 const iconMap = {
   primary: 'i-lucide-bell',

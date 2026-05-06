@@ -1,115 +1,7 @@
-<script lang="ts">
-import type { ButtonProps, ComponentConfig, FormInputEvents, FormProps, InferInput } from '@nuxt/ui'
-import type { z } from 'zod'
-import type { ZodAutoFormFieldMeta } from '../types/zod'
-import type { AutoFormControls, DynamicFormSlots } from '../types/auto-form'
-import type { Ref } from 'vue'
-import type { OmitByKey } from '@movk/core'
-import type { AppConfig } from 'nuxt/schema'
-import theme from '#build/movk-ui/search-form'
-
-type SearchForm = ComponentConfig<typeof theme, AppConfig, 'searchForm'>
-
-export interface SearchFormProps<S extends z.ZodObject, T extends boolean = true, N extends boolean = false> extends /** @vue-ignore */ OmitByKey<FormProps<S, T, N>, 'schema' | 'state' | 'validateOn' | 'ui'> {
-  /** Zod 对象 schema，定义搜索字段 */
-  schema: S
-  /** 搜索表单的状态对象。 */
-  state?: N extends false ? Partial<InferInput<S>> : never
-  /**
-   * 网格列数
-   * @defaultValue 3
-   */
-  cols?: number | { sm?: number, md?: number, lg?: number, xl?: number }
-  /**
-   * 可见行数（折叠时显示的行数）
-   * @defaultValue 1
-   */
-  visibleRows?: number
-  /** 自定义控件映射（复用 AutoForm 的控件系统） */
-  controls?: AutoFormControls
-  /** 全局字段元数据 */
-  globalMeta?: ZodAutoFormFieldMeta
-  /** 搜索按钮属性 */
-  searchButtonProps?: ButtonProps
-  /**  重置按钮属性 */
-  resetButtonProps?: ButtonProps
-  /** 收起按钮属性 */
-  collapseButtonProps?: ButtonProps
-  /**
-   * 搜索按钮文本
-   * @defaultValue '搜索'
-   */
-  searchText?: string
-  /**
-   * 重置按钮文本
-   * @defaultValue '重置'
-   */
-  resetText?: string
-  /**
-   * 是否显示搜索按钮
-   * @defaultValue true
-   */
-  showSearchButton?: boolean
-  /**
-   * 是否显示重置按钮
-   * @defaultValue true
-   */
-  showResetButton?: boolean
-  /**
-   * 搜索按钮加载状态
-   * @defaultValue false
-   */
-  loading?: boolean
-  /**
-   * 展开/收起按钮图标
-   * @defaultValue 'i-lucide-chevron-down'
-   */
-  icon?: string
-  /**
-   * 展开按钮文本
-   * @defaultValue '展开'
-   */
-  expandText?: string
-  /**
-   * 收起按钮文本
-   * @defaultValue '收起'
-   */
-  collapseText?: string
-  /**
-   * 默认展开状态
-   * @defaultValue false
-   */
-  defaultExpanded?: boolean
-  /**
-   * 表单验证时机，详见 UForm 的 validateOn 属性
-   * @defaultValue []
-   */
-  validateOn?: FormInputEvents[]
-  ui?: SearchForm['slots']
-}
-
-interface SearchFormActionSlots {
-  actions: (props: {
-    expanded: boolean
-    toggle: () => void
-    search: () => void
-    reset: () => void
-    loading: boolean
-  }) => any
-  extraActions: (props: { expanded: boolean }) => any
-}
-
-export interface SearchFormEmits<S extends z.ZodObject> {
-  search: [value: Partial<InferInput<S>>]
-  reset: []
-  expand: [expanded: boolean]
-}
-
-export type SearchFormSlots<S extends z.ZodObject> = SearchFormActionSlots & DynamicFormSlots<Partial<InferInput<S>>>
-type SearchFormStateType<S extends z.ZodObject> = Partial<InferInput<S>>
-</script>
-
 <script lang="ts" setup generic="S extends z.ZodObject, T extends boolean = true, N extends boolean = false">
+import type { InferInput, ComponentConfig } from '@nuxt/ui'
+import type { z } from 'zod'
+import type { Ref } from 'vue'
 import { UButton, UCollapsible, UForm } from '#components'
 import { computed, ref, unref, useAttrs, useTemplateRef, watch } from 'vue'
 import { isFunction } from '@movk/core'
@@ -119,8 +11,15 @@ import { useAutoForm } from '../composables/useAutoForm'
 import AutoFormRendererField from './auto-form-renderer/AutoFormRendererField.vue'
 import { useAppConfig } from '#app'
 import { tv } from '../utils/tv'
+import theme from '#build/movk-ui/search-form'
+import type { AppConfig } from 'nuxt/schema'
+import type { SearchFormProps, SearchFormEmits, SearchFormSlots } from '../types/auto-form/search-form'
 
-const props = withDefaults(defineProps<SearchFormProps<S, T, N>>(), {
+interface Props extends SearchFormProps<S, T, N> {
+  ui?: ComponentConfig<typeof theme, AppConfig, 'searchForm'>['slots']
+}
+
+const props = withDefaults(defineProps<Props>(), {
   cols: 3,
   visibleRows: 1,
   icon: 'i-lucide-chevron-down',
@@ -134,15 +33,15 @@ const props = withDefaults(defineProps<SearchFormProps<S, T, N>>(), {
   loading: false,
   validateOn: () => []
 })
-const modelValue = defineModel<SearchFormStateType<S>>()
+const modelValue = defineModel<Partial<InferInput<S>>>()
 const emits = defineEmits<SearchFormEmits<S>>()
 const slots = defineSlots<SearchFormSlots<S>>()
 defineOptions({ inheritAttrs: false })
 
 const attrs = useAttrs()
 
-const stateModel = ref(modelValue.value ?? props.state ?? {}) as Ref<SearchFormStateType<S>>
-const initialState = { ...(modelValue.value ?? props.state ?? {}) } as SearchFormStateType<S>
+const stateModel = ref(modelValue.value ?? props.state ?? {}) as Ref<Partial<InferInput<S>>>
+const initialState = { ...(modelValue.value ?? props.state ?? {}) } as Partial<InferInput<S>>
 
 watch(() => stateModel.value, (val) => {
   if (val !== modelValue.value) {
@@ -152,11 +51,11 @@ watch(() => stateModel.value, (val) => {
 
 watch(() => modelValue.value, (val) => {
   if (val !== undefined && val !== stateModel.value) {
-    stateModel.value = (val ?? {}) as SearchFormStateType<S>
+    stateModel.value = (val ?? {}) as Partial<InferInput<S>>
   }
 })
 
-const appConfig = useAppConfig() as SearchForm['AppConfig']
+const appConfig = useAppConfig() as { movk?: { searchForm?: unknown }, ui: { icons: Record<string, string> } }
 const formRef = useTemplateRef('formRef')
 const expanded = ref(props.defaultExpanded)
 
@@ -169,12 +68,12 @@ function maxCols(cols: number | ColsConfig): number {
 
 const colsVariants = computed(() => {
   const c = props.cols
-  if (typeof c === 'number') return { cols: c }
-  return { cols: 1, smCols: c.sm, mdCols: c.md, lgCols: c.lg, xlCols: c.xl }
+  if (typeof c === 'number') return { cols: String(c) }
+  return { cols: '1', smCols: c.sm ? String(c.sm) : undefined, mdCols: c.md ? String(c.md) : undefined, lgCols: c.lg ? String(c.lg) : undefined, xlCols: c.xl ? String(c.xl) : undefined }
 })
 
 const uiCls = computed(() =>
-  tv({ extend: tv(theme), ...(appConfig.movk?.searchForm || {}) })(colsVariants.value)
+  tv({ extend: tv(theme), ...((appConfig.movk?.searchForm || {}) as typeof theme) })(colsVariants.value as any)
 )
 
 const { DEFAULT_CONTROLS } = useAutoForm()
@@ -223,7 +122,7 @@ function triggerSearch() {
 }
 
 function clear() {
-  stateModel.value = {} as SearchFormStateType<S>
+  stateModel.value = {} as Partial<InferInput<S>>
   formRef.value?.clear()
 }
 

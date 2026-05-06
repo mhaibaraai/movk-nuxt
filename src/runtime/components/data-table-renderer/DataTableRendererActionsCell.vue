@@ -7,7 +7,7 @@ import type {
   DataTableActionsColumn,
   DataTableDynamic
 } from '../../types/data-table'
-import type { DataTableProps } from '../DataTable.vue'
+import type { DataTableProps } from '../../types/data-table/component'
 
 interface DataTableRendererActionsCellProps {
   col: DataTableActionsColumn<unknown>

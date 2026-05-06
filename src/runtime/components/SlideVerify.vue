@@ -1,69 +1,20 @@
-<script lang="ts">
-import type { VNode } from '#imports'
-import type { ComponentConfig } from '@nuxt/ui'
-import type { AppConfig } from 'nuxt/schema'
-import theme from '#build/movk-ui/slide-verify'
-
-type SlideVerify = ComponentConfig<typeof theme, AppConfig, 'slideVerify'>
-
-export interface SlideVerifyProps {
-  /**
-   * 尺寸大小
-   * @defaultValue 'md'
-   */
-  size?: SlideVerify['variants']['size']
-  /**
-   * 是否禁用
-   * @defaultValue false
-   */
-  disabled?: boolean
-  /**
-   * 待滑动时的提示文本
-   * @defaultValue '请向右滑动验证'
-   */
-  text?: string
-  /**
-   * 验证成功时的提示文本
-   * @defaultValue '验证成功'
-   */
-  successText?: string
-  /**
-   * 滑块图标
-   * @defaultValue 'i-lucide-chevrons-right'
-   */
-  icon?: string
-  /**
-   * 验证成功时的图标
-   * @defaultValue 'i-lucide-check'
-   */
-  successIcon?: string
-  /**
-   * 完成验证所需的阈值百分比（0-1）
-   * @defaultValue 0.9
-   */
-  threshold?: number
-  ui?: SlideVerify['slots']
-}
-
-export interface SlideVerifyEmits {
-  success: []
-  dragStart: []
-  dragEnd: [success: boolean]
-}
-
-export interface SlideVerifySlots {
-  slider?(props: { verified?: boolean, progress: number }): VNode[]
-}
-</script>
-
 <script lang="ts" setup>
 import { UIcon } from '#components'
 import { useAppConfig } from '#imports'
 import { useElementSize } from '@vueuse/core'
 import { computed, ref, useTemplateRef } from 'vue'
 import { tv } from '../utils/tv'
+import theme from '#build/movk-ui/slide-verify'
+import type { ComponentConfig } from '@nuxt/ui'
+import type { AppConfig } from 'nuxt/schema'
+import type { SlideVerifyProps, SlideVerifyEmits, SlideVerifySlots } from '../types/components/slide-verify'
 
-const props = withDefaults(defineProps<SlideVerifyProps>(), {
+interface Props extends SlideVerifyProps {
+  size?: ComponentConfig<typeof theme, AppConfig, 'slideVerify'>['variants']['size']
+  ui?: ComponentConfig<typeof theme, AppConfig, 'slideVerify'>['slots']
+}
+
+const props = withDefaults(defineProps<Props>(), {
   size: 'md',
   disabled: false,
   text: '请向右滑动验证',
@@ -87,7 +38,7 @@ const dragX = ref(0)
 const pointerStartX = ref(0)
 const dragStartX = ref(0)
 
-const appConfig = useAppConfig() as SlideVerify['AppConfig']
+const appConfig = useAppConfig() as { movk?: { slideVerify?: unknown } }
 
 const uiCls = computed(() =>
   tv({ extend: tv(theme), ...((appConfig.movk?.slideVerify || {}) as typeof theme) })({

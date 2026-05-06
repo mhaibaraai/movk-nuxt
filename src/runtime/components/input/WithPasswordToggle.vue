@@ -1,33 +1,28 @@
-<script lang="ts">
-import type { OmitByKey } from '@movk/core'
-import type { ButtonProps, ComponentConfig, InputEmits, InputProps, InputSlots, InputValue } from '@nuxt/ui'
-import type { AppConfig } from 'nuxt/schema'
-import theme from '#build/movk-ui/with-password-toggle'
-import inputTheme from '#build/ui/input'
-
-type WithPasswordToggle = ComponentConfig<typeof inputTheme & typeof theme, AppConfig, 'withPasswordToggle'>
-
-export interface WithPasswordToggleProps<T extends InputValue = InputValue> extends /** @vue-ignore */ OmitByKey<InputProps<T>, 'type' | 'modelValue' | 'ui'> {
-  buttonProps?: ButtonProps
-  ui?: WithPasswordToggle['slots']
-}
-</script>
-
 <script lang="ts" setup generic="T extends InputValue">
+import type { ButtonProps, InputSlots, InputValue, ComponentConfig, InputEmits } from '@nuxt/ui'
+import type { OmitByKey } from '@movk/core'
+import { useAttrs } from 'vue'
 import { UInput, UButton } from '#components'
 import { useToggle } from '@vueuse/core'
-import { useAttrs } from 'vue'
 import { useAppConfig } from '#imports'
+import theme from '#build/movk-ui/with-password-toggle'
+import inputTheme from '#build/ui/input'
 import { useExtendedTv } from '../../utils/extend-theme'
+import type { AppConfig } from 'nuxt/schema'
+import type { WithPasswordToggleProps } from '../../types/components/input/with-password-toggle'
 
-const props = defineProps<WithPasswordToggleProps<T>>()
+interface Props extends WithPasswordToggleProps<T> {
+  ui?: ComponentConfig<typeof inputTheme & typeof theme, AppConfig, 'withPasswordToggle'>['slots']
+}
+
+const props = defineProps<Props>()
 const emits = defineEmits<InputEmits<T>>()
 const slots = defineSlots<OmitByKey<InputSlots, 'trailing'>>()
 
 defineOptions({ inheritAttrs: false })
 
 const attrs = useAttrs()
-const appConfig = useAppConfig() as WithPasswordToggle['AppConfig']
+const appConfig = useAppConfig() as { movk?: { withPasswordToggle?: unknown } }
 const modelValue = defineModel<T>()
 
 const { baseUi } = useExtendedTv(

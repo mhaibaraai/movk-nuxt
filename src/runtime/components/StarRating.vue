@@ -1,90 +1,18 @@
-<script lang="ts">
-import type { ButtonProps, ComponentConfig } from '@nuxt/ui'
-import type { AppConfig } from 'nuxt/schema'
-import theme from '#build/movk-ui/star-rating'
-
-type StarRating = ComponentConfig<typeof theme, AppConfig, 'starRating'>
-
-export interface StarRatingProps {
-  /**
-   * 当前评分值
-   * @defaultValue 0
-   */
-  modelValue?: number
-  /**
-   * 最大星级数
-   * @defaultValue 5
-   */
-  max?: number
-  /**
-   * 是否禁用
-   * @defaultValue false
-   */
-  disabled?: boolean
-  /**
-   * 是否只读
-   * @defaultValue false
-   */
-  readonly?: boolean
-  /**
-   * 是否显示评分徽章
-   * @defaultValue true
-   */
-  showBadge?: boolean
-  /** 自定义星星按钮属性 */
-  buttonProps?: Partial<ButtonProps>
-  /**
-   * 未选中星星的图标
-   * @defaultValue 'i-lucide-star'
-   */
-  emptyIcon?: string
-  /**
-   * 选中星星的图标
-   * @defaultValue 'i-lucide-star'
-   */
-  filledIcon?: string
-  /**
-   * 半星图标
-   * @defaultValue 'i-lucide-star-half'
-   */
-  halfIcon?: string
-  /**
-   * 选中星星的颜色
-   * @defaultValue 'warning'
-   */
-  color?: ButtonProps['color']
-  /**
-   * 星星大小
-   * @defaultValue 'md'
-   */
-  size?: ButtonProps['size']
-  /**
-   * 是否允许半星
-   * @defaultValue false
-   */
-  allowHalf?: boolean
-  /**
-   * 是否允许清除评分
-   * @defaultValue false
-   */
-  clearable?: boolean
-  ui?: StarRating['slots']
-}
-
-export interface StarRatingEmits {
-  'update:modelValue': [value: number]
-  'change': [value: number]
-  'hover': [value: number | null]
-}
-</script>
-
 <script lang="ts" setup>
+import type { ButtonProps, ComponentConfig } from '@nuxt/ui'
 import { UButton, UBadge } from '#components'
 import { computed, ref } from 'vue'
 import { useAppConfig } from '#imports'
 import { tv } from '../utils/tv'
+import theme from '#build/movk-ui/star-rating'
+import type { AppConfig } from 'nuxt/schema'
+import type { StarRatingProps, StarRatingEmits } from '../types/components/star-rating'
 
-const props = withDefaults(defineProps<StarRatingProps>(), {
+interface Props extends StarRatingProps {
+  ui?: ComponentConfig<typeof theme, AppConfig, 'starRating'>['slots']
+}
+
+const props = withDefaults(defineProps<Props>(), {
   modelValue: 0,
   max: 5,
   disabled: false,
@@ -107,7 +35,7 @@ const focusedIndex = ref<number>(0)
 
 const isInteractive = computed(() => !props.disabled && !props.readonly)
 
-const appConfig = useAppConfig() as StarRating['AppConfig']
+const appConfig = useAppConfig() as { movk?: { starRating?: unknown } }
 
 const uiCls = computed(() =>
   tv({ extend: tv(theme), ...((appConfig.movk?.starRating || {}) as typeof theme) })({

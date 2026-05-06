@@ -1,39 +1,28 @@
-<script lang="ts">
-import type { OmitByKey } from '@movk/core'
-import type { ButtonProps, ComponentConfig, InputEmits, InputProps, InputSlots, InputValue } from '@nuxt/ui'
-import type { AppConfig } from 'nuxt/schema'
-import theme from '#build/movk-ui/with-floating-label'
-import inputTheme from '#build/ui/input'
-
-type WithFloatingLabel = ComponentConfig<typeof inputTheme & typeof theme, AppConfig, 'withFloatingLabel'>
-
-export interface WithFloatingLabelProps<T extends InputValue = InputValue> extends /** @vue-ignore */ OmitByKey<InputProps<T>, 'modelValue' | 'size' | 'ui'> {
-  label?: string
-  size?: InputProps<T>['size']
-  clearButtonProps?: ButtonProps
-  ui?: WithFloatingLabel['slots']
-}
-
-type WithFloatingLabelEmits<T extends InputValue = InputValue> = InputEmits<T> & {
-  clear: []
-}
-</script>
-
 <script lang="ts" setup generic="T extends InputValue">
+import type { InputSlots, InputValue, ComponentConfig } from '@nuxt/ui'
+import type { OmitByKey } from '@movk/core'
 import { useAttrs } from 'vue'
 import { UInput, UButton } from '#components'
 import { isEmpty } from '@movk/core'
 import { useAppConfig } from '#imports'
+import theme from '#build/movk-ui/with-floating-label'
+import inputTheme from '#build/ui/input'
 import { useExtendedTv } from '../../utils/extend-theme'
+import type { AppConfig } from 'nuxt/schema'
+import type { WithFloatingLabelEmits, WithFloatingLabelProps } from '../../types/components/input/with-floating-label'
 
-const props = defineProps<WithFloatingLabelProps<T>>()
+interface Props extends WithFloatingLabelProps<T> {
+  ui?: ComponentConfig<typeof inputTheme & typeof theme, AppConfig, 'withFloatingLabel'>['slots']
+}
+
+const props = defineProps<Props>()
 const emits = defineEmits<WithFloatingLabelEmits<T>>()
 const slots = defineSlots<OmitByKey<InputSlots, 'default' | 'trailing'>>()
 
 defineOptions({ inheritAttrs: false })
 
 const attrs = useAttrs()
-const appConfig = useAppConfig() as WithFloatingLabel['AppConfig']
+const appConfig = useAppConfig() as { movk?: { withFloatingLabel?: unknown } }
 const modelValue = defineModel<T>()
 
 const { baseUi, extraUi } = useExtendedTv(

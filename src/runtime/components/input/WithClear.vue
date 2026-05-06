@@ -1,37 +1,28 @@
-<script lang="ts">
-import type { OmitByKey } from '@movk/core'
-import type { ButtonProps, ComponentConfig, InputEmits, InputProps, InputSlots, InputValue } from '@nuxt/ui'
-import type { AppConfig } from 'nuxt/schema'
-import theme from '#build/movk-ui/with-clear'
-import inputTheme from '#build/ui/input'
-
-type WithClear = ComponentConfig<typeof inputTheme & typeof theme, AppConfig, 'withClear'>
-
-export interface WithClearProps<T extends InputValue = InputValue> extends /** @vue-ignore */ OmitByKey<InputProps<T>, 'modelValue' | 'ui'> {
-  buttonProps?: ButtonProps
-  ui?: WithClear['slots']
-}
-
-type WithClearEmits<T extends InputValue = InputValue> = InputEmits<T> & {
-  clear: []
-}
-</script>
-
 <script lang="ts" setup generic="T extends InputValue">
+import type { ButtonProps, InputProps, InputSlots, InputValue, ComponentConfig } from '@nuxt/ui'
+import type { OmitByKey } from '@movk/core'
+import { useAttrs } from 'vue'
 import { UInput, UButton } from '#components'
 import { isEmpty } from '@movk/core'
-import { useAttrs } from 'vue'
 import { useAppConfig } from '#imports'
+import theme from '#build/movk-ui/with-clear'
+import inputTheme from '#build/ui/input'
 import { useExtendedTv } from '../../utils/extend-theme'
+import type { AppConfig } from 'nuxt/schema'
+import type { WithClearEmits, WithClearProps } from '../../types/components/input/with-clear'
 
-const props = defineProps<WithClearProps<T>>()
+interface Props extends WithClearProps<T> {
+  ui?: ComponentConfig<typeof inputTheme & typeof theme, AppConfig, 'withClear'>['slots']
+}
+
+const props = defineProps<Props>()
 const emits = defineEmits<WithClearEmits<T>>()
 const slots = defineSlots<OmitByKey<InputSlots, 'trailing'>>()
 
 defineOptions({ inheritAttrs: false })
 
 const attrs = useAttrs()
-const appConfig = useAppConfig() as WithClear['AppConfig']
+const appConfig = useAppConfig() as { movk?: { withClear?: unknown } }
 const modelValue = defineModel<InputProps<T>['modelValue']>()
 
 const { baseUi } = useExtendedTv(

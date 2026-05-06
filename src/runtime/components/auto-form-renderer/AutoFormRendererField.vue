@@ -1,6 +1,6 @@
 <script lang="ts">
 import type { z } from 'zod'
-import type { AutoFormProps } from '../AutoForm.vue'
+import type { AutoFormProps } from '../../types/auto-form/component'
 import type { AnyObject } from '@movk/core'
 import type { AutoFormField } from '../../types'
 

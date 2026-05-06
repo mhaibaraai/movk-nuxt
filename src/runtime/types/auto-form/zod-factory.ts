@@ -14,8 +14,7 @@ import type {
 } from '@movk/core'
 import type { AUTOFORM_META } from '../../constants/auto-form'
 import type { AutoFormFieldContext } from './fields'
-import type { AutoFormControl, AutoFormControls, AutoFormControlsMeta, _Unset } from './controls'
-import type { AutoFormLayoutConfig } from './meta'
+import type { AutoFormControl, AutoFormControls, AutoFormControlsMeta, _Unset, AutoFormLayoutConfig } from './controls'
 
 interface LayoutFieldMarker<Fields extends Record<string, z.ZodType>> extends z.ZodType<AutoFormLayoutConfig<any>, any, any> {
   __brand: typeof AUTOFORM_META.LAYOUT_KEY
@@ -128,7 +127,7 @@ type MetaByDefaultIfExists<
   ? { component?: never, type?: never } & MetaPropsFor<TControls, TDefaultKey>
   : never
 
-export type AutoFormFactoryMethod<
+type AutoFormFactoryMethod<
   TControls extends AutoFormControls,
   TResult,
   TDefaultKey extends string,

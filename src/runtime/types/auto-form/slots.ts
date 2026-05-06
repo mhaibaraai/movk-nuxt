@@ -2,7 +2,7 @@ import type { z } from 'zod'
 import type { FormError } from '@nuxt/ui'
 import type { ArrayFieldKeys, NonObjectFieldKeys, ObjectFieldKeys } from '@movk/core'
 import type { AutoFormFieldContext, AutoFormFieldSlots } from './fields'
-import type { AutoFormMergeMeta } from './meta'
+import type { AutoFormMergeMeta } from './controls'
 
 export interface AutoFormField {
   path: string

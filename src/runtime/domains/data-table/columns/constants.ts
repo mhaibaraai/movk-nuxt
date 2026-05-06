@@ -4,7 +4,7 @@ import type {
   DataTableSizePreset,
   DataTableTreeSelectionStrategy
 } from '../../../types/data-table'
-import type { DataTableProps } from '../../../components/DataTable.vue'
+import type { DataTableProps } from '../../../types/data-table/component'
 
 export const DENSITY_PRESETS: Record<DataTableDensityPreset, { th?: string, td?: string }> = {
   compact: { td: 'px-3 py-1.5', th: 'px-3 py-2' },

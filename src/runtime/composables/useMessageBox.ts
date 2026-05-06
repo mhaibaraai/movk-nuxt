@@ -1,4 +1,4 @@
-import type { MessageBoxProps } from '../components/MessageBox.vue'
+import type { MessageBoxProps } from '../types/components/message-box'
 import { useOverlay } from '#imports'
 import { LazyMMessageBox } from '#components'
 import type { OmitByKey } from '@movk/core'

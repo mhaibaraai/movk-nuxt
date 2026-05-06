@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import type { StarRatingProps } from '#movk/components/StarRating.vue'
+import type { StarRatingProps } from '@movk/nuxt'
 
 defineProps<Pick<StarRatingProps, 'modelValue' | 'max' | 'disabled'>>()
 
