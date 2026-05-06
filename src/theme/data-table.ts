@@ -72,6 +72,11 @@ export default () => ({
       true: {
         tr: 'has-[>[data-slot=td]:only-child:empty]:hidden'
       }
+    },
+    resizing: {
+      true: {
+        base: 'cursor-col-resize! select-none! [&_*]:cursor-col-resize! [&_*]:select-none!'
+      }
     }
   }
 })

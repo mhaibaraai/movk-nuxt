@@ -162,17 +162,17 @@ export function renderHeaderActions<T>(
 
   const resizeHandle = resizable
     ? h('div', {
-        class: 'absolute top-0 bottom-0 right-0 w-4 -mr-2 cursor-col-resize select-none touch-none flex items-center justify-center',
+        class: 'absolute top-0 bottom-0 right-0 w-4 -mr-2 cursor-col-resize select-none touch-none flex items-center justify-center group/resize',
         onMousedown: ctx.header.getResizeHandler(),
         onTouchstart: ctx.header.getResizeHandler(),
         onClick: (e: Event) => e.stopPropagation()
       }, [
         h('div', {
           class: [
-            'w-px h-full transition-colors',
+            'h-full transition-colors',
             ctx.column.getIsResizing()
-              ? 'bg-primary'
-              : 'opacity-0 group-hover:opacity-100 bg-(--ui-border-accented)'
+              ? 'w-0.5 bg-primary'
+              : 'w-px opacity-0 group-hover:opacity-100 bg-(--ui-border-accented) group-hover/resize:w-0.5 group-hover/resize:bg-primary'
           ].join(' ')
         })
       ])

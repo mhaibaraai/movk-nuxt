@@ -242,6 +242,9 @@ const tableRef = useTemplateRef<{
   tableRef: HTMLTableElement | null
 }>('tableRef')
 
+const tableApi = computed<Table<T> | null>(() => tableRef.value?.tableApi ?? null)
+const isColumnResizing = computed(() => Boolean(tableApi.value?.getState().columnSizingInfo.isResizingColumn))
+
 const isTreeMode = computed(() => Boolean(props.childrenKey))
 const isManualPagination = computed(() => props.paginationOptions?.manualPagination === true)
 
@@ -288,7 +291,8 @@ const { baseUi, ui } = useExtendedTv(
       fitContent: !!props.fitContent,
       bordered: !!props.bordered,
       striped: !!props.stripe,
-      tree: isTreeMode.value
+      tree: isTreeMode.value,
+      resizing: isColumnResizing.value
     }
   })
 )
@@ -354,8 +358,6 @@ const uTableProps = computed(() => {
     })
   }
 })
-
-const tableApi = computed<Table<T> | null>(() => tableRef.value?.tableApi ?? null)
 
 const selectedCount = computed(() => {
   if (rowSelectionKeysState.value !== undefined) return rowSelectionKeysState.value.length
