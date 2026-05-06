@@ -23,8 +23,10 @@ interface DataTablePaginationUiText {
 
 export interface DataTablePaginationUi {
   /**
-   * 是否显示分页栏。
-   * @defaultValue `pageCount > 1 || pageSizes.length > 1`
+   * 分页栏 UI 是否显示（仅在分页已启用时生效）。
+   * 仅控 UI 显隐，不影响数据切片；
+   * 若要完全关闭分页，请不要传入 `paginationOptions` / `v-model:pagination` / `pageSizes`。
+   * @defaultValue 分页启用时为 `pageCount > 1 || pageSizes.length > 1`，否则为 `false`
    */
   show?: boolean
   /**

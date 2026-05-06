@@ -191,8 +191,9 @@ export interface DataTableProps<T extends TableData> extends /* @vue-ignore */ O
   expandedKeys?: string[]
   /**
    * 分页配置，直接透传给 TanStack / UTable
-   * - 客户端分页：默认注入 `getPaginationRowModel()`
+   * - 客户端分页：传入本字段（或使用 `v-model:pagination` / `paginationUi.pageSizes`）即视为启用，自动注入 `getPaginationRowModel()`
    * - 服务端分页：设置 `manualPagination: true`，并提供 `rowCount` 或 `pageCount`
+   * - 全部不传时，数据全量渲染、不分页、不显示分页栏
    */
   paginationOptions?: TableProps<T>['paginationOptions']
   paginationUi?: DataTablePaginationUi

@@ -247,6 +247,12 @@ const isColumnResizing = computed(() => Boolean(tableApi.value?.getState().colum
 
 const isTreeMode = computed(() => Boolean(props.childrenKey))
 const isManualPagination = computed(() => props.paginationOptions?.manualPagination === true)
+const hasPaginationIntent = computed(() =>
+  props.paginationOptions !== undefined
+  || paginationState.value !== undefined
+  || (props.paginationUi?.pageSizes?.length ?? 0) > 0
+  || props.paginationUi?.show === true
+)
 
 const tableMeta = computed((): TableMeta<T> => ({
   ...((props.stripe || props.rowClass || props.meta?.class?.tr) && {
@@ -344,7 +350,7 @@ const uTableProps = computed(() => {
       ...props.expandedOptions
     },
     paginationOptions: {
-      ...(!isManualPagination.value && {
+      ...(hasPaginationIntent.value && !isManualPagination.value && {
         getPaginationRowModel: getPaginationRowModel()
       }),
       ...props.paginationOptions
@@ -366,7 +372,7 @@ const selectedCount = computed(() => {
 
 const paginationView = computed(() => {
   const api = tableApi.value
-  if (!api) return null
+  if (!api || !hasPaginationIntent.value) return null
 
   const manual = isManualPagination.value
   const explicitRowCount = props.paginationOptions?.rowCount
