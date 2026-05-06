@@ -1,8 +1,8 @@
 <script lang="ts">
 import type { z } from 'zod'
-import type { AutoFormField } from '../../types/auto-form'
+import type { AutoFormField } from '../../../types/auto-form'
 import type { AnyObject } from '@movk/core'
-import type { AutoFormProps } from '../../types/auto-form/component'
+import type { AutoFormProps } from '../../../types/auto-form/component'
 
 interface AutoFormRendererChildrenProps<S extends z.ZodObject> extends Pick<AutoFormProps<S>, 'schema'> {
   fields: AutoFormField[]
@@ -12,11 +12,11 @@ interface AutoFormRendererChildrenProps<S extends z.ZodObject> extends Pick<Auto
 
 <script lang="ts" setup generic="S extends z.ZodObject">
 import { computed } from 'vue'
-import { classifyFields } from '../../domains/auto-form/fields'
-import AutoFormRendererField from './AutoFormRendererField.vue'
-import AutoFormRendererArray from './AutoFormRendererArray.vue'
-import AutoFormRendererLayout from './AutoFormRendererLayout.vue'
-import AutoFormRendererNested from './AutoFormRendererNested.vue'
+import { classifyFields } from '../fields'
+import AutoFormRendererField from './Field.vue'
+import AutoFormRendererArray from './Array.vue'
+import AutoFormRendererLayout from './Layout.vue'
+import AutoFormRendererNested from './Nested.vue'
 
 const { fields, schema, extraProps } = defineProps<AutoFormRendererChildrenProps<S>>()
 

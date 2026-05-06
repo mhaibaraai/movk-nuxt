@@ -8,7 +8,7 @@ import type {
 import type { ResolveContext } from './constants'
 import { h } from 'vue'
 import { resolveCallbackValue, resolveColumnFlag, resolveTemplate } from './utils'
-import DataTableCellTooltip from '../../../components/data-table-renderer/DataTableRendererCellTooltip.vue'
+import DataTableCellTooltip from '../components/CellTooltip.vue'
 import { UButton } from '#components'
 import { applyBaseState, buildClassMeta, COLUMN_SIZE_STYLE, resolveAlignClass } from './style'
 import type { DataTableProps } from '../../../types/data-table/component'

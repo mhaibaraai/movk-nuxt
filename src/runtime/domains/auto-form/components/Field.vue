@@ -1,8 +1,8 @@
 <script lang="ts">
 import type { z } from 'zod'
-import type { AutoFormProps } from '../../types/auto-form/component'
+import type { AutoFormProps } from '../../../types/auto-form/component'
 import type { AnyObject } from '@movk/core'
-import type { AutoFormField } from '../../types'
+import type { AutoFormField } from '../../../types'
 
 interface AutoFormFieldProps<S extends z.ZodObject> extends Pick<AutoFormProps<S>, 'schema'> {
   field: AutoFormField
@@ -13,8 +13,8 @@ interface AutoFormFieldProps<S extends z.ZodObject> extends Pick<AutoFormProps<S
 <script lang="ts" setup generic="S extends z.ZodObject">
 import { UFormField } from '#components'
 import { computed } from 'vue'
-import { useAutoFormInjector } from '../../domains/auto-form/provider'
-import { VNodeRender } from '../../domains/auto-form/reactive'
+import { useAutoFormInjector } from '../provider'
+import { VNodeRender } from '../reactive'
 
 const { field, extraProps } = defineProps<AutoFormFieldProps<S>>()
 

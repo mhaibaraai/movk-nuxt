@@ -1,9 +1,9 @@
 <script lang="ts">
 import type { z } from 'zod'
 import type { ButtonProps } from '@nuxt/ui'
-import type { AutoFormField } from '../../types/auto-form'
+import type { AutoFormField } from '../../../types/auto-form'
 import type { AnyObject } from '@movk/core'
-import type { AutoFormProps } from '../../types/auto-form/component'
+import type { AutoFormProps } from '../../../types/auto-form/component'
 
 interface AutoFormRendererArrayProps<S extends z.ZodObject> extends Pick<AutoFormProps<S>, 'schema'> {
   field: AutoFormField
@@ -15,12 +15,12 @@ interface AutoFormRendererArrayProps<S extends z.ZodObject> extends Pick<AutoFor
 <script lang="ts" setup generic="S extends z.ZodObject">
 import { UButton, UCollapsible } from '#components'
 import { computed, ref } from 'vue'
-import { useAutoFormInjector } from '../../domains/auto-form/provider'
+import { useAutoFormInjector } from '../provider'
 import { joinPath } from '@movk/core'
-import { collectFieldDefaults, createHintSlotFactory } from '../../domains/auto-form/fields'
-import { VNodeRender } from '../../domains/auto-form/reactive'
-import AutoFormRendererField from './AutoFormRendererField.vue'
-import AutoFormRendererNested from './AutoFormRendererNested.vue'
+import { collectFieldDefaults, createHintSlotFactory } from '../fields'
+import { VNodeRender } from '../reactive'
+import AutoFormRendererField from './Field.vue'
+import AutoFormRendererNested from './Nested.vue'
 
 const {
   extraProps,

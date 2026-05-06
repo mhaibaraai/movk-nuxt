@@ -12,7 +12,7 @@ interface DataTableRendererCellTooltipProps {
 <script lang="ts" setup>
 import { UTooltip } from '#components'
 import { computed, useAttrs, useTemplateRef } from 'vue'
-import { useOverflowDetection } from '../../domains/data-table/composables/useOverflowDetection'
+import { useOverflowDetection } from '../composables/useOverflowDetection'
 
 defineOptions({ inheritAttrs: false })
 

@@ -24,13 +24,18 @@ import { resolveCallbackValue } from '../domains/data-table/columns/utils'
 import { computeTreeRowSelection } from '../domains/data-table/tree-selection'
 import theme from '#build/movk-ui/data-table'
 import tableTheme from '#build/ui/table'
-import DataTablePagination from './data-table-renderer/DataTableRendererPagination.vue'
+import type paginationTheme from '#build/movk-ui/data-table-pagination'
+import DataTablePagination from '../domains/data-table/components/Pagination.vue'
 import type { AppConfig } from 'nuxt/schema'
 import type { DataTableProps } from '../types/data-table/component'
 import type { TreeSelectionResult } from '../types/data-table/columns'
+import type { DataTablePaginationUi } from '../types/data-table/pagination'
 
 interface Props extends DataTableProps<T> {
   ui?: ComponentConfig<typeof tableTheme & typeof theme, AppConfig, 'dataTable'>['slots']
+  paginationUi?: DataTablePaginationUi & {
+    ui?: ComponentConfig<typeof paginationTheme, AppConfig, 'dataTablePagination'>['slots']
+  }
 }
 
 const props = withDefaults(defineProps<Props>(), {

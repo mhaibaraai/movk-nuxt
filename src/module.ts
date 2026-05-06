@@ -88,10 +88,7 @@ export default defineNuxtModule<ModuleOptions>({
     nuxt.options.css = nuxt.options.css || []
     nuxt.options.css.push(resolve('runtime/index.css'))
 
-    const componentIgnore: string[] = [
-      'auto-form-renderer/**',
-      'data-table-renderer/**'
-    ]
+    const componentIgnore: string[] = []
     if (options.theme?.enabled === false) {
       componentIgnore.push('theme-picker/**')
     }

@@ -6,14 +6,13 @@ import { useAppConfig } from '#imports'
 import { computed } from 'vue'
 import { tv } from '@nuxt/ui/utils/tv'
 import theme from '#build/movk-ui/data-table-pagination'
-import type {
-  DataTablePaginationProps,
-  DataTablePaginationSlots
-} from '../../types/data-table/pagination'
+import type { DataTablePaginationProps, DataTablePaginationSlots, DataTablePaginationUi } from '../../../types/data-table/pagination'
 
-type DataTablePaginationSlotsCfg = ComponentConfig<typeof theme, AppConfig, 'dataTablePagination'>['slots']
+interface Props extends DataTablePaginationProps<T> {
+  uiConfig?: DataTablePaginationUi & { ui?: ComponentConfig<typeof theme, AppConfig, 'dataTablePagination'>['slots'] }
+}
 
-const props = defineProps<DataTablePaginationProps<T>>()
+const props = defineProps<Props>()
 
 defineSlots<DataTablePaginationSlots<T>>()
 
@@ -28,7 +27,7 @@ const cfg = computed(() => ({
   showRowRange: props.uiConfig?.showRowRange ?? true,
   paginationProps: props.uiConfig?.paginationProps,
   pageSizeSelectProps: props.uiConfig?.pageSizeSelectProps,
-  ui: props.uiConfig?.ui as DataTablePaginationSlotsCfg | undefined
+  ui: props.uiConfig?.ui
 }))
 
 interface PaginationUiText {

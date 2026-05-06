@@ -1,7 +1,7 @@
 <script lang="ts">
 import type { z } from 'zod'
-import type { AutoFormProps } from '../../types/auto-form/component'
-import type { AutoFormField } from '../../types'
+import type { AutoFormProps } from '../../../types/auto-form/component'
+import type { AutoFormField } from '../../../types'
 import type { AnyObject } from '@movk/core'
 
 interface AutoFormRendererNestedProps<S extends z.ZodObject> extends Pick<AutoFormProps<S>, 'schema'> {
@@ -13,11 +13,11 @@ interface AutoFormRendererNestedProps<S extends z.ZodObject> extends Pick<AutoFo
 <script lang="ts" setup generic="S extends z.ZodObject">
 import { UCollapsible } from '#components'
 import { computed } from 'vue'
-import { useAutoFormInjector } from '../../domains/auto-form/provider'
-import { isLeafField } from '../../domains/auto-form/fields'
-import { VNodeRender } from '../../domains/auto-form/reactive'
-import AutoFormRendererField from './AutoFormRendererField.vue'
-import AutoFormRendererChildren from './AutoFormRendererChildren.vue'
+import { useAutoFormInjector } from '../provider'
+import { isLeafField } from '../fields'
+import { VNodeRender } from '../reactive'
+import AutoFormRendererField from './Field.vue'
+import AutoFormRendererChildren from './Children.vue'
 
 const {
   field,

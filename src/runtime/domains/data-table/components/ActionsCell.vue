@@ -6,8 +6,8 @@ import type {
   DataTableActionButtonContext,
   DataTableActionsColumn,
   DataTableDynamic
-} from '../../types/data-table'
-import type { DataTableProps } from '../../types/data-table/component'
+} from '../../../types/data-table'
+import type { DataTableProps } from '../../../types/data-table/component'
 
 interface DataTableRendererActionsCellProps {
   col: DataTableActionsColumn<unknown>
@@ -19,10 +19,10 @@ interface DataTableRendererActionsCellProps {
 <script lang="ts" setup>
 import { h } from 'vue'
 import { isFunction } from '@movk/core'
-import { resolveCallbackValue } from '../../domains/data-table/columns/utils'
-import { useMessageBox } from '../../composables/useMessageBox'
+import { resolveCallbackValue } from '../columns/utils'
+import { useMessageBox } from '../../../composables/useMessageBox'
 import { UButton, UDropdownMenu } from '#components'
-import DataTableActionConfirm from './DataTableRendererActionConfirm.vue'
+import DataTableActionConfirm from './ActionConfirm.vue'
 
 const props = defineProps<DataTableRendererActionsCellProps>()
 
