@@ -14,6 +14,7 @@ const uiResult = ref('')
 
 async function simulateAsync() {
   await new Promise<void>(resolve => setTimeout(resolve, 1500))
+  asyncResult.value = '已完成'
 }
 
 async function failingAction() {
@@ -62,7 +63,6 @@ function handleError(err: unknown) {
             title="确认提交?"
             description="提交后将立即生效，请确认操作。"
             :on-confirm="simulateAsync"
-            @confirm="asyncResult = '提交成功'"
           >
             <UButton color="primary" label="提交申请" icon="i-lucide-send" />
           </MPopconfirm>
