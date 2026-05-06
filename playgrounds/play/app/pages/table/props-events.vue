@@ -1,20 +1,21 @@
 <script setup lang="ts">
+import type { TableRow } from '@nuxt/ui'
 import type { TableUser } from '~/composables/useTableExamples'
 
 const { users, selectionColumns } = useTableExamples()
 
 const tableData = ref<TableUser[]>([...users])
-const selectedKeys = ref<(string | number)[]>([])
+const selectedKeys = ref([])
 const clickMessage = ref('点击任意行查看 row-click 回调结果。')
 const contextMenuMessage = ref('在任意行上右键触发 onRowContextmenu。')
 
-function handleRowClick(row: TableUser, index: number) {
-  clickMessage.value = `row-click：第 ${index + 1} 行（${row.name}）`
+function onSelect(_event: Event, _row: TableRow<TableUser>) {
 }
 
-function handleRowContextmenu(event: Event, row: TableUser) {
-  event.preventDefault()
-  contextMenuMessage.value = `row-contextmenu：${row.name}`
+function onContextmenu(_event: Event, _row: TableRow<TableUser>) {
+}
+
+function onHover(_event: Event, _row: TableRow<TableUser> | null) {
 }
 
 function reloadData() {
@@ -53,7 +54,7 @@ function rowStyle(row: TableUser) {
         DataTable / Props & Events
       </h2>
       <p class="text-sm text-muted">
-        演示 <code>rowClass</code>、<code>rowStyle</code>、<code>stripeClass</code>、<code>rowKey</code>、<code>preserveSelectionOnDataChange</code>、<code>onRowClick</code>、<code>onRowContextmenu</code>。
+        演示 <code>rowClass</code>、<code>rowStyle</code>、<code>stripeClass</code>、<code>rowKey</code>、<code>onRowClick</code>、<code>onRowContextmenu</code>。
       </p>
     </div>
 
@@ -67,7 +68,7 @@ function rowStyle(row: TableUser) {
     </div>
 
     <MDataTable
-      v-model:selected-keys="selectedKeys"
+      v-model:row-selection-keys="selectedKeys"
       :data="tableData"
       :columns="selectionColumns"
       row-key="id"
@@ -76,9 +77,9 @@ function rowStyle(row: TableUser) {
       bordered
       :row-class="rowClass"
       :row-style="rowStyle"
-      :preserve-selection-on-data-change="false"
-      :on-row-click="handleRowClick"
-      :on-row-contextmenu="handleRowContextmenu"
+      @select="onSelect"
+      @contextmenu="onContextmenu"
+      @hover="onHover"
     />
 
     <p class="text-sm text-muted">

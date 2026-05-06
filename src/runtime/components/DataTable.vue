@@ -27,7 +27,7 @@ import tableTheme from '#build/ui/table'
 import type paginationTheme from '#build/movk-ui/data-table-pagination'
 import DataTablePagination from '../domains/data-table/components/Pagination.vue'
 import type { AppConfig } from 'nuxt/schema'
-import type { DataTableProps } from '../types/data-table/component'
+import type { DataTableExposed, DataTableProps } from '../types/data-table/component'
 import type { TreeSelectionResult } from '../types/data-table/columns'
 import type { DataTablePaginationUi } from '../types/data-table/pagination'
 
@@ -458,11 +458,11 @@ const tableResetKey = computed(() => {
   return `${props.columnResizeMode === 'onEnd' ? 'e' : 'c'}${flags.toString(36)}`
 })
 
-defineExpose({
-  tableRef: computed(() => tableRef.value?.tableRef ?? null),
-  tableApi,
+defineExpose<DataTableExposed<T>>({
+  get tableRef() { return tableRef.value?.tableRef ?? null },
+  get tableApi() { return tableApi.value },
   clearSelection,
-  treeSelection
+  get treeSelection() { return treeSelection.value }
 })
 </script>
 

@@ -2,6 +2,7 @@ import type {
   CellContext,
   ColumnDefTemplate,
   ColumnMeta,
+  Table,
   TableMeta
 } from '@tanstack/vue-table'
 import type { ButtonProps, TableData, TableProps, TooltipProps } from '@nuxt/ui'
@@ -11,11 +12,19 @@ import type {
   DataTableColumn,
   DataTableDataColumn,
   DataTableDensityPreset,
-  DataTableDynamic
+  DataTableDynamic,
+  TreeSelectionResult
 } from './columns'
 import type { DataTablePinButtonContext, DataTableSortButtonContext } from './contexts'
 import type { DataTablePaginationUi } from './pagination'
 import type { ClassNameValue } from '../shared'
+
+export interface DataTableExposed<T extends TableData> {
+  tableRef: HTMLTableElement | null
+  tableApi: Table<T> | null
+  clearSelection: () => void
+  treeSelection: TreeSelectionResult<T>
+}
 
 export interface DataTableProps<T extends TableData> extends /* @vue-ignore */ OmitByKey<
   TableProps<T>,

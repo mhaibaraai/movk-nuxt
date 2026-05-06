@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { DataTableColumn } from '#movk/types/data-table'
+import type { DataTableColumn, DataTableExposed, TreeSelectionResult } from '#movk/types/data-table'
 
 interface Payment {
   id: string
@@ -23,9 +23,8 @@ const columns = computed(() => [
   { accessorKey: 'amount', header: '金额', align: 'right' }
 ] as DataTableColumn<Payment>[])
 
-const tableRef = useTemplateRef('tableRef')
-
-// const derived = computed(() => tableRef.value?.treeSelection)
+const tableRef = useTemplateRef<DataTableExposed<Payment>>('tableRef')
+const derived = computed(() => tableRef.value?.treeSelection ?? {} as TreeSelectionResult<Payment>)
 
 const strategyOptions = [
   { label: 'cascade（父子级联）', value: 'cascade' },
@@ -66,12 +65,11 @@ const strategyOptions = [
     <div class="text-sm space-y-1">
       <div>strategy: {{ strategy }}</div>
       <div>rowSelectionKeys: {{ rowSelectionKeys }}</div>
-      <!-- {{ derived }} -->
-      <!-- <div>selected({{ derived.selected.length }}): {{ derived.selected.map(r => r.id) }}</div>
-      <div>leaves({{ derived.leaves.length }}): {{ derived.leaves.map(r => r.id) }}</div>
-      <div>parents({{ derived.parents.length }}): {{ derived.parents.map(r => r.id) }}</div>
-      <div>halfSelected({{ derived.halfSelected.length }}): {{ derived.halfSelected.map(r => r.id) }}</div>
-      <div>strictlyChecked({{ derived.strictlyChecked.length }}): {{ derived.strictlyChecked.map(r => r.id) }}</div> -->
+      <div>selected({{ derived?.selected.length ?? 0 }}): {{ derived?.selected.map(r => r.id) ?? [] }}</div>
+      <div>leaves({{ derived?.leaves.length ?? 0 }}): {{ derived?.leaves.map(r => r.id) ?? [] }}</div>
+      <div>parents({{ derived?.parents.length ?? 0 }}): {{ derived?.parents.map(r => r.id) ?? [] }}</div>
+      <div>halfSelected({{ derived?.halfSelected.length ?? 0 }}): {{ derived?.halfSelected.map(r => r.id) ?? [] }}</div>
+      <div>strictlyChecked({{ derived?.strictlyChecked.length ?? 0 }}): {{ derived?.strictlyChecked.map(r => r.id) ?? [] }}</div>
     </div>
   </div>
 </template>

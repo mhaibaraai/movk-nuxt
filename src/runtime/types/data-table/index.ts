@@ -29,4 +29,4 @@ export type {
   DataTablePaginationProps,
   DataTablePaginationSlots
 } from './pagination'
-export type { DataTableProps } from './component'
+export type { DataTableExposed, DataTableProps } from './component'
