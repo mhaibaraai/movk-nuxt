@@ -2,7 +2,7 @@ import type { ReactiveValue, AnyObject } from '@movk/core'
 import type { AutoFormFieldContext } from '../../types/auto-form'
 import { isFunction, isObject } from '@movk/core'
 import { Fragment, h, isRef, isVNode, unref } from 'vue'
-import { AUTOFORM_LIMITS, AUTOFORM_PATTERNS } from '../../constants/auto-form'
+import { AUTOFORM_LIMITS, AUTOFORM_PATTERNS } from './constants'
 
 function validateContext(context: AutoFormFieldContext): asserts context is AutoFormFieldContext {
   if (!context || typeof context !== 'object') {

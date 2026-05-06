@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { z } from 'zod'
-import { AUTOFORM_META } from '../../../src/runtime/constants/auto-form'
+import { AUTOFORM_META } from '../../../src/runtime/domains/auto-form/constants'
 import { applyMeta } from '../../../src/runtime/domains/auto-form/metadata'
 import { extractPureSchema, introspectSchema } from '../../../src/runtime/domains/auto-form/schema'
 import type { AutoFormControls } from '../../../src/runtime/types/auto-form'

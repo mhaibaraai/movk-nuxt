@@ -12,9 +12,9 @@ import type {
   UnionToIntersection,
   WidenLiteral
 } from '@movk/core'
-import type { AUTOFORM_META } from '../../constants/auto-form'
 import type { AutoFormFieldContext } from './fields'
 import type { AutoFormControl, AutoFormControls, AutoFormControlsMeta, _Unset, AutoFormLayoutConfig } from './controls'
+import type { AUTOFORM_META } from '../../domains/auto-form/constants'
 
 interface LayoutFieldMarker<Fields extends Record<string, z.ZodType>> extends z.ZodType<AutoFormLayoutConfig<any>, any, any> {
   __brand: typeof AUTOFORM_META.LAYOUT_KEY

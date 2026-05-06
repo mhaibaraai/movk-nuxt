@@ -17,4 +17,5 @@ export interface DatePickerProps<R extends boolean, M extends boolean, P extends
   labelFormat?: LabelFormat | ((formatter: DateFormatter, modelValue: CalendarProps<R, M>['modelValue']) => string)
 }
 
-export type DatePickerEmits<R extends boolean, M extends boolean> = PopoverEmits & CalendarEmits<R, M>
+export type DatePickerEmits<R extends boolean, M extends boolean>
+  = PopoverEmits & CalendarEmits<R, M>

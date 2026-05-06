@@ -1,6 +1,6 @@
 import type { z } from 'zod'
 import { isObject } from '@movk/core'
-import { AUTOFORM_META } from '../../constants/auto-form'
+import { AUTOFORM_META } from './constants'
 
 type AutoFormMetadata = Record<string, unknown>
 

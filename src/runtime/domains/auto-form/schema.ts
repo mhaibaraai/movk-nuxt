@@ -5,8 +5,8 @@ import { markRaw } from 'vue'
 import { z as zod } from 'zod'
 import { joinPath, startCase, toPath, isFunction, isObject } from '@movk/core'
 import { getAutoFormMetadata } from './metadata'
-import { AUTOFORM_LIMITS, AUTOFORM_META } from '../../constants/auto-form'
 import type { ZodAutoFormFieldMeta } from '../../types/zod'
+import { AUTOFORM_LIMITS, AUTOFORM_META } from './constants'
 
 /** 获取 schema 的内层类型（optional/default/pipe 等包装的内部 schema） */
 function getUnwrappedSchema(schema: any): z.ZodType | undefined {

@@ -3,7 +3,7 @@ import type { AutoFormField } from '../../types/auto-form'
 import { UButton, UIcon } from '#components'
 import { h } from 'vue'
 import { setPath } from '@movk/core'
-import { AUTOFORM_META } from '../../constants/auto-form'
+import { AUTOFORM_META } from './constants'
 
 /** 将字段列表分类为叶子/嵌套/数组/布局四组 */
 export function classifyFields(fields: AutoFormField[]) {

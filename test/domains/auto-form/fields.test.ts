@@ -7,7 +7,7 @@ import {
   extractEnumValuesFromItems,
   isLeafField
 } from '../../../src/runtime/domains/auto-form/fields'
-import { AUTOFORM_META } from '../../../src/runtime/constants/auto-form'
+import { AUTOFORM_META } from '../../../src/runtime/domains/auto-form/constants'
 import type { AutoFormField } from '../../../src/runtime/types/auto-form'
 
 vi.mock('#components', () => ({

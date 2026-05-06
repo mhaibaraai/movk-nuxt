@@ -4,4 +4,14 @@ export type { MessageBoxEmits, MessageBoxProps } from './message-box'
 export type { PopconfirmEmits, PopconfirmProps, PopconfirmSlots } from './popconfirm'
 export type { SlideVerifyEmits, SlideVerifyProps, SlideVerifySlots } from './slide-verify'
 export type { StarRatingEmits, StarRatingProps } from './star-rating'
-export type { AsPhoneNumberInputProps, WithCharacterLimitProps, WithClearEmits, WithClearProps, WithCopyEmits, WithCopyProps, WithFloatingLabelEmits, WithFloatingLabelProps, WithPasswordToggleProps } from './input'
+export type {
+  AsPhoneNumberInputProps,
+  WithCharacterLimitProps,
+  WithClearEmits,
+  WithClearProps,
+  WithCopyEmits,
+  WithCopyProps,
+  WithFloatingLabelEmits,
+  WithFloatingLabelProps,
+  WithPasswordToggleProps
+} from './input'
