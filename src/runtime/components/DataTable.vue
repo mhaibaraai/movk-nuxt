@@ -17,11 +17,12 @@ import type { TableData, TableProps, ComponentConfig } from '@nuxt/ui'
 import { UTable } from '#components'
 import { useAppConfig } from '#imports'
 import type { Ref, WritableComputedRef } from 'vue'
-import { computed, onMounted, useAttrs, useTemplateRef, watch } from 'vue'
+import { computed, onMounted, ref, useAttrs, useTemplateRef, watch } from 'vue'
 import { useExtendedTv } from '../utils/extend-theme'
 import { resolveColumns } from '../domains/data-table/columns/resolve-columns'
 import { resolveCallbackValue } from '../domains/data-table/columns/utils'
 import { computeTreeRowSelection } from '../domains/data-table/tree-selection'
+import { useInfiniteScrollBinding } from '../domains/data-table/composables/useInfiniteScrollBinding'
 import theme from '#build/movk-ui/data-table'
 import tableTheme from '#build/ui/table'
 import type paginationTheme from '#build/movk-ui/data-table-pagination'
@@ -42,6 +43,7 @@ const props = withDefaults(defineProps<Props>(), {
   emptyCell: '-',
   indentSize: '1rem',
   truncate: true,
+  sticky: true,
   columnResizeMode: 'onChange'
 })
 
@@ -238,9 +240,42 @@ defineOptions({ inheritAttrs: false })
 const attrs = useAttrs()
 const appConfig = useAppConfig() as { movk?: { dataTable?: unknown } }
 const tableRef = useTemplateRef<{
+  $el: HTMLElement | null
   tableApi: Table<T>
   tableRef: HTMLTableElement | null
 }>('tableRef')
+
+const internalLoading = ref(false)
+
+async function invokeLoadMore() {
+  if (!props.loadMore) return
+  const ret = props.loadMore()
+  if (ret && typeof (ret as Promise<void>).then === 'function') {
+    internalLoading.value = true
+    try {
+      await ret
+    } finally {
+      internalLoading.value = false
+    }
+  }
+}
+
+useInfiniteScrollBinding(
+  () => tableRef.value?.$el ?? null,
+  {
+    distance: () => props.loadMoreDistance ?? 100,
+    canLoadMore: () => !!props.loadMore && props.canLoadMore !== false && !internalLoading.value,
+    onLoadMore: invokeLoadMore
+  }
+)
+
+onMounted(() => {
+  if (props.loadMore && props.loadMoreImmediate) invokeLoadMore()
+})
+
+function scrollToTop(options: ScrollToOptions = { top: 0, behavior: 'smooth' }) {
+  tableRef.value?.$el?.scrollTo({ top: 0, ...options })
+}
 
 const tableApi = computed<Table<T> | null>(() => tableRef.value?.tableApi ?? null)
 const isColumnResizing = computed(() => Boolean(tableApi.value?.getState().columnSizingInfo.isResizingColumn))
@@ -248,10 +283,12 @@ const isColumnResizing = computed(() => Boolean(tableApi.value?.getState().colum
 const isTreeMode = computed(() => Boolean(props.childrenKey))
 const isManualPagination = computed(() => props.paginationOptions?.manualPagination === true)
 const hasPaginationIntent = computed(() =>
-  props.paginationOptions !== undefined
-  || paginationState.value !== undefined
-  || (props.paginationUi?.pageSizes?.length ?? 0) > 0
-  || props.paginationUi?.show === true
+  !props.loadMore && (
+    props.paginationOptions !== undefined
+    || paginationState.value !== undefined
+    || (props.paginationUi?.pageSizes?.length ?? 0) > 0
+    || props.paginationUi?.show === true
+  )
 )
 
 const tableMeta = computed((): TableMeta<T> => ({
@@ -287,7 +324,7 @@ const borderedStyle = computed(() => {
   }
 })
 
-const { baseUi, ui } = useExtendedTv(
+const { baseUi, extraUi } = useExtendedTv(
   tableTheme,
   theme,
   () => appConfig.movk?.dataTable,
@@ -319,6 +356,8 @@ const uTableProps = computed(() => {
       }
     }),
     ...attrs,
+    sticky: props.sticky,
+    loading: Boolean(props.loading) || internalLoading.value,
     columns: resolved.value.columnDefs,
     meta: tableMeta.value,
     ui: baseUi.value,
@@ -461,13 +500,15 @@ const tableResetKey = computed(() => {
 defineExpose<DataTableExposed<T>>({
   get tableRef() { return tableRef.value?.tableRef ?? null },
   get tableApi() { return tableApi.value },
+  get el() { return tableRef.value?.$el ?? null },
+  scrollToTop,
   clearSelection,
   get treeSelection() { return treeSelection.value }
 })
 </script>
 
 <template>
-  <div :class="ui.root">
+  <div :class="extraUi.wrapper">
     <UTable
       :key="tableResetKey"
       ref="tableRef"

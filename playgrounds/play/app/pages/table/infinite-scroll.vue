@@ -2,41 +2,37 @@
 const { largeUsers, sortingColumns } = useTableExamples()
 
 const batchSize = 20
-const loadedCount = ref(batchSize)
+const users = ref<typeof largeUsers>([])
 
-const visibleUsers = computed(() => largeUsers.slice(0, loadedCount.value))
-const canLoadMore = computed(() => loadedCount.value < largeUsers.length)
+const canLoadMore = computed(() => users.value.length < largeUsers.length)
 
-function handleLoadMore() {
-  if (!canLoadMore.value) return
-
-  loadedCount.value = Math.min(
-    loadedCount.value + batchSize,
-    largeUsers.length
-  )
+async function loadMore() {
+  await new Promise(resolve => setTimeout(resolve, 300))
+  const start = users.value.length
+  users.value = [...users.value, ...largeUsers.slice(start, start + batchSize)]
 }
 </script>
 
 <template>
-  <div class="space-y-4 p-6 overflow-auto">
+  <div class="space-y-4 p-6 max-h-150 flex flex-col overflow-hidden">
     <div>
       <h2 class="text-xl font-semibold mb-1">
         DataTable / Infinite Scroll
       </h2>
       <p class="text-sm text-muted">
-        演示滚动触底加载更多，当前已加载 {{ loadedCount }} / {{ largeUsers.length }} 条。
+        演示滚动触底加载更多，当前已加载 {{ users.length }} / {{ largeUsers.length }} 条。
       </p>
     </div>
 
     <MDataTable
-      :data="visibleUsers"
+      :data="users"
       :columns="sortingColumns"
-      infinite-scroll
-      :infinite-scroll-height="'360px'"
-      :infinite-scroll-distance="80"
-      :can-load-more="canLoadMore"
       bordered
-      @load-more="handleLoadMore"
+      class="flex-1"
+      :load-more-distance="80"
+      :can-load-more="canLoadMore"
+      :load-more="loadMore"
+      load-more-immediate
     />
 
     <p class="text-sm text-muted">

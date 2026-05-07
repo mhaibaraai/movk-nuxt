@@ -14,25 +14,17 @@ const selectedKeys = ref([])
 const clickMessage = ref('点击任意行查看 row-click 回调结果。')
 const contextMenuMessage = ref('在任意行上右键触发 onRowContextmenu。')
 
-const onSelect: DataTableSelectHandler<TableUser> = (_event, _row) => {}
+const onSelect: DataTableSelectHandler<TableUser> = (_event, _row) => {
+  console.log('onSelect', _row)
+}
 
-const onContextmenu: DataTableContextmenuHandler<TableUser> = (_event, _row) => {}
+const onContextmenu: DataTableContextmenuHandler<TableUser> = (event, _row) => {
+  console.log(event)
+}
 
 const onHover: DataTableHoverHandler<TableUser> = (_event, _row) => {}
 
 const onStateChange: DataTableStateChangeHandler = (_updater) => {}
-
-function reloadData() {
-  const reversed = [...users].reverse()
-  tableData.value = reversed.map((item, idx) => ({
-    ...item,
-    id: item.id + 100 + idx
-  }))
-}
-
-function resetData() {
-  tableData.value = [...users]
-}
 
 function rowClass(row: TableUser) {
   if (row.status === 'inactive') return 'bg-error/5'
@@ -61,15 +53,6 @@ function rowStyle(row: TableUser) {
         演示
         <code>rowClass</code>、<code>rowStyle</code>、<code>stripeClass</code>、<code>rowKey</code>、<code>onRowClick</code>、<code>onRowContextmenu</code>。
       </p>
-    </div>
-
-    <div class="flex items-center gap-2 flex-wrap">
-      <UButton color="neutral" variant="soft" @click="reloadData">
-        刷新数据（替换 ID）
-      </UButton>
-      <UButton color="neutral" variant="ghost" @click="resetData">
-        重置数据
-      </UButton>
     </div>
 
     <MDataTable

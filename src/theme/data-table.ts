@@ -10,7 +10,8 @@ const BS = 'var(--m-dt-border-style,solid)'
 
 export default () => ({
   slots: {
-    root: '',
+    wrapper: 'flex flex-col min-h-0 relative',
+    root: 'flex-1',
     base: 'border-separate border-spacing-0',
     tbody: 'divide-y-0',
     th: [
@@ -36,12 +37,11 @@ export default () => ({
     },
     bordered: {
       true: {
-        base: [
+        root: [
           `border-[length:${BW}]`,
           `border-[color:${BC}]`,
           `[border-style:${BS}]`,
-          'rounded-[var(--ui-radius)]',
-          'overflow-hidden'
+          'rounded-[var(--ui-radius)]'
         ].join(' '),
         th: [
           `${NOT_LAST_NOT_PIN}:border-r-[length:${BW}]`,

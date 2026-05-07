@@ -65,11 +65,11 @@ const strategyOptions = [
     <div class="text-sm space-y-1">
       <div>strategy: {{ strategy }}</div>
       <div>rowSelectionKeys: {{ rowSelectionKeys }}</div>
-      <div>selected({{ derived?.selected.length ?? 0 }}): {{ derived?.selected.map(r => r.id) ?? [] }}</div>
-      <div>leaves({{ derived?.leaves.length ?? 0 }}): {{ derived?.leaves.map(r => r.id) ?? [] }}</div>
-      <div>parents({{ derived?.parents.length ?? 0 }}): {{ derived?.parents.map(r => r.id) ?? [] }}</div>
-      <div>halfSelected({{ derived?.halfSelected.length ?? 0 }}): {{ derived?.halfSelected.map(r => r.id) ?? [] }}</div>
-      <div>strictlyChecked({{ derived?.strictlyChecked.length ?? 0 }}): {{ derived?.strictlyChecked.map(r => r.id) ?? [] }}</div>
+      <div>selected: {{ derived?.selected?.map(r => r.id) ?? [] }}</div>
+      <div>leaves: {{ derived?.leaves?.map(r => r.id) ?? [] }}</div>
+      <div>parents: {{ derived?.parents?.map(r => r.id) ?? [] }}</div>
+      <div>halfSelected: {{ derived?.halfSelected?.map(r => r.id) ?? [] }}</div>
+      <div>strictlyChecked: {{ derived?.strictlyChecked?.map(r => r.id) ?? [] }}</div>
     </div>
   </div>
 </template>

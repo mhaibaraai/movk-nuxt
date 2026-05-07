@@ -36,6 +36,9 @@ export type DataTableStateChangeHandler
 export interface DataTableExposed<T extends TableData> {
   tableRef: HTMLTableElement | null
   tableApi: Table<T> | null
+  /** UTable 根元素，即滚动容器 */
+  el: HTMLElement | null
+  scrollToTop: (options?: ScrollToOptions) => void
   clearSelection: () => void
   treeSelection: TreeSelectionResult<T>
 }
@@ -44,6 +47,8 @@ export interface DataTableProps<T extends TableData> extends /* @vue-ignore */ O
   TableProps<T>,
   | 'columns'
   | 'meta'
+  | 'sticky'
+  | 'loading'
   | 'ui'
   | 'columnSizingOptions'
   | 'columnPinningOptions'
@@ -57,27 +62,19 @@ export interface DataTableProps<T extends TableData> extends /* @vue-ignore */ O
   | 'onStateChange'
 > {
   /**
-   * 行唯一标识字段
-   *
-   * 提供后自动派生 `getRowId: (row) => String(row[rowKey])`；
-   * 同时传入 `getRowId` 时后者优先。未提供且未传入 `getRowId` 时，
-   * TanStack Table 默认使用行索引作为 ID。
-   *
+   * 行唯一标识字段，自动派生 getRowId；与 getRowId 同传时后者优先
    * @example 'id'
    */
   rowKey?: Suggest<keyof T & string>
-  /** 列定义 */
   columns?: DataTableColumn<T>[]
+  loading?: TableProps<T>['loading']
   /**
-   * 是否为斑马纹（默认 'even:bg-elevated/30'）
+   * 斑马纹
    * @defaultValue false
    */
   stripe?: boolean
   /**
-   * 是否带有纵向边框，传 true 使用默认样式，传对象可定制颜色/粗细/线型
-   * - color: 边框颜色，支持 CSS 颜色值或 CSS var，默认 'var(--ui-border)'
-   * - width: 边框宽度，默认 '1px'
-   * - style: 边框样式，默认 'solid'
+   * 纵向边框，传对象可定制 color/width/style
    * @defaultValue false
    */
   bordered?: boolean | {
@@ -86,99 +83,65 @@ export interface DataTableProps<T extends TableData> extends /* @vue-ignore */ O
     style?: 'solid' | 'dashed' | 'dotted' | 'double'
   }
   /**
-   * 表格宽度由列宽内容决定（w-fit），关闭后表格撑满容器
+   * 表格宽度由列宽内容决定（w-fit）
    * @defaultValue false
    */
   fitContent?: boolean
   /**
-   * 空值占位符，null/undefined/'' 时显示
+   * 空值占位符
    * @defaultValue '-'
    */
   emptyCell?: false | string | ColumnDefTemplate<CellContext<T, unknown>>
   /**
-   * 全局启用数据列 pin 按钮，传函数可按列定义动态决定
+   * 启用列固定按钮，传函数可按列动态决定
    * @defaultValue false
    */
   pinable?: boolean | ((col: DataTableDataColumn<T>) => boolean)
-  /** 固定列按钮 props 透传 */
   pinButtonProps?: DataTableDynamic<ButtonProps, DataTablePinButtonContext<T>>
   /**
-   * 全局数据列可排序，传函数可按列定义动态决定
+   * 启用列排序，传函数可按列动态决定
    * @defaultValue false
    */
   sortable?: boolean | ((col: DataTableDataColumn<T>) => boolean)
-  /** 排序按钮 props 透传 */
   sortButtonProps?: DataTableDynamic<ButtonProps, DataTableSortButtonContext<T>>
   /** 全局 action 按钮 props，与列级 action.buttonProps 深度合并，列级优先 */
   actionButtonProps?: DataTableDynamic<ButtonProps, DataTableActionButtonContext<T>>
   /**
-   * 全局溢出阈值
+   * 行内最多展示多少 action 按钮，超出折叠到 overflow
    * @defaultValue 3
    */
   actionsMaxInline?: number
-  /** 全局溢出按钮样式 */
   actionsOverflowTrigger?: DataTableDynamic<ButtonProps, CellContext<T, unknown>>
   /**
-   * 启用列拖拽调整宽度，传函数可按列定义动态决定
+   * 启用列宽拖拽，传函数可按列动态决定
    * @defaultValue false
    */
   resizable?: boolean | ((col: DataTableDataColumn<T>) => boolean)
   /**
-   * 列宽拖动模式
-   * - 'onChange' = 拖动中实时重排
-   * - 'onEnd' = 释放鼠标后才更新
+   * - 'onChange' 拖动中实时重排
+   * - 'onEnd' 释放后才更新
    * @defaultValue 'onChange'
    */
   columnResizeMode?: 'onChange' | 'onEnd'
-  /**
-   * 表格密度，控制单元格与表头内边距
-   */
+  /** 单元格内边距密度 */
   density?: DataTableDensityPreset | ColumnMeta<T, unknown>['class']
-  /** 表格元数据 */
   meta?: TableMeta<T>
-  /** 行条件 class */
   rowClass?: string | ((row: T) => string)
-  /** 行条件 style */
   rowStyle?: string | Record<string, string> | ((row: T) => string | Record<string, string>)
   /**
-   * 全局数据列溢出 Tooltip，传函数可按 cell 上下文动态决定
-   * - true = 溢出时显示（单行截断）
-   * - number = 溢出时显示（多行截断行数）
-   * - false = 禁用
-   * - 函数 = 按 cell 上下文动态决定
+   * 单元格溢出 Tooltip：true 单行 / number 多行 / false 禁用 / 函数 动态
    * @defaultValue false
    */
   tooltip?: boolean | number | ((ctx: CellContext<T, unknown>) => boolean | number)
-  /** 全局 Tooltip 透传 props（tooltip 启用时生效） */
   tooltipProps?: Omit<TooltipProps, 'text'>
   /**
-   * 全局单元格文本溢出截断，传函数可按 cell 上下文动态决定
-   * - true = 单行截断
-   * - number > 1 = 多行截断行数
-   * - false = 禁用
-   * - 函数 = 按 cell 上下文动态决定
+   * 单元格文本截断：true 单行 / number 多行 / false 禁用 / 函数 动态
    * @defaultValue true
    */
   truncate?: boolean | number | ((ctx: CellContext<T, unknown>) => boolean | number)
-  /**
-   * 排序配置
-   * @defaultValue `{ enableSorting: !!sortable }`
-   */
   sortingOptions?: TableProps<T>['sortingOptions']
-  /**
-   * 列尺寸配置
-   * @defaultValue `{ enableColumnResizing: !!resizable, columnResizeMode }`
-   */
   columnSizingOptions?: TableProps<T>['columnSizingOptions']
-  /**
-   * 列固定配置
-   * @defaultValue `{ enableColumnPinning: !!pinable }`
-   */
   columnPinningOptions?: TableProps<T>['columnPinningOptions']
-  /**
-   * 行选择配置
-   * @defaultValue `{ enableMultiRowSelection: true }`
-   */
   rowSelectionOptions?: TableProps<T>['rowSelectionOptions']
   /**
    * 子行字段名，设置后启用树形模式
@@ -186,44 +149,57 @@ export interface DataTableProps<T extends TableData> extends /* @vue-ignore */ O
    */
   childrenKey?: Suggest<keyof T & string>
   /**
-   * 树形缩进宽度，传函数可按行/深度动态计算
-   * - number = 每层缩进量（px），乘以 depth 得到实际 marginLeft
-   * - string = 直接作为 CSS 值（调用方自行处理深度逻辑）
-   * - 函数 = 按 cell 上下文动态计算，返回 CSS 字符串（如 '24px'）
+   * 树形缩进：number 每层缩进 px / string CSS 值 / 函数 动态返回 CSS
    * @defaultValue '1rem'
    */
   indentSize?: number | string | ((ctx: CellContext<T, unknown>) => string)
-  /** 展开行配置 */
   expandedOptions?: TableProps<T>['expandedOptions']
-  /**
-   * 点击行时切换树形展开状态
-   * @defaultValue false
-   */
+  /** @defaultValue false */
   expandOnRowClick?: boolean
-  /**
-   * 点击行时切换行选择状态
-   * @defaultValue false
-   */
+  /** @defaultValue false */
   selectOnRowClick?: boolean
-  /** 数组形可见列白名单 */
+  /** 可见列白名单（数组形） */
   columnVisibilityKeys?: string[]
-  /** 数组形隐藏列黑名单，与 columnVisibilityKeys 互斥，同时传入时 columnVisibilityKeys 优先 */
+  /** 隐藏列黑名单（数组形），与 columnVisibilityKeys 互斥，同传时白名单优先 */
   columnVisibilityExcludeKeys?: string[]
-  /** 数组形选中行 id 列表 */
+  /** 选中行 id 列表（数组形） */
   rowSelectionKeys?: string[]
-  /** 数组形展开行 id 列表 */
+  /** 展开行 id 列表（数组形） */
   expandedKeys?: string[]
   onSelect?: DataTableSelectHandler<T>
   onHover?: DataTableHoverHandler<T>
   onRowContextmenu?: DataTableContextmenuHandler<T>
   onStateChange?: DataTableStateChangeHandler
   /**
-   * 分页配置，直接透传给 TanStack / UTable
-   * - 客户端分页：传入本字段（或使用 `v-model:pagination` / `paginationUi.pageSizes`）即视为启用，自动注入 `getPaginationRowModel()`
-   * - 服务端分页：设置 `manualPagination: true`，并提供 `rowCount` 或 `pageCount`
-   * - 全部不传时，数据全量渲染、不分页、不显示分页栏
+   * 分页配置，透传给 TanStack / UTable
+   * - 客户端分页：传入即启用，自动注入 getPaginationRowModel
+   * - 服务端分页：manualPagination=true 并提供 rowCount 或 pageCount
    */
   paginationOptions?: TableProps<T>['paginationOptions']
+  /**
+   * 粘性表头
+   * @defaultValue true
+   */
+  sticky?: TableProps<T>['sticky']
   paginationUi?: DataTablePaginationUi
+  /**
+   * 触底加载回调，传入即启用无限滚动模式（自动隐藏内置分页、async 期间派生 loading）
+   */
+  loadMore?: () => void | Promise<void>
+  /**
+   * 是否还能加载更多
+   * @defaultValue true
+   */
+  canLoadMore?: boolean
+  /**
+   * 触发 loadMore 的距底像素阈值
+   * @defaultValue 100
+   */
+  loadMoreDistance?: number
+  /**
+   * mount 后立即触发一次 loadMore
+   * @defaultValue false
+   */
+  loadMoreImmediate?: boolean
   ui?: Record<string, ClassNameValue>
 }
