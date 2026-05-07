@@ -1,5 +1,10 @@
 <script setup lang="ts">
-import type { TableRow } from '@nuxt/ui'
+import type {
+  DataTableContextmenuHandler,
+  DataTableHoverHandler,
+  DataTableSelectHandler,
+  DataTableStateChangeHandler
+} from '#movk/types/data-table'
 import type { TableUser } from '~/composables/useTableExamples'
 
 const { users, selectionColumns } = useTableExamples()
@@ -9,14 +14,13 @@ const selectedKeys = ref([])
 const clickMessage = ref('点击任意行查看 row-click 回调结果。')
 const contextMenuMessage = ref('在任意行上右键触发 onRowContextmenu。')
 
-function onSelect(_event: Event, _row: TableRow<TableUser>) {
-}
+const onSelect: DataTableSelectHandler<TableUser> = (_event, _row) => {}
 
-function onContextmenu(_event: Event, _row: TableRow<TableUser>) {
-}
+const onContextmenu: DataTableContextmenuHandler<TableUser> = (_event, _row) => {}
 
-function onHover(_event: Event, _row: TableRow<TableUser> | null) {
-}
+const onHover: DataTableHoverHandler<TableUser> = (_event, _row) => {}
+
+const onStateChange: DataTableStateChangeHandler = (_updater) => {}
 
 function reloadData() {
   const reversed = [...users].reverse()
@@ -54,7 +58,8 @@ function rowStyle(row: TableUser) {
         DataTable / Props & Events
       </h2>
       <p class="text-sm text-muted">
-        演示 <code>rowClass</code>、<code>rowStyle</code>、<code>stripeClass</code>、<code>rowKey</code>、<code>onRowClick</code>、<code>onRowContextmenu</code>。
+        演示
+        <code>rowClass</code>、<code>rowStyle</code>、<code>stripeClass</code>、<code>rowKey</code>、<code>onRowClick</code>、<code>onRowContextmenu</code>。
       </p>
     </div>
 
@@ -80,6 +85,7 @@ function rowStyle(row: TableUser) {
       @select="onSelect"
       @contextmenu="onContextmenu"
       @hover="onHover"
+      @state-change="onStateChange"
     />
 
     <p class="text-sm text-muted">

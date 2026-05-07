@@ -3,9 +3,11 @@ import type {
   ColumnDefTemplate,
   ColumnMeta,
   Table,
-  TableMeta
+  TableMeta,
+  TableState,
+  Updater
 } from '@tanstack/vue-table'
-import type { ButtonProps, TableData, TableProps, TooltipProps } from '@nuxt/ui'
+import type { ButtonProps, TableData, TableProps, TableRow, TooltipProps } from '@nuxt/ui'
 import type { OmitByKey, Suggest } from '@movk/core'
 import type {
   DataTableActionButtonContext,
@@ -18,6 +20,18 @@ import type {
 import type { DataTablePinButtonContext, DataTableSortButtonContext } from './contexts'
 import type { DataTablePaginationUi } from './pagination'
 import type { ClassNameValue } from '../shared'
+
+export type DataTableSelectHandler<T extends TableData>
+  = (e: Event, row: TableRow<T>) => void
+
+export type DataTableHoverHandler<T extends TableData>
+  = (e: Event, row: TableRow<T> | null) => void
+
+export type DataTableContextmenuHandler<T extends TableData>
+  = ((e: Event, row: TableRow<T>) => void) | ((e: Event, row: TableRow<T>) => void)[]
+
+export type DataTableStateChangeHandler
+  = (updater: Updater<TableState>) => void
 
 export interface DataTableExposed<T extends TableData> {
   tableRef: HTMLTableElement | null
@@ -38,6 +52,9 @@ export interface DataTableProps<T extends TableData> extends /* @vue-ignore */ O
   | 'expandedOptions'
   | 'paginationOptions'
   | 'onSelect'
+  | 'onHover'
+  | 'onContextmenu'
+  | 'onStateChange'
 > {
   /**
    * 行唯一标识字段
@@ -178,8 +195,6 @@ export interface DataTableProps<T extends TableData> extends /* @vue-ignore */ O
   indentSize?: number | string | ((ctx: CellContext<T, unknown>) => string)
   /** 展开行配置 */
   expandedOptions?: TableProps<T>['expandedOptions']
-  /** 行选择回调 */
-  onSelect?: TableProps<T>['onSelect']
   /**
    * 点击行时切换树形展开状态
    * @defaultValue false
@@ -198,6 +213,10 @@ export interface DataTableProps<T extends TableData> extends /* @vue-ignore */ O
   rowSelectionKeys?: string[]
   /** 数组形展开行 id 列表 */
   expandedKeys?: string[]
+  onSelect?: DataTableSelectHandler<T>
+  onHover?: DataTableHoverHandler<T>
+  onRowContextmenu?: DataTableContextmenuHandler<T>
+  onStateChange?: DataTableStateChangeHandler
   /**
    * 分页配置，直接透传给 TanStack / UTable
    * - 客户端分页：传入本字段（或使用 `v-model:pagination` / `paginationUi.pageSizes`）即视为启用，自动注入 `getPaginationRowModel()`
