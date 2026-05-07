@@ -1,84 +1,18 @@
-<script setup lang="ts">
-import type { ButtonProps } from '@nuxt/ui'
+<script lang="ts" setup>
+import type { ButtonProps, ComponentConfig } from '@nuxt/ui'
 import { UButton, UBadge } from '#components'
 import { computed, ref } from 'vue'
+import { useAppConfig } from '#imports'
+import { tv } from '../utils/tv'
+import theme from '#build/movk-ui/star-rating'
+import type { AppConfig } from 'nuxt/schema'
+import type { StarRatingProps, StarRatingEmits } from '../types/components/star-rating'
 
-export interface StarRatingProps {
-  /**
-   * 当前评分值
-   * @defaultValue 0
-   */
-  modelValue?: number
-  /**
-   * 最大星级数
-   * @defaultValue 5
-   */
-  max?: number
-  /**
-   * 是否禁用
-   * @defaultValue false
-   */
-  disabled?: boolean
-  /**
-   * 是否只读
-   * @defaultValue false
-   */
-  readonly?: boolean
-  /**
-   * 是否显示评分徽章
-   * @defaultValue true
-   */
-  showBadge?: boolean
-  /**
-   * 自定义星星按钮属性
-   */
-  buttonProps?: Partial<ButtonProps>
-  /**
-   * 未选中星星的图标
-   * @defaultValue 'i-lucide-star'
-   */
-  emptyIcon?: string
-  /**
-   * 选中星星的图标
-   * @defaultValue 'i-lucide-star'
-   */
-  filledIcon?: string
-  /**
-   * 半星图标
-   * @defaultValue 'i-lucide-star-half'
-   */
-  halfIcon?: string
-  /**
-   * 选中星星的颜色
-   * @defaultValue 'warning'
-   */
-  color?: ButtonProps['color']
-  /**
-   * 星星大小
-   * @defaultValue 'md'
-   */
-  size?: ButtonProps['size']
-  /**
-   * 是否允许半星
-   * @defaultValue false
-   */
-  allowHalf?: boolean
-  /**
-   * 是否允许清除评分
-   * @defaultValue false
-   */
-  clearable?: boolean
+interface Props extends StarRatingProps {
+  ui?: ComponentConfig<typeof theme, AppConfig, 'starRating'>['slots']
 }
 
-export interface StarRatingEmits {
-  'update:modelValue': [value: number]
-  /** 评分改变事件 */
-  'change': [value: number]
-  /** 悬停事件 */
-  'hover': [value: number | null]
-}
-
-const props = withDefaults(defineProps<StarRatingProps>(), {
+const props = withDefaults(defineProps<Props>(), {
   modelValue: 0,
   max: 5,
   disabled: false,
@@ -92,7 +26,7 @@ const props = withDefaults(defineProps<StarRatingProps>(), {
   allowHalf: false,
   clearable: false
 })
-const emit = defineEmits<StarRatingEmits>()
+const emits = defineEmits<StarRatingEmits>()
 
 defineOptions({ inheritAttrs: false })
 
@@ -101,9 +35,16 @@ const focusedIndex = ref<number>(0)
 
 const isInteractive = computed(() => !props.disabled && !props.readonly)
 
-/**
- * 计算半星位置：根据鼠标/点击位置判断是否为半星
- */
+const appConfig = useAppConfig() as { movk?: { starRating?: unknown } }
+
+const uiCls = computed(() =>
+  tv({ extend: tv(theme), ...((appConfig.movk?.starRating || {}) as typeof theme) })({
+    interactive: isInteractive.value,
+    disabled: props.disabled,
+    readonly: props.readonly && !props.disabled
+  })
+)
+
 function calculateHalfStarValue(index: number, event: MouseEvent): number {
   if (!props.allowHalf) return index + 1
 
@@ -115,18 +56,15 @@ function calculateHalfStarValue(index: number, event: MouseEvent): number {
   return posX < halfWidth ? index + 0.5 : index + 1
 }
 
-/**
- * 更新评分值
- */
 function updateValue(newValue: number) {
   if (props.clearable && newValue === props.modelValue) {
-    emit('update:modelValue', 0)
-    emit('change', 0)
+    emits('update:modelValue', 0)
+    emits('change', 0)
     return
   }
 
-  emit('update:modelValue', newValue)
-  emit('change', newValue)
+  emits('update:modelValue', newValue)
+  emits('change', newValue)
 }
 
 function handleClick(index: number, event?: MouseEvent) {
@@ -141,7 +79,7 @@ function handleMouseEnter(index: number, event?: MouseEvent) {
 
   const hoverValue = calculateHalfStarValue(index, event)
   hoveredStar.value = hoverValue - 1
-  emit('hover', hoverValue)
+  emits('hover', hoverValue)
 }
 
 function handleMouseMove(index: number, event: MouseEvent) {
@@ -152,19 +90,16 @@ function handleMouseMove(index: number, event: MouseEvent) {
 
   if (currentHover !== hoverValue) {
     hoveredStar.value = hoverValue - 1
-    emit('hover', hoverValue)
+    emits('hover', hoverValue)
   }
 }
 
 function handleMouseLeave() {
   if (!isInteractive.value) return
   hoveredStar.value = null
-  emit('hover', null)
+  emits('hover', null)
 }
 
-/**
- * 键盘导航支持
- */
 function handleKeyDown(event: KeyboardEvent) {
   if (!isInteractive.value) return
 
@@ -211,7 +146,6 @@ function handleKeyDown(event: KeyboardEvent) {
       break
 
     default:
-      // 数字键快速设置评分
       if (event.key >= '0' && event.key <= '9') {
         const numValue = Number.parseInt(event.key)
         if (numValue <= props.max) {
@@ -254,7 +188,7 @@ const badgeLabel = computed(() => `${props.modelValue}/${props.max}`)
 
 <template>
   <div
-    class="inline-flex items-center gap-1"
+    :class="uiCls.root({ class: props.ui?.root })"
     role="slider"
     :aria-label="`评分 ${props.modelValue} / ${props.max}`"
     :aria-valuenow="props.modelValue"
@@ -266,7 +200,7 @@ const badgeLabel = computed(() => `${props.modelValue}/${props.max}`)
     @keydown="handleKeyDown"
   >
     <slot name="prefix" :value="props.modelValue" :max="props.max" />
-    <div class="flex items-center gap-0.5">
+    <div :class="uiCls.stars({ class: props.ui?.stars })">
       <UButton
         v-for="index in props.max"
         :key="index"
@@ -278,12 +212,7 @@ const badgeLabel = computed(() => `${props.modelValue}/${props.max}`)
         :aria-label="`${index} 星`"
         :tabindex="-1"
         v-bind="buttonProps"
-        class="transition-all duration-150"
-        :class="{
-          'cursor-pointer hover:scale-110': isInteractive,
-          'cursor-not-allowed opacity-50': props.disabled,
-          'cursor-default': props.readonly && !props.disabled
-        }"
+        :class="uiCls.star({ class: props.ui?.star })"
         @click="handleClick(index - 1, $event)"
         @mouseenter="handleMouseEnter(index - 1, $event)"
         @mousemove="handleMouseMove(index - 1, $event)"

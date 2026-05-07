@@ -1,0 +1,9 @@
+@import "tailwindcss" theme(static);
+@import "@nuxt/ui";
+@import '#build/movk-ui.css';
+
+@source "./components";
+
+@theme static {
+  --font-sans: 'Alibaba PuHuiTi', sans-serif;
+}

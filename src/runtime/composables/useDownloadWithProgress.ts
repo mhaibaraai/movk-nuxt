@@ -1,7 +1,9 @@
 import type { RequestToastOptions, MovkApiPublicConfig } from '../types/api'
 import { ref, useRuntimeConfig } from '#imports'
 import { extractFilename, triggerDownload } from '@movk/core'
-import { showToast, extractToastMessage, getAuthHeaders, resolveEndpointConfig } from '../utils/api-utils'
+import { getAuthHeaders } from '../domains/api/auth'
+import { resolveEndpointConfig } from '../domains/api/endpoint-config'
+import { extractToastMessage, showToast } from '../domains/api/toast'
 
 /**
  * 下载选项(带进度监控)
@@ -69,7 +71,7 @@ export function useDownloadWithProgress() {
 
     try {
       // 合并认证 headers
-      const authHeaders = getAuthHeaders(config)
+      const authHeaders = getAuthHeaders(config.auth)
 
       const response = await fetch(fullUrl, {
         method: 'GET',

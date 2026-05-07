@@ -1,17 +1,11 @@
-<script setup lang="ts" generic="P extends 'click' | 'hover' = 'click'">
+<script lang="ts" setup generic="P extends 'click' | 'hover'">
+import type { PopoverEmits } from '@nuxt/ui'
 import { UPopover, UButton, UColorPicker, UIcon } from '#components'
-import type { ButtonProps, ColorPickerProps, PopoverEmits, PopoverProps } from '@nuxt/ui'
 import { computed } from 'vue'
-
-export interface ColorChooserProps<P extends 'click' | 'hover' = 'click'> extends /** @vue-ignore */ ColorPickerProps {
-  /** 弹出层组件属性 */
-  popoverProps?: PopoverProps<P>
-  /** 按钮组件属性 */
-  buttonProps?: ButtonProps
-}
+import type { ColorChooserProps } from '../types/components/color-chooser'
 
 const props = defineProps<ColorChooserProps<P>>()
-const emit = defineEmits<PopoverEmits>()
+const emits = defineEmits<PopoverEmits>()
 
 defineOptions({ inheritAttrs: false })
 
@@ -27,7 +21,7 @@ const chipStyle = computed(() => ({
 </script>
 
 <template>
-  <UPopover v-bind="props.popoverProps" @close:prevent="emit('close:prevent')" @update:open="emit('update:open', $event)">
+  <UPopover v-bind="props.popoverProps" @close:prevent="emits('close:prevent')" @update:open="emits('update:open', $event)">
     <template #default="defaultSlotProps">
       <slot v-bind="defaultSlotProps">
         <UButton

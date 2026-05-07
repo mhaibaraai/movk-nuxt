@@ -1,14 +1,20 @@
-<script setup lang="ts">
-defineProps<{
+<script lang="ts">
+interface ThemePickerButtonProps {
   label: string
   icon?: string
   chip?: string
   selected?: boolean
-}>()
+}
 
-const slots = defineSlots<{
+interface ThemePickerButtonSlots {
   leading: () => any
-}>()
+}
+</script>
+
+<script lang="ts" setup>
+defineProps<ThemePickerButtonProps>()
+
+const slots = defineSlots<ThemePickerButtonSlots>()
 </script>
 
 <template>

@@ -16,6 +16,8 @@ export default createConfigForNuxt({
 }).append({
   files: ['**/*.vue'],
   rules: {
+    'import/first': 'off',
+    'import/order': 'off',
     'vue/multi-word-component-names': 'off',
     'vue/max-attributes-per-line': ['error', { singleline: 5, multiline: 1 }]
   }

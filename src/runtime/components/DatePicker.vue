@@ -1,47 +1,25 @@
-<script setup lang="ts" generic="R extends boolean, M extends boolean, P extends 'click' | 'hover' = 'click'">
-import { UPopover, UButton, UCalendar } from '#components'
+<script lang="ts" setup generic="R extends boolean, M extends boolean, P extends 'click' | 'hover'">
+import type { ButtonProps, CalendarProps } from '@nuxt/ui'
 import type { DateValue } from '@internationalized/date'
-import type { DateFormatterOptions } from '../composables/useDateFormatter'
-import type { ButtonProps, CalendarEmits, CalendarProps, PopoverEmits, PopoverProps } from '@nuxt/ui'
-import type { OmitByKey } from '@movk/core'
+import { UPopover, UButton, UCalendar } from '#components'
 import { computed, useAttrs } from 'vue'
 import { useDateFormatter } from '../composables/useDateFormatter'
+import type { DatePickerEmits, DatePickerProps, LabelFormat } from '../types/components/date-picker'
 
-export type LabelFormat = 'iso' | 'formatted' | 'date' | 'timestamp' | 'unix'
+const props = withDefaults(defineProps<DatePickerProps<R, M, P>>(), {
+  placeholder: '选择日期',
+  labelFormat: 'formatted'
+})
 
-export interface DatePickerProps<R extends boolean, M extends boolean, P extends 'click' | 'hover' = 'click'> extends /** @vue-ignore */ OmitByKey<CalendarProps<R, M>, 'modelValue' | 'placeholder'>, DateFormatterOptions {
-  /**
-   * 输入框占位文本
-   * @defaultValue '选择日期'
-   */
-  placeholder?: string
-  /** 按钮组件属性 */
-  buttonProps?: ButtonProps
-  /** 弹出层组件属性 */
-  popoverProps?: PopoverProps<P>
-  /** 按钮上展示文本的格式 */
-  labelFormat?: LabelFormat | ((formatter: ReturnType<typeof useDateFormatter>, modelValue: CalendarProps<R, M>['modelValue']) => string)
-}
-
-const LABEL_FORMATS: LabelFormat[] = ['iso', 'formatted', 'date', 'timestamp', 'unix']
-
-const {
-  buttonProps,
-  popoverProps,
-  formatOptions = { dateStyle: 'medium' },
-  locale,
-  labelFormat = 'formatted',
-  placeholder = '选择日期'
-} = defineProps<DatePickerProps<R, M, P>>()
-
-const emit = defineEmits<PopoverEmits & CalendarEmits<R, M>>()
+const emits = defineEmits<DatePickerEmits<R, M>>()
 
 defineOptions({ inheritAttrs: false })
 
+const LABEL_FORMATS: LabelFormat[] = ['iso', 'formatted', 'date', 'timestamp', 'unix']
 const attrs = useAttrs()
 const modelValue = defineModel<CalendarProps<R, M>['modelValue']>()
 
-const formatter = useDateFormatter({ locale, formatOptions })
+const formatter = useDateFormatter({ locale: props.locale, formatOptions: props.formatOptions })
 
 const formatConverters: Record<LabelFormat, (date: DateValue) => string> = {
   iso: date => formatter.toISO(date),
@@ -57,17 +35,17 @@ const convertArray = (dates: DateValue[], format: LabelFormat) =>
   dates.map(d => convertSingle(d, format)).join(', ')
 
 const convertRange = (range: { start?: DateValue | null, end?: DateValue | null }, format: LabelFormat) => {
-  if (!range.start || !range.end) return placeholder || buttonProps?.label || ''
+  if (!range.start || !range.end) return props.placeholder || props.buttonProps?.label || ''
   return `${convertSingle(range.start, format)} - ${convertSingle(range.end, format)}`
 }
 
 const convertToLabel = (value: CalendarProps<R, M>['modelValue']): string => {
-  if (!value) return placeholder || buttonProps?.label || ''
+  if (!value) return props.placeholder || props.buttonProps?.label || ''
 
-  const format = LABEL_FORMATS.includes(labelFormat as LabelFormat) ? labelFormat as LabelFormat : 'formatted'
+  const format = LABEL_FORMATS.includes(props.labelFormat as LabelFormat) ? props.labelFormat as LabelFormat : 'formatted'
 
   if (Array.isArray(value)) {
-    return value.length > 0 ? convertArray(value, format) : placeholder || buttonProps?.label || ''
+    return value.length > 0 ? convertArray(value, format) : props.placeholder || props.buttonProps?.label || ''
   }
 
   if (typeof value === 'object' && 'start' in value && 'end' in value) {
@@ -78,13 +56,13 @@ const convertToLabel = (value: CalendarProps<R, M>['modelValue']): string => {
 }
 
 const formattedDate = computed<string>(() => {
-  if (typeof labelFormat === 'function') return labelFormat(formatter, modelValue.value)
+  if (typeof props.labelFormat === 'function') return props.labelFormat(formatter, modelValue.value)
   return convertToLabel(modelValue.value)
 })
 </script>
 
 <template>
-  <UPopover v-bind="popoverProps" @close:prevent="emit('close:prevent')" @update:open="emit('update:open', $event)">
+  <UPopover v-bind="popoverProps" @close:prevent="emits('close:prevent')" @update:open="emits('update:open', $event)">
     <template #default="defaultSlotProps">
       <slot v-bind="defaultSlotProps">
         <UButton
@@ -114,10 +92,10 @@ const formattedDate = computed<string>(() => {
       <UCalendar
         v-model="modelValue"
         class="p-2"
-        v-bind="$attrs"
-        @update:placeholder="(e: any) => emit('update:placeholder', e)"
-        @update:start-value="emit('update:startValue', $event)"
-        @update:valid-model-value="emit('update:validModelValue', $event)"
+        v-bind="attrs"
+        @update:placeholder="(e: any) => emits('update:placeholder', e)"
+        @update:start-value="emits('update:startValue', $event)"
+        @update:valid-model-value="emits('update:validModelValue', $event)"
       >
         <template v-if="$slots.day" #day="day">
           <slot name="day" v-bind="day" />

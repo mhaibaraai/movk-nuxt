@@ -1,80 +1,21 @@
-<script setup lang="ts">
+<script lang="ts" setup>
 import { UIcon } from '#components'
+import { useAppConfig } from '#imports'
 import { useElementSize } from '@vueuse/core'
-import { Motion } from 'motion-v'
 import { computed, ref, useTemplateRef } from 'vue'
-import type { ClassNameValue } from '../types'
+import { tv } from '../utils/tv'
+import theme from '#build/movk-ui/slide-verify'
+import type { ComponentConfig } from '@nuxt/ui'
+import type { AppConfig } from 'nuxt/schema'
+import type { SlideVerifyProps, SlideVerifyEmits, SlideVerifySlots } from '../types/components/slide-verify'
 
-export interface SlideVerifyProps {
-  /**
-   * 滑块宽度
-   * @defaultValue 50
-   */
-  sliderWidth?: number
-  /**
-   * 滑块高度
-   * @defaultValue 32
-   */
-  height?: number
-  /**
-   * 是否禁用
-   * @defaultValue false
-   */
-  disabled?: boolean
-  /**
-   * 待滑动时的提示文本
-   * @defaultValue '请向右滑动验证'
-   */
-  text?: string
-  /**
-   * 验证成功时的提示文本
-   * @defaultValue '验证成功'
-   */
-  successText?: string
-  /**
-   * 滑块图标
-   * @defaultValue 'i-lucide-chevrons-right'
-   */
-  icon?: string
-  /**
-   * 验证成功时的图标
-   * @defaultValue 'i-lucide-check'
-   */
-  successIcon?: string
-  /**
-   * 完成验证所需的阈值百分比（0-1）
-   * @defaultValue 0.9
-   */
-  threshold?: number
-  /**
-   * 自定义轨道样式
-   */
-  trackClass?: ClassNameValue
-  /**
-   * 自定义滑块样式
-   */
-  sliderClass?: ClassNameValue
-  /**
-   * 自定义文本样式
-   */
-  textClass?: ClassNameValue
-  /**
-   * 自定义根元素样式
-   */
-  class?: ClassNameValue
+interface Props extends SlideVerifyProps {
+  size?: ComponentConfig<typeof theme, AppConfig, 'slideVerify'>['variants']['size']
+  ui?: ComponentConfig<typeof theme, AppConfig, 'slideVerify'>['slots']
 }
 
-export interface SlideVerifyEmits {
-  success: []
-  dragStart: []
-  dragEnd: [success: boolean]
-}
-
-defineOptions({ inheritAttrs: false })
-
-const props = withDefaults(defineProps<SlideVerifyProps>(), {
-  sliderWidth: 50,
-  height: 32,
+const props = withDefaults(defineProps<Props>(), {
+  size: 'md',
   disabled: false,
   text: '请向右滑动验证',
   successText: '验证成功',
@@ -83,49 +24,85 @@ const props = withDefaults(defineProps<SlideVerifyProps>(), {
   threshold: 0.9
 })
 
-const emit = defineEmits<SlideVerifyEmits>()
+const emits = defineEmits<SlideVerifyEmits>()
+defineSlots<SlideVerifySlots>()
+defineOptions({ inheritAttrs: false })
 
 const isVerified = defineModel<boolean>({ default: false })
-const trackRef = useTemplateRef<HTMLElement>('track')
-const { width: trackWidth } = useElementSize(trackRef)
+const rootRef = useTemplateRef<HTMLElement>('root')
+const sliderRef = useTemplateRef<HTMLElement>('slider')
+const { width: rootWidth } = useElementSize(rootRef)
+const { width: sliderWidth } = useElementSize(sliderRef)
 const isDragging = ref(false)
 const dragX = ref(0)
+const pointerStartX = ref(0)
+const dragStartX = ref(0)
+
+const appConfig = useAppConfig() as { movk?: { slideVerify?: unknown } }
+
+const uiCls = computed(() =>
+  tv({ extend: tv(theme), ...((appConfig.movk?.slideVerify || {}) as typeof theme) })({
+    disabled: props.disabled,
+    verified: isVerified.value,
+    size: props.size
+  })
+)
+
+const rootPaddingX = computed(() => {
+  const root = rootRef.value
+  const size = props.size
+  if (!root || !size) return 0
+
+  const style = getComputedStyle(root)
+  return (Number.parseFloat(style.paddingLeft) || 0) + (Number.parseFloat(style.paddingRight) || 0)
+})
+
+const sliderOuterWidth = computed(() =>
+  sliderWidth.value ? (sliderRef.value?.offsetWidth || sliderWidth.value) : 0
+)
 
 const maxDragDistance = computed(() =>
-  trackWidth.value ? Math.max(0, trackWidth.value - props.sliderWidth - 8) : 0
+  rootWidth.value ? Math.max(0, (rootRef.value?.clientWidth || 0) - rootPaddingX.value - sliderOuterWidth.value) : 0
 )
 
 const progress = computed(() =>
   isVerified.value ? 1 : maxDragDistance.value ? Math.min(dragX.value / maxDragDistance.value, 1) : 0
 )
 
-const canInteract = computed(() => !props.disabled && !isVerified.value && trackWidth.value > 0)
+const canInteract = computed(() => !props.disabled && !isVerified.value && rootWidth.value > 0)
 
-const springTransition = { type: 'spring' as const, stiffness: 400, damping: 30 }
+const currentTranslateX = computed(() =>
+  isVerified.value ? maxDragDistance.value : dragX.value
+)
 
-function handleDragStart() {
+function handlePointerDown(e: PointerEvent) {
   if (!canInteract.value) return
+  pointerStartX.value = e.clientX
+  dragStartX.value = dragX.value
   isDragging.value = true
-  emit('dragStart')
+  ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
+  emits('dragStart')
 }
 
-function handleDrag(_event: PointerEvent, info: { offset: { x: number } }) {
-  if (!canInteract.value) return
-  dragX.value = Math.max(0, Math.min(info.offset.x, maxDragDistance.value))
+function handlePointerMove(e: PointerEvent) {
+  if (!isDragging.value || !canInteract.value) return
+  dragX.value = Math.max(0, Math.min(
+    dragStartX.value + (e.clientX - pointerStartX.value),
+    maxDragDistance.value
+  ))
 }
 
-function handleDragEnd() {
-  if (!canInteract.value) return
+function handlePointerUp() {
+  if (!isDragging.value) return
   isDragging.value = false
-
   const success = progress.value >= props.threshold
   if (success) {
     isVerified.value = true
-    emit('success')
+    emits('success')
   } else {
     dragX.value = 0
   }
-  emit('dragEnd', success)
+  emits('dragEnd', success)
 }
 
 function reset() {
@@ -138,13 +115,8 @@ defineExpose({ reset })
 
 <template>
   <div
-    :class="[
-      'relative select-none overflow-hidden rounded-lg border transition-colors duration-300',
-      props.class,
-      disabled ? 'opacity-50 cursor-not-allowed' : '',
-      isVerified ? 'bg-success border-transparent' : 'bg-elevated border-default'
-    ]"
-    :style="{ height: `${height}px` }"
+    ref="root"
+    :class="uiCls.root({ class: props.ui?.root })"
     role="slider"
     :aria-label="text"
     :aria-valuenow="Math.round(progress * 100)"
@@ -152,74 +124,44 @@ defineExpose({ reset })
     aria-valuemax="100"
     :aria-disabled="disabled"
   >
-    <div ref="track" class="absolute inset-0" :class="trackClass">
-      <Motion
+    <div ref="track" :class="uiCls.track({ class: props.ui?.track })">
+      <div
         v-if="!isVerified"
-        as="div"
-        class="absolute inset-y-0 left-0 bg-primary/20"
-        :animate="{ width: `${progress * 100}%`, opacity: 0.6 }"
-        :transition="isDragging ? { duration: 0 } : springTransition"
+        :class="[uiCls.fill({ class: props.ui?.fill }), isDragging ? 'transition-none' : 'transition-[width] duration-300']"
+        :style="{ width: `${progress * 100}%` }"
       />
 
-      <div
-        class="absolute inset-0 flex items-center justify-center text-sm font-medium pointer-events-none"
-        :class="textClass"
-      >
-        <Motion
+      <div :class="uiCls.text({ class: props.ui?.text })">
+        <span
           v-if="!isVerified"
-          as="span"
-          class="relative inline-block bg-size-[200%_100%] bg-clip-text text-transparent bg-no-repeat"
+          class="animate-[shimmer_2s_linear_infinite] [background-size:200%_100%] bg-clip-text text-transparent bg-no-repeat select-none"
           :style="{
-            backgroundImage: 'radial-gradient(circle at center, var(--color-gray-500), transparent), linear-gradient(var(--color-neutral-400), var(--color-neutral-400))',
+            backgroundImage: 'linear-gradient(90deg, var(--ui-text-dimmed) 0%, var(--ui-text-muted) 50%, var(--ui-text-dimmed) 100%)',
             opacity: 1 - progress * 0.5
           }"
-          :animate="{ backgroundPosition: '-200% 50%, 0 0' }"
-          :initial="{ backgroundPosition: '200% 50%, 0 0' }"
-          :transition="{
-            repeat: Infinity,
-            duration: 2,
-            ease: 'linear'
-          }"
-        >
-          {{ text }}
-        </Motion>
-        <span v-else class="text-inverted font-medium">{{ successText }}</span>
+        >{{ text }}</span>
+        <span v-else class="font-medium text-inverted">{{ successText }}</span>
       </div>
     </div>
 
-    <Motion
-      as="div"
-      class="absolute inset-1"
-      :style="{ width: `${sliderWidth}px` }"
-      :initial="{ x: 0 }"
-      :animate="{ x: isVerified ? maxDragDistance : isDragging ? dragX : 0 }"
-      :transition="isDragging ? { duration: 0 } : springTransition"
-      :while-hover="canInteract ? { scale: 1.02 } : undefined"
-      :while-tap="canInteract ? { scale: 0.98 } : undefined"
-      :drag="canInteract ? 'x' : false"
-      :drag-constraints="{ left: 0, right: maxDragDistance }"
-      :drag-elastic="0"
-      :drag-momentum="false"
-      @drag-start="handleDragStart"
-      @drag="handleDrag"
-      @drag-end="handleDragEnd"
+    <div
+      ref="slider"
+      :class="[
+        uiCls.slider({ class: props.ui?.slider }),
+        isDragging ? 'transition-none' : 'transition-transform duration-300 ease-out',
+        canInteract ? 'hover:scale-[1.02] active:scale-[0.98]' : ''
+      ]"
+      :style="{ transform: `translateX(${currentTranslateX}px)` }"
+      @pointerdown="handlePointerDown"
+      @pointermove="handlePointerMove"
+      @pointerup="handlePointerUp"
     >
-      <div
-        class="size-full flex items-center justify-center rounded-md shadow-sm transition-colors"
-        :class="[
-          sliderClass,
-          isVerified
-            ? 'bg-white/90'
-            : 'bg-default cursor-grab active:cursor-grabbing ring-1 ring-default'
-        ]"
-      >
-        <slot name="slider" :verified="isVerified" :progress="progress">
-          <UIcon
-            :name="isVerified ? successIcon : icon"
-            :class="['size-5', isVerified ? 'text-success' : 'text-primary']"
-          />
-        </slot>
-      </div>
-    </Motion>
+      <slot name="slider" :verified="isVerified" :progress="progress">
+        <UIcon
+          :name="isVerified ? successIcon : icon"
+          :class="uiCls.icon({ class: props.ui?.icon })"
+        />
+      </slot>
+    </div>
   </div>
 </template>

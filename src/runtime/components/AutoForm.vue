@@ -1,87 +1,57 @@
-<script setup lang="ts" generic="S extends z.ZodObject, T extends boolean = true, N extends boolean = false">
-import type { ButtonProps, FormEmits, FormProps, InferInput } from '@nuxt/ui'
+<script lang="ts" setup generic="S extends z.ZodObject, T extends boolean = true, N extends boolean = false">
+import type { InferInput } from '@nuxt/ui'
 import type { z } from 'zod'
-import type { ZodAutoFormFieldMeta } from '../types/zod'
-import type { AutoFormControls, AutoFormField, AutoFormSlotProps, DynamicFormSlots } from '../types/auto-form'
 import type { Ref } from 'vue'
 import { UForm } from '#components'
-import { computed, onMounted, ref, unref, useTemplateRef } from 'vue'
+import { computed, onMounted, ref, unref, useAttrs, useTemplateRef } from 'vue'
 import { getPath, isFunction, setPath } from '@movk/core'
-import { useAutoFormProvider } from '../auto-form/provider'
-import { classifyFields } from '../auto-form/field-utils'
-import { extractPureSchema, introspectSchema } from '../auto-form/schema-introspector'
+import { useAutoFormProvider } from '../domains/auto-form/provider'
+import { classifyFields } from '../domains/auto-form/fields'
+import { extractPureSchema, introspectSchema } from '../domains/auto-form/schema'
 import { useAutoForm } from '../composables/useAutoForm'
-import AutoFormRendererChildren from './auto-form-renderer/AutoFormRendererChildren.vue'
-import AutoFormRendererField from './auto-form-renderer/AutoFormRendererField.vue'
-
-export interface AutoFormProps<S extends z.ZodObject, T extends boolean = true, N extends boolean = false> extends FormProps<S, T, N> {
-  /**
-   * 是否显示默认提交按钮
-   * @defaultValue true
-   */
-  submitButton?: boolean
-  /** 提交按钮属性 */
-  submitButtonProps?: ButtonProps
-  /** 自定义控件映射 */
-  controls?: AutoFormControls
-  /** 全局字段元数据配置 */
-  globalMeta?: ZodAutoFormFieldMeta
-  /** 数组字段添加按钮属性 */
-  addButtonProps?: ButtonProps
-  loadingAuto?: boolean
-}
-
-export interface AutoFormEmits<S extends z.ZodObject, T extends boolean = true> extends FormEmits<S, T> {
-}
-
-export type AutoFormSlots<T extends object> = {
-  header: (props: AutoFormSlotProps<T>) => any
-  footer: (props: AutoFormSlotProps<T>) => any
-  submit: (props: AutoFormSlotProps<T>) => any
-} & DynamicFormSlots<T>
+import AutoFormRendererChildren from '../domains/auto-form/components/Children.vue'
+import AutoFormRendererField from '../domains/auto-form/components/Field.vue'
+import type { AutoFormProps, AutoFormEmits, AutoFormSlots } from '../types/auto-form/component'
+import type { AutoFormField } from '../types/auto-form/slots'
 
 type AutoFormStateType = N extends false ? Partial<InferInput<S>> : never
-const {
-  schema,
-  controls,
-  globalMeta,
-  submitButton = true,
-  submitButtonProps,
-  addButtonProps,
-  state: _state,
-  loadingAuto = true,
-  validateOn = [],
-  ...restProps
-} = defineProps<AutoFormProps<S, T, N>>()
+
+const props = withDefaults(defineProps<AutoFormProps<S, T, N>>(), {
+  submitButton: true,
+  loadingAuto: true,
+  validateOn: () => []
+})
 
 defineEmits<AutoFormEmits<S, T>>()
-const _slots = defineSlots<AutoFormSlots<AutoFormStateType>>()
+const slots = defineSlots<AutoFormSlots<AutoFormStateType>>()
 defineOptions({ inheritAttrs: false })
 
-const state = ref(_state || {}) as Ref<AutoFormStateType>
+const attrs = useAttrs()
+
+const stateModel = ref(props.state || {}) as Ref<AutoFormStateType>
 
 const formRef = useTemplateRef('formRef')
 const { DEFAULT_CONTROLS } = useAutoForm()
-const { resolveFieldProp } = useAutoFormProvider(state, _slots)
+const { resolveFieldProp } = useAutoFormProvider(stateModel, slots)
 
 const resolvedButtonSize = computed(() => {
-  const size = globalMeta?.size
+  const size = props.globalMeta?.size
   if (size === undefined || isFunction(size)) return undefined
   return unref(size)
 })
 
-const pureSchema = computed(() => schema ? extractPureSchema(schema) as S : schema)
+const pureSchema = computed(() => props.schema ? extractPureSchema(props.schema) as S : props.schema)
 
 const controlsMapping = computed(() => ({
   ...DEFAULT_CONTROLS,
-  ...controls
+  ...props.controls
 }))
 
 const fields = computed(() => {
-  if (!schema)
+  if (!props.schema)
     return []
 
-  return introspectSchema(schema, controlsMapping.value, '', globalMeta)
+  return introspectSchema(props.schema, controlsMapping.value, '', props.globalMeta)
 })
 
 function resolveDefaultValue(fields: AutoFormField[], stateValue: AutoFormStateType) {
@@ -134,27 +104,27 @@ const renderData = computed(() => {
 })
 
 onMounted(() => {
-  resolveDefaultValue(fields.value, state.value)
+  resolveDefaultValue(fields.value, stateModel.value)
 })
 
 function reset() {
-  Object.keys(state.value).forEach((key) => {
+  Object.keys(stateModel.value).forEach((key) => {
     // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-    delete state.value[key as keyof AutoFormStateType]
+    delete stateModel.value[key as keyof AutoFormStateType]
   })
 
-  if (_state) {
-    Object.assign(state.value, _state)
+  if (props.state) {
+    Object.assign(stateModel.value, props.state)
   }
-  resolveDefaultValue(fields.value, state.value)
+  resolveDefaultValue(fields.value, stateModel.value)
 
   formRef.value?.clear()
 }
 
 function clear() {
-  Object.keys(state.value).forEach((key) => {
+  Object.keys(stateModel.value).forEach((key) => {
     // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-    delete state.value[key as keyof AutoFormStateType]
+    delete stateModel.value[key as keyof AutoFormStateType]
   })
 
   formRef.value?.clear()
@@ -171,14 +141,14 @@ defineExpose({
   <UForm
     v-if="renderData"
     ref="formRef"
-    :state="state"
+    :state="stateModel"
     :schema="pureSchema"
     :loading-auto="loadingAuto"
     :validate-on="validateOn"
-    v-bind="restProps"
+    v-bind="attrs"
   >
     <template #default="{ errors, loading }">
-      <slot name="header" v-bind="{ errors, loading, fields: visibleFields, state }" />
+      <slot name="header" v-bind="{ errors, loading, fields: visibleFields, state: stateModel }" />
 
       <template v-if="renderData.hasComplexFields">
         <AutoFormRendererChildren
@@ -198,9 +168,9 @@ defineExpose({
         />
       </template>
 
-      <slot name="footer" v-bind="{ errors, loading, fields: visibleFields, state }" />
+      <slot name="footer" v-bind="{ errors, loading, fields: visibleFields, state: stateModel }" />
 
-      <slot name="submit" v-bind="{ errors, loading, fields: visibleFields, state }">
+      <slot name="submit" v-bind="{ errors, loading, fields: visibleFields, state: stateModel }">
         <UButton
           v-if="submitButton"
           type="submit"

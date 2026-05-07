@@ -1,37 +1,44 @@
-<script setup lang="ts" generic="T extends InputValue">
+<script lang="ts" setup generic="T extends InputValue">
+import type { ButtonProps, ComponentConfig, InputSlots, InputValue } from '@nuxt/ui'
+import type { OmitByKey } from '@movk/core'
+import { useAttrs } from 'vue'
 import { UInput, UButton, UTooltip } from '#components'
 import { useClipboard } from '@vueuse/core'
-import { isEmpty, type OmitByKey } from '@movk/core'
-import type { ButtonProps, InputEmits, InputProps, InputSlots, InputValue, TooltipProps } from '@nuxt/ui'
-import { useAttrs } from 'vue'
+import { isEmpty } from '@movk/core'
+import { useAppConfig } from '#imports'
+import theme from '#build/movk-ui/with-copy'
+import inputTheme from '#build/ui/input'
+import { useExtendedTv } from '../../utils/extend-theme'
+import type { WithCopyEmits, WithCopyProps } from '../../types/components/input/with-copy'
+import type { AppConfig } from 'nuxt/schema'
 
-export interface WithCopyProps<T extends InputValue = InputValue> extends /** @vue-ignore */ OmitByKey<InputProps<T>, 'modelValue'> {
-  /** 复制按钮的自定义属性 */
-  buttonProps?: ButtonProps
-  /** 提示框的自定义属性 */
-  tooltipProps?: TooltipProps
+interface Props extends WithCopyProps<T> {
+  ui?: ComponentConfig<typeof inputTheme & typeof theme, AppConfig, 'withCopy'>['slots']
 }
 
-export type WithCopyEmits<T extends InputValue = InputValue> = InputEmits<T> & {
-  copy: [value: string]
-}
-
-const props = defineProps<WithCopyProps<T>>()
-const emit = defineEmits<WithCopyEmits<T>>()
+const props = defineProps<Props>()
+const emits = defineEmits<WithCopyEmits<T>>()
 const slots = defineSlots<OmitByKey<InputSlots, 'trailing'>>()
 
 defineOptions({ inheritAttrs: false })
 
 const attrs = useAttrs()
+const appConfig = useAppConfig() as { movk?: { withCopy?: unknown } }
 const modelValue = defineModel<T>()
 
+const { baseUi } = useExtendedTv(
+  inputTheme,
+  theme,
+  () => appConfig.movk?.withCopy,
+  () => ({ ui: props.ui })
+)
 const { copy, copied } = useClipboard()
 
 function handleCopy() {
   if (modelValue.value) {
     const stringValue = String(modelValue.value)
     copy(stringValue)
-    emit('copy', stringValue)
+    emits('copy', stringValue)
   }
 }
 </script>
@@ -39,10 +46,10 @@ function handleCopy() {
 <template>
   <UInput
     v-model="modelValue"
-    :ui="{ trailing: 'pe-1' }"
-    v-bind="$attrs"
-    @blur="emit('blur', $event)"
-    @change="emit('change', $event)"
+    :ui="baseUi"
+    v-bind="attrs"
+    @blur="emits('blur', $event)"
+    @change="emits('change', $event)"
   >
     <template v-for="(_, slotName) in slots" :key="slotName" #[slotName]="slotProps">
       <slot :name="slotName" v-bind="slotProps ?? {}" />

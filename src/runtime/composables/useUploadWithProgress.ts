@@ -1,13 +1,14 @@
 import type { ApiResponse, RequestToastOptions, MovkApiPublicConfig } from '../types/api'
 import { ref, useRuntimeConfig } from '#imports'
 import {
-  showToast,
-  isBusinessSuccess,
+  getAuthHeaders
+} from '../domains/api/auth'
+import {
   extractMessage,
-  extractToastMessage,
-  getAuthHeaders,
-  resolveEndpointConfig
-} from '../utils/api-utils'
+  isBusinessSuccess
+} from '../domains/api/response'
+import { resolveEndpointConfig } from '../domains/api/endpoint-config'
+import { extractToastMessage, showToast } from '../domains/api/toast'
 
 /**
  * 上传选项(带进度监控)
@@ -84,7 +85,7 @@ export function useUploadWithProgress() {
     error.value = null
 
     return new Promise((resolve) => {
-      const authHeaders = getAuthHeaders(config)
+      const authHeaders = getAuthHeaders(config.auth)
       const xhr = new XMLHttpRequest()
       currentXhr = xhr
 

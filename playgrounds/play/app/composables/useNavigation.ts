@@ -102,8 +102,31 @@ const autoFormNav: NavigationMenuItem = {
   ]
 }
 
+const tableNav: NavigationMenuItem = {
+  label: 'Table',
+  icon: 'i-lucide-table',
+  defaultOpen: true,
+  children: [
+    { label: 'Basic', to: '/table/basic' },
+    { label: 'Formatting', to: '/table/formatting' },
+    { label: 'Props & Events', to: '/table/props-events' },
+    { label: 'Slots & States', to: '/table/slots-states' },
+    { label: 'Selection', to: '/table/selection' },
+    { label: 'Actions', to: '/table/actions' },
+    { label: 'Sorting', to: '/table/sorting' },
+    { label: 'Pagination', to: '/table/pagination' },
+    { label: 'Column Sizing', to: '/table/column-sizing' },
+    { label: 'Column Pinning', to: '/table/column-pinning' },
+    { label: 'Row Pinning', to: '/table/row-pinning' },
+    { label: 'Infinite Scroll', to: '/table/infinite-scroll' },
+    { label: 'Column Toggle', to: '/table/column-toggle' },
+    { label: 'Tree', to: '/table/tree' }
+  ]
+}
+
 const components: NavigationMenuItem[] = [
   autoFormNav,
+  tableNav,
   {
     label: 'Components',
     icon: 'i-lucide-box',
@@ -120,7 +143,9 @@ const components: NavigationMenuItem[] = [
       { label: 'SlideVerify', to: '/components/SlideVerify' },
       { label: 'ThemePicker', to: '/components/ThemePicker' },
       { label: 'WithFloatingLabel', to: '/components/WithFloatingLabel' },
-      { label: 'AsPhoneNumberInput', to: '/components/AsPhoneNumberInput' }
+      { label: 'AsPhoneNumberInput', to: '/components/AsPhoneNumberInput' },
+      { label: 'MessageBox', to: '/components/MessageBox' },
+      { label: 'Popconfirm', to: '/components/Popconfirm' }
     ]
   }
 ]

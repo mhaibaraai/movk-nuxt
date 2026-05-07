@@ -1,9 +1,15 @@
 import { useAppConfig, useColorMode, useSiteConfig } from '#imports'
-import { themeIcons } from '../utils/theme'
+import { themeIcons } from '../domains/theme/theme-icons'
 import { omit, kebabCase } from '@movk/core'
 import { useLocalStorage } from '@vueuse/core'
 import colors from 'tailwindcss/colors'
 import { computed } from 'vue'
+
+const SYSTEM_DEFAULT_RADIUS = 0.25
+const SYSTEM_DEFAULT_FONT = 'Alibaba PuHuiTi'
+const SYSTEM_DEFAULT_ICONS = 'lucide'
+const SYSTEM_DEFAULT_PRIMARY = 'blue'
+const SYSTEM_DEFAULT_NEUTRAL = 'slate'
 
 export function useTheme() {
   const appConfig = useAppConfig()
@@ -11,12 +17,24 @@ export function useTheme() {
   const site = useSiteConfig()
   const name = kebabCase(site.name)
 
-  const radius = useLocalStorage(`${name}-ui-radius`, 0.25)
-  const font = useLocalStorage(`${name}-ui-font`, 'Alibaba PuHuiTi')
-  const _iconSet = useLocalStorage(`${name}-ui-icons`, 'lucide')
-  const blackAsPrimary = useLocalStorage(`${name}-ui-black-as-primary`, false)
+  const movk = appConfig.movk
 
-  const neutralColors = ['slate', 'gray', 'zinc', 'neutral', 'stone', 'taupe', 'mauve', 'mist', 'olive']
+  const _radius = useLocalStorage(`${name}-ui-radius`, movk?.radius ?? SYSTEM_DEFAULT_RADIUS)
+  const _font = useLocalStorage(`${name}-ui-font`, movk?.font ?? SYSTEM_DEFAULT_FONT)
+  const _iconSet = useLocalStorage(`${name}-ui-icons`, movk?.icons ?? SYSTEM_DEFAULT_ICONS)
+  const _blackAsPrimary = useLocalStorage(`${name}-ui-black-as-primary`, false)
+
+  const pickerFonts = movk?.picker?.fonts ?? []
+  const neutralColors = movk?.picker?.neutralColors ?? []
+  const radiuses = movk?.picker?.radiuses ?? []
+  const fonts = pickerFonts.map(f => f.name)
+
+  const icons = [
+    { label: 'Lucide', icon: 'i-lucide-feather', value: 'lucide' },
+    { label: 'Phosphor', icon: 'i-ph-phosphor-logo', value: 'phosphor' },
+    { label: 'Tabler', icon: 'i-tabler-brand-tabler', value: 'tabler' }
+  ]
+
   const neutral = computed({
     get() {
       return appConfig.ui.colors.neutral
@@ -36,26 +54,28 @@ export function useTheme() {
     set(option) {
       appConfig.ui.colors.primary = option
       window.localStorage.setItem(`${name}-ui-primary`, appConfig.ui.colors.primary)
-      blackAsPrimary.value = false
+      setBlackAsPrimary(false)
     }
   })
 
-  const radiuses = [0, 0.125, 0.25, 0.375, 0.5]
-  const fonts = ['Alibaba PuHuiTi', 'Public Sans', 'DM Sans', 'Geist', 'Inter', 'Poppins', 'Outfit', 'Raleway']
+  const radius = computed({
+    get() {
+      return _radius.value
+    },
+    set(option) {
+      _radius.value = option
+    }
+  })
 
-  const icons = [{
-    label: 'Lucide',
-    icon: 'i-lucide-feather',
-    value: 'lucide'
-  }, {
-    label: 'Phosphor',
-    icon: 'i-ph-phosphor-logo',
-    value: 'phosphor'
-  }, {
-    label: 'Tabler',
-    icon: 'i-tabler-brand-tabler',
-    value: 'tabler'
-  }]
+  const font = computed({
+    get() {
+      return _font.value
+    },
+    set(option) {
+      _font.value = option
+    }
+  })
+
   const icon = computed({
     get() {
       return _iconSet.value
@@ -80,36 +100,44 @@ export function useTheme() {
     }
   })
 
-  const radiusStyle = computed(() => `:root { --ui-radius: ${radius.value}rem; }`)
-  const blackAsPrimaryStyle = computed(() => blackAsPrimary.value ? `:root { --ui-primary: black; } .dark { --ui-primary: white; }` : ':root {}')
-  const fontStyle = computed(() => `:root { --font-sans: '${font.value}', sans-serif; }`)
+  const blackAsPrimary = computed(() => _blackAsPrimary.value)
+
+  function setBlackAsPrimary(value: boolean) {
+    _blackAsPrimary.value = value
+  }
+
+  const radiusStyle = computed(() => `:root { --ui-radius: ${_radius.value}rem; }`)
+  const blackAsPrimaryStyle = computed(() => _blackAsPrimary.value ? `:root { --ui-primary: black; } .dark { --ui-primary: white; }` : ':root {}')
+  const fontStyle = computed(() => `:root { --font-sans: '${_font.value}', sans-serif; }`)
 
   const link = computed(() => {
-    const name = font.value
-    if (name === 'Alibaba PuHuiTi' || !fonts.includes(name)) return []
+    const fontName = _font.value
+    const fontConfig = pickerFonts.find(f => f.name === fontName)
+    const href = fontConfig?.href
+      ?? `https://fonts.googleapis.com/css2?family=${encodeURIComponent(fontName)}:wght@400;500;600;700&display=swap`
     return [{
       rel: 'stylesheet' as const,
-      href: `https://fonts.googleapis.com/css2?family=${encodeURIComponent(name)}:wght@400;500;600;700&display=swap`,
-      id: `font-${kebabCase(name)}`
+      href,
+      id: `font-${fontName.toLowerCase().replace(/\s+/g, '-')}`
     }]
   })
 
   const style = [
-    { innerHTML: radiusStyle, id: `${name}-ui-radius`, tagPriority: -2 },
-    { innerHTML: blackAsPrimaryStyle, id: `${name}-ui-black-as-primary`, tagPriority: -2 },
-    { innerHTML: fontStyle, id: `${name}-ui-font`, tagPriority: -2 }
+    { innerHTML: radiusStyle, id: `nuxt-ui-radius`, tagPriority: -2 },
+    { innerHTML: blackAsPrimaryStyle, id: `nuxt-ui-black-as-primary`, tagPriority: -2 },
+    { innerHTML: fontStyle, id: `nuxt-ui-font`, tagPriority: -2 }
   ]
 
   const hasCSSChanges = computed(() => {
-    return radius.value !== 0.25
-      || blackAsPrimary.value
-      || font.value !== 'Alibaba PuHuiTi'
+    return _radius.value !== (movk?.radius ?? SYSTEM_DEFAULT_RADIUS)
+      || _blackAsPrimary.value
+      || _font.value !== (movk?.font ?? SYSTEM_DEFAULT_FONT)
   })
 
-  const hasAppConfigChanges = computed(() => {
-    return appConfig.ui.colors.primary !== 'blue'
-      || appConfig.ui.colors.neutral !== 'slate'
-      || _iconSet.value !== 'lucide'
+  const hasConfigChanges = computed(() => {
+    return appConfig.ui.colors.primary !== SYSTEM_DEFAULT_PRIMARY
+      || appConfig.ui.colors.neutral !== SYSTEM_DEFAULT_NEUTRAL
+      || _iconSet.value !== (movk?.icons ?? SYSTEM_DEFAULT_ICONS)
   })
 
   function exportCSS(): string {
@@ -118,15 +146,15 @@ export function useTheme() {
       '@import "@nuxt/ui";'
     ]
 
-    if (font.value !== 'Alibaba PuHuiTi') {
-      lines.push('', '@theme {', `  --font-sans: '${font.value}', sans-serif;`, '}')
+    if (_font.value !== SYSTEM_DEFAULT_FONT) {
+      lines.push('', '@theme {', `  --font-sans: '${_font.value}', sans-serif;`, '}')
     }
 
     const rootLines: string[] = []
-    if (radius.value !== 0.25) {
-      rootLines.push(`  --ui-radius: ${radius.value}rem;`)
+    if (_radius.value !== SYSTEM_DEFAULT_RADIUS) {
+      rootLines.push(`  --ui-radius: ${_radius.value}rem;`)
     }
-    if (blackAsPrimary.value) {
+    if (_blackAsPrimary.value) {
       rootLines.push('  --ui-primary: black;')
     }
 
@@ -135,7 +163,7 @@ export function useTheme() {
     }
 
     const darkLines: string[] = []
-    if (blackAsPrimary.value) {
+    if (_blackAsPrimary.value) {
       darkLines.push('  --ui-primary: white;')
     }
 
@@ -145,16 +173,24 @@ export function useTheme() {
     return lines.join('\n')
   }
 
-  function exportAppConfig(): string {
+  function exportConfig(): string {
     const config: Record<string, any> = {}
 
-    const defaultColors: Record<string, string> = { primary: 'sky', secondary: 'blue', success: 'green', info: 'blue', warning: 'yellow', error: 'red', neutral: 'slate' }
+    const defaultColors: Record<string, string> = {
+      primary: SYSTEM_DEFAULT_PRIMARY,
+      neutral: SYSTEM_DEFAULT_NEUTRAL,
+      secondary: 'blue',
+      success: 'green',
+      info: 'blue',
+      warning: 'yellow',
+      error: 'red'
+    }
     const colorEntries = Object.entries(defaultColors).filter(([key, def]) => (appConfig.ui.colors as any)[key] !== def)
     if (colorEntries.length) {
       config.ui = { colors: Object.fromEntries(colorEntries.map(([key]) => [key, (appConfig.ui.colors as any)[key]])) }
     }
 
-    if (_iconSet.value !== 'lucide') {
+    if (_iconSet.value !== SYSTEM_DEFAULT_ICONS) {
       const iconMapping = themeIcons[_iconSet.value as keyof typeof themeIcons]
       config.ui = config.ui || {}
       config.ui.icons = iconMapping
@@ -168,21 +204,23 @@ export function useTheme() {
   }
 
   function resetTheme() {
-    appConfig.ui.colors.primary = 'blue'
+    const defaultPrimary = SYSTEM_DEFAULT_PRIMARY
+    const defaultNeutral = SYSTEM_DEFAULT_NEUTRAL
+    const defaultRadius = movk?.radius ?? SYSTEM_DEFAULT_RADIUS
+    const defaultFont = movk?.font ?? SYSTEM_DEFAULT_FONT
+    const defaultIcons = movk?.icons ?? SYSTEM_DEFAULT_ICONS
+
+    appConfig.ui.colors.primary = defaultPrimary
     window.localStorage.removeItem(`${name}-ui-primary`)
 
-    appConfig.ui.colors.neutral = 'slate'
+    appConfig.ui.colors.neutral = defaultNeutral
     window.localStorage.removeItem(`${name}-ui-neutral`)
 
-    radius.value = 0.25
-    font.value = 'Alibaba PuHuiTi'
-    _iconSet.value = 'lucide'
-    appConfig.ui.icons = themeIcons.lucide as any
-    blackAsPrimary.value = false
-
-    window.localStorage.removeItem(`${name}-ui-ai-theme`)
-    window.localStorage.removeItem(`${name}-ui-custom-colors`)
-    window.localStorage.removeItem(`${name}-ui-css-variables`)
+    _radius.value = defaultRadius
+    _font.value = defaultFont
+    _iconSet.value = defaultIcons
+    appConfig.ui.icons = themeIcons[defaultIcons as keyof typeof themeIcons] as any
+    _blackAsPrimary.value = false
   }
 
   return {
@@ -193,6 +231,7 @@ export function useTheme() {
     primaryColors,
     primary,
     blackAsPrimary,
+    setBlackAsPrimary,
     radiuses,
     radius,
     fonts,
@@ -202,9 +241,10 @@ export function useTheme() {
     modes,
     mode,
     hasCSSChanges,
-    hasAppConfigChanges,
+    hasConfigChanges,
+    configLabel: 'vite.config.ts',
     exportCSS,
-    exportAppConfig,
+    exportConfig,
     resetTheme
   }
 }

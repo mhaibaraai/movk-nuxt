@@ -1,23 +1,36 @@
-<script setup lang="ts" generic="T extends InputValue">
-import { UInput, UButton } from '#components'
+<script lang="ts" setup generic="T extends InputValue">
+import type { ButtonProps, InputSlots, InputValue, ComponentConfig, InputEmits } from '@nuxt/ui'
 import type { OmitByKey } from '@movk/core'
-import type { ButtonProps, InputEmits, InputProps, InputSlots, InputValue } from '@nuxt/ui'
-import { useToggle } from '@vueuse/core'
 import { useAttrs } from 'vue'
+import { UInput, UButton } from '#components'
+import { useToggle } from '@vueuse/core'
+import { useAppConfig } from '#imports'
+import theme from '#build/movk-ui/with-password-toggle'
+import inputTheme from '#build/ui/input'
+import { useExtendedTv } from '../../utils/extend-theme'
+import type { AppConfig } from 'nuxt/schema'
+import type { WithPasswordToggleProps } from '../../types/components/input/with-password-toggle'
 
-export interface WithPasswordToggleProps<T extends InputValue = InputValue> extends /** @vue-ignore */ OmitByKey<InputProps<T>, 'type' | 'modelValue'> {
-  /** 切换按钮的自定义属性 */
-  buttonProps?: ButtonProps
+interface Props extends WithPasswordToggleProps<T> {
+  ui?: ComponentConfig<typeof inputTheme & typeof theme, AppConfig, 'withPasswordToggle'>['slots']
 }
 
-const props = defineProps<WithPasswordToggleProps<T>>()
-const emit = defineEmits<InputEmits<T>>()
+const props = defineProps<Props>()
+const emits = defineEmits<InputEmits<T>>()
 const slots = defineSlots<OmitByKey<InputSlots, 'trailing'>>()
 
 defineOptions({ inheritAttrs: false })
 
 const attrs = useAttrs()
+const appConfig = useAppConfig() as { movk?: { withPasswordToggle?: unknown } }
 const modelValue = defineModel<T>()
+
+const { baseUi } = useExtendedTv(
+  inputTheme,
+  theme,
+  () => appConfig.movk?.withPasswordToggle,
+  () => ({ ui: props.ui })
+)
 
 const [value, toggle] = useToggle(false)
 </script>
@@ -26,10 +39,10 @@ const [value, toggle] = useToggle(false)
   <UInput
     v-model="modelValue"
     :type="value ? 'text' : 'password'"
-    :ui="{ trailing: 'pe-1' }"
-    v-bind="$attrs"
-    @blur="emit('blur', $event)"
-    @change="emit('change', $event)"
+    :ui="baseUi"
+    v-bind="attrs"
+    @blur="emits('blur', $event)"
+    @change="emits('change', $event)"
   >
     <template v-for="(_, slotName) in slots" :key="slotName" #[slotName]="slotProps">
       <slot :name="slotName" v-bind="slotProps ?? {}" />

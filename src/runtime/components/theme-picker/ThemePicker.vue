@@ -1,16 +1,38 @@
-<script setup lang="ts">
-import { useColorMode } from '#imports'
+<script lang="ts">
+import type { ComponentConfig } from '@nuxt/ui'
+import type { AppConfig } from 'nuxt/schema'
+import theme from '#build/movk-ui/theme-picker'
+import popoverTheme from '#build/ui/popover'
+import { useExtendedTv } from '../../utils/extend-theme'
+
+type ThemePicker = ComponentConfig<typeof popoverTheme & typeof theme, AppConfig, 'themePicker'>
+
+interface ThemePickerProps {
+  ui?: ThemePicker['slots']
+}
+</script>
+
+<script lang="ts" setup>
+import { useAppConfig, useColorMode } from '#imports'
 import { useClipboard } from '@vueuse/core'
 import { ref } from 'vue'
 import { useTheme } from '../../composables'
 import ThemePickerButton from './ThemePickerButton.vue'
 
+const props = defineProps<ThemePickerProps>()
+const appConfig = useAppConfig() as ThemePicker['AppConfig']
 const colorMode = useColorMode()
 
 const open = ref(false)
+const { ui } = useExtendedTv(
+  popoverTheme,
+  theme,
+  () => appConfig.movk?.themePicker,
+  () => ({ ui: props.ui })
+)
 
 const { copy: copyCSS, copied: copiedCSS } = useClipboard()
-const { copy: copyAppConfig, copied: copiedAppConfig } = useClipboard()
+const { copy: copyConfig, copied: copiedConfig } = useClipboard()
 
 const {
   neutralColors,
@@ -18,6 +40,7 @@ const {
   primaryColors,
   primary,
   blackAsPrimary,
+  setBlackAsPrimary,
   radiuses,
   radius,
   fonts,
@@ -27,15 +50,16 @@ const {
   modes,
   mode,
   hasCSSChanges,
-  hasAppConfigChanges,
+  hasConfigChanges,
+  configLabel,
   exportCSS,
-  exportAppConfig,
+  exportConfig,
   resetTheme
 } = useTheme()
 </script>
 
 <template>
-  <UPopover v-model:open="open" :ui="{ content: 'w-72 px-6 py-4 flex flex-col gap-4 overflow-y-auto max-h-[calc(100vh-5rem)]' }">
+  <UPopover v-model:open="open" :ui="ui">
     <template #default>
       <UButton
         icon="i-lucide-swatch-book"
@@ -67,7 +91,7 @@ const {
           <ThemePickerButton
             label="Black"
             :selected="blackAsPrimary"
-            @click="blackAsPrimary = true"
+            @click="setBlackAsPrimary(true)"
           >
             <template #leading>
               <span class="inline-block size-2 rounded-full bg-black dark:bg-white" />
@@ -221,7 +245,7 @@ const {
         </div>
       </fieldset>
 
-      <fieldset v-if="hasCSSChanges || hasAppConfigChanges">
+      <fieldset v-if="hasCSSChanges || hasConfigChanges">
         <legend class="text-[11px] leading-none font-semibold mb-2 select-none">
           Export
         </legend>
@@ -238,14 +262,14 @@ const {
             @click="copyCSS(exportCSS())"
           />
           <UButton
-            v-if="hasAppConfigChanges"
+            v-if="hasConfigChanges"
             color="neutral"
             variant="soft"
             size="sm"
-            label="app.config.ts"
-            :icon="copiedAppConfig ? 'i-lucide-copy-check' : 'i-lucide-copy'"
+            :label="configLabel"
+            :icon="copiedConfig ? 'i-lucide-copy-check' : 'i-lucide-copy'"
             class="flex-1 text-[11px]"
-            @click="copyAppConfig(exportAppConfig())"
+            @click="copyConfig(exportConfig())"
           />
           <UTooltip text="Reset theme">
             <UButton

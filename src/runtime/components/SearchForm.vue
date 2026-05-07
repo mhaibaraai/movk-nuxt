@@ -1,198 +1,106 @@
-<script setup lang="ts" generic="S extends z.ZodObject, T extends boolean = true, N extends boolean = false">
-import type { ButtonProps, FormProps, InferInput } from '@nuxt/ui'
+<script lang="ts" setup generic="S extends z.ZodObject, T extends boolean = true, N extends boolean = false">
+import type { InferInput, ComponentConfig } from '@nuxt/ui'
 import type { z } from 'zod'
-import type { ZodAutoFormFieldMeta } from '../types/zod'
-import type { AutoFormControls, DynamicFormSlots } from '../types/auto-form'
-import { UButton, UCollapsible, UForm } from '#components'
 import type { Ref } from 'vue'
-import { computed, ref, unref, useTemplateRef, watch } from 'vue'
+import { UButton, UCollapsible, UForm } from '#components'
+import { computed, ref, unref, useAttrs, useTemplateRef, watch } from 'vue'
 import { isFunction } from '@movk/core'
-import { useAutoFormProvider } from '../auto-form/provider'
-import { extractPureSchema, introspectSchema } from '../auto-form/schema-introspector'
+import { useAutoFormProvider } from '../domains/auto-form/provider'
+import { extractPureSchema, introspectSchema } from '../domains/auto-form/schema'
 import { useAutoForm } from '../composables/useAutoForm'
-import AutoFormRendererField from './auto-form-renderer/AutoFormRendererField.vue'
+import AutoFormRendererField from '../domains/auto-form/components/Field.vue'
 import { useAppConfig } from '#app'
-import { resolveGridClasses, resolveMaxCols } from '../constants/grid-cols'
+import { tv } from '../utils/tv'
+import theme from '#build/movk-ui/search-form'
+import type { AppConfig } from 'nuxt/schema'
+import type { SearchFormProps, SearchFormEmits, SearchFormSlots } from '../types/auto-form/search-form'
 
-export interface SearchFormProps<S extends z.ZodObject, T extends boolean = true, N extends boolean = false> extends FormProps<S, T, N> {
-  /**
-   * Zod 对象 schema，定义搜索字段
-   */
-  schema: S
-  /**
-   * 网格列数
-   * @defaultValue 3
-   */
-  cols?: number | { sm?: number, md?: number, lg?: number, xl?: number }
-  /**
-   * 可见行数（折叠时显示的行数）
-   * @defaultValue 1
-   */
-  visibleRows?: number
-  /**
-   * 自定义控件映射（复用 AutoForm 的控件系统）
-   */
-  controls?: AutoFormControls
-  /**
-   * 全局字段元数据
-   */
-  globalMeta?: ZodAutoFormFieldMeta
-  /**
-   * 搜索按钮属性
-   */
-  searchButtonProps?: ButtonProps
-  /**
-   * 重置按钮属性
-   */
-  resetButtonProps?: ButtonProps
-  /**
-   * 搜索按钮文本
-   * @defaultValue '搜索'
-   */
-  searchText?: string
-  /**
-   * 重置按钮文本
-   * @defaultValue '重置'
-   */
-  resetText?: string
-  /**
-   * 是否显示搜索按钮
-   * @defaultValue true
-   */
-  showSearchButton?: boolean
-  /**
-   * 是否显示重置按钮
-   * @defaultValue true
-   */
-  showResetButton?: boolean
-  /**
-   * 搜索按钮加载状态
-   * @defaultValue false
-   */
-  loading?: boolean
-  /**
-   * 展开/收起按钮图标
-   * @defaultValue 'i-lucide-chevron-down'
-   */
-  icon?: string
-  /**
-   * 展开按钮文本
-   * @defaultValue '展开'
-   */
-  expandText?: string
-  /**
-   * 收起按钮文本
-   * @defaultValue '收起'
-   */
-  collapseText?: string
-  /**
-   * 默认展开状态
-   * @defaultValue false
-   */
-  defaultExpanded?: boolean
-  /**
-   * 网格间距
-   * @defaultValue 'gap-4'
-   */
-  gap?: string
+interface Props extends SearchFormProps<S, T, N> {
+  ui?: ComponentConfig<typeof theme, AppConfig, 'searchForm'>['slots']
 }
 
-export interface SearchFormActionSlots {
-  /** 替换默认按钮区域 */
-  actions: (props: {
-    expanded: boolean
-    toggle: () => void
-    search: () => void
-    reset: () => void
-    loading: boolean
-  }) => any
-  /** 追加在默认按钮后面 */
-  extraActions: (props: { expanded: boolean }) => any
-}
-
-type SearchFormStateType = Partial<InferInput<S>>
-
-type SearchFormSlotTypes = SearchFormActionSlots & DynamicFormSlots<SearchFormStateType>
-
-const {
-  schema,
-  controls,
-  globalMeta,
-  cols = 3,
-  visibleRows = 1,
-  icon = 'i-lucide-chevron-down',
-  expandText = '展开',
-  collapseText = '收起',
-  defaultExpanded = false,
-  gap = 'gap-4',
-  searchText = '搜索',
-  resetText = '重置',
-  searchButtonProps,
-  resetButtonProps,
-  showSearchButton = true,
-  showResetButton = true,
-  loading = false,
-  validateOn = [],
-  state: _state,
-  ...restProps
-} = defineProps<SearchFormProps<S, T, N>>()
-
-const emit = defineEmits<{
-  search: [value: SearchFormStateType]
-  reset: []
-  expand: [expanded: boolean]
-}>()
-
-const modelValue = defineModel<SearchFormStateType>()
-const _slots = defineSlots<SearchFormSlotTypes>()
+const props = withDefaults(defineProps<Props>(), {
+  cols: 3,
+  visibleRows: 1,
+  icon: 'i-lucide-chevron-down',
+  expandText: '展开',
+  collapseText: '收起',
+  defaultExpanded: false,
+  searchText: '搜索',
+  resetText: '重置',
+  showSearchButton: true,
+  showResetButton: true,
+  loading: false,
+  validateOn: () => []
+})
+const modelValue = defineModel<Partial<InferInput<S>>>()
+const emits = defineEmits<SearchFormEmits<S>>()
+const slots = defineSlots<SearchFormSlots<S>>()
 defineOptions({ inheritAttrs: false })
 
-const state = ref(modelValue.value ?? _state ?? {}) as Ref<SearchFormStateType>
-const initialState = { ...(modelValue.value ?? _state ?? {}) } as SearchFormStateType
+const attrs = useAttrs()
 
-watch(() => state.value, (val) => {
+const stateModel = ref(modelValue.value ?? props.state ?? {}) as Ref<Partial<InferInput<S>>>
+const initialState = { ...(modelValue.value ?? props.state ?? {}) } as Partial<InferInput<S>>
+
+watch(() => stateModel.value, (val) => {
   if (val !== modelValue.value) {
     modelValue.value = val
   }
 }, { deep: true })
 
 watch(() => modelValue.value, (val) => {
-  if (val !== undefined && val !== state.value) {
-    state.value = (val ?? {}) as SearchFormStateType
+  if (val !== undefined && val !== stateModel.value) {
+    stateModel.value = (val ?? {}) as Partial<InferInput<S>>
   }
 })
 
-const appConfig = useAppConfig()
+const appConfig = useAppConfig() as { movk?: { searchForm?: unknown }, ui: { icons: Record<string, string> } }
 const formRef = useTemplateRef('formRef')
-const expanded = ref(defaultExpanded)
+const expanded = ref(props.defaultExpanded)
+
+type ColsConfig = { sm?: number, md?: number, lg?: number, xl?: number }
+
+function maxCols(cols: number | ColsConfig): number {
+  if (typeof cols === 'number') return cols
+  return Math.max(cols.sm ?? 1, cols.md ?? 1, cols.lg ?? 1, cols.xl ?? 1)
+}
+
+const colsVariants = computed(() => {
+  const c = props.cols
+  if (typeof c === 'number') return { cols: String(c) }
+  return { cols: '1', smCols: c.sm ? String(c.sm) : undefined, mdCols: c.md ? String(c.md) : undefined, lgCols: c.lg ? String(c.lg) : undefined, xlCols: c.xl ? String(c.xl) : undefined }
+})
+
+const uiCls = computed(() =>
+  tv({ extend: tv(theme), ...((appConfig.movk?.searchForm || {}) as typeof theme) })(colsVariants.value as any)
+)
 
 const { DEFAULT_CONTROLS } = useAutoForm()
-useAutoFormProvider(state, _slots)
+useAutoFormProvider(stateModel, slots)
 
 const resolvedButtonSize = computed(() => {
-  const size = globalMeta?.size
+  const size = props.globalMeta?.size
   if (size === undefined || isFunction(size)) return undefined
   return unref(size)
 })
 
-const showActionsCell = computed(() => showSearchButton || showResetButton || !!_slots.actions || !!_slots.extraActions)
+const showActionsCell = computed(() => props.showSearchButton || props.showResetButton || !!slots.actions || !!slots.extraActions)
 
-const pureSchema = computed(() => schema ? extractPureSchema(schema) as S : schema)
+const pureSchema = computed(() => props.schema ? extractPureSchema(props.schema) as S : props.schema)
 
 const controlsMapping = computed(() => ({
   ...DEFAULT_CONTROLS,
-  ...controls
+  ...props.controls
 }))
 
 const fields = computed(() => {
-  if (!schema) return []
-  return introspectSchema(schema, controlsMapping.value, '', globalMeta)
+  if (!props.schema) return []
+  return introspectSchema(props.schema, controlsMapping.value, '', props.globalMeta)
 })
 
-const gridClass = computed(() => resolveGridClasses(cols, gap))
-
 const visibleCount = computed(() => {
-  const base = resolveMaxCols(cols) * visibleRows
+  const base = maxCols(props.cols) * props.visibleRows
   return Math.max(0, showActionsCell.value ? base - 1 : base)
 })
 
@@ -202,11 +110,11 @@ const needsCollapse = computed(() => collapsedFields.value.length > 0)
 
 function toggle() {
   expanded.value = !expanded.value
-  emit('expand', expanded.value)
+  emits('expand', expanded.value)
 }
 
 function handleSearch() {
-  emit('search', { ...state.value })
+  emits('search', { ...stateModel.value })
 }
 
 function triggerSearch() {
@@ -214,14 +122,14 @@ function triggerSearch() {
 }
 
 function clear() {
-  state.value = {} as SearchFormStateType
+  stateModel.value = {} as Partial<InferInput<S>>
   formRef.value?.clear()
 }
 
 function reset() {
-  state.value = { ...initialState }
+  stateModel.value = { ...initialState }
   formRef.value?.clear()
-  emit('reset')
+  emits('reset')
 }
 
 defineExpose({
@@ -236,22 +144,23 @@ defineExpose({
 <template>
   <UForm
     ref="formRef"
-    :state="state"
+    :state="stateModel"
     :schema="pureSchema"
-    :validate-on="validateOn"
-    v-bind="restProps"
+    :validate-on="props.validateOn"
+    :ui="{ base: uiCls.base({ class: props.ui?.base }) }"
+    v-bind="attrs"
     @submit="handleSearch"
   >
     <template #default="{ errors, loading: formLoading }">
-      <div class="group/search pb-6 -mb-6">
-        <div class="relative">
-          <div :class="gridClass">
+      <div :class="uiCls.root({ class: props.ui?.root })">
+        <div :class="uiCls.inner({ class: props.ui?.inner })">
+          <div :class="uiCls.grid({ class: props.ui?.grid })">
             <AutoFormRendererField
               v-for="field in visibleFields"
               :key="field.path"
               :field="field"
-              :schema="schema"
-              :extra-props="{ errors, loading: formLoading }"
+              :schema="props.schema"
+              :extra-props="{ errors, loading: formLoading, state: stateModel }"
             />
 
             <slot
@@ -263,7 +172,7 @@ defineExpose({
               :reset="reset"
               :loading="loading"
             >
-              <div class="flex items-end gap-2 justify-end">
+              <div :class="uiCls.actionWrapper({ class: props.ui?.actionWrapper })">
                 <UButton
                   v-if="showSearchButton"
                   type="submit"
@@ -290,18 +199,19 @@ defineExpose({
 
           <div
             v-if="needsCollapse"
-            class="absolute inset-x-0 top-full flex justify-center pointer-events-none z-10"
+            :class="uiCls.toggleWrapper({ class: props.ui?.toggleWrapper })"
           >
             <UButton
               :icon="icon || appConfig.ui.icons.chevronDown"
               color="neutral"
-              :size="resolvedButtonSize ?? 'xs'"
+              :size="resolvedButtonSize"
               variant="ghost"
               :data-state="expanded ? 'open' : 'closed'"
               :label="expanded ? collapseText : expandText"
               tabindex="-1"
-              class="group pointer-events-auto opacity-30 group-hover/search:opacity-100 transition-opacity duration-200"
               :ui="{ leadingIcon: 'size-3.5 group-data-[state=open]:rotate-180 transition-transform duration-200' }"
+              :class="uiCls.toggle({ class: props.ui?.toggle })"
+              v-bind="collapseButtonProps"
               @click="toggle"
             />
           </div>
@@ -309,13 +219,13 @@ defineExpose({
 
         <UCollapsible v-if="needsCollapse" v-model:open="expanded">
           <template #content>
-            <div :class="gridClass" class="mt-4">
+            <div :class="[uiCls.grid({ class: props.ui?.grid }), uiCls.collapsedContent({ class: props.ui?.collapsedContent })]">
               <AutoFormRendererField
                 v-for="field in collapsedFields"
                 :key="field.path"
                 :field="field"
-                :schema="schema"
-                :extra-props="{ errors, loading: formLoading }"
+                :schema="props.schema"
+                :extra-props="{ errors, loading: formLoading, state: stateModel }"
               />
             </div>
           </template>

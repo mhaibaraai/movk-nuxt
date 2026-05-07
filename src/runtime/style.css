@@ -1,9 +1,0 @@
-@import "tailwindcss" theme(static);
-@import "@nuxt/ui";
-
-@source "./components";
-@source "./constants";
-
-@theme static {
-  --font-sans: 'Alibaba PuHuiTi', sans-serif;
-}

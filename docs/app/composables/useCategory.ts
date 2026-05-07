@@ -14,6 +14,11 @@ export function useCategory() {
         icon: 'i-lucide-pencil-line'
       },
       {
+        id: 'feedback',
+        title: '反馈组件',
+        icon: 'i-lucide-message-square-dot'
+      },
+      {
         id: 'advanced',
         title: '进阶组件',
         icon: 'i-lucide-blocks'
