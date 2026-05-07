@@ -8,11 +8,9 @@ import { tv } from '@nuxt/ui/utils/tv'
 import theme from '#build/movk-ui/data-table-pagination'
 import type { DataTablePaginationProps, DataTablePaginationSlots, DataTablePaginationUi } from '../../../types/data-table/pagination'
 
-interface Props extends DataTablePaginationProps<T> {
+const props = defineProps<DataTablePaginationProps<T> & {
   uiConfig?: DataTablePaginationUi & { ui?: ComponentConfig<typeof theme, AppConfig, 'dataTablePagination'>['slots'] }
-}
-
-const props = defineProps<Props>()
+}>()
 
 defineSlots<DataTablePaginationSlots<T>>()
 

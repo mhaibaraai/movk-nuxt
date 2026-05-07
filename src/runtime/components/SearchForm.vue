@@ -15,11 +15,9 @@ import theme from '#build/movk-ui/search-form'
 import type { AppConfig } from 'nuxt/schema'
 import type { SearchFormProps, SearchFormEmits, SearchFormSlots } from '../types/auto-form/search-form'
 
-interface Props extends SearchFormProps<S, T, N> {
+const props = withDefaults(defineProps<SearchFormProps<S, T, N> & {
   ui?: ComponentConfig<typeof theme, AppConfig, 'searchForm'>['slots']
-}
-
-const props = withDefaults(defineProps<Props>(), {
+}>(), {
   cols: 3,
   visibleRows: 1,
   icon: 'i-lucide-chevron-down',

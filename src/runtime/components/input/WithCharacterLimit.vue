@@ -10,11 +10,9 @@ import { useExtendedTv } from '../../utils/extend-theme'
 import type { WithCharacterLimitProps } from '../../types/components/input/with-character-limit'
 import type { AppConfig } from 'nuxt/schema'
 
-interface Props extends WithCharacterLimitProps<T> {
+const props = withDefaults(defineProps<WithCharacterLimitProps<T> & {
   ui?: ComponentConfig<typeof inputTheme & typeof theme, AppConfig, 'withCharacterLimit'>['slots']
-}
-
-const props = withDefaults(defineProps<Props>(), {
+}>(), {
   maxLength: 50
 })
 const emits = defineEmits<InputEmits<T>>()

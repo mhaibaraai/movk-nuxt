@@ -7,14 +7,14 @@
     "dev": "nuxt dev"
   },
   "dependencies": {
-    "@iconify-json/vscode-icons": "^1.2.46",
+    "@iconify-json/vscode-icons": "^1.2.49",
     "@internationalized/date": "^3.12.1",
     "@movk/nuxt-docs": "^1.18.2",
     "@nuxt/content": "^3.13.0",
-    "@nuxt/ui": "^4.7.0",
+    "@nuxt/ui": "^4.7.1",
     "better-sqlite3": "^12.9.0",
-    "nuxt": "^4.4.2",
+    "nuxt": "^4.4.4",
     "tailwindcss": "^4.2.4",
-    "zod": "^4.3.6"
+    "zod": "^4.4.3"
   }
 }

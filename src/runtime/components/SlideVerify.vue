@@ -9,12 +9,10 @@ import type { ComponentConfig } from '@nuxt/ui'
 import type { AppConfig } from 'nuxt/schema'
 import type { SlideVerifyProps, SlideVerifyEmits, SlideVerifySlots } from '../types/components/slide-verify'
 
-interface Props extends SlideVerifyProps {
+const props = withDefaults(defineProps<SlideVerifyProps & {
   size?: ComponentConfig<typeof theme, AppConfig, 'slideVerify'>['variants']['size']
   ui?: ComponentConfig<typeof theme, AppConfig, 'slideVerify'>['slots']
-}
-
-const props = withDefaults(defineProps<Props>(), {
+}>(), {
   size: 'md',
   disabled: false,
   text: '请向右滑动验证',

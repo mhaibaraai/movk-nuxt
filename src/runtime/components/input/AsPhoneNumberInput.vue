@@ -10,11 +10,9 @@ import { useExtendedTv } from '../../utils/extend-theme'
 import type { AsPhoneNumberInputProps } from '../../types/components/input/as-phone-number-input'
 import type { AppConfig } from 'nuxt/schema'
 
-interface Props extends AsPhoneNumberInputProps<T> {
+const props = withDefaults(defineProps<AsPhoneNumberInputProps<T> & {
   ui?: ComponentConfig<typeof inputTheme & typeof theme, AppConfig, 'asPhoneNumberInput'>['slots']
-}
-
-const props = withDefaults(defineProps<Props>(), {
+}>(), {
   mask: '(###) ###-####'
 })
 const modelValue = defineModel<T>()

@@ -32,14 +32,12 @@ import type { DataTableExposed, DataTableProps } from '../types/data-table/compo
 import type { TreeSelectionResult } from '../types/data-table/columns'
 import type { DataTablePaginationUi } from '../types/data-table/pagination'
 
-interface Props extends DataTableProps<T> {
+const props = withDefaults(defineProps<DataTableProps<T> & {
   ui?: ComponentConfig<typeof tableTheme & typeof theme, AppConfig, 'dataTable'>['slots']
   paginationUi?: DataTablePaginationUi & {
     ui?: ComponentConfig<typeof paginationTheme, AppConfig, 'dataTablePagination'>['slots']
   }
-}
-
-const props = withDefaults(defineProps<Props>(), {
+}>(), {
   emptyCell: '-',
   indentSize: '1rem',
   truncate: true,
@@ -398,7 +396,7 @@ const uTableProps = computed(() => {
       onSelect: (e: Event, row: Row<T>) => {
         if (props.expandOnRowClick && row.getCanExpand()) row.toggleExpanded()
         if (props.selectOnRowClick) row.toggleSelected()
-        ;(props.onSelect as Props['onSelect'])?.(e, row)
+        ;(props.onSelect as DataTableProps<T>['onSelect'])?.(e, row)
       }
     })
   }
