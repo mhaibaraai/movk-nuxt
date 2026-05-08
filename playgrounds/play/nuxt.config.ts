@@ -6,6 +6,8 @@ export default defineNuxtConfig({
   compatibilityDate: 'latest',
 
   movk: {
-
+    api: {
+      enabled: true
+    }
   }
 })

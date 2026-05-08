@@ -1,47 +1,46 @@
-<script lang="ts" setup>
-defineProps<{
-  form?: unknown
-  title?: string
-  description?: string
+<script setup lang="ts" generic="T extends Record<string, string[]>">
+type SlotProps = { [K in keyof T]: T[K] extends (infer U)[] ? U : never }
+
+const props = defineProps<{
+  attrs: T
+  containerClass?: string
 }>()
+
+defineSlots<{
+  default: (props: SlotProps) => unknown
+}>()
+
+const combinations = computed<SlotProps[]>(() => {
+  const keys = Object.keys(props.attrs)
+  const values = Object.values(props.attrs)
+
+  if (keys.length === 0) return [{} as SlotProps]
+
+  const result: SlotProps[] = []
+
+  function generate(index: number, current: Record<string, string>) {
+    if (index === keys.length) {
+      result.push({ ...current } as unknown as SlotProps)
+      return
+    }
+    const key = keys[index]
+    const list = values[index] || []
+    for (const value of list) {
+      generate(index + 1, { ...current, [key as string]: value })
+    }
+  }
+
+  generate(0, {})
+  return result
+})
 </script>
 
 <template>
-  <UCard
-    :ui="{
-      body: 'space-y-6 h-auto max-h-[65vh] overflow-y-auto',
-      footer: 'h-auto max-h-[10vh] overflow-auto'
-    }"
-    class="min-w-lg"
-  >
-    <template #header>
-      <slot name="header">
-        <div v-if="title">
-          <h3 class="text-base font-semibold leading-6">
-            {{ title }}
-          </h3>
-
-          <p v-if="description" class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            {{ description }}
-          </p>
-        </div>
-      </slot>
+  <div class="flex items-start gap-4 flex-wrap min-h-0 p-4">
+    <template v-for="(combination, index) in combinations" :key="index">
+      <div class="flex flex-col items-start gap-3" :class="containerClass">
+        <slot v-bind="combination" />
+      </div>
     </template>
-    <UTheme
-      :ui="{
-        collapsible: { content: 'space-y-4' },
-        form: { base: 'space-y-4 min-w-md' }
-      }"
-    >
-      <slot />
-    </UTheme>
-    <template v-if="form" #footer>
-      <details>
-        <summary class="cursor-pointer text-muted text-sm font-medium mb-2">
-          查看表单数据
-        </summary>
-        <pre class="text-xs">{{ form }}</pre>
-      </details>
-    </template>
-  </UCard>
+  </div>
 </template>

@@ -1,13 +1,8 @@
 export default defineAppConfig({
-  movk: {
-    picker: {
-    },
-    asPhoneNumberInput: {
-      variants: {
-        dialCode: {
-          true: { leading: 'text-amber-100' }
-        }
-      }
+  ui: {
+    colors: {
+      primary: 'sky',
+      neutral: 'slate'
     }
   },
   toaster: {

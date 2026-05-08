@@ -2,167 +2,77 @@ import type { CommandPaletteGroup, CommandPaletteItem, NavigationMenuItem } from
 
 const autoFormNav: NavigationMenuItem = {
   label: 'AutoForm',
-  icon: 'i-lucide-book-marked',
+  icon: 'i-lucide-form-input',
   defaultOpen: true,
   children: [
-    {
-      label: 'Getting Started',
-      children: [
-        { label: 'Basic', to: '/auto-form/getting-started/basic' },
-        { label: 'Validation', to: '/auto-form/getting-started/validation' },
-        { label: 'Default Values', to: '/auto-form/getting-started/default-values' },
-        { label: 'Optional Fields', to: '/auto-form/getting-started/optional' }
-      ]
-    },
-    {
-      label: 'Field Types',
-      children: [
-        { label: 'String', to: '/auto-form/field-types/string' },
-        { label: 'Number', to: '/auto-form/field-types/number' },
-        { label: 'Boolean', to: '/auto-form/field-types/boolean' },
-        { label: 'Date', to: '/auto-form/field-types/date' },
-        { label: 'Enum', to: '/auto-form/field-types/enum' },
-        { label: 'File', to: '/auto-form/field-types/file' },
-        { label: 'Array', to: '/auto-form/field-types/array' },
-        { label: 'Object', to: '/auto-form/field-types/object' },
-        { label: 'Typed Object', to: '/auto-form/field-types/typed-object' },
-        { label: 'Nested', to: '/auto-form/field-types/nested' }
-      ]
-    },
-    {
-      label: 'Controls',
-      children: [
-        { label: 'WithClear', to: '/auto-form/controls/with-clear' },
-        { label: 'WithPasswordToggle', to: '/auto-form/controls/with-password-toggle' },
-        { label: 'WithCopy', to: '/auto-form/controls/with-copy' },
-        { label: 'WithCharacterLimit', to: '/auto-form/controls/with-character-limit' },
-        { label: 'AsPhoneNumberInput', to: '/auto-form/controls/as-phone-number-input' },
-        { label: 'WithFloatingLabel', to: '/auto-form/controls/with-floating-label' },
-        { label: 'ColorChooser', to: '/auto-form/controls/color-chooser' },
-        { label: 'InputTags', to: '/auto-form/controls/input-tags' },
-        { label: 'SelectMenu', to: '/auto-form/controls/select-menu' },
-        { label: 'InputMenu', to: '/auto-form/controls/input-menu' },
-        { label: 'CheckboxGroup', to: '/auto-form/controls/checkbox-group' },
-        { label: 'RadioGroup', to: '/auto-form/controls/radio-group' },
-        { label: 'StarRating', to: '/auto-form/controls/star-rating' },
-        { label: 'SlideVerify', to: '/auto-form/controls/slide-verify' }
-      ]
-    },
-    {
-      label: 'Layout',
-      children: [
-        { label: 'Basic', to: '/auto-form/layout/basic' },
-        { label: 'Grid', to: '/auto-form/layout/grid' },
-        { label: 'Nested', to: '/auto-form/layout/nested' },
-        { label: 'Multi-column', to: '/auto-form/layout/multi-column' },
-        { label: 'Accordion', to: '/auto-form/layout/accordion' },
-        { label: 'Tabs', to: '/auto-form/layout/tabs' },
-        { label: 'FieldSlot', to: '/auto-form/layout/field-slot' }
-      ]
-    },
-    {
-      label: 'Advanced',
-      children: [
-        { label: 'Conditional', to: '/auto-form/advanced/conditional' },
-        { label: 'Dynamic Arrays', to: '/auto-form/advanced/dynamic-arrays' },
-        { label: 'Custom Controls', to: '/auto-form/advanced/custom-controls' },
-        { label: 'Direct Component', to: '/auto-form/advanced/direct-component' },
-        { label: 'Async Validation', to: '/auto-form/advanced/async-validation' },
-        { label: 'Dependencies', to: '/auto-form/advanced/dependencies' },
-        { label: 'Collapsible', to: '/auto-form/advanced/collapsible' },
-        { label: 'Reactive Props', to: '/auto-form/advanced/reactive-props' },
-        { label: 'Global Meta', to: '/auto-form/advanced/global-meta' }
-      ]
-    },
-    {
-      label: 'Slots',
-      children: [
-        { label: 'Basic', to: '/auto-form/slots/basic' },
-        { label: 'Field Slots', to: '/auto-form/slots/field-slots' },
-        { label: 'Generic Slots', to: '/auto-form/slots/generic-slots' },
-        { label: 'Nested Content', to: '/auto-form/slots/nested-content' },
-        { label: 'Array Content', to: '/auto-form/slots/array-content' },
-        { label: 'Custom Controls', to: '/auto-form/slots/custom-controls' },
-        { label: 'Mixed Slots', to: '/auto-form/slots/mixed-slots' },
-        { label: 'Submit Slot', to: '/auto-form/slots/submit' }
-      ]
-    },
-    {
-      label: 'Examples',
-      children: [
-        { label: 'Basic', to: '/auto-form/examples/basic' },
-        { label: 'Login', to: '/auto-form/examples/login' },
-        { label: 'Registration', to: '/auto-form/examples/registration' },
-        { label: 'Profile', to: '/auto-form/examples/profile' },
-        { label: 'Product', to: '/auto-form/examples/product' },
-        { label: 'Survey', to: '/auto-form/examples/survey' },
-        { label: 'Filter', to: '/auto-form/examples/filter' }
-      ]
-    }
+    { label: 'Quickstart', to: '/auto-form/quickstart' },
+    { label: 'Field Types', to: '/auto-form/field-types' },
+    { label: 'Metadata', to: '/auto-form/metadata' },
+    { label: 'Controls', to: '/auto-form/controls' },
+    { label: 'Reactive', to: '/auto-form/reactive' },
+    { label: 'Layout', to: '/auto-form/layout' },
+    { label: 'Slots', to: '/auto-form/slots' },
+    { label: 'Recipes', to: '/auto-form/recipes' }
   ]
 }
 
-const tableNav: NavigationMenuItem = {
-  label: 'Table',
+const dataTableNav: NavigationMenuItem = {
+  label: 'DataTable',
   icon: 'i-lucide-table',
   defaultOpen: true,
   children: [
-    { label: 'Basic', to: '/table/basic' },
-    { label: 'Formatting', to: '/table/formatting' },
-    { label: 'Props & Events', to: '/table/props-events' },
-    { label: 'Slots & States', to: '/table/slots-states' },
-    { label: 'Selection', to: '/table/selection' },
-    { label: 'Actions', to: '/table/actions' },
-    { label: 'Sorting', to: '/table/sorting' },
-    { label: 'Pagination', to: '/table/pagination' },
-    { label: 'Column Sizing', to: '/table/column-sizing' },
-    { label: 'Column Pinning', to: '/table/column-pinning' },
-    { label: 'Row Pinning', to: '/table/row-pinning' },
-    { label: 'Infinite Scroll', to: '/table/infinite-scroll' },
-    { label: 'Column Toggle', to: '/table/column-toggle' },
-    { label: 'Tree', to: '/table/tree' }
+    { label: 'Columns', to: '/data-table/columns' },
+    { label: 'Rows', to: '/data-table/rows' },
+    { label: 'Special Columns', to: '/data-table/special-columns' },
+    { label: 'Data', to: '/data-table/data' },
+    { label: 'Large Data', to: '/data-table/large-data' },
+    { label: 'Tree & Style', to: '/data-table/tree-and-style' }
   ]
 }
 
-const components: NavigationMenuItem[] = [
-  autoFormNav,
-  tableNav,
-  {
-    label: 'Components',
-    icon: 'i-lucide-box',
-    defaultOpen: true,
-    children: [
-      { label: 'SearchForm', to: '/components/SearchForm' },
-      { label: 'ColorChooser', to: '/components/ColorChooser' },
-      { label: 'DatePicker', to: '/components/DatePicker' },
-      { label: 'StarRating', to: '/components/StarRating' },
-      { label: 'WithClear', to: '/components/WithClear' },
-      { label: 'WithPasswordToggle', to: '/components/WithPasswordToggle' },
-      { label: 'WithCopy', to: '/components/WithCopy' },
-      { label: 'WithCharacterLimit', to: '/components/WithCharacterLimit' },
-      { label: 'SlideVerify', to: '/components/SlideVerify' },
-      { label: 'ThemePicker', to: '/components/ThemePicker' },
-      { label: 'WithFloatingLabel', to: '/components/WithFloatingLabel' },
-      { label: 'AsPhoneNumberInput', to: '/components/AsPhoneNumberInput' },
-      { label: 'MessageBox', to: '/components/MessageBox' },
-      { label: 'Popconfirm', to: '/components/Popconfirm' }
-    ]
-  }
-]
+const componentsNav: NavigationMenuItem = {
+  label: 'Components',
+  icon: 'i-lucide-box',
+  defaultOpen: true,
+  children: [
+    { label: 'StarRating', to: '/components/star-rating' },
+    { label: 'SlideVerify', to: '/components/slide-verify' },
+    { label: 'Popconfirm', to: '/components/popconfirm' },
+    { label: 'MessageBox', to: '/components/message-box' },
+    { label: 'ColorChooser', to: '/components/color-chooser' },
+    { label: 'DatePicker', to: '/components/date-picker' },
+    { label: 'SearchForm', to: '/components/search-form' },
+    { label: 'ThemePicker', to: '/components/theme-picker' },
+    { label: 'Inputs · With*', to: '/components/inputs-with' },
+    { label: 'AsPhoneNumberInput', to: '/components/as-phone-number-input' }
+  ]
+}
+
+const composablesNav: NavigationMenuItem = {
+  label: 'Composables',
+  icon: 'i-lucide-puzzle',
+  defaultOpen: true,
+  children: [
+    { label: 'useApiFetch', to: '/composables/use-api-fetch' },
+    { label: 'Upload Progress', to: '/composables/use-upload-progress' },
+    { label: 'Download Progress', to: '/composables/use-download-progress' },
+    { label: 'useDateFormatter', to: '/composables/use-date-formatter' },
+    { label: 'useTheme', to: '/composables/use-theme' },
+    { label: 'useMessageBox', to: '/composables/use-message-box' }
+  ]
+}
+
+const components: NavigationMenuItem[] = [autoFormNav, dataTableNav, componentsNav, composablesNav]
 
 export const useNavigation = () => {
-  const items = [
+  const items: NavigationMenuItem[] = [
     { label: 'Home', icon: 'i-lucide-house', to: '/' }
   ]
 
   const groups = computed<CommandPaletteGroup<CommandPaletteItem>[]>(() => [
     { id: 'links', items: items as unknown as CommandPaletteItem[] },
-    { id: 'components', label: 'Components', items: components as unknown as CommandPaletteItem[] }
+    { id: 'components', label: 'Navigation', items: components as unknown as CommandPaletteItem[] }
   ])
 
-  return {
-    components,
-    groups,
-    items
-  }
+  return { components, groups, items }
 }

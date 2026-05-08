@@ -12,11 +12,10 @@ const items = computed<DropdownMenuItem[]>(() => [{
   children: colors.map(color => ({
     label: color,
     chip: color,
+    type: 'checkbox' as const,
     checked: appConfig.ui.colors.primary === color,
-    type: 'checkbox',
-    onSelect: (e) => {
+    onSelect: (e: Event) => {
       e.preventDefault()
-
       appConfig.ui.colors.primary = color
     }
   }))
@@ -26,11 +25,10 @@ const items = computed<DropdownMenuItem[]>(() => [{
   children: neutrals.map(color => ({
     label: color,
     chip: color === 'neutral' ? 'old-neutral' : color,
-    type: 'checkbox',
+    type: 'checkbox' as const,
     checked: appConfig.ui.colors.neutral === color,
-    onSelect: (e) => {
+    onSelect: (e: Event) => {
       e.preventDefault()
-
       appConfig.ui.colors.neutral = color
     }
   }))
@@ -39,19 +37,12 @@ const items = computed<DropdownMenuItem[]>(() => [{
 
 <template>
   <UDropdownMenu :items="items" :content="{ side: 'right', align: 'start' }">
-    <UButton
-      icon="i-lucide-swatch-book"
-      color="neutral"
-      variant="ghost"
-      class="data-[state=open]:bg-elevated"
-      aria-label="Switch theme"
-    />
-
+    <UButton icon="i-lucide-swatch-book" color="neutral" variant="ghost" size="sm" aria-label="Switch theme" />
     <template #item-leading="{ item }">
       <span
         :style="{
-          '--chip-light': `var(--color-${(item as any).chip}-500)`,
-          '--chip-dark': `var(--color-${(item as any).chip}-400)`
+          '--chip-light': `var(--color-${(item as { chip: string }).chip}-500)`,
+          '--chip-dark': `var(--color-${(item as { chip: string }).chip}-400)`
         }"
         class="ms-0.5 size-2 rounded-full bg-(--chip-light) dark:bg-(--chip-dark)"
       />

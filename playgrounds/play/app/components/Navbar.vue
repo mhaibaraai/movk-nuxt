@@ -1,72 +1,45 @@
 <script setup lang="ts">
 import type { NavigationMenuItem } from '@nuxt/ui'
 import { upperName } from '../utils'
-
-const route = useRoute()
-const router = useRouter()
+import { flattenNav } from '../composables/useFlatNav'
 
 defineProps<{
   to?: string
 }>()
 
-const name = computed(() => route.path.split('/').pop() as string)
+defineSlots<{
+  default: () => unknown
+  trailing: () => unknown
+}>()
+
+const route = useRoute()
+const router = useRouter()
+
+const name = computed(() => route.path.split('/').pop() || 'home')
 const title = computed(() => upperName(name.value))
 
-const components = inject<NavigationMenuItem[]>('components')
+const components = inject<NavigationMenuItem[]>('components', [])
+const flatItems = computed(() => flattenNav(components))
 
-function flattenNavigationItems(items: NavigationMenuItem[]): NavigationMenuItem[] {
-  if (!items) return []
+const currentIndex = computed(() => flatItems.value.findIndex(item => item.to === route.path))
 
-  const result: NavigationMenuItem[] = []
-
-  for (const item of items) {
-    if (item.children) {
-      result.push(...item.children)
-
-      for (const child of item.children) {
-        if (child.children) {
-          result.push(...child.children)
-        }
-      }
-    }
-  }
-
-  return result
-}
-
-const flattenedNavItems = computed(() => flattenNavigationItems(components || []))
-
-const currentIndex = computed(() => {
-  return flattenedNavItems.value.findIndex(item => item.to === route.path) ?? -1
+const prev = computed<NavigationMenuItem | null>(() => {
+  const i = currentIndex.value
+  return i > 0 ? (flatItems.value[i - 1] ?? null) : null
 })
 
-const navigationCache = computed(() => {
-  const current = currentIndex.value
-  const items = flattenedNavItems.value
-
-  return {
-    prev: current > 0 ? items[current - 1] : null,
-    next: current < items.length - 1 ? items[current + 1] : null
-  }
+const next = computed<NavigationMenuItem | null>(() => {
+  const i = currentIndex.value
+  return i >= 0 && i < flatItems.value.length - 1 ? (flatItems.value[i + 1] ?? null) : null
 })
 
-function navigate(direction: 'prev' | 'next' | number): void {
-  let targetRoute: NavigationMenuItem | null = null
-
-  if (typeof direction === 'number') {
-    targetRoute = flattenedNavItems.value[direction] ?? null
-  } else {
-    targetRoute = navigationCache.value[direction] ?? null
-  }
-
-  if (targetRoute?.to) {
-    router.push(targetRoute.to)
-  }
+function go(target: NavigationMenuItem | null | undefined) {
+  if (target?.to) router.push(target.to as string)
 }
 
 defineShortcuts({
-  j: () => navigate('next'),
-  k: () => navigate('prev')
+  j: () => go(next.value),
+  k: () => go(prev.value)
 })
 </script>
 
@@ -83,21 +56,36 @@ defineShortcuts({
           icon="i-lucide-chevron-left"
           color="neutral"
           variant="outline"
-          :disabled="!navigationCache.prev"
+          :disabled="!prev"
           class="ring-default"
-          aria-label="Previous component"
-          @click="navigate('prev')"
+          aria-label="Previous"
+          @click="go(prev)"
         />
         <UButton
           icon="i-lucide-chevron-right"
           color="neutral"
           variant="outline"
-          :disabled="!navigationCache.next"
+          :disabled="!next"
           class="ring-default"
-          aria-label="Next component"
-          @click="navigate('next')"
+          aria-label="Next"
+          @click="go(next)"
         />
       </UFieldGroup>
+    </template>
+
+    <template #trailing>
+      <slot name="trailing">
+        <UButton
+          v-if="to"
+          :to="to"
+          target="_blank"
+          icon="i-lucide-external-link"
+          color="neutral"
+          variant="ghost"
+          size="xs"
+          aria-label="Open docs"
+        />
+      </slot>
     </template>
 
     <template #right>

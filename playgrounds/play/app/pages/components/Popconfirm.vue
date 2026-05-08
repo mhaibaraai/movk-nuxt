@@ -1,165 +1,96 @@
-<script lang="ts" setup>
-import type { SemanticColor } from '#movk/types'
+<script setup lang="ts">
+import theme from '#build/movk-ui/popconfirm'
 
-const toast = useToast()
+const types = Object.keys(theme.variants.type)
 
-const types: SemanticColor[] = ['neutral', 'primary', 'info', 'success', 'warning', 'error']
-
-const syncResult = ref('')
-const asyncResult = ref('')
-const customResult = ref('')
-const errorMsg = ref('')
-const slotResult = ref('')
-const uiResult = ref('')
-
-async function simulateAsync() {
-  await new Promise<void>(resolve => setTimeout(resolve, 1500))
-  asyncResult.value = '已完成'
+const log = ref<string[]>([])
+function record(msg: string) {
+  log.value = [`[${new Date().toLocaleTimeString()}] ${msg}`, ...log.value].slice(0, 8)
 }
 
-async function failingAction() {
-  await new Promise<void>(resolve => setTimeout(resolve, 800))
-  throw new Error('服务器返回错误：操作被拒绝')
-}
-
-function handleError(err: unknown) {
-  errorMsg.value = err instanceof Error ? err.message : '未知错误'
-  toast.add({
-    color: 'error',
-    title: '操作失败',
-    description: errorMsg.value
-  })
+async function asyncConfirm() {
+  await new Promise(r => setTimeout(r, 1200))
+  record('async confirmed')
 }
 </script>
 
 <template>
   <Navbar />
-  <Matrix title="气泡确认框" description="`MPopconfirm` 组件的各种用法场景。">
-    <div class="grid gap-8">
-      <UFormField label="类型（type）">
-        <div class="flex flex-wrap gap-3">
+
+  <div class="p-4 grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-4">
+    <div class="flex flex-col gap-4">
+      <Showcase title="按 type 区分语义" description="primary / info / success / warning / error / neutral">
+        <div class="flex flex-wrap gap-2">
           <MPopconfirm
-            v-for="type in types"
-            :key="type"
-            :type="type"
-            :title="`${type} 确认`"
-            :description="`这是一条 ${type} 类型的确认气泡。`"
-            :on-confirm="() => { syncResult = `${type} 已确认` }"
-            :ui="{
-              content: 'p-4 py-3',
-              header: 'gap-1.5'
-            }"
+            v-for="t in types"
+            :key="t"
+            :type="(t as 'primary' | 'info' | 'success' | 'warning' | 'error' | 'neutral')"
+            :title="`${t} 类型`"
+            description="是否确认此操作？"
+            @confirm="record(`${t} confirmed`)"
+            @cancel="record(`${t} cancelled`)"
           >
-            <UButton :color="type" variant="soft" :label="type" size="sm" />
+            <UButton :color="t === 'primary' ? 'primary' : (t as 'info' | 'success' | 'warning' | 'error' | 'neutral')" variant="soft" size="sm">
+              {{ t }}
+            </UButton>
           </MPopconfirm>
         </div>
-        <span v-if="syncResult" class="mt-2 block text-sm text-muted">{{ syncResult }}</span>
-      </UFormField>
+      </Showcase>
 
-      <UFormField label="异步确认（loading 1.5s）">
-        <div class="flex items-center gap-4">
+      <Showcase title="异步 onConfirm" description="返回 Promise 时确认按钮自动 loading，1.2s 后关闭">
+        <div class="flex gap-2">
           <MPopconfirm
-            type="primary"
-            title="确认提交?"
-            description="提交后将立即生效，请确认操作。"
-            :on-confirm="simulateAsync"
+            type="warning"
+            title="删除资源"
+            description="该操作不可恢复"
+            :on-confirm="asyncConfirm"
+            :confirm-button="{ color: 'error', label: '删除' }"
           >
-            <UButton color="primary" label="提交申请" icon="i-lucide-send" />
+            <UButton color="error" variant="soft" icon="i-lucide-trash-2">
+              异步删除
+            </UButton>
           </MPopconfirm>
-          <span v-if="asyncResult" class="text-sm text-success">{{ asyncResult }}</span>
-        </div>
-      </UFormField>
 
-      <UFormField label="自定义图标和按钮">
-        <div class="flex items-center gap-4">
           <MPopconfirm
             type="error"
-            title="永久删除?"
-            description="此操作不可撤销，数据将永久丢失。"
-            icon="i-lucide-trash-2"
-            :confirm-button="{ color: 'error', label: '确认删除' }"
-            :cancel-button="{ label: '取消操作', variant: 'ghost' }"
-            :on-confirm="() => { customResult = '已删除' }"
+            title="拒绝执行"
+            description="onConfirm 抛出错误时弹层不关闭"
+            :on-confirm="() => { throw new Error('被拒绝') }"
+            @error="(e: unknown) => record(`error: ${(e as Error).message}`)"
           >
-            <UButton color="error" variant="soft" label="危险操作" icon="i-lucide-alert-triangle" />
+            <UButton color="error" variant="outline">
+              抛错保留
+            </UButton>
           </MPopconfirm>
-          <span v-if="customResult" class="text-sm text-error">{{ customResult }}</span>
         </div>
-      </UFormField>
+      </Showcase>
 
-      <UFormField label="禁用取消按钮">
-        <MPopconfirm
-          type="warning"
-          title="强制确认"
-          description="此操作必须确认，无法取消。"
-          :cancel-button="false"
-        >
-          <UButton color="warning" variant="soft" label="强制操作" />
-        </MPopconfirm>
-      </UFormField>
-
-      <UFormField label="错误处理（@error）">
-        <div class="flex flex-col gap-2">
+      <Showcase title="自定义按钮 / 隐藏取消" description="cancelButton=false 隐藏取消按钮，confirmButton 透传 ButtonProps">
+        <div class="flex gap-2">
           <MPopconfirm
-            type="error"
-            title="模拟操作失败"
-            description="确认后将触发失败的异步操作。"
-            :on-confirm="failingAction"
-            @error="handleError"
+            title="单按钮模式"
+            :cancel-button="false"
+            :confirm-button="{ label: '我知道了' }"
           >
-            <UButton color="error" variant="soft" label="触发失败操作" icon="i-lucide-zap-off" />
+            <UButton variant="soft">
+              仅确认
+            </UButton>
           </MPopconfirm>
-        </div>
-      </UFormField>
 
-      <UFormField label="body Slot 自定义内容">
-        <div class="flex items-center gap-4">
-          <MPopconfirm
-            title="删除用户"
-            :description="''"
-            :on-confirm="() => { slotResult = '用户已删除' }"
-          >
-            <template #body>
-              <div class="flex flex-col gap-2 py-1">
-                <p class="text-sm text-muted">
-                  即将删除以下用户，操作不可撤销：
-                </p>
-                <div class="flex items-center gap-2 rounded-md bg-elevated px-3 py-2">
-                  <UAvatar size="xs" icon="i-lucide-user" />
-                  <div class="flex flex-col">
-                    <span class="text-xs font-medium text-highlighted">张三</span>
-                    <span class="text-xs text-muted">zhangsan@example.com</span>
-                  </div>
-                </div>
-              </div>
-            </template>
-            <UButton color="error" variant="soft" label="删除用户" icon="i-lucide-user-x" />
-          </MPopconfirm>
-          <span v-if="slotResult" class="text-sm text-error">{{ slotResult }}</span>
-        </div>
-      </UFormField>
-
-      <UFormField label="ui 样式定制">
-        <div class="flex items-center gap-4">
           <MPopconfirm
             type="info"
-            title="样式定制示例"
-            description="通过 ui 属性覆盖内部各区块 class。"
-            :ui="{
-              content: 'w-72',
-              title: 'text-info text-base',
-              description: 'text-xs text-info/70',
-              footer: 'justify-between pt-2 border-t border-default'
-            }"
-            :confirm-button="{ label: '好的，执行', color: 'info' }"
-            :cancel-button="{ label: '不了，取消', variant: 'ghost' }"
-            :on-confirm="() => { uiResult = '已确认' }"
+            title="自定义文案"
+            :confirm-button="{ label: '继续', icon: 'i-lucide-arrow-right', color: 'info' }"
+            :cancel-button="{ label: '再想想', variant: 'ghost' }"
           >
-            <UButton color="info" variant="soft" label="打开定制气泡" icon="i-lucide-palette" />
+            <UButton variant="outline">
+              文案定制
+            </UButton>
           </MPopconfirm>
-          <span v-if="uiResult" class="text-sm text-muted">{{ uiResult }}</span>
         </div>
-      </UFormField>
+      </Showcase>
     </div>
-  </Matrix>
+
+    <StateViewer :state="log" label="事件日志" />
+  </div>
 </template>
