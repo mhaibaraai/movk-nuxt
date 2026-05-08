@@ -21,8 +21,8 @@ importers:
         specifier: ^3.12.1
         version: 3.12.1
       '@movk/core':
-        specifier: ^1.2.3
-        version: 1.2.3(vue@3.5.34(typescript@6.0.3))
+        specifier: ^1.2.4
+        version: 1.2.4(vue@3.5.34(typescript@6.0.3))
       '@nuxt/image':
         specifier: ^2.0.0
         version: 2.0.0(db0@0.3.4(better-sqlite3@12.9.0))(ioredis@5.10.1)(magicast@0.5.2)(srvx@0.11.15)
@@ -1371,6 +1371,12 @@ packages:
 
   '@movk/core@1.2.3':
     resolution: {integrity: sha512-9aYuLiW/wB6/1zsCaYMREuWxTFwiceg0+U1YbFez/vLdMC37WyuV65ktQ5aCRpgV4J2edoiTk1TW8Qlx6rnGTg==}
+    hasBin: true
+    peerDependencies:
+      vue: ^3.5.25
+
+  '@movk/core@1.2.4':
+    resolution: {integrity: sha512-ysxAx44eAIFTtez+f6SEkJt3q5Z84VX4DUh9nQKRwfxZ347OC3v2LyrpWv4qsCCkVtRfVbvzupJZUjWonO6v4g==}
     hasBin: true
     peerDependencies:
       vue: ^3.5.25
@@ -8986,6 +8992,11 @@ snapshots:
     dependencies:
       '@vueuse/core': 14.3.0(vue@3.5.34(typescript@6.0.3))
       tinyglobby: 0.2.16
+      vue: 3.5.34(typescript@6.0.3)
+
+  '@movk/core@1.2.4(vue@3.5.34(typescript@6.0.3))':
+    dependencies:
+      '@vueuse/core': 14.3.0(vue@3.5.34(typescript@6.0.3))
       vue: 3.5.34(typescript@6.0.3)
 
   '@movk/nuxt-docs@1.18.4(8164714a3007f752741d7ae52c5f906b)':

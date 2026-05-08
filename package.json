@@ -101,7 +101,7 @@
     "@iconify-json/ph": "^1.2.2",
     "@iconify-json/tabler": "^1.2.34",
     "@internationalized/date": "^3.12.1",
-    "@movk/core": "^1.2.3",
+    "@movk/core": "^1.2.4",
     "@nuxt/image": "^2.0.0",
     "@nuxt/ui": "^4.7.1",
     "@tanstack/vue-table": "^8.21.3",
