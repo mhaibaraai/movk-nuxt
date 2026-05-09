@@ -1,4 +1,10 @@
-export type { ColorChooserProps } from './color-chooser'
+export type {
+  ColorChooserEmits,
+  ColorChooserProps,
+  ColorChooserSlots,
+  ColorChooserTrigger,
+  ColorFormat
+} from './color-chooser'
 export type { DatePickerEmits, DatePickerProps, LabelFormat } from './date-picker'
 export type { MessageBoxEmits, MessageBoxProps } from './message-box'
 export type { PopconfirmEmits, PopconfirmProps, PopconfirmSlots } from './popconfirm'

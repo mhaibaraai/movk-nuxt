@@ -1,4 +1,5 @@
 export { default as popconfirm } from './popconfirm'
+export { default as colorChooser } from './color-chooser'
 export { default as dataTablePagination } from './data-table-pagination'
 export { default as asPhoneNumberInput } from './as-phone-number-input'
 export { default as withClear } from './with-clear'
