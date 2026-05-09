@@ -11,6 +11,7 @@ import type { MessageBoxProps, MessageBoxEmits } from '../types/components/messa
 import type { SemanticColor } from '../types/shared'
 
 interface Props extends MessageBoxProps {
+  type?: ComponentConfig<typeof modalTheme & typeof theme, AppConfig, 'messageBox'>['variants']['type']
   ui?: ComponentConfig<typeof modalTheme & typeof theme, AppConfig, 'messageBox'>['slots']
 }
 

@@ -1,5 +1,6 @@
-import type { ButtonProps } from '@nuxt/ui'
+import type { ButtonProps, IconProps } from '@nuxt/ui'
 import type { ClassNameValue } from '../shared'
+import type {} from '@movk/core'
 
 export interface StarRatingProps {
   /**
@@ -12,57 +13,41 @@ export interface StarRatingProps {
    * @defaultValue 5
    */
   max?: number
-  /**
-   * 是否禁用
-   * @defaultValue false
-   */
+  /** 是否禁用 */
   disabled?: boolean
-  /**
-   * 是否只读
-   * @defaultValue false
-   */
+  /** 是否只读 */
   readonly?: boolean
   /**
    * 是否显示评分徽章
    * @defaultValue true
    */
   showBadge?: boolean
-  /** 自定义星星按钮属性 */
-  buttonProps?: Partial<ButtonProps>
+  buttonProps?: ButtonProps
   /**
    * 未选中星星的图标
+   * @IconifyIcon
    * @defaultValue 'i-lucide-star'
    */
-  emptyIcon?: string
+  emptyIcon?: IconProps['name']
   /**
    * 选中星星的图标
+   * @IconifyIcon
    * @defaultValue 'i-lucide-star'
    */
-  filledIcon?: string
+  filledIcon?: IconProps['name']
   /**
    * 半星图标
+   * @IconifyIcon
    * @defaultValue 'i-lucide-star-half'
    */
-  halfIcon?: string
-  /**
-   * 选中星星的颜色
-   * @defaultValue 'warning'
-   */
+  halfIcon?: IconProps['name']
+  /** 选中星星的颜色 */
   color?: ButtonProps['color']
-  /**
-   * 星星大小
-   * @defaultValue 'md'
-   */
+  /**  星星大小 @defaultValue 'md' */
   size?: ButtonProps['size']
-  /**
-   * 是否允许半星
-   * @defaultValue false
-   */
+  /** 是否允许半星 */
   allowHalf?: boolean
-  /**
-   * 是否允许清除评分
-   * @defaultValue false
-   */
+  /** 是否允许清除评分 */
   clearable?: boolean
   ui?: Record<string, ClassNameValue>
 }
