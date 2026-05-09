@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import theme from '#build/movk-ui/popconfirm'
+import type { SemanticColor } from '@movk/nuxt'
 
-const types = Object.keys(theme.variants.type)
+const types = Object.keys(theme.variants.type) as SemanticColor[]
 
 const log = ref<string[]>([])
 function record(msg: string) {
@@ -24,13 +25,13 @@ async function asyncConfirm() {
           <MPopconfirm
             v-for="t in types"
             :key="t"
-            :type="(t as 'primary' | 'info' | 'success' | 'warning' | 'error' | 'neutral')"
+            :type="t"
             :title="`${t} 类型`"
             description="是否确认此操作？"
             @confirm="record(`${t} confirmed`)"
             @cancel="record(`${t} cancelled`)"
           >
-            <UButton :color="t === 'primary' ? 'primary' : (t as 'info' | 'success' | 'warning' | 'error' | 'neutral')" variant="soft" size="sm">
+            <UButton :color="t === 'primary' ? 'primary' : t" variant="soft" size="sm">
               {{ t }}
             </UButton>
           </MPopconfirm>
