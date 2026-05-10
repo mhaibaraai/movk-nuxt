@@ -24,6 +24,8 @@ export function useTheme() {
   const _iconSet = useLocalStorage(`${name}-ui-icons`, movk?.icons ?? SYSTEM_DEFAULT_ICONS)
   const _blackAsPrimary = useLocalStorage(`${name}-ui-black-as-primary`, false)
 
+  const color = computed(() => colorMode.value === 'dark' ? (colors as any)[appConfig.ui.colors.neutral][900] : 'white')
+
   const pickerFonts = movk?.picker?.fonts ?? []
   const neutralColors = movk?.picker?.neutralColors ?? []
   const radiuses = movk?.picker?.radiuses ?? []
@@ -224,6 +226,7 @@ export function useTheme() {
   }
 
   return {
+    color,
     style,
     link,
     neutralColors,

@@ -4,10 +4,7 @@ import { zh_cn } from '@nuxt/ui/locale'
 const { components, groups, items } = useNavigation()
 
 useHead({
-  title: 'Movk Nuxt · Playground',
-  meta: [
-    { name: 'viewport', content: 'width=device-width, initial-scale=1' }
-  ]
+  title: 'Movk Nuxt · Playground'
 })
 
 provide('components', components)

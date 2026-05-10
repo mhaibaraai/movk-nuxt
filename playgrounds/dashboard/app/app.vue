@@ -1,26 +1,16 @@
 <script setup lang="ts">
-import colors from 'tailwindcss/colors'
 import { zh_cn } from '@nuxt/ui/locale'
 import { removeTrailingSlash } from '@movk/core'
 
 const route = useRoute()
-const colorMode = useColorMode()
 const appConfig = useAppConfig()
 const site = useSiteConfig()
-const { style, link } = useTheme()
-
-const color = computed(() => colorMode.value === 'dark' ? (colors as any)[appConfig.ui.colors.neutral][900] : 'white')
 
 useHead({
-  meta: [
-    { key: 'theme-color', name: 'theme-color', content: color }
-  ],
   link: [
     { rel: 'icon', href: '/favicon.ico' },
-    { rel: 'canonical', href: `${site.url}${removeTrailingSlash(route.path)}` },
-    ...link.value
-  ],
-  style
+    { rel: 'canonical', href: `${site.url}${removeTrailingSlash(route.path)}` }
+  ]
 })
 
 useFaviconFromTheme()
