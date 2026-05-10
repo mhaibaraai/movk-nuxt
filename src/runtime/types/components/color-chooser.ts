@@ -6,7 +6,7 @@ import type { ClassNameValue } from '../shared'
 type PopoverMode = 'click' | 'hover'
 
 export type ColorFormat = NonNullable<ColorPickerProps['format']>
-type ColorChooserTrigger = 'button' | 'chip' | 'input'
+export type ColorChooserTrigger = 'button' | 'chip' | 'input'
 
 export interface ColorChooserProps<M extends PopoverMode = PopoverMode>
   extends /** @vue-ignore */ OmitByKey<PopoverProps<M>, 'open' | 'defaultOpen' | 'ui'> {

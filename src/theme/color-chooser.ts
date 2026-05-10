@@ -2,7 +2,6 @@ export default () => ({
   slots: {
     body: 'p-2 flex flex-col gap-2 min-w-[14rem]',
     header: 'flex items-center justify-between gap-2',
-    formatTabs: 'p-0.5',
     section: 'flex flex-col gap-1.5',
     swatches: 'grid grid-cols-8 gap-1',
     swatch: 'rounded ring-1 ring-default cursor-pointer transition hover:scale-110 hover:ring-2 hover:ring-primary aria-selected:ring-2 aria-selected:ring-primary',

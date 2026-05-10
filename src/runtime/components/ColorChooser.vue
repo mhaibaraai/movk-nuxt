@@ -1,14 +1,16 @@
 <script lang="ts" setup generic="M extends 'click' | 'hover'">
-import type { ButtonProps, ColorPickerProps, ComponentConfig, TabsItem } from '@nuxt/ui'
+import type { ButtonProps, ColorPickerProps, ComponentConfig } from '@nuxt/ui'
 import type { AppConfig } from 'nuxt/schema'
 import { computed, ref, useAttrs, watch } from 'vue'
 import { useClipboard } from '@vueuse/core'
 import { ColorTranslator } from 'colortranslator'
-import { UPopover, UButton, UColorPicker, UIcon, UTabs, UInput } from '#components'
+import { UPopover, UButton, UColorPicker, UIcon, UInput } from '#components'
 import { useAppConfig } from '#imports'
 import { useExtendedTv } from '../utils/extend-theme'
 import theme from '#build/movk-ui/color-chooser'
 import popoverTheme from '#build/ui/popover'
+import PillGroup from './PillGroup.vue'
+import type { PillsItem } from '../types/components/pill-group'
 import type { ColorChooserProps, ColorChooserEmits, ColorChooserSlots, ColorFormat } from '../types/components/color-chooser'
 
 const props = withDefaults(defineProps<ColorChooserProps<M> & {
@@ -68,7 +70,7 @@ watch(() => props.format, (val) => {
 
 const showFormatTabs = computed(() => (props.formats?.length ?? 0) >= 2)
 
-const formatItems = computed<TabsItem[]>(() =>
+const formatItems = computed<PillsItem[]>(() =>
   (props.formats ?? []).map(f => ({ label: f.toUpperCase(), value: f }))
 )
 
@@ -232,13 +234,12 @@ function handleOpenUpdate(val: boolean) {
     <template #content>
       <div :class="extraUi.body">
         <div v-if="showFormatTabs" :class="extraUi.header">
-          <UTabs
+          <PillGroup
             :model-value="currentFormat"
             :items="formatItems"
-            variant="pill"
+            value-key="value"
             size="xs"
-            :content="false"
-            :ui="{ list: extraUi.formatTabs }"
+            color="neutral"
             @update:model-value="(v) => selectFormat(v as ColorFormat)"
           />
         </div>
