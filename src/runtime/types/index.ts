@@ -69,7 +69,11 @@ export { isDataColumn, isGroupColumn } from './data-table'
 
 export type {
   AsPhoneNumberInputProps,
+  ColorChooserEmits,
   ColorChooserProps,
+  ColorChooserSlots,
+  ColorChooserTrigger,
+  ColorFormat,
   DatePickerEmits,
   DatePickerProps,
   LabelFormat,

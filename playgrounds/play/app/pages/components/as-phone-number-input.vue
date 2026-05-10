@@ -1,15 +1,12 @@
 <script setup lang="ts">
-import type { InputProps } from '@nuxt/ui'
+import type { SemanticSize, SemanticColor } from '@movk/nuxt'
 
-type Size = NonNullable<InputProps['size']>
-type Color = NonNullable<InputProps['color']>
+const sizes: SemanticSize[] = ['xs', 'sm', 'md', 'lg', 'xl']
+const colors: SemanticColor[] = ['primary', 'info', 'warning', 'neutral', 'error', 'success']
 
-const sizes: Size[] = ['xs', 'sm', 'md', 'lg', 'xl']
-const colors: Color[] = ['primary', 'neutral']
-
-const attrs = reactive({
-  size: ['md'] as string[],
-  color: ['primary'] as string[]
+const attrs = ref({
+  size: ['md'] as SemanticSize[],
+  color: ['primary'] as SemanticColor[]
 })
 
 const phoneCN = ref('13800138000')
@@ -19,8 +16,8 @@ const phoneIntl = ref('')
 
 <template>
   <Navbar>
-    <USelect v-model="attrs.size" :items="sizes as unknown as string[]" multiple size="xs" placeholder="size" />
-    <USelect v-model="attrs.color" :items="colors as unknown as string[]" multiple size="xs" placeholder="color" />
+    <USelect v-model="attrs.size" :items="sizes" multiple size="xs" placeholder="size" />
+    <USelect v-model="attrs.color" :items="colors" multiple size="xs" placeholder="color" />
   </Navbar>
 
   <div class="p-4 flex flex-col gap-4">
@@ -30,15 +27,15 @@ const phoneIntl = ref('')
       </p>
 
       <UFormField label="中国大陆（默认 +86）">
-        <MAsPhoneNumberInput v-model="phoneCN" :size="(props.size as Size)" :color="(props.color as Color)" />
+        <MAsPhoneNumberInput v-model="phoneCN" :size="props.size" :color="props.color" />
       </UFormField>
 
       <UFormField label="美国（dial-code 显示）">
-        <MAsPhoneNumberInput v-model="phoneUS" dial-code="+1" :size="(props.size as Size)" :color="(props.color as Color)" />
+        <MAsPhoneNumberInput v-model="phoneUS" dial-code="+1" :size="props.size" :color="props.color" />
       </UFormField>
 
       <UFormField label="错误态">
-        <MAsPhoneNumberInput v-model="phoneIntl" :size="(props.size as Size)" color="error" placeholder="必填" />
+        <MAsPhoneNumberInput v-model="phoneIntl" :size="props.size" color="error" placeholder="必填" />
       </UFormField>
     </Matrix>
   </div>

@@ -12,13 +12,14 @@ import type { PopconfirmProps, PopconfirmEmits, PopconfirmSlots } from '../types
 import type { SemanticColor } from '../types/shared'
 
 const props = withDefaults(defineProps<PopconfirmProps & {
+  type?: ComponentConfig<typeof popoverTheme & typeof theme, AppConfig, 'popconfirm'>['variants']['type']
   ui?: ComponentConfig<typeof popoverTheme & typeof theme, AppConfig, 'popconfirm'>['slots']
 }>(), {
   title: '确认操作',
   description: '请确认是否执行此操作?',
+  dismissible: false,
   type: 'neutral',
   icon: 'i-lucide-circle-question-mark',
-  dismissible: false,
   arrow: true,
   cancelButton: true
 })

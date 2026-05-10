@@ -21,8 +21,8 @@ importers:
         specifier: ^3.12.1
         version: 3.12.1
       '@movk/core':
-        specifier: ^1.2.4
-        version: 1.2.4(vue@3.5.34(typescript@6.0.3))
+        specifier: link:/Users/yixuanmiao/MOVK/movk-core
+        version: link:../movk-core
       '@nuxt/image':
         specifier: ^2.0.0
         version: 2.0.0(db0@0.3.4(better-sqlite3@12.9.0))(ioredis@5.10.1)(magicast@0.5.2)(srvx@0.11.15)
@@ -38,6 +38,9 @@ importers:
       '@vueuse/nuxt':
         specifier: ^14.3.0
         version: 14.3.0(magicast@0.5.2)(nuxt@4.4.4(@babel/core@7.29.0)(@babel/plugin-syntax-jsx@7.28.6(@babel/core@7.29.0))(@parcel/watcher@2.5.6)(@types/node@25.6.0)(@vue/compiler-sfc@3.5.34)(better-sqlite3@12.9.0)(cac@6.7.14)(db0@0.3.4(better-sqlite3@12.9.0))(eslint@10.3.0(jiti@2.7.0))(ioredis@5.10.1)(lightningcss@1.32.0)(magicast@0.5.2)(meow@13.2.0)(optionator@0.9.4)(rollup-plugin-visualizer@7.0.1(rollup@4.60.3))(rollup@4.60.3)(sass-embedded@1.99.0)(sass@1.99.0)(srvx@0.11.15)(terser@5.46.2)(typescript@6.0.3)(vite@7.3.2(@types/node@25.6.0)(jiti@2.7.0)(lightningcss@1.32.0)(sass-embedded@1.99.0)(sass@1.99.0)(terser@5.46.2)(yaml@2.8.4))(vue-tsc@3.2.8(typescript@6.0.3))(yaml@2.8.4))(vue@3.5.34(typescript@6.0.3))
+      colortranslator:
+        specifier: ^6.1.1
+        version: 6.1.1
       defu:
         specifier: ^6.1.7
         version: 6.1.7
@@ -1371,12 +1374,6 @@ packages:
 
   '@movk/core@1.2.3':
     resolution: {integrity: sha512-9aYuLiW/wB6/1zsCaYMREuWxTFwiceg0+U1YbFez/vLdMC37WyuV65ktQ5aCRpgV4J2edoiTk1TW8Qlx6rnGTg==}
-    hasBin: true
-    peerDependencies:
-      vue: ^3.5.25
-
-  '@movk/core@1.2.4':
-    resolution: {integrity: sha512-ysxAx44eAIFTtez+f6SEkJt3q5Z84VX4DUh9nQKRwfxZ347OC3v2LyrpWv4qsCCkVtRfVbvzupJZUjWonO6v4g==}
     hasBin: true
     peerDependencies:
       vue: ^3.5.25
@@ -3851,6 +3848,9 @@ packages:
 
   colortranslator@5.0.0:
     resolution: {integrity: sha512-Z3UPUKasUVDFCDYAjP2fmlVRf1jFHJv1izAmPjiOa0OCIw1W7iC8PZ2GsoDa8uZv+mKyWopxxStT9q05+27h7w==}
+
+  colortranslator@6.1.1:
+    resolution: {integrity: sha512-SVrXoxIgWm+KZrJgTuV486zKbmjpKX3mt9/mUVL2QV9I5Qw4ItwP0XR6c63EQU2ecHkSgDqJPVPnQSPrzDOteA==}
 
   comark@0.3.2:
     resolution: {integrity: sha512-wZ16V3PPItX49EScg6yDswqQ24bsMAhujZUGIf1dBKMmZjqGBa4HmXDe+WZNeqNQSOd8v4AJJT1NKyrvgdf3dA==}
@@ -8994,11 +8994,6 @@ snapshots:
       tinyglobby: 0.2.16
       vue: 3.5.34(typescript@6.0.3)
 
-  '@movk/core@1.2.4(vue@3.5.34(typescript@6.0.3))':
-    dependencies:
-      '@vueuse/core': 14.3.0(vue@3.5.34(typescript@6.0.3))
-      vue: 3.5.34(typescript@6.0.3)
-
   '@movk/nuxt-docs@1.18.4(8164714a3007f752741d7ae52c5f906b)':
     dependencies:
       '@ai-sdk/gateway': 3.0.110(zod@4.4.3)
@@ -11846,6 +11841,8 @@ snapshots:
   colorjs.io@0.6.1: {}
 
   colortranslator@5.0.0: {}
+
+  colortranslator@6.1.1: {}
 
   comark@0.3.2(shiki@4.0.2):
     dependencies:

@@ -13,7 +13,8 @@ import type { AppConfig } from 'nuxt/schema'
 const props = withDefaults(defineProps<AsPhoneNumberInputProps<T> & {
   ui?: ComponentConfig<typeof inputTheme & typeof theme, AppConfig, 'asPhoneNumberInput'>['slots']
 }>(), {
-  mask: '(###) ###-####'
+  mask: '(###) ###-####',
+  dialCode: '+86'
 })
 const modelValue = defineModel<T>()
 const emits = defineEmits<InputEmits<T>>()

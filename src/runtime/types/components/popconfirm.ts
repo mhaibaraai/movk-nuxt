@@ -1,6 +1,6 @@
 import type { VNode } from 'vue'
 import type { ButtonProps, IconProps, LinkPropsKeys, PopoverProps, PopoverSlots } from '@nuxt/ui'
-import type { OmitByKey } from '@movk/core'
+import type { OmitByKey, VoidCallback } from '@movk/core'
 import type { ClassNameValue, SemanticColor } from '../shared'
 
 type PopoverMode = 'click' | 'hover'
@@ -54,7 +54,7 @@ export interface PopconfirmProps<M extends PopoverMode = PopoverMode> extends /*
    * 支持返回 `Promise`，期间确认按钮自动进入 loading 状态。
    * 回调成功完成后弹层自动关闭并触发 `confirm` 事件；抛错时保持弹层打开。
    */
-  onConfirm?: () => void | Promise<void>
+  onConfirm?: VoidCallback
   ui?: Record<string, ClassNameValue>
 }
 

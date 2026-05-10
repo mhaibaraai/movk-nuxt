@@ -14,7 +14,6 @@ const props = withDefaults(defineProps<SlideVerifyProps & {
   ui?: ComponentConfig<typeof theme, AppConfig, 'slideVerify'>['slots']
 }>(), {
   size: 'md',
-  disabled: false,
   text: '请向右滑动验证',
   successText: '验证成功',
   icon: 'i-lucide-chevrons-right',

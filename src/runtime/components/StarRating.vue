@@ -13,16 +13,10 @@ const props = withDefaults(defineProps<StarRatingProps & {
 }>(), {
   modelValue: 0,
   max: 5,
-  disabled: false,
-  readonly: false,
   showBadge: true,
   emptyIcon: 'i-lucide-star',
   filledIcon: 'i-lucide-star',
-  halfIcon: 'i-lucide-star-half',
-  color: 'warning',
-  size: 'md',
-  allowHalf: false,
-  clearable: false
+  halfIcon: 'i-lucide-star-half'
 })
 const emits = defineEmits<StarRatingEmits>()
 
