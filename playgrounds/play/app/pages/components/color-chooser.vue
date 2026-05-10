@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { ColorFormat, ColorChooserTrigger } from '@movk/nuxt'
+import type { ColorChooserProps } from '@movk/nuxt'
 
 const basic = ref('#0ea5e9')
 const formatsValue = ref('#22c55e')
@@ -26,8 +26,8 @@ const groupedSwatches: string[][] = [
   ['#0a0a0a', '#404040', '#737373', '#a3a3a3', '#d4d4d4', '#e5e5e5', '#f5f5f5', '#ffffff']
 ]
 
-const sizes: Array<'xs' | 'sm' | 'md' | 'lg' | 'xl'> = ['xs', 'sm', 'md', 'lg', 'xl']
-const triggers: ColorChooserTrigger[] = ['button', 'chip', 'input']
+const sizes: NonNullable<ColorChooserProps['size']>[] = ['xs', 'sm', 'md', 'lg', 'xl']
+const triggers: NonNullable<ColorChooserProps['trigger']>[] = ['button', 'chip', 'input']
 
 interface EventEntry {
   id: number
@@ -49,7 +49,7 @@ function clearLog() {
   eventLog.value = []
 }
 
-const enabledFormats = ref<ColorFormat[]>(['hex', 'rgb', 'hsl'])
+const enabledFormats = ref<ColorChooserProps['formats']>(['hex', 'rgb', 'hsl'])
 </script>
 
 <template>
@@ -60,14 +60,24 @@ const enabledFormats = ref<ColorFormat[]>(['hex', 'rgb', 'hsl'])
       <MColorChooser v-model="basic" />
     </Showcase>
 
-    <Showcase title="Format 切换 tab" description="在 popover 顶部切换 hex / rgb / hsl，输出格式实时变化" :state="{ value: formatsValue, enabledFormats }">
+    <Showcase
+      title="Format 切换 tab"
+      description="在 popover 顶部切换 hex / rgb / hsl，输出格式实时变化"
+      :state="{ value: formatsValue, enabledFormats }"
+    >
       <template #toolbar>
-        <USelect v-model="enabledFormats" :items="(['hex', 'rgb', 'hsl'] as ColorFormat[])" multiple size="xs" placeholder="formats" />
+        <USelect
+          v-model="enabledFormats"
+          :items="['hex', 'rgb', 'hsl']"
+          multiple
+          size="xs"
+          placeholder="formats"
+        />
       </template>
       <MColorChooser
         v-model="formatsValue"
         :formats="enabledFormats"
-        @format-change="(fmt: ColorFormat) => logEvent('format-change', fmt)"
+        @format-change="(fmt) => logEvent('format-change', fmt)"
       />
     </Showcase>
 
@@ -76,14 +86,14 @@ const enabledFormats = ref<ColorFormat[]>(['hex', 'rgb', 'hsl'])
     </Showcase>
 
     <Showcase title="预设色板（二维分组）" description="多行 swatches，按色相 / 中性色分组" :state="{ value: groupedValue }">
-      <MColorChooser
-        v-model="groupedValue"
-        :swatches="groupedSwatches"
-        :close-on-swatch="false"
-      />
+      <MColorChooser v-model="groupedValue" :swatches="groupedSwatches" :close-on-swatch="false" />
     </Showcase>
 
-    <Showcase title="复制 / 清除 actions" description="copyable + clearable 启用底部 actions 区" :state="{ value: actionsValue }">
+    <Showcase
+      title="复制 / 清除 actions"
+      description="copyable + clearable 启用底部 actions 区"
+      :state="{ value: actionsValue }"
+    >
       <MColorChooser
         v-model="actionsValue"
         copyable
@@ -104,19 +114,16 @@ const enabledFormats = ref<ColorFormat[]>(['hex', 'rgb', 'hsl'])
     <Showcase title="Trigger = chip" description="仅圆形色点，常用于工具栏 / 颜色单元格" :state="{ value: chipValue }">
       <MColorChooser
         v-model="chipValue"
+        :ui="{
+          triggerChip: 'size-4'
+        }"
         trigger="chip"
         :swatches="tailwindPalette"
       />
     </Showcase>
 
     <Showcase title="Trigger = input" description="色点 + 可输入色值文本框，blur 时自动校验 hex" :state="{ value: inputValue }">
-      <MColorChooser
-        v-model="inputValue"
-        trigger="input"
-        :swatches="tailwindPalette"
-        clearable
-        copyable
-      />
+      <MColorChooser v-model="inputValue" trigger="input" :swatches="tailwindPalette" clearable copyable />
     </Showcase>
 
     <Showcase title="自定义触发器（default slot）" description="完全接管触发器渲染" :state="{ value: slotValue }">

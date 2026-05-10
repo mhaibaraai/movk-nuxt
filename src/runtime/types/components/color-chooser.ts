@@ -6,7 +6,7 @@ import type { ClassNameValue } from '../shared'
 type PopoverMode = 'click' | 'hover'
 
 export type ColorFormat = NonNullable<ColorPickerProps['format']>
-export type ColorChooserTrigger = 'button' | 'chip' | 'input'
+type ColorChooserTrigger = 'button' | 'chip' | 'input'
 
 export interface ColorChooserProps<M extends PopoverMode = PopoverMode>
   extends /** @vue-ignore */ OmitByKey<PopoverProps<M>, 'open' | 'defaultOpen' | 'ui'> {
@@ -31,15 +31,9 @@ export interface ColorChooserProps<M extends PopoverMode = PopoverMode>
    * @defaultValue true
    */
   closeOnSwatch?: boolean
-  /**
-   * 是否在底部 actions 区显示清除按钮。
-   * @defaultValue false
-   */
+  /** 是否在底部 actions 区显示清除按钮。 */
   clearable?: boolean
-  /**
-   * 是否在底部 actions 区显示复制按钮（基于 navigator.clipboard）。
-   * @defaultValue false
-   */
+  /** actions 区显示复制按钮（基于 navigator.clipboard）。 */
   copyable?: boolean
   /**
    * 触发器形态。
@@ -49,9 +43,7 @@ export interface ColorChooserProps<M extends PopoverMode = PopoverMode>
    * @defaultValue 'button'
    */
   trigger?: ColorChooserTrigger
-  /**
-   * `trigger='button'` 时按钮上的文本，未传则显示当前色值。
-   */
+  /** `trigger='button'` 时按钮上的文本，未传则显示当前色值。 */
   label?: string
   /**
    * 未选中颜色时的占位文案。
@@ -63,19 +55,14 @@ export interface ColorChooserProps<M extends PopoverMode = PopoverMode>
    * @defaultValue 'md'
    */
   size?: ButtonProps['size']
-  /**
-   * 触发按钮的颜色（trigger=button|chip 生效）。
-   */
+  /** 触发按钮的颜色（trigger=button|chip 生效）。 */
   color?: ButtonProps['color']
   /**
    * 触发按钮的视觉变体（trigger=button|chip 生效）。
    * @defaultValue 'subtle'
    */
   variant?: ButtonProps['variant']
-  /**
-   * 是否禁用。禁用时弹层不会打开、所有交互失效。
-   * @defaultValue false
-   */
+  /** 是否禁用。禁用时弹层不会打开、所有交互失效。 */
   disabled?: boolean
   /**
    * 未选中颜色时占位的图标。

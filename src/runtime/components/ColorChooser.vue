@@ -1,19 +1,15 @@
 <script lang="ts" setup generic="M extends 'click' | 'hover'">
-import type { ButtonProps, ColorPickerProps, ComponentConfig } from '@nuxt/ui'
+import type { ButtonProps, ColorPickerProps, ComponentConfig, TabsItem } from '@nuxt/ui'
 import type { AppConfig } from 'nuxt/schema'
 import { computed, ref, useAttrs, watch } from 'vue'
 import { useClipboard } from '@vueuse/core'
-import { UPopover, UButton, UColorPicker, UIcon } from '#components'
+import { ColorTranslator } from 'colortranslator'
+import { UPopover, UButton, UColorPicker, UIcon, UTabs, UInput } from '#components'
 import { useAppConfig } from '#imports'
 import { useExtendedTv } from '../utils/extend-theme'
 import theme from '#build/movk-ui/color-chooser'
 import popoverTheme from '#build/ui/popover'
-import type {
-  ColorChooserProps,
-  ColorChooserEmits,
-  ColorChooserSlots,
-  ColorFormat
-} from '../types/components/color-chooser'
+import type { ColorChooserProps, ColorChooserEmits, ColorChooserSlots, ColorFormat } from '../types/components/color-chooser'
 
 const props = withDefaults(defineProps<ColorChooserProps<M> & {
   size?: ComponentConfig<typeof popoverTheme & typeof theme, AppConfig, 'colorChooser'>['variants']['size']
@@ -23,14 +19,10 @@ const props = withDefaults(defineProps<ColorChooserProps<M> & {
   format: 'hex',
   formats: () => ['hex'],
   closeOnSwatch: true,
-  clearable: false,
-  copyable: false,
   trigger: 'button',
   placeholder: '选择颜色',
-  size: 'md',
   color: 'neutral',
   variant: 'subtle',
-  disabled: false,
   icon: 'i-lucide-palette'
 })
 
@@ -43,16 +35,42 @@ defineOptions({ inheritAttrs: false })
 const attrs = useAttrs()
 const appConfig = useAppConfig() as { movk?: { colorChooser?: unknown } }
 
-const openState = ref(false)
-const currentFormat = ref<ColorFormat>(
-  (props.formats?.length ? props.formats[0] : props.format) ?? 'hex'
-)
+const FORMAT_KEY = {
+  hex: 'HEX',
+  rgb: 'RGB',
+  hsl: 'HSL',
+  cmyk: 'CMYK',
+  lab: 'CIELab'
+} as const
 
+function convertColor(value: string | undefined, fmt: ColorFormat): string | undefined {
+  if (!value) return value
+  try {
+    const key = FORMAT_KEY[fmt as keyof typeof FORMAT_KEY]
+    if (!key) return value
+    return new ColorTranslator(value)[key] as string
+  }
+  catch {
+    return value
+  }
+}
+
+const openState = ref(false)
+const currentFormat = ref<ColorFormat>(props.formats?.[0] ?? props.format ?? 'hex')
+
+const inputDraft = ref(modelValue.value ?? '')
+watch(modelValue, (val) => {
+  inputDraft.value = val ?? ''
+})
 watch(() => props.format, (val) => {
   if (val) currentFormat.value = val
 })
 
 const showFormatTabs = computed(() => (props.formats?.length ?? 0) >= 2)
+
+const formatItems = computed<TabsItem[]>(() =>
+  (props.formats ?? []).map(f => ({ label: f.toUpperCase(), value: f }))
+)
 
 const swatchRows = computed<string[][]>(() => {
   const sw = props.swatches
@@ -95,7 +113,13 @@ const colorPickerAttrs = computed<ColorPickerProps>(() => ({
 const { copy, isSupported: clipboardSupported } = useClipboard()
 
 function selectFormat(fmt: ColorFormat) {
+  if (fmt === currentFormat.value) return
   currentFormat.value = fmt
+  const converted = convertColor(modelValue.value, fmt)
+  if (converted !== modelValue.value) {
+    modelValue.value = converted
+    emits('change', converted)
+  }
   emits('format-change', fmt)
 }
 
@@ -123,13 +147,6 @@ function handlePickerUpdate(v: string | undefined) {
   emits('change', v)
 }
 
-const inputDraft = ref('')
-const HEX_RE = /^#?(?:[0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i
-
-watch(modelValue, (val) => {
-  inputDraft.value = val ?? ''
-}, { immediate: true })
-
 function handleInputBlur() {
   const v = inputDraft.value.trim()
   if (!v) {
@@ -137,28 +154,25 @@ function handleInputBlur() {
     emits('change', undefined)
     return
   }
-  if (currentFormat.value === 'hex' && !HEX_RE.test(v)) {
+  const normalized = convertColor(v, currentFormat.value)
+  const hexInvalid = currentFormat.value === 'hex' && !/^#?(?:[0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(v)
+  if (!normalized || (normalized === v && hexInvalid)) {
     inputDraft.value = modelValue.value ?? ''
     return
   }
-  const normalized = currentFormat.value === 'hex' && !v.startsWith('#') ? `#${v}` : v
   modelValue.value = normalized
   emits('change', normalized)
 }
 
-function openIfEnabled() {
-  if (props.disabled) return
-  openState.value = true
+function handleOpenUpdate(val: boolean) {
+  if (val && props.disabled) return
+  openState.value = val
+  emits('update:open', val)
 }
 </script>
 
 <template>
-  <UPopover
-    v-bind="attrs"
-    v-model:open="openState"
-    :ui="ui"
-    @update:open="emits('update:open', $event)"
-  >
+  <UPopover v-bind="attrs" :open="openState" :ui="ui" @update:open="handleOpenUpdate">
     <template #default="{ open }">
       <slot :open="open" :value="modelValue">
         <UButton
@@ -166,52 +180,44 @@ function openIfEnabled() {
           v-bind="triggerButtonAttrs"
           :aria-label="modelValue || props.placeholder"
         >
-          <span
-            :class="extraUi.triggerChip"
-            :style="{ backgroundColor: modelValue || 'transparent' }"
-          >
-            <UIcon v-if="!modelValue" :name="props.icon" class="size-3 text-muted" />
+          <span :class="extraUi.triggerChip" :style="{ backgroundColor: modelValue || 'transparent' }">
+            <UIcon v-if="!modelValue" :name="props.icon" :class="extraUi.triggerIcon" />
           </span>
         </UButton>
 
-        <div
-          v-else-if="props.trigger === 'input'"
-          :class="extraUi.triggerInputWrap"
-          @click.self="openIfEnabled"
-        >
-          <slot name="leading" :value="modelValue">
-            <span
-              v-if="modelValue"
-              :class="extraUi.triggerChip"
-              :style="{ backgroundColor: modelValue }"
-              @click="openIfEnabled"
-            />
-            <UIcon
-              v-else
-              :name="props.icon"
-              class="text-muted shrink-0 cursor-pointer"
-              @click="openIfEnabled"
-            />
-          </slot>
-          <input
+        <div v-else-if="props.trigger === 'input'" class="w-full">
+          <UInput
             v-model="inputDraft"
-            :class="[extraUi.triggerInput, 'bg-transparent outline-none border-0 text-default']"
+            :size="props.size"
             :placeholder="props.placeholder"
             :disabled="props.disabled"
             @blur="handleInputBlur"
             @keydown.enter="($event.target as HTMLInputElement).blur()"
           >
-          <slot name="trailing" :value="modelValue" />
+            <template #leading>
+              <slot name="leading" :value="modelValue">
+                <span
+                  v-if="modelValue"
+                  :class="extraUi.triggerChip"
+                  :style="{ backgroundColor: modelValue }"
+                />
+                <UIcon
+                  v-else
+                  :name="props.icon"
+                  :class="extraUi.triggerIcon"
+                />
+              </slot>
+            </template>
+            <template v-if="!!slots.trailing" #trailing>
+              <slot name="trailing" :value="modelValue" />
+            </template>
+          </UInput>
         </div>
 
         <UButton v-else v-bind="triggerButtonAttrs">
           <template #leading>
             <slot name="leading" :value="modelValue">
-              <span
-                v-if="modelValue"
-                :class="extraUi.triggerChip"
-                :style="{ backgroundColor: modelValue }"
-              />
+              <span v-if="modelValue" :class="extraUi.triggerChip" :style="{ backgroundColor: modelValue }" />
               <UIcon v-else :name="props.icon" />
             </slot>
           </template>
@@ -226,19 +232,15 @@ function openIfEnabled() {
     <template #content>
       <div :class="extraUi.body">
         <div v-if="showFormatTabs" :class="extraUi.header">
-          <div role="tablist" :class="extraUi.formatTabs">
-            <button
-              v-for="fmt in props.formats"
-              :key="fmt"
-              type="button"
-              role="tab"
-              :aria-selected="currentFormat === fmt"
-              :class="extraUi.formatTab"
-              @click="selectFormat(fmt)"
-            >
-              {{ fmt }}
-            </button>
-          </div>
+          <UTabs
+            :model-value="currentFormat"
+            :items="formatItems"
+            variant="pill"
+            size="xs"
+            :content="false"
+            :ui="{ list: extraUi.formatTabs }"
+            @update:model-value="(v) => selectFormat(v as ColorFormat)"
+          />
         </div>
 
         <UColorPicker
@@ -249,11 +251,7 @@ function openIfEnabled() {
 
         <div v-if="hasSwatches || !!slots.swatches" :class="extraUi.section">
           <slot name="swatches" :swatches="swatchRows" :select="selectSwatch">
-            <div
-              v-for="(row, idx) in swatchRows"
-              :key="idx"
-              :class="extraUi.swatches"
-            >
+            <div v-for="(row, idx) in swatchRows" :key="idx" :class="extraUi.swatches">
               <button
                 v-for="c in row"
                 :key="c"
@@ -268,20 +266,12 @@ function openIfEnabled() {
           </slot>
         </div>
 
-        <div
-          v-if="props.copyable || props.clearable || !!slots.actions"
-          :class="extraUi.actions"
-        >
-          <slot
-            name="actions"
-            :value="modelValue"
-            :copy="handleCopy"
-            :clear="handleClear"
-          >
-            <span class="text-xs text-muted tabular-nums truncate">
+        <div v-if="props.copyable || props.clearable || !!slots.actions" :class="extraUi.actions">
+          <slot name="actions" :value="modelValue" :copy="handleCopy" :clear="handleClear">
+            <span :class="extraUi.actionsValue">
               {{ modelValue || '—' }}
             </span>
-            <div class="flex items-center gap-1">
+            <div :class="extraUi.actionsButtons">
               <UButton
                 v-if="props.copyable"
                 icon="i-lucide-copy"
