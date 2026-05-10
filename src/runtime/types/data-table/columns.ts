@@ -1,5 +1,5 @@
 import type { ButtonProps, CheckboxProps, DropdownMenuProps, IconProps, ModalProps, TableColumn, TooltipProps } from '@nuxt/ui'
-import type { OmitByKey, Suggest } from '@movk/core'
+import type { OmitByKey } from '@movk/core'
 import type { CellContext, ColumnDef, ColumnDefTemplate } from '@tanstack/vue-table'
 import type { SemanticColor } from '../shared'
 import type {
@@ -35,7 +35,7 @@ interface DataTableBaseColumn {
 
 export interface DataTableDataColumn<T> extends DataTableBaseColumn {
   /** 数据字段键 */
-  accessorKey: Suggest<keyof T & string>
+  accessorKey: keyof T & string | (string & {})
   /**
    * 默认是否可见
    * @defaultValue true

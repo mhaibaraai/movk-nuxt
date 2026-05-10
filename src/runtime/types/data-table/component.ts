@@ -8,7 +8,7 @@ import type {
   Updater
 } from '@tanstack/vue-table'
 import type { ButtonProps, TableData, TableProps, TableRow, TooltipProps } from '@nuxt/ui'
-import type { OmitByKey, Suggest } from '@movk/core'
+import type { OmitByKey } from '@movk/core'
 import type {
   DataTableActionButtonContext,
   DataTableColumn,
@@ -65,7 +65,7 @@ export interface DataTableProps<T extends TableData> extends /* @vue-ignore */ O
    * 行唯一标识字段，自动派生 getRowId；与 getRowId 同传时后者优先
    * @example 'id'
    */
-  rowKey?: Suggest<keyof T & string>
+  rowKey?: keyof T & string | (string & {})
   columns?: DataTableColumn<T>[]
   loading?: TableProps<T>['loading']
   /**
@@ -147,7 +147,7 @@ export interface DataTableProps<T extends TableData> extends /* @vue-ignore */ O
    * 子行字段名，设置后启用树形模式
    * @example 'children'
    */
-  childrenKey?: Suggest<keyof T & string>
+  childrenKey?: keyof T & string | (string & {})
   /**
    * 树形缩进：number 每层缩进 px / string CSS 值 / 函数 动态返回 CSS
    * @defaultValue '1rem'
