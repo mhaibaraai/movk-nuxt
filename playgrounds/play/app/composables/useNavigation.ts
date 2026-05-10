@@ -40,6 +40,7 @@ const componentsNav: NavigationMenuItem = {
     { label: 'Popconfirm', to: '/components/popconfirm' },
     { label: 'MessageBox', to: '/components/message-box' },
     { label: 'ColorChooser', to: '/components/color-chooser' },
+    { label: 'PillGroup', to: '/components/pill-group' },
     { label: 'DatePicker', to: '/components/date-picker' },
     { label: 'SearchForm', to: '/components/search-form' },
     { label: 'ThemePicker', to: '/components/theme-picker' },

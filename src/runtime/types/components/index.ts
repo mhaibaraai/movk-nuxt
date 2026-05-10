@@ -11,6 +11,15 @@ export type { PopconfirmEmits, PopconfirmProps, PopconfirmSlots } from './popcon
 export type { SlideVerifyEmits, SlideVerifyProps, SlideVerifySlots } from './slide-verify'
 export type { StarRatingEmits, StarRatingProps } from './star-rating'
 export type {
+  PillGroupBaseProps,
+  PillGroupEmits,
+  PillGroupModelValue,
+  PillGroupProps,
+  PillGroupSlots,
+  PillsItem,
+  PillsModelValue
+} from './pill-group'
+export type {
   AsPhoneNumberInputProps,
   WithCharacterLimitProps,
   WithClearEmits,
