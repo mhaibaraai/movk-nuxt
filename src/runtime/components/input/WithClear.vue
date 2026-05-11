@@ -11,9 +11,11 @@ import { useExtendedTv } from '../../utils/extend-theme'
 import type { AppConfig } from 'nuxt/schema'
 import type { WithClearEmits, WithClearProps } from '../../types/components/input/with-clear'
 
-const props = defineProps<WithClearProps<T> & {
-  ui?: ComponentConfig<typeof inputTheme & typeof theme, AppConfig, 'withClear'>['slots']
-}>()
+interface _Props extends WithClearProps<T> {
+  ui?: ComponentConfig<typeof inputTheme & typeof theme, AppConfig, 'withCharacterLimit'>['slots']
+}
+
+const props = defineProps<_Props>()
 const emits = defineEmits<WithClearEmits<T>>()
 const slots = defineSlots<OmitByKey<InputSlots, 'trailing'>>()
 

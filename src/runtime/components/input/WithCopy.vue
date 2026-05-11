@@ -12,9 +12,11 @@ import { useExtendedTv } from '../../utils/extend-theme'
 import type { WithCopyEmits, WithCopyProps } from '../../types/components/input/with-copy'
 import type { AppConfig } from 'nuxt/schema'
 
-const props = defineProps<WithCopyProps<T> & {
+interface _Props extends WithCopyProps<T> {
   ui?: ComponentConfig<typeof inputTheme & typeof theme, AppConfig, 'withCopy'>['slots']
-}>()
+}
+
+const props = defineProps<_Props>()
 const emits = defineEmits<WithCopyEmits<T>>()
 const slots = defineSlots<OmitByKey<InputSlots, 'trailing'>>()
 

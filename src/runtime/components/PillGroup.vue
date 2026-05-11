@@ -9,15 +9,14 @@ import { getPath } from '@movk/core'
 import theme from '#build/movk-ui/pill-group'
 import { useExtendedTv } from '../utils/extend-theme'
 import type {
-  PillGroupBaseProps,
+  PillGroupProps,
   PillGroupEmits,
   PillGroupSlots,
   PillsItem,
   PillsModelValue
 } from '../types/components/pill-group'
 
-// 扁平 props 实现; 严格契约见 PillGroupProps<T, VK, M>
-interface InternalProps extends PillGroupBaseProps<T, VK> {
+interface _Props extends PillGroupProps<T, VK> {
   size?: ComponentConfig<typeof theme, AppConfig, 'pillGroup'>['variants']['size']
   orientation?: ComponentConfig<typeof theme, AppConfig, 'pillGroup'>['variants']['orientation']
   ui?: ComponentConfig<typeof theme, AppConfig, 'pillGroup'>['slots']
@@ -30,16 +29,11 @@ interface InternalProps extends PillGroupBaseProps<T, VK> {
   min?: number
 }
 
-const props = withDefaults(defineProps<InternalProps>(), {
-  orientation: 'horizontal',
-  size: 'md',
-  color: 'primary',
+const props = withDefaults(defineProps<_Props>(), {
   variant: 'solid',
   inactiveVariant: 'ghost',
-  multiple: false,
-  deselectable: false,
-  labelKey: 'label' as keyof T & string,
-  descriptionKey: 'description' as keyof T & string
+  labelKey: 'label',
+  descriptionKey: 'description'
 })
 
 type SingleValue = PillsModelValue<T, VK>
@@ -57,7 +51,7 @@ const {
   ariaAttrs,
   emitFormChange,
   emitFormInput
-} = useFormField<InternalProps>(props)
+} = useFormField<_Props>(props)
 
 const effectiveSize = computed(() => ffSize.value ?? props.size)
 const effectiveColor = computed(() => ffColor.value ?? props.color)

@@ -11,9 +11,11 @@ import { useExtendedTv } from '../../utils/extend-theme'
 import type { AppConfig } from 'nuxt/schema'
 import type { WithFloatingLabelEmits, WithFloatingLabelProps } from '../../types/components/input/with-floating-label'
 
-const props = defineProps<WithFloatingLabelProps<T> & {
+interface _Props extends WithFloatingLabelProps<T> {
   ui?: ComponentConfig<typeof inputTheme & typeof theme, AppConfig, 'withFloatingLabel'>['slots']
-}>()
+}
+
+const props = defineProps<_Props>()
 const emits = defineEmits<WithFloatingLabelEmits<T>>()
 const slots = defineSlots<OmitByKey<InputSlots, 'default' | 'trailing'>>()
 

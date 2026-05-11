@@ -11,10 +11,12 @@ import type { AppConfig } from 'nuxt/schema'
 import type { PopconfirmProps, PopconfirmEmits, PopconfirmSlots } from '../types/components/popconfirm'
 import type { SemanticColor } from '../types/shared'
 
-const props = withDefaults(defineProps<PopconfirmProps & {
+interface _Props extends PopconfirmProps {
   type?: ComponentConfig<typeof popoverTheme & typeof theme, AppConfig, 'popconfirm'>['variants']['type']
   ui?: ComponentConfig<typeof popoverTheme & typeof theme, AppConfig, 'popconfirm'>['slots']
-}>(), {
+}
+
+const props = withDefaults(defineProps<_Props>(), {
   title: '确认操作',
   description: '请确认是否执行此操作?',
   dismissible: false,

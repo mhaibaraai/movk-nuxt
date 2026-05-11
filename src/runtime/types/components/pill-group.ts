@@ -34,7 +34,7 @@ export type PillGroupModelValue<
   ? PillsModelValue<T, VK>[]
   : PillsModelValue<T, VK> | undefined
 
-export interface PillGroupBaseProps<
+export interface PillGroupProps<
   T extends Record<string, any> = PillsItem,
   VK extends keyof T & string | undefined = undefined
 > {
@@ -76,20 +76,6 @@ export interface PillGroupBaseProps<
   id?: string
   ui?: Record<string, ClassNameValue>
 }
-
-/**
- * 严格判别联合: M=true 暴露 multiple/max/min, M=false 暴露 deselectable。
- * 组件内部用扁平 props (SFC defineProps 不支持泛型条件联合),此类型仅供库使用方推导。
- */
-export type PillGroupProps<
-  T extends Record<string, any> = PillsItem,
-  VK extends keyof T & string | undefined = undefined,
-  M extends boolean = false
-> = PillGroupBaseProps<T, VK> & (
-  M extends true
-    ? { multiple: true, max?: number, min?: number }
-    : { multiple?: false, deselectable?: boolean }
-)
 
 export interface PillGroupEmits {
   'update:modelValue': [value: AcceptableValue | Record<string, any> | (AcceptableValue | Record<string, any>)[] | undefined]

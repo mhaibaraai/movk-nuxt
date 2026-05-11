@@ -13,11 +13,13 @@ import PillGroup from './PillGroup.vue'
 import type { PillsItem } from '../types/components/pill-group'
 import type { ColorChooserProps, ColorChooserEmits, ColorChooserSlots, ColorFormat } from '../types/components/color-chooser'
 
-const props = withDefaults(defineProps<ColorChooserProps<M> & {
+interface _Props extends ColorChooserProps<M> {
   size?: ComponentConfig<typeof popoverTheme & typeof theme, AppConfig, 'colorChooser'>['variants']['size']
   trigger?: ComponentConfig<typeof popoverTheme & typeof theme, AppConfig, 'colorChooser'>['variants']['trigger']
   ui?: ComponentConfig<typeof popoverTheme & typeof theme, AppConfig, 'colorChooser'>['slots']
-}>(), {
+}
+
+const props = withDefaults(defineProps<_Props>(), {
   format: 'hex',
   formats: () => ['hex'],
   closeOnSwatch: true,

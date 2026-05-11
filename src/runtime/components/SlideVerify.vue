@@ -9,11 +9,12 @@ import type { ComponentConfig } from '@nuxt/ui'
 import type { AppConfig } from 'nuxt/schema'
 import type { SlideVerifyProps, SlideVerifyEmits, SlideVerifySlots } from '../types/components/slide-verify'
 
-const props = withDefaults(defineProps<SlideVerifyProps & {
+interface _Props extends SlideVerifyProps {
   size?: ComponentConfig<typeof theme, AppConfig, 'slideVerify'>['variants']['size']
   ui?: ComponentConfig<typeof theme, AppConfig, 'slideVerify'>['slots']
-}>(), {
-  size: 'md',
+}
+
+const props = withDefaults(defineProps<_Props>(), {
   text: '请向右滑动验证',
   successText: '验证成功',
   icon: 'i-lucide-chevrons-right',
@@ -77,7 +78,7 @@ function handlePointerDown(e: PointerEvent) {
   pointerStartX.value = e.clientX
   dragStartX.value = dragX.value
   isDragging.value = true
-  ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
+  ; (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
   emits('dragStart')
 }
 
@@ -154,10 +155,7 @@ defineExpose({ reset })
       @pointerup="handlePointerUp"
     >
       <slot name="slider" :verified="isVerified" :progress="progress">
-        <UIcon
-          :name="isVerified ? successIcon : icon"
-          :class="uiCls.icon({ class: props.ui?.icon })"
-        />
+        <UIcon :name="isVerified ? successIcon : icon" :class="uiCls.icon({ class: props.ui?.icon })" />
       </slot>
     </div>
   </div>

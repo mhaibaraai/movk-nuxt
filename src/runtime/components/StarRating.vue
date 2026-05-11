@@ -8,9 +8,11 @@ import theme from '#build/movk-ui/star-rating'
 import type { AppConfig } from 'nuxt/schema'
 import type { StarRatingProps, StarRatingEmits } from '../types/components/star-rating'
 
-const props = withDefaults(defineProps<StarRatingProps & {
+interface _Props extends StarRatingProps {
   ui?: ComponentConfig<typeof theme, AppConfig, 'starRating'>['slots']
-}>(), {
+}
+
+const props = withDefaults(defineProps<_Props>(), {
   modelValue: 0,
   max: 5,
   showBadge: true,

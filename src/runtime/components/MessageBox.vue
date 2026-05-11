@@ -10,12 +10,12 @@ import type { AppConfig } from 'nuxt/schema'
 import type { MessageBoxProps, MessageBoxEmits } from '../types/components/message-box'
 import type { SemanticColor } from '../types/shared'
 
-interface Props extends MessageBoxProps {
+interface _Props extends MessageBoxProps {
   type?: ComponentConfig<typeof modalTheme & typeof theme, AppConfig, 'messageBox'>['variants']['type']
   ui?: ComponentConfig<typeof modalTheme & typeof theme, AppConfig, 'messageBox'>['slots']
 }
 
-const props = withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<_Props>(), {
   title: '提示',
   type: 'primary',
   mode: 'alert',

@@ -184,7 +184,7 @@ const variants: NonNullable<PillGroupProps['variant']>[] = ['solid', 'outline', 
     </Showcase>
 
     <Showcase title="9. UFormField 集成" description="size 自动跟随" :state="{ value: singleForm }">
-      <UFormField label="视图模式" hint="选择展示方式" size="lg">
+      <UFormField label="视图模式" hint="选择展示方式" size="xs">
         <MPillGroup v-model="singleForm" :items="viewItems" value-key="value" />
       </UFormField>
     </Showcase>
