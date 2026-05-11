@@ -84,7 +84,7 @@ const swatchRows = computed<string[][]>(() => {
 
 const hasSwatches = computed(() => swatchRows.value.length > 0)
 
-const { ui, extraUi } = useExtendedTv(
+const { baseUi, extraUi } = useExtendedTv(
   popoverTheme,
   theme,
   () => appConfig.movk?.colorChooser,
@@ -176,7 +176,7 @@ function handleOpenUpdate(val: boolean) {
 </script>
 
 <template>
-  <UPopover v-bind="attrs" :open="openState" :ui="ui" @update:open="handleOpenUpdate">
+  <UPopover v-bind="attrs" :open="openState" :ui="baseUi" @update:open="handleOpenUpdate">
     <template #default="{ open }">
       <slot :open="open" :value="modelValue">
         <UButton
@@ -189,7 +189,7 @@ function handleOpenUpdate(val: boolean) {
           </span>
         </UButton>
 
-        <div v-else-if="props.trigger === 'input'" class="w-full">
+        <div v-else-if="props.trigger === 'input'">
           <UInput
             v-model="inputDraft"
             :size="props.size"

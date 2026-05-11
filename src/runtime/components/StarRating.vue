@@ -3,10 +3,10 @@ import type { ButtonProps, ComponentConfig } from '@nuxt/ui'
 import { UButton, UBadge } from '#components'
 import { computed, ref } from 'vue'
 import { useAppConfig } from '#imports'
-import { tv } from '../utils/tv'
 import theme from '#build/movk-ui/star-rating'
 import type { AppConfig } from 'nuxt/schema'
 import type { StarRatingProps, StarRatingEmits } from '../types/components/star-rating'
+import { useExtendedTv } from '../utils/extend-theme'
 
 interface _Props extends StarRatingProps {
   ui?: ComponentConfig<typeof theme, AppConfig, 'starRating'>['slots']
@@ -31,11 +31,17 @@ const isInteractive = computed(() => !props.disabled && !props.readonly)
 
 const appConfig = useAppConfig() as { movk?: { starRating?: unknown } }
 
-const uiCls = computed(() =>
-  tv({ extend: tv(theme), ...((appConfig.movk?.starRating || {}) as typeof theme) })({
-    interactive: isInteractive.value,
-    disabled: props.disabled,
-    readonly: props.readonly && !props.disabled
+const { ui } = useExtendedTv(
+  { slots: {} },
+  theme,
+  () => appConfig.movk?.starRating,
+  () => ({
+    ui: props.ui,
+    variants: {
+      interactive: isInteractive.value,
+      disabled: props.disabled,
+      readonly: props.readonly && !props.disabled
+    }
   })
 )
 
@@ -182,7 +188,7 @@ const badgeLabel = computed(() => `${props.modelValue}/${props.max}`)
 
 <template>
   <div
-    :class="uiCls.root({ class: props.ui?.root })"
+    :class="ui.root"
     role="slider"
     :aria-label="`评分 ${props.modelValue} / ${props.max}`"
     :aria-valuenow="props.modelValue"
@@ -194,7 +200,7 @@ const badgeLabel = computed(() => `${props.modelValue}/${props.max}`)
     @keydown="handleKeyDown"
   >
     <slot name="prefix" :value="props.modelValue" :max="props.max" />
-    <div :class="uiCls.stars({ class: props.ui?.stars })">
+    <div :class="ui.stars">
       <UButton
         v-for="index in props.max"
         :key="index"
@@ -206,7 +212,7 @@ const badgeLabel = computed(() => `${props.modelValue}/${props.max}`)
         :aria-label="`${index} 星`"
         :tabindex="-1"
         v-bind="buttonProps"
-        :class="uiCls.star({ class: props.ui?.star })"
+        :class="ui.star"
         @click="handleClick(index - 1, $event)"
         @mouseenter="handleMouseEnter(index - 1, $event)"
         @mousemove="handleMouseMove(index - 1, $event)"

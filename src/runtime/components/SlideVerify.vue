@@ -3,11 +3,11 @@ import { UIcon } from '#components'
 import { useAppConfig } from '#imports'
 import { useElementSize } from '@vueuse/core'
 import { computed, ref, useTemplateRef } from 'vue'
-import { tv } from '../utils/tv'
 import theme from '#build/movk-ui/slide-verify'
 import type { ComponentConfig } from '@nuxt/ui'
 import type { AppConfig } from 'nuxt/schema'
 import type { SlideVerifyProps, SlideVerifyEmits, SlideVerifySlots } from '../types/components/slide-verify'
+import { useExtendedTv } from '../utils/extend-theme'
 
 interface _Props extends SlideVerifyProps {
   size?: ComponentConfig<typeof theme, AppConfig, 'slideVerify'>['variants']['size']
@@ -38,11 +38,17 @@ const dragStartX = ref(0)
 
 const appConfig = useAppConfig() as { movk?: { slideVerify?: unknown } }
 
-const uiCls = computed(() =>
-  tv({ extend: tv(theme), ...((appConfig.movk?.slideVerify || {}) as typeof theme) })({
-    disabled: props.disabled,
-    verified: isVerified.value,
-    size: props.size
+const { ui } = useExtendedTv(
+  { slots: {} },
+  theme,
+  () => appConfig.movk?.slideVerify,
+  () => ({
+    ui: props.ui,
+    variants: {
+      disabled: props.disabled,
+      verified: isVerified.value,
+      size: props.size
+    }
   })
 )
 
@@ -114,7 +120,7 @@ defineExpose({ reset })
 <template>
   <div
     ref="root"
-    :class="uiCls.root({ class: props.ui?.root })"
+    :class="ui.root"
     role="slider"
     :aria-label="text"
     :aria-valuenow="Math.round(progress * 100)"
@@ -122,14 +128,14 @@ defineExpose({ reset })
     aria-valuemax="100"
     :aria-disabled="disabled"
   >
-    <div ref="track" :class="uiCls.track({ class: props.ui?.track })">
+    <div ref="track" :class="ui.track">
       <div
         v-if="!isVerified"
-        :class="[uiCls.fill({ class: props.ui?.fill }), isDragging ? 'transition-none' : 'transition-[width] duration-300']"
+        :class="[ui.fill, isDragging ? 'transition-none' : 'transition-[width] duration-300']"
         :style="{ width: `${progress * 100}%` }"
       />
 
-      <div :class="uiCls.text({ class: props.ui?.text })">
+      <div :class="ui.text">
         <span
           v-if="!isVerified"
           class="animate-[shimmer_2s_linear_infinite] [background-size:200%_100%] bg-clip-text text-transparent bg-no-repeat select-none"
@@ -145,7 +151,7 @@ defineExpose({ reset })
     <div
       ref="slider"
       :class="[
-        uiCls.slider({ class: props.ui?.slider }),
+        ui.slider,
         isDragging ? 'transition-none' : 'transition-transform duration-300 ease-out',
         canInteract ? 'hover:scale-[1.02] active:scale-[0.98]' : ''
       ]"
@@ -155,7 +161,7 @@ defineExpose({ reset })
       @pointerup="handlePointerUp"
     >
       <slot name="slider" :verified="isVerified" :progress="progress">
-        <UIcon :name="isVerified ? successIcon : icon" :class="uiCls.icon({ class: props.ui?.icon })" />
+        <UIcon :name="isVerified ? successIcon : icon" :class="ui.icon" />
       </slot>
     </div>
   </div>

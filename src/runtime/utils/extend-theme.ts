@@ -27,11 +27,14 @@ export function useExtendedTv<P extends SlotsLike, M extends SlotsLike>(
   getOverride: () => unknown = () => ({}),
   getParams: () => MergeParams = () => ({})
 ): ExtendedTv<P, M> {
+  // 父 theme 只用于划分被包装组件的原生 slot 边界。
   const parentSlotKeys = new Set(Object.keys(parentTheme.slots))
+  // 补齐父 slot key，让最终 ui 同时包含父组件和扩展组件的 slot。
   const emptySlots = Object.fromEntries(
     Object.keys(parentTheme.slots).map(key => [key, ''])
   )
 
+  // 完整合并结果：包含父组件原生 slot 与 movk 扩展 slot。
   const ui = computed(() => {
     const ov = (getOverride() ?? {}) as Record<string, unknown>
     const { ui: uiOverride, variants } = getParams()
@@ -63,12 +66,14 @@ export function useExtendedTv<P extends SlotsLike, M extends SlotsLike>(
     return result
   }) as ComputedRef<Record<AllKeys<P, M>, string>>
 
+  // 仅父组件原生 slot，适合传给 UPopover、UInput 等被包装组件的 :ui。
   const baseUi = computed(() =>
     Object.fromEntries(
       Object.entries(ui.value).filter(([k]) => parentSlotKeys.has(k))
     )
   ) as ComputedRef<Record<BaseKeys<P>, string>>
 
+  // 仅 movk 扩展 slot，适合当前封装组件内部元素使用。
   const extraUi = computed(() =>
     Object.fromEntries(
       Object.entries(ui.value).filter(([k]) => !parentSlotKeys.has(k))

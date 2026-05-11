@@ -35,7 +35,7 @@ const appConfig = useAppConfig() as { movk?: { popconfirm?: unknown } }
 
 const openState = ref(false)
 
-const { ui, extraUi } = useExtendedTv(
+const { baseUi, extraUi } = useExtendedTv(
   popoverTheme,
   theme,
   () => appConfig.movk?.popconfirm,
@@ -101,7 +101,7 @@ async function handleConfirm(close: () => void) {
     v-model:open="openState"
     :dismissible="props.dismissible"
     :arrow="props.arrow"
-    :ui="ui"
+    :ui="baseUi"
   >
     <template #default="{ open }">
       <slot :open="open" />

@@ -73,7 +73,7 @@ function handleUpdateOpen(val: boolean) {
   emits('close', false)
 }
 
-const { ui, extraUi } = useExtendedTv(
+const { baseUi, extraUi } = useExtendedTv(
   modalTheme,
   theme,
   () => appConfig.movk?.messageBox,
@@ -82,7 +82,7 @@ const { ui, extraUi } = useExtendedTv(
 </script>
 
 <template>
-  <UModal v-model:open="open" :dismissible="props.dismissible" :ui="ui" v-bind="attrs" @update:open="handleUpdateOpen">
+  <UModal v-model:open="open" :dismissible="props.dismissible" :ui="baseUi" v-bind="attrs" @update:open="handleUpdateOpen">
     <template #title>
       <UIcon :name="resolvedIcon" :class="extraUi.icon" />
       <span>{{ props.title }}</span>
