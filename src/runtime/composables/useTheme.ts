@@ -12,38 +12,28 @@ const SYSTEM_DEFAULT_PRIMARY = 'blue'
 const SYSTEM_DEFAULT_NEUTRAL = 'slate'
 
 export function useTheme() {
-  const appConfig = useAppConfig()
+  const { movk, ui } = useAppConfig()
   const colorMode = useColorMode()
   const site = useSiteConfig()
   const name = kebabCase(site.name)
 
-  const movk = appConfig.movk
+  const color = computed(() => colorMode.value === 'dark' ? (colors as any)[ui.colors.neutral][900] : 'white')
 
   const _radius = useLocalStorage(`${name}-ui-radius`, movk?.radius ?? SYSTEM_DEFAULT_RADIUS)
   const _font = useLocalStorage(`${name}-ui-font`, movk?.font ?? SYSTEM_DEFAULT_FONT)
   const _iconSet = useLocalStorage(`${name}-ui-icons`, movk?.icons ?? SYSTEM_DEFAULT_ICONS)
   const _blackAsPrimary = useLocalStorage(`${name}-ui-black-as-primary`, false)
 
-  const color = computed(() => colorMode.value === 'dark' ? (colors as any)[appConfig.ui.colors.neutral][900] : 'white')
-
   const pickerFonts = movk?.picker?.fonts ?? []
+
   const neutralColors = movk?.picker?.neutralColors ?? []
-  const radiuses = movk?.picker?.radiuses ?? []
-  const fonts = pickerFonts.map(f => f.name)
-
-  const icons = [
-    { label: 'Lucide', icon: 'i-lucide-feather', value: 'lucide' },
-    { label: 'Phosphor', icon: 'i-ph-phosphor-logo', value: 'phosphor' },
-    { label: 'Tabler', icon: 'i-tabler-brand-tabler', value: 'tabler' }
-  ]
-
   const neutral = computed({
     get() {
-      return appConfig.ui.colors.neutral
+      return ui.colors.neutral
     },
     set(option) {
-      appConfig.ui.colors.neutral = option
-      window.localStorage.setItem(`${name}-ui-neutral`, appConfig.ui.colors.neutral)
+      ui.colors.neutral = option
+      window.localStorage.setItem(`${name}-ui-neutral`, ui.colors.neutral)
     }
   })
 
@@ -51,15 +41,16 @@ export function useTheme() {
   const primaryColors = Object.keys(omit(colors, colorsToOmit as any))
   const primary = computed({
     get() {
-      return appConfig.ui.colors.primary
+      return ui.colors.primary
     },
     set(option) {
-      appConfig.ui.colors.primary = option
-      window.localStorage.setItem(`${name}-ui-primary`, appConfig.ui.colors.primary)
+      ui.colors.primary = option
+      window.localStorage.setItem(`${name}-ui-primary`, ui.colors.primary)
       setBlackAsPrimary(false)
     }
   })
 
+  const radiuses = movk?.picker?.radiuses ?? []
   const radius = computed({
     get() {
       return _radius.value
@@ -69,6 +60,7 @@ export function useTheme() {
     }
   })
 
+  const fonts = pickerFonts.map(f => f.name)
   const font = computed({
     get() {
       return _font.value
@@ -78,20 +70,25 @@ export function useTheme() {
     }
   })
 
+  const icons = [
+    { label: 'Lucide', icon: 'i-lucide-feather', value: 'lucide' },
+    { label: 'Phosphor', icon: 'i-ph-phosphor-logo', value: 'phosphor' },
+    { label: 'Tabler', icon: 'i-tabler-brand-tabler', value: 'tabler' }
+  ]
   const icon = computed({
     get() {
       return _iconSet.value
     },
     set(option) {
       _iconSet.value = option
-      appConfig.ui.icons = themeIcons[option as keyof typeof themeIcons] as any
+      ui.icons = themeIcons[option as keyof typeof themeIcons] as any
     }
   })
 
   const modes = computed(() => [
-    { label: 'light', icon: appConfig.ui.icons.light },
-    { label: 'dark', icon: appConfig.ui.icons.dark },
-    { label: 'system', icon: appConfig.ui.icons.system }
+    { label: 'light', icon: ui.icons.light },
+    { label: 'dark', icon: ui.icons.dark },
+    { label: 'system', icon: ui.icons.system }
   ])
   const mode = computed({
     get() {
@@ -137,8 +134,8 @@ export function useTheme() {
   })
 
   const hasConfigChanges = computed(() => {
-    return appConfig.ui.colors.primary !== SYSTEM_DEFAULT_PRIMARY
-      || appConfig.ui.colors.neutral !== SYSTEM_DEFAULT_NEUTRAL
+    return ui.colors.primary !== SYSTEM_DEFAULT_PRIMARY
+      || ui.colors.neutral !== SYSTEM_DEFAULT_NEUTRAL
       || _iconSet.value !== (movk?.icons ?? SYSTEM_DEFAULT_ICONS)
   })
 
@@ -187,9 +184,9 @@ export function useTheme() {
       warning: 'yellow',
       error: 'red'
     }
-    const colorEntries = Object.entries(defaultColors).filter(([key, def]) => (appConfig.ui.colors as any)[key] !== def)
+    const colorEntries = Object.entries(defaultColors).filter(([key, def]) => (ui.colors as any)[key] !== def)
     if (colorEntries.length) {
-      config.ui = { colors: Object.fromEntries(colorEntries.map(([key]) => [key, (appConfig.ui.colors as any)[key]])) }
+      config.ui = { colors: Object.fromEntries(colorEntries.map(([key]) => [key, (ui.colors as any)[key]])) }
     }
 
     if (_iconSet.value !== SYSTEM_DEFAULT_ICONS) {
@@ -212,16 +209,16 @@ export function useTheme() {
     const defaultFont = movk?.font ?? SYSTEM_DEFAULT_FONT
     const defaultIcons = movk?.icons ?? SYSTEM_DEFAULT_ICONS
 
-    appConfig.ui.colors.primary = defaultPrimary
+    ui.colors.primary = defaultPrimary
     window.localStorage.removeItem(`${name}-ui-primary`)
 
-    appConfig.ui.colors.neutral = defaultNeutral
+    ui.colors.neutral = defaultNeutral
     window.localStorage.removeItem(`${name}-ui-neutral`)
 
     _radius.value = defaultRadius
     _font.value = defaultFont
     _iconSet.value = defaultIcons
-    appConfig.ui.icons = themeIcons[defaultIcons as keyof typeof themeIcons] as any
+    ui.icons = themeIcons[defaultIcons as keyof typeof themeIcons] as any
     _blackAsPrimary.value = false
   }
 
@@ -245,7 +242,7 @@ export function useTheme() {
     mode,
     hasCSSChanges,
     hasConfigChanges,
-    configLabel: 'vite.config.ts',
+    configLabel: 'app.config.ts',
     exportCSS,
     exportConfig,
     resetTheme

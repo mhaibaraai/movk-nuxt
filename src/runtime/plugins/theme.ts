@@ -1,6 +1,5 @@
 import { kebabCase } from '@movk/core'
 import { defineNuxtPlugin, useAppConfig, useHead, useSiteConfig } from '#imports'
-import { useTheme } from '../composables/useTheme'
 import { themeIcons } from '../domains/theme/theme-icons'
 
 export default defineNuxtPlugin({
@@ -105,12 +104,5 @@ export default defineNuxtPlugin({
         }]
       })
     }
-
-    const { color, style, link } = useTheme()
-    useHead({
-      meta: [{ key: 'theme-color', name: 'theme-color', content: color }],
-      link,
-      style
-    })
   }
 })

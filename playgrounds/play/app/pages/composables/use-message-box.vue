@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { SemanticColor } from '#movk/types/shared'
+import type { SemanticColor } from '@movk/nuxt'
 
 const { alert, confirm } = useMessageBox()
 const log = ref<string[]>([])

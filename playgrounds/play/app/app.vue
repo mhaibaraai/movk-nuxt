@@ -3,8 +3,13 @@ import { zh_cn } from '@nuxt/ui/locale'
 
 const { components, groups, items } = useNavigation()
 
+const { color, style, link } = useTheme()
+
 useHead({
-  title: 'Movk Nuxt · Playground'
+  title: 'Movk Nuxt · Playground',
+  meta: [{ key: 'theme-color', name: 'theme-color', content: color }],
+  link,
+  style
 })
 
 provide('components', components)
