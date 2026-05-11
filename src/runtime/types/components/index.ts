@@ -5,7 +5,15 @@ export type {
   ColorChooserTrigger,
   ColorFormat
 } from './color-chooser'
-export type { DatePickerEmits, DatePickerProps, LabelFormat } from './date-picker'
+export type {
+  DatePickerEmits,
+  DatePickerLabelFormatter,
+  DatePickerPreset,
+  DatePickerProps,
+  FormattedValue,
+  LabelFormat,
+  ValueFormat
+} from './date-picker'
 export type { MessageBoxEmits, MessageBoxProps } from './message-box'
 export type { PopconfirmEmits, PopconfirmProps, PopconfirmSlots } from './popconfirm'
 export type { SlideVerifyEmits, SlideVerifyProps, SlideVerifySlots } from './slide-verify'

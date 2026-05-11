@@ -1,84 +1,183 @@
-<script lang="ts" setup generic="R extends boolean, M extends boolean, P extends 'click' | 'hover'">
-import type { ButtonProps, CalendarProps } from '@nuxt/ui'
+<script lang="ts" setup generic="R extends boolean, M extends boolean, P extends 'click' | 'hover', V extends ValueFormat = 'date-value'">
+import type { ButtonProps, CalendarProps, ComponentConfig } from '@nuxt/ui'
+import type { AppConfig } from 'nuxt/schema'
 import type { DateValue } from '@internationalized/date'
-import { UPopover, UButton, UCalendar } from '#components'
+import { UPopover, UButton, UCalendar, UIcon } from '#components'
 import { computed, useAttrs } from 'vue'
+import { useAppConfig } from '#imports'
 import { useDateFormatter } from '../composables/useDateFormatter'
-import type { DatePickerEmits, DatePickerProps, LabelFormat } from '../types/components/date-picker'
+import type { ValueFormat } from '../composables/useDateFormatter'
+import { useExtendedTv } from '../utils/extend-theme'
+import theme from '#build/movk-ui/date-picker'
+import popoverTheme from '#build/ui/popover'
+import type {
+  DatePickerEmits,
+  DatePickerPreset,
+  DatePickerProps,
+  FormattedValue,
+  LabelFormat
+} from '../types/components/date-picker'
+import PillGroup from './PillGroup.vue'
+import type { PillsItem } from '../types/components/pill-group'
 
-const props = withDefaults(defineProps<DatePickerProps<R, M, P>>(), {
+interface _Props extends DatePickerProps<R, M, P, V> {
+  ui?: ComponentConfig<typeof popoverTheme & typeof theme, AppConfig, 'datePicker'>['slots']
+}
+
+const props = withDefaults(defineProps<_Props>(), {
   placeholder: '选择日期',
-  labelFormat: 'formatted'
+  labelFormat: 'formatted',
+  clearable: false
 })
 
-const emits = defineEmits<DatePickerEmits<R, M>>()
+const emits = defineEmits<DatePickerEmits<R, M, V>>()
 
 defineOptions({ inheritAttrs: false })
 
-const LABEL_FORMATS: LabelFormat[] = ['iso', 'formatted', 'date', 'timestamp', 'unix']
 const attrs = useAttrs()
-const modelValue = defineModel<CalendarProps<R, M>['modelValue']>()
+const modelValue = defineModel<FormattedValue<R, M, V>>()
+const appConfig = useAppConfig() as { movk?: { datePicker?: unknown } }
 
-const formatter = useDateFormatter({ locale: props.locale, formatOptions: props.formatOptions })
+const formatter = useDateFormatter({
+  locale: props.locale,
+  formatOptions: props.formatOptions,
+  timeZone: props.timeZone
+})
 
-const formatConverters: Record<LabelFormat, (date: DateValue) => string> = {
-  iso: date => formatter.toISO(date),
-  timestamp: date => String(formatter.toTimestamp(date)),
-  unix: date => String(formatter.toUnixTimestamp(date)),
-  date: date => formatter.toDate(date)?.toLocaleDateString() ?? '',
-  formatted: date => formatter.format(date)
-}
+type CalendarModel = CalendarProps<R, M>['modelValue']
+const asModel = (v: unknown) => v as CalendarModel
+const isOn = (v: unknown) => v === '' || v === true || v === 'true'
 
-const convertSingle = (date: DateValue, format: LabelFormat) => formatConverters[format](date)
+const valueFormat = computed<ValueFormat>(() => props.valueFormat ?? 'date-value')
+const isRange = computed(() => isOn(attrs.range))
+const isMultiple = computed(() => isOn(attrs.multiple))
 
-const convertArray = (dates: DateValue[], format: LabelFormat) =>
-  dates.map(d => convertSingle(d, format)).join(', ')
-
-const convertRange = (range: { start?: DateValue | null, end?: DateValue | null }, format: LabelFormat) => {
-  if (!range.start || !range.end) return props.placeholder || props.buttonProps?.label || ''
-  return `${convertSingle(range.start, format)} - ${convertSingle(range.end, format)}`
-}
-
-const convertToLabel = (value: CalendarProps<R, M>['modelValue']): string => {
-  if (!value) return props.placeholder || props.buttonProps?.label || ''
-
-  const format = LABEL_FORMATS.includes(props.labelFormat as LabelFormat) ? props.labelFormat as LabelFormat : 'formatted'
-
-  if (Array.isArray(value)) {
-    return value.length > 0 ? convertArray(value, format) : props.placeholder || props.buttonProps?.label || ''
+const calendarValue = computed<CalendarModel>({
+  get: () => formatter.convertFromFormat(modelValue.value, valueFormat.value) as CalendarModel,
+  set: (next) => {
+    modelValue.value = formatter.convertToFormat(next, valueFormat.value) as FormattedValue<R, M, V>
   }
+})
 
-  if (typeof value === 'object' && 'start' in value && 'end' in value) {
-    return convertRange(value, format)
-  }
+const emptyLabel = computed(() => props.placeholder || props.buttonProps?.label || '')
 
-  return convertSingle(value as DateValue, format)
+const fromNumber = (n: number | null): string => n === null ? '' : String(n)
+
+const converters: Record<LabelFormat, (d: DateValue) => string> = {
+  iso: formatter.toISO,
+  formatted: formatter.format,
+  date: d => formatter.toDate(d)?.toLocaleDateString() ?? '',
+  timestamp: d => fromNumber(formatter.toTimestamp(d)),
+  unix: d => fromNumber(formatter.toUnixTimestamp(d))
 }
 
 const formattedDate = computed<string>(() => {
-  if (typeof props.labelFormat === 'function') return props.labelFormat(formatter, modelValue.value)
-  return convertToLabel(modelValue.value)
+  const value = calendarValue.value
+  if (typeof props.labelFormat === 'function') return props.labelFormat(formatter, value)
+  if (!value) return emptyLabel.value
+
+  const convert = converters[props.labelFormat as LabelFormat] ?? formatter.format
+
+  if (Array.isArray(value)) {
+    return value.length === 0 ? emptyLabel.value : value.map(convert).join(', ')
+  }
+  if (formatter.isDateRange(value)) {
+    if (!value.start || !value.end) return emptyLabel.value
+    return `${convert(value.start)} - ${convert(value.end)}`
+  }
+  return convert(value as DateValue)
 })
+
+const hasValue = computed<boolean>(() => {
+  const value = calendarValue.value
+  if (value === undefined || value === null) return false
+  if (Array.isArray(value)) return value.length > 0
+  if (formatter.isDateRange(value)) return !!value.start || !!value.end
+  return true
+})
+
+function handleClear(event: MouseEvent) {
+  event.stopPropagation()
+  if (isRange.value) calendarValue.value = asModel({ start: undefined, end: undefined })
+  else if (isMultiple.value) calendarValue.value = asModel([])
+  else calendarValue.value = asModel(undefined)
+}
+
+function buildDefaultPresets(): DatePickerPreset<R, M>[] {
+  const today = formatter.getToday()
+  const range = (start: DateValue, end: DateValue) => asModel({ start, end })
+
+  if (isRange.value) return [
+    { label: '今天', value: () => range(today, today) },
+    { label: '本周', value: f => range(f.getStartOfWeek(today), f.getEndOfWeek(today)) },
+    { label: '本月', value: f => range(f.getStartOfMonth(today), f.getEndOfMonth(today)) },
+    { label: '最近 7 天', value: () => range(today.subtract({ days: 6 }), today) },
+    { label: '最近 30 天', value: () => range(today.subtract({ days: 29 }), today) }
+  ]
+
+  if (isMultiple.value) return []
+
+  return [
+    { label: '今天', value: () => asModel(today) },
+    { label: '昨天', value: () => asModel(today.subtract({ days: 1 })) },
+    { label: '明天', value: () => asModel(today.add({ days: 1 })) }
+  ]
+}
+
+const resolvedPresets = computed<DatePickerPreset<R, M>[]>(() => {
+  if (!props.presets) return []
+  if (props.presets === 'default') return buildDefaultPresets()
+  return props.presets
+})
+
+function applyPreset(preset: DatePickerPreset<R, M>) {
+  const value = typeof preset.value === 'function' ? preset.value(formatter) : preset.value
+  calendarValue.value = value as CalendarModel
+}
+
+const presetItems = computed<PillsItem[]>(() => resolvedPresets.value.map(preset => ({
+  label: preset.label,
+  value: preset.label,
+  onSelect: () => applyPreset(preset)
+})))
+
+const { baseUi, extraUi } = useExtendedTv(
+  popoverTheme,
+  theme,
+  () => appConfig.movk?.datePicker,
+  () => ({
+    ui: props.ui,
+    variants: { withPresets: resolvedPresets.value.length > 0 }
+  })
+)
 </script>
 
 <template>
-  <UPopover v-bind="popoverProps" @close:prevent="emits('close:prevent')" @update:open="emits('update:open', $event)">
+  <UPopover
+    v-bind="popoverProps"
+    :ui="baseUi"
+    @close:prevent="emits('close:prevent')"
+    @update:open="emits('update:open', $event)"
+  >
     <template #default="defaultSlotProps">
       <slot v-bind="defaultSlotProps">
         <UButton
           color="neutral"
           variant="subtle"
           icon="i-lucide-calendar"
-          class="w-full"
           :size="(attrs.size as ButtonProps['size'])"
+          :label="formattedDate"
+          class="w-full"
           v-bind="buttonProps"
         >
-          {{ formattedDate }}
           <template v-if="$slots.leading" #leading="leading">
             <slot name="leading" v-bind="leading" />
           </template>
           <template v-if="$slots.trailing" #trailing="trailing">
             <slot name="trailing" v-bind="trailing" />
+          </template>
+          <template v-else-if="clearable && hasValue" #trailing>
+            <UIcon name="i-lucide-x" :class="extraUi.clearIcon" @click="handleClear" />
           </template>
         </UButton>
       </slot>
@@ -89,24 +188,38 @@ const formattedDate = computed<string>(() => {
     </template>
 
     <template #content>
-      <UCalendar
-        v-model="modelValue"
-        class="p-2"
-        v-bind="attrs"
-        @update:placeholder="(e: any) => emits('update:placeholder', e)"
-        @update:start-value="emits('update:startValue', $event)"
-        @update:valid-model-value="emits('update:validModelValue', $event)"
-      >
-        <template v-if="$slots.day" #day="day">
-          <slot name="day" v-bind="day" />
-        </template>
-        <template v-if="$slots.heading" #heading="heading">
-          <slot name="heading" v-bind="heading" />
-        </template>
-        <template v-if="$slots['week-day']" #week-day="weekDay">
-          <slot name="week-day" v-bind="weekDay" />
-        </template>
-      </UCalendar>
+      <div :class="extraUi.wrapper">
+        <div v-if="presetItems.length" :class="extraUi.presets">
+          <PillGroup
+            :model-value="undefined"
+            :items="presetItems"
+            orientation="vertical"
+            size="sm"
+            color="neutral"
+            variant="ghost"
+            inactive-variant="ghost"
+            :ui="{ root: 'block', list: 'flex flex-col gap-1 bg-transparent ring-0 p-0', item: extraUi.presetButton }"
+          />
+        </div>
+        <UCalendar
+          v-model="calendarValue"
+          :class="extraUi.calendar"
+          v-bind="attrs"
+          @update:placeholder="e => emits('update:placeholder', e)"
+          @update:start-value="emits('update:startValue', $event)"
+          @update:valid-model-value="emits('update:validModelValue', $event)"
+        >
+          <template v-if="$slots.day" #day="day">
+            <slot name="day" v-bind="day" />
+          </template>
+          <template v-if="$slots.heading" #heading="heading">
+            <slot name="heading" v-bind="heading" />
+          </template>
+          <template v-if="$slots['week-day']" #week-day="weekDay">
+            <slot name="week-day" v-bind="weekDay" />
+          </template>
+        </UCalendar>
+      </div>
     </template>
   </UPopover>
 </template>
