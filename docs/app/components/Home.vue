@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import type { DateValue } from '@internationalized/date'
+import type { DateValue } from '#movk/types'
 import type { TabsItem } from '@nuxt/ui'
 import type z from 'zod'
 
