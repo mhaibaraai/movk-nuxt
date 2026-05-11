@@ -12,7 +12,8 @@ export default createConfigForNuxt({
   '@typescript-eslint/no-explicit-any': 'off',
   '@typescript-eslint/no-empty-object-type': 'off',
   '@typescript-eslint/ban-ts-comment': 'off',
-  '@stylistic/brace-style': 'off'
+  '@stylistic/brace-style': 'off',
+  '@stylistic/max-statements-per-line': 'off'
 }).append({
   files: ['**/*.vue'],
   rules: {

@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { CalendarDate, getLocalTimeZone } from '@internationalized/date'
+import type { DateValue } from '@internationalized/date'
 import { useDateFormatter } from '../../src/runtime/composables/useDateFormatter'
 
 describe('useDateFormatter', () => {
@@ -76,6 +77,11 @@ describe('useDateFormatter', () => {
     it('toUnixTimestamp: 转换为秒时间戳', () => {
       const unix = formatter.toUnixTimestamp(fixedDate)
       expect(typeof unix).toBe('number')
+    })
+
+    it('toUnixTimestamp: 1970-01-01 应返回 0 而非 null', () => {
+      const epoch = new CalendarDate(1970, 1, 1)
+      expect(formatter.toUnixTimestamp(epoch)).toBe(0)
     })
 
     it('parse: 解析 ISO 字符串', () => {
@@ -210,6 +216,142 @@ describe('useDateFormatter', () => {
       const result = formatter.convertToFormatted(data)
       // 默认 zh-CN medium
       expect(result.date).toBe('2025年11月29日')
+    })
+  })
+
+  describe('反向工具', () => {
+    const formatter = useDateFormatter({ timeZone: 'Asia/Shanghai' })
+
+    it('fromISO: 从 ISO 字符串反解', () => {
+      const date = formatter.fromISO('2025-11-29')
+      expect(date?.year).toBe(2025)
+      expect(date?.month).toBe(11)
+      expect(date?.day).toBe(29)
+    })
+
+    it('fromISO: 空值返回 null', () => {
+      expect(formatter.fromISO(null)).toBeNull()
+      expect(formatter.fromISO(undefined)).toBeNull()
+      expect(formatter.fromISO('')).toBeNull()
+    })
+
+    it('fromDate: 从 JS Date 反解', () => {
+      const jsDate = new Date(Date.UTC(2025, 10, 29))
+      const date = formatter.fromDate(jsDate)
+      expect(date?.year).toBe(2025)
+      expect(date?.month).toBe(11)
+      expect(date?.day).toBe(29)
+    })
+
+    it('fromDate: 无效 Date 返回 null', () => {
+      expect(formatter.fromDate(new Date('invalid'))).toBeNull()
+      expect(formatter.fromDate(null)).toBeNull()
+    })
+
+    it('fromTimestamp: 从毫秒时间戳反解', () => {
+      const ts = Date.UTC(2025, 10, 29)
+      const date = formatter.fromTimestamp(ts)
+      expect(date?.year).toBe(2025)
+      expect(date?.month).toBe(11)
+      expect(date?.day).toBe(29)
+    })
+
+    it('fromUnixTimestamp: 从秒时间戳反解', () => {
+      const unix = Date.UTC(2025, 10, 29) / 1000
+      const date = formatter.fromUnixTimestamp(unix)
+      expect(date?.year).toBe(2025)
+      expect(date?.month).toBe(11)
+      expect(date?.day).toBe(29)
+    })
+
+    it('round-trip: toISO → fromISO', () => {
+      const iso = formatter.toISO(fixedDate)
+      const back = formatter.fromISO(iso)
+      expect(formatter.isSameDay(fixedDate, back!)).toBe(true)
+    })
+
+    it('round-trip: toDate → fromDate', () => {
+      const jsDate = formatter.toDate(fixedDate)
+      const back = formatter.fromDate(jsDate)
+      expect(formatter.isSameDay(fixedDate, back!)).toBe(true)
+    })
+
+    it('round-trip: toTimestamp → fromTimestamp', () => {
+      const ts = formatter.toTimestamp(fixedDate)
+      const back = formatter.fromTimestamp(ts)
+      expect(formatter.isSameDay(fixedDate, back!)).toBe(true)
+    })
+
+    it('round-trip: toUnixTimestamp → fromUnixTimestamp', () => {
+      const unix = formatter.toUnixTimestamp(fixedDate)
+      const back = formatter.fromUnixTimestamp(unix)
+      expect(formatter.isSameDay(fixedDate, back!)).toBe(true)
+    })
+
+    it('fromFormat: 按 format 自动分发', () => {
+      expect(formatter.fromFormat('2025-11-29', 'iso')?.day).toBe(29)
+      expect(formatter.fromFormat(Date.UTC(2025, 10, 29), 'timestamp')?.day).toBe(29)
+      expect(formatter.fromFormat(Date.UTC(2025, 10, 29) / 1000, 'unix')?.day).toBe(29)
+      expect(formatter.fromFormat(new Date(Date.UTC(2025, 10, 29)), 'date')?.day).toBe(29)
+      expect(formatter.fromFormat(fixedDate, 'date-value')).toBe(fixedDate)
+    })
+
+    it('fromFormat: 不匹配的输入类型返回 null', () => {
+      expect(formatter.fromFormat(123, 'iso')).toBeNull()
+      expect(formatter.fromFormat('2025-11-29', 'timestamp')).toBeNull()
+      expect(formatter.fromFormat(null, 'iso')).toBeNull()
+    })
+
+    it('convertFromFormat: 反解单值', () => {
+      const result = formatter.convertFromFormat('2025-11-29', 'iso') as DateValue
+      expect(formatter.isDateValue(result)).toBe(true)
+      expect(result.day).toBe(29)
+    })
+
+    it('convertFromFormat: 反解范围', () => {
+      const result = formatter.convertFromFormat(
+        { start: '2025-11-29', end: '2025-12-01' },
+        'iso'
+      ) as { start: DateValue, end: DateValue }
+      expect(result.start.day).toBe(29)
+      expect(result.end.day).toBe(1)
+    })
+
+    it('convertFromFormat: 反解数组', () => {
+      const result = formatter.convertFromFormat(['2025-11-29', '2025-12-01'], 'iso') as DateValue[]
+      expect(result).toHaveLength(2)
+      expect(result[0].day).toBe(29)
+      expect(result[1].day).toBe(1)
+    })
+
+    it('convertFromFormat: date-value 形态直接透传', () => {
+      const data = { start: fixedDate, end: fixedDate2 }
+      expect(formatter.convertFromFormat(data, 'date-value')).toBe(data)
+    })
+  })
+
+  describe('正向 toFormat / convertToFormat', () => {
+    const formatter = useDateFormatter({ timeZone: 'Asia/Shanghai' })
+
+    it('toFormat: 按 format 选择正向转换', () => {
+      expect(formatter.toFormat(fixedDate, 'iso')).toBe('2025-11-29')
+      expect(formatter.toFormat(fixedDate, 'timestamp')).toBe(Date.UTC(2025, 10, 29))
+      expect(formatter.toFormat(fixedDate, 'unix')).toBe(Date.UTC(2025, 10, 29) / 1000)
+      expect(formatter.toFormat(fixedDate, 'date-value')).toBe(fixedDate)
+      expect(formatter.toFormat(fixedDate, 'date')).toBeInstanceOf(Date)
+    })
+
+    it('convertToFormat: 范围批量转换', () => {
+      const result = formatter.convertToFormat(
+        { start: fixedDate, end: fixedDate2 },
+        'iso'
+      ) as { start: string, end: string }
+      expect(result).toEqual({ start: '2025-11-29', end: '2025-12-01' })
+    })
+
+    it('convertToFormat: date-value 直接透传', () => {
+      const data = [fixedDate, fixedDate2]
+      expect(formatter.convertToFormat(data, 'date-value')).toBe(data)
     })
   })
 })

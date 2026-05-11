@@ -1,5 +1,6 @@
 import {
-  DateFormatter,
+  CalendarDate,
+  DateFormatter as IntlDateFormatter,
   getLocalTimeZone,
   today,
   now,
@@ -24,6 +25,8 @@ import {
 import type { DateValue } from '@internationalized/date'
 import type { DateRange } from 'reka-ui'
 
+export type ValueFormat = 'date-value' | 'iso' | 'timestamp' | 'unix' | 'date'
+
 /**
  * 日期格式化器配置选项
  */
@@ -47,6 +50,11 @@ export interface DateFormatterOptions {
 
 const DEFAULT_LOCALE = 'zh-CN'
 const DEFAULT_FORMAT_OPTIONS: Intl.DateTimeFormatOptions = { dateStyle: 'medium' }
+
+function safe<T>(fn: () => T, fallback: T): T {
+  try { return fn() }
+  catch { return fallback }
+}
 
 /**
  * 检查值是否为 DateValue 类型
@@ -100,17 +108,12 @@ export function useDateFormatter(options: DateFormatterOptions = {}) {
   const formatOptions = options.formatOptions ?? DEFAULT_FORMAT_OPTIONS
   const timeZone = options.timeZone ?? getLocalTimeZone()
 
-  const formatter = new DateFormatter(locale, { ...formatOptions, timeZone })
+  const formatter = new IntlDateFormatter(locale, { ...formatOptions, timeZone })
 
   /** 格式化日期为本地化字符串 */
   function format(date: DateValue | undefined | null): string {
     if (!date) return ''
-    try {
-      return formatter.format(date.toDate(timeZone))
-    }
-    catch {
-      return ''
-    }
+    return safe(() => formatter.format(date.toDate(timeZone)), '')
   }
 
   /**
@@ -146,12 +149,7 @@ export function useDateFormatter(options: DateFormatterOptions = {}) {
   /** 转换为 ISO 8601 字符串 */
   function toISO(date: DateValue | undefined | null): string {
     if (!date) return ''
-    try {
-      return date.toString()
-    }
-    catch {
-      return ''
-    }
+    return safe(() => date.toString(), '')
   }
 
   /**
@@ -161,12 +159,7 @@ export function useDateFormatter(options: DateFormatterOptions = {}) {
    */
   function toDate(date: DateValue | undefined | null): Date | null {
     if (!date) return null
-    try {
-      return new Date(Date.UTC(date.year, date.month - 1, date.day))
-    }
-    catch {
-      return null
-    }
+    return safe(() => new Date(Date.UTC(date.year, date.month - 1, date.day)), null)
   }
 
   /** 转换为时间戳(毫秒) */
@@ -178,7 +171,81 @@ export function useDateFormatter(options: DateFormatterOptions = {}) {
   /** 转换为 Unix 时间戳(秒) */
   function toUnixTimestamp(date: DateValue | undefined | null): number | null {
     const timestamp = toTimestamp(date)
-    return timestamp ? Math.floor(timestamp / 1000) : null
+    return timestamp === null ? null : Math.floor(timestamp / 1000)
+  }
+
+  /** 按 ValueFormat 把 DateValue 转换为指定形态 */
+  function toFormat(date: DateValue | undefined | null, format: ValueFormat): unknown {
+    if (!date) return undefined
+    switch (format) {
+      case 'date-value': return date
+      case 'iso': return toISO(date)
+      case 'timestamp': return toTimestamp(date)
+      case 'unix': return toUnixTimestamp(date)
+      case 'date': return toDate(date)
+    }
+  }
+
+  /** 按 format 递归转换 single / range / array；date-value 时透传 */
+  function convertToFormat<T>(data: T, format: ValueFormat): unknown {
+    if (format === 'date-value') return data
+    return convertData(data, value => toFormat(value, format))
+  }
+
+  /** 从 JS Date 反解为 CalendarDate（用 UTC 字段，与 toDate 互逆） */
+  function fromDate(value: Date | undefined | null): CalendarDate | null {
+    if (!value || Number.isNaN(value.getTime())) return null
+    return safe(
+      () => new CalendarDate(value.getUTCFullYear(), value.getUTCMonth() + 1, value.getUTCDate()),
+      null
+    )
+  }
+
+  /** 毫秒时间戳 → CalendarDate */
+  function fromTimestamp(value: number | undefined | null): CalendarDate | null {
+    if (value === null || value === undefined || Number.isNaN(value)) return null
+    return fromDate(new Date(value))
+  }
+
+  /** Unix 秒时间戳 → CalendarDate */
+  function fromUnixTimestamp(value: number | undefined | null): CalendarDate | null {
+    if (value === null || value === undefined || Number.isNaN(value)) return null
+    return fromTimestamp(value * 1000)
+  }
+
+  /** ISO 字符串 → DateValue */
+  function fromISO(value: string | undefined | null): DateValue | null {
+    if (!value) return null
+    return parse(value)
+  }
+
+  /** 按 format 把任意值反解为 DateValue；类型不匹配返回 null */
+  function fromFormat(value: unknown, format: ValueFormat): DateValue | null {
+    if (value === null || value === undefined) return null
+    if (format === 'date-value') return isDateValue(value) ? value : null
+    if (format === 'iso') return typeof value === 'string' ? fromISO(value) : null
+    if (format === 'timestamp') return typeof value === 'number' ? fromTimestamp(value) : null
+    if (format === 'unix') return typeof value === 'number' ? fromUnixTimestamp(value) : null
+    if (format === 'date') return value instanceof Date ? fromDate(value) : null
+    return null
+  }
+
+  /** 按 format 递归反解 single / range / array；date-value 时透传 */
+  function convertFromFormat<T>(data: T, format: ValueFormat): unknown {
+    if (data === null || data === undefined) return data
+    if (format === 'date-value') return data
+
+    if (Array.isArray(data)) return data.map(item => convertFromFormat(item, format))
+
+    if (typeof data === 'object' && 'start' in data && 'end' in data) {
+      const range = data as { start?: unknown, end?: unknown }
+      return {
+        start: range.start === undefined || range.start === null ? range.start : fromFormat(range.start, format),
+        end: range.end === undefined || range.end === null ? range.end : fromFormat(range.end, format)
+      }
+    }
+
+    return fromFormat(data, format)
   }
 
   /** 获取今天的日期 */
@@ -255,13 +322,10 @@ export function useDateFormatter(options: DateFormatterOptions = {}) {
     date: DateValue,
     style: 'narrow' | 'short' | 'long' = 'long'
   ): string {
-    try {
-      const weekdayFormatter = new DateFormatter(locale, { weekday: style, timeZone })
+    return safe(() => {
+      const weekdayFormatter = new IntlDateFormatter(locale, { weekday: style, timeZone })
       return weekdayFormatter.format(date.toDate(timeZone))
-    }
-    catch {
-      return ''
-    }
+    }, '')
   }
 
   /** 获取本月的周数 */
@@ -327,13 +391,9 @@ export function useDateFormatter(options: DateFormatterOptions = {}) {
     }
 
     if (typeof data === 'object') {
-      const result = {} as Record<string, unknown>
-      for (const key in data) {
-        if (Object.prototype.hasOwnProperty.call(data, key)) {
-          result[key] = convertData(data[key], converter)
-        }
-      }
-      return result as T
+      return Object.fromEntries(
+        Object.entries(data as Record<string, unknown>).map(([k, v]) => [k, convertData(v, converter)])
+      ) as T
     }
 
     return data
@@ -362,8 +422,16 @@ export function useDateFormatter(options: DateFormatterOptions = {}) {
     toDate,
     toTimestamp,
     toUnixTimestamp,
+    toFormat,
+    fromISO,
+    fromDate,
+    fromTimestamp,
+    fromUnixTimestamp,
+    fromFormat,
     parse,
     convertData,
+    convertToFormat,
+    convertFromFormat,
     getToday,
     getNow,
     getStartOfWeek,
@@ -390,3 +458,19 @@ export function useDateFormatter(options: DateFormatterOptions = {}) {
     timeZone
   }
 }
+
+export type { CalendarDate } from '@internationalized/date'
+
+export type DateFormatter = ReturnType<typeof useDateFormatter>
+
+export type {
+  AnyCalendarDate,
+  Calendar,
+  CalendarDateTime,
+  DateDuration,
+  DateFields,
+  DateValue,
+  Time,
+  ZonedDateTime
+} from '@internationalized/date'
+export type { DateRange } from 'reka-ui'
