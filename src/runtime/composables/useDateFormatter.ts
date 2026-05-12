@@ -459,7 +459,7 @@ export function useDateFormatter(options: DateFormatterOptions = {}) {
   }
 }
 
-export type { CalendarDate } from '@internationalized/date'
+export { CalendarDate } from '@internationalized/date'
 
 export type DateFormatter = ReturnType<typeof useDateFormatter>
 
