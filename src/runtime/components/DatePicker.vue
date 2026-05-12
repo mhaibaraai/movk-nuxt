@@ -1,4 +1,6 @@
-<script lang="ts" setup generic="R extends boolean, M extends boolean, P extends 'click' | 'hover', V extends ValueFormat = 'date-value'">
+<script lang="ts" setup
+  generic="R extends boolean, M extends boolean, P extends 'click' | 'hover', V extends ValueFormat = 'date-value'"
+>
 import type { ButtonProps, CalendarProps, ComponentConfig } from '@nuxt/ui'
 import type { AppConfig } from 'nuxt/schema'
 import type { DateValue } from '@internationalized/date'
@@ -17,8 +19,6 @@ import type {
   FormattedValue,
   LabelFormat
 } from '../types/components/date-picker'
-import PillGroup from './PillGroup.vue'
-import type { PillsItem } from '../types/components/pill-group'
 
 interface _Props extends DatePickerProps<R, M, P, V> {
   ui?: ComponentConfig<typeof popoverTheme & typeof theme, AppConfig, 'datePicker'>['slots']
@@ -135,12 +135,6 @@ function applyPreset(preset: DatePickerPreset<R, M>) {
   calendarValue.value = value as CalendarModel
 }
 
-const presetItems = computed<PillsItem[]>(() => resolvedPresets.value.map(preset => ({
-  label: preset.label,
-  value: preset.label,
-  onSelect: () => applyPreset(preset)
-})))
-
 const { baseUi, extraUi } = useExtendedTv(
   popoverTheme,
   theme,
@@ -189,16 +183,16 @@ const { baseUi, extraUi } = useExtendedTv(
 
     <template #content>
       <div :class="extraUi.wrapper">
-        <div v-if="presetItems.length" :class="extraUi.presets">
-          <PillGroup
-            :model-value="undefined"
-            :items="presetItems"
-            orientation="vertical"
+        <div v-if="resolvedPresets.length" :class="extraUi.presets">
+          <UButton
+            v-for="preset in resolvedPresets"
+            :key="preset.label"
+            :label="preset.label"
             size="sm"
             color="neutral"
             variant="ghost"
-            inactive-variant="ghost"
-            :ui="{ root: 'block', list: 'flex flex-col gap-1 bg-transparent ring-0 p-0', item: extraUi.presetButton }"
+            :class="extraUi.presetButton"
+            @click="applyPreset(preset)"
           />
         </div>
         <UCalendar
