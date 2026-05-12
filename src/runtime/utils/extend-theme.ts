@@ -15,8 +15,8 @@ type BaseKeys<P extends SlotsLike> = string & keyof P['slots']
 type ExtraKeys<P extends SlotsLike, M extends SlotsLike> = string & Exclude<keyof M['slots'], keyof P['slots']>
 type AllKeys<P extends SlotsLike, M extends SlotsLike> = string & (keyof P['slots'] | keyof M['slots'])
 
-export interface ExtendedTv<P extends SlotsLike, M extends SlotsLike> {
-  ui: ComputedRef<Record<AllKeys<P, M>, string>>
+interface ExtendedTv<P extends SlotsLike, M extends SlotsLike> {
+  extendUi: ComputedRef<Record<AllKeys<P, M>, string>>
   baseUi: ComputedRef<Record<BaseKeys<P>, string>>
   extraUi: ComputedRef<Record<ExtraKeys<P, M>, string>>
 }
@@ -35,7 +35,7 @@ export function useExtendedTv<P extends SlotsLike, M extends SlotsLike>(
   )
 
   // 完整合并结果：包含父组件原生 slot 与 movk 扩展 slot。
-  const ui = computed(() => {
+  const extendUi = computed(() => {
     const ov = (getOverride() ?? {}) as Record<string, unknown>
     const { ui: uiOverride, variants } = getParams()
 
@@ -69,16 +69,16 @@ export function useExtendedTv<P extends SlotsLike, M extends SlotsLike>(
   // 仅父组件原生 slot，适合传给 UPopover、UInput 等被包装组件的 :ui。
   const baseUi = computed(() =>
     Object.fromEntries(
-      Object.entries(ui.value).filter(([k]) => parentSlotKeys.has(k))
+      Object.entries(extendUi.value).filter(([k]) => parentSlotKeys.has(k))
     )
   ) as ComputedRef<Record<BaseKeys<P>, string>>
 
   // 仅 movk 扩展 slot，适合当前封装组件内部元素使用。
   const extraUi = computed(() =>
     Object.fromEntries(
-      Object.entries(ui.value).filter(([k]) => !parentSlotKeys.has(k))
+      Object.entries(extendUi.value).filter(([k]) => !parentSlotKeys.has(k))
     )
   ) as ComputedRef<Record<ExtraKeys<P, M>, string>>
 
-  return { ui, baseUi, extraUi }
+  return { extendUi, baseUi, extraUi }
 }
