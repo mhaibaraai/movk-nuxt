@@ -10,14 +10,16 @@ import { extractPureSchema, introspectSchema } from '../domains/auto-form/schema
 import { useAutoForm } from '../composables/useAutoForm'
 import AutoFormRendererField from '../domains/auto-form/components/Field.vue'
 import { useAppConfig } from '#app'
-import { tv } from '../utils/tv'
 import theme from '#build/movk-ui/search-form'
 import type { AppConfig } from 'nuxt/schema'
 import type { SearchFormProps, SearchFormEmits, SearchFormSlots } from '../types/auto-form/search-form'
+import { useExtendedTv } from '../utils/extend-theme'
 
-const props = withDefaults(defineProps<SearchFormProps<S, T, N> & {
+interface _Props extends SearchFormProps<S, T, N> {
   ui?: ComponentConfig<typeof theme, AppConfig, 'searchForm'>['slots']
-}>(), {
+}
+
+const props = withDefaults(defineProps<_Props>(), {
   cols: 3,
   visibleRows: 1,
   icon: 'i-lucide-chevron-down',
@@ -70,8 +72,14 @@ const colsVariants = computed(() => {
   return { cols: '1', smCols: c.sm ? String(c.sm) : undefined, mdCols: c.md ? String(c.md) : undefined, lgCols: c.lg ? String(c.lg) : undefined, xlCols: c.xl ? String(c.xl) : undefined }
 })
 
-const uiCls = computed(() =>
-  tv({ extend: tv(theme), ...((appConfig.movk?.searchForm || {}) as typeof theme) })(colsVariants.value as any)
+const { extraUi } = useExtendedTv(
+  { slots: {} },
+  theme,
+  () => appConfig.movk?.searchForm,
+  () => ({
+    ui: props.ui,
+    variants: colsVariants.value
+  })
 )
 
 const { DEFAULT_CONTROLS } = useAutoForm()
@@ -145,14 +153,16 @@ defineExpose({
     :state="stateModel"
     :schema="pureSchema"
     :validate-on="props.validateOn"
-    :ui="{ base: uiCls.base({ class: props.ui?.base }) }"
+    :ui="{
+      base: extraUi.base
+    }"
     v-bind="attrs"
     @submit="handleSearch"
   >
     <template #default="{ errors, loading: formLoading }">
-      <div :class="uiCls.root({ class: props.ui?.root })">
-        <div :class="uiCls.inner({ class: props.ui?.inner })">
-          <div :class="uiCls.grid({ class: props.ui?.grid })">
+      <div :class="extraUi.root">
+        <div :class="extraUi.inner">
+          <div :class="extraUi.grid">
             <AutoFormRendererField
               v-for="field in visibleFields"
               :key="field.path"
@@ -170,7 +180,7 @@ defineExpose({
               :reset="reset"
               :loading="loading"
             >
-              <div :class="uiCls.actionWrapper({ class: props.ui?.actionWrapper })">
+              <div :class="extraUi.actionWrapper">
                 <UButton
                   v-if="showSearchButton"
                   type="submit"
@@ -195,10 +205,7 @@ defineExpose({
             </slot>
           </div>
 
-          <div
-            v-if="needsCollapse"
-            :class="uiCls.toggleWrapper({ class: props.ui?.toggleWrapper })"
-          >
+          <div v-if="needsCollapse" :class="extraUi.toggleWrapper">
             <UButton
               :icon="icon || appConfig.ui.icons.chevronDown"
               color="neutral"
@@ -208,7 +215,7 @@ defineExpose({
               :label="expanded ? collapseText : expandText"
               tabindex="-1"
               :ui="{ leadingIcon: 'size-3.5 group-data-[state=open]:rotate-180 transition-transform duration-200' }"
-              :class="uiCls.toggle({ class: props.ui?.toggle })"
+              :class="extraUi.toggle"
               v-bind="collapseButtonProps"
               @click="toggle"
             />
@@ -217,7 +224,7 @@ defineExpose({
 
         <UCollapsible v-if="needsCollapse" v-model:open="expanded">
           <template #content>
-            <div :class="[uiCls.grid({ class: props.ui?.grid }), uiCls.collapsedContent({ class: props.ui?.collapsedContent })]">
+            <div :class="[extraUi.grid, extraUi.collapsedContent]">
               <AutoFormRendererField
                 v-for="field in collapsedFields"
                 :key="field.path"

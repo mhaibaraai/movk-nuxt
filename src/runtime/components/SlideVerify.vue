@@ -38,7 +38,7 @@ const dragStartX = ref(0)
 
 const appConfig = useAppConfig() as { movk?: { slideVerify?: unknown } }
 
-const { ui } = useExtendedTv(
+const { extendUi } = useExtendedTv(
   { slots: {} },
   theme,
   () => appConfig.movk?.slideVerify,
@@ -120,7 +120,7 @@ defineExpose({ reset })
 <template>
   <div
     ref="root"
-    :class="ui.root"
+    :class="extendUi.root"
     role="slider"
     :aria-label="text"
     :aria-valuenow="Math.round(progress * 100)"
@@ -128,14 +128,14 @@ defineExpose({ reset })
     aria-valuemax="100"
     :aria-disabled="disabled"
   >
-    <div ref="track" :class="ui.track">
+    <div ref="track" :class="extendUi.track">
       <div
         v-if="!isVerified"
-        :class="[ui.fill, isDragging ? 'transition-none' : 'transition-[width] duration-300']"
+        :class="[extendUi.fill, isDragging ? 'transition-none' : 'transition-[width] duration-300']"
         :style="{ width: `${progress * 100}%` }"
       />
 
-      <div :class="ui.text">
+      <div :class="extendUi.text">
         <span
           v-if="!isVerified"
           class="animate-[shimmer_2s_linear_infinite] [background-size:200%_100%] bg-clip-text text-transparent bg-no-repeat select-none"
@@ -151,7 +151,7 @@ defineExpose({ reset })
     <div
       ref="slider"
       :class="[
-        ui.slider,
+        extendUi.slider,
         isDragging ? 'transition-none' : 'transition-transform duration-300 ease-out',
         canInteract ? 'hover:scale-[1.02] active:scale-[0.98]' : ''
       ]"
@@ -161,7 +161,7 @@ defineExpose({ reset })
       @pointerup="handlePointerUp"
     >
       <slot name="slider" :verified="isVerified" :progress="progress">
-        <UIcon :name="isVerified ? successIcon : icon" :class="ui.icon" />
+        <UIcon :name="isVerified ? successIcon : icon" :class="extendUi.icon" />
       </slot>
     </div>
   </div>

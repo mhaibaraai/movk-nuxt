@@ -31,7 +31,7 @@ const isInteractive = computed(() => !props.disabled && !props.readonly)
 
 const appConfig = useAppConfig() as { movk?: { starRating?: unknown } }
 
-const { ui } = useExtendedTv(
+const { extendUi } = useExtendedTv(
   { slots: {} },
   theme,
   () => appConfig.movk?.starRating,
@@ -188,7 +188,7 @@ const badgeLabel = computed(() => `${props.modelValue}/${props.max}`)
 
 <template>
   <div
-    :class="ui.root"
+    :class="extendUi.root"
     role="slider"
     :aria-label="`评分 ${props.modelValue} / ${props.max}`"
     :aria-valuenow="props.modelValue"
@@ -200,7 +200,7 @@ const badgeLabel = computed(() => `${props.modelValue}/${props.max}`)
     @keydown="handleKeyDown"
   >
     <slot name="prefix" :value="props.modelValue" :max="props.max" />
-    <div :class="ui.stars">
+    <div :class="extendUi.stars">
       <UButton
         v-for="index in props.max"
         :key="index"
@@ -212,7 +212,7 @@ const badgeLabel = computed(() => `${props.modelValue}/${props.max}`)
         :aria-label="`${index} 星`"
         :tabindex="-1"
         v-bind="buttonProps"
-        :class="ui.star"
+        :class="extendUi.star"
         @click="handleClick(index - 1, $event)"
         @mouseenter="handleMouseEnter(index - 1, $event)"
         @mousemove="handleMouseMove(index - 1, $event)"

@@ -57,7 +57,7 @@ const effectiveSize = computed(() => ffSize.value ?? props.size)
 const effectiveColor = computed(() => ffColor.value ?? props.color)
 const effectiveDisabled = computed(() => ffDisabled.value ?? props.disabled ?? false)
 
-const { ui } = useExtendedTv(
+const { extendUi } = useExtendedTv(
   { slots: {} },
   theme,
   () => appConfig.movk?.pillGroup,
@@ -211,11 +211,11 @@ const itemRole = computed(() => (props.multiple ? 'checkbox' : 'radio'))
 </script>
 
 <template>
-  <div :class="ui.root">
+  <div :class="extendUi.root">
     <div
       :id="id"
       :role="groupRole"
-      :class="ui.list"
+      :class="extendUi.list"
       v-bind="ariaAttrs"
       :aria-required="props.required || undefined"
     >
@@ -226,7 +226,7 @@ const itemRole = computed(() => (props.multiple ? 'checkbox' : 'radio'))
         :variant="isSelected(item) ? props.variant : props.inactiveVariant"
         :size="effectiveSize"
         :disabled="effectiveDisabled || isItemDisabled(item) || isItemLocked(item)"
-        :class="[ui.item, isSelectItem(item) ? item.class : undefined]"
+        :class="[extendUi.item, isSelectItem(item) ? item.class : undefined]"
         :role="itemRole"
         :aria-checked="isSelected(item)"
         @click="handleClick($event, item)"
@@ -243,8 +243,8 @@ const itemRole = computed(() => (props.multiple ? 'checkbox' : 'radio'))
           </slot>
         </template>
 
-        <span :class="ui.itemBody">
-          <span :class="ui.itemLabel">
+        <span :class="extendUi.itemBody">
+          <span :class="extendUi.itemLabel">
             <slot
               name="label"
               :item="item"
@@ -256,7 +256,7 @@ const itemRole = computed(() => (props.multiple ? 'checkbox' : 'radio'))
           </span>
           <span
             v-if="getItemDescription(item) || !!slots.description"
-            :class="ui.itemDescription"
+            :class="extendUi.itemDescription"
           >
             <slot
               name="description"

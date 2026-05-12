@@ -7,7 +7,7 @@ const colsVariant = (prefix = '') =>
 
 export default () => ({
   slots: {
-    base: '',
+    base: 'space-y-4',
     root: 'group/search pb-6 -mb-6',
     inner: 'relative',
     grid: 'grid gap-4',
