@@ -20,6 +20,8 @@ const singleVertical = ref<string | undefined>('week')
 const singleForm = ref<string | undefined>('grid')
 const singleSlot = ref<string | undefined>('hot')
 const singleMatrix = ref<string | undefined>('grid')
+const formFieldCompat = ref<string | undefined>('grid')
+const fieldGroupCompat = ref<string | undefined>('list')
 
 // 多选 (multiple=true)
 const multiScalar = ref<string[]>(['hex', 'rgb'])
@@ -130,6 +132,21 @@ const variants: NonNullable<PillGroupProps['variant']>[] = ['solid', 'outline', 
 
 <template>
   <Navbar />
+
+  <div class="p-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <Showcase title="UFormField 兼容" description="外层字段尺寸和错误态传递到按钮组" :state="{ value: formFieldCompat }">
+      <UFormField label="视图模式" size="xs" error="示例错误态">
+        <MPillGroup v-model="formFieldCompat" :items="viewItems" value-key="value" />
+      </UFormField>
+    </Showcase>
+
+    <Showcase title="UFieldGroup 兼容" description="按钮组和操作按钮共同继承分组尺寸" :state="{ value: fieldGroupCompat }">
+      <UFieldGroup size="xs" class="w-full">
+        <MPillGroup v-model="fieldGroupCompat" :items="viewItems" value-key="value" />
+        <UButton icon="i-lucide-filter" color="neutral" variant="subtle" />
+      </UFieldGroup>
+    </Showcase>
+  </div>
 
   <div class="p-4 space-y-2">
     <h2 class="text-lg font-semibold">

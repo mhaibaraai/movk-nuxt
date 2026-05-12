@@ -10,6 +10,8 @@ const attrs = ref({
 })
 
 const value = ref(3)
+const formFieldRating = ref(3)
+const fieldGroupRating = ref(4)
 const halfValue = ref(3.5)
 const clearableValue = ref(2.5)
 
@@ -57,6 +59,21 @@ function clearLog() {
     <USelect v-model="attrs.size" :items="sizes" multiple size="xs" placeholder="size" />
     <USelect v-model="attrs.color" :items="colors" multiple size="xs" placeholder="color" />
   </Navbar>
+
+  <div class="p-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <Showcase title="UFormField 兼容" description="外层字段尺寸和错误态传递到评分控件" :state="{ value: formFieldRating }">
+      <UFormField label="满意度" size="xs" error="示例错误态">
+        <MStarRating v-model="formFieldRating" />
+      </UFormField>
+    </Showcase>
+
+    <Showcase title="UFieldGroup 兼容" description="评分控件和按钮共同继承分组尺寸" :state="{ value: fieldGroupRating }">
+      <UFieldGroup size="xs" class="w-full">
+        <MStarRating v-model="fieldGroupRating" />
+        <UButton icon="i-lucide-rotate-ccw" color="neutral" variant="subtle" @click="fieldGroupRating = 0" />
+      </UFieldGroup>
+    </Showcase>
+  </div>
 
   <UFormField label="Emits 演示" help="点击 / 悬浮 / 键盘交互（含 Backspace 清零）均会写入日志。" class="p-4">
     <div class="flex flex-wrap items-start gap-6">

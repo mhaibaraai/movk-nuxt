@@ -2,6 +2,8 @@
 import type { ColorChooserProps } from '@movk/nuxt'
 
 const basic = ref('#0ea5e9')
+const formFieldValue = ref('#0ea5e9')
+const fieldGroupValue = ref('#22c55e')
 const formatsValue = ref('#22c55e')
 const swatchesValue = ref('#ef4444')
 const groupedValue = ref('#3b82f6')
@@ -56,6 +58,19 @@ const enabledFormats = ref<ColorChooserProps['formats']>(['hex', 'rgb', 'hsl'])
   <Navbar />
 
   <div class="p-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <Showcase title="UFormField 兼容" description="外层字段尺寸和错误态传递到 input 触发器" :state="{ value: formFieldValue }">
+      <UFormField label="品牌色" size="xs" error="示例错误态">
+        <MColorChooser v-model="formFieldValue" trigger="input" />
+      </UFormField>
+    </Showcase>
+
+    <Showcase title="UFieldGroup 兼容" description="颜色触发器和按钮共同继承分组尺寸" :state="{ value: fieldGroupValue }">
+      <UFieldGroup size="xs" class="w-full">
+        <MColorChooser v-model="fieldGroupValue" trigger="input" />
+        <UButton icon="i-lucide-pipette" color="neutral" variant="subtle" />
+      </UFieldGroup>
+    </Showcase>
+
     <Showcase title="基础用法" description="默认 button 触发器" :state="{ value: basic }">
       <MColorChooser v-model="basic" />
     </Showcase>

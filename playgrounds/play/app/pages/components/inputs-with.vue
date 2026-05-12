@@ -14,6 +14,8 @@ const password = ref('s3cret-pass')
 const limited = ref('')
 const labeled = ref('')
 const copyable = ref('https://movk.dev')
+const formFieldValue = ref('Field value')
+const fieldGroupValue = ref('Group value')
 </script>
 
 <template>
@@ -23,6 +25,29 @@ const copyable = ref('https://movk.dev')
   </Navbar>
 
   <div class="p-4 flex flex-col gap-6">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <Showcase
+        title="UFormField 兼容"
+        description="外层字段尺寸和错误态传递到内部 UInput"
+        :state="{ value: formFieldValue }"
+      >
+        <UFormField label="WithClear" size="xs" error="示例错误态">
+          <MWithClear v-model="formFieldValue" placeholder="可清除" />
+        </UFormField>
+      </Showcase>
+
+      <Showcase
+        title="UFieldGroup 兼容"
+        description="输入封装和按钮共同继承分组尺寸"
+        :state="{ value: fieldGroupValue }"
+      >
+        <UFieldGroup size="xs" class="w-full">
+          <MWithClear v-model="fieldGroupValue" placeholder="搜索关键字" />
+          <UButton icon="i-lucide-search" color="neutral" variant="subtle" />
+        </UFieldGroup>
+      </Showcase>
+    </div>
+
     <Matrix v-slot="props" :attrs="attrs" container-class="w-72">
       <p class="text-xs text-muted font-medium">
         {{ props.size }} · {{ props.color }}

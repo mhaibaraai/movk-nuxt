@@ -5,6 +5,8 @@ import type { DateValue, DateRange } from '@movk/nuxt'
 const formatter = useDateFormatter()
 
 const basic = shallowRef<DateValue>(new CalendarDate(2025, 11, 18))
+const formFieldDate = shallowRef<DateValue>(new CalendarDate(2025, 11, 18))
+const fieldGroupDate = shallowRef<DateValue>(new CalendarDate(2025, 11, 18))
 
 const range = shallowRef<DateRange>({
   start: new CalendarDate(2025, 11, 1),
@@ -49,6 +51,19 @@ const presetCustom = shallowRef<DateValue>()
   <Navbar />
 
   <div class="p-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <Showcase title="UFormField 兼容" description="外层字段尺寸和禁用态传递到触发按钮" :state="{ value: formFieldDate?.toString() }">
+      <UFormField label="预约日期" size="xs" disabled>
+        <MDatePicker v-model="formFieldDate" />
+      </UFormField>
+    </Showcase>
+
+    <Showcase title="UFieldGroup 兼容" description="日期按钮和操作按钮共同继承分组尺寸" :state="{ value: fieldGroupDate?.toString() }">
+      <UFieldGroup size="xs" class="w-full">
+        <MDatePicker v-model="fieldGroupDate" />
+        <UButton icon="i-lucide-calendar-check" color="neutral" variant="subtle" />
+      </UFieldGroup>
+    </Showcase>
+
     <Showcase title="基础用法" :state="{ value: basic?.toString() }">
       <MDatePicker v-model="basic" />
     </Showcase>
