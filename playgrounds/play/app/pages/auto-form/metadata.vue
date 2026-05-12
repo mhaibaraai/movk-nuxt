@@ -2,6 +2,7 @@
 import { z } from 'zod'
 
 const { afz } = useAutoForm()
+const autoForm = useTemplateRef('autoForm')
 
 const richSchema = z.object({
   label: afz.string({ controlProps: { placeholder: '只设置 label' } })
@@ -81,7 +82,10 @@ const richState = reactive<Partial<z.output<typeof richSchema>>>({ hidden: 'secr
 
   <div class="p-4 grid grid-cols-1">
     <Showcase title="加上元数据" :state="richState">
-      <MAutoForm :schema="richSchema" :state="richState" />
+      <template #toolbar>
+        <UButton size="sm" label="重置" @click="autoForm?.reset()" />
+      </template>
+      <MAutoForm ref="autoForm" :schema="richSchema" :state="richState" />
     </Showcase>
   </div>
 </template>
