@@ -3,6 +3,8 @@ import { UIcon } from '#components'
 import { useAppConfig } from '#imports'
 import { useElementSize } from '@vueuse/core'
 import { computed, ref, useTemplateRef } from 'vue'
+import { useFieldGroup } from '@nuxt/ui/composables/useFieldGroup'
+import { useFormField } from '@nuxt/ui/composables/useFormField'
 import theme from '#build/movk-ui/slide-verify'
 import type { ComponentConfig } from '@nuxt/ui'
 import type { AppConfig } from 'nuxt/schema'
@@ -27,6 +29,20 @@ defineSlots<SlideVerifySlots>()
 defineOptions({ inheritAttrs: false })
 
 const isVerified = defineModel<boolean>({ default: false })
+const {
+  id,
+  name,
+  size: formFieldSize,
+  disabled: formFieldDisabled,
+  ariaAttrs,
+  emitFormBlur,
+  emitFormChange,
+  emitFormFocus,
+  emitFormInput
+} = useFormField<_Props>(props)
+const { size: fieldGroupSize } = useFieldGroup<_Props>(props)
+const effectiveSize = computed(() => fieldGroupSize.value || formFieldSize.value)
+const effectiveDisabled = computed(() => formFieldDisabled.value ?? props.disabled ?? false)
 const rootRef = useTemplateRef<HTMLElement>('root')
 const sliderRef = useTemplateRef<HTMLElement>('slider')
 const { width: rootWidth } = useElementSize(rootRef)
@@ -45,16 +61,16 @@ const { extendUi } = useExtendedTv(
   () => ({
     ui: props.ui,
     variants: {
-      disabled: props.disabled,
+      disabled: effectiveDisabled.value,
       verified: isVerified.value,
-      size: props.size
+      size: effectiveSize.value
     }
   })
 )
 
 const rootPaddingX = computed(() => {
   const root = rootRef.value
-  const size = props.size
+  const size = effectiveSize.value
   if (!root || !size) return 0
 
   const style = getComputedStyle(root)
@@ -73,7 +89,7 @@ const progress = computed(() =>
   isVerified.value ? 1 : maxDragDistance.value ? Math.min(dragX.value / maxDragDistance.value, 1) : 0
 )
 
-const canInteract = computed(() => !props.disabled && !isVerified.value && rootWidth.value > 0)
+const canInteract = computed(() => !effectiveDisabled.value && !isVerified.value && rootWidth.value > 0)
 
 const currentTranslateX = computed(() =>
   isVerified.value ? maxDragDistance.value : dragX.value
@@ -103,6 +119,8 @@ function handlePointerUp() {
   if (success) {
     isVerified.value = true
     emits('success')
+    emitFormInput()
+    emitFormChange()
   } else {
     dragX.value = 0
   }
@@ -119,14 +137,20 @@ defineExpose({ reset })
 
 <template>
   <div
+    :id="id"
     ref="root"
+    :name="name"
     :class="extendUi.root"
     role="slider"
     :aria-label="text"
     :aria-valuenow="Math.round(progress * 100)"
     aria-valuemin="0"
     aria-valuemax="100"
-    :aria-disabled="disabled"
+    :aria-disabled="effectiveDisabled"
+    :tabindex="canInteract ? 0 : -1"
+    v-bind="ariaAttrs"
+    @blur="emitFormBlur"
+    @focus="emitFormFocus"
   >
     <div ref="track" :class="extendUi.track">
       <div

@@ -1,13 +1,14 @@
 <script lang="ts" setup generic="T extends InputValue">
 import type { ButtonProps, InputSlots, InputValue, ComponentConfig, InputEmits } from '@nuxt/ui'
 import type { OmitByKey } from '@movk/core'
-import { useAttrs } from 'vue'
+import { computed, useAttrs } from 'vue'
 import { UInput, UButton } from '#components'
 import { useToggle } from '@vueuse/core'
 import { useAppConfig } from '#imports'
 import theme from '#build/movk-ui/with-password-toggle'
 import inputTheme from '#build/ui/input'
 import { useExtendedTv } from '../../utils/extend-theme'
+import { useFormFieldBridge, useForwardedProps } from '../../utils/form-control'
 import type { AppConfig } from 'nuxt/schema'
 import type { WithPasswordToggleProps } from '../../types/components/input/with-password-toggle'
 
@@ -24,6 +25,9 @@ defineOptions({ inheritAttrs: false })
 const attrs = useAttrs()
 const appConfig = useAppConfig() as { movk?: { withPasswordToggle?: unknown } }
 const modelValue = defineModel<T>()
+const inputProps = useForwardedProps(props, ['ui', 'buttonProps', 'defaultValue', 'modelModifiers'] as const)
+const { size: fieldSize } = useFormFieldBridge(props)
+const buttonSize = computed(() => fieldSize.value as ButtonProps['size'])
 
 const { baseUi } = useExtendedTv(
   inputTheme,
@@ -40,7 +44,7 @@ const [value, toggle] = useToggle(false)
     v-model="modelValue"
     :type="value ? 'text' : 'password'"
     :ui="baseUi"
-    v-bind="attrs"
+    v-bind="{ ...inputProps, ...attrs }"
     @blur="emits('blur', $event)"
     @change="emits('change', $event)"
   >
@@ -52,7 +56,7 @@ const [value, toggle] = useToggle(false)
       <UButton
         color="neutral"
         variant="link"
-        :size="(attrs.size as ButtonProps['size'])"
+        :size="buttonSize"
         :icon="value ? 'i-lucide-eye-off' : 'i-lucide-eye'"
         :aria-label="value ? 'Hide password' : 'Show password'"
         :aria-pressed="value"

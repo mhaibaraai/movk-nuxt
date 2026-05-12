@@ -6,6 +6,8 @@ import { useClipboard } from '@vueuse/core'
 import { ColorTranslator } from 'colortranslator'
 import { UPopover, UButton, UColorPicker, UIcon, UInput } from '#components'
 import { useAppConfig } from '#imports'
+import { useFieldGroup } from '@nuxt/ui/composables/useFieldGroup'
+import { useFormField } from '@nuxt/ui/composables/useFormField'
 import { useExtendedTv } from '../utils/extend-theme'
 import theme from '#build/movk-ui/color-chooser'
 import popoverTheme from '#build/ui/popover'
@@ -38,6 +40,23 @@ defineOptions({ inheritAttrs: false })
 
 const attrs = useAttrs()
 const appConfig = useAppConfig() as { movk?: { colorChooser?: unknown } }
+const {
+  id,
+  name,
+  size: formFieldSize,
+  color: formFieldColor,
+  highlight,
+  disabled: formFieldDisabled,
+  ariaAttrs,
+  emitFormBlur,
+  emitFormChange,
+  emitFormFocus,
+  emitFormInput
+} = useFormField<_Props>(props)
+const { size: fieldGroupSize } = useFieldGroup<_Props>(props)
+const effectiveSize = computed(() => fieldGroupSize.value || formFieldSize.value)
+const effectiveColor = computed(() => formFieldColor.value ?? props.color)
+const effectiveDisabled = computed(() => formFieldDisabled.value ?? false)
 
 const FORMAT_KEY = {
   hex: 'HEX',
@@ -91,18 +110,18 @@ const { baseUi, extraUi } = useExtendedTv(
   () => ({
     ui: props.ui,
     variants: {
-      size: props.size,
+      size: effectiveSize.value,
       trigger: props.trigger,
-      disabled: props.disabled
+      disabled: effectiveDisabled.value
     }
   })
 )
 
 const triggerButtonAttrs = computed<ButtonProps>(() => ({
-  color: props.color,
+  color: effectiveColor.value,
   variant: props.variant,
-  size: props.size,
-  disabled: props.disabled,
+  size: effectiveSize.value as ButtonProps['size'],
+  disabled: effectiveDisabled.value,
   square: props.trigger === 'chip'
 }))
 
@@ -111,7 +130,7 @@ const triggerLabel = computed(() => props.label ?? modelValue.value ?? props.pla
 const colorPickerAttrs = computed<ColorPickerProps>(() => ({
   ...(props.colorPickerProps ?? {}),
   format: currentFormat.value,
-  disabled: props.disabled
+  disabled: effectiveDisabled.value
 }))
 
 const { copy, isSupported: clipboardSupported } = useClipboard()
@@ -121,15 +140,13 @@ function selectFormat(fmt: ColorFormat) {
   currentFormat.value = fmt
   const converted = convertColor(modelValue.value, fmt)
   if (converted !== modelValue.value) {
-    modelValue.value = converted
-    emits('change', converted)
+    commitValue(converted)
   }
   emits('format-change', fmt)
 }
 
 function selectSwatch(c: string) {
-  modelValue.value = c
-  emits('change', c)
+  commitValue(c)
   if (props.closeOnSwatch) openState.value = false
 }
 
@@ -141,21 +158,19 @@ function handleCopy() {
 }
 
 function handleClear() {
-  modelValue.value = undefined
-  emits('change', undefined)
+  commitValue(undefined)
   emits('clear')
 }
 
 function handlePickerUpdate(v: string | undefined) {
-  modelValue.value = v
-  emits('change', v)
+  commitValue(v)
 }
 
 function handleInputBlur() {
+  emitFormBlur()
   const v = inputDraft.value.trim()
   if (!v) {
-    modelValue.value = undefined
-    emits('change', undefined)
+    commitValue(undefined)
     return
   }
   const normalized = convertColor(v, currentFormat.value)
@@ -164,14 +179,20 @@ function handleInputBlur() {
     inputDraft.value = modelValue.value ?? ''
     return
   }
-  modelValue.value = normalized
-  emits('change', normalized)
+  commitValue(normalized)
 }
 
 function handleOpenUpdate(val: boolean) {
-  if (val && props.disabled) return
+  if (val && effectiveDisabled.value) return
   openState.value = val
   emits('update:open', val)
+}
+
+function commitValue(value: string | undefined) {
+  modelValue.value = value
+  emits('change', value)
+  emitFormInput()
+  emitFormChange()
 }
 </script>
 
@@ -181,8 +202,12 @@ function handleOpenUpdate(val: boolean) {
       <slot :open="open" :value="modelValue">
         <UButton
           v-if="props.trigger === 'chip'"
-          v-bind="triggerButtonAttrs"
+          :id="id"
+          :name="name"
+          v-bind="{ ...triggerButtonAttrs, ...ariaAttrs }"
           :aria-label="modelValue || props.placeholder"
+          @blur="emitFormBlur"
+          @focus="emitFormFocus"
         >
           <span :class="extraUi.triggerChip" :style="{ backgroundColor: modelValue || 'transparent' }">
             <UIcon v-if="!modelValue" :name="props.icon" :class="extraUi.triggerIcon" />
@@ -191,11 +216,17 @@ function handleOpenUpdate(val: boolean) {
 
         <div v-else-if="props.trigger === 'input'">
           <UInput
+            :id="id"
             v-model="inputDraft"
-            :size="props.size"
+            :name="name"
+            :size="effectiveSize"
+            :color="effectiveColor"
+            :highlight="highlight"
             :placeholder="props.placeholder"
-            :disabled="props.disabled"
+            :disabled="effectiveDisabled"
+            v-bind="ariaAttrs"
             @blur="handleInputBlur"
+            @focus="emitFormFocus"
             @keydown.enter="($event.target as HTMLInputElement).blur()"
           >
             <template #leading>
@@ -218,7 +249,14 @@ function handleOpenUpdate(val: boolean) {
           </UInput>
         </div>
 
-        <UButton v-else v-bind="triggerButtonAttrs">
+        <UButton
+          v-else
+          :id="id"
+          :name="name"
+          v-bind="{ ...triggerButtonAttrs, ...ariaAttrs }"
+          @blur="emitFormBlur"
+          @focus="emitFormFocus"
+        >
           <template #leading>
             <slot name="leading" :value="modelValue">
               <span v-if="modelValue" :class="extraUi.triggerChip" :style="{ backgroundColor: modelValue }" />

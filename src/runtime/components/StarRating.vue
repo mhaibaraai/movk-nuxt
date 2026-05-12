@@ -3,6 +3,8 @@ import type { ButtonProps, ComponentConfig } from '@nuxt/ui'
 import { UButton, UBadge } from '#components'
 import { computed, ref } from 'vue'
 import { useAppConfig } from '#imports'
+import { useFieldGroup } from '@nuxt/ui/composables/useFieldGroup'
+import { useFormField } from '@nuxt/ui/composables/useFormField'
 import theme from '#build/movk-ui/star-rating'
 import type { AppConfig } from 'nuxt/schema'
 import type { StarRatingProps, StarRatingEmits } from '../types/components/star-rating'
@@ -24,10 +26,26 @@ const emits = defineEmits<StarRatingEmits>()
 
 defineOptions({ inheritAttrs: false })
 
+const {
+  id,
+  name,
+  size: formFieldSize,
+  color: formFieldColor,
+  disabled: formFieldDisabled,
+  ariaAttrs,
+  emitFormBlur,
+  emitFormChange,
+  emitFormFocus,
+  emitFormInput
+} = useFormField<_Props>(props)
+const { size: fieldGroupSize } = useFieldGroup<_Props>(props)
+const effectiveSize = computed(() => fieldGroupSize.value || formFieldSize.value)
+const effectiveColor = computed(() => formFieldColor.value ?? props.color)
+const effectiveDisabled = computed(() => formFieldDisabled.value ?? props.disabled ?? false)
 const hoveredStar = ref<number | null>(null)
 const focusedIndex = ref<number>(0)
 
-const isInteractive = computed(() => !props.disabled && !props.readonly)
+const isInteractive = computed(() => !effectiveDisabled.value && !props.readonly)
 
 const appConfig = useAppConfig() as { movk?: { starRating?: unknown } }
 
@@ -39,11 +57,16 @@ const { extendUi } = useExtendedTv(
     ui: props.ui,
     variants: {
       interactive: isInteractive.value,
-      disabled: props.disabled,
-      readonly: props.readonly && !props.disabled
+      disabled: effectiveDisabled.value,
+      readonly: props.readonly && !effectiveDisabled.value
     }
   })
 )
+
+function emitFormValueChange() {
+  emitFormInput()
+  emitFormChange()
+}
 
 function calculateHalfStarValue(index: number, event: MouseEvent): number {
   if (!props.allowHalf) return index + 1
@@ -60,11 +83,13 @@ function updateValue(newValue: number) {
   if (props.clearable && newValue === props.modelValue) {
     emits('update:modelValue', 0)
     emits('change', 0)
+    emitFormValueChange()
     return
   }
 
   emits('update:modelValue', newValue)
   emits('change', newValue)
+  emitFormValueChange()
 }
 
 function handleClick(index: number, event?: MouseEvent) {
@@ -180,7 +205,7 @@ function getStarIcon(index: number): string {
 
 function getStarColor(index: number): ButtonProps['color'] {
   const state = getStarState(index)
-  return state !== 'empty' ? props.color : 'neutral'
+  return state !== 'empty' ? effectiveColor.value : 'neutral'
 }
 
 const badgeLabel = computed(() => `${props.modelValue}/${props.max}`)
@@ -188,15 +213,20 @@ const badgeLabel = computed(() => `${props.modelValue}/${props.max}`)
 
 <template>
   <div
+    :id="id"
+    :name="name"
     :class="extendUi.root"
     role="slider"
     :aria-label="`评分 ${props.modelValue} / ${props.max}`"
     :aria-valuenow="props.modelValue"
     :aria-valuemin="0"
     :aria-valuemax="props.max"
-    :aria-disabled="props.disabled"
+    :aria-disabled="effectiveDisabled"
     :aria-readonly="props.readonly"
     :tabindex="isInteractive ? 0 : -1"
+    v-bind="ariaAttrs"
+    @blur="emitFormBlur"
+    @focus="emitFormFocus"
     @keydown="handleKeyDown"
   >
     <slot name="prefix" :value="props.modelValue" :max="props.max" />
@@ -207,8 +237,8 @@ const badgeLabel = computed(() => `${props.modelValue}/${props.max}`)
         :icon="getStarIcon(index - 1)"
         :color="getStarColor(index - 1)"
         variant="ghost"
-        :size="props.size"
-        :disabled="props.disabled"
+        :size="effectiveSize"
+        :disabled="effectiveDisabled"
         :aria-label="`${index} 星`"
         :tabindex="-1"
         v-bind="buttonProps"
@@ -231,7 +261,7 @@ const badgeLabel = computed(() => `${props.modelValue}/${props.max}`)
         :label="badgeLabel"
         color="primary"
         variant="subtle"
-        :size="props.size"
+        :size="effectiveSize"
       />
     </slot>
 

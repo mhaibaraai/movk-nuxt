@@ -7,6 +7,7 @@ import { useAppConfig } from '#imports'
 import theme from '#build/movk-ui/with-character-limit'
 import inputTheme from '#build/ui/input'
 import { useExtendedTv } from '../../utils/extend-theme'
+import { useForwardedProps } from '../../utils/form-control'
 import type { WithCharacterLimitProps } from '../../types/components/input/with-character-limit'
 import type { AppConfig } from 'nuxt/schema'
 
@@ -25,6 +26,7 @@ defineOptions({ inheritAttrs: false })
 const attrs = useAttrs()
 const appConfig = useAppConfig() as { movk?: { withCharacterLimit?: unknown } }
 const modelValue = defineModel<T>()
+const inputProps = useForwardedProps(props, ['ui', 'maxLength', 'maxlength', 'defaultValue', 'modelModifiers'] as const)
 
 const { baseUi, extraUi } = useExtendedTv(
   inputTheme,
@@ -41,7 +43,7 @@ const currentLength = computed(() => String(modelValue.value ?? '').length)
     :maxlength="props.maxLength"
     aria-describedby="character-count"
     :ui="baseUi"
-    v-bind="attrs"
+    v-bind="{ ...inputProps, ...attrs }"
     @blur="emits('blur', $event)"
     @change="emits('change', $event)"
   >

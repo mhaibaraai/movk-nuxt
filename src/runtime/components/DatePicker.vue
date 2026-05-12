@@ -7,6 +7,8 @@ import type { DateValue } from '@internationalized/date'
 import { UPopover, UButton, UCalendar, UIcon } from '#components'
 import { computed, useAttrs } from 'vue'
 import { useAppConfig } from '#imports'
+import { useFieldGroup } from '@nuxt/ui/composables/useFieldGroup'
+import { useFormField } from '@nuxt/ui/composables/useFormField'
 import { useDateFormatter } from '../composables/useDateFormatter'
 import type { ValueFormat } from '../composables/useDateFormatter'
 import { useExtendedTv } from '../utils/extend-theme'
@@ -37,6 +39,21 @@ defineOptions({ inheritAttrs: false })
 const attrs = useAttrs()
 const modelValue = defineModel<FormattedValue<R, M, V>>()
 const appConfig = useAppConfig() as { movk?: { datePicker?: unknown } }
+const {
+  id,
+  name,
+  size: formFieldSize,
+  color,
+  disabled,
+  ariaAttrs,
+  emitFormBlur,
+  emitFormChange,
+  emitFormFocus,
+  emitFormInput
+} = useFormField<_Props>(props)
+const { size: fieldGroupSize } = useFieldGroup<_Props>(props)
+const effectiveSize = computed(() => fieldGroupSize.value || formFieldSize.value)
+const effectiveDisabled = computed(() => disabled.value ?? false)
 
 const formatter = useDateFormatter({
   locale: props.locale,
@@ -56,6 +73,8 @@ const calendarValue = computed<CalendarModel>({
   get: () => formatter.convertFromFormat(modelValue.value, valueFormat.value) as CalendarModel,
   set: (next) => {
     modelValue.value = formatter.convertToFormat(next, valueFormat.value) as FormattedValue<R, M, V>
+    emitFormInput()
+    emitFormChange()
   }
 })
 
@@ -95,6 +114,17 @@ const hasValue = computed<boolean>(() => {
   if (formatter.isDateRange(value)) return !!value.start || !!value.end
   return true
 })
+
+const triggerButtonAttrs = computed<ButtonProps>(() => ({
+  color: color.value === 'error' ? 'error' : 'neutral',
+  variant: 'subtle',
+  icon: 'i-lucide-calendar',
+  size: effectiveSize.value as ButtonProps['size'],
+  label: formattedDate.value,
+  disabled: effectiveDisabled.value,
+  class: 'w-full',
+  ...props.buttonProps
+}))
 
 function handleClear(event: MouseEvent) {
   event.stopPropagation()
@@ -156,13 +186,11 @@ const { baseUi, extraUi } = useExtendedTv(
     <template #default="defaultSlotProps">
       <slot v-bind="defaultSlotProps">
         <UButton
-          color="neutral"
-          variant="subtle"
-          icon="i-lucide-calendar"
-          :size="(attrs.size as ButtonProps['size'])"
-          :label="formattedDate"
-          class="w-full"
-          v-bind="buttonProps"
+          :id="id"
+          :name="name"
+          v-bind="{ ...triggerButtonAttrs, ...ariaAttrs }"
+          @blur="emitFormBlur"
+          @focus="emitFormFocus"
         >
           <template v-if="$slots.leading" #leading="leading">
             <slot name="leading" v-bind="leading" />
@@ -199,6 +227,7 @@ const { baseUi, extraUi } = useExtendedTv(
           v-model="calendarValue"
           :class="extraUi.calendar"
           v-bind="attrs"
+          :disabled="effectiveDisabled"
           @update:placeholder="e => emits('update:placeholder', e)"
           @update:start-value="emits('update:startValue', $event)"
           @update:valid-model-value="emits('update:validModelValue', $event)"

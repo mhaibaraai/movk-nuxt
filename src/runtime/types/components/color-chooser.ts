@@ -10,6 +10,8 @@ export type ColorChooserTrigger = 'button' | 'chip' | 'input'
 
 export interface ColorChooserProps<M extends PopoverMode = PopoverMode>
   extends /** @vue-ignore */ OmitByKey<PopoverProps<M>, 'open' | 'defaultOpen' | 'ui'> {
+  id?: string
+  name?: string
   /**
    * 当前激活的颜色格式。
    * @defaultValue 'hex'
@@ -64,6 +66,8 @@ export interface ColorChooserProps<M extends PopoverMode = PopoverMode>
   variant?: ButtonProps['variant']
   /** 是否禁用。禁用时弹层不会打开、所有交互失效。 */
   disabled?: boolean
+  /** Highlight the ring color like a focus state. */
+  highlight?: boolean
   /**
    * 未选中颜色时占位的图标。
    * @IconifyIcon

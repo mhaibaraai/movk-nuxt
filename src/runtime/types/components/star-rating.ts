@@ -3,6 +3,8 @@ import type { ClassNameValue } from '../shared'
 import type {} from '@movk/core'
 
 export interface StarRatingProps {
+  id?: string
+  name?: string
   /**
    * 当前评分值
    * @defaultValue 0
@@ -15,6 +17,8 @@ export interface StarRatingProps {
   max?: number
   /** 是否禁用 */
   disabled?: boolean
+  /** Highlight the ring color like a focus state. */
+  highlight?: boolean
   /** 是否只读 */
   readonly?: boolean
   /**

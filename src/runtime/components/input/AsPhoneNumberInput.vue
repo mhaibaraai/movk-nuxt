@@ -7,6 +7,7 @@ import { useAppConfig } from '#imports'
 import theme from '#build/movk-ui/as-phone-number-input'
 import inputTheme from '#build/ui/input'
 import { useExtendedTv } from '../../utils/extend-theme'
+import { useForwardedProps } from '../../utils/form-control'
 import type { AsPhoneNumberInputProps } from '../../types/components/input/as-phone-number-input'
 import type { AppConfig } from 'nuxt/schema'
 
@@ -25,6 +26,7 @@ const slots = defineSlots<OmitByKey<InputSlots, 'leading'>>()
 defineOptions({ inheritAttrs: false })
 
 const appConfig = useAppConfig() as { movk?: { asPhoneNumberInput?: unknown } }
+const inputProps = useForwardedProps(props, ['ui', 'mask', 'dialCode', 'placeholder', 'defaultValue', 'modelModifiers'] as const)
 
 const { baseUi, extraUi } = useExtendedTv(
   inputTheme,
@@ -42,7 +44,7 @@ const { baseUi, extraUi } = useExtendedTv(
     :placeholder="props.placeholder ?? props.mask.replaceAll('#', '_')"
     :style="props.dialCode ? { '--dial-code-length': `${props.dialCode.length + 1.5}ch` } : undefined"
     :ui="baseUi"
-    v-bind="$attrs"
+    v-bind="{ ...inputProps, ...$attrs }"
     @blur="emits('blur', $event)"
     @change="emits('change', $event)"
   >

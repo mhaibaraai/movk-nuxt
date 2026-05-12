@@ -43,6 +43,8 @@ export interface DatePickerProps<
 > extends
   DateFormatterOptions,
   /** @vue-ignore */ OmitByKey<CalendarProps<R, M>, 'modelValue' | 'placeholder' | 'ui'> {
+  id?: string
+  name?: string
   /** @defaultValue '选择日期' */
   placeholder?: string
   buttonProps?: ButtonProps

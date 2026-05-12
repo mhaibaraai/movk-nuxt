@@ -3,6 +3,8 @@ import type { ClassNameValue } from '../shared'
 import type { IconProps } from '@nuxt/ui'
 
 export interface SlideVerifyProps {
+  id?: string
+  name?: string
   /**
    * 尺寸大小
    * @defaultValue 'md'

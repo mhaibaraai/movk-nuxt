@@ -1,10 +1,11 @@
 <script lang="ts" setup generic="T extends Record<string, any> = PillsItem, VK extends keyof T & string | undefined = undefined">
 import type { AcceptableValue, ComponentConfig } from '@nuxt/ui'
 import type { AppConfig } from 'nuxt/schema'
-import { computed, toRaw } from 'vue'
+import { computed, ref, toRaw } from 'vue'
 import { UAvatar, UBadge, UButton, UIcon } from '#components'
 import { useAppConfig } from '#imports'
-import { useFormField } from '@nuxt/ui/composables'
+import { useFieldGroup } from '@nuxt/ui/composables/useFieldGroup'
+import { useFormField } from '@nuxt/ui/composables/useFormField'
 import { getPath } from '@movk/core'
 import theme from '#build/movk-ui/pill-group'
 import { useExtendedTv } from '../utils/extend-theme'
@@ -50,12 +51,16 @@ const {
   disabled: ffDisabled,
   ariaAttrs,
   emitFormChange,
+  emitFormFocus,
+  emitFormBlur,
   emitFormInput
 } = useFormField<_Props>(props)
+const { size: fieldGroupSize } = useFieldGroup<_Props>(props)
 
-const effectiveSize = computed(() => ffSize.value ?? props.size)
+const effectiveSize = computed(() => fieldGroupSize.value || ffSize.value)
 const effectiveColor = computed(() => ffColor.value ?? props.color)
 const effectiveDisabled = computed(() => ffDisabled.value ?? props.disabled ?? false)
+const focusWithin = ref(false)
 
 const { extendUi } = useExtendedTv(
   { slots: {} },
@@ -198,6 +203,19 @@ function handleClick(e: Event, item: AcceptableValue | T) {
   emitFormInput()
 }
 
+function handleFocusIn() {
+  if (focusWithin.value) return
+  focusWithin.value = true
+  emitFormFocus()
+}
+
+function handleFocusOut(event: FocusEvent) {
+  const nextTarget = event.relatedTarget
+  if (nextTarget instanceof Node && (event.currentTarget as HTMLElement).contains(nextTarget)) return
+  focusWithin.value = false
+  emitFormBlur()
+}
+
 function hasLeading(item: AcceptableValue | T): boolean {
   return isSelectItem(item) && (!!item.icon || !!item.avatar)
 }
@@ -214,10 +232,13 @@ const itemRole = computed(() => (props.multiple ? 'checkbox' : 'radio'))
   <div :class="extendUi.root">
     <div
       :id="id"
+      :name="name"
       :role="groupRole"
       :class="extendUi.list"
       v-bind="ariaAttrs"
       :aria-required="props.required || undefined"
+      @focusin="handleFocusIn"
+      @focusout="handleFocusOut"
     >
       <UButton
         v-for="(item, idx) in items"
