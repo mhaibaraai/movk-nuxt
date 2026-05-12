@@ -1,4 +1,4 @@
-import type { ButtonProps, FormInputEvents, FormProps, InferInput } from '@nuxt/ui'
+import type { ButtonProps, FormInputEvents, FormProps, IconProps, InferInput } from '@nuxt/ui'
 import type { z } from 'zod'
 import type { OmitByKey } from '@movk/core'
 import type { ZodAutoFormFieldMeta } from '../zod'
@@ -7,9 +7,7 @@ import type { DynamicFormSlots } from './slots'
 import type { ClassNameValue } from '../shared'
 
 export interface SearchFormProps<S extends z.ZodObject, T extends boolean = true, N extends boolean = false> extends /** @vue-ignore */ OmitByKey<FormProps<S, T, N>, 'schema' | 'state' | 'validateOn' | 'ui'> {
-  /** Zod 对象 schema，定义搜索字段 */
   schema: S
-  /** 搜索表单的状态对象。 */
   state?: N extends false ? Partial<InferInput<S>> : never
   /**
    * 网格列数
@@ -58,9 +56,10 @@ export interface SearchFormProps<S extends z.ZodObject, T extends boolean = true
   loading?: boolean
   /**
    * 展开/收起按钮图标
+   * @IconifyIcon
    * @defaultValue 'i-lucide-chevron-down'
    */
-  icon?: string
+  icon?: IconProps['name']
   /**
    * 展开按钮文本
    * @defaultValue '展开'

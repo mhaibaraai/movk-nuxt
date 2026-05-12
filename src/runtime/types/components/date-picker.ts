@@ -54,10 +54,7 @@ export interface DatePickerProps<
    */
   valueFormat?: V
   clearable?: boolean
-  /**
-   * 快捷预设
-   * @defaultValue 'default'
-   */
+  /** 快捷预设 */
   presets?: DatePickerPreset<R, M>[] | 'default'
   ui?: Record<string, ClassNameValue>
 }

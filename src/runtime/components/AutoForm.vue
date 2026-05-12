@@ -1,5 +1,5 @@
 <script lang="ts" setup generic="S extends z.ZodObject, T extends boolean = true, N extends boolean = false">
-import type { InferInput } from '@nuxt/ui'
+import type { ComponentConfig, InferInput } from '@nuxt/ui'
 import type { z } from 'zod'
 import type { Ref } from 'vue'
 import { UForm } from '#components'
@@ -13,10 +13,18 @@ import AutoFormRendererChildren from '../domains/auto-form/components/Children.v
 import AutoFormRendererField from '../domains/auto-form/components/Field.vue'
 import type { AutoFormProps, AutoFormEmits, AutoFormSlots } from '../types/auto-form/component'
 import type { AutoFormField } from '../types/auto-form/slots'
+import { useExtendedTv } from '../utils/extend-theme'
+import theme from '#build/movk-ui/auto-form'
+import type { AppConfig } from 'nuxt/schema'
+import { useAppConfig } from '#app'
 
 type AutoFormStateType = N extends false ? Partial<InferInput<S>> : never
 
-const props = withDefaults(defineProps<AutoFormProps<S, T, N>>(), {
+interface _Props extends AutoFormProps<S, T, N> {
+  ui?: ComponentConfig<typeof theme, AppConfig, 'autoForm'>['slots']
+}
+
+const props = withDefaults(defineProps<_Props>(), {
   submitButton: true,
   loadingAuto: true,
   validateOn: () => []
@@ -28,8 +36,9 @@ defineOptions({ inheritAttrs: false })
 
 const attrs = useAttrs()
 
-const stateModel = ref(props.state || {}) as Ref<AutoFormStateType>
+const appConfig = useAppConfig() as { movk?: { autoForm?: unknown } }
 
+const stateModel = ref(props.state || {}) as Ref<AutoFormStateType>
 const formRef = useTemplateRef('formRef')
 const { DEFAULT_CONTROLS } = useAutoForm()
 const { resolveFieldProp } = useAutoFormProvider(stateModel, slots)
@@ -103,6 +112,15 @@ const renderData = computed(() => {
   }
 })
 
+const { extendUi } = useExtendedTv(
+  { slots: { } },
+  theme,
+  () => appConfig.movk?.autoForm,
+  () => ({
+    ui: props.ui
+  })
+)
+
 onMounted(() => {
   resolveDefaultValue(fields.value, stateModel.value)
 })
@@ -138,50 +156,58 @@ defineExpose({
 </script>
 
 <template>
-  <UForm
-    v-if="renderData"
-    ref="formRef"
-    :state="stateModel"
-    :schema="pureSchema"
-    :loading-auto="loadingAuto"
-    :validate-on="validateOn"
-    v-bind="attrs"
+  <UTheme
+    :ui="{
+      form: { base: 'space-y-4' },
+      collapsible: { content: 'space-y-4' }
+    }"
   >
-    <template #default="{ errors, loading }">
-      <slot name="header" v-bind="{ errors, loading, fields: visibleFields, state: stateModel }" />
+    <UForm
+      v-if="renderData"
+      ref="formRef"
+      :state="stateModel"
+      :schema="pureSchema"
+      :loading-auto="loadingAuto"
+      :validate-on="validateOn"
+      :ui="extendUi"
+      v-bind="attrs"
+    >
+      <template #default="{ errors, loading }">
+        <slot name="header" v-bind="{ errors, loading, fields: visibleFields, state: stateModel }" />
 
-      <template v-if="renderData.hasComplexFields">
-        <AutoFormRendererChildren
-          :fields="renderData.allFields"
-          :schema="schema"
-          :extra-props="{ errors, loading }"
-        />
+        <template v-if="renderData.hasComplexFields">
+          <AutoFormRendererChildren
+            :fields="renderData.allFields"
+            :schema="schema"
+            :extra-props="{ errors, loading }"
+          />
+        </template>
+
+        <template v-else>
+          <AutoFormRendererField
+            v-for="field in renderData.flatFields"
+            :key="field.path"
+            :field="field"
+            :schema="schema"
+            :extra-props="{ errors, loading }"
+          />
+        </template>
+
+        <slot name="footer" v-bind="{ errors, loading, fields: visibleFields, state: stateModel }" />
+
+        <slot name="submit" v-bind="{ errors, loading, fields: visibleFields, state: stateModel }">
+          <UButton
+            v-if="submitButton"
+            type="submit"
+            :loading="loading"
+            label="提交"
+            loading-auto
+            block
+            :size="resolvedButtonSize"
+            v-bind="submitButtonProps"
+          />
+        </slot>
       </template>
-
-      <template v-else>
-        <AutoFormRendererField
-          v-for="field in renderData.flatFields"
-          :key="field.path"
-          :field="field"
-          :schema="schema"
-          :extra-props="{ errors, loading }"
-        />
-      </template>
-
-      <slot name="footer" v-bind="{ errors, loading, fields: visibleFields, state: stateModel }" />
-
-      <slot name="submit" v-bind="{ errors, loading, fields: visibleFields, state: stateModel }">
-        <UButton
-          v-if="submitButton"
-          type="submit"
-          :loading="loading"
-          label="提交"
-          loading-auto
-          block
-          :size="resolvedButtonSize"
-          v-bind="submitButtonProps"
-        />
-      </slot>
-    </template>
-  </UForm>
+    </UForm>
+  </UTheme>
 </template>

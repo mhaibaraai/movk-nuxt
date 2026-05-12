@@ -1,4 +1,10 @@
-<script lang="ts">
+<script lang="ts" setup generic="S extends z.ZodObject">
+import { computed } from 'vue'
+import { classifyFields } from '../fields'
+import AutoFormRendererField from './Field.vue'
+import AutoFormRendererArray from './Array.vue'
+import AutoFormRendererLayout from './Layout.vue'
+import AutoFormRendererNested from './Nested.vue'
 import type { z } from 'zod'
 import type { AutoFormField } from '../../../types/auto-form'
 import type { AnyObject } from '@movk/core'
@@ -8,20 +14,11 @@ interface AutoFormRendererChildrenProps<S extends z.ZodObject> extends Pick<Auto
   fields: AutoFormField[]
   extraProps?: AnyObject
 }
-</script>
 
-<script lang="ts" setup generic="S extends z.ZodObject">
-import { computed } from 'vue'
-import { classifyFields } from '../fields'
-import AutoFormRendererField from './Field.vue'
-import AutoFormRendererArray from './Array.vue'
-import AutoFormRendererLayout from './Layout.vue'
-import AutoFormRendererNested from './Nested.vue'
-
-const { fields, schema, extraProps } = defineProps<AutoFormRendererChildrenProps<S>>()
+const props = defineProps<AutoFormRendererChildrenProps<S>>()
 
 const fieldTypeMap = computed(() => {
-  const { leafFields, arrayFields, layoutFields } = classifyFields(fields)
+  const { leafFields, arrayFields, layoutFields } = classifyFields(props.fields)
   const map = new Map<AutoFormField, 'leaf' | 'array' | 'layout' | 'nested'>()
 
   for (const f of leafFields) map.set(f, 'leaf')
@@ -33,30 +30,30 @@ const fieldTypeMap = computed(() => {
 </script>
 
 <template>
-  <template v-for="childField in fields" :key="childField.path">
+  <template v-for="childField in props.fields" :key="childField.path">
     <AutoFormRendererField
       v-if="fieldTypeMap.get(childField) === 'leaf'"
       :field="childField"
-      :schema="schema"
-      :extra-props="extraProps"
+      :schema="props.schema"
+      :extra-props="props.extraProps"
     />
     <AutoFormRendererArray
       v-else-if="fieldTypeMap.get(childField) === 'array'"
       :field="childField"
-      :schema="schema"
-      :extra-props="extraProps"
+      :schema="props.schema"
+      :extra-props="props.extraProps"
     />
     <AutoFormRendererLayout
       v-else-if="fieldTypeMap.get(childField) === 'layout'"
       :field="childField"
-      :schema="schema"
-      :extra-props="extraProps"
+      :schema="props.schema"
+      :extra-props="props.extraProps"
     />
     <AutoFormRendererNested
       v-else
       :field="childField"
-      :schema="schema"
-      :extra-props="extraProps"
+      :schema="props.schema"
+      :extra-props="props.extraProps"
     />
   </template>
 </template>

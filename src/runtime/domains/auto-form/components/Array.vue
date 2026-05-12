@@ -1,4 +1,12 @@
-<script lang="ts">
+<script lang="ts" setup generic="S extends z.ZodObject">
+import { UButton, UCollapsible } from '#components'
+import { computed, ref } from 'vue'
+import { useAutoFormInjector } from '../provider'
+import { joinPath } from '@movk/core'
+import { collectFieldDefaults, createHintSlotFactory } from '../fields'
+import { VNodeRender } from '../reactive'
+import AutoFormRendererField from './Field.vue'
+import AutoFormRendererNested from './Nested.vue'
 import type { z } from 'zod'
 import type { ButtonProps } from '@nuxt/ui'
 import type { AutoFormField } from '../../../types/auto-form'
@@ -10,32 +18,16 @@ interface AutoFormRendererArrayProps<S extends z.ZodObject> extends Pick<AutoFor
   extraProps?: AnyObject
   addButtonProps?: Partial<ButtonProps>
 }
-</script>
 
-<script lang="ts" setup generic="S extends z.ZodObject">
-import { UButton, UCollapsible } from '#components'
-import { computed, ref } from 'vue'
-import { useAutoFormInjector } from '../provider'
-import { joinPath } from '@movk/core'
-import { collectFieldDefaults, createHintSlotFactory } from '../fields'
-import { VNodeRender } from '../reactive'
-import AutoFormRendererField from './Field.vue'
-import AutoFormRendererNested from './Nested.vue'
-
-const {
-  extraProps,
-  field,
-  schema,
-  addButtonProps: customAddButtonProps
-} = defineProps<AutoFormRendererArrayProps<S>>()
+const props = defineProps<AutoFormRendererArrayProps<S>>()
 
 const { createCollapsibleEnhancer, createFieldContext, createSlotResolver, createSlotProps, resolveFieldProp } = useAutoFormInjector()
-const context = createFieldContext(field)
+const context = createFieldContext(props.field)
 
-const slotResolver = computed(() => createSlotResolver(field, extraProps))
-const slotProps = computed(() => createSlotProps(field, extraProps))
+const slotResolver = computed(() => createSlotResolver(props.field, props.extraProps))
+const slotProps = computed(() => createSlotProps(props.field, props.extraProps))
 
-const elementTemplate = computed(() => field.arrayElement)
+const elementTemplate = computed(() => props.field.arrayElement)
 
 const isObjectElement = computed(() => elementTemplate.value?.meta.type === 'object')
 
@@ -50,7 +42,7 @@ const idCounter = ref(0)
 function ensureItemIds() {
   const arr = arrayValue.value
   while (itemIds.value.length < arr.length) {
-    itemIds.value.push(`${field.path}-${idCounter.value++}`)
+    itemIds.value.push(`${props.field.path}-${idCounter.value++}`)
   }
 }
 
@@ -100,8 +92,8 @@ const arrayItemFields = computed(() => {
   const factory = createHintSlotFactory(removeItem)
 
   return arr.map((_, index) => {
-    const newBasePath = joinPath([field.path, index])
-    return updateFieldPaths(template, field.path, newBasePath, factory)
+    const newBasePath = joinPath([props.field.path, index])
+    return updateFieldPaths(template, props.field.path, newBasePath, factory)
   })
 })
 
@@ -130,7 +122,7 @@ function removeItem(count?: number) {
   context.setValue(newArray)
 }
 
-const { collapsibleConfig, shouldShowCollapsible, isHidden, enhancedField } = createCollapsibleEnhancer(field, extraProps)
+const { collapsibleConfig, shouldShowCollapsible, isHidden, enhancedField } = createCollapsibleEnhancer(props.field, props.extraProps)
 
 const DEFAULT_ADD_BUTTON_PROPS = {
   icon: 'i-lucide-plus',
@@ -141,15 +133,15 @@ const DEFAULT_ADD_BUTTON_PROPS = {
 
 const addButtonProps = computed(() => ({
   ...DEFAULT_ADD_BUTTON_PROPS,
-  size: resolveFieldProp(field, 'size', 'sm', extraProps),
-  ...customAddButtonProps
+  size: resolveFieldProp(props.field, 'size', 'sm', props.extraProps),
+  ...props.addButtonProps
 }))
 </script>
 
 <template>
   <UCollapsible v-if="shouldShowCollapsible" v-show="!isHidden" v-bind="collapsibleConfig || {}">
     <template #default="{ open }">
-      <AutoFormRendererField :field="enhancedField" :schema="schema" :extra-props="{ ...extraProps, open }" />
+      <AutoFormRendererField :field="enhancedField" :schema="props.schema" :extra-props="{ ...props.extraProps, open }" />
     </template>
 
     <template v-if="elementTemplate" #content>
@@ -160,8 +152,8 @@ const addButtonProps = computed(() => ({
           <component
             :is="isObjectElement ? AutoFormRendererNested : AutoFormRendererField"
             :field="itemField"
-            :schema="schema"
-            :extra-props="{ ...extraProps, count }"
+            :schema="props.schema"
+            :extra-props="{ ...props.extraProps, count }"
           />
         </template>
       </template>
@@ -177,8 +169,8 @@ const addButtonProps = computed(() => ({
       <component
         :is="isObjectElement ? AutoFormRendererNested : AutoFormRendererField"
         :field="itemField"
-        :schema="schema"
-        :extra-props="{ ...extraProps, count }"
+        :schema="props.schema"
+        :extra-props="{ ...props.extraProps, count }"
       />
     </template>
     <UButton v-bind="addButtonProps" @click="addItem">

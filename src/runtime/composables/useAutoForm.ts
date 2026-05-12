@@ -2,6 +2,7 @@ import type { IsComponent } from '@movk/core'
 import type { AutoFormControls, AutoFormLayoutConfig, TypedZodFactory } from '../types/auto-form'
 import type { CalendarDate, DateValue, Time } from '@internationalized/date'
 import type { DateRange } from 'reka-ui'
+import type { ValueFormat } from './useDateFormatter'
 import { z } from 'zod'
 import { isObject } from '@movk/core'
 import { applyMeta, extractErrorAndMeta, getAutoFormMetadata } from '../domains/auto-form/metadata'
@@ -21,23 +22,42 @@ function createBasicFactory<T extends z.ZodType>(
   }
 }
 
-/** 创建日期选择 schema 工厂，校验 DateValue/DateRange/DateValue[] 三种格式 */
+const DEFAULT_VALUE_FORMAT: ValueFormat = 'date-value'
+const VALUE_FORMATS = ['date-value', 'iso', 'timestamp', 'unix', 'date'] as const
+
+function isValueFormat(value: unknown): value is ValueFormat {
+  return typeof value === 'string' && VALUE_FORMATS.includes(value as ValueFormat)
+}
+
+function resolveStaticValueFormat(meta: unknown): ValueFormat {
+  if (!isObject(meta)) return DEFAULT_VALUE_FORMAT
+
+  const controlProps = (meta as { controlProps?: unknown }).controlProps
+  if (!isObject(controlProps)) return DEFAULT_VALUE_FORMAT
+
+  const valueFormat = (controlProps as { valueFormat?: unknown }).valueFormat
+  return isValueFormat(valueFormat) ? valueFormat : DEFAULT_VALUE_FORMAT
+}
+
+/** 创建日期选择 schema 工厂，按 DatePicker valueFormat 校验单值/范围/数组 */
 function createCalendarDateFactory(type: 'calendarDate' | 'inputDate' = 'calendarDate') {
-  const { isDateValue, isDateRange } = useDateFormatter()
+  const { fromFormat, isDateRange } = useDateFormatter()
   return <T extends DateValue | DateRange | DateValue[] = CalendarDate>(
     controlMeta?: any
   ): z.ZodType<T> => {
     const [error, meta] = extractErrorAndMeta(controlMeta)
+    const valueFormat = resolveStaticValueFormat(meta)
+    const isValidDateValue = (value: unknown) => fromFormat(value, valueFormat) !== null
 
     const schema = z.custom<T>().refine(
       (val: unknown) => {
-        if (isDateValue(val)) return true
+        if (isValidDateValue(val)) return true
         if (isDateRange(val)) {
           const range = val as DateRange
-          return isDateValue(range.start) && isDateValue(range.end)
+          return isValidDateValue(range.start) && isValidDateValue(range.end)
         }
         if (Array.isArray(val)) {
-          return val.length > 0 && val.every((item: unknown) => isDateValue(item))
+          return val.length > 0 && val.every(isValidDateValue)
         }
         return false
       },

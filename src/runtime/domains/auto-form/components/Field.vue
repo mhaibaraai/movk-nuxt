@@ -1,4 +1,8 @@
-<script lang="ts">
+<script lang="ts" setup generic="S extends z.ZodObject">
+import { UFormField } from '#components'
+import { computed } from 'vue'
+import { useAutoFormInjector } from '../provider'
+import { VNodeRender } from '../reactive'
 import type { z } from 'zod'
 import type { AutoFormProps } from '../../../types/auto-form/component'
 import type { AnyObject } from '@movk/core'
@@ -8,15 +12,8 @@ interface AutoFormFieldProps<S extends z.ZodObject> extends Pick<AutoFormProps<S
   field: AutoFormField
   extraProps?: AnyObject
 }
-</script>
 
-<script lang="ts" setup generic="S extends z.ZodObject">
-import { UFormField } from '#components'
-import { computed } from 'vue'
-import { useAutoFormInjector } from '../provider'
-import { VNodeRender } from '../reactive'
-
-const { field, extraProps } = defineProps<AutoFormFieldProps<S>>()
+const props = defineProps<AutoFormFieldProps<S>>()
 
 const {
   resolveFieldProp,
@@ -26,29 +23,30 @@ const {
   createSlotProps
 } = useAutoFormInjector()
 
-const slotResolver = computed(() => createSlotResolver(field, extraProps))
+const slotResolver = computed(() => createSlotResolver(props.field, props.extraProps))
 
 const fieldProps = computed(() => ({
-  hidden: resolveFieldProp(field, 'hidden', undefined, extraProps),
-  as: resolveFieldProp(field, 'as', undefined, extraProps),
-  name: resolveFieldProp(field, 'name', field.path, extraProps),
-  errorPattern: resolveFieldProp(field, 'errorPattern', undefined, extraProps),
-  label: resolveFieldProp(field, 'label', undefined, extraProps),
-  description: resolveFieldProp(field, 'description', undefined, extraProps),
-  help: resolveFieldProp(field, 'help', undefined, extraProps),
-  error: resolveFieldProp(field, 'error', undefined, extraProps),
-  hint: resolveFieldProp(field, 'hint', undefined, extraProps),
-  size: resolveFieldProp(field, 'size', undefined, extraProps),
-  required: resolveFieldProp(field, 'required', undefined, extraProps),
-  eagerValidation: resolveFieldProp(field, 'eagerValidation', undefined, extraProps),
-  validateOnInputDelay: resolveFieldProp(field, 'validateOnInputDelay', undefined, extraProps),
-  class: resolveFieldProp(field, 'class', undefined, extraProps),
-  ui: resolveFieldProp(field, 'ui', undefined, extraProps)
+  hidden: resolveFieldProp(props.field, 'hidden', undefined, props.extraProps),
+  as: resolveFieldProp(props.field, 'as', undefined, props.extraProps),
+  name: resolveFieldProp(props.field, 'name', props.field.path, props.extraProps),
+  errorPattern: resolveFieldProp(props.field, 'errorPattern', undefined, props.extraProps),
+  label: resolveFieldProp(props.field, 'label', undefined, props.extraProps),
+  description: resolveFieldProp(props.field, 'description', undefined, props.extraProps),
+  help: resolveFieldProp(props.field, 'help', undefined, props.extraProps),
+  error: resolveFieldProp(props.field, 'error', undefined, props.extraProps),
+  hint: resolveFieldProp(props.field, 'hint', undefined, props.extraProps),
+  size: resolveFieldProp(props.field, 'size', undefined, props.extraProps),
+  required: resolveFieldProp(props.field, 'required', undefined, props.extraProps),
+  eagerValidation: resolveFieldProp(props.field, 'eagerValidation', undefined, props.extraProps),
+  validateOnInputDelay: resolveFieldProp(props.field, 'validateOnInputDelay', undefined, props.extraProps),
+  orientation: resolveFieldProp(props.field, 'orientation', undefined, props.extraProps),
+  class: resolveFieldProp(props.field, 'class', undefined, props.extraProps),
+  ui: resolveFieldProp(props.field, 'ui', undefined, props.extraProps)
 }))
 
-const formFieldSlots = computed(() => createFormFieldSlots(field, slotResolver.value, extraProps))
-const renderedControl = computed(() => renderControl(field, extraProps))
-const defaultSlotProps = computed(() => createSlotProps(field, extraProps))
+const formFieldSlots = computed(() => createFormFieldSlots(props.field, slotResolver.value, props.extraProps))
+const renderedControl = computed(() => renderControl(props.field, props.extraProps))
+const defaultSlotProps = computed(() => createSlotProps(props.field, props.extraProps))
 </script>
 
 <template>
