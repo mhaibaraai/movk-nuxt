@@ -36,6 +36,11 @@ export interface ZodAutoFormFieldMeta {
    * @defaultValue `300`
    */
   validateOnInputDelay?: ZodValue<number>
+  /**
+   * 字段布局方向。
+   * @defaultValue 'vertical'
+   */
+  orientation?: ZodValue<'horizontal' | 'vertical'>
   class?: ZodValue<any>
   ui?: ZodValue<{ root?: ClassNameValue, wrapper?: ClassNameValue, labelWrapper?: ClassNameValue, label?: ClassNameValue, container?: ClassNameValue, description?: ClassNameValue, error?: ClassNameValue, hint?: ClassNameValue, help?: ClassNameValue }>
   /**
