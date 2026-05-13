@@ -84,7 +84,7 @@ function createTodo() {
   <Navbar />
 
   <div class="p-4 grid grid-cols-1 xl:grid-cols-2 gap-4">
-    <Showcase title="表单级 slot" description="header、footer、submit 可读取 loading、errors、state" :state="formSlotState">
+    <Showcase title="表单级插槽" description="header、footer、submit 可读取 loading、errors、state 并接管表单外层区域" :state="formSlotState">
       <MAutoForm
         :schema="formSlotSchema"
         :state="formSlotState"
@@ -131,7 +131,7 @@ function createTodo() {
       </MAutoForm>
     </Showcase>
 
-    <Showcase title="通用字段 slot" description="field-label、field-hint、field-error 统一接管所有字段" :state="genericSlotState">
+    <Showcase title="通用字段插槽" description="field-label、field-hint、field-error 统一接管所有字段的标签、提示和错误展示" :state="genericSlotState">
       <MAutoForm :schema="genericSlotSchema" :state="genericSlotState" :validate-on="['input', 'blur']">
         <template #field-label="{ label, path }">
           <span class="inline-flex items-center gap-2">
@@ -164,7 +164,7 @@ function createTodo() {
       </MAutoForm>
     </Showcase>
 
-    <Showcase title="指定字段 slot" description="field-default:bio 与 field-help:password 只覆盖指定字段" :state="fieldSlotState">
+    <Showcase title="指定字段插槽" description="通过 field-default:bio、field-help:password 等命名插槽只覆盖指定字段" :state="fieldSlotState">
       <MAutoForm :schema="fieldSlotSchema" :state="fieldSlotState">
         <template #field-label:username="{ label }">
           <UBadge icon="i-lucide-user" color="success" variant="subtle" size="xs">
@@ -194,7 +194,7 @@ function createTodo() {
       </MAutoForm>
     </Showcase>
 
-    <Showcase title="before / after slot" description="field-before:settings 与 field-after:settings 在对象字段默认渲染前后插入内容" :state="beforeAfterState">
+    <Showcase title="字段前后插槽" description="field-before:settings 与 field-after:settings 在对象字段默认渲染前后插入内容" :state="beforeAfterState">
       <MAutoForm :schema="beforeAfterSchema" :state="beforeAfterState">
         <template #field-before:settings="{ path }">
           <UAlert
@@ -223,7 +223,7 @@ function createTodo() {
       </MAutoForm>
     </Showcase>
 
-    <Showcase title="对象 content slot" description="field-content:profile 接管对象字段，使用 setValue('key', value)" :state="objectContentState">
+    <Showcase title="对象 content 插槽" description="field-content:profile 接管对象字段，通过 setValue('key', value) 更新子字段" :state="objectContentState">
       <MAutoForm :schema="objectContentSchema" :state="objectContentState">
         <template #field-content:profile="{ path, value, setValue }">
           <div class="space-y-4 rounded-md border border-default p-4">
@@ -272,7 +272,7 @@ function createTodo() {
       </MAutoForm>
     </Showcase>
 
-    <Showcase title="数组 content slot" description="field-content:todos 接管数组字段，使用 setValue([...]) 与 setValue('[0].title', value)" :state="arrayContentState">
+    <Showcase title="数组 content 插槽" description="field-content:todos 接管数组字段，通过 setValue([...]) 与 setValue('[0].title', value) 更新列表" :state="arrayContentState">
       <MAutoForm :schema="arrayContentSchema" :state="arrayContentState">
         <template #field-content:todos="{ value, setValue }">
           <div class="space-y-3">

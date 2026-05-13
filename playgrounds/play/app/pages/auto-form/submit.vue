@@ -74,7 +74,7 @@ async function onRefSubmit() {
 
   <div class="p-4 grid grid-cols-1 xl:grid-cols-2 gap-4">
     <Showcase
-      title="A · loadingAuto（默认）"
+      title="自动 loading 提交"
       description="@submit 返回 Promise，按钮 loading 自动管理"
       :state="autoState"
     >
@@ -82,7 +82,7 @@ async function onRefSubmit() {
     </Showcase>
 
     <Showcase
-      title="B · 手动 loading"
+      title="手动 loading 提交"
       description=":loading-auto=false，通过 submitButtonProps.loading 自管"
       :state="manualState"
     >
@@ -96,7 +96,7 @@ async function onRefSubmit() {
     </Showcase>
 
     <Showcase
-      title="C · 异常 / 校验错误"
+      title="提交异常与校验错误"
       description="@submit 内 try/catch；@error 监听校验失败"
       :state="errState"
     >
@@ -109,7 +109,7 @@ async function onRefSubmit() {
     </Showcase>
 
     <Showcase
-      title="D · 暴露 API"
+      title="实例 API 提交"
       description="useTemplateRef 调用 submit / reset / clear"
       :state="refState"
     >

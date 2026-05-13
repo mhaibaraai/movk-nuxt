@@ -81,7 +81,7 @@ const richState = reactive<Partial<z.output<typeof richSchema>>>({ hidden: 'secr
   <Navbar />
 
   <div class="p-4 grid grid-cols-1">
-    <Showcase title="afz.meta()" description="UFormField Props" :state="richState">
+    <Showcase title="字段元数据" description="通过 meta() 配置 label、description、hint、help、error、样式、条件和分组" :state="richState">
       <template #toolbar>
         <UButton size="sm" label="重置" @click="autoForm?.reset()" />
       </template>

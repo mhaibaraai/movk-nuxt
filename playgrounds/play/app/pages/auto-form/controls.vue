@@ -55,7 +55,10 @@ const state = reactive<Partial<z.output<typeof schema>>>({})
   <Navbar />
 
   <div class="p-4 grid grid-cols-1 xl:grid-cols-[1fr_360px] gap-4">
-    <Showcase title="所有内置控件">
+    <Showcase
+      title="内置控件映射"
+      description="覆盖 Nuxt UI 控件、输入包装器和自定义组件型控件的 type 映射"
+    >
       <template #toolbar>
         <UButton size="sm" label="重置" @click="autoForm?.reset()" />
       </template>

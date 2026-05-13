@@ -78,15 +78,15 @@ const layoutState = reactive<Partial<z.output<typeof layoutSchema>>>({})
   <Navbar />
 
   <div class="p-4 grid grid-cols-1 xl:grid-cols-2 gap-4">
-    <Showcase title="网格布局" description="使用 CSS Grid 创建多列布局，通过字段级别的 class 控制跨列" :state="gridState">
+    <Showcase title="CSS Grid 布局" description="使用 CSS Grid 创建多列布局，通过字段级别的 class 控制跨列" :state="gridState">
       <MAutoForm :schema="gridSchema" :state="gridState" />
     </Showcase>
 
-    <Showcase title="响应式多列布局" description="利用 Tailwind 的响应式前缀，创建自适应不同屏幕尺寸的布局" :state="responsiveState">
+    <Showcase title="响应式网格布局" description="利用 Tailwind 的响应式前缀，创建自适应不同屏幕尺寸的布局" :state="responsiveState">
       <MAutoForm :schema="responsiveSchema" :state="responsiveState" />
     </Showcase>
 
-    <Showcase title="手风琴布局" description="使用 Nuxt UI 的 UAccordion 组件，将字段组织在可折叠的面板中" :state="layoutState">
+    <Showcase title="手风琴分组布局" description="使用 Nuxt UI 的 UAccordion 组件，将字段组织在可折叠的面板中" :state="layoutState">
       <MAutoForm :schema="layoutSchema" :state="layoutState" />
     </Showcase>
   </div>

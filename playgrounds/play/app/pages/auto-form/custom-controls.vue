@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { FormSubmitEvent } from '@nuxt/ui'
 import type { z } from 'zod'
 
 const Counter = defineComponent({
@@ -99,17 +100,19 @@ const schema = afz.object({
     .meta({ label: '数量', description: 'step=2，max=50，最少 0' }),
   slug: afz
     .string({ type: 'slug' })
-    .meta({ label: 'URL Slug', description: '输入空格自动替换为「-」并转小写' }),
+    .meta({ label: 'URL Slug', description: '输入空格自动替换为「-」并转小写' }).default('auto-lowercase-dasherize'),
   rating: afz
     .number({ type: 'ratingDesc' })
     .default(0)
     .meta({ label: '评分', description: '点击数字直接评分，右侧显示描述' })
 })
 
-const state = reactive<Partial<z.output<typeof schema>>>({})
+type Schema = z.output<typeof schema>
+const state = reactive<Partial<Schema>>({})
 
-async function onSubmit() {
-  useToast().add({ title: '提交成功', description: JSON.stringify(state), color: 'success' })
+function onSubmit(event: FormSubmitEvent<Schema>) {
+  console.log(event)
+  return new Promise<void>(res => setTimeout(res, 3000))
 }
 </script>
 
@@ -117,10 +120,7 @@ async function onSubmit() {
   <Navbar />
 
   <div class="p-4 grid grid-cols-1 xl:grid-cols-[1fr_360px] gap-4">
-    <Showcase
-      title="自定义控件注册"
-      description="useAutoForm({ counter, slug, ratingDesc }) 后 afz 自动获得对应 type 提示"
-    >
+    <Showcase title="自定义控件注册" description="通过 useAutoForm({ controls }) 注册 counter、slug、ratingDesc，并在 afz type 中使用">
       <MAutoForm :schema="schema" :state="state" :controls="controls" @submit="onSubmit" />
     </Showcase>
     <StateViewer :state="state" label="state" />
