@@ -6,7 +6,7 @@ import type { AutoFormControls } from './controls'
 import type { AutoFormSlotProps, DynamicFormSlots } from './slots'
 import type { ClassNameValue } from '../shared'
 
-export interface AutoFormProps<S extends z.ZodObject, T extends boolean = true, N extends boolean = false> extends /** @vue-ignore */ OmitByKey<FormProps<S, T, N>, 'schema' | 'state' | 'loadingAuto' | 'validateOn' | 'ui'> {
+export interface AutoFormProps<S extends z.ZodObject = z.ZodObject, T extends boolean = true, N extends boolean = false> extends /** @vue-ignore */ OmitByKey<FormProps<S, T, N>, 'schema' | 'state' | 'loadingAuto' | 'validateOn' | 'onSubmit' | 'ui'> {
   /** Zod 对象 schema，定义表单字段 */
   schema: S
   /** 表单的状态对象。 */
@@ -34,6 +34,7 @@ export interface AutoFormProps<S extends z.ZodObject, T extends boolean = true, 
    * @defaultValue []
    */
   validateOn?: FormInputEvents[]
+  onSubmit?: FormProps<S, T, N>['onSubmit']
   ui?: Record<string, ClassNameValue>
 }
 

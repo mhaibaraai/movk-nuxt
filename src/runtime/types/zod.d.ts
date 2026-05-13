@@ -47,14 +47,11 @@ export interface ZodAutoFormFieldMeta {
    * @see https://ui4.nuxt.com/docs/components/form-field#slots
    */
   fieldSlots?: ZodValue<Partial<AutoFormFieldSlots>>
-
   /** 显示条件 */
   if?: ZodValue<boolean>
   /** 是否隐藏 */
   hidden?: ZodValue<boolean>
-  /**
-   * 对象字段折叠配置。
-   */
+  /** 对象字段折叠配置。 */
   collapsible?: ZodValue<AutoFormNestedCollapsible>
 
 }

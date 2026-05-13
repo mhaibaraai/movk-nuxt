@@ -26,11 +26,10 @@ interface _Props extends AutoFormProps<S, T, N> {
 
 const props = withDefaults(defineProps<_Props>(), {
   submitButton: true,
-  loadingAuto: true,
   validateOn: () => []
 })
 
-defineEmits<AutoFormEmits<S, T>>()
+const emits = defineEmits<AutoFormEmits<S, T>>()
 const slots = defineSlots<AutoFormSlots<AutoFormStateType>>()
 defineOptions({ inheritAttrs: false })
 
@@ -167,10 +166,13 @@ defineExpose({
       ref="formRef"
       :state="stateModel"
       :schema="pureSchema"
-      :loading-auto="loadingAuto"
-      :validate-on="validateOn"
+      :loading-auto="props.loadingAuto"
+      :validate-on="props.validateOn"
+      :on-submit="props.onSubmit"
       :ui="extendUi"
       v-bind="attrs"
+      @submit="emits('submit', $event)"
+      @error="emits('error', $event)"
     >
       <template #default="{ errors, loading }">
         <slot name="header" v-bind="{ errors, loading, fields: visibleFields, state: stateModel }" />
@@ -199,10 +201,10 @@ defineExpose({
           <UButton
             v-if="submitButton"
             type="submit"
-            :loading="loading"
             label="提交"
-            loading-auto
             block
+            :loading="loading"
+            :loading-auto="props.loadingAuto"
             :size="resolvedButtonSize"
             v-bind="submitButtonProps"
           />
