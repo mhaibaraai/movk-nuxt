@@ -72,6 +72,7 @@ async function asyncConfirm() {
             title="单按钮模式"
             :cancel-button="false"
             :confirm-button="{ label: '我知道了' }"
+            class="w-30"
           >
             <UButton variant="soft">
               仅确认
