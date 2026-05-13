@@ -1,4 +1,4 @@
-<script lang="ts" setup generic="S extends z.ZodObject">
+<script lang="ts" setup>
 import { UCollapsible } from '#components'
 import { computed } from 'vue'
 import { useAutoFormInjector } from '../provider'
@@ -7,16 +7,16 @@ import { VNodeRender } from '../reactive'
 import AutoFormRendererField from './Field.vue'
 import AutoFormRendererChildren from './Children.vue'
 import type { z } from 'zod'
-import type { AutoFormProps } from '../../../types/auto-form/component'
 import type { AutoFormField } from '../../../types'
 import type { AnyObject } from '@movk/core'
 
-interface AutoFormRendererNestedProps<S extends z.ZodObject> extends Pick<AutoFormProps<S>, 'schema'> {
+interface AutoFormRendererNestedProps {
+  schema: z.ZodObject
   field: AutoFormField
   extraProps?: AnyObject
 }
 
-const props = defineProps<AutoFormRendererNestedProps<S>>()
+const props = defineProps<AutoFormRendererNestedProps>()
 
 const { createSlotResolver, createSlotProps, createCollapsibleEnhancer, resolveFieldProp } = useAutoFormInjector()
 

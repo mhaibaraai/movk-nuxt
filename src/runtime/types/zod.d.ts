@@ -57,8 +57,6 @@ export interface ZodAutoFormFieldMeta {
    */
   collapsible?: ZodValue<AutoFormNestedCollapsible>
 
-  /** 索引签名，允许动态属性访问 */
-  [key: string]: unknown
 }
 
 declare module 'zod' {

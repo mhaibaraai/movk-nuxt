@@ -1,6 +1,8 @@
-export type { AutoFormFieldContext, AutoFormFieldSlots, AutoFormNestedCollapsible } from './fields'
+export type { AutoFormFieldContext, AutoFormFieldSlots, AutoFormNestedCollapsible, ResolvedAutoFormFieldContext } from './fields'
 export type {
   AutoFormControl,
+  AutoFormControlProps,
+  AutoFormControlSlots,
   AutoFormControls,
   AutoFormLayoutConfig,
   AutoFormMergeMeta

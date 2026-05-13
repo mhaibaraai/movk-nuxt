@@ -1,4 +1,4 @@
-<script lang="ts" setup generic="S extends z.ZodObject">
+<script lang="ts" setup>
 import { computed } from 'vue'
 import { classifyFields } from '../fields'
 import AutoFormRendererField from './Field.vue'
@@ -8,14 +8,14 @@ import AutoFormRendererNested from './Nested.vue'
 import type { z } from 'zod'
 import type { AutoFormField } from '../../../types/auto-form'
 import type { AnyObject } from '@movk/core'
-import type { AutoFormProps } from '../../../types/auto-form/component'
 
-interface AutoFormRendererChildrenProps<S extends z.ZodObject> extends Pick<AutoFormProps<S>, 'schema'> {
+interface AutoFormRendererChildrenProps {
+  schema: z.ZodObject
   fields: AutoFormField[]
   extraProps?: AnyObject
 }
 
-const props = defineProps<AutoFormRendererChildrenProps<S>>()
+const props = defineProps<AutoFormRendererChildrenProps>()
 
 const fieldTypeMap = computed(() => {
   const { leafFields, arrayFields, layoutFields } = classifyFields(props.fields)

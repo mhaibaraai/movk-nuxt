@@ -35,6 +35,43 @@ type SlotExtraPropsMap = {
   default: { error?: boolean | string }
 }
 
+type _FormGenericSlots<T> = {
+  [K in keyof AutoFormFieldSlots as `field-${K}`]: (props: SlotExtraPropsMap[K] & AutoFormFieldContext<T>) => unknown
+}
+
+type _FieldPath<T> = string & (NonObjectFieldKeys<T> | ObjectFieldKeys<T>)
+type _NestedPath<T> = string & (ObjectFieldKeys<T> | ArrayFieldKeys<T>)
+
+type _SlotEntry = {
+  key: PropertyKey
+  props: unknown
+}
+
+type _EntryToSlots<E extends _SlotEntry> = {
+  [Entry in E as Entry['key']]: (props: Entry['props']) => unknown
+}
+
+type _FormKeyedSlotEntry<T> = {
+  [K in keyof AutoFormFieldSlots]: {
+    [P in _FieldPath<T>]: {
+      key: `field-${K}:${P}`
+      props: SlotExtraPropsMap[K] & AutoFormFieldContext<T, P>
+    }
+  }[_FieldPath<T>]
+}[keyof AutoFormFieldSlots]
+
+type _NestedSlotName = 'content' | 'before' | 'after'
+
+type _FormNestedSlotEntry<T> = {
+  [P in _NestedPath<T>]: {
+    key: `field-${_NestedSlotName}:${P}`
+    props: AutoFormFieldContext<T, P>
+  }
+}[_NestedPath<T>]
+
+type _FormKeyedSlots<T> = _EntryToSlots<_FormKeyedSlotEntry<T>>
+type _FormNestedSlots<T> = _EntryToSlots<_FormNestedSlotEntry<T>>
+
 /**
  * 动态表单插槽类型
  *
@@ -44,16 +81,6 @@ type SlotExtraPropsMap = {
  * - 嵌套：`field-{content|before|after}:{objectKey|arrayKey}`
  */
 export type DynamicFormSlots<T>
-  = Record<string, (props: AutoFormFieldContext<T>) => unknown>
-    & {
-      [K in keyof AutoFormFieldSlots as `field-${K}`]: (props: SlotExtraPropsMap[K] & AutoFormFieldContext<T>) => unknown
-    }
-    & {
-      [Key in `field-${keyof AutoFormFieldSlots}:${NonObjectFieldKeys<T> | ObjectFieldKeys<T>}`]:
-      Key extends `field-${infer K extends keyof AutoFormFieldSlots}:${infer P extends string & (NonObjectFieldKeys<T> | ObjectFieldKeys<T>)}`
-        ? (props: SlotExtraPropsMap[K] & AutoFormFieldContext<T, P>) => unknown
-        : never
-    }
-    & {
-      [P in ObjectFieldKeys<T> | ArrayFieldKeys<T> as `field-${'content' | 'before' | 'after'}:${P}`]: (props: AutoFormFieldContext<T, P>) => unknown
-    }
+  = _FormGenericSlots<T>
+    & _FormKeyedSlots<T>
+    & _FormNestedSlots<T>

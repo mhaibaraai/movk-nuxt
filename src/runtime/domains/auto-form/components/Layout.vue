@@ -1,22 +1,22 @@
 <script lang="ts">
 import type { z } from 'zod'
 import type { AutoFormField } from '../../../types/auto-form'
-import type { AutoFormProps } from '../../../types/auto-form/component'
 import type { AnyObject } from '@movk/core'
 
-interface AutoFormRendererLayoutProps<S extends z.ZodObject> extends Pick<AutoFormProps<S>, 'schema'> {
+interface AutoFormRendererLayoutProps {
+  schema: z.ZodObject
   field: AutoFormField
   extraProps?: AnyObject
 }
 </script>
 
-<script lang="ts" setup generic="S extends z.ZodObject">
+<script lang="ts" setup>
 import { computed, resolveDynamicComponent } from 'vue'
 import { resolveReactiveValue } from '../reactive'
 import { useAutoFormInjector } from '../provider'
 import AutoFormRendererChildren from './Children.vue'
 
-const props = defineProps<AutoFormRendererLayoutProps<S>>()
+const props = defineProps<AutoFormRendererLayoutProps>()
 
 const { createFieldContext, resolveFieldProp } = useAutoFormInjector()
 

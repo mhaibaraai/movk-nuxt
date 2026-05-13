@@ -1,5 +1,6 @@
 import type { InjectionKey, Ref } from 'vue'
-import type { AutoFormField, AutoFormFieldContext } from '../../types/auto-form'
+import type { ReactiveValue } from '@movk/core'
+import type { AutoFormField, AutoFormMergeMeta, ResolvedAutoFormFieldContext } from '../../types/auto-form'
 import { UIcon } from '#components'
 import defu from 'defu'
 import { computed, h, inject, isVNode, provide, resolveDynamicComponent, unref } from 'vue'
@@ -7,25 +8,30 @@ import { getPath, setPath } from '@movk/core'
 import { enhanceEventProps, resolveReactiveValue } from './reactive'
 
 type AutoFormProvider = ReturnType<typeof useAutoFormProvider>
+type _ResolveReactive<T> = T extends ReactiveValue<infer V, any> ? V : T
+type ResolvedMetaValue<K extends keyof AutoFormMergeMeta> = _ResolveReactive<NonNullable<AutoFormMergeMeta[K]>>
 
 const AUTO_FORM_CONTEXT_KEY: InjectionKey<AutoFormProvider> = Symbol('AUTO_FORM_CONTEXT_KEY')
 
 /** 初始化表单上下文工厂并通过 provide 注入给所有子渲染器 */
-export function useAutoFormProvider<T extends Record<string, any>>(
-  state: Ref<T>,
+export function useAutoFormProvider(
+  state: Ref<any>,
   slots: Record<string, any>
 ) {
   /** 为单个字段构建运行时上下文（value/setValue/errors/loading/open） */
-  function createFieldContext(field: AutoFormField, extraProps?: Record<string, any>): AutoFormFieldContext {
+  function createFieldContext(field: AutoFormField, extraProps?: Record<string, any>): ResolvedAutoFormFieldContext {
     const path = field.path
 
-    const context: AutoFormFieldContext = {
-      get state() { return state.value as T },
+    const context: ResolvedAutoFormFieldContext = {
+      get state() { return state.value },
       path,
       get value() { return getPath(state.value, path) },
       setValue: (pathOrValue: any, value?: any) => {
         if (value === undefined) {
-          setPath(state.value, path, pathOrValue)
+          const nextValue = typeof pathOrValue === 'function'
+            ? pathOrValue(getPath(state.value, path))
+            : pathOrValue
+          setPath(state.value, path, nextValue)
         }
         else {
           const relativePath = String(pathOrValue)
@@ -54,14 +60,26 @@ export function useAutoFormProvider<T extends Record<string, any>>(
   }
 
   /** 读取字段 meta 中的属性，若为响应式值则以当前 context 求值 */
-  function resolveFieldProp<T = any>(field: AutoFormField, prop: string, defaultValue?: T, extraProps?: Record<string, any>): T | undefined {
+  function resolveFieldProp<K extends keyof AutoFormMergeMeta>(
+    field: AutoFormField,
+    prop: K,
+    defaultValue?: ResolvedMetaValue<K>,
+    extraProps?: Record<string, any>
+  ): ResolvedMetaValue<K> | undefined
+  function resolveFieldProp<T>(
+    field: AutoFormField,
+    prop: keyof AutoFormMergeMeta,
+    defaultValue?: T,
+    extraProps?: Record<string, any>
+  ): T | undefined
+  function resolveFieldProp(field: AutoFormField, prop: keyof AutoFormMergeMeta, defaultValue?: unknown, extraProps?: Record<string, any>) {
     const value = field.meta?.[prop]
     if (value === undefined)
       return defaultValue
 
     const valueType = typeof value
     if (valueType !== 'function' && valueType !== 'object') {
-      return value as T
+      return value
     }
 
     const context = createFieldContext(field, extraProps)
@@ -76,7 +94,7 @@ export function useAutoFormProvider<T extends Record<string, any>>(
   function getResolvedFieldSlots(field: AutoFormField, extraProps?: Record<string, any>) {
     if (!field.meta?.fieldSlots)
       return undefined
-    return resolveFieldProp(field, 'fieldSlots', undefined, extraProps)
+    return resolveFieldProp(field, 'fieldSlots', undefined, extraProps) as Record<string, ((props?: any) => any) | undefined> | undefined
   }
 
   /** 渲染字段对应的输入控件，合并 controlProps/controlSlots 并绑定双向绑定逻辑 */
@@ -171,7 +189,7 @@ export function useAutoFormProvider<T extends Record<string, any>>(
     }
   }
 
-  function createSlotProps(field: AutoFormField, extraProps: Record<string, any> = {}): AutoFormFieldContext {
+  function createSlotProps(field: AutoFormField, extraProps: Record<string, any> = {}): ResolvedAutoFormFieldContext {
     const context = createFieldContext(field, extraProps)
 
     return {

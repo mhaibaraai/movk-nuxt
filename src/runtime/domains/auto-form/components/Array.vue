@@ -1,4 +1,4 @@
-<script lang="ts" setup generic="S extends z.ZodObject">
+<script lang="ts" setup>
 import { UButton, UCollapsible } from '#components'
 import { computed, ref } from 'vue'
 import { useAutoFormInjector } from '../provider'
@@ -11,15 +11,15 @@ import type { z } from 'zod'
 import type { ButtonProps } from '@nuxt/ui'
 import type { AutoFormField } from '../../../types/auto-form'
 import type { AnyObject } from '@movk/core'
-import type { AutoFormProps } from '../../../types/auto-form/component'
 
-interface AutoFormRendererArrayProps<S extends z.ZodObject> extends Pick<AutoFormProps<S>, 'schema'> {
+interface AutoFormRendererArrayProps {
+  schema: z.ZodObject
   field: AutoFormField
   extraProps?: AnyObject
   addButtonProps?: Partial<ButtonProps>
 }
 
-const props = defineProps<AutoFormRendererArrayProps<S>>()
+const props = defineProps<AutoFormRendererArrayProps>()
 
 const { createCollapsibleEnhancer, createFieldContext, createSlotResolver, createSlotProps, resolveFieldProp } = useAutoFormInjector()
 const context = createFieldContext(props.field)
