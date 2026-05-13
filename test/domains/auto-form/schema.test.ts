@@ -12,7 +12,7 @@ describe('auto-form schema', () => {
   } satisfies AutoFormControls
 
   it('introspectSchema 解析对象字段、默认 label 与控件映射', () => {
-    const schema = z.object({
+    const schema = afz.object({
       name: z.string(),
       age: z.number().optional()
     })
@@ -36,7 +36,7 @@ describe('auto-form schema', () => {
       }
     })
 
-    const schema = z.object({
+    const schema = afz.object({
       hero: layoutField,
       status: z.string()
     })
