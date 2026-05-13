@@ -1,62 +1,92 @@
 <script setup lang="ts">
-import { z } from 'zod'
+import type { z } from 'zod'
+import { UAccordion } from '#components'
 
-const { afz } = useFormBuilder()
+const { afz } = useAutoForm()
 
-const gridSchema = z.object({
-  firstName: afz.string({ label: '姓', cols: 3 }),
-  lastName: afz.string({ label: '名', cols: 3 }),
-  email: afz.email({ label: '邮箱', cols: 4 }),
-  phone: afz.string({ label: '电话', type: 'asPhoneNumberInput', cols: 2 }),
-  bio: afz.string({ label: '简介', type: 'textarea', cols: 6 })
-})
-
-const nestedSchema = z.object({
-  user: afz.object({
-    name: afz.string({ label: '姓名' }),
-    age: afz.number({ label: '年龄' })
-  }, { label: '用户信息' }),
-  contact: afz.object({
-    email: afz.email({ label: '邮箱' }),
-    phone: afz.string({ label: '电话' })
-  }, { label: '联系方式' })
-})
-
-const layoutSchema = z.object({
-  base: afz.layout({
-    component: 'UAccordion',
-    props: { multiple: true, defaultValue: ['account'] },
-    items: [
-      { label: '账号', value: 'account', fields: ['username', 'password'] },
-      { label: '资料', value: 'profile', fields: ['name', 'phone'] }
-    ],
+const gridSchema = afz.object({
+  $grid: afz.layout({
+    class: 'grid grid-cols-2 gap-4',
     fields: {
-      username: afz.string({ label: '用户名' }),
-      password: afz.string({ type: 'withPasswordToggle', label: '密码' }),
-      name: afz.string({ label: '昵称' }),
-      phone: afz.string({ label: '电话' })
+      firstName: afz.string().meta({ label: '名字' }),
+      lastName: afz.string().meta({ label: '姓氏' }),
+      email: afz.email().meta({
+        class: 'col-span-2',
+        label: '邮箱地址',
+        description: '此字段占据两列宽度'
+      }),
+      phone: afz.string().meta({ label: '电话' }),
+      age: afz.number().int().min(0).meta({ label: '年龄' })
     }
   })
 })
 
-const gridState = reactive<Partial<z.input<typeof gridSchema>>>({})
-const nestedState = reactive<Partial<z.input<typeof nestedSchema>>>({})
-const layoutState = reactive<Partial<z.input<typeof layoutSchema>>>({})
+const responsiveSchema = afz.object({
+  $responsive: afz.layout({
+    // 移动端 1 列，平板 2 列，桌面端 3 列
+    class: 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4',
+    fields: {
+      title: afz.string().meta({
+        class: 'col-span-full', // 所有屏幕尺寸都占满整行
+        label: '标题'
+      }),
+      firstName: afz.string().meta({ label: '名字' }),
+      lastName: afz.string().meta({ label: '姓氏' }),
+      email: afz.email().meta({ label: '邮箱' }),
+      phone: afz.string().meta({ label: '电话' }),
+      age: afz.number().int().min(0).meta({ label: '年龄' }),
+      description: afz.string({ type: 'textarea' }).meta({
+        class: 'col-span-full',
+        label: '描述'
+      })
+    }
+  })
+})
+
+const layoutSchema = afz.object({
+  $accordion: afz.layout({
+    component: UAccordion,
+    props: {
+      type: 'multiple',
+      ui: {
+        content: 'space-y-4'
+      },
+      items: [
+        { label: '基本信息', icon: 'i-lucide-user', slot: 'item-0' },
+        { label: '详细信息', icon: 'i-lucide-square-pen', slot: 'item-1' }
+      ]
+    },
+    fieldSlots: {
+      name: 'item-0',
+      email: 'item-0',
+      bio: 'item-1'
+    },
+    fields: {
+      name: afz.string().meta({ label: '姓名' }),
+      email: afz.email().meta({ label: '邮箱' }),
+      bio: afz.string({ type: 'textarea' }).meta({ label: '个人简介' }).optional()
+    }
+  })
+})
+
+const gridState = reactive<Partial<z.output<typeof gridSchema>>>({})
+const responsiveState = reactive<Partial<z.output<typeof responsiveSchema>>>({})
+const layoutState = reactive<Partial<z.output<typeof layoutSchema>>>({})
 </script>
 
 <template>
   <Navbar />
 
-  <div class="p-4 grid grid-cols-1 xl:grid-cols-3 gap-4">
-    <Showcase title="cols 网格" description="globalMeta.cols=6 + 字段 cols 控制每行占比" :state="gridState">
-      <MAutoForm :schema="gridSchema" :state="gridState" :global-meta="{ cols: 6 }" />
+  <div class="p-4 grid grid-cols-1 xl:grid-cols-2 gap-4">
+    <Showcase title="网格布局" description="使用 CSS Grid 创建多列布局，通过字段级别的 class 控制跨列" :state="gridState">
+      <MAutoForm :schema="gridSchema" :state="gridState" />
     </Showcase>
 
-    <Showcase title="嵌套对象自动 fieldset" description="afz.object 自动作为分组" :state="nestedState">
-      <MAutoForm :schema="nestedSchema" :state="nestedState" />
+    <Showcase title="响应式多列布局" description="利用 Tailwind 的响应式前缀，创建自适应不同屏幕尺寸的布局" :state="responsiveState">
+      <MAutoForm :schema="responsiveSchema" :state="responsiveState" />
     </Showcase>
 
-    <Showcase title="afz.layout 容器" description="将字段嵌入 UAccordion / UTabs 等容器" :state="layoutState">
+    <Showcase title="手风琴布局" description="使用 Nuxt UI 的 UAccordion 组件，将字段组织在可折叠的面板中" :state="layoutState">
       <MAutoForm :schema="layoutSchema" :state="layoutState" />
     </Showcase>
   </div>

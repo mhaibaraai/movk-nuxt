@@ -9,7 +9,10 @@ const autoFormNav: NavigationMenuItem = {
     { label: 'Field Types', to: '/auto-form/field-types' },
     { label: 'Metadata', to: '/auto-form/metadata' },
     { label: 'Controls', to: '/auto-form/controls' },
+    { label: 'Custom Controls', to: '/auto-form/custom-controls' },
+    { label: 'Global Meta', to: '/auto-form/global-meta' },
     { label: 'Reactive', to: '/auto-form/reactive' },
+    { label: 'Submit', to: '/auto-form/submit' },
     { label: 'Layout', to: '/auto-form/layout' },
     { label: 'Slots', to: '/auto-form/slots' },
     { label: 'Recipes', to: '/auto-form/recipes' }

@@ -8,32 +8,6 @@ interface User {
   avatar?: { src: string }
 }
 
-// 单选 (multiple=false / 默认)
-const singleScalar = ref<string | undefined>('grid')
-const singleObject = ref<PillsItem | undefined>()
-const singleUser = ref<User | undefined>()
-const singleDeselectable = ref<string | undefined>('todo')
-const singleOnSelect = ref<string | undefined>('en')
-const singleDisabled = ref<string | undefined>('grid')
-const singleDescription = ref<string | undefined>('basic')
-const singleVertical = ref<string | undefined>('week')
-const singleSlot = ref<string | undefined>('hot')
-const singleMatrix = ref<string | undefined>('grid')
-const formFieldCompat = ref<string | undefined>('grid')
-const fieldGroupCompat = ref<string | undefined>('list')
-
-// 多选 (multiple=true)
-const multiScalar = ref<string[]>(['hex', 'rgb'])
-const multiObject = ref<PillsItem[]>([])
-const multiUser = ref<User[]>([])
-const multiOnSelect = ref<string[]>(['fe'])
-const multiMax = ref<string[]>(['day', 'week'])
-const multiMin = ref<string[]>(['vue'])
-const multiDisabled = ref<string[]>(['grid'])
-const multiVertical = ref<string[]>(['week'])
-const multiUi = ref<string[]>([])
-const multiMatrix = ref<string[]>(['grid', 'kanban'])
-
 const literalItems = ['grid', 'list', 'kanban']
 
 const viewItems: PillsItem[] = [
@@ -100,6 +74,39 @@ const disabledItems: PillsItem[] = [
   { label: 'List', value: 'list', disabled: true },
   { label: 'Kanban', value: 'kanban' }
 ]
+
+// 单选 (multiple=false / 默认)
+const singleScalar = ref<string | undefined>('grid')
+const singleObject = ref<PillsItem | undefined>()
+const singleUser = ref<User | undefined>(userItems.value[2])
+const singleDeselectable = ref<string | undefined>('todo')
+const singleOnSelect = ref<string | undefined>('en')
+const singleDisabled = ref<string | undefined>('grid')
+const singleDescription = ref<string | undefined>('basic')
+const singleVertical = ref<string | undefined>('week')
+const singleSlot = ref<string | undefined>('hot')
+const singleMatrix = ref<string | undefined>('grid')
+const formFieldCompat = ref<string | undefined>('grid')
+const fieldGroupCompat = ref<string | undefined>('list')
+
+// 多选 (multiple=true)
+const multiScalar = ref<string[]>(['hex', 'rgb'])
+const multiObject = ref<PillsItem[]>([{
+  label: 'HSL',
+  value: 'hsl'
+},
+{
+  label: 'CMYK',
+  value: 'cmyk'
+}])
+const multiUser = ref<User[]>([])
+const multiOnSelect = ref<string[]>(['fe'])
+const multiMax = ref<string[]>(['day', 'week'])
+const multiMin = ref<string[]>(['vue'])
+const multiDisabled = ref<string[]>(['grid'])
+const multiVertical = ref<string[]>(['week'])
+const multiUi = ref<string[]>([])
+const multiMatrix = ref<string[]>(['grid', 'kanban'])
 
 const eventLog = ref<{ id: number, name: string, payload: unknown, time: string }[]>([])
 let seq = 0

@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { z } from 'zod'
+import type { z } from 'zod'
 
 const { afz } = useAutoForm()
 const autoForm = useTemplateRef('autoForm')
 
-const richSchema = z.object({
+const richSchema = afz.object({
   label: afz.string({ controlProps: { placeholder: '只设置 label' } })
     .meta({ label: 'Label' }),
   description: afz.string({ controlProps: { placeholder: '查看字段说明文本' } })
@@ -28,7 +28,7 @@ const richSchema = z.object({
       class: 'rounded-md border border-primary/20 p-3',
       ui: {
         label: 'text-primary',
-        description: 'text-muted'
+        description: 'text-warning'
       }
     }),
   required: afz.string({ controlProps: { placeholder: 'required=false' } })
@@ -81,7 +81,7 @@ const richState = reactive<Partial<z.output<typeof richSchema>>>({ hidden: 'secr
   <Navbar />
 
   <div class="p-4 grid grid-cols-1">
-    <Showcase title="加上元数据" :state="richState">
+    <Showcase title="afz.meta()" description="UFormField Props" :state="richState">
       <template #toolbar>
         <UButton size="sm" label="重置" @click="autoForm?.reset()" />
       </template>

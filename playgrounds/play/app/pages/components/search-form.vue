@@ -2,15 +2,15 @@
 import { z } from 'zod'
 import type { Person } from '../../composables/useMockData'
 
-const { afz } = useFormBuilder()
+const { afz } = useAutoForm()
 
-const schema = z.object({
-  keyword: afz.string({ label: '关键词', controlProps: { placeholder: '姓名/邮箱/岗位' } }).optional(),
-  department: afz.enum(['研发', '设计', '产品', '运营', '市场'], { label: '部门' }).optional(),
-  level: afz.enum(['P5', 'P6', 'P7', 'P8'], { label: '职级' }).optional(),
-  status: afz.enum(['active', 'leave', 'offboarded'], { label: '状态' }).optional(),
-  joinedFrom: afz.calendarDate({ label: '入职起' }).optional(),
-  joinedTo: afz.calendarDate({ label: '入职止' }).optional()
+const schema = afz.object({
+  keyword: afz.string({ controlProps: { placeholder: '姓名/邮箱/岗位' } }).meta({ label: '关键词' }).optional(),
+  department: afz.enum(['研发', '设计', '产品', '运营', '市场']).meta({ label: '部门' }).optional(),
+  level: afz.enum(['P5', 'P6', 'P7', 'P8']).meta({ label: '职级' }).optional(),
+  status: afz.enum(['active', 'leave', 'offboarded']).meta({ label: '状态' }).optional(),
+  joinedFrom: afz.calendarDate().meta({ label: '入职起' }).optional(),
+  joinedTo: afz.calendarDate().meta({ label: '入职止' }).optional()
 })
 const state = reactive<Partial<z.input<typeof schema>>>({})
 

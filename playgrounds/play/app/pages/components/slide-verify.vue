@@ -45,7 +45,7 @@ function resetFieldGroup() {
 
     <Showcase title="UFieldGroup 兼容" description="滑动验证和按钮共同继承分组尺寸" :state="{ value: fieldGroupVerified }">
       <UFieldGroup size="xs" class="w-full">
-        <MSlideVerify :key="fieldGroupKey" v-model="fieldGroupVerified" />
+        <MSlideVerify :key="fieldGroupKey" v-model="fieldGroupVerified" class="flex-1" />
         <UButton icon="i-lucide-rotate-ccw" color="neutral" variant="subtle" @click="resetFieldGroup" />
       </UFieldGroup>
     </Showcase>

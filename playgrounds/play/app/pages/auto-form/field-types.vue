@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { z } from 'zod'
+import type { z } from 'zod'
 
 const autoForm = useTemplateRef('autoForm')
 const { afz } = useAutoForm()
 
-const schema = z.object({
+const schema = afz.object({
   string: afz.string({ controlProps: { placeholder: '文本' } }),
   number: afz.number({ controlProps: { placeholder: '数字' } }),
   boolean: afz.boolean(),
@@ -42,7 +42,7 @@ const state = reactive<Partial<z.output<typeof schema>>>({})
   <Navbar />
 
   <div class="p-4 grid grid-cols-1 xl:grid-cols-[1fr_360px] gap-4">
-    <Showcase title="所有 Zod 类型">
+    <Showcase title="内置 zod 类型">
       <template #toolbar>
         <UButton size="sm" label="重置" @click="autoForm?.reset()" />
       </template>

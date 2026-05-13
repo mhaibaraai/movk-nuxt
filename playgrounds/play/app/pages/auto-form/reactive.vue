@@ -1,59 +1,78 @@
 <script setup lang="ts">
-import { z } from 'zod'
+import type { z } from 'zod'
 
-const { afz } = useFormBuilder()
+const { afz } = useAutoForm()
 
-const conditionalSchema = z.object({
-  notify: afz.boolean({ type: 'switch', label: '启用通知' }).default(false),
-  email: afz.email({
-    label: '邮箱地址',
-    if: (ctx: { state: { notify?: boolean } }) => Boolean(ctx.state.notify)
-  })
-})
+const countryOptions = ['CN', 'US', 'JP'] as const
+type CountryCode = typeof countryOptions[number]
 
-const dependsSchema = z.object({
-  country: afz.enum(['CN', 'US', 'JP'], { label: '国家' }).default('CN'),
-  city: afz.enum([], {
-    label: '城市',
-    depends: ['country'],
-    controlProps: (ctx: { state: { country?: string } }) => ({
-      items: ({
-        CN: ['北京', '上海', '广州'],
-        US: ['New York', 'San Francisco', 'Seattle'],
-        JP: ['Tokyo', 'Osaka', 'Kyoto']
-      }[ctx.state.country ?? 'CN']) ?? []
+const cityItemsByCountry: Record<CountryCode, string[]> = {
+  CN: ['北京', '上海', '广州'],
+  US: ['New York', 'San Francisco', 'Seattle'],
+  JP: ['Tokyo', 'Osaka', 'Kyoto']
+}
+
+const conditionalSchema = afz.object({
+  notify: afz.boolean({ type: 'switch' }).default(false).meta({ label: '通知' }),
+  email: afz.email().meta({ label: '通知邮箱', if: ({ state }) => Boolean(state.notify) }),
+  agreeToTerms: afz
+    .boolean()
+    .default(false)
+    .meta({
+      label: '同意服务条款',
+      description: '我已阅读并同意相关服务条款和隐私政策'
+    }),
+  newsletter: afz
+    .boolean()
+    .default(true)
+    .meta({
+      label: '订阅邮件通知',
+      description: '接收产品更新和优惠信息',
+      hidden: ({ state }) => !state?.agreeToTerms
     })
-  })
 })
 
-const arraySchema = z.object({
+const dependsSchema = afz.object({
+  country: afz.enum(countryOptions).default('CN').meta({ label: '国家' }),
+  city: afz.enum([], {
+    type: 'enum',
+    controlProps: ({ state }) => ({
+      items: cityItemsByCountry[(state.country as CountryCode | undefined) ?? 'CN']
+    })
+  }).meta({ label: '城市' })
+})
+
+const arraySchema = afz.object({
   members: afz.array(
     afz.object({
       name: afz.string({ controlProps: { placeholder: '姓名' } }),
       role: afz.enum(['leader', 'dev', 'qa'])
-    }),
-    { label: '团队成员' }
-  ).default([{ name: '', role: 'dev' }])
+    })
+  ).default([{ name: '', role: 'dev' }]).meta({ label: '团队成员' })
 })
 
-const asyncSchema = z.object({
-  username: afz.string({ label: '用户名' }).refine(async (val) => {
+const asyncSchema = afz.object({
+  username: afz.string().refine(async (val) => {
     await new Promise(r => setTimeout(r, 600))
     return val !== 'admin'
-  }, { message: '该用户名已被占用' })
+  }, { message: '该用户名已被占用' }).meta({ label: '用户名' })
 })
 
-const conditionalState = reactive<Partial<z.input<typeof conditionalSchema>>>({})
-const dependsState = reactive<Partial<z.input<typeof dependsSchema>>>({})
-const arrayState = reactive<Partial<z.input<typeof arraySchema>>>({})
-const asyncState = reactive<Partial<z.input<typeof asyncSchema>>>({})
+const conditionalState = reactive<Partial<z.output<typeof conditionalSchema>>>({})
+const dependsState = reactive<Partial<z.output<typeof dependsSchema>>>({})
+const arrayState = reactive<Partial<z.output<typeof arraySchema>>>({})
+const asyncState = reactive<Partial<z.output<typeof asyncSchema>>>({})
+
+watch(() => dependsState.country, () => {
+  dependsState.city = undefined
+})
 </script>
 
 <template>
   <Navbar />
 
   <div class="p-4 grid grid-cols-1 xl:grid-cols-2 gap-4">
-    <Showcase title="if 条件渲染" description="字段元数据 if(ctx) 返回 false 则跳过渲染" :state="conditionalState">
+    <Showcase title="if、hidden 条件渲染" description="字段元数据 if(ctx) 返回 false 则跳过渲染" :state="conditionalState">
       <MAutoForm :schema="conditionalSchema" :state="conditionalState" />
     </Showcase>
 
@@ -65,11 +84,7 @@ const asyncState = reactive<Partial<z.input<typeof asyncSchema>>>({})
       <MAutoForm :schema="arraySchema" :state="arrayState" />
     </Showcase>
 
-    <Showcase
-      title="异步校验"
-      description="尝试输入 'admin' 触发服务端式异步校验"
-      :state="asyncState"
-    >
+    <Showcase title="异步校验" description="尝试输入 'admin' 触发服务端式异步校验" :state="asyncState">
       <MAutoForm :schema="asyncSchema" :state="asyncState" :validate-on="['blur']" />
     </Showcase>
   </div>
