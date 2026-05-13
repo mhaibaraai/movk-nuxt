@@ -209,40 +209,39 @@ function commitValue(value: string | undefined) {
           </span>
         </UButton>
 
-        <div v-else-if="props.trigger === 'input'">
-          <UInput
-            :id="id"
-            v-model="inputDraft"
-            :name="name"
-            :size="effectiveSize"
-            :color="effectiveColor"
-            :highlight="highlight"
-            :placeholder="props.placeholder"
-            :disabled="effectiveDisabled"
-            v-bind="ariaAttrs"
-            @blur="handleInputBlur"
-            @focus="emitFormFocus"
-            @keydown.enter="($event.target as HTMLInputElement).blur()"
-          >
-            <template #leading>
-              <slot name="leading" :value="modelValue">
-                <span
-                  v-if="modelValue"
-                  :class="extraUi.triggerChip"
-                  :style="{ backgroundColor: modelValue }"
-                />
-                <UIcon
-                  v-else
-                  :name="props.icon"
-                  :class="extraUi.triggerIcon"
-                />
-              </slot>
-            </template>
-            <template v-if="!!slots.trailing" #trailing>
-              <slot name="trailing" :value="modelValue" />
-            </template>
-          </UInput>
-        </div>
+        <UInput
+          v-else-if="props.trigger === 'input'"
+          :id="id"
+          v-model="inputDraft"
+          :name="name"
+          :size="effectiveSize"
+          :color="effectiveColor"
+          :highlight="highlight"
+          :placeholder="props.placeholder"
+          :disabled="effectiveDisabled"
+          v-bind="ariaAttrs"
+          @blur="handleInputBlur"
+          @focus="emitFormFocus"
+          @keydown.enter="($event.target as HTMLInputElement).blur()"
+        >
+          <template #leading>
+            <slot name="leading" :value="modelValue">
+              <span
+                v-if="modelValue"
+                :class="extraUi.triggerChip"
+                :style="{ backgroundColor: modelValue }"
+              />
+              <UIcon
+                v-else
+                :name="props.icon"
+                :class="extraUi.triggerIcon"
+              />
+            </slot>
+          </template>
+          <template v-if="!!slots.trailing" #trailing>
+            <slot name="trailing" :value="modelValue" />
+          </template>
+        </UInput>
 
         <UButton
           v-else
