@@ -6,11 +6,6 @@ export interface StarRatingProps {
   id?: string
   name?: string
   /**
-   * 当前评分值
-   * @defaultValue 0
-   */
-  modelValue?: number
-  /**
    * 最大星级数
    * @defaultValue 5
    */
@@ -57,7 +52,6 @@ export interface StarRatingProps {
 }
 
 export interface StarRatingEmits {
-  'update:modelValue': [value: number]
-  'change': [value: number]
-  'hover': [value: number | null]
+  change: [value: number]
+  hover: [value: number | null]
 }

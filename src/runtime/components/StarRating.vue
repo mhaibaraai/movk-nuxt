@@ -3,25 +3,24 @@ import type { ButtonProps, ComponentConfig } from '@nuxt/ui'
 import { UButton, UBadge } from '#components'
 import { computed, ref } from 'vue'
 import { useAppConfig } from '#imports'
-import { useFieldGroup } from '@nuxt/ui/composables/useFieldGroup'
-import { useFormField } from '@nuxt/ui/composables/useFormField'
 import theme from '#build/movk-ui/star-rating'
 import type { AppConfig } from 'nuxt/schema'
 import type { StarRatingProps, StarRatingEmits } from '../types/components/star-rating'
 import { useExtendedTv } from '../utils/extend-theme'
+import { useFieldControl } from '../utils/form-control'
 
 interface _Props extends StarRatingProps {
   ui?: ComponentConfig<typeof theme, AppConfig, 'starRating'>['slots']
 }
 
 const props = withDefaults(defineProps<_Props>(), {
-  modelValue: 0,
   max: 5,
   showBadge: true,
   emptyIcon: 'i-lucide-star',
   filledIcon: 'i-lucide-star',
   halfIcon: 'i-lucide-star-half'
 })
+const modelValue = defineModel<number>({ default: 0 })
 const emits = defineEmits<StarRatingEmits>()
 
 defineOptions({ inheritAttrs: false })
@@ -29,19 +28,15 @@ defineOptions({ inheritAttrs: false })
 const {
   id,
   name,
-  size: formFieldSize,
-  color: formFieldColor,
-  disabled: formFieldDisabled,
+  size: effectiveSize,
+  color: effectiveColor,
+  disabled: effectiveDisabled,
   ariaAttrs,
   emitFormBlur,
   emitFormChange,
   emitFormFocus,
   emitFormInput
-} = useFormField<_Props>(props)
-const { size: fieldGroupSize } = useFieldGroup<_Props>(props)
-const effectiveSize = computed(() => fieldGroupSize.value || formFieldSize.value)
-const effectiveColor = computed(() => formFieldColor.value ?? props.color)
-const effectiveDisabled = computed(() => formFieldDisabled.value ?? props.disabled ?? false)
+} = useFieldControl(props)
 const hoveredStar = ref<number | null>(null)
 const focusedIndex = ref<number>(0)
 
@@ -80,15 +75,9 @@ function calculateHalfStarValue(index: number, event: MouseEvent): number {
 }
 
 function updateValue(newValue: number) {
-  if (props.clearable && newValue === props.modelValue) {
-    emits('update:modelValue', 0)
-    emits('change', 0)
-    emitFormValueChange()
-    return
-  }
-
-  emits('update:modelValue', newValue)
-  emits('change', newValue)
+  const finalValue = props.clearable && newValue === modelValue.value ? 0 : newValue
+  modelValue.value = finalValue
+  emits('change', finalValue)
   emitFormValueChange()
 }
 
@@ -134,18 +123,18 @@ function handleKeyDown(event: KeyboardEvent) {
     case 'ArrowRight':
     case 'ArrowUp':
       event.preventDefault()
-      if (props.modelValue < props.max) {
-        updateValue(Math.min(props.modelValue + step, props.max))
-        focusedIndex.value = Math.min(Math.floor(props.modelValue + step), props.max - 1)
+      if (modelValue.value < props.max) {
+        updateValue(Math.min(modelValue.value + step, props.max))
+        focusedIndex.value = Math.min(Math.floor(modelValue.value + step), props.max - 1)
       }
       break
 
     case 'ArrowLeft':
     case 'ArrowDown':
       event.preventDefault()
-      if (props.modelValue > 0) {
-        updateValue(Math.max(props.modelValue - step, 0))
-        focusedIndex.value = Math.max(Math.floor(props.modelValue - step) - 1, 0)
+      if (modelValue.value > 0) {
+        updateValue(Math.max(modelValue.value - step, 0))
+        focusedIndex.value = Math.max(Math.floor(modelValue.value - step) - 1, 0)
       }
       break
 
@@ -183,7 +172,7 @@ function handleKeyDown(event: KeyboardEvent) {
 }
 
 function getStarState(index: number): 'empty' | 'half' | 'full' {
-  const displayValue = hoveredStar.value !== null ? hoveredStar.value + 1 : props.modelValue
+  const displayValue = hoveredStar.value !== null ? hoveredStar.value + 1 : modelValue.value
 
   if (index < Math.floor(displayValue)) {
     return 'full'
@@ -208,7 +197,7 @@ function getStarColor(index: number): ButtonProps['color'] {
   return state !== 'empty' ? effectiveColor.value : 'neutral'
 }
 
-const badgeLabel = computed(() => `${props.modelValue}/${props.max}`)
+const badgeLabel = computed(() => `${modelValue.value}/${props.max}`)
 </script>
 
 <template>
@@ -217,8 +206,8 @@ const badgeLabel = computed(() => `${props.modelValue}/${props.max}`)
     :name="name"
     :class="extendUi.root"
     role="slider"
-    :aria-label="`评分 ${props.modelValue} / ${props.max}`"
-    :aria-valuenow="props.modelValue"
+    :aria-label="`评分 ${modelValue} / ${props.max}`"
+    :aria-valuenow="modelValue"
     :aria-valuemin="0"
     :aria-valuemax="props.max"
     :aria-disabled="effectiveDisabled"
@@ -229,7 +218,7 @@ const badgeLabel = computed(() => `${props.modelValue}/${props.max}`)
     @focus="emitFormFocus"
     @keydown="handleKeyDown"
   >
-    <slot name="prefix" :value="props.modelValue" :max="props.max" />
+    <slot name="prefix" :value="modelValue" :max="props.max" />
     <div :class="extendUi.stars">
       <UButton
         v-for="index in props.max"
@@ -252,12 +241,12 @@ const badgeLabel = computed(() => `${props.modelValue}/${props.max}`)
 
     <slot
       name="badge"
-      :value="props.modelValue"
+      :value="modelValue"
       :max="props.max"
       :label="badgeLabel"
     >
       <UBadge
-        v-if="showBadge && props.modelValue > 0"
+        v-if="showBadge && modelValue > 0"
         :label="badgeLabel"
         color="primary"
         variant="subtle"
@@ -265,6 +254,6 @@ const badgeLabel = computed(() => `${props.modelValue}/${props.max}`)
       />
     </slot>
 
-    <slot name="suffix" :value="props.modelValue" :max="props.max" />
+    <slot name="suffix" :value="modelValue" :max="props.max" />
   </div>
 </template>
