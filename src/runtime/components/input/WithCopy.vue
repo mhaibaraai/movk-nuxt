@@ -1,7 +1,7 @@
 <script lang="ts" setup generic="T extends InputValue">
 import type { ButtonProps, ComponentConfig, InputSlots, InputValue } from '@nuxt/ui'
 import type { OmitByKey } from '@movk/core'
-import { computed, useAttrs } from 'vue'
+import { useAttrs } from 'vue'
 import { UInput, UButton, UTooltip } from '#components'
 import { useClipboard } from '@vueuse/core'
 import { isEmpty } from '@movk/core'
@@ -27,8 +27,7 @@ const attrs = useAttrs()
 const appConfig = useAppConfig() as { movk?: { withCopy?: unknown } }
 const modelValue = defineModel<T>()
 const inputProps = useForwardedProps(props, ['ui', 'buttonProps', 'tooltipProps', 'defaultValue', 'modelModifiers'] as const)
-const { size: fieldSize } = useFormFieldBridge(props)
-const buttonSize = computed(() => fieldSize.value as ButtonProps['size'])
+const { size: buttonSize } = useFormFieldBridge<ButtonProps['size']>(props)
 
 const { baseUi } = useExtendedTv(
   inputTheme,

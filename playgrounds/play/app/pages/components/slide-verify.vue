@@ -37,8 +37,8 @@ function resetFieldGroup() {
   </Navbar>
 
   <div class="p-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
-    <Showcase title="UFormField 兼容" description="外层字段尺寸和禁用态传递到滑动验证" :state="{ value: formFieldVerified }">
-      <UFormField label="滑动验证" size="xs" disabled>
+    <Showcase title="UFormField 兼容" description="外层字段尺寸和错误态传递到滑动验证" :state="{ value: formFieldVerified }">
+      <UFormField label="滑动验证" size="xs" error="示例错误态">
         <MSlideVerify v-model="formFieldVerified" />
       </UFormField>
     </Showcase>

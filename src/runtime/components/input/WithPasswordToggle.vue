@@ -1,7 +1,7 @@
 <script lang="ts" setup generic="T extends InputValue">
 import type { ButtonProps, InputSlots, InputValue, ComponentConfig, InputEmits } from '@nuxt/ui'
 import type { OmitByKey } from '@movk/core'
-import { computed, useAttrs } from 'vue'
+import { useAttrs } from 'vue'
 import { UInput, UButton } from '#components'
 import { useToggle } from '@vueuse/core'
 import { useAppConfig } from '#imports'
@@ -26,8 +26,7 @@ const attrs = useAttrs()
 const appConfig = useAppConfig() as { movk?: { withPasswordToggle?: unknown } }
 const modelValue = defineModel<T>()
 const inputProps = useForwardedProps(props, ['ui', 'buttonProps', 'defaultValue', 'modelModifiers'] as const)
-const { size: fieldSize } = useFormFieldBridge(props)
-const buttonSize = computed(() => fieldSize.value as ButtonProps['size'])
+const { size: buttonSize } = useFormFieldBridge<ButtonProps['size']>(props)
 
 const { baseUi } = useExtendedTv(
   inputTheme,

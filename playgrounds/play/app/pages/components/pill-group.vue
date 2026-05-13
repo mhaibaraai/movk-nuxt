@@ -17,7 +17,6 @@ const singleOnSelect = ref<string | undefined>('en')
 const singleDisabled = ref<string | undefined>('grid')
 const singleDescription = ref<string | undefined>('basic')
 const singleVertical = ref<string | undefined>('week')
-const singleForm = ref<string | undefined>('grid')
 const singleSlot = ref<string | undefined>('hot')
 const singleMatrix = ref<string | undefined>('grid')
 const formFieldCompat = ref<string | undefined>('grid')
@@ -32,7 +31,6 @@ const multiMax = ref<string[]>(['day', 'week'])
 const multiMin = ref<string[]>(['vue'])
 const multiDisabled = ref<string[]>(['grid'])
 const multiVertical = ref<string[]>(['week'])
-const multiForm = ref<string[]>(['hex'])
 const multiUi = ref<string[]>([])
 const multiMatrix = ref<string[]>(['grid', 'kanban'])
 
@@ -200,13 +198,7 @@ const variants: NonNullable<PillGroupProps['variant']>[] = ['solid', 'outline', 
       </div>
     </Showcase>
 
-    <Showcase title="9. UFormField 集成" description="size 自动跟随" :state="{ value: singleForm }">
-      <UFormField label="视图模式" hint="选择展示方式" size="xs">
-        <MPillGroup v-model="singleForm" :items="viewItems" value-key="value" />
-      </UFormField>
-    </Showcase>
-
-    <Showcase title="10. label slot + ui 覆盖" description="自定义 label + 圆形容器" :state="{ value: singleSlot }">
+    <Showcase title="9. label slot + ui 覆盖" description="自定义 label + 圆形容器" :state="{ value: singleSlot }">
       <MPillGroup v-model="singleSlot" :items="trendItems" value-key="value">
         <template #label="{ item, selected }">
           <span class="font-mono">{{ selected ? '★' : '·' }} {{ item && typeof item === 'object' ? item.label : item }}</span>
@@ -268,13 +260,7 @@ const variants: NonNullable<PillGroupProps['variant']>[] = ['solid', 'outline', 
       </div>
     </Showcase>
 
-    <Showcase title="19. UFormField + multiple" description="size 自动跟随 + 多选" :state="{ value: multiForm }">
-      <UFormField label="颜色格式" size="lg">
-        <MPillGroup v-model="multiForm" :items="formatItems" value-key="value" multiple />
-      </UFormField>
-    </Showcase>
-
-    <Showcase title="20. ui 覆盖" description="圆形容器 + 主题色" :state="{ value: multiUi }">
+    <Showcase title="19. ui 覆盖" description="圆形容器 + 主题色" :state="{ value: multiUi }">
       <MPillGroup
         v-model="multiUi"
         :items="tagItems"

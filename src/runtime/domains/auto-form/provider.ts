@@ -98,6 +98,7 @@ export function useAutoFormProvider<T extends Record<string, any>>(
     const context = createFieldContext(field, extraProps)
     const resolvedControlProps = resolveFieldProp(field, 'controlProps', undefined, extraProps) || {}
     const isReadonly = field.decorators?.isReadonly
+    // size 双向注入：UFormField 用于 label/spacing，controlProps.size 透传到控件本体，由叶子组件 useFieldControl 与 UFieldGroup 合并
     const resolvedSize = resolveFieldProp(field, 'size', undefined, extraProps)
 
     const finalProps = defu(

@@ -3,13 +3,12 @@ import { UIcon } from '#components'
 import { useAppConfig } from '#imports'
 import { useElementSize } from '@vueuse/core'
 import { computed, ref, useTemplateRef } from 'vue'
-import { useFieldGroup } from '@nuxt/ui/composables/useFieldGroup'
-import { useFormField } from '@nuxt/ui/composables/useFormField'
 import theme from '#build/movk-ui/slide-verify'
 import type { ComponentConfig } from '@nuxt/ui'
 import type { AppConfig } from 'nuxt/schema'
 import type { SlideVerifyProps, SlideVerifyEmits, SlideVerifySlots } from '../types/components/slide-verify'
 import { useExtendedTv } from '../utils/extend-theme'
+import { useFieldControl } from '../utils/form-control'
 
 interface _Props extends SlideVerifyProps {
   size?: ComponentConfig<typeof theme, AppConfig, 'slideVerify'>['variants']['size']
@@ -32,17 +31,14 @@ const isVerified = defineModel<boolean>({ default: false })
 const {
   id,
   name,
-  size: formFieldSize,
-  disabled: formFieldDisabled,
+  size: effectiveSize,
+  disabled: effectiveDisabled,
   ariaAttrs,
   emitFormBlur,
   emitFormChange,
   emitFormFocus,
   emitFormInput
-} = useFormField<_Props>(props)
-const { size: fieldGroupSize } = useFieldGroup<_Props>(props)
-const effectiveSize = computed(() => fieldGroupSize.value || formFieldSize.value)
-const effectiveDisabled = computed(() => formFieldDisabled.value ?? props.disabled ?? false)
+} = useFieldControl(props)
 const rootRef = useTemplateRef<HTMLElement>('root')
 const sliderRef = useTemplateRef<HTMLElement>('slider')
 const { width: rootWidth } = useElementSize(rootRef)

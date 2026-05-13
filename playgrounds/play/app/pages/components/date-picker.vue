@@ -51,8 +51,8 @@ const presetCustom = shallowRef<DateValue>()
   <Navbar />
 
   <div class="p-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
-    <Showcase title="UFormField 兼容" description="外层字段尺寸和禁用态传递到触发按钮" :state="{ value: formFieldDate?.toString() }">
-      <UFormField label="预约日期" size="xs" disabled>
+    <Showcase title="UFormField 兼容" description="外层字段尺寸和错误态传递到触发按钮" :state="{ value: formFieldDate?.toString() }">
+      <UFormField label="预约日期" size="xs" error="示例错误态">
         <MDatePicker v-model="formFieldDate" />
       </UFormField>
     </Showcase>

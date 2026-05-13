@@ -6,9 +6,8 @@ import { useClipboard } from '@vueuse/core'
 import { ColorTranslator } from 'colortranslator'
 import { UPopover, UButton, UColorPicker, UIcon, UInput } from '#components'
 import { useAppConfig } from '#imports'
-import { useFieldGroup } from '@nuxt/ui/composables/useFieldGroup'
-import { useFormField } from '@nuxt/ui/composables/useFormField'
 import { useExtendedTv } from '../utils/extend-theme'
+import { useFieldControl } from '../utils/form-control'
 import theme from '#build/movk-ui/color-chooser'
 import popoverTheme from '#build/ui/popover'
 import PillGroup from './PillGroup.vue'
@@ -43,20 +42,16 @@ const appConfig = useAppConfig() as { movk?: { colorChooser?: unknown } }
 const {
   id,
   name,
-  size: formFieldSize,
-  color: formFieldColor,
+  size: effectiveSize,
+  color: effectiveColor,
   highlight,
-  disabled: formFieldDisabled,
+  disabled: effectiveDisabled,
   ariaAttrs,
   emitFormBlur,
   emitFormChange,
   emitFormFocus,
   emitFormInput
-} = useFormField<_Props>(props)
-const { size: fieldGroupSize } = useFieldGroup<_Props>(props)
-const effectiveSize = computed(() => fieldGroupSize.value || formFieldSize.value)
-const effectiveColor = computed(() => formFieldColor.value ?? props.color)
-const effectiveDisabled = computed(() => formFieldDisabled.value ?? false)
+} = useFieldControl(props)
 
 const FORMAT_KEY = {
   hex: 'HEX',

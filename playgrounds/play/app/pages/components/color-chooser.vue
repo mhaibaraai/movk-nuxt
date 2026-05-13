@@ -58,9 +58,9 @@ const enabledFormats = ref<ColorChooserProps['formats']>(['hex', 'rgb', 'hsl'])
   <Navbar />
 
   <div class="p-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
-    <Showcase title="UFormField 兼容" description="外层字段尺寸和错误态传递到 input 触发器" :state="{ value: formFieldValue }">
+    <Showcase title="UFormField 兼容" description="外层字段尺寸和错误态传递到触发按钮" :state="{ value: formFieldValue }">
       <UFormField label="品牌色" size="xs" error="示例错误态">
-        <MColorChooser v-model="formFieldValue" trigger="input" />
+        <MColorChooser v-model="formFieldValue" />
       </UFormField>
     </Showcase>
 

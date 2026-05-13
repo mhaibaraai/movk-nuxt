@@ -1,7 +1,7 @@
 <script lang="ts" setup generic="T extends InputValue">
 import type { InputSlots, InputValue, ComponentConfig } from '@nuxt/ui'
 import type { OmitByKey } from '@movk/core'
-import { computed, useAttrs } from 'vue'
+import { useAttrs } from 'vue'
 import { UInput, UButton } from '#components'
 import { isEmpty } from '@movk/core'
 import { useAppConfig } from '#imports'
@@ -26,8 +26,7 @@ const attrs = useAttrs()
 const appConfig = useAppConfig() as { movk?: { withFloatingLabel?: unknown } }
 const modelValue = defineModel<T>()
 const inputProps = useForwardedProps(props, ['ui', 'label', 'clearButtonProps', 'placeholder', 'defaultValue', 'modelModifiers'] as const)
-const { size: fieldSize, emitFormChange, emitFormInput } = useFormFieldBridge(props)
-const effectiveSize = computed(() => fieldSize.value as WithFloatingLabelProps<T>['size'])
+const { size: effectiveSize, emitFormChange, emitFormInput } = useFormFieldBridge<WithFloatingLabelProps<T>['size']>(props)
 
 const { baseUi, extraUi } = useExtendedTv(
   inputTheme,

@@ -4,11 +4,10 @@ import type { AppConfig } from 'nuxt/schema'
 import { computed, ref, toRaw } from 'vue'
 import { UAvatar, UBadge, UButton, UIcon } from '#components'
 import { useAppConfig } from '#imports'
-import { useFieldGroup } from '@nuxt/ui/composables/useFieldGroup'
-import { useFormField } from '@nuxt/ui/composables/useFormField'
 import { getPath } from '@movk/core'
 import theme from '#build/movk-ui/pill-group'
 import { useExtendedTv } from '../utils/extend-theme'
+import { useFieldControl } from '../utils/form-control'
 import type {
   PillGroupProps,
   PillGroupEmits,
@@ -46,20 +45,15 @@ const appConfig = useAppConfig() as { movk?: { pillGroup?: unknown } }
 
 const {
   id,
-  size: ffSize,
-  color: ffColor,
-  disabled: ffDisabled,
+  size: effectiveSize,
+  color: effectiveColor,
+  disabled: effectiveDisabled,
   ariaAttrs,
   emitFormChange,
   emitFormFocus,
   emitFormBlur,
   emitFormInput
-} = useFormField<_Props>(props)
-const { size: fieldGroupSize } = useFieldGroup<_Props>(props)
-
-const effectiveSize = computed(() => fieldGroupSize.value || ffSize.value)
-const effectiveColor = computed(() => ffColor.value ?? props.color)
-const effectiveDisabled = computed(() => ffDisabled.value ?? props.disabled ?? false)
+} = useFieldControl(props)
 const focusWithin = ref(false)
 
 const { extendUi } = useExtendedTv(

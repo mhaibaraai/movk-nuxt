@@ -7,11 +7,10 @@ import type { DateValue } from '@internationalized/date'
 import { UPopover, UButton, UCalendar, UIcon } from '#components'
 import { computed, useAttrs } from 'vue'
 import { useAppConfig } from '#imports'
-import { useFieldGroup } from '@nuxt/ui/composables/useFieldGroup'
-import { useFormField } from '@nuxt/ui/composables/useFormField'
 import { useDateFormatter } from '../composables/useDateFormatter'
 import type { ValueFormat } from '../composables/useDateFormatter'
 import { useExtendedTv } from '../utils/extend-theme'
+import { useFieldControl } from '../utils/form-control'
 import theme from '#build/movk-ui/date-picker'
 import popoverTheme from '#build/ui/popover'
 import type {
@@ -28,8 +27,7 @@ interface _Props extends DatePickerProps<R, M, P, V> {
 
 const props = withDefaults(defineProps<_Props>(), {
   placeholder: '选择日期',
-  labelFormat: 'formatted',
-  clearable: false
+  labelFormat: 'formatted'
 })
 
 const emits = defineEmits<DatePickerEmits<R, M, V>>()
@@ -42,18 +40,15 @@ const appConfig = useAppConfig() as { movk?: { datePicker?: unknown } }
 const {
   id,
   name,
-  size: formFieldSize,
+  size: effectiveSize,
   color,
-  disabled,
+  disabled: effectiveDisabled,
   ariaAttrs,
   emitFormBlur,
   emitFormChange,
   emitFormFocus,
   emitFormInput
-} = useFormField<_Props>(props)
-const { size: fieldGroupSize } = useFieldGroup<_Props>(props)
-const effectiveSize = computed(() => fieldGroupSize.value || formFieldSize.value)
-const effectiveDisabled = computed(() => disabled.value ?? false)
+} = useFieldControl(props)
 
 const formatter = useDateFormatter({
   locale: props.locale,
