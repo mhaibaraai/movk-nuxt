@@ -19,7 +19,6 @@ interface _Props extends PopconfirmProps {
 const props = withDefaults(defineProps<_Props>(), {
   title: '确认操作',
   description: '请确认是否执行此操作?',
-  dismissible: false,
   type: 'neutral',
   icon: 'i-lucide-circle-question-mark',
   arrow: true,

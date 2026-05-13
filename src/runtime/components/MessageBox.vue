@@ -19,7 +19,6 @@ const props = withDefaults(defineProps<_Props>(), {
   title: '提示',
   type: 'primary',
   mode: 'alert',
-  dismissible: false,
   alertConfirmLabel: '知道了',
   confirmLabel: '确认',
   cancelLabel: '取消'

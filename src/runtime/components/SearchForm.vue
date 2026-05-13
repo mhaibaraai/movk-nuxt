@@ -25,12 +25,10 @@ const props = withDefaults(defineProps<_Props>(), {
   icon: 'i-lucide-chevron-down',
   expandText: '展开',
   collapseText: '收起',
-  defaultExpanded: false,
   searchText: '搜索',
   resetText: '重置',
   showSearchButton: true,
   showResetButton: true,
-  loading: false,
   validateOn: () => []
 })
 const modelValue = defineModel<Partial<InferInput<S>>>()
@@ -57,7 +55,7 @@ watch(() => modelValue.value, (val) => {
 
 const appConfig = useAppConfig() as { movk?: { searchForm?: unknown }, ui: { icons: Record<string, string> } }
 const formRef = useTemplateRef('formRef')
-const expanded = ref(props.defaultExpanded)
+const expanded = ref(props.defaultExpanded ?? false)
 
 type ColsConfig = { sm?: number, md?: number, lg?: number, xl?: number }
 
