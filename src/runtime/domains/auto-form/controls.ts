@@ -14,6 +14,7 @@ import DatePicker from '../../components/DatePicker.vue'
 import ColorChooser from '../../components/ColorChooser.vue'
 import StarRating from '../../components/StarRating.vue'
 import SlideVerify from '../../components/SlideVerify.vue'
+import PillGroup from '../../components/PillGroup.vue'
 import {
   UInput,
   UInputNumber,
@@ -30,7 +31,8 @@ import {
   UCheckboxGroup,
   URadioGroup,
   UInputDate,
-  UInputTime
+  UInputTime,
+  UListbox
 } from '#components'
 
 const DEFAULT_CONTROL_PROPS = { class: 'w-full' } as const
@@ -60,27 +62,32 @@ const DEFAULT_CONTROL_COMPONENTS = {
   enum: USelect,
   file: UFileUpload,
   calendarDate: DatePicker,
-  datePicker: DatePicker,
-  switch: USwitch,
-  textarea: UTextarea,
-  slider: USlider,
-  pinInput: UPinInput,
-  inputTags: UInputTags,
-  selectMenu: USelectMenu,
-  inputMenu: UInputMenu,
-  checkboxGroup: UCheckboxGroup,
-  radioGroup: URadioGroup,
   inputDate: UInputDate,
   inputTime: UInputTime,
+
   withClear: WithClear,
   withPasswordToggle: WithPasswordToggle,
   withCopy: WithCopy,
   withCharacterLimit: WithCharacterLimit,
-  asPhoneNumberInput: AsPhoneNumberInput,
   withFloatingLabel: WithFloatingLabel,
-  colorChooser: ColorChooser,
+  asPhoneNumberInput: AsPhoneNumberInput,
+
+  textarea: UTextarea,
+  switch: USwitch,
+  slider: USlider,
+
+  selectMenu: USelectMenu,
+  inputMenu: UInputMenu,
+  checkboxGroup: UCheckboxGroup,
+  radioGroup: URadioGroup,
+  inputTags: UInputTags,
+  pinInput: UPinInput,
+  listbox: UListbox,
+
   starRating: StarRating,
-  slideVerify: SlideVerify
+  colorChooser: ColorChooser,
+  slideVerify: SlideVerify,
+  pillGroup: PillGroup
 } as const
 
 type DefaultControlComponents = typeof DEFAULT_CONTROL_COMPONENTS
