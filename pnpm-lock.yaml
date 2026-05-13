@@ -21,8 +21,8 @@ importers:
         specifier: ^3.12.1
         version: 3.12.1
       '@movk/core':
-        specifier: https://pkg.pr.new/@movk/core@43a2d21
-        version: https://pkg.pr.new/@movk/core@43a2d21(vue@3.5.34(typescript@6.0.3))
+        specifier: https://pkg.pr.new/@movk/core@52e49fc
+        version: https://pkg.pr.new/@movk/core@52e49fc(vue@3.5.34(typescript@6.0.3))
       '@nuxt/image':
         specifier: ^2.0.0
         version: 2.0.0(db0@0.3.4(better-sqlite3@12.9.0))(ioredis@5.10.1)(magicast@0.5.2)(srvx@0.11.15)
@@ -1378,14 +1378,14 @@ packages:
       '@cfworker/json-schema':
         optional: true
 
-  '@movk/core@1.2.3':
-    resolution: {integrity: sha512-9aYuLiW/wB6/1zsCaYMREuWxTFwiceg0+U1YbFez/vLdMC37WyuV65ktQ5aCRpgV4J2edoiTk1TW8Qlx6rnGTg==}
+  '@movk/core@1.2.4':
+    resolution: {integrity: sha512-ysxAx44eAIFTtez+f6SEkJt3q5Z84VX4DUh9nQKRwfxZ347OC3v2LyrpWv4qsCCkVtRfVbvzupJZUjWonO6v4g==}
     hasBin: true
     peerDependencies:
       vue: ^3.5.25
 
-  '@movk/core@https://pkg.pr.new/@movk/core@43a2d21':
-    resolution: {tarball: https://pkg.pr.new/@movk/core@43a2d21}
+  '@movk/core@https://pkg.pr.new/@movk/core@52e49fc':
+    resolution: {integrity: sha512-Qiz+kNlSfoBbK65rvQwsKRSnAYQPRiM/6bQFQ72A7ttgb4TmuMUY0Oa2i5ddBmVk92jf7n40PsZUjrOludGBoQ==, tarball: https://pkg.pr.new/@movk/core@52e49fc}
     version: 1.2.4
     hasBin: true
     peerDependencies:
@@ -9030,13 +9030,12 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@movk/core@1.2.3(vue@3.5.34(typescript@6.0.3))':
+  '@movk/core@1.2.4(vue@3.5.34(typescript@6.0.3))':
     dependencies:
       '@vueuse/core': 14.3.0(vue@3.5.34(typescript@6.0.3))
-      tinyglobby: 0.2.16
       vue: 3.5.34(typescript@6.0.3)
 
-  '@movk/core@https://pkg.pr.new/@movk/core@43a2d21(vue@3.5.34(typescript@6.0.3))':
+  '@movk/core@https://pkg.pr.new/@movk/core@52e49fc(vue@3.5.34(typescript@6.0.3))':
     dependencies:
       '@vueuse/core': 14.3.0(vue@3.5.34(typescript@6.0.3))
       vue: 3.5.34(typescript@6.0.3)
@@ -9050,7 +9049,7 @@ snapshots:
       '@iconify-json/lucide': 1.2.105
       '@iconify-json/simple-icons': 1.2.81
       '@iconify-json/vscode-icons': 1.2.49
-      '@movk/core': 1.2.3(vue@3.5.34(typescript@6.0.3))
+      '@movk/core': 1.2.4(vue@3.5.34(typescript@6.0.3))
       '@nuxt/a11y': 1.0.0-alpha.1(magicast@0.5.2)(vite@7.3.2(@types/node@25.6.0)(jiti@2.7.0)(lightningcss@1.32.0)(sass-embedded@1.99.0)(sass@1.99.0)(terser@5.46.2)(yaml@2.8.4))
       '@nuxt/content': 3.13.0(better-sqlite3@12.9.0)(magicast@0.5.2)
       '@nuxt/image': 2.0.0(db0@0.3.4(better-sqlite3@12.9.0))(ioredis@5.10.1)(magicast@0.5.2)(srvx@0.11.15)
