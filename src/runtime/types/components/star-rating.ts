@@ -48,6 +48,7 @@ export interface StarRatingProps {
   allowHalf?: boolean
   /** 是否允许清除评分 */
   clearable?: boolean
+  class?: ClassNameValue
   ui?: Record<string, ClassNameValue>
 }
 

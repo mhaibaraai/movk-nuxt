@@ -86,6 +86,7 @@ export function useFieldControl<T extends FieldControlProps>(props: T) {
     size,
     disabled,
     color,
-    fieldGroupSize: fieldGroup.size
+    fieldGroupSize: fieldGroup.size,
+    fieldGroupOrientation: fieldGroup.orientation
   }
 }

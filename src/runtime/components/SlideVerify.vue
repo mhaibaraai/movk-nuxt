@@ -33,6 +33,7 @@ const {
   name,
   size: effectiveSize,
   disabled: effectiveDisabled,
+  fieldGroupOrientation,
   ariaAttrs,
   emitFormBlur,
   emitFormChange,
@@ -55,11 +56,15 @@ const { extendUi } = useExtendedTv(
   theme,
   () => appConfig.movk?.slideVerify,
   () => ({
-    ui: props.ui,
+    ui: {
+      ...props.ui,
+      root: [props.ui?.root, props.class]
+    },
     variants: {
       disabled: effectiveDisabled.value,
       verified: isVerified.value,
-      size: effectiveSize.value
+      size: effectiveSize.value,
+      fieldGroup: fieldGroupOrientation.value
     }
   })
 )

@@ -1,10 +1,11 @@
 <script lang="ts" setup generic="T extends Record<string, any> = PillsItem, VK extends keyof T & string | undefined = undefined">
 import type { AcceptableValue, ComponentConfig } from '@nuxt/ui'
 import type { AppConfig } from 'nuxt/schema'
-import { computed, ref, toRaw } from 'vue'
+import { computed, ref } from 'vue'
+import { FieldGroupReset } from '@nuxt/ui/composables/useFieldGroup'
 import { UAvatar, UBadge, UButton, UIcon } from '#components'
 import { useAppConfig } from '#imports'
-import { getPath } from '@movk/core'
+import { equalsBy, getPath } from '@movk/core'
 import theme from '#build/movk-ui/pill-group'
 import { useExtendedTv } from '../utils/extend-theme'
 import { useFieldControl } from '../utils/form-control'
@@ -48,6 +49,7 @@ const {
   size: effectiveSize,
   color: effectiveColor,
   disabled: effectiveDisabled,
+  fieldGroupOrientation,
   ariaAttrs,
   emitFormChange,
   emitFormFocus,
@@ -65,7 +67,8 @@ const { extendUi } = useExtendedTv(
     variants: {
       orientation: props.orientation,
       size: effectiveSize.value,
-      disabled: effectiveDisabled.value
+      disabled: effectiveDisabled.value,
+      fieldGroup: fieldGroupOrientation.value
     }
   })
 )
@@ -110,19 +113,17 @@ function isItemDisabled(item: AcceptableValue | T): boolean {
   return isSelectItem(item) && item.disabled === true
 }
 
+const itemEqualKeys = computed<ReadonlyArray<string | undefined>>(() => [
+  props.valueKey,
+  'value',
+  props.labelKey ?? 'label'
+])
+
 function compareItem(a: unknown, b: unknown): boolean {
-  const ra = a !== null && typeof a === 'object' ? toRaw(a) : a
-  const rb = b !== null && typeof b === 'object' ? toRaw(b) : b
-  if (ra === rb) return true
-  if (props.by) {
-    if (typeof props.by === 'function' && isSelectItem(ra) && isSelectItem(rb)) {
-      return props.by(ra as T, rb as T)
-    }
-    if (typeof props.by === 'string' && isSelectItem(ra) && isSelectItem(rb)) {
-      return getPath(ra, props.by) === getPath(rb, props.by)
-    }
-  }
-  return false
+  return equalsBy(a, b, {
+    by: props.by as string | ((a: unknown, b: unknown) => boolean) | undefined,
+    keys: itemEqualKeys.value
+  })
 }
 
 const selectedArray = computed<unknown[]>(() => {
@@ -224,81 +225,83 @@ const itemRole = computed(() => (props.multiple ? 'checkbox' : 'radio'))
 
 <template>
   <div :class="extendUi.root">
-    <div
-      :id="id"
-      :name="name"
-      :role="groupRole"
-      :class="extendUi.list"
-      v-bind="ariaAttrs"
-      :aria-required="props.required || undefined"
-      @focusin="handleFocusIn"
-      @focusout="handleFocusOut"
-    >
-      <UButton
-        v-for="(item, idx) in items"
-        :key="getItemKey(item, idx)"
-        :color="effectiveColor"
-        :variant="isSelected(item) ? props.variant : props.inactiveVariant"
-        :size="effectiveSize"
-        :disabled="effectiveDisabled || isItemDisabled(item) || isItemLocked(item)"
-        :class="[extendUi.item, isSelectItem(item) ? item.class : undefined]"
-        :role="itemRole"
-        :aria-checked="isSelected(item)"
-        @click="handleClick($event, item)"
+    <FieldGroupReset>
+      <div
+        :id="id"
+        :name="name"
+        :role="groupRole"
+        :class="extendUi.list"
+        v-bind="ariaAttrs"
+        :aria-required="props.required || undefined"
+        @focusin="handleFocusIn"
+        @focusout="handleFocusOut"
       >
-        <template v-if="!!slots.leading || hasLeading(item)" #leading>
-          <slot
-            name="leading"
-            :item="item"
-            :index="idx"
-            :selected="isSelected(item)"
-          >
-            <UIcon v-if="isSelectItem(item) && item.icon" :name="item.icon" />
-            <UAvatar v-else-if="isSelectItem(item) && item.avatar" v-bind="item.avatar" />
-          </slot>
-        </template>
-
-        <span :class="extendUi.itemBody">
-          <span :class="extendUi.itemLabel">
+        <UButton
+          v-for="(item, idx) in items"
+          :key="getItemKey(item, idx)"
+          :color="effectiveColor"
+          :variant="isSelected(item) ? props.variant : props.inactiveVariant"
+          :size="effectiveSize"
+          :disabled="effectiveDisabled || isItemDisabled(item) || isItemLocked(item)"
+          :class="[extendUi.item, isSelectItem(item) ? item.class : undefined]"
+          :role="itemRole"
+          :aria-checked="isSelected(item)"
+          @click="handleClick($event, item)"
+        >
+          <template v-if="!!slots.leading || hasLeading(item)" #leading>
             <slot
-              name="label"
+              name="leading"
               :item="item"
               :index="idx"
               :selected="isSelected(item)"
             >
-              {{ getItemLabel(item) }}
+              <UIcon v-if="isSelectItem(item) && item.icon" :name="item.icon" />
+              <UAvatar v-else-if="isSelectItem(item) && item.avatar" v-bind="item.avatar" />
             </slot>
+          </template>
+
+          <span :class="extendUi.itemBody">
+            <span :class="extendUi.itemLabel">
+              <slot
+                name="label"
+                :item="item"
+                :index="idx"
+                :selected="isSelected(item)"
+              >
+                {{ getItemLabel(item) }}
+              </slot>
+            </span>
+            <span
+              v-if="getItemDescription(item) || !!slots.description"
+              :class="extendUi.itemDescription"
+            >
+              <slot
+                name="description"
+                :item="item"
+                :index="idx"
+                :selected="isSelected(item)"
+              >
+                {{ getItemDescription(item) }}
+              </slot>
+            </span>
           </span>
-          <span
-            v-if="getItemDescription(item) || !!slots.description"
-            :class="extendUi.itemDescription"
-          >
+
+          <template v-if="!!slots.trailing || hasTrailing(item)" #trailing>
             <slot
-              name="description"
+              name="trailing"
               :item="item"
               :index="idx"
               :selected="isSelected(item)"
             >
-              {{ getItemDescription(item) }}
+              <UBadge
+                v-if="isSelectItem(item) && item.badge != null"
+                size="xs"
+                v-bind="typeof item.badge === 'object' ? item.badge : { label: String(item.badge) }"
+              />
             </slot>
-          </span>
-        </span>
-
-        <template v-if="!!slots.trailing || hasTrailing(item)" #trailing>
-          <slot
-            name="trailing"
-            :item="item"
-            :index="idx"
-            :selected="isSelected(item)"
-          >
-            <UBadge
-              v-if="isSelectItem(item) && item.badge != null"
-              size="xs"
-              v-bind="typeof item.badge === 'object' ? item.badge : { label: String(item.badge) }"
-            />
-          </slot>
-        </template>
-      </UButton>
-    </div>
+          </template>
+        </UButton>
+      </div>
+    </FieldGroupReset>
   </div>
 </template>

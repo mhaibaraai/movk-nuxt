@@ -39,6 +39,7 @@ export interface SlideVerifyProps {
    * @defaultValue 0.9
    */
   threshold?: number
+  class?: ClassNameValue
   ui?: Record<string, ClassNameValue>
 }
 

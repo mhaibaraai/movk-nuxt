@@ -29,6 +29,14 @@ export default () => ({
         slider: 'bg-default cursor-grab active:cursor-grabbing ring-1 ring-default',
         icon: 'text-primary'
       }
+    },
+    fieldGroup: {
+      horizontal: {
+        root: 'not-only:first:rounded-e-none not-only:last:rounded-s-none not-last:not-first:rounded-none focus-visible:z-[1]'
+      },
+      vertical: {
+        root: 'not-only:first:rounded-b-none not-only:last:rounded-t-none not-last:not-first:rounded-none focus-visible:z-[1]'
+      }
     }
   },
   defaultVariants: {

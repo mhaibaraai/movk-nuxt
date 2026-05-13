@@ -2,6 +2,7 @@
 import type { ButtonProps, ComponentConfig } from '@nuxt/ui'
 import { UButton, UBadge } from '#components'
 import { computed, ref } from 'vue'
+import { FieldGroupReset } from '@nuxt/ui/composables/useFieldGroup'
 import { useAppConfig } from '#imports'
 import theme from '#build/movk-ui/star-rating'
 import type { AppConfig } from 'nuxt/schema'
@@ -31,6 +32,7 @@ const {
   size: effectiveSize,
   color: effectiveColor,
   disabled: effectiveDisabled,
+  fieldGroupOrientation,
   ariaAttrs,
   emitFormBlur,
   emitFormChange,
@@ -49,11 +51,15 @@ const { extendUi } = useExtendedTv(
   theme,
   () => appConfig.movk?.starRating,
   () => ({
-    ui: props.ui,
+    ui: {
+      ...props.ui,
+      root: [props.ui?.root, props.class]
+    },
     variants: {
       interactive: isInteractive.value,
       disabled: effectiveDisabled.value,
-      readonly: props.readonly && !effectiveDisabled.value
+      readonly: props.readonly && !effectiveDisabled.value,
+      fieldGroup: fieldGroupOrientation.value
     }
   })
 )
@@ -218,42 +224,44 @@ const badgeLabel = computed(() => `${modelValue.value}/${props.max}`)
     @focus="emitFormFocus"
     @keydown="handleKeyDown"
   >
-    <slot name="prefix" :value="modelValue" :max="props.max" />
-    <div :class="extendUi.stars">
-      <UButton
-        v-for="index in props.max"
-        :key="index"
-        :icon="getStarIcon(index - 1)"
-        :color="getStarColor(index - 1)"
-        variant="ghost"
-        :size="effectiveSize"
-        :disabled="effectiveDisabled"
-        :aria-label="`${index} 星`"
-        :tabindex="-1"
-        v-bind="buttonProps"
-        :class="extendUi.star"
-        @click="handleClick(index - 1, $event)"
-        @mouseenter="handleMouseEnter(index - 1, $event)"
-        @mousemove="handleMouseMove(index - 1, $event)"
-        @mouseleave="handleMouseLeave"
-      />
-    </div>
+    <FieldGroupReset>
+      <slot name="prefix" :value="modelValue" :max="props.max" />
+      <div :class="extendUi.stars">
+        <UButton
+          v-for="index in props.max"
+          :key="index"
+          :icon="getStarIcon(index - 1)"
+          :color="getStarColor(index - 1)"
+          variant="ghost"
+          :size="effectiveSize"
+          :disabled="effectiveDisabled"
+          :aria-label="`${index} 星`"
+          :tabindex="-1"
+          v-bind="buttonProps"
+          :class="extendUi.star"
+          @click="handleClick(index - 1, $event)"
+          @mouseenter="handleMouseEnter(index - 1, $event)"
+          @mousemove="handleMouseMove(index - 1, $event)"
+          @mouseleave="handleMouseLeave"
+        />
+      </div>
 
-    <slot
-      name="badge"
-      :value="modelValue"
-      :max="props.max"
-      :label="badgeLabel"
-    >
-      <UBadge
-        v-if="showBadge && modelValue > 0"
+      <slot
+        name="badge"
+        :value="modelValue"
+        :max="props.max"
         :label="badgeLabel"
-        color="primary"
-        variant="subtle"
-        :size="effectiveSize"
-      />
-    </slot>
+      >
+        <UBadge
+          v-if="showBadge && modelValue > 0"
+          :label="badgeLabel"
+          color="primary"
+          variant="subtle"
+          :size="effectiveSize"
+        />
+      </slot>
 
-    <slot name="suffix" :value="modelValue" :max="props.max" />
+      <slot name="suffix" :value="modelValue" :max="props.max" />
+    </FieldGroupReset>
   </div>
 </template>

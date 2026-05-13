@@ -21,6 +21,16 @@ export default () => ({
     },
     disabled: {
       true: { root: 'opacity-60 pointer-events-none' }
+    },
+    fieldGroup: {
+      horizontal: {
+        root: 'rounded-md overflow-hidden not-only:first:rounded-e-none not-only:last:rounded-s-none not-last:not-first:rounded-none focus-within:z-[1]',
+        list: 'rounded-md'
+      },
+      vertical: {
+        root: 'rounded-md overflow-hidden not-only:first:rounded-b-none not-only:last:rounded-t-none not-last:not-first:rounded-none focus-within:z-[1]',
+        list: 'rounded-md'
+      }
     }
   },
   defaultVariants: {
