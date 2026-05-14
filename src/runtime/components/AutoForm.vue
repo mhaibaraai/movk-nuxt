@@ -25,11 +25,11 @@ interface _Props extends AutoFormProps<S, T, N> {
 }
 
 const props = withDefaults(defineProps<_Props>(), {
-  submitButton: true,
+  submit: true,
   validateOn: () => []
 })
 
-const emits = defineEmits<AutoFormEmits<S, T>>()
+const emits = defineEmits<AutoFormEmits<S>>()
 const slots = defineSlots<AutoFormSlots<AutoFormStateType>>()
 defineOptions({ inheritAttrs: false })
 
@@ -112,7 +112,7 @@ const renderData = computed(() => {
 })
 
 const { extendUi } = useExtendedTv(
-  { slots: { } },
+  { slots: {} },
   theme,
   () => appConfig.movk?.autoForm,
   () => ({
@@ -125,25 +125,13 @@ onMounted(() => {
 })
 
 function reset() {
-  Object.keys(stateModel.value).forEach((key) => {
-    // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-    delete stateModel.value[key as keyof AutoFormStateType]
-  })
-
-  if (props.state) {
-    Object.assign(stateModel.value, props.state)
-  }
+  stateModel.value = { ...(props.state ?? {}) } as AutoFormStateType
   resolveDefaultValue(fields.value, stateModel.value)
-
   formRef.value?.clear()
 }
 
 function clear() {
-  Object.keys(stateModel.value).forEach((key) => {
-    // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-    delete stateModel.value[key as keyof AutoFormStateType]
-  })
-
+  stateModel.value = {} as AutoFormStateType
   formRef.value?.clear()
 }
 
@@ -168,10 +156,10 @@ defineExpose({
       :schema="pureSchema"
       :loading-auto="props.loadingAuto"
       :validate-on="props.validateOn"
-      :on-submit="props.onSubmit"
       :ui="extendUi"
+      data-slot="form"
       v-bind="attrs"
-      @submit="emits('submit', $event)"
+      @submit="props.onSubmit"
       @error="emits('error', $event)"
     >
       <template #default="{ errors, loading }">
@@ -197,16 +185,15 @@ defineExpose({
 
         <slot name="footer" v-bind="{ errors, loading, fields: visibleFields, state: stateModel }" />
 
-        <slot name="submit" v-bind="{ errors, loading, fields: visibleFields, state: stateModel }">
+        <slot v-if="props.submit" name="submit" v-bind="{ errors, loading, fields: visibleFields, state: stateModel }">
           <UButton
-            v-if="submitButton"
             type="submit"
             label="提交"
             block
             :loading="loading"
             :loading-auto="props.loadingAuto"
             :size="resolvedButtonSize"
-            v-bind="submitButtonProps"
+            v-bind="props.submitButtonProps"
           />
         </slot>
       </template>

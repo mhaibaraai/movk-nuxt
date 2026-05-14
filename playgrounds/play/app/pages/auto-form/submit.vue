@@ -114,11 +114,9 @@ async function onRefSubmit() {
       :state="refState"
     >
       <template #toolbar>
-        <UButtonGroup size="xs">
-          <UButton label="submit()" @click="programmaticSubmit" />
-          <UButton variant="soft" label="reset()" @click="programmaticReset" />
-          <UButton variant="soft" color="neutral" label="clear()" @click="programmaticClear" />
-        </UButtonGroup>
+        <UButton label="submit()" @click="programmaticSubmit" />
+        <UButton variant="soft" label="reset()" @click="programmaticReset" />
+        <UButton variant="soft" color="neutral" label="clear()" @click="programmaticClear" />
       </template>
       <MAutoForm
         ref="apiForm"

@@ -3,6 +3,7 @@ import type { FormError } from '@nuxt/ui'
 import type { ArrayFieldKeys, NonObjectFieldKeys, ObjectFieldKeys } from '@movk/core'
 import type { AutoFormFieldContext, AutoFormFieldSlots } from './fields'
 import type { AutoFormMergeMeta } from './controls'
+import type { VNode } from 'vue'
 
 export interface AutoFormField {
   path: string
@@ -36,7 +37,7 @@ type SlotExtraPropsMap = {
 }
 
 type _FormGenericSlots<T> = {
-  [K in keyof AutoFormFieldSlots as `field-${K}`]: (props: SlotExtraPropsMap[K] & AutoFormFieldContext<T>) => unknown
+  [K in keyof AutoFormFieldSlots as `field-${K}`]: (props: SlotExtraPropsMap[K] & AutoFormFieldContext<T>) => VNode[]
 }
 
 type _FieldPath<T> = string & (NonObjectFieldKeys<T> | ObjectFieldKeys<T>)
@@ -48,7 +49,7 @@ type _SlotEntry = {
 }
 
 type _EntryToSlots<E extends _SlotEntry> = {
-  [Entry in E as Entry['key']]: (props: Entry['props']) => unknown
+  [Entry in E as Entry['key']]: (props: Entry['props']) => VNode[]
 }
 
 type _FormKeyedSlotEntry<T> = {
