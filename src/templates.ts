@@ -1,12 +1,16 @@
 import type { NuxtTemplate, NuxtTypeTemplate } from '@nuxt/schema'
-import { addTemplate, addTypeTemplate, getLayerDirectories, type Resolver } from '@nuxt/kit'
+import { fileURLToPath } from 'node:url'
+import { addTemplate, addTypeTemplate, getLayerDirectories } from '@nuxt/kit'
 import { kebabCase } from 'scule'
 import * as theme from './theme'
 import type { ModuleOptions } from './module'
 import type { Nuxt } from 'nuxt/schema'
+import { applyDefaultVariants, applyPrefixToObject } from './utils/theme-variants'
 
-export function getTemplates(options: ModuleOptions, nuxt?: Nuxt) {
+function getTemplates(options: ModuleOptions, nuxt?: Nuxt) {
   const templates: NuxtTemplate[] = []
+
+  const isDev = process.argv.includes('--uiDev')
 
   function writeThemeTemplate(theme: Record<string, any>, path?: string) {
     for (const component in theme) {
@@ -15,7 +19,12 @@ export function getTemplates(options: ModuleOptions, nuxt?: Nuxt) {
         write: true,
         getContents: async () => {
           const template = (theme as any)[component]
-          const result = typeof template === 'function' ? template(options) : template
+          let result = typeof template === 'function' ? template(options) : template
+
+          // Override default variants from nuxt.config.ts
+          result = applyDefaultVariants(result, options.theme?.defaultVariants)
+          // Apply Tailwind prefix if configured
+          result = applyPrefixToObject(result, options.theme?.prefix)
 
           const variants = Object.entries(result.variants || {})
             .filter(([_, values]) => {
@@ -41,6 +50,27 @@ export function getTemplates(options: ModuleOptions, nuxt?: Nuxt) {
             })
           }
 
+          // For local development, import directly from theme
+          if (isDev) {
+            const templatePath = fileURLToPath(new URL(`./theme/${path ? `${path}/` : ''}${kebabCase(component)}`, import.meta.url))
+            const themeUtilsPath = fileURLToPath(new URL('./utils/theme-variants', import.meta.url))
+            const defaultVariantsJson = JSON.stringify(options.theme?.defaultVariants) ?? 'undefined'
+            const prefixJson = JSON.stringify(options.theme?.prefix) ?? 'undefined'
+
+            return [
+              `import template from ${JSON.stringify(templatePath)}`,
+              `import { applyDefaultVariants, applyPrefixToObject } from ${JSON.stringify(themeUtilsPath)}`,
+              ...generateVariantDeclarations(variants),
+              `const options = ${JSON.stringify(options, null, 2)}`,
+              `let result = typeof template === 'function' ? (template as Function)(options) : template`,
+              `result = applyDefaultVariants(result, ${defaultVariantsJson})`,
+              `result = applyPrefixToObject(result, ${prefixJson})`,
+              `const theme = ${json}`,
+              `export default result as typeof theme`
+            ].join('\n\n')
+          }
+
+          // For production build
           return [
             ...generateVariantDeclarations(variants),
             `export default ${json}`
@@ -94,7 +124,7 @@ export function getTemplates(options: ModuleOptions, nuxt?: Nuxt) {
       return `import * as movkUi from '#build/movk-ui'
 import type { TVConfig } from '@nuxt/ui'
 import type { defaultConfig } from 'tailwind-variants'
-import type { EndpointPrivateConfig, MovkApiPublicConfig, ApiInstance } from '@movk/nuxt'
+import type { EndpointPrivateConfig, MovkApiPublicConfig, ApiInstance, ModuleOptions } from '@movk/nuxt'
 import type { HookResult } from '@nuxt/schema'
 import type { FetchContext } from 'ofetch'
 
@@ -111,7 +141,7 @@ type AppConfigUI = {
   radius?: Radius | (number & {})
   blackAsPrimary?: boolean
   font?: FontFamily | (string & {})
-  icons?: Icons | (string & {})
+  icon?: Icons | (string & {})
   prefix?: string
   tv?: typeof defaultConfig
   picker?: {
@@ -135,6 +165,10 @@ declare module 'nuxt/app' {
 }
 
 declare module 'nuxt/schema' {
+  interface NuxtOptions {
+    ['movk']: ModuleOptions
+  }
+
   interface AppConfig {
     /**
      * Movk UI theme configuration
@@ -153,6 +187,10 @@ declare module 'nuxt/schema' {
 }
 
 declare module '@nuxt/schema' {
+  interface NuxtOptions {
+    ['movk']: ModuleOptions
+  }
+
   interface AppConfigInput {
     /**
      * Movk UI theme configuration
@@ -170,7 +208,7 @@ export {}
   return templates
 }
 
-export function addTemplates(options: ModuleOptions, nuxt: Nuxt, resolve: Resolver['resolve']) {
+export function addTemplates(options: ModuleOptions, nuxt: Nuxt) {
   const templates = getTemplates(options, nuxt)
   for (const template of templates) {
     if (template.filename!.endsWith('.d.ts')) {
@@ -179,8 +217,4 @@ export function addTemplates(options: ModuleOptions, nuxt: Nuxt, resolve: Resolv
       addTemplate(template)
     }
   }
-
-  nuxt.hook('prepare:types', ({ references }) => {
-    references.push({ path: resolve('./runtime/types/app.config.d.ts') })
-  })
 }

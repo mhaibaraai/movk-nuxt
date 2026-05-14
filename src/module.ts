@@ -1,6 +1,8 @@
-import type {
-  MovkApiFullConfig
-} from './runtime/types'
+import type { MovkApiFullConfig } from './runtime/types'
+import type { ModuleOptions as UiModuleOptions } from '@nuxt/ui'
+import type { ModuleOptions as SiteConfigOptions } from 'nuxt-site-config'
+import type { SiteConfigInput } from 'nuxt-site-config/kit'
+import type { Nuxt } from 'nuxt/schema'
 import {
   addComponentsDir,
   addImportsDir,
@@ -12,12 +14,21 @@ import { defu } from 'defu'
 import { name, version } from '../package.json'
 import { addTemplates } from './templates'
 import { getPackageJsonMetadata } from './runtime/utils/meta'
-import { setupTheme } from './utils/theme'
-import { buildApiRuntimeConfig } from './utils/api'
+import { kebabCase } from 'scule'
+import { updateSiteConfig } from 'nuxt-site-config/kit'
+import { defaultOptions, getDefaultApiConfig } from './utils/defaults'
+import { addTheme } from './utils/theme'
 
 export * from './runtime/types'
 
-export interface ThemeFontConfig {
+interface NuxtWithExtra {
+  options: Nuxt['options'] & {
+    ui?: UiModuleOptions
+    site?: SiteConfigOptions
+  }
+}
+
+interface ThemeFontConfig {
   /** 字体名称 */
   name: string
   /**
@@ -25,6 +36,10 @@ export interface ThemeFontConfig {
    * @example 'https://cdn.mhaibaraai.cn/fonts/alibaba-puhuiti.css'
    */
   href?: string
+}
+
+type StrictUiTheme = {
+  [K in keyof NonNullable<UiModuleOptions['theme']>]?: Exclude<NonNullable<UiModuleOptions['theme']>[K], null>
 }
 
 export interface ModuleOptions {
@@ -43,11 +58,24 @@ export interface ModuleOptions {
      */
     enabled?: boolean
     /**
+     * Define the color aliases available for components
+     * @defaultValue `['primary', 'secondary', 'success', 'info', 'warning', 'error']`
+     * @see https://ui.nuxt.com/docs/getting-started/installation/nuxt#themecolors
+     */
+    colors?: StrictUiTheme['colors']
+    /**
+     * The default variants to use for components
+     * @defaultValue 'nuxt.options.ui.theme.defaultVariants'
+     * @see https://ui.nuxt.com/docs/getting-started/installation/nuxt#themedefaultvariants
+     */
+    defaultVariants?: StrictUiTheme['defaultVariants']
+    /**
      * Prefix for Tailwind CSS utility classes
+     * @defaultValue 'nuxt.options.ui.theme.prefix'
      * @see https://ui.nuxt.com/docs/getting-started/installation/nuxt#themeprefix
      * @example 'tw'
      */
-    prefix?: string
+    prefix?: StrictUiTheme['prefix']
     /** ThemePicker 字体可选项；提供时完整替换内置列表 */
     fonts?: ThemeFontConfig[]
     /** ThemePicker 圆角可选项 */
@@ -64,15 +92,9 @@ export default defineNuxtModule<ModuleOptions>({
     configKey: 'movk',
     compatibility: { nuxt: '>=4.4.2' }
   },
-  defaults: {
-    prefix: 'M',
-    theme: {
-      enabled: true
-    }
-  },
+  defaults: defaultOptions,
   moduleDependencies: {
     '@nuxt/image': { version: '>=2.0.0' },
-    /** 默认禁用 @nuxt/ui 的 fonts 子模块（大陆地区无法访问 Google Fonts 时由本模块手动注入字体 link） */
     '@nuxt/ui': { version: '>=4.6.0', defaults: { fonts: false } },
     '@vueuse/nuxt': { version: '>=14.2.1' },
     'nuxt-auth-utils': { version: '>=0.5.29' },
@@ -81,9 +103,8 @@ export default defineNuxtModule<ModuleOptions>({
   async setup(options, nuxt) {
     const { resolve } = createResolver(import.meta.url)
 
+    nuxt.options.movk = options
     nuxt.options.alias['#movk'] = resolve('./runtime')
-
-    setupTheme(nuxt, resolve, options['theme'])
 
     nuxt.options.css = nuxt.options.css || []
     nuxt.options.css.push(resolve('runtime/index.css'))
@@ -101,11 +122,10 @@ export default defineNuxtModule<ModuleOptions>({
     })
 
     addImportsDir(resolve('runtime/composables'))
-    addTemplates(options, nuxt, resolve)
 
     const apiConfig = options.api ?? {}
     if (apiConfig.enabled !== false) {
-      const { publicConfig, privateConfig } = buildApiRuntimeConfig(apiConfig)
+      const { publicConfig, privateConfig } = getDefaultApiConfig(apiConfig)
 
       nuxt.options.runtimeConfig.movkApi = privateConfig
       nuxt.options.runtimeConfig.public.movkApi = publicConfig
@@ -114,9 +134,30 @@ export default defineNuxtModule<ModuleOptions>({
     }
 
     const meta = await getPackageJsonMetadata(nuxt.options.rootDir)
-    // @ts-expect-error
-    nuxt.options.site = defu(nuxt.options.site, {
-      name: meta.name || 'movk-nuxt'
+
+    nuxt.hook('modules:done', () => {
+      const site = defu((nuxt as NuxtWithExtra).options.site, {
+        name: kebabCase(meta.name || ''),
+        debug: false
+      })
+
+      updateSiteConfig(site as SiteConfigInput)
+
+      const uiTheme = (nuxt as NuxtWithExtra).options.ui?.theme
+      const themeDefaults: StrictUiTheme = {
+        prefix: uiTheme?.prefix ?? undefined,
+        colors: uiTheme?.colors ?? undefined,
+        defaultVariants: uiTheme?.defaultVariants ?? undefined
+      }
+
+      nuxt.options.movk.theme = defu(nuxt.options.movk.theme || {}, themeDefaults)
+
+      addTheme(nuxt, resolve, options['theme'])
+      addTemplates(options, nuxt)
+    })
+
+    nuxt.hook('prepare:types', ({ references }) => {
+      references.push({ path: resolve('./runtime/types/app.config.d.ts') })
     })
   }
 })

@@ -4,25 +4,21 @@ import { omit, kebabCase } from '@movk/core'
 import { useLocalStorage } from '@vueuse/core'
 import colors from 'tailwindcss/colors'
 import { computed } from 'vue'
-
-const SYSTEM_DEFAULT_RADIUS = 0.25
-const SYSTEM_DEFAULT_FONT = 'Alibaba PuHuiTi'
-const SYSTEM_DEFAULT_ICONS = 'lucide'
-const SYSTEM_DEFAULT_PRIMARY = 'blue'
-const SYSTEM_DEFAULT_NEUTRAL = 'slate'
+import { getDefaultConfig } from '../../utils/defaults'
 
 export function useTheme() {
   const { movk, ui } = useAppConfig()
   const colorMode = useColorMode()
-  const site = useSiteConfig()
-  const name = kebabCase(site.name)
+  const name = kebabCase(useSiteConfig().name)
 
   const color = computed(() => colorMode.value === 'dark' ? (colors as any)[ui.colors.neutral][900] : 'white')
 
-  const _radius = useLocalStorage(`${name}-ui-radius`, movk?.radius ?? SYSTEM_DEFAULT_RADIUS)
-  const _font = useLocalStorage(`${name}-ui-font`, movk?.font ?? SYSTEM_DEFAULT_FONT)
-  const _iconSet = useLocalStorage(`${name}-ui-icons`, movk?.icons ?? SYSTEM_DEFAULT_ICONS)
-  const _blackAsPrimary = useLocalStorage(`${name}-ui-black-as-primary`, false)
+  const defaultConfig = getDefaultConfig()
+
+  const _radius = useLocalStorage(`${name}-ui-radius`, movk?.radius ?? defaultConfig.radius)
+  const _font = useLocalStorage(`${name}-ui-font`, movk?.font ?? defaultConfig.font)
+  const _iconSet = useLocalStorage(`${name}-ui-icon`, movk?.icon ?? defaultConfig.icon)
+  const _blackAsPrimary = useLocalStorage(`${name}-ui-black-as-primary`, defaultConfig.blackAsPrimary)
 
   const pickerFonts = movk?.picker?.fonts ?? []
 
@@ -128,15 +124,15 @@ export function useTheme() {
   ]
 
   const hasCSSChanges = computed(() => {
-    return _radius.value !== (movk?.radius ?? SYSTEM_DEFAULT_RADIUS)
+    return _radius.value !== (movk?.radius ?? defaultConfig.radius)
       || _blackAsPrimary.value
-      || _font.value !== (movk?.font ?? SYSTEM_DEFAULT_FONT)
+      || _font.value !== (movk?.font ?? defaultConfig.font)
   })
 
   const hasConfigChanges = computed(() => {
-    return ui.colors.primary !== SYSTEM_DEFAULT_PRIMARY
-      || ui.colors.neutral !== SYSTEM_DEFAULT_NEUTRAL
-      || _iconSet.value !== (movk?.icons ?? SYSTEM_DEFAULT_ICONS)
+    return ui.colors.primary !== 'blue'
+      || ui.colors.neutral !== 'slate'
+      || _iconSet.value !== (movk?.icon ?? defaultConfig.icon)
   })
 
   function exportCSS(): string {
@@ -145,12 +141,12 @@ export function useTheme() {
       '@import "@nuxt/ui";'
     ]
 
-    if (_font.value !== SYSTEM_DEFAULT_FONT) {
+    if (_font.value !== defaultConfig.font) {
       lines.push('', '@theme {', `  --font-sans: '${_font.value}', sans-serif;`, '}')
     }
 
     const rootLines: string[] = []
-    if (_radius.value !== SYSTEM_DEFAULT_RADIUS) {
+    if (_radius.value !== defaultConfig.radius) {
       rootLines.push(`  --ui-radius: ${_radius.value}rem;`)
     }
     if (_blackAsPrimary.value) {
@@ -176,8 +172,8 @@ export function useTheme() {
     const config: Record<string, any> = {}
 
     const defaultColors: Record<string, string> = {
-      primary: SYSTEM_DEFAULT_PRIMARY,
-      neutral: SYSTEM_DEFAULT_NEUTRAL,
+      primary: 'blue',
+      neutral: 'slate',
       secondary: 'blue',
       success: 'green',
       info: 'blue',
@@ -189,7 +185,7 @@ export function useTheme() {
       config.ui = { colors: Object.fromEntries(colorEntries.map(([key]) => [key, (ui.colors as any)[key]])) }
     }
 
-    if (_iconSet.value !== SYSTEM_DEFAULT_ICONS) {
+    if (_iconSet.value !== defaultConfig.icon) {
       const iconMapping = themeIcons[_iconSet.value as keyof typeof themeIcons]
       config.ui = config.ui || {}
       config.ui.icons = iconMapping
@@ -203,11 +199,9 @@ export function useTheme() {
   }
 
   function resetTheme() {
-    const defaultPrimary = SYSTEM_DEFAULT_PRIMARY
-    const defaultNeutral = SYSTEM_DEFAULT_NEUTRAL
-    const defaultRadius = movk?.radius ?? SYSTEM_DEFAULT_RADIUS
-    const defaultFont = movk?.font ?? SYSTEM_DEFAULT_FONT
-    const defaultIcons = movk?.icons ?? SYSTEM_DEFAULT_ICONS
+    const defaultPrimary = 'blue'
+    const defaultNeutral = 'slate'
+    const defaultIcon = movk?.icon ?? defaultConfig.icon
 
     ui.colors.primary = defaultPrimary
     window.localStorage.removeItem(`${name}-ui-primary`)
@@ -215,11 +209,11 @@ export function useTheme() {
     ui.colors.neutral = defaultNeutral
     window.localStorage.removeItem(`${name}-ui-neutral`)
 
-    _radius.value = defaultRadius
-    _font.value = defaultFont
-    _iconSet.value = defaultIcons
-    ui.icons = themeIcons[defaultIcons as keyof typeof themeIcons] as any
-    _blackAsPrimary.value = false
+    _radius.value = movk?.radius ?? defaultConfig.radius
+    _font.value = movk?.font ?? defaultConfig.font
+    _iconSet.value = defaultIcon
+    ui.icons = themeIcons[defaultIcon as keyof typeof themeIcons] as any
+    _blackAsPrimary.value = movk?.blackAsPrimary ?? defaultConfig.blackAsPrimary
   }
 
   return {
