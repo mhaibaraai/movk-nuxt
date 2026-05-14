@@ -33,7 +33,8 @@ const userItems = ref<User[]>([
 const planItems: PillsItem[] = [
   { label: 'Basic', value: 'basic', description: '免费 · 5 项目' },
   { label: 'Pro', value: 'pro', description: '$9/月 · 无限项目' },
-  { label: 'Team', value: 'team', description: '$29/月 · 协作' }
+  { label: 'Team', value: 'team', description: '$29/月 · 协作' },
+  { label: 'Enterprise', value: 'enterprise', description: '$99/月 · 无限项目' }
 ]
 
 const periodItems: PillsItem[] = [
@@ -132,13 +133,29 @@ const tagItemsWithHook: PillsItem[] = tagItems.map(it => ({
 }))
 
 const sizes: NonNullable<PillGroupProps['size']>[] = ['xs', 'sm', 'md', 'lg', 'xl']
-const variants: NonNullable<PillGroupProps['variant']>[] = ['solid', 'outline', 'soft', 'subtle']
+const variants: NonNullable<PillGroupProps['activeVariant']>[] = ['solid', 'outline', 'soft', 'subtle']
+
+const multiPlan = ref<PillsItem[]>([{
+  label: 'Team',
+  value: 'team',
+  description: '$29/月 · 协作'
+},
+{
+  label: 'Pro',
+  value: 'pro',
+  description: '$9/月 · 无限项目'
+}])
 </script>
 
 <template>
   <Navbar />
 
-  <div class="p-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
+  <Showcase title="12. 对象数组 (不传 value-key)" description="v-model 拿到 item 对象数组" :state="{ value: multiPlan }">
+    <MPillGroup v-model="multiPlan" :items="planItems" multiple />
+    <MPillGroup v-model="singleVertical" :items="periodItems" value-key="value" orientation="vertical" />
+  </Showcase>
+
+  <!-- <div class="p-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
     <Showcase title="UFormField 兼容" description="外层字段尺寸和错误态传递到按钮组" :state="{ value: formFieldCompat }">
       <UFormField label="视图模式" size="xs" error="示例错误态">
         <MPillGroup v-model="formFieldCompat" :items="viewItems" value-key="value" />
@@ -151,8 +168,8 @@ const variants: NonNullable<PillGroupProps['variant']>[] = ['solid', 'outline', 
         <UButton icon="i-lucide-filter" color="neutral" variant="subtle" />
       </UFieldGroup>
     </Showcase>
-  </div>
-
+  </div> -->
+<!--
   <div class="p-4 space-y-2">
     <h2 class="text-lg font-semibold">
       单选模式 (默认 / multiple=false)
@@ -277,16 +294,16 @@ const variants: NonNullable<PillGroupProps['variant']>[] = ['solid', 'outline', 
         :ui="{ list: 'rounded-full bg-success/5 ring-1 ring-success/30 gap-2 p-1.5' }"
       />
     </Showcase>
-  </div>
+  </div> -->
 
-  <Matrix v-slot="{ size, variant }" :attrs="{ size: sizes, variant: variants }" class="p-4">
+  <!-- <Matrix v-slot="{ size, variant }" :attrs="{ size: sizes, variant: variants }" class="p-4">
     <div class="flex flex-col gap-2">
       <UFormField :label="`${size} · ${variant} · single`" size="xs">
-        <MPillGroup v-model="singleMatrix" :items="literalItems" :size="size" :variant="variant" />
+        <MPillGroup v-model="singleMatrix" :items="literalItems" :size="size" :active-variant="variant" />
       </UFormField>
       <UFormField :label="`${size} · ${variant} · multiple`" size="xs">
-        <MPillGroup v-model="multiMatrix" :items="literalItems" multiple :size="size" :variant="variant" />
+        <MPillGroup v-model="multiMatrix" :items="literalItems" multiple :size="size" :active-variant="variant" />
       </UFormField>
     </div>
-  </Matrix>
+  </Matrix> -->
 </template>

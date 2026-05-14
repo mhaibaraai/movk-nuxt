@@ -19,6 +19,7 @@ export interface PillsItem {
   disabled?: boolean
   onSelect?: (e: Event) => void
   class?: ClassNameValue
+  [key: string]: any
 }
 
 /** 单值 v-model 类型: VK=undefined → T 或 AcceptableValue (字面量 items); VK=keyof T → T[VK] */
@@ -61,12 +62,17 @@ export interface PillGroupProps<
    */
   color?: ButtonProps['color']
   /**
-   * 选中态视觉变体
+   * 容器外壳视觉变体
    * @defaultValue 'solid'
    */
   variant?: ButtonProps['variant']
   /**
-   * 未选中态视觉变体
+   * 选中态单项视觉变体
+   * @defaultValue 'solid'
+   */
+  activeVariant?: ButtonProps['variant']
+  /**
+   * 未选中态单项视觉变体
    * @defaultValue 'ghost'
    */
   inactiveVariant?: ButtonProps['variant']
@@ -74,6 +80,7 @@ export interface PillGroupProps<
   name?: string
   required?: boolean
   id?: string
+  class?: ClassNameValue
   ui?: Record<string, ClassNameValue>
 }
 

@@ -32,6 +32,7 @@ interface _Props extends PillGroupProps<T, VK> {
 
 const props = withDefaults(defineProps<_Props>(), {
   variant: 'solid',
+  activeVariant: 'solid',
   inactiveVariant: 'ghost',
   labelKey: 'label',
   descriptionKey: 'description'
@@ -68,7 +69,8 @@ const { extendUi } = useExtendedTv(
       orientation: props.orientation,
       size: effectiveSize.value,
       disabled: effectiveDisabled.value,
-      fieldGroup: fieldGroupOrientation.value
+      fieldGroup: fieldGroupOrientation.value,
+      variant: props.variant
     }
   })
 )
@@ -240,7 +242,7 @@ const itemRole = computed(() => (props.multiple ? 'checkbox' : 'radio'))
           v-for="(item, idx) in items"
           :key="getItemKey(item, idx)"
           :color="effectiveColor"
-          :variant="isSelected(item) ? props.variant : props.inactiveVariant"
+          :variant="isSelected(item) ? props.activeVariant : props.inactiveVariant"
           :size="effectiveSize"
           :disabled="effectiveDisabled || isItemDisabled(item) || isItemLocked(item)"
           :class="[extendUi.item, isSelectItem(item) ? item.class : undefined]"
