@@ -141,7 +141,7 @@ type AppConfigUI = {
   radius?: Radius | (number & {})
   blackAsPrimary?: boolean
   font?: FontFamily | (string & {})
-  icon?: Icons | (string & {})
+  icons?: Icons | (string & {})
   prefix?: string
   tv?: typeof defaultConfig
   picker?: {

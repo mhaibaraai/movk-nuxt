@@ -17,7 +17,7 @@ export function useTheme() {
 
   const _radius = useLocalStorage(`${name}-ui-radius`, movk?.radius ?? defaultConfig.radius)
   const _font = useLocalStorage(`${name}-ui-font`, movk?.font ?? defaultConfig.font)
-  const _iconSet = useLocalStorage(`${name}-ui-icon`, movk?.icon ?? defaultConfig.icon)
+  const _iconSet = useLocalStorage(`${name}-ui-icons`, movk?.icons ?? defaultConfig.icons)
   const _blackAsPrimary = useLocalStorage(`${name}-ui-black-as-primary`, defaultConfig.blackAsPrimary)
 
   const pickerFonts = movk?.picker?.fonts ?? []
@@ -132,7 +132,7 @@ export function useTheme() {
   const hasConfigChanges = computed(() => {
     return ui.colors.primary !== 'blue'
       || ui.colors.neutral !== 'slate'
-      || _iconSet.value !== (movk?.icon ?? defaultConfig.icon)
+      || _iconSet.value !== (movk?.icons ?? defaultConfig.icons)
   })
 
   function exportCSS(): string {
@@ -185,7 +185,7 @@ export function useTheme() {
       config.ui = { colors: Object.fromEntries(colorEntries.map(([key]) => [key, (ui.colors as any)[key]])) }
     }
 
-    if (_iconSet.value !== defaultConfig.icon) {
+    if (_iconSet.value !== defaultConfig.icons) {
       const iconMapping = themeIcons[_iconSet.value as keyof typeof themeIcons]
       config.ui = config.ui || {}
       config.ui.icons = iconMapping
@@ -201,7 +201,7 @@ export function useTheme() {
   function resetTheme() {
     const defaultPrimary = 'blue'
     const defaultNeutral = 'slate'
-    const defaultIcon = movk?.icon ?? defaultConfig.icon
+    const defaultIcon = movk?.icons ?? defaultConfig.icons
 
     ui.colors.primary = defaultPrimary
     window.localStorage.removeItem(`${name}-ui-primary`)

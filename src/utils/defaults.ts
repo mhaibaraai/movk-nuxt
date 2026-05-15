@@ -81,7 +81,7 @@ export function getDefaultConfig(theme?: ModuleOptions['theme']) {
     radius: 0.25,
     blackAsPrimary: false,
     font: 'Alibaba PuHuiTi',
-    icon: 'lucide',
+    icons: 'lucide',
     prefix: theme?.prefix,
     tv: {
       twMergeConfig: {

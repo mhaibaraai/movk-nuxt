@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { z } from 'zod'
+import type { z } from 'zod'
 import type { Person } from '../../composables/useMockData'
 
 const { afz } = useAutoForm()
