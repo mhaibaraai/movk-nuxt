@@ -1,39 +1,18 @@
 import type { VNode } from 'vue'
-import type {
-  AcceptableValue,
-  AvatarProps,
-  BadgeProps,
-  ButtonProps,
-  IconProps
-} from '@nuxt/ui'
+import type { AcceptableValue, BadgeProps, ButtonProps } from '@nuxt/ui'
 import type { ClassNameValue } from '../shared'
 
-export interface PillsItem {
-  label?: string
+type PillButtonProps = Omit<
+  ButtonProps,
+  'to' | 'href' | 'onClick' | 'block' | 'square' | 'activeColor' | 'activeVariant'
+>
+
+export interface PillsItem extends PillButtonProps {
+  value?: AcceptableValue
   description?: string
-  /** @IconifyIcon */
-  icon?: IconProps['name']
-  avatar?: AvatarProps
   badge?: string | number | BadgeProps
-  value: AcceptableValue
-  disabled?: boolean
   onSelect?: (e: Event) => void
-  class?: ClassNameValue
-  [key: string]: any
 }
-
-/** 单值 v-model 类型: VK=undefined → T 或 AcceptableValue (字面量 items); VK=keyof T → T[VK] */
-export type PillsModelValue<T, VK extends string | undefined>
-  = VK extends keyof T ? T[VK] : T | AcceptableValue
-
-/** v-model 类型: M=true → 数组; 否则 → 单值或 undefined */
-export type PillGroupModelValue<
-  T,
-  VK extends string | undefined,
-  M extends boolean
-> = M extends true
-  ? PillsModelValue<T, VK>[]
-  : PillsModelValue<T, VK> | undefined
 
 export interface PillGroupProps<
   T extends Record<string, any> = PillsItem,
@@ -54,18 +33,17 @@ export interface PillGroupProps<
    * 排列方向
    * @defaultValue 'horizontal'
    */
-  orientation?: 'horizontal' | 'vertical'
-  /** @defaultValue 'md' */
+  orientation?: string
+  /**
+   * 按钮尺寸
+   * @defaultValue 'md'
+   */
   size?: ButtonProps['size']
   /**
+   * 按钮颜色
    * @defaultValue 'primary'
    */
   color?: ButtonProps['color']
-  /**
-   * 容器外壳视觉变体
-   * @defaultValue 'solid'
-   */
-  variant?: ButtonProps['variant']
   /**
    * 选中态单项视觉变体
    * @defaultValue 'solid'
@@ -77,9 +55,6 @@ export interface PillGroupProps<
    */
   inactiveVariant?: ButtonProps['variant']
   disabled?: boolean
-  name?: string
-  required?: boolean
-  id?: string
   class?: ClassNameValue
   ui?: Record<string, ClassNameValue>
 }

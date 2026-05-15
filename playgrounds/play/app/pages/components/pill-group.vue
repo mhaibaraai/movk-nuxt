@@ -134,25 +134,20 @@ const tagItemsWithHook: PillsItem[] = tagItems.map(it => ({
 
 const sizes: NonNullable<PillGroupProps['size']>[] = ['xs', 'sm', 'md', 'lg', 'xl']
 const variants: NonNullable<PillGroupProps['activeVariant']>[] = ['solid', 'outline', 'soft', 'subtle']
-
-const multiPlan = ref<PillsItem[]>([{
-  label: 'Team',
-  value: 'team',
-  description: '$29/月 · 协作'
-},
-{
-  label: 'Pro',
-  value: 'pro',
-  description: '$9/月 · 无限项目'
-}])
 </script>
 
 <template>
   <Navbar />
 
-  <Showcase title="12. 对象数组 (不传 value-key)" description="v-model 拿到 item 对象数组" :state="{ value: multiPlan }">
-    <MPillGroup v-model="multiPlan" :items="planItems" multiple />
-    <MPillGroup v-model="singleVertical" :items="periodItems" value-key="value" orientation="vertical" />
+  <Showcase title="1. 字面量 items" description="字符串数组,无需 value-key" :state="{ value: singleObject }">
+    <MPillGroup
+      v-model="singleObject"
+      :items="[
+        {
+
+        }
+      ]"
+    />
   </Showcase>
 
   <!-- <div class="p-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -168,8 +163,8 @@ const multiPlan = ref<PillsItem[]>([{
         <UButton icon="i-lucide-filter" color="neutral" variant="subtle" />
       </UFieldGroup>
     </Showcase>
-  </div> -->
-<!--
+  </div>
+
   <div class="p-4 space-y-2">
     <h2 class="text-lg font-semibold">
       单选模式 (默认 / multiple=false)
@@ -294,9 +289,9 @@ const multiPlan = ref<PillsItem[]>([{
         :ui="{ list: 'rounded-full bg-success/5 ring-1 ring-success/30 gap-2 p-1.5' }"
       />
     </Showcase>
-  </div> -->
+  </div>
 
-  <!-- <Matrix v-slot="{ size, variant }" :attrs="{ size: sizes, variant: variants }" class="p-4">
+  <Matrix v-slot="{ size, variant }" :attrs="{ size: sizes, variant: variants }" class="p-4">
     <div class="flex flex-col gap-2">
       <UFormField :label="`${size} · ${variant} · single`" size="xs">
         <MPillGroup v-model="singleMatrix" :items="literalItems" :size="size" :active-variant="variant" />

@@ -2,10 +2,12 @@
 import type { AcceptableValue, ComponentConfig } from '@nuxt/ui'
 import type { AppConfig } from 'nuxt/schema'
 import { computed, ref } from 'vue'
+import type { AcceptableValue as RekaAcceptableValue } from 'reka-ui'
+import { ToggleGroupRoot, ToggleGroupItem } from 'reka-ui'
 import { FieldGroupReset } from '@nuxt/ui/composables/useFieldGroup'
-import { UAvatar, UBadge, UButton, UIcon } from '#components'
+import { UBadge, UButton } from '#components'
 import { useAppConfig } from '#imports'
-import { equalsBy, getPath } from '@movk/core'
+import { getPath } from '@movk/core'
 import theme from '#build/movk-ui/pill-group'
 import { useExtendedTv } from '../utils/extend-theme'
 import { useFieldControl } from '../utils/form-control'
@@ -13,14 +15,15 @@ import type {
   PillGroupProps,
   PillGroupEmits,
   PillGroupSlots,
-  PillsItem,
-  PillsModelValue
+  PillsItem
 } from '../types/components/pill-group'
 
+type PillGroup = ComponentConfig<typeof theme, AppConfig, 'pillGroup'>
+
 interface _Props extends PillGroupProps<T, VK> {
-  size?: ComponentConfig<typeof theme, AppConfig, 'pillGroup'>['variants']['size']
-  orientation?: ComponentConfig<typeof theme, AppConfig, 'pillGroup'>['variants']['orientation']
-  ui?: ComponentConfig<typeof theme, AppConfig, 'pillGroup'>['slots']
+  orientation?: PillGroup['variants']['orientation']
+  size?: PillGroup['variants']['size']
+  ui?: PillGroup['slots']
   multiple?: boolean
   /** 单选: 再次点击当前选中项清空 */
   deselectable?: boolean
@@ -31,9 +34,9 @@ interface _Props extends PillGroupProps<T, VK> {
 }
 
 const props = withDefaults(defineProps<_Props>(), {
-  variant: 'solid',
+  orientation: 'horizontal',
   activeVariant: 'solid',
-  inactiveVariant: 'ghost',
+  inactiveVariant: 'soft',
   labelKey: 'label',
   descriptionKey: 'description'
 })
@@ -57,6 +60,7 @@ const {
   emitFormBlur,
   emitFormInput
 } = useFieldControl(props)
+
 const focusWithin = ref(false)
 
 const { extendUi } = useExtendedTv(
@@ -64,13 +68,15 @@ const { extendUi } = useExtendedTv(
   theme,
   () => appConfig.movk?.pillGroup,
   () => ({
-    ui: props.ui,
+    ui: {
+      ...props.ui,
+      root: [props.ui?.root, props.class]
+    },
     variants: {
       orientation: props.orientation,
       size: effectiveSize.value,
       disabled: effectiveDisabled.value,
-      fieldGroup: fieldGroupOrientation.value,
-      variant: props.variant
+      fieldGroup: fieldGroupOrientation.value
     }
   })
 )
@@ -79,9 +85,56 @@ function isSelectItem(item: unknown): item is T {
   return typeof item === 'object' && item !== null
 }
 
+// 统一的 key 生成器: item 与 modelValue 共用同一套规则,reka-ui 内部 O(1) 比较
+function keyOf(input: unknown, idx?: number): string {
+  if (input == null) return idx != null ? `i:${idx}` : ''
+  if (typeof input !== 'object') return `v:${String(input)}`
+  const obj = input as Record<string, any>
+  if (props.by && typeof props.by === 'string') {
+    const v = getPath(obj, props.by)
+    if (v != null && typeof v !== 'object') return `v:${String(v)}`
+  }
+  if (props.valueKey) {
+    const v = getPath(obj, props.valueKey)
+    if (v != null && typeof v !== 'object') return `v:${String(v)}`
+  }
+  const valueField = getPath(obj, 'value')
+  if (valueField != null && typeof valueField !== 'object') return `v:${String(valueField)}`
+  const label = getPath(obj, props.labelKey ?? 'label') as string | undefined
+  if (label) return `l:${label}`
+  return idx != null ? `i:${idx}` : ''
+}
+
+const keyToItem = computed(() => {
+  const m = new Map<string, AcceptableValue | T>()
+  ;(props.items ?? []).forEach((it, i) => m.set(keyOf(it, i), it))
+  return m
+})
+
+const internalValue = computed<string | string[] | undefined>(() => {
+  const mv = modelValue.value
+  if (props.multiple) return Array.isArray(mv) ? mv.map(v => keyOf(v)) : []
+  return mv == null ? undefined : keyOf(mv)
+})
+
+function isSelected(item: AcceptableValue | T, idx: number): boolean {
+  const k = keyOf(item, idx)
+  const v = internalValue.value
+  return Array.isArray(v) ? v.includes(k) : v === k
+}
+
+function isItemLocked(item: AcceptableValue | T, idx: number): boolean {
+  if (!props.multiple || props.max == null) return false
+  const v = internalValue.value
+  return Array.isArray(v) && v.length >= props.max && !v.includes(keyOf(item, idx))
+}
+
+function isItemDisabled(item: AcceptableValue | T): boolean {
+  return isSelectItem(item) && item.disabled === true
+}
+
 function getItemValue(item: AcceptableValue | T): AcceptableValue | T {
-  if (!isSelectItem(item)) return item
-  if (!props.valueKey) return item
+  if (!isSelectItem(item) || !props.valueKey) return item
   return getPath(item, props.valueKey) as AcceptableValue
 }
 
@@ -94,107 +147,31 @@ function getItemLabel(item: AcceptableValue | T): string {
 }
 
 function getItemDescription(item: AcceptableValue | T): string | undefined {
-  if (!isSelectItem(item)) return undefined
-  return getPath(item, props.descriptionKey ?? 'description') as string | undefined
+  return isSelectItem(item)
+    ? (getPath(item, props.descriptionKey ?? 'description') as string | undefined)
+    : undefined
 }
 
-function getItemKey(item: AcceptableValue | T, idx: number): string | number {
-  if (!isSelectItem(item)) return `v:${String(item)}`
-  if (props.valueKey) {
-    const v = getPath(item, props.valueKey)
-    if (v != null && typeof v !== 'object') return `v:${String(v)}`
-  }
-  const valueField = getPath(item, 'value')
-  if (valueField != null && typeof valueField !== 'object') return `v:${String(valueField)}`
-  const label = getPath(item, props.labelKey ?? 'label') as string | undefined
-  if (label) return `l:${label}`
-  return `i:${idx}`
-}
-
-function isItemDisabled(item: AcceptableValue | T): boolean {
-  return isSelectItem(item) && item.disabled === true
-}
-
-const itemEqualKeys = computed<ReadonlyArray<string | undefined>>(() => [
-  props.valueKey,
-  'value',
-  props.labelKey ?? 'label'
-])
-
-function compareItem(a: unknown, b: unknown): boolean {
-  return equalsBy(a, b, {
-    by: props.by as string | ((a: unknown, b: unknown) => boolean) | undefined,
-    keys: itemEqualKeys.value
-  })
-}
-
-const selectedArray = computed<unknown[]>(() => {
-  if (!props.multiple) return []
-  const v = modelValue.value
-  return Array.isArray(v) ? v : []
-})
-
-// 多选 + by 为字符串时启用 O(1) 命中
-const selectedKeyMap = computed<Map<unknown, true> | null>(() => {
-  if (!props.multiple || !props.by || typeof props.by !== 'string') return null
-  const m = new Map<unknown, true>()
-  for (const v of selectedArray.value) {
-    const key = isSelectItem(v) ? getPath(v, props.by) : v
-    m.set(key, true)
-  }
-  return m
-})
-
-function isSelected(item: AcceptableValue | T): boolean {
-  const target = getItemValue(item)
+function onUpdate(next: RekaAcceptableValue | RekaAcceptableValue[]) {
   if (props.multiple) {
-    if (selectedKeyMap.value) {
-      const key = isSelectItem(target) ? getPath(target, props.by as string) : target
-      return selectedKeyMap.value.has(key)
+    const arrKeys = (Array.isArray(next) ? next : []) as string[]
+    if (props.min != null && arrKeys.length < props.min) return
+    const prev = (internalValue.value as string[]) ?? []
+    const addedKey = arrKeys.find(k => !prev.includes(k))
+    if (addedKey) {
+      const it = keyToItem.value.get(addedKey)
+      if (isSelectItem(it) && typeof it.onSelect === 'function') it.onSelect(new Event('select'))
     }
-    return selectedArray.value.some(v => compareItem(v, target))
-  }
-  if (modelValue.value === undefined) return false
-  return compareItem(modelValue.value, target)
-}
-
-const reachedMax = computed(() =>
-  props.multiple && props.max != null && selectedArray.value.length >= props.max
-)
-
-// 视觉锁: max 触顶,未选项变灰
-function isItemLocked(item: AcceptableValue | T): boolean {
-  return reachedMax.value && !isSelected(item)
-}
-
-// 交互锁: min 阻止取消,视觉不变
-function isClickBlocked(item: AcceptableValue | T): boolean {
-  if (!props.multiple || props.min == null) return false
-  return isSelected(item) && selectedArray.value.length <= props.min
-}
-
-function handleClick(e: Event, item: AcceptableValue | T) {
-  if (effectiveDisabled.value || isItemDisabled(item)) return
-  if (props.multiple && (isItemLocked(item) || isClickBlocked(item))) return
-  if (isSelectItem(item) && typeof item.onSelect === 'function') {
-    item.onSelect(e)
-  }
-
-  if (props.multiple) {
-    const arr = selectedArray.value
-    const target = getItemValue(item)
-    const next = isSelected(item)
-      ? arr.filter(v => !compareItem(v, target))
-      : [...arr, target]
-    modelValue.value = next as SingleValue[]
-    emits('change', next as (AcceptableValue | Record<string, any>)[])
+    const values = arrKeys.map(k => getItemValue(keyToItem.value.get(k)!))
+    modelValue.value = values as SingleValue[]
+    emits('change', values as (AcceptableValue | Record<string, any>)[])
   } else {
-    const next = getItemValue(item)
-    const isCurrent = isSelected(item)
-    const finalValue = props.deselectable && isCurrent ? undefined : next
-    if (compareItem(modelValue.value, finalValue)) return
-    modelValue.value = finalValue as SingleValue | undefined
-    emits('change', finalValue as AcceptableValue | Record<string, any> | undefined)
+    if (next == null && !props.deselectable) return
+    const it = next ? keyToItem.value.get(next as string) : undefined
+    if (it && isSelectItem(it) && typeof it.onSelect === 'function') it.onSelect(new Event('select'))
+    const v = it ? getItemValue(it) : undefined
+    modelValue.value = v as SingleValue | undefined
+    emits('change', v as AcceptableValue | Record<string, any> | undefined)
   }
   emitFormChange()
   emitFormInput()
@@ -212,98 +189,93 @@ function handleFocusOut(event: FocusEvent) {
   focusWithin.value = false
   emitFormBlur()
 }
-
-function hasLeading(item: AcceptableValue | T): boolean {
-  return isSelectItem(item) && (!!item.icon || !!item.avatar)
-}
-
-function hasTrailing(item: AcceptableValue | T): boolean {
-  return isSelectItem(item) && item.badge != null
-}
-
-const groupRole = computed(() => (props.multiple ? 'group' : 'radiogroup'))
-const itemRole = computed(() => (props.multiple ? 'checkbox' : 'radio'))
 </script>
 
 <template>
-  <div :class="extendUi.root">
+  <div :class="extendUi.root" data-slot="root" @focusin="handleFocusIn" @focusout="handleFocusOut">
     <FieldGroupReset>
-      <div
+      <ToggleGroupRoot
         :id="id"
-        :name="name"
-        :role="groupRole"
+        :type="multiple ? 'multiple' : 'single'"
+        :model-value="internalValue"
+        :disabled="effectiveDisabled"
+        :orientation="orientation"
+        :roving-focus="true"
+        :loop="true"
         :class="extendUi.list"
         v-bind="ariaAttrs"
-        :aria-required="props.required || undefined"
-        @focusin="handleFocusIn"
-        @focusout="handleFocusOut"
+        @update:model-value="onUpdate"
       >
-        <UButton
+        <ToggleGroupItem
           v-for="(item, idx) in items"
-          :key="getItemKey(item, idx)"
-          :color="effectiveColor"
-          :variant="isSelected(item) ? props.activeVariant : props.inactiveVariant"
-          :size="effectiveSize"
-          :disabled="effectiveDisabled || isItemDisabled(item) || isItemLocked(item)"
-          :class="[extendUi.item, isSelectItem(item) ? item.class : undefined]"
-          :role="itemRole"
-          :aria-checked="isSelected(item)"
-          @click="handleClick($event, item)"
+          :key="keyOf(item, idx)"
+          :value="keyOf(item, idx)"
+          :disabled="isItemDisabled(item) || isItemLocked(item, idx)"
+          as-child
         >
-          <template v-if="!!slots.leading || hasLeading(item)" #leading>
-            <slot
-              name="leading"
-              :item="item"
-              :index="idx"
-              :selected="isSelected(item)"
-            >
-              <UIcon v-if="isSelectItem(item) && item.icon" :name="item.icon" />
-              <UAvatar v-else-if="isSelectItem(item) && item.avatar" v-bind="item.avatar" />
-            </slot>
-          </template>
-
-          <span :class="extendUi.itemBody">
-            <span :class="extendUi.itemLabel">
+          <UButton
+            :color="effectiveColor"
+            :variant="isSelected(item, idx) ? activeVariant : inactiveVariant"
+            :size="effectiveSize"
+            :icon="isSelectItem(item) ? item.icon : undefined"
+            :avatar="isSelectItem(item) ? item.avatar : undefined"
+            :class="[extendUi.item, isSelectItem(item) ? item.class : undefined]"
+          >
+            <template v-if="!!slots.leading" #leading>
               <slot
-                name="label"
+                name="leading"
                 :item="item"
                 :index="idx"
-                :selected="isSelected(item)"
-              >
-                {{ getItemLabel(item) }}
-              </slot>
-            </span>
-            <span
-              v-if="getItemDescription(item) || !!slots.description"
-              :class="extendUi.itemDescription"
-            >
-              <slot
-                name="description"
-                :item="item"
-                :index="idx"
-                :selected="isSelected(item)"
-              >
-                {{ getItemDescription(item) }}
-              </slot>
-            </span>
-          </span>
-
-          <template v-if="!!slots.trailing || hasTrailing(item)" #trailing>
-            <slot
-              name="trailing"
-              :item="item"
-              :index="idx"
-              :selected="isSelected(item)"
-            >
-              <UBadge
-                v-if="isSelectItem(item) && item.badge != null"
-                size="xs"
-                v-bind="typeof item.badge === 'object' ? item.badge : { label: String(item.badge) }"
+                :selected="isSelected(item, idx)"
               />
-            </slot>
-          </template>
-        </UButton>
-      </div>
+            </template>
+
+            <span :class="extendUi.wrapper">
+              <span :class="extendUi.label">
+                <slot
+                  name="label"
+                  :item="item"
+                  :index="idx"
+                  :selected="isSelected(item, idx)"
+                >
+                  {{ getItemLabel(item) }}
+                </slot>
+              </span>
+              <span
+                v-if="getItemDescription(item) || !!slots.description"
+                :class="extendUi.description"
+              >
+                <slot
+                  name="description"
+                  :item="item"
+                  :index="idx"
+                  :selected="isSelected(item, idx)"
+                >
+                  {{ getItemDescription(item) }}
+                </slot>
+              </span>
+            </span>
+
+            <template
+              v-if="!!slots.trailing || (isSelectItem(item) && item.badge != null)"
+              #trailing
+            >
+              <slot
+                name="trailing"
+                :item="item"
+                :index="idx"
+                :selected="isSelected(item, idx)"
+              >
+                <UBadge
+                  v-if="isSelectItem(item) && item.badge != null"
+                  size="xs"
+                  v-bind="typeof item.badge === 'object' ? item.badge : { label: String(item.badge) }"
+                />
+              </slot>
+            </template>
+          </UButton>
+        </ToggleGroupItem>
+      </ToggleGroupRoot>
     </FieldGroupReset>
   </div>
 </template>

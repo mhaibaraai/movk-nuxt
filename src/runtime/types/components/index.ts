@@ -20,11 +20,9 @@ export type { SlideVerifyEmits, SlideVerifyProps, SlideVerifySlots } from './sli
 export type { StarRatingEmits, StarRatingProps } from './star-rating'
 export type {
   PillGroupEmits,
-  PillGroupModelValue,
   PillGroupProps,
   PillGroupSlots,
-  PillsItem,
-  PillsModelValue
+  PillsItem
 } from './pill-group'
 export type {
   AsPhoneNumberInputProps,

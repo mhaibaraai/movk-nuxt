@@ -150,9 +150,9 @@ export default defineNuxtModule<ModuleOptions>({
         defaultVariants: uiTheme?.defaultVariants ?? undefined
       }
 
-      nuxt.options.movk.theme = defu(nuxt.options.movk.theme || {}, themeDefaults)
+      options.theme = defu(options.theme || {}, themeDefaults)
 
-      addTheme(nuxt, resolve, options['theme'])
+      addTheme(nuxt, resolve, options.theme)
       addTemplates(options, nuxt)
     })
 
