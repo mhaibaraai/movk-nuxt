@@ -11,7 +11,7 @@ import { useFieldControl } from '../utils/form-control'
 import theme from '#build/movk-ui/color-chooser'
 import popoverTheme from '#build/ui/popover'
 import PillGroup from './PillGroup.vue'
-import type { PillsItem } from '../types/components/pill-group'
+import type { PillItem } from '../types/components/pill-group'
 import type { ColorChooserProps, ColorChooserEmits, ColorChooserSlots, ColorFormat } from '../types/components/color-chooser'
 
 interface _Props extends ColorChooserProps<M> {
@@ -86,7 +86,7 @@ watch(() => props.format, (val) => {
 
 const showFormatTabs = computed(() => (props.formats?.length ?? 0) >= 2)
 
-const formatItems = computed<PillsItem[]>(() =>
+const formatItems = computed<PillItem[]>(() =>
   (props.formats ?? []).map(f => ({ label: f.toUpperCase(), value: f }))
 )
 

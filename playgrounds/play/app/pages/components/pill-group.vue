@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import type { PillGroupProps, PillsItem } from '@movk/nuxt'
+import type { PillGroupProps, PillItem, PillItemObject } from '@movk/nuxt'
+import type { SelectItem } from '@nuxt/ui'
 
 interface User {
   id: number
@@ -10,13 +11,13 @@ interface User {
 
 const literalItems = ['grid', 'list', 'kanban']
 
-const viewItems: PillsItem[] = [
+const viewItems: PillItem[] = [
   { label: 'Grid', value: 'grid' },
   { label: 'List', value: 'list' },
   { label: 'Kanban', value: 'kanban' }
 ]
 
-const formatItems: PillsItem[] = [
+const formatItems: PillItem[] = [
   { label: 'HEX', value: 'hex' },
   { label: 'RGB', value: 'rgb' },
   { label: 'HSL', value: 'hsl' },
@@ -30,47 +31,47 @@ const userItems = ref<User[]>([
   { id: 4, name: 'Dave', email: 'dave@movk.dev', avatar: { src: 'https://i.pravatar.cc/40?img=4' } }
 ])
 
-const planItems: PillsItem[] = [
-  { label: 'Basic', value: 'basic', description: '免费 · 5 项目' },
-  { label: 'Pro', value: 'pro', description: '$9/月 · 无限项目' },
-  { label: 'Team', value: 'team', description: '$29/月 · 协作' },
-  { label: 'Enterprise', value: 'enterprise', description: '$99/月 · 无限项目' }
+const planItems: PillItem[] = [
+  { label: 'Basic', type: 'basic', description: '免费 · 5 项目' },
+  { label: 'Pro', type: 'pro', description: '$9/月 · 无限项目' },
+  { label: 'Team', type: 'team', description: '$29/月 · 协作' },
+  { label: 'Enterprise', type: 'enterprise', description: '$99/月 · 无限项目' }
 ]
 
-const periodItems: PillsItem[] = [
+const periodItems: PillItem[] = [
   { label: '本日', value: 'day' },
   { label: '本周', value: 'week' },
   { label: '本月', value: 'month' },
   { label: '本年', value: 'year' }
 ]
 
-const techItems: PillsItem[] = [
+const techItems: PillItem[] = [
   { label: 'Vue', value: 'vue' },
   { label: 'React', value: 'react' },
   { label: 'Svelte', value: 'svelte' },
   { label: 'Solid', value: 'solid' }
 ]
 
-const todoItems: PillsItem[] = [
+const todoItems: PillItem[] = [
   { label: 'Todo', value: 'todo' },
   { label: 'Doing', value: 'doing' },
   { label: 'Done', value: 'done' }
 ]
 
-const trendItems: PillsItem[] = [
+const trendItems: PillItem[] = [
   { label: '热门', value: 'hot' },
   { label: '最新', value: 'new' },
   { label: '推荐', value: 'rec' }
 ]
 
-const tagItems: PillsItem[] = [
+const tagItems: PillItem[] = [
   { label: '前端', value: 'fe' },
   { label: '后端', value: 'be' },
   { label: '运维', value: 'ops' },
   { label: '设计', value: 'design' }
 ]
 
-const disabledItems: PillsItem[] = [
+const disabledItems: PillItem[] = [
   { label: 'Grid', value: 'grid' },
   { label: 'List', value: 'list', disabled: true },
   { label: 'Kanban', value: 'kanban' }
@@ -78,7 +79,7 @@ const disabledItems: PillsItem[] = [
 
 // 单选 (multiple=false / 默认)
 const singleScalar = ref<string | undefined>('grid')
-const singleObject = ref<PillsItem | undefined>()
+const singleObject = ref<PillItem | undefined>()
 const singleUser = ref<User | undefined>(userItems.value[2])
 const singleDeselectable = ref<string | undefined>('todo')
 const singleOnSelect = ref<string | undefined>('en')
@@ -92,7 +93,7 @@ const fieldGroupCompat = ref<string | undefined>('list')
 
 // 多选 (multiple=true)
 const multiScalar = ref<string[]>(['hex', 'rgb'])
-const multiObject = ref<PillsItem[]>([{
+const multiObject = ref<PillItem[]>([{
   label: 'HSL',
   value: 'hsl'
 },
@@ -121,16 +122,20 @@ function clearLog() {
   eventLog.value = []
 }
 
-const langItems: PillsItem[] = [
+const langItems: PillItem[] = [
   { label: 'English', value: 'en', icon: 'i-lucide-globe', onSelect: () => logEvent('item.onSelect', { lang: 'en' }) },
   { label: '简体中文', value: 'zh-CN', icon: 'i-lucide-globe', onSelect: () => logEvent('item.onSelect', { lang: 'zh-CN' }) },
   { label: '日本語', value: 'ja', icon: 'i-lucide-globe', onSelect: () => logEvent('item.onSelect', { lang: 'ja' }) }
 ]
 
-const tagItemsWithHook: PillsItem[] = tagItems.map(it => ({
+const tagItemsWithHook: PillItemObject[] = (tagItems as PillItemObject[]).map(it => ({
   ...it,
   onSelect: () => logEvent('item.onSelect', it.value)
 }))
+
+const a: SelectItem[] = [
+  { a: '22' }
+]
 
 const sizes: NonNullable<PillGroupProps['size']>[] = ['xs', 'sm', 'md', 'lg', 'xl']
 const variants: NonNullable<PillGroupProps['activeVariant']>[] = ['solid', 'outline', 'soft', 'subtle']
@@ -141,12 +146,12 @@ const variants: NonNullable<PillGroupProps['activeVariant']>[] = ['solid', 'outl
 
   <Showcase title="1. 字面量 items" description="字符串数组,无需 value-key" :state="{ value: singleObject }">
     <MPillGroup
-      v-model="singleObject"
-      :items="[
-        {
-
-        }
-      ]"
+      :color="'warning'"
+      size="xl"
+      :items="['222', '11']"
+      label-key="name"
+      value-key="name"
+      description-key="email"
     />
   </Showcase>
 

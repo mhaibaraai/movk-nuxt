@@ -22,7 +22,10 @@ export type {
   PillGroupEmits,
   PillGroupProps,
   PillGroupSlots,
-  PillsItem
+  PillItem,
+  PillItemObject,
+  PillGroupValue,
+  PillSelectPayload
 } from './pill-group'
 export type {
   AsPhoneNumberInputProps,

@@ -2,18 +2,19 @@ export default () => ({
   slots: {
     root: 'flex items-center gap-2',
     list: 'relative flex group rounded-lg bg-elevated',
-    item: 'transition-colors focus:outline-none',
-    wrapper: 'inline-flex flex-col items-start min-w-0',
-    label: 'truncate',
-    description: 'truncate'
+    item: 'inline-flex items-center gap-1.5',
+    leading: 'inline-flex items-center shrink-0',
+    leadingIcon: 'shrink-0 text-dimmed',
+    trailing: 'inline-flex items-center shrink-0',
+    trailingIcon: 'shrink-0 text-dimmed',
+    itemWrapper: 'flex flex-col items-start min-w-0 gap-0.5',
+    itemLabel: 'truncate',
+    itemDescription: 'truncate text-muted text-xs'
   },
   variants: {
     orientation: {
       horizontal: { root: 'flex-col', list: 'w-full' },
       vertical: { list: 'flex-col' }
-    },
-    disabled: {
-      true: { root: 'opacity-60 pointer-events-none' }
     },
     fieldGroup: {
       horizontal: {
@@ -25,9 +26,5 @@ export default () => ({
         list: 'rounded-md'
       }
     }
-  },
-  defaultVariants: {
-    color: 'primary',
-    size: 'md'
   }
 })
