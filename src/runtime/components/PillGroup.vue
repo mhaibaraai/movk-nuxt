@@ -1,4 +1,4 @@
-<script lang="ts" setup generic="T extends PillItem, VK extends GetItemKeys<T> = 'value', M extends boolean = false">
+<script lang="ts" setup generic="T extends PillItem, VK extends GetItemKeys<T> | undefined = undefined, M extends boolean = false">
 import type { AcceptableValue, ComponentConfig, GetItemKeys, GetModelValue } from '@nuxt/ui'
 import type { AppConfig } from 'nuxt/schema'
 import { computed, ref } from 'vue'
@@ -29,7 +29,8 @@ const props = withDefaults(defineProps<_Props>(), {
   activeVariant: 'solid',
   inactiveVariant: 'soft',
   labelKey: 'label',
-  descriptionKey: 'description'
+  descriptionKey: 'description',
+  deselectable: false
 })
 
 const modelValue = defineModel<GetModelValue<T, VK, M>>()

@@ -10,39 +10,26 @@ import type { ClassNameValue } from '../shared'
 
 export type PillGroupValue = AcceptableValue
 
-type PillGroupSlotKey
-  = | 'root' | 'list' | 'item' | 'itemWrapper' | 'itemLabel' | 'itemDescription'
-    | 'leading' | 'leadingIcon' | 'trailing' | 'trailingIcon'
+type PillItemUI = 'item' | 'itemWrapper' | 'itemLabel' | 'itemDescription' | 'leading' | 'trailing'
 
-export type PillGroupSlotMap = Partial<Record<PillGroupSlotKey, ClassNameValue>>
-
-type PillItemUI = Pick<
-  PillGroupSlotMap,
-  'item' | 'itemWrapper' | 'itemLabel' | 'itemDescription' | 'leading' | 'trailing'
->
-
-export interface PillItemObject {
+export type PillItem = PillGroupValue | {
   value?: PillGroupValue
   label?: string
   description?: string
   disabled?: boolean
   icon?: string
   avatar?: AvatarProps
-  /** 单项可覆盖 group 的视觉变体。 */
   variant?: ButtonProps['variant']
   color?: ButtonProps['color']
-  /** 点击单项时的副作用钩子，在 modelValue 更新前触发。 */
   onSelect?: (e: Event) => void
   class?: ClassNameValue
-  ui?: PillItemUI
+  ui?: Partial<Record<PillItemUI, ClassNameValue>>
   [key: string]: any
 }
 
-export type PillItem = PillGroupValue | PillItemObject
-
 export interface PillGroupProps<
   T extends PillItem = PillItem,
-  VK extends GetItemKeys<T> = 'value',
+  VK extends GetItemKeys<T> | undefined = undefined,
   M extends boolean = false
 > {
   items?: T[]
@@ -84,16 +71,16 @@ export interface PillGroupProps<
   disabled?: boolean
   /** 是否可以多选 */
   multiple?: M & boolean
-  /** 单选：再次点击当前选中项清空 */
-  deselectable?: M extends true ? never : boolean
+  /** 单选：再次点击当前选中项清空（多选模式下被忽略） */
+  deselectable?: boolean
   /** 多选：最多可选数量 */
-  max?: M extends true ? number : never
+  max?: number
   /** 多选：最少需保留数量 */
-  min?: M extends true ? number : never
+  min?: number
   defaultValue?: GetModelValue<T, VK, M>
   modelValue?: GetModelValue<T, VK, M>
   class?: ClassNameValue
-  ui?: PillGroupSlotMap
+  ui?: Record<string, ClassNameValue>
 }
 
 type ItemSlotProps<T extends PillItem> = (props: {
@@ -116,19 +103,13 @@ export interface PillGroupSlots<
   VK extends GetItemKeys<T> | undefined = undefined,
   M extends boolean = false
 > {
-  /** root 内列表前，常用于标题/前缀图标。 */
   'leading'?: GroupSlotProps<T, VK, M>
-  /** 完全替换列表区域；slot 内部自行 v-for 渲染 items。 */
   'default'?: GroupSlotProps<T, VK, M>
-  /** root 内列表后，常用于操作按钮/统计。 */
   'trailing'?: GroupSlotProps<T, VK, M>
-  /** 单项完全替换：拿到 item / index / selected，自行渲染按钮容器。 */
   'item'?: ItemSlotProps<T>
-  /** 单项内左侧：替换 icon/avatar 默认渲染。 */
   'item-leading'?: ItemSlotProps<T>
   'item-label'?: ItemSlotProps<T>
   'item-description'?: ItemSlotProps<T>
-  /** 单项内右侧：默认不渲染任何内容，仅在 slot 提供时显示。 */
   'item-trailing'?: ItemSlotProps<T>
 }
 

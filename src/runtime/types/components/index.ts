@@ -23,7 +23,6 @@ export type {
   PillGroupProps,
   PillGroupSlots,
   PillItem,
-  PillItemObject,
   PillGroupValue,
   PillSelectPayload
 } from './pill-group'

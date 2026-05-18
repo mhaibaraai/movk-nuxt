@@ -1,15 +1,15 @@
 export default () => ({
   slots: {
     root: 'flex items-center gap-2',
-    list: 'relative flex group rounded-lg bg-elevated',
+    list: 'relative flex group rounded-lg gap-1',
     item: 'inline-flex items-center gap-1.5',
     leading: 'inline-flex items-center shrink-0',
-    leadingIcon: 'shrink-0 text-dimmed',
+    leadingIcon: 'shrink-0',
     trailing: 'inline-flex items-center shrink-0',
-    trailingIcon: 'shrink-0 text-dimmed',
+    trailingIcon: 'shrink-0',
     itemWrapper: 'flex flex-col items-start min-w-0 gap-0.5',
     itemLabel: 'truncate',
-    itemDescription: 'truncate text-muted text-xs'
+    itemDescription: 'truncate text-xs'
   },
   variants: {
     orientation: {
