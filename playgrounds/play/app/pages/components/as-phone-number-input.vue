@@ -25,8 +25,8 @@ const fieldGroupPhone = ref('5551234567')
   <div class="p-4 flex flex-col gap-4">
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
       <Showcase
-        title="UFormField 兼容"
-        description="外层字段尺寸和错误态传递到内部 UInput"
+        title="继承字段上下文"
+        description="放入 UFormField 后自动接收 size 与错误态，并同步到内部 UInput。"
         :state="{ value: formFieldPhone }"
       >
         <UFormField label="手机号" size="xs" error="示例错误态">
@@ -35,8 +35,8 @@ const fieldGroupPhone = ref('5551234567')
       </Showcase>
 
       <Showcase
-        title="UFieldGroup 兼容"
-        description="输入封装和按钮共同继承分组尺寸"
+        title="融入分组控件"
+        description="与按钮置于 UFieldGroup 时共用尺寸、圆角和边框衔接，适合组合拨号操作。"
         :state="{ value: fieldGroupPhone }"
       >
         <UFieldGroup size="xs" class="w-full">

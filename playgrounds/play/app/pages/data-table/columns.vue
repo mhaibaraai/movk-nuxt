@@ -42,8 +42,8 @@ const allKeys = ['id', 'name', 'department', 'role', 'level', 'email', 'joinedAt
 
   <div class="p-4 flex flex-col gap-4">
     <Showcase
-      title="列能力一页通"
-      description="accessorKey · header · 分组列 · fixed · size · cell 渲染 · sortable · pinable · resizable · truncate · tooltip · columnVisibility"
+      title="列定义与交互能力"
+      description="列定义支持固定、排序、固定列、拖拽列宽、截断、tooltip 与可见性控制"
     >
       <template #toolbar>
         <USelect

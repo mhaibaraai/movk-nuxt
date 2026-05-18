@@ -27,8 +27,8 @@ function refreshAll() {
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
       <Showcase
-        title="useApiFetch"
-        description="SSR 立即获取，刷新页面后页面渲染时已含数据"
+        title="SSR 同步请求"
+        description="useApiFetch 在 SSR 阶段发起请求，首屏即可拿到接口数据或错误"
       >
         <UBadge :color="ssr.pending.value ? 'warning' : (ssr.error.value ? 'error' : 'success')" variant="subtle">
           {{ ssr.pending.value ? 'pending' : (ssr.error.value ? 'error' : 'ready') }}
@@ -37,8 +37,8 @@ function refreshAll() {
       </Showcase>
 
       <Showcase
-        title="useLazyApiFetch"
-        description="懒加载：不阻塞渲染，pending 时返回空数据"
+        title="延迟请求"
+        description="useLazyApiFetch 先完成页面渲染再进入 pending，期间数据为空"
       >
         <UBadge :color="lazy.pending.value ? 'warning' : (lazy.error.value ? 'error' : 'success')" variant="subtle">
           {{ lazy.pending.value ? 'pending' : (lazy.error.value ? 'error' : 'ready') }}
@@ -47,8 +47,8 @@ function refreshAll() {
       </Showcase>
 
       <Showcase
-        title="useClientApiFetch"
-        description="仅客户端：SSR 期间不发起请求，挂载后再请求"
+        title="客户端请求"
+        description="useClientApiFetch 跳过 SSR，浏览器挂载后请求，状态从 pending 切到 ready 或 error"
       >
         <UBadge :color="csr.pending.value ? 'warning' : (csr.error.value ? 'error' : 'success')" variant="subtle">
           {{ csr.pending.value ? 'pending' : (csr.error.value ? 'error' : 'ready') }}

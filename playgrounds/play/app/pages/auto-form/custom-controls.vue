@@ -104,7 +104,7 @@ const schema = afz.object({
   rating: afz
     .number({ type: 'ratingDesc' })
     .default(0)
-    .meta({ label: '评分', description: '点击数字直接评分，右侧显示描述' })
+    .meta({ label: '评分', description: '点击数字直接评分，描述随分值变化' })
 })
 
 type Schema = z.output<typeof schema>
@@ -120,7 +120,7 @@ function onSubmit(event: FormSubmitEvent<Schema>) {
   <Navbar />
 
   <div class="p-4 grid grid-cols-1 xl:grid-cols-[1fr_360px] gap-4">
-    <Showcase title="自定义控件注册" description="通过 useAutoForm({ controls }) 注册 counter、slug、ratingDesc，并在 afz type 中使用">
+    <Showcase title="自定义控件注入" description="useAutoForm({ controls }) 注册控件，afz type 按名匹配">
       <MAutoForm :schema="schema" :state="state" :controls="controls" @submit="onSubmit" />
     </Showcase>
     <StateViewer :state="state" label="state" />

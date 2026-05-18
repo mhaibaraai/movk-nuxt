@@ -9,7 +9,7 @@ const richSchema = afz.object({
     .meta({ label: 'Label' }),
   description: afz.string({ controlProps: { placeholder: '查看字段说明文本' } })
     .meta({ label: 'Description', description: '显示在 label 下方的描述文本' }),
-  hint: afz.string({ controlProps: { placeholder: '查看右侧 hint' } })
+  hint: afz.string({ controlProps: { placeholder: '展示 hint 文本' } })
     .meta({ label: 'Hint', hint: '可选' }),
   help: afz.string({ controlProps: { placeholder: '查看 help 文本' } })
     .meta({ label: 'Help', help: '没有错误时显示在控件下方的帮助文本' }),
@@ -81,7 +81,7 @@ const richState = reactive<Partial<z.output<typeof richSchema>>>({ hidden: 'secr
   <Navbar />
 
   <div class="p-4 grid grid-cols-1">
-    <Showcase title="字段元数据" description="通过 meta() 配置 label、description、hint、help、error、样式、条件和分组" :state="richState">
+    <Showcase title="字段元数据渲染" description="meta() 配置 label、提示、错误、样式、条件渲染与对象分组" :state="richState">
       <template #toolbar>
         <UButton size="sm" label="重置" @click="autoForm?.reset()" />
       </template>

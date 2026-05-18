@@ -30,8 +30,8 @@ async function loadMore() {
 
   <div class="p-4 flex flex-col gap-4">
     <Showcase
-      title="无限滚动"
-      :description="`loadMore + canLoadMore + sticky 表头 · 已加载 ${items.length} / ${total}`"
+      title="增量加载与粘性表头"
+      :description="`loadMore 按页追加，canLoadMore 控制继续加载，sticky 表头保持可见 · 已加载 ${items.length} / ${total}`"
     >
       <MDataTable
         :data="items"

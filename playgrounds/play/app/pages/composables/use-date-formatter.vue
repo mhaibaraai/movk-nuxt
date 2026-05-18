@@ -35,8 +35,8 @@ const columns = [
 
   <div class="p-4 flex flex-col gap-4">
     <Showcase
-      title="useDateFormatter 方法表"
-      :description="`locale=${f.locale} · timeZone=${f.timeZone}`"
+      title="格式化能力一览"
+      :description="`useDateFormatter 以 locale=${f.locale}、timeZone=${f.timeZone} 输出格式化文本、ISO、时间戳与区间`"
     >
       <MDataTable :columns="columns" :data="rows" stripe bordered density="compact" />
     </Showcase>

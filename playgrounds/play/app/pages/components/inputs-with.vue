@@ -27,8 +27,8 @@ const fieldGroupValue = ref('Group value')
   <div class="p-4 flex flex-col gap-6">
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
       <Showcase
-        title="UFormField 兼容"
-        description="外层字段尺寸和错误态传递到内部 UInput"
+        title="继承字段上下文"
+        description="包装输入组件会把 UFormField 的 size、错误态和可访问性信息传递给内部 UInput。"
         :state="{ value: formFieldValue }"
       >
         <UFormField label="WithClear" size="xs" error="示例错误态">
@@ -37,8 +37,8 @@ const fieldGroupValue = ref('Group value')
       </Showcase>
 
       <Showcase
-        title="UFieldGroup 兼容"
-        description="输入封装和按钮共同继承分组尺寸"
+        title="融入分组控件"
+        description="与按钮放入 UFieldGroup 后共享尺寸和圆角，输入框与操作按钮保持一体化边界。"
         :state="{ value: fieldGroupValue }"
       >
         <UFieldGroup size="xs" class="w-full">

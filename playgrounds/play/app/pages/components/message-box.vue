@@ -11,8 +11,8 @@ function record(msg: string) {
 async function openByCommand() {
   const ok = await messageBox.confirm({
     type: 'warning',
-    title: '命令式调用',
-    description: '通过 useMessageBox().confirm() 唤起，等待用户操作'
+    title: '确认执行批量操作',
+    description: '由 useMessageBox().confirm() 唤起，返回值会在用户确认或取消后解析。'
   })
   record(`命令式 → ${ok}`)
 }
@@ -36,22 +36,22 @@ const dismissibleOpen = ref(false)
   <div class="p-4 grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-4">
     <div class="flex flex-col gap-4">
       <Showcase
-        title="命令式 API"
-        description="useMessageBox() 返回 alert/confirm，无需在模板中放占位组件"
+        title="命令式弹窗调用"
+        description="useMessageBox() 提供 alert 与 confirm 方法，无需在模板中预置组件即可等待用户决策。"
       >
         <div class="flex gap-2 flex-wrap">
           <UButton @click="openByCommand">
             打开 confirm
           </UButton>
-          <UButton variant="soft" @click="messageBox.alert({ type: 'success', title: '成功', description: '操作已完成' }).then(() => record('alert closed'))">
+          <UButton variant="soft" @click="messageBox.alert({ type: 'success', title: '操作已完成', description: 'alert 关闭后 Promise 会解析，日志记录关闭时机。' }).then(() => record('alert closed'))">
             打开 alert
           </UButton>
         </div>
       </Showcase>
 
       <Showcase
-        title="按 type 区分语义"
-        description="primary / info / success / warning / error / neutral，图标与确认按钮颜色随 type 变化"
+        title="按 type 呈现语义反馈"
+        description="primary、info、success、warning、error、neutral 会同步影响图标、确认按钮颜色和视觉优先级。"
       >
         <div class="flex flex-wrap gap-2">
           <template v-for="t in types" :key="t">
@@ -62,8 +62,8 @@ const dismissibleOpen = ref(false)
               v-model:open="openMap[t]"
               :type="t"
               mode="confirm"
-              :title="`${t} 类型`"
-              description="是否确认此操作？"
+              :title="`${t} 语义确认`"
+              description="点击确认或取消后关闭弹窗，并返回对应的布尔结果。"
               @close="(ok: boolean) => record(`${t} → ${ok}`)"
             />
           </template>
@@ -71,8 +71,8 @@ const dismissibleOpen = ref(false)
       </Showcase>
 
       <Showcase
-        title="alert / confirm 模式对比"
-        description="alert 仅显示确认按钮；confirm 同时显示取消与确认"
+        title="区分提示与确认模式"
+        description="alert 只呈现确认按钮并用于告知结果，confirm 同时提供取消与确认并返回用户选择。"
       >
         <div class="flex gap-2">
           <UButton variant="soft" @click="alertOpen = true">
@@ -86,24 +86,24 @@ const dismissibleOpen = ref(false)
             v-model:open="alertOpen"
             type="info"
             mode="alert"
-            title="alert 模式"
-            description="只有「知道了」一个按钮"
+            title="通知处理结果"
+            description="该模式只显示「知道了」按钮，关闭后返回 true。"
             @close="(ok: boolean) => record(`alert → ${ok}`)"
           />
           <MMessageBox
             v-model:open="confirmOpen"
             type="warning"
             mode="confirm"
-            title="confirm 模式"
-            description="点击确认或取消，结果会写入日志"
+            title="确认提交变更"
+            description="点击确认返回 true，点击取消返回 false，结果会写入日志。"
             @close="(ok: boolean) => record(`confirm → ${ok}`)"
           />
         </div>
       </Showcase>
 
       <Showcase
-        title="自定义按钮"
-        description="confirmLabel/cancelLabel 改文案，confirmButton/cancelButton 透传 ButtonProps"
+        title="定制按钮文案与属性"
+        description="confirmLabel、cancelLabel 改写文案，confirmButton、cancelButton 透传 ButtonProps 调整图标和样式。"
       >
         <div class="flex gap-2">
           <UButton variant="outline" @click="labelOpen = true">
@@ -117,8 +117,8 @@ const dismissibleOpen = ref(false)
             v-model:open="labelOpen"
             type="primary"
             mode="confirm"
-            title="协议确认"
-            description="使用 confirmLabel / cancelLabel 改写按钮文案"
+            title="确认接受服务协议"
+            description="按钮文案由 confirmLabel 与 cancelLabel 控制，关闭结果会回传给调用方。"
             confirm-label="我同意"
             cancel-label="再想想"
             @close="(ok: boolean) => record(`label → ${ok}`)"
@@ -127,8 +127,8 @@ const dismissibleOpen = ref(false)
             v-model:open="buttonPropsOpen"
             type="info"
             mode="confirm"
-            title="ButtonProps 透传"
-            description="confirmButton/cancelButton 接收完整 ButtonProps"
+            title="继续后续流程"
+            description="confirmButton 与 cancelButton 接收完整 ButtonProps，可为不同操作配置图标、颜色和 variant。"
             :confirm-button="{ label: '继续', icon: 'i-lucide-arrow-right', color: 'info' }"
             :cancel-button="{ label: '取消', variant: 'ghost' }"
             @close="(ok: boolean) => record(`buttonProps → ${ok}`)"
@@ -137,8 +137,8 @@ const dismissibleOpen = ref(false)
       </Showcase>
 
       <Showcase
-        title="dismissible 行为"
-        description="默认 false，遮罩与 Esc 不可关；设为 true 时点遮罩或 Esc 也会关闭并 emit close(false)"
+        title="控制非按钮关闭策略"
+        description="dismissible 默认为 false；开启后点击遮罩或按 Esc 也会关闭，并通过 close(false) 标记为未确认。"
       >
         <div class="flex gap-2">
           <UButton color="neutral" variant="outline" @click="strictOpen = true">
@@ -152,16 +152,16 @@ const dismissibleOpen = ref(false)
             v-model:open="strictOpen"
             type="error"
             mode="confirm"
-            title="严格模式"
-            description="只能通过按钮关闭，Esc 与遮罩点击无效"
+            title="严格确认高风险操作"
+            description="只能通过取消或确认按钮关闭，Esc 与遮罩点击不会改变打开状态。"
             @close="(ok: boolean) => record(`strict → ${ok}`)"
           />
           <MMessageBox
             v-model:open="dismissibleOpen"
             type="neutral"
             mode="confirm"
-            title="可关闭"
-            description="按 Esc 或点击遮罩关闭，会以 false 通知父组件"
+            title="允许快速放弃操作"
+            description="按 Esc 或点击遮罩会关闭弹窗，并以 false 通知父组件。"
             dismissible
             @close="(ok: boolean) => record(`dismissible → ${ok}`)"
           />

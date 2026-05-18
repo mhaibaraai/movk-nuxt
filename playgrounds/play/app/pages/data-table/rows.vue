@@ -29,7 +29,10 @@ function rowClass(row: Person): string {
   <Navbar />
 
   <div class="p-4 grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-4">
-    <Showcase title="行交互" description="rowSelection · expanded · onSelect · rowClass · selectOnRowClick">
+    <Showcase
+      title="行选择与展开"
+      description="rowSelection、expanded 通过 v-model 暴露状态，rowClass 控制高亮，select 事件返回选中行"
+    >
       <template #toolbar>
         <USwitch v-model="selectOnRowClick" label="点行即选" />
       </template>

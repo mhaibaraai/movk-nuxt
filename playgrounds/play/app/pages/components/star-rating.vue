@@ -61,13 +61,13 @@ function clearLog() {
   </Navbar>
 
   <div class="p-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
-    <Showcase title="UFormField 兼容" description="外层字段尺寸和错误态传递到评分控件" :state="{ value: formFieldRating }">
+    <Showcase title="继承字段上下文" description="放入 UFormField 后接收字段尺寸和错误态，评分图标会随表单状态更新。" :state="{ value: formFieldRating }">
       <UFormField label="满意度" size="xs" error="示例错误态">
         <MStarRating v-model="formFieldRating" />
       </UFormField>
     </Showcase>
 
-    <Showcase title="UFieldGroup 兼容" description="评分控件和按钮共同继承分组尺寸" :state="{ value: fieldGroupRating }">
+    <Showcase title="融入分组控件" description="评分控件与重置按钮共享 UFieldGroup 尺寸，适合在紧凑表单行内组合操作。" :state="{ value: fieldGroupRating }">
       <UFieldGroup size="xs" class="w-full">
         <MStarRating v-model="fieldGroupRating" />
         <UButton icon="i-lucide-rotate-ccw" color="neutral" variant="subtle" @click="fieldGroupRating = 0" />
@@ -75,7 +75,7 @@ function clearLog() {
     </Showcase>
   </div>
 
-  <UFormField label="Emits 演示" help="点击 / 悬浮 / 键盘交互（含 Backspace 清零）均会写入日志。" class="p-4">
+  <UFormField label="事件回调" help="点击、悬浮、键盘交互（含 Backspace 清零）都会触发对应事件。" class="p-4">
     <div class="flex flex-wrap items-start gap-6">
       <MStarRating
         v-model="emitsValue"
@@ -86,12 +86,12 @@ function clearLog() {
         @hover="onHover"
       />
       <UButton size="xs" variant="ghost" :disabled="!eventLog.length" @click="clearLog">
-        Clear log
+        清空记录
       </UButton>
     </div>
     <StateViewer
       :state="{ modelValue: emitsValue, hoverValue, eventLog }"
-      :label="`Emits 状态（日志最近 ${MAX_LOG} 条，连续 hover 已折叠）`"
+      :label="`事件记录（最近 ${MAX_LOG} 条，连续 hover 已折叠）`"
       class="mt-3"
     />
   </UFormField>

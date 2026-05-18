@@ -24,7 +24,10 @@ async function start() {
 
   <div class="p-4 grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-4">
     <div class="flex flex-col gap-4">
-      <Showcase title="选择文件" description="支持多文件，调用 POST /api/upload">
+      <Showcase
+        title="上传进度与中止"
+        description="useUploadWithProgress 通过 multipart POST 上传，进度、uploading 与错误状态同步"
+      >
         <div class="flex items-center gap-2 flex-wrap">
           <input ref="inputRef" type="file" multiple class="text-sm" @change="onChange">
           <UButton :loading="uploading" :disabled="!selected.length" icon="i-lucide-upload" @click="start">
@@ -41,7 +44,10 @@ async function start() {
         </p>
       </Showcase>
 
-      <Showcase title="已选文件" :description="`共 ${selected.length} 个`">
+      <Showcase
+        title="待上传文件清单"
+        :description="`选择器缓存 ${selected.length} 个文件，列表展示名称与体积，上传前不发起请求`"
+      >
         <ul class="text-sm flex flex-col gap-1">
           <li v-for="f in selected" :key="f.name" class="flex justify-between gap-3">
             <span class="truncate">{{ f.name }}</span>

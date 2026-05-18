@@ -18,7 +18,10 @@ async function start() {
   <Navbar />
 
   <div class="p-4 grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-4">
-    <Showcase title="下载大文件" description="GET /api/download/large 流式返回 ~5MB">
+    <Showcase
+      title="流式下载进度"
+      description="useDownloadWithProgress 请求 GET /api/download/large，同步暴露进度与传输状态"
+    >
       <div class="flex gap-2">
         <UButton :loading="downloading" icon="i-lucide-download" @click="start">
           开始下载

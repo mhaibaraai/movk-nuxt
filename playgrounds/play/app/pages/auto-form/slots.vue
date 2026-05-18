@@ -64,7 +64,7 @@ const arrayContentSchema = afz.object({
     })
   ).default([
     { title: '整理 slot 示例', priority: 'high', done: false },
-    { title: '验证 setValue 路径', priority: 'medium', done: false }
+    { title: '梳理 setValue 路径', priority: 'medium', done: false }
   ]).meta({ label: '待办列表', collapsible: { defaultOpen: true } })
 })
 const arrayContentState = reactive<Partial<z.output<typeof arrayContentSchema>>>({})
@@ -84,7 +84,7 @@ function createTodo() {
   <Navbar />
 
   <div class="p-4 grid grid-cols-1 xl:grid-cols-2 gap-4">
-    <Showcase title="表单级插槽" description="header、footer、submit 可读取 loading、errors、state 并接管表单外层区域" :state="formSlotState">
+    <Showcase title="表单级插槽接管" description="header、footer、submit 可读取 loading、errors、state 定制外层" :state="formSlotState">
       <MAutoForm
         :schema="formSlotSchema"
         :state="formSlotState"
@@ -96,8 +96,8 @@ function createTodo() {
             color="info"
             variant="soft"
             icon="i-lucide-log-in"
-            title="登录表单"
-            description="header slot 位于所有字段之前，可展示说明或状态"
+            title="header 插槽状态展示"
+            description="header slot 在字段渲染前接收 loading，可同步展示说明与提交状态"
           >
             <template v-if="loading" #actions>
               <UBadge color="info" variant="subtle">
@@ -131,7 +131,7 @@ function createTodo() {
       </MAutoForm>
     </Showcase>
 
-    <Showcase title="通用字段插槽" description="field-label、field-hint、field-error 统一接管所有字段的标签、提示和错误展示" :state="genericSlotState">
+    <Showcase title="通用字段插槽接管" description="field-label、field-hint、field-error 统一覆盖字段标签与提示" :state="genericSlotState">
       <MAutoForm :schema="genericSlotSchema" :state="genericSlotState" :validate-on="['input', 'blur']">
         <template #field-label="{ label, path }">
           <span class="inline-flex items-center gap-2">
@@ -164,7 +164,7 @@ function createTodo() {
       </MAutoForm>
     </Showcase>
 
-    <Showcase title="指定字段插槽" description="通过 field-default:bio、field-help:password 等命名插槽只覆盖指定字段" :state="fieldSlotState">
+    <Showcase title="命名字段插槽覆盖" description="field-default:bio、field-help:password 仅替换指定字段区域" :state="fieldSlotState">
       <MAutoForm :schema="fieldSlotSchema" :state="fieldSlotState">
         <template #field-label:username="{ label }">
           <UBadge icon="i-lucide-user" color="success" variant="subtle" size="xs">
@@ -177,7 +177,7 @@ function createTodo() {
             color="warning"
             variant="subtle"
             icon="i-lucide-shield-check"
-            description="密码至少 8 位。这个提示只来自 password 字段的 help slot。"
+            description="field-help:password 只替换 password 字段的帮助说明，并保留字段默认控件"
             class="mt-2"
           />
         </template>
@@ -194,14 +194,14 @@ function createTodo() {
       </MAutoForm>
     </Showcase>
 
-    <Showcase title="字段前后插槽" description="field-before:settings 与 field-after:settings 在对象字段默认渲染前后插入内容" :state="beforeAfterState">
+    <Showcase title="字段前后内容插入" description="field-before、field-after 在默认字段前后追加内容，不接管子字段" :state="beforeAfterState">
       <MAutoForm :schema="beforeAfterSchema" :state="beforeAfterState">
         <template #field-before:settings="{ path }">
           <UAlert
             color="neutral"
             variant="subtle"
             icon="i-lucide-settings"
-            title="渲染前插入"
+            title="field-before 插入点"
             :description="`field-before:${path} 不接管子字段，只在默认内容前追加说明。`"
             class="mb-4"
           />
@@ -223,7 +223,7 @@ function createTodo() {
       </MAutoForm>
     </Showcase>
 
-    <Showcase title="对象 content 插槽" description="field-content:profile 接管对象字段，通过 setValue('key', value) 更新子字段" :state="objectContentState">
+    <Showcase title="对象字段 content 接管" description="field-content 替换对象内容，通过 setValue('key', value) 更新子字段" :state="objectContentState">
       <MAutoForm :schema="objectContentSchema" :state="objectContentState">
         <template #field-content:profile="{ path, value, setValue }">
           <div class="space-y-4 rounded-md border border-default p-4">
@@ -272,7 +272,7 @@ function createTodo() {
       </MAutoForm>
     </Showcase>
 
-    <Showcase title="数组 content 插槽" description="field-content:todos 接管数组字段，通过 setValue([...]) 与 setValue('[0].title', value) 更新列表" :state="arrayContentState">
+    <Showcase title="数组字段 content 接管" description="field-content 替换数组内容，通过 setValue 写入列表或单项" :state="arrayContentState">
       <MAutoForm :schema="arrayContentSchema" :state="arrayContentState">
         <template #field-content:todos="{ value, setValue }">
           <div class="space-y-3">

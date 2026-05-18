@@ -83,7 +83,7 @@ function onSearchReset() {
   <Navbar />
 
   <div class="p-4 grid grid-cols-1 xl:grid-cols-2 gap-4">
-    <Showcase title="登录表单" description="使用邮箱、密码和记住我字段，loadingAuto 自动管理提交按钮 loading 状态" :state="loginState">
+    <Showcase title="登录表单" description="组合邮箱、密码与记住我字段，loadingAuto 接管异步提交态" :state="loginState">
       <MAutoForm
         :schema="loginSchema"
         :state="loginState"
@@ -92,7 +92,7 @@ function onSearchReset() {
       />
     </Showcase>
 
-    <Showcase title="嵌套对象注册" description="通过嵌套 object 分组账号与资料字段，并用 refine 校验两次密码一致" :state="registerState">
+    <Showcase title="注册分组校验" description="嵌套 object 分组字段，refine 校验确认密码一致" :state="registerState">
       <MAutoForm
         :schema="registerSchema"
         :state="registerState"
@@ -101,7 +101,7 @@ function onSearchReset() {
       />
     </Showcase>
 
-    <Showcase title="文件上传" description="afz.array(afz.file()) 渲染多文件上传字段，并在异步提交后统计文件数量" :state="fileState">
+    <Showcase title="多文件上传" description="afz.array(afz.file()) 渲染多文件字段，提交后汇总附件数量" :state="fileState">
       <MAutoForm
         :schema="fileSchema"
         :state="fileState"
@@ -110,7 +110,7 @@ function onSearchReset() {
       />
     </Showcase>
 
-    <Showcase title="搜索表单" description="globalMeta 横向排布筛选项，footer 插槽接管搜索和重置按钮" :state="searchState">
+    <Showcase title="横向搜索表单" description="globalMeta 横向排布筛选项，footer 插槽承载操作按钮" :state="searchState">
       <MAutoForm
         ref="searchForm"
         :schema="searchSchema"

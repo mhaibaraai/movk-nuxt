@@ -29,15 +29,15 @@ const validateOn = ref<FormInputEvents[]>(['blur'])
   <Navbar />
 
   <div class="p-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
-    <Showcase title="最小表单渲染" description="仅传入 schema 与 state，即可根据字段类型自动渲染表单" :state="minimalState">
+    <Showcase title="Schema 驱动渲染" description="传入 schema 与 state 即可根据字段类型生成控件" :state="minimalState">
       <MAutoForm :schema="minimalSchema" :state="minimalState" />
     </Showcase>
 
-    <Showcase title="可选字段与默认值" description="optional() 标记非必填字段，default() 在表单初始化时写入默认值" :state="optionalState">
+    <Showcase title="可选字段与默认值" description="optional() 标记非必填，default() 在初始化时写入默认值" :state="optionalState">
       <MAutoForm :schema="optionalSchema" :state="optionalState" />
     </Showcase>
 
-    <Showcase title="校验触发时机" description="通过 validate-on 切换 input、change、blur 事件，观察字段校验触发时机" :state="validateOnState">
+    <Showcase title="校验事件策略" description="通过 validate-on 切换 input、change、blur 触发时机" :state="validateOnState">
       <template #toolbar>
         <USelect v-model="validateOn" :items="validateItems" multiple size="xs" class="w-25" />
       </template>

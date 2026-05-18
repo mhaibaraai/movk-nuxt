@@ -43,8 +43,8 @@ const state = reactive<Partial<z.output<typeof schema>>>({})
 
   <div class="p-4 grid grid-cols-1 xl:grid-cols-[1fr_360px] gap-4">
     <Showcase
-      title="字段类型映射"
-      description="展示 string、number、boolean、enum、date、array、object、tuple、file 等 Zod 类型到控件的默认映射"
+      title="Zod 类型控件映射"
+      description="string、number、date、array、object、tuple、file 等 Zod 类型对应的默认控件"
     >
       <template #toolbar>
         <UButton size="sm" label="重置" @click="autoForm?.reset()" />

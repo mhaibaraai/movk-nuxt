@@ -38,7 +38,10 @@ const serverTotal = computed(() => data.value?.total ?? 0)
   <Navbar />
 
   <div class="p-4 flex flex-col gap-4">
-    <Showcase title="客户端 vs 服务端分页">
+    <Showcase
+      title="客户端与服务端分页"
+      description="切换本地数组与 /api/people 手动分页，搜索、排序、刷新驱动 queryUrl、pending、total 更新"
+    >
       <template #toolbar>
         <UTabs
           v-model="mode"

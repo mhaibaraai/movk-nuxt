@@ -72,19 +72,19 @@ watch(() => dependsState.country, () => {
   <Navbar />
 
   <div class="p-4 grid grid-cols-1 xl:grid-cols-2 gap-4">
-    <Showcase title="条件渲染" description="通过 if 控制通知邮箱渲染，通过 hidden 根据条款勾选状态隐藏订阅字段" :state="conditionalState">
+    <Showcase title="条件字段渲染" description="if 控制字段挂载，hidden 按其它字段值隐藏" :state="conditionalState">
       <MAutoForm :schema="conditionalSchema" :state="conditionalState" />
     </Showcase>
 
-    <Showcase title="依赖联动" description="国家字段变化时重算城市字段的 controlProps.items，并清空旧城市值" :state="dependsState">
+    <Showcase title="依赖项联动" description="国家字段变化时重算城市选项并清空失效值" :state="dependsState">
       <MAutoForm :schema="dependsSchema" :state="dependsState" />
     </Showcase>
 
-    <Showcase title="动态数组字段" description="afz.array() 自动渲染团队成员列表，并支持成员对象的添加与删除" :state="arrayState">
+    <Showcase title="数组对象编辑" description="afz.array() 渲染对象列表，支持添加、删除与状态同步" :state="arrayState">
       <MAutoForm :schema="arraySchema" :state="arrayState" />
     </Showcase>
 
-    <Showcase title="异步字段校验" description="字段通过异步 refine 模拟服务端校验，输入 'admin' 时返回占用错误" :state="asyncState">
+    <Showcase title="异步字段校验" description="异步 refine 模拟服务端校验，失焦后返回占用错误" :state="asyncState">
       <MAutoForm :schema="asyncSchema" :state="asyncState" :validate-on="['blur']" />
     </Showcase>
   </div>

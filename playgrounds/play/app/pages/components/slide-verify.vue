@@ -37,13 +37,13 @@ function resetFieldGroup() {
   </Navbar>
 
   <div class="p-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
-    <Showcase title="UFormField 兼容" description="外层字段尺寸和错误态传递到滑动验证" :state="{ value: formFieldVerified }">
+    <Showcase title="继承字段上下文" description="放入 UFormField 后接收字段尺寸与错误态，滑块按表单状态渲染。" :state="{ value: formFieldVerified }">
       <UFormField label="滑动验证" size="xs" error="示例错误态">
         <MSlideVerify v-model="formFieldVerified" />
       </UFormField>
     </Showcase>
 
-    <Showcase title="UFieldGroup 兼容" description="滑动验证和按钮共同继承分组尺寸" :state="{ value: fieldGroupVerified }">
+    <Showcase title="融入分组控件" description="与重置按钮组合时共享 UFieldGroup 尺寸，滑块区域和按钮保持统一高度。" :state="{ value: fieldGroupVerified }">
       <UFieldGroup size="xs" class="w-full">
         <MSlideVerify :key="fieldGroupKey" v-model="fieldGroupVerified" class="flex-1" />
         <UButton icon="i-lucide-rotate-ccw" color="neutral" variant="subtle" @click="resetFieldGroup" />

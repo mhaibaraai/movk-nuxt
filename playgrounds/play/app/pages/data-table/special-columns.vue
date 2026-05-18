@@ -45,7 +45,7 @@ const columns: DataTableColumn<Person>[] = [
         confirmProps: ({ row }) => ({
           type: 'error',
           title: `删除 ${row.name}？`,
-          description: '该操作不可恢复',
+          description: '删除动作会先弹出确认框，确认后才写入 action 日志',
           confirmText: '删除'
         }),
         onClick: ({ row }) => record(`deleted ${row.name}`)
@@ -63,8 +63,8 @@ const rowPinning = ref<{ top?: string[], bottom?: string[] }>({})
 
   <div class="p-4 grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-4">
     <Showcase
-      title="特殊列类型"
-      description="selection · index · expand · row-pinning · actions(maxInline=2 折叠 + 确认弹窗)"
+      title="特殊列与操作折叠"
+      description="同时启用 selection、index、row-pinning 与 actions，超过 maxInline 的操作折叠到菜单"
     >
       <MDataTable
         v-model:row-selection="rowSelection"

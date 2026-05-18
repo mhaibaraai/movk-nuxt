@@ -31,7 +31,10 @@ const truncate = ref(true)
   <Navbar />
 
   <div class="p-4 flex flex-col gap-6">
-    <Showcase title="树形表格" description="childrenKey + cascade 选择策略 + 自动展开列">
+    <Showcase
+      title="树形数据与级联选择"
+      description="childrenKey 识别层级，selection cascade 同步父子选中，expand 列控制展开"
+    >
       <MDataTable
         :data="treeData"
         :columns="treeColumns"
@@ -42,7 +45,10 @@ const truncate = ref(true)
       />
     </Showcase>
 
-    <Showcase title="视觉控制">
+    <Showcase
+      title="视觉密度与截断"
+      description="切换斑马纹、边框、密度与 tooltip 截断，UI props 即时影响表格呈现"
+    >
       <template #toolbar>
         <USwitch v-model="stripe" label="斑马纹" />
         <USwitch v-model="bordered" label="纵向边框" />

@@ -58,7 +58,7 @@ const enabledFormats = ref<ColorChooserProps['formats']>(['hex', 'rgb', 'hsl'])
   <Navbar />
 
   <div class="p-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
-    <Showcase title="UFormField 兼容" description="外层字段尺寸和错误态传递到触发按钮" :state="{ value: formFieldValue }">
+    <Showcase title="继承字段上下文" description="放入 UFormField 后继承 size 与错误态，颜色触发器会按表单状态渲染。" :state="{ value: formFieldValue }">
       <UFormField label="品牌色" size="xs" error="示例错误态">
         <MColorChooser
           v-model="formFieldValue"
@@ -67,20 +67,20 @@ const enabledFormats = ref<ColorChooserProps['formats']>(['hex', 'rgb', 'hsl'])
       </UFormField>
     </Showcase>
 
-    <Showcase title="UFieldGroup 兼容" description="颜色触发器和按钮共同继承分组尺寸" :state="{ value: fieldGroupValue }">
+    <Showcase title="融入分组控件" description="颜色输入触发器与按钮共享 UFieldGroup 尺寸，适合表单行内的取色操作。" :state="{ value: fieldGroupValue }">
       <UFieldGroup size="xs" class="w-full">
         <MColorChooser v-model="fieldGroupValue" trigger="input" />
         <UButton icon="i-lucide-pipette" color="neutral" variant="subtle" />
       </UFieldGroup>
     </Showcase>
 
-    <Showcase title="基础用法" description="默认 button 触发器" :state="{ value: basic }">
+    <Showcase title="按钮触发取色" description="默认 button 触发器展示当前色值，打开弹层后可从面板选择并同步 v-model。" :state="{ value: basic }">
       <MColorChooser v-model="basic" />
     </Showcase>
 
     <Showcase
-      title="Format 切换 tab"
-      description="在 popover 顶部切换 hex / rgb / hsl，输出格式实时变化"
+      title="切换颜色输出格式"
+      description="在 popover 顶部切换 hex、rgb、hsl，当前值会转换为对应格式并触发 format-change。"
       :state="{ value: formatsValue, enabledFormats }"
     >
       <template #toolbar>
@@ -99,17 +99,17 @@ const enabledFormats = ref<ColorChooserProps['formats']>(['hex', 'rgb', 'hsl'])
       />
     </Showcase>
 
-    <Showcase title="预设色板（一维）" description="单行 swatches，点击即选中并默认关闭弹层" :state="{ value: swatchesValue }">
+    <Showcase title="单组预设色板" description="一维 swatches 渲染为连续色板，点击色块会选中颜色并默认关闭弹层。" :state="{ value: swatchesValue }">
       <MColorChooser v-model="swatchesValue" :swatches="tailwindPalette" />
     </Showcase>
 
-    <Showcase title="预设色板（二维分组）" description="多行 swatches，按色相 / 中性色分组" :state="{ value: groupedValue }">
+    <Showcase title="分组预设色板" description="二维 swatches 按行分组展示色相与中性色，可通过 closeOnSwatch 控制选择后是否关闭。" :state="{ value: groupedValue }">
       <MColorChooser v-model="groupedValue" :swatches="groupedSwatches" :close-on-swatch="false" />
     </Showcase>
 
     <Showcase
-      title="复制 / 清除 actions"
-      description="copyable + clearable 启用底部 actions 区"
+      title="复制与清除操作"
+      description="copyable 与 clearable 会启用底部 actions 区，复制、清除和值变化都会写入事件日志。"
       :state="{ value: actionsValue }"
     >
       <MColorChooser
@@ -122,14 +122,14 @@ const enabledFormats = ref<ColorChooserProps['formats']>(['hex', 'rgb', 'hsl'])
         @change="(v: string | undefined) => logEvent('change', v)"
       />
       <template #aside>
-        <StateViewer :state="{ value: actionsValue, eventLog }" label="Emits 状态" />
+        <StateViewer :state="{ value: actionsValue, eventLog }" label="事件记录" />
         <UButton size="xs" variant="ghost" :disabled="!eventLog.length" class="self-start" @click="clearLog">
-          Clear log
+          清空记录
         </UButton>
       </template>
     </Showcase>
 
-    <Showcase title="Trigger = chip" description="仅圆形色点，常用于工具栏 / 颜色单元格" :state="{ value: chipValue }">
+    <Showcase title="色点触发器" description="trigger='chip' 只渲染紧凑色点，适合工具栏、表格单元格或空间受限场景。" :state="{ value: chipValue }">
       <MColorChooser
         v-model="chipValue"
         :ui="{
@@ -140,11 +140,11 @@ const enabledFormats = ref<ColorChooserProps['formats']>(['hex', 'rgb', 'hsl'])
       />
     </Showcase>
 
-    <Showcase title="Trigger = input" description="色点 + 可输入色值文本框，blur 时自动校验 hex" :state="{ value: inputValue }">
+    <Showcase title="输入型触发器" description="trigger='input' 提供色点与文本输入，blur 时校验 hex 并同步有效色值。" :state="{ value: inputValue }">
       <MColorChooser v-model="inputValue" trigger="input" :swatches="tailwindPalette" clearable copyable />
     </Showcase>
 
-    <Showcase title="自定义触发器（default slot）" description="完全接管触发器渲染" :state="{ value: slotValue }">
+    <Showcase title="自定义触发器渲染" description="default slot 可完全接管触发器外观，同时通过 open 与 value slot props 保持弹层状态可见。" :state="{ value: slotValue }">
       <MColorChooser v-model="slotValue" :swatches="tailwindPalette">
         <template #default="{ open, value }">
           <button
@@ -159,7 +159,7 @@ const enabledFormats = ref<ColorChooserProps['formats']>(['hex', 'rgb', 'hsl'])
       </MColorChooser>
     </Showcase>
 
-    <Showcase title="ui prop 覆盖" description="把 swatches 网格改成 4 列、放大 swatch 尺寸" :state="{ value: uiValue }">
+    <Showcase title="覆盖内部 UI slots" description="ui prop 可定制 swatches 网格和 swatch 尺寸，不影响取色、复制和清除机制。" :state="{ value: uiValue }">
       <MColorChooser
         v-model="uiValue"
         :swatches="tailwindPalette"
@@ -170,7 +170,7 @@ const enabledFormats = ref<ColorChooserProps['formats']>(['hex', 'rgb', 'hsl'])
       />
     </Showcase>
 
-    <Showcase title="禁用态" description="popover 不打开、input 只读" :state="{ value: disabledValue }">
+    <Showcase title="禁用交互状态" description="disabled 会阻止 popover 打开，并让 input 触发器进入只读状态，当前值保持可展示。" :state="{ value: disabledValue }">
       <div class="flex flex-wrap items-center gap-3">
         <MColorChooser v-model="disabledValue" disabled />
         <MColorChooser v-model="disabledValue" trigger="chip" disabled />

@@ -103,44 +103,44 @@ function getItemLabel(item: PillItem): string {
   </Navbar>
 
   <div class="p-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
-    <Showcase title="UFormField 兼容" description="外层字段尺寸和错误态传递到 pill" :state="{ value: formFieldValue }">
+    <Showcase title="继承字段上下文" description="放入 UFormField 后继承 size 与错误态，选项胶囊会按表单状态同步显示。" :state="{ value: formFieldValue }">
       <UFormField label="订阅方案" size="xs" error="示例错误态">
         <MPillGroup v-model="formFieldValue" :items="planItems" />
       </UFormField>
     </Showcase>
 
-    <Showcase title="UFieldGroup 兼容" description="pill 与按钮共同继承分组尺寸与圆角" :state="{ value: fieldGroupValue }">
+    <Showcase title="融入分组控件" description="与操作按钮放入 UFieldGroup 后共享尺寸和圆角，适合行内筛选与快捷清除。" :state="{ value: fieldGroupValue }">
       <UFieldGroup size="xs" class="w-full">
         <MPillGroup v-model="fieldGroupValue" :items="stringItems" />
         <UButton icon="i-lucide-rotate-ccw" color="neutral" variant="subtle" @click="fieldGroupValue = undefined" />
       </UFieldGroup>
     </Showcase>
 
-    <Showcase title="基础用法" description="传入字符串数组即用" :state="{ value: basicValue }">
+    <Showcase title="字符串选项快速选择" description="传入字符串数组即可生成单选胶囊，选中值直接写入 v-model。" :state="{ value: basicValue }">
       <MPillGroup v-model="basicValue" :items="stringItems" />
     </Showcase>
 
-    <Showcase title="对象 items + 描述/图标" description="默认 labelKey='label'，descriptionKey='description'" :state="{ value: planValue }">
+    <Showcase title="结构化选项渲染" description="对象 items 可通过 labelKey、descriptionKey 与 icon 渲染复合内容，同时保留原始对象作为值。" :state="{ value: planValue }">
       <MPillGroup v-model="planValue" :items="planItems" />
     </Showcase>
 
-    <Showcase title="多选模式" description="multiple=true 时 modelValue 为数组" :state="{ value: multiValue }">
+    <Showcase title="多选集合管理" description="开启 multiple 后 modelValue 变为数组，用户可连续选择多个方案并实时同步状态。" :state="{ value: multiValue }">
       <MPillGroup v-model="multiValue" :items="planItems" multiple value-key="value" />
     </Showcase>
 
     <Showcase
-      title="多选 min/max 约束"
+      title="多选数量约束"
       :description="`至少保留 ${MIN_COUNT} 项，最多 ${MAX_COUNT} 项；触顶时未选项变灰，触底时已选不可取消`"
       :state="{ value: constrainedValue, min: MIN_COUNT, max: MAX_COUNT }"
     >
       <MPillGroup v-model="constrainedValue" :items="statusItems" multiple :min="MIN_COUNT" :max="MAX_COUNT" />
     </Showcase>
 
-    <Showcase title="单选 deselectable" description="再次点击当前选项即清空" :state="{ value: deselectableValue }">
+    <Showcase title="单选可取消" description="deselectable 允许再次点击当前项清空选择，适合非必选筛选条件。" :state="{ value: deselectableValue }">
       <MPillGroup v-model="deselectableValue" :items="planItems" deselectable />
     </Showcase>
 
-    <Showcase title="头像 + 自定义 valueKey" description="labelKey='name'，valueKey='id'，modelValue 为 id 字符串" :state="{ value: userValue }">
+    <Showcase title="自定义字段映射" description="通过 labelKey='name' 与 valueKey='id' 读取业务对象，modelValue 只保存稳定 id。" :state="{ value: userValue }">
       <MPillGroup
         v-model="userValue"
         :items="userItems"
@@ -149,22 +149,22 @@ function getItemLabel(item: PillItem): string {
       />
     </Showcase>
 
-    <Showcase title="按项覆盖 color" description="每个 status item 自带语义色，渲染时按项生效" :state="{ value: statusValue }">
+    <Showcase title="按选项覆盖语义色" description="每个状态项可携带独立 color，渲染时按项应用，便于表达任务状态差异。" :state="{ value: statusValue }">
       <MPillGroup v-model="statusValue" :items="statusItems" />
     </Showcase>
 
-    <Showcase title="禁用态" description="单项 disabled 与整体 disabled" :state="{ partial: partialDisabledValue, full: fullDisabledValue }">
+    <Showcase title="局部与整体禁用" description="单项 disabled 会阻止该项交互，整体 disabled 会冻结整个选项组并保留当前值。" :state="{ partial: partialDisabledValue, full: fullDisabledValue }">
       <div class="flex flex-col gap-3">
         <MPillGroup v-model="partialDisabledValue" :items="featureItems" />
         <MPillGroup v-model="fullDisabledValue" :items="featureItems" disabled />
       </div>
     </Showcase>
 
-    <Showcase title="竖向排列" description="orientation='vertical'" :state="{ value: verticalValue }">
+    <Showcase title="垂直排列选项" description="orientation='vertical' 将选项改为纵向堆叠，适合描述较长或移动端窄容器。" :state="{ value: verticalValue }">
       <MPillGroup v-model="verticalValue" :items="planItems" orientation="vertical" />
     </Showcase>
 
-    <Showcase title="自定义 slot" description="item-label 加粗，item-trailing 显示选中标记" :state="{ value: slotValue }">
+    <Showcase title="插槽定制选项内容" description="item-label 与 item-trailing 可接管局部渲染，选中标记会随 selected slot props 更新。" :state="{ value: slotValue }">
       <MPillGroup v-model="slotValue" :items="planItems" multiple>
         <template #item-label="{ item }">
           <span class="font-semibold">{{ getItemLabel(item) }}</span>
@@ -175,7 +175,7 @@ function getItemLabel(item: PillItem): string {
       </MPillGroup>
     </Showcase>
 
-    <Showcase title="active/inactive variant" description="自由组合激活态与未激活态视觉" :state="{ value: variantValue }">
+    <Showcase title="区分激活与未激活样式" description="activeVariant 与 inactiveVariant 可分别控制选中和未选状态，便于匹配不同密度的界面。" :state="{ value: variantValue }">
       <div class="flex flex-col gap-3">
         <MPillGroup v-model="variantValue" :items="planItems" active-variant="solid" inactive-variant="outline" />
         <MPillGroup v-model="variantValue" :items="planItems" active-variant="subtle" inactive-variant="ghost" />
@@ -183,7 +183,7 @@ function getItemLabel(item: PillItem): string {
       </div>
     </Showcase>
 
-    <Showcase title="Emits 演示" description="点击 pill 触发 update:modelValue / change / select 三类事件">
+    <Showcase title="事件回调" description="点击选项依次触发 update:modelValue、change 与 select，可比较 payload 差异。">
       <div class="flex flex-wrap items-start gap-3">
         <MPillGroup
           v-model="emitsValue"
@@ -194,13 +194,13 @@ function getItemLabel(item: PillItem): string {
           @select="onSelect"
         />
         <UButton size="xs" variant="ghost" :disabled="!eventLog.length" @click="clearLog">
-          Clear log
+          清空记录
         </UButton>
       </div>
       <template #aside>
         <StateViewer
           :state="{ modelValue: emitsValue, eventLog }"
-          :label="`Emits 状态（最近 ${MAX_LOG} 条）`"
+          :label="`事件记录（最近 ${MAX_LOG} 条）`"
         />
       </template>
     </Showcase>

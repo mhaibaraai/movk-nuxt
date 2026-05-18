@@ -74,16 +74,16 @@ async function onRefSubmit() {
 
   <div class="p-4 grid grid-cols-1 xl:grid-cols-2 gap-4">
     <Showcase
-      title="自动 loading 提交"
-      description="@submit 返回 Promise，按钮 loading 自动管理"
+      title="Promise 自动 loading"
+      description="@submit 返回 Promise 时，按钮 loading 由 AutoForm 自动管理"
       :state="autoState"
     >
       <MAutoForm :schema="autoSchema" :state="autoState" @submit="onAutoSubmit" />
     </Showcase>
 
     <Showcase
-      title="手动 loading 提交"
-      description=":loading-auto=false，通过 submitButtonProps.loading 自管"
+      title="手动 loading 控制"
+      description="关闭 loadingAuto，由 submitButtonProps.loading 接管按钮状态"
       :state="manualState"
     >
       <MAutoForm
@@ -96,8 +96,8 @@ async function onRefSubmit() {
     </Showcase>
 
     <Showcase
-      title="提交异常与校验错误"
-      description="@submit 内 try/catch；@error 监听校验失败"
+      title="异常与校验事件"
+      description="@submit 处理异步异常，@error 接收字段校验失败"
       :state="errState"
     >
       <MAutoForm
@@ -109,8 +109,8 @@ async function onRefSubmit() {
     </Showcase>
 
     <Showcase
-      title="实例 API 提交"
-      description="useTemplateRef 调用 submit / reset / clear"
+      title="实例方法调用"
+      description="useTemplateRef 拿到表单实例后可外部触发 submit、reset、clear"
       :state="refState"
     >
       <template #toolbar>
