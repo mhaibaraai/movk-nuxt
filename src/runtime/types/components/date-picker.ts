@@ -1,4 +1,4 @@
-import type { ButtonProps, CalendarEmits, CalendarProps, PopoverEmits, PopoverProps } from '@nuxt/ui'
+import type { ButtonProps, ButtonSlots, CalendarEmits, CalendarProps, CalendarSlots, PopoverEmits, PopoverProps, PopoverSlots } from '@nuxt/ui'
 import type { OmitByKey } from '@movk/core'
 import type { DateValue } from '@internationalized/date'
 import type { DateFormatter, DateFormatterOptions, ValueFormat } from '../../composables/useDateFormatter'
@@ -70,3 +70,7 @@ export type DatePickerEmits<
   & {
     'update:modelValue': [value: FormattedValue<R, M, V>]
   }
+
+export type DatePickerSlots<
+  P extends PopoverMode = PopoverMode
+> = OmitByKey<PopoverSlots<P>, 'anchor'> & CalendarSlots & OmitByKey<ButtonSlots, 'default'>

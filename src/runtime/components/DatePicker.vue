@@ -17,6 +17,7 @@ import type {
   DatePickerEmits,
   DatePickerPreset,
   DatePickerProps,
+  DatePickerSlots,
   FormattedValue,
   LabelFormat
 } from '../types/components/date-picker'
@@ -31,6 +32,7 @@ const props = withDefaults(defineProps<_Props>(), {
 })
 
 const emits = defineEmits<DatePickerEmits<R, M, V>>()
+defineSlots<DatePickerSlots<P>>()
 
 defineOptions({ inheritAttrs: false })
 
@@ -198,10 +200,6 @@ const { baseUi, extraUi } = useExtendedTv(
           </template>
         </UButton>
       </slot>
-    </template>
-
-    <template v-if="$slots.anchor" #anchor="anchor">
-      <slot name="anchor" v-bind="anchor" />
     </template>
 
     <template #content>
