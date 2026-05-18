@@ -26,10 +26,11 @@ interface _Props extends AutoFormProps<S, T, N> {
 
 const props = withDefaults(defineProps<_Props>(), {
   submit: true,
+  loadingAuto: true,
   validateOn: () => []
 })
 
-const emits = defineEmits<AutoFormEmits<S>>()
+const emits = defineEmits<AutoFormEmits>()
 const slots = defineSlots<AutoFormSlots<AutoFormStateType>>()
 defineOptions({ inheritAttrs: false })
 
@@ -120,10 +121,6 @@ const { extendUi } = useExtendedTv(
   })
 )
 
-onMounted(() => {
-  resolveDefaultValue(fields.value, stateModel.value)
-})
-
 function reset() {
   stateModel.value = { ...(props.state ?? {}) } as AutoFormStateType
   resolveDefaultValue(fields.value, stateModel.value)
@@ -134,6 +131,10 @@ function clear() {
   stateModel.value = {} as AutoFormStateType
   formRef.value?.clear()
 }
+
+onMounted(() => {
+  resolveDefaultValue(fields.value, stateModel.value)
+})
 
 defineExpose({
   formRef,
@@ -159,7 +160,6 @@ defineExpose({
       :ui="extendUi"
       data-slot="form"
       v-bind="attrs"
-      @submit="props.onSubmit"
       @error="emits('error', $event)"
     >
       <template #default="{ errors, loading }">
@@ -193,6 +193,7 @@ defineExpose({
             :loading="loading"
             :loading-auto="props.loadingAuto"
             :size="resolvedButtonSize"
+            :disabled="attrs.disabled as boolean"
             v-bind="props.submitButtonProps"
           />
         </slot>
