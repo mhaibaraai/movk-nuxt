@@ -133,7 +133,7 @@ export interface DataTableProps<T extends TableData> extends /* @vue-ignore */ O
    * @defaultValue false
    */
   tooltip?: boolean | number | ((ctx: CellContext<T, unknown>) => boolean | number)
-  tooltipProps?: Omit<TooltipProps, 'text'>
+  tooltipProps?: OmitByKey<TooltipProps, 'text'>
   /**
    * 单元格文本截断：true 单行 / number 多行 / false 禁用 / 函数 动态
    * @defaultValue true

@@ -37,7 +37,7 @@ export interface PopconfirmProps<M extends PopoverMode = PopoverMode> extends /*
    * 透传给确认按钮的属性。
    * `loading` 状态由组件内部托管。
    */
-  confirmButton?: Omit<ButtonProps, 'loading' | LinkPropsKeys>
+  confirmButton?: OmitByKey<ButtonProps, 'loading' | LinkPropsKeys>
   /**
    * 透传给取消按钮的属性。
    * 传入 `false` 可完全隐藏取消按钮。
