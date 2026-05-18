@@ -1,309 +1,214 @@
 <script setup lang="ts">
-import type { PillGroupProps, PillItem, PillItemObject } from '@movk/nuxt'
-import type { SelectItem } from '@nuxt/ui'
+import type { PillItem, PillSelectPayload, SemanticColor, SemanticSize } from '@movk/nuxt'
 
-interface User {
-  id: number
-  name: string
-  email: string
-  avatar?: { src: string }
-}
-
-const literalItems = ['grid', 'list', 'kanban']
-
-const viewItems: PillItem[] = [
-  { label: 'Grid', value: 'grid' },
-  { label: 'List', value: 'list' },
-  { label: 'Kanban', value: 'kanban' }
-]
-
-const formatItems: PillItem[] = [
-  { label: 'HEX', value: 'hex' },
-  { label: 'RGB', value: 'rgb' },
-  { label: 'HSL', value: 'hsl' },
-  { label: 'CMYK', value: 'cmyk' }
-]
-
-const userItems = ref<User[]>([
-  { id: 1, name: 'Alice', email: 'alice@movk.dev', avatar: { src: 'https://i.pravatar.cc/40?img=1' } },
-  { id: 2, name: 'Bob', email: 'bob@movk.dev', avatar: { src: 'https://i.pravatar.cc/40?img=2' } },
-  { id: 3, name: 'Carol', email: 'carol@movk.dev', avatar: { src: 'https://i.pravatar.cc/40?img=3' } },
-  { id: 4, name: 'Dave', email: 'dave@movk.dev', avatar: { src: 'https://i.pravatar.cc/40?img=4' } }
-])
+const stringItems = ['全部', '进行中', '已完成', '已归档']
 
 const planItems: PillItem[] = [
-  { label: 'Basic', type: 'basic', description: '免费 · 5 项目' },
-  { label: 'Pro', type: 'pro', description: '$9/月 · 无限项目' },
-  { label: 'Team', type: 'team', description: '$29/月 · 协作' },
-  { label: 'Enterprise', type: 'enterprise', description: '$99/月 · 无限项目' }
+  { value: 'free', label: '免费版', description: '基础功能 / 1 用户', icon: 'i-lucide-gift' },
+  { value: 'pro', label: '专业版', description: '团队协作 / 10 用户', icon: 'i-lucide-zap' },
+  { value: 'enterprise', label: '企业版', description: '自定义 SLA / 不限', icon: 'i-lucide-building' }
 ]
 
-const periodItems: PillItem[] = [
-  { label: '本日', value: 'day' },
-  { label: '本周', value: 'week' },
-  { label: '本月', value: 'month' },
-  { label: '本年', value: 'year' }
+const statusItems: PillItem[] = [
+  { value: 'todo', label: '待办', icon: 'i-lucide-circle', color: 'neutral' },
+  { value: 'doing', label: '进行中', icon: 'i-lucide-loader', color: 'warning' },
+  { value: 'done', label: '已完成', icon: 'i-lucide-check-circle', color: 'success' },
+  { value: 'block', label: '阻塞', icon: 'i-lucide-octagon-x', color: 'error' }
 ]
 
-const techItems: PillItem[] = [
-  { label: 'Vue', value: 'vue' },
-  { label: 'React', value: 'react' },
-  { label: 'Svelte', value: 'svelte' },
-  { label: 'Solid', value: 'solid' }
+const featureItems: PillItem[] = [
+  { value: 'a', label: 'Feature A', icon: 'i-lucide-sparkles' },
+  { value: 'b', label: 'Feature B（敬请期待）', icon: 'i-lucide-clock', disabled: true },
+  { value: 'c', label: 'Feature C', icon: 'i-lucide-rocket' }
 ]
 
-const todoItems: PillItem[] = [
-  { label: 'Todo', value: 'todo' },
-  { label: 'Doing', value: 'doing' },
-  { label: 'Done', value: 'done' }
-]
+const userItems = [
+  { id: 'u1', name: 'Alice', avatar: { src: 'https://i.pravatar.cc/40?img=1' } },
+  { id: 'u2', name: 'Bob', avatar: { src: 'https://i.pravatar.cc/40?img=2' } },
+  { id: 'u3', name: 'Carol', avatar: { src: 'https://i.pravatar.cc/40?img=3' } }
+] as PillItem[]
 
-const trendItems: PillItem[] = [
-  { label: '热门', value: 'hot' },
-  { label: '最新', value: 'new' },
-  { label: '推荐', value: 'rec' }
-]
+const sizes: SemanticSize[] = ['xs', 'sm', 'md', 'lg', 'xl']
+const colors: SemanticColor[] = ['primary', 'info', 'warning', 'neutral', 'error', 'success']
 
-const tagItems: PillItem[] = [
-  { label: '前端', value: 'fe' },
-  { label: '后端', value: 'be' },
-  { label: '运维', value: 'ops' },
-  { label: '设计', value: 'design' }
-]
+const attrs = ref({
+  size: ['md'] as SemanticSize[],
+  color: ['primary'] as SemanticColor[]
+})
 
-const disabledItems: PillItem[] = [
-  { label: 'Grid', value: 'grid' },
-  { label: 'List', value: 'list', disabled: true },
-  { label: 'Kanban', value: 'kanban' }
-]
+const formFieldValue = ref<PillItem | undefined>(planItems[1])
+const fieldGroupValue = ref<string | undefined>('全部')
+const basicValue = ref<string | undefined>('全部')
+const planValue = ref<PillItem | undefined>(planItems[0])
+const multiValue = ref<string[]>(['free', 'pro'])
+const constrainedValue = ref<PillItem[]>([statusItems[1]!, statusItems[2]!])
+const deselectableValue = ref<PillItem | undefined>(planItems[0])
+const userValue = ref<string | undefined>('u1')
+const statusValue = ref<PillItem | undefined>(statusItems[1])
+const partialDisabledValue = ref<PillItem | undefined>(featureItems[0])
+const fullDisabledValue = ref<PillItem | undefined>(featureItems[0])
+const verticalValue = ref<PillItem | undefined>(planItems[1])
+const slotValue = ref<PillItem[]>([planItems[1]!])
+const variantValue = ref<PillItem | undefined>(planItems[1])
+const emitsValue = ref<PillItem[]>([planItems[1]!])
+const matrixValue = ref<PillItem | undefined>(planItems[1])
 
-// 单选 (multiple=false / 默认)
-const singleScalar = ref<string | undefined>('grid')
-const singleObject = ref<PillItem | undefined>()
-const singleUser = ref<User | undefined>(userItems.value[2])
-const singleDeselectable = ref<string | undefined>('todo')
-const singleOnSelect = ref<string | undefined>('en')
-const singleDisabled = ref<string | undefined>('grid')
-const singleDescription = ref<string | undefined>('basic')
-const singleVertical = ref<string | undefined>('week')
-const singleSlot = ref<string | undefined>('hot')
-const singleMatrix = ref<string | undefined>('grid')
-const formFieldCompat = ref<string | undefined>('grid')
-const fieldGroupCompat = ref<string | undefined>('list')
+const MIN_COUNT = 1
+const MAX_COUNT = 3
 
-// 多选 (multiple=true)
-const multiScalar = ref<string[]>(['hex', 'rgb'])
-const multiObject = ref<PillItem[]>([{
-  label: 'HSL',
-  value: 'hsl'
-},
-{
-  label: 'CMYK',
-  value: 'cmyk'
-}])
-const multiUser = ref<User[]>([])
-const multiOnSelect = ref<string[]>(['fe'])
-const multiMax = ref<string[]>(['day', 'week'])
-const multiMin = ref<string[]>(['vue'])
-const multiDisabled = ref<string[]>(['grid'])
-const multiVertical = ref<string[]>(['week'])
-const multiUi = ref<string[]>([])
-const multiMatrix = ref<string[]>(['grid', 'kanban'])
-
-const eventLog = ref<{ id: number, name: string, payload: unknown, time: string }[]>([])
-let seq = 0
-function logEvent(name: string, payload: unknown) {
-  eventLog.value = [
-    { id: ++seq, name, payload, time: new Date().toLocaleTimeString('zh-CN', { hour12: false }) },
-    ...eventLog.value
-  ].slice(0, 10)
+interface EventEntry {
+  id: number
+  name: 'update:modelValue' | 'change' | 'select'
+  payload: unknown
+  time: string
 }
+
+const eventLog = ref<EventEntry[]>([])
+let eventSeq = 0
+const MAX_LOG = 8
+
+function logEvent(name: EventEntry['name'], payload: unknown) {
+  eventLog.value = [
+    {
+      id: ++eventSeq,
+      name,
+      payload,
+      time: new Date().toLocaleTimeString('zh-CN', { hour12: false })
+    },
+    ...eventLog.value
+  ].slice(0, MAX_LOG)
+}
+
+function onSelect(payload: PillSelectPayload<PillItem>) {
+  const itemLabel = typeof payload.item === 'object' && payload.item
+    ? payload.item.label ?? String(payload.item.value)
+    : String(payload.item)
+  logEvent('select', { label: itemLabel, selected: payload.selected, index: payload.index })
+}
+
 function clearLog() {
   eventLog.value = []
 }
 
-const langItems: PillItem[] = [
-  { label: 'English', value: 'en', icon: 'i-lucide-globe', onSelect: () => logEvent('item.onSelect', { lang: 'en' }) },
-  { label: '简体中文', value: 'zh-CN', icon: 'i-lucide-globe', onSelect: () => logEvent('item.onSelect', { lang: 'zh-CN' }) },
-  { label: '日本語', value: 'ja', icon: 'i-lucide-globe', onSelect: () => logEvent('item.onSelect', { lang: 'ja' }) }
-]
-
-const tagItemsWithHook: PillItemObject[] = (tagItems as PillItemObject[]).map(it => ({
-  ...it,
-  onSelect: () => logEvent('item.onSelect', it.value)
-}))
-
-const a: SelectItem[] = [
-  { a: '22' }
-]
-
-const sizes: NonNullable<PillGroupProps['size']>[] = ['xs', 'sm', 'md', 'lg', 'xl']
-const variants: NonNullable<PillGroupProps['activeVariant']>[] = ['solid', 'outline', 'soft', 'subtle']
+function getItemLabel(item: PillItem): string {
+  if (typeof item === 'object' && item) return item.label ?? String(item.value)
+  return String(item)
+}
 </script>
 
 <template>
-  <Navbar />
+  <Navbar>
+    <USelect v-model="attrs.size" :items="sizes" multiple size="xs" placeholder="size" />
+    <USelect v-model="attrs.color" :items="colors" multiple size="xs" placeholder="color" />
+  </Navbar>
 
-  <Showcase title="1. 字面量 items" description="字符串数组,无需 value-key" :state="{ value: singleObject }">
-    <MPillGroup
-      :color="'warning'"
-      size="xl"
-      :items="['222', '11']"
-      label-key="name"
-      value-key="name"
-      description-key="email"
-    />
-  </Showcase>
-
-  <!-- <div class="p-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
-    <Showcase title="UFormField 兼容" description="外层字段尺寸和错误态传递到按钮组" :state="{ value: formFieldCompat }">
-      <UFormField label="视图模式" size="xs" error="示例错误态">
-        <MPillGroup v-model="formFieldCompat" :items="viewItems" value-key="value" />
+  <div class="p-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <Showcase title="UFormField 兼容" description="外层字段尺寸和错误态传递到 pill" :state="{ value: formFieldValue }">
+      <UFormField label="订阅方案" size="xs" error="示例错误态">
+        <MPillGroup v-model="formFieldValue" :items="planItems" />
       </UFormField>
     </Showcase>
 
-    <Showcase title="UFieldGroup 兼容" description="按钮组和操作按钮共同继承分组尺寸" :state="{ value: fieldGroupCompat }">
+    <Showcase title="UFieldGroup 兼容" description="pill 与按钮共同继承分组尺寸与圆角" :state="{ value: fieldGroupValue }">
       <UFieldGroup size="xs" class="w-full">
-        <MPillGroup v-model="fieldGroupCompat" :items="viewItems" value-key="value" />
-        <UButton icon="i-lucide-filter" color="neutral" variant="subtle" />
+        <MPillGroup v-model="fieldGroupValue" :items="stringItems" />
+        <UButton icon="i-lucide-rotate-ccw" color="neutral" variant="subtle" @click="fieldGroupValue = undefined" />
       </UFieldGroup>
     </Showcase>
-  </div>
 
-  <div class="p-4 space-y-2">
-    <h2 class="text-lg font-semibold">
-      单选模式 (默认 / multiple=false)
-    </h2>
-  </div>
-
-  <div class="p-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
-    <Showcase title="1. 字面量 items" description="字符串数组,无需 value-key" :state="{ value: singleObject }">
-      <MPillGroup v-model="singleObject" :items="literalItems" />
+    <Showcase title="基础用法" description="传入字符串数组即用" :state="{ value: basicValue }">
+      <MPillGroup v-model="basicValue" :items="stringItems" />
     </Showcase>
 
-    <Showcase title="2. 对象 items + value-key" description="v-model 是 value 字段标量" :state="{ value: singleScalar }">
-      <MPillGroup v-model="singleScalar" :items="viewItems" value-key="value" />
+    <Showcase title="对象 items + 描述/图标" description="默认 labelKey='label'，descriptionKey='description'" :state="{ value: planValue }">
+      <MPillGroup v-model="planValue" :items="planItems" />
     </Showcase>
 
-    <Showcase title="3. 业务对象 + by='id'" description="v-model 是 user 整对象,by 加速比对" :state="{ value: singleUser }">
-      <MPillGroup v-model="singleUser" :items="userItems" label-key="name" description-key="email" by="id" />
+    <Showcase title="多选模式" description="multiple=true 时 modelValue 为数组" :state="{ value: multiValue }">
+      <MPillGroup v-model="multiValue" :items="planItems" multiple value-key="value" />
     </Showcase>
 
-    <Showcase title="4. description 双行布局" description="size=lg + 套餐对比" :state="{ value: singleDescription }">
-      <MPillGroup v-model="singleDescription" :items="planItems" value-key="value" size="lg" />
+    <Showcase
+      title="多选 min/max 约束"
+      :description="`至少保留 ${MIN_COUNT} 项，最多 ${MAX_COUNT} 项；触顶时未选项变灰，触底时已选不可取消`"
+      :state="{ value: constrainedValue, min: MIN_COUNT, max: MAX_COUNT }"
+    >
+      <MPillGroup v-model="constrainedValue" :items="statusItems" multiple :min="MIN_COUNT" :max="MAX_COUNT" />
     </Showcase>
 
-    <Showcase title="5. deselectable" description="再次点击清空" :state="{ value: singleDeselectable }">
-      <MPillGroup v-model="singleDeselectable" :items="todoItems" value-key="value" deselectable />
+    <Showcase title="单选 deselectable" description="再次点击当前选项即清空" :state="{ value: deselectableValue }">
+      <MPillGroup v-model="deselectableValue" :items="planItems" deselectable />
     </Showcase>
 
-    <Showcase title="6. 纵向排列" description="orientation=vertical" :state="{ value: singleVertical }">
-      <MPillGroup v-model="singleVertical" :items="periodItems" value-key="value" orientation="vertical" />
-    </Showcase>
-
-    <Showcase title="7. item.onSelect 钩子" description="单项点击在 v-model 更新前触发" :state="{ value: singleOnSelect, eventLog }">
+    <Showcase title="头像 + 自定义 valueKey" description="labelKey='name'，valueKey='id'，modelValue 为 id 字符串" :state="{ value: userValue }">
       <MPillGroup
-        v-model="singleOnSelect"
-        :items="langItems"
-        value-key="value"
-        @change="(v) => logEvent('change', v)"
+        v-model="userValue"
+        :items="userItems"
+        label-key="name"
+        value-key="id"
       />
-      <template #aside-extra>
-        <UButton size="xs" variant="ghost" :disabled="!eventLog.length" class="self-start" @click="clearLog">
-          Clear log
-        </UButton>
-      </template>
     </Showcase>
 
-    <Showcase title="8. 禁用态" description="单项 disabled + 整体 disabled" :state="{ value: singleDisabled }">
+    <Showcase title="按项覆盖 color" description="每个 status item 自带语义色，渲染时按项生效" :state="{ value: statusValue }">
+      <MPillGroup v-model="statusValue" :items="statusItems" />
+    </Showcase>
+
+    <Showcase title="禁用态" description="单项 disabled 与整体 disabled" :state="{ partial: partialDisabledValue, full: fullDisabledValue }">
       <div class="flex flex-col gap-3">
-        <MPillGroup v-model="singleDisabled" :items="disabledItems" value-key="value" />
-        <MPillGroup v-model="singleDisabled" :items="viewItems" value-key="value" disabled />
+        <MPillGroup v-model="partialDisabledValue" :items="featureItems" />
+        <MPillGroup v-model="fullDisabledValue" :items="featureItems" disabled />
       </div>
     </Showcase>
 
-    <Showcase title="9. label slot + ui 覆盖" description="自定义 label + 圆形容器" :state="{ value: singleSlot }">
-      <MPillGroup v-model="singleSlot" :items="trendItems" value-key="value">
-        <template #label="{ item, selected }">
-          <span class="font-mono">{{ selected ? '★' : '·' }} {{ item && typeof item === 'object' ? item.label : item }}</span>
+    <Showcase title="竖向排列" description="orientation='vertical'" :state="{ value: verticalValue }">
+      <MPillGroup v-model="verticalValue" :items="planItems" orientation="vertical" />
+    </Showcase>
+
+    <Showcase title="自定义 slot" description="item-label 加粗，item-trailing 显示选中标记" :state="{ value: slotValue }">
+      <MPillGroup v-model="slotValue" :items="planItems" multiple>
+        <template #item-label="{ item }">
+          <span class="font-semibold">{{ getItemLabel(item) }}</span>
+        </template>
+        <template #item-trailing="{ selected }">
+          <UIcon v-if="selected" name="i-lucide-check" class="size-3.5" />
         </template>
       </MPillGroup>
     </Showcase>
-  </div>
 
-  <div class="p-4 space-y-2 pt-8">
-    <h2 class="text-lg font-semibold">
-      多选模式 (multiple=true)
-    </h2>
-  </div>
-
-  <div class="p-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
-    <Showcase title="11. 标量数组" description="value-key='value', v-model 是 value 数组" :state="{ value: multiScalar }">
-      <MPillGroup v-model="multiScalar" :items="formatItems" value-key="value" multiple />
-    </Showcase>
-
-    <Showcase title="12. 对象数组 (不传 value-key)" description="v-model 拿到 item 对象数组" :state="{ value: multiObject }">
-      <MPillGroup v-model="multiObject" :items="formatItems" multiple />
-    </Showcase>
-
-    <Showcase title="13. 业务对象 + by='id'" description="O(1) Map 命中优化" :state="{ value: multiUser }">
-      <MPillGroup v-model="multiUser" :items="userItems" label-key="name" by="id" multiple />
-    </Showcase>
-
-    <Showcase title="14. max=2 触顶禁用" description="未选项被锁定" :state="{ value: multiMax }">
-      <MPillGroup v-model="multiMax" :items="periodItems" value-key="value" multiple :max="2" />
-    </Showcase>
-
-    <Showcase title="15. min=1 阻止取消" description="已选 1 项时取消失败 (新增能力)" :state="{ value: multiMin }">
-      <MPillGroup v-model="multiMin" :items="techItems" value-key="value" multiple :min="1" />
-    </Showcase>
-
-    <Showcase title="16. 纵向排列" description="orientation=vertical" :state="{ value: multiVertical }">
-      <MPillGroup v-model="multiVertical" :items="periodItems" value-key="value" orientation="vertical" multiple />
-    </Showcase>
-
-    <Showcase title="17. item.onSelect + change" description="单项钩子与 emit 顺序" :state="{ value: multiOnSelect, eventLog }">
-      <MPillGroup
-        v-model="multiOnSelect"
-        :items="tagItemsWithHook"
-        value-key="value"
-        multiple
-        @change="(v) => logEvent('change', v)"
-      />
-      <template #aside-extra>
-        <UButton size="xs" variant="ghost" :disabled="!eventLog.length" class="self-start" @click="clearLog">
-          Clear log
-        </UButton>
-      </template>
-    </Showcase>
-
-    <Showcase title="18. 禁用态" description="单项 disabled + 整体 disabled" :state="{ value: multiDisabled }">
+    <Showcase title="active/inactive variant" description="自由组合激活态与未激活态视觉" :state="{ value: variantValue }">
       <div class="flex flex-col gap-3">
-        <MPillGroup v-model="multiDisabled" :items="disabledItems" value-key="value" multiple />
-        <MPillGroup v-model="multiDisabled" :items="formatItems" value-key="value" multiple disabled />
+        <MPillGroup v-model="variantValue" :items="planItems" active-variant="solid" inactive-variant="outline" />
+        <MPillGroup v-model="variantValue" :items="planItems" active-variant="subtle" inactive-variant="ghost" />
+        <MPillGroup v-model="variantValue" :items="planItems" active-variant="outline" inactive-variant="link" />
       </div>
     </Showcase>
 
-    <Showcase title="19. ui 覆盖" description="圆形容器 + 主题色" :state="{ value: multiUi }">
-      <MPillGroup
-        v-model="multiUi"
-        :items="tagItems"
-        value-key="value"
-        multiple
-        color="success"
-        :ui="{ list: 'rounded-full bg-success/5 ring-1 ring-success/30 gap-2 p-1.5' }"
-      />
+    <Showcase title="Emits 演示" description="点击 pill 触发 update:modelValue / change / select 三类事件">
+      <div class="flex flex-wrap items-start gap-3">
+        <MPillGroup
+          v-model="emitsValue"
+          :items="planItems"
+          multiple
+          @update:model-value="(v) => logEvent('update:modelValue', v)"
+          @change="(v) => logEvent('change', v)"
+          @select="onSelect"
+        />
+        <UButton size="xs" variant="ghost" :disabled="!eventLog.length" @click="clearLog">
+          Clear log
+        </UButton>
+      </div>
+      <template #aside>
+        <StateViewer
+          :state="{ modelValue: emitsValue, eventLog }"
+          :label="`Emits 状态（最近 ${MAX_LOG} 条）`"
+        />
+      </template>
     </Showcase>
   </div>
 
-  <Matrix v-slot="{ size, variant }" :attrs="{ size: sizes, variant: variants }" class="p-4">
-    <div class="flex flex-col gap-2">
-      <UFormField :label="`${size} · ${variant} · single`" size="xs">
-        <MPillGroup v-model="singleMatrix" :items="literalItems" :size="size" :active-variant="variant" />
-      </UFormField>
-      <UFormField :label="`${size} · ${variant} · multiple`" size="xs">
-        <MPillGroup v-model="multiMatrix" :items="literalItems" multiple :size="size" :active-variant="variant" />
-      </UFormField>
-    </div>
-  </Matrix> -->
+  <Matrix v-slot="props" :attrs="attrs" class="p-4">
+    <UFormField :label="`${props.size} · ${props.color}`" size="xs">
+      <MPillGroup v-model="matrixValue" :items="planItems" :size="props.size" :color="props.color" />
+    </UFormField>
+  </Matrix>
 </template>
