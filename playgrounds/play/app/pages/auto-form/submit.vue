@@ -48,7 +48,7 @@ function onErrError() {
 }
 
 const refSchema = afz.object({
-  name: afz.string().min(2).meta({ label: '姓名' }),
+  name: afz.string().min(2).meta({ label: '姓名' }).default('默认值'),
   age: afz.number().min(0).meta({ label: '年龄' })
 })
 const refState = reactive<Partial<z.output<typeof refSchema>>>({})

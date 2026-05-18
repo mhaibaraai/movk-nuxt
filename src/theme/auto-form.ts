@@ -1,5 +1,10 @@
 export default () => ({
   slots: {
-    base: 'space-y-4'
+    base: '',
+    body: 'space-y-4',
+    group: 'space-y-4',
+    header: '',
+    footer: '',
+    actions: ''
   }
 })
