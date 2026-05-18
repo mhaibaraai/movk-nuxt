@@ -1385,7 +1385,7 @@ packages:
       vue: ^3.5.25
 
   '@movk/core@https://pkg.pr.new/@movk/core@52e49fc':
-    resolution: {integrity: sha512-Qiz+kNlSfoBbK65rvQwsKRSnAYQPRiM/6bQFQ72A7ttgb4TmuMUY0Oa2i5ddBmVk92jf7n40PsZUjrOludGBoQ==, tarball: https://pkg.pr.new/@movk/core@52e49fc}
+    resolution: {tarball: https://pkg.pr.new/@movk/core@52e49fc}
     version: 1.2.4
     hasBin: true
     peerDependencies:
