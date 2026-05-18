@@ -3,13 +3,15 @@ import { z } from 'zod'
 import { AUTOFORM_META } from '../../../src/runtime/domains/auto-form/constants'
 import { applyMeta } from '../../../src/runtime/domains/auto-form/metadata'
 import { extractPureSchema, introspectSchema } from '../../../src/runtime/domains/auto-form/schema'
-import type { AutoFormControls } from '../../../src/runtime/types/auto-form'
+import { useAutoForm } from '../../../src/runtime/composables'
 
 describe('auto-form schema', () => {
+  const { afz } = useAutoForm()
+
   const mapping = {
     string: { component: 'Input', controlProps: { class: 'w-full' } },
     number: { component: 'InputNumber', controlProps: { class: 'w-full' } }
-  } satisfies AutoFormControls
+  } as any
 
   it('introspectSchema 解析对象字段、默认 label 与控件映射', () => {
     const schema = afz.object({

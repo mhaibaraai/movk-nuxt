@@ -3,16 +3,15 @@ import type { ComponentConfig, InferInput } from '@nuxt/ui'
 import type { z } from 'zod'
 import type { Ref } from 'vue'
 import { UForm } from '#components'
-import { computed, onMounted, ref, unref, useAttrs, useTemplateRef } from 'vue'
-import { deepClone, getPath, isFunction, setPath } from '@movk/core'
+import { computed, onMounted, ref, toRaw, unref, useAttrs, useTemplateRef } from 'vue'
+import { deepClone, isFunction } from '@movk/core'
 import { useAutoFormProvider } from '../domains/auto-form/provider'
-import { classifyFields } from '../domains/auto-form/fields'
+import { applyFieldDefaults, classifyFields } from '../domains/auto-form/fields'
 import { extractPureSchema, introspectSchema } from '../domains/auto-form/schema'
-import { useAutoForm } from '../composables/useAutoForm'
+import { DEFAULT_CONTROLS } from '../domains/auto-form/controls'
 import AutoFormRendererChildren from '../domains/auto-form/components/Children.vue'
 import AutoFormRendererField from '../domains/auto-form/components/Field.vue'
 import type { AutoFormProps, AutoFormEmits, AutoFormSlots } from '../types/auto-form/component'
-import type { AutoFormField } from '../types/auto-form/slots'
 import { useExtendedTv } from '../utils/extend-theme'
 import theme from '#build/movk-ui/auto-form'
 import type { AppConfig } from 'nuxt/schema'
@@ -38,10 +37,9 @@ const attrs = useAttrs()
 
 const appConfig = useAppConfig() as { movk?: { autoForm?: unknown } }
 
-const initialState = deepClone(props.state ?? {}) as AutoFormStateType
+const initialState = deepClone(toRaw(props.state ?? {})) as AutoFormStateType
 const stateModel = ref(deepClone(initialState)) as Ref<AutoFormStateType>
 const formRef = useTemplateRef('formRef')
-const { DEFAULT_CONTROLS } = useAutoForm()
 const { resolveFieldProp } = useAutoFormProvider(stateModel, slots)
 
 const resolvedButtonSize = computed(() => {
@@ -52,48 +50,10 @@ const resolvedButtonSize = computed(() => {
 
 const pureSchema = computed(() => props.schema ? extractPureSchema(props.schema) as S : props.schema)
 
-const controlsMapping = computed(() => ({
-  ...DEFAULT_CONTROLS,
-  ...props.controls
-}))
-
-const fields = computed(() => {
-  if (!props.schema)
-    return []
-
-  return introspectSchema(props.schema, controlsMapping.value, '', props.globalMeta)
-})
-
-function resolveDefaultValue(fields: AutoFormField[], stateValue: AutoFormStateType) {
-  if (!fields.length)
-    return
-
-  const updates: Array<{ path: string, value: any }> = []
-
-  function collectDefaultValues(fieldList: AutoFormField[]) {
-    for (const field of fieldList) {
-      if (field?.decorators?.defaultValue !== undefined
-        && getPath(stateValue, field.path) === undefined) {
-        updates.push({
-          path: field.path,
-          value: field.decorators.defaultValue
-        })
-      }
-
-      if (field?.children && Array.isArray(field.children) && field.children.length > 0) {
-        collectDefaultValues(field.children)
-      }
-    }
-  }
-
-  collectDefaultValues(fields)
-
-  if (updates.length > 0) {
-    for (const { path, value } of updates) {
-      setPath(stateValue, path, value)
-    }
-  }
-}
+const controlsMapping = computed(() => ({ ...DEFAULT_CONTROLS, ...props.controls }))
+const fields = computed(() => props.schema
+  ? introspectSchema(props.schema, controlsMapping.value, '', props.globalMeta)
+  : [])
 
 const visibleFields = computed(() =>
   fields.value.filter(field =>
@@ -118,13 +78,16 @@ const { extendUi } = useExtendedTv(
   theme,
   () => appConfig.movk?.autoForm,
   () => ({
-    ui: props.ui
+    ui: {
+      ...props.ui,
+      root: [props.ui?.root, props.class]
+    }
   })
 )
 
 function reset() {
   stateModel.value = deepClone(initialState)
-  resolveDefaultValue(fields.value, stateModel.value)
+  applyFieldDefaults(fields.value, stateModel.value as Record<string, any>)
   formRef.value?.clear()
 }
 
@@ -134,7 +97,7 @@ function clear() {
 }
 
 onMounted(() => {
-  resolveDefaultValue(fields.value, stateModel.value)
+  applyFieldDefaults(fields.value, stateModel.value as Record<string, any>)
 })
 
 defineExpose({
@@ -145,11 +108,10 @@ defineExpose({
 </script>
 
 <template>
-  <div :class="extendUi.base">
+  <div :class="extendUi.root" data-slot="root">
     <UTheme
       :ui="{
-        form: { base: extendUi.body },
-        collapsible: { content: extendUi.group }
+        collapsible: { content: extendUi.collapsible }
       }"
     >
       <UForm
@@ -161,10 +123,13 @@ defineExpose({
         :validate-on="props.validateOn"
         data-slot="form"
         v-bind="attrs"
+        :ui="{
+          base: extendUi.base
+        }"
         @error="emits('error', $event)"
       >
         <template #default="{ errors, loading }">
-          <div v-if="$slots.header" :class="extendUi.header">
+          <div v-if="$slots.header" :class="extendUi.header" data-slot="header">
             <slot name="header" v-bind="{ errors, loading, fields: visibleFields, state: stateModel }" />
           </div>
 
@@ -186,11 +151,11 @@ defineExpose({
             />
           </template>
 
-          <div v-if="$slots.footer" :class="extendUi.footer">
+          <div v-if="$slots.footer" :class="extendUi.footer" data-slot="footer">
             <slot name="footer" v-bind="{ errors, loading, fields: visibleFields, state: stateModel }" />
           </div>
 
-          <div v-if="props.submit" :class="extendUi.actions">
+          <div v-if="props.submit" :class="extendUi.actions" data-slot="submit">
             <slot name="submit" v-bind="{ errors, loading, fields: visibleFields, state: stateModel }">
               <UButton
                 type="submit"

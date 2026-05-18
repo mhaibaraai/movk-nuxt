@@ -2,8 +2,30 @@ import type { VNode } from 'vue'
 import type { AutoFormField } from '../../types/auto-form'
 import { UButton, UIcon } from '#components'
 import { h } from 'vue'
-import { setPath } from '@movk/core'
+import { getPath, setPath } from '@movk/core'
 import { AUTOFORM_META } from './constants'
+
+/** 沿字段树回填带 defaultValue 的叶子节点，已存在值的路径不覆盖 */
+export function applyFieldDefaults(fields: AutoFormField[], target: Record<string, any>) {
+  if (!fields.length) return
+
+  const updates: Array<{ path: string, value: unknown }> = []
+
+  function collect(items: AutoFormField[]) {
+    for (const field of items) {
+      if (field?.decorators?.defaultValue !== undefined
+        && getPath(target, field.path) === undefined) {
+        updates.push({ path: field.path, value: field.decorators.defaultValue })
+      }
+      if (field?.children && Array.isArray(field.children) && field.children.length > 0) {
+        collect(field.children)
+      }
+    }
+  }
+
+  collect(fields)
+  for (const { path, value } of updates) setPath(target, path, value)
+}
 
 /** 将字段列表分类为叶子/嵌套/数组/布局四组 */
 export function classifyFields(fields: AutoFormField[]) {

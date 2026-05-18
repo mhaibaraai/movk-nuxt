@@ -9,5 +9,6 @@ export type {
 } from './controls'
 export type { AutoFormField, AutoFormSlotProps, DynamicFormSlots } from './slots'
 export type { TypedZodFactory } from './zod-factory'
+export type { BaseAutoFormProps } from './base'
 export type { AutoFormEmits, AutoFormProps, AutoFormSlots, AutoFormErrorHandler, AutoFormSubmitHandler } from './component'
-export type { SearchFormEmits, SearchFormProps, SearchFormSlots } from './search-form'
+export type { SearchFormEmits, SearchFormProps, SearchFormSlots, SearchFormAction, SearchFormSlotProps } from './search-form'

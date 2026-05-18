@@ -7,6 +7,7 @@ import type {
   IsAny,
   IsComponent,
   KnownKeys,
+  OmitByKey,
   Prettify,
   ReactiveValue,
   UnionToIntersection,
@@ -112,7 +113,7 @@ type MetaByControlKey<
 type MetaByComponent<C extends IsComponent> = {
   component: C
   type?: never
-} & Omit<AutoFormControlsMeta<C>, 'component' | 'type'>
+} & OmitByKey<AutoFormControlsMeta<C>, 'component' | 'type'>
 
 type MetaByDefaultIfExists<
   TControls extends AutoFormControls,
