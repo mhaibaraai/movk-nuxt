@@ -1,5 +1,5 @@
 import type { UseApiFetchOptions, UseApiFetchReturn } from '../types/api'
-import { useNuxtApp, useFetch } from '#imports'
+import { useNuxtApp, useFetch } from '#app'
 
 /**
  * API Fetch 组合式函数
