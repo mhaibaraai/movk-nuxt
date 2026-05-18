@@ -9,17 +9,24 @@ const schema = afz.object({
 })
 
 const params = ref({})
+
+function onExport() {
+  // 演示自定义动作：导出当前查询条件
+  // 在真实业务中可调用接口下载文件
+  alert(`导出查询条件: ${JSON.stringify(params.value)}`)
+}
 </script>
 
 <template>
   <MSearchForm
     v-model="params"
     :schema="schema"
-    search-text="查询"
-    reset-text="清空"
     expand-text="更多"
     collapse-text="收起"
-    :search-button-props="{ color: 'primary', variant: 'solid' }"
-    :reset-button-props="{ color: 'error', variant: 'outline' }"
+    :actions="[
+      { key: 'search', label: '查询', icon: 'i-lucide-search', type: 'submit', color: 'primary', variant: 'solid' },
+      { key: 'reset', label: '清空', icon: 'i-lucide-rotate-ccw', color: 'error', variant: 'outline' },
+      { key: 'export', label: '导出', icon: 'i-lucide-download', color: 'primary', variant: 'soft', onClick: onExport }
+    ]"
   />
 </template>

@@ -50,19 +50,19 @@ name: 'components-search-form-expand-example'
 ---
 ::
 
-## 按钮显隐
+## 自定义 actions
 
-通过 `showSearchButton` / `showResetButton` 控制按钮显隐，配合 `actions` slot 可完全自定义按钮区域：
+通过 `actions` 数组扩展或裁剪按钮：
+
+- 内置 `key: 'search'` 自动绑定提交，`key: 'reset'` 自动绑定重置；
+- 自定义 `key` 需提供 `onClick(ctx)`，`ctx` 中含 `state / errors / search / reset / clear / toggle / loading / expanded`；
+- 传 `actions: []` 关闭所有内置按钮，配合 `actions` slot 完全自定义。
 
 ::component-example
 ---
 name: 'components-search-form-hide-buttons-example'
 ---
 ::
-
-## 自定义按钮
-
-自定义按钮文本和样式：
 
 ::component-example
 ---
@@ -101,10 +101,12 @@ name: 'components-search-form-responsive-example'
 | Name | Type |
 | ---- | ---- |
 | `formRef`{lang="ts-type"} | `Ref<InstanceType<typeof UForm>>`{lang="ts-type"} <br> <div class="text-toned mt-1"><p>UForm 组件引用</p> |
-| `reset()`{lang="ts-type"} | `void`{lang="ts-type"} <br> <div class="text-toned mt-1"><p>恢复到初始值（`v-model` / `state` prop 传入的值），并触发 `reset` 事件</p> |
-| `clear()`{lang="ts-type"} | `void`{lang="ts-type"} <br> <div class="text-toned mt-1"><p>清空表单所有字段为空值，不触发事件</p> |
-| `expanded`{lang="ts-type"} | `Ref<boolean>`{lang="ts-type"} <br> <div class="text-toned mt-1"><p>当前展开/收起状态</p> |
-| `toggle()`{lang="ts-type"} | `void`{lang="ts-type"} <br> <div class="text-toned mt-1"><p>切换展开/收起</p> |
+| `submit()`{lang="ts-type"} | `void`{lang="ts-type"} <br> <div class="text-toned mt-1"><p>程序化触发表单提交（等价于点击 search 按钮）</p> |
+| `reset()`{lang="ts-type"} | `void`{lang="ts-type"} <br> <div class="text-toned mt-1"><p>恢复到 baseline（首次挂载的 v-model 快照），并触发 `reset` 事件</p> |
+| `clear()`{lang="ts-type"} | `void`{lang="ts-type"} <br> <div class="text-toned mt-1"><p>清空表单所有字段为空值，并触发 `clear` 事件</p> |
+| `setBaseline(value?)`{lang="ts-type"} | `void`{lang="ts-type"} <br> <div class="text-toned mt-1"><p>设置 `reset()` 的恢复基准；不传参时使用当前 v-model 值</p> |
+| `expanded`{lang="ts-type"} | `ComputedRef<boolean>`{lang="ts-type"} <br> <div class="text-toned mt-1"><p>当前展开/收起状态</p> |
+| `toggle()`{lang="ts-type"} | `void`{lang="ts-type"} <br> <div class="text-toned mt-1"><p>切换展开/收起，并 emit `expand` 与 `update:expanded`</p> |
 
 ## Changelog
 
