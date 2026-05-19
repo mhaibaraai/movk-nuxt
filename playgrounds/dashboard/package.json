@@ -15,8 +15,8 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "nuxt": "^4.4.5",
+    "nuxt": "^4.4.6",
     "typescript": "^6.0.3",
-    "vue-tsc": "^3.2.8"
+    "vue-tsc": "^3.3.0"
   }
 }
