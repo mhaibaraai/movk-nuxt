@@ -8,8 +8,8 @@ export default () => ({
     footer: '',
     actions: 'flex items-end gap-2 justify-end',
     toggleWrapper: 'flex justify-center pt-2',
-    toggle: 'group',
-    toggleIcon: 'size-3.5 group-data-[state=open]:rotate-180 transition-transform duration-200',
+    toggle: 'group opacity-75 hover:opacity-100 active:opacity-90 transition-all duration-200',
+    toggleIcon: 'size-3.5 transition-all duration-200 opacity-80 group-data-[state=open]:rotate-180 group-data-[state=open]:opacity-100',
     collapsed: 'mt-4'
   }
 })

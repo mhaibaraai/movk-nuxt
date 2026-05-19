@@ -248,7 +248,7 @@ function onValidateSearch(payload: unknown) {
         :cols="3"
       >
         <template #actions="{ search, clear, loading }">
-          <div class="flex items-center gap-2">
+          <div class="flex items-end gap-2">
             <UButton color="primary" variant="solid" icon="i-lucide-filter" :loading="loading" @click="search">
               筛选
             </UButton>

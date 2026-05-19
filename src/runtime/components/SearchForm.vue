@@ -299,7 +299,9 @@ defineExpose({
             v-bind="collapseButtonProps"
             :ui="{
               ...(collapseButtonProps?.ui ?? {}),
-              leadingIcon: `${collapseButtonProps?.ui?.leadingIcon} ${extraUi.toggleIcon}`
+              leadingIcon: [collapseButtonProps?.ui?.leadingIcon, extraUi.toggleIcon]
+                .filter(Boolean)
+                .join(' ')
             }"
             @click="toggle"
           />
