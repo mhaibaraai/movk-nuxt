@@ -20,6 +20,7 @@ minimumReleaseAgeExclude:
   - '@vue/language-core@3.3.0'
   - nuxt@4.4.6
   - vue-tsc@3.3.0
+  - '@movk/core@1.2.5'
 
 overrides:
   '@nuxt/content': ^3.14.0
