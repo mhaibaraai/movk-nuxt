@@ -67,9 +67,6 @@ pnpm clean
 
 ## 类型与导入约定
 
-业务侧代码禁止直接 import `@tanstack/vue-table`，类型统一从 `@movk/nuxt` 取：
-
 - prop 回调用索引访问派生，参数靠 contextual typing 推断：`const fn: DataTableDataColumn<T>['cell' | 'truncate' | 'tooltip'] = ctx => ...`、`DataTableProps<T>['sortable' | 'pinable' | 'resizable']` 同理
 - 事件处理用 `DataTableSelectHandler` / `HoverHandler` / `ContextmenuHandler` / `StateChangeHandler`
-- 独立工具函数等无法派生的场景，从 `@movk/nuxt` re-export 取 `Row` / `Table` / `TableMeta` / `TableState` / `Updater` / `ColumnDef`
-- `CellContext` 不 re-export，强制走派生
+- 独立工具函数等无法派生的场景，从 `@movk/nuxt` re-export
