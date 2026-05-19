@@ -24,12 +24,13 @@ const dataTableNav: NavigationMenuItem = {
   icon: 'i-lucide-table',
   defaultOpen: true,
   children: [
+    { label: 'Appearance', to: '/data-table/appearance' },
     { label: 'Columns', to: '/data-table/columns' },
     { label: 'Rows', to: '/data-table/rows' },
     { label: 'Special Columns', to: '/data-table/special-columns' },
     { label: 'Data', to: '/data-table/data' },
     { label: 'Large Data', to: '/data-table/large-data' },
-    { label: 'Tree & Style', to: '/data-table/tree-and-style' }
+    { label: 'Tree', to: '/data-table/tree' }
   ]
 }
 

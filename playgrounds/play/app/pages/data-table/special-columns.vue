@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { DataTableColumn } from '#movk/types/data-table/columns'
+import type { DataTableColumn } from '@movk/nuxt'
 import type { Person } from '../../composables/useMockData'
 
 const data = makePeople(12)
