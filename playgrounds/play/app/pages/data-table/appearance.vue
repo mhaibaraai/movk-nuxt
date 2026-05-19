@@ -38,6 +38,14 @@ const truncateValue = computed<DataTableProps<Person>['truncate']>(() => {
   return ctx => ctx.column.id === 'bio' ? 2 : true
 })
 
+const truncateColumns: DataTableColumn<Person>[] = [
+  { accessorKey: 'id', header: '工号', size: 90 },
+  { accessorKey: 'name', header: '姓名', size: 100 },
+  { accessorKey: 'department', header: '部门', size: 80 },
+  { accessorKey: 'address', header: '住址', size: 180 },
+  { accessorKey: 'bio', header: '简介', size: 240 }
+]
+
 const tooltipEnabled = ref(true)
 
 const fitContent = ref(false)
@@ -48,7 +56,13 @@ const fitColumns: DataTableColumn<Person>[] = [
   { accessorKey: 'level', header: '职级', size: 80 }
 ]
 
-const emptyData: Person[] = makePeople(4).map((p, i) => ({
+const emptyColumns: DataTableColumn<Person>[] = [
+  { accessorKey: 'id', header: '工号', size: 80 },
+  { accessorKey: 'name', header: '姓名', size: 90 },
+  { accessorKey: 'address', header: '住址', size: 200 },
+  { accessorKey: 'bio', header: '简介', size: 220 }
+]
+const emptyData: Person[] = makePeople(3).map((p, i) => ({
   ...p,
   bio: i % 2 === 0 ? '' : p.bio,
   address: i % 3 === 0 ? '' : p.address
@@ -164,7 +178,7 @@ const rowStyleFn: DataTableProps<Person>['rowStyle'] = row =>
 
       <MDataTable
         :data="data"
-        :columns="columns"
+        :columns="truncateColumns"
         :truncate="truncateValue"
         :tooltip="tooltipEnabled"
       />
@@ -193,15 +207,15 @@ const rowStyleFn: DataTableProps<Person>['rowStyle'] = row =>
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div class="flex flex-col gap-2">
           <span class="text-xs text-muted">字符串占位 (—)</span>
-          <MDataTable :data="emptyData" :columns="columns" empty-cell="—" bordered />
+          <MDataTable :data="emptyData" :columns="emptyColumns" empty-cell="—" bordered />
         </div>
         <div class="flex flex-col gap-2">
           <span class="text-xs text-muted">函数模板 (VNode)</span>
-          <MDataTable :data="emptyData" :columns="columns" :empty-cell="emptyVNodeCell" bordered />
+          <MDataTable :data="emptyData" :columns="emptyColumns" :empty-cell="emptyVNodeCell" bordered />
         </div>
         <div class="flex flex-col gap-2">
           <span class="text-xs text-muted">关闭占位 (false)</span>
-          <MDataTable :data="emptyData" :columns="columns" :empty-cell="false" bordered />
+          <MDataTable :data="emptyData" :columns="emptyColumns" :empty-cell="false" bordered />
         </div>
       </div>
     </Showcase>
