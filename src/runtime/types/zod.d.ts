@@ -56,8 +56,10 @@ export interface ZodAutoFormFieldMeta {
 
 }
 
+type ShallowGlobalMeta<T> = { [K in keyof T]?: unknown }
+
 declare module 'zod' {
-  interface GlobalMeta extends ZodAutoFormFieldMeta { }
+  interface GlobalMeta extends ShallowGlobalMeta<ZodAutoFormFieldMeta> { }
 }
 
 export { }

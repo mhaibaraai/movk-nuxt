@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { z } from 'zod'
+import type { AutoFormFieldContext } from '@movk/nuxt'
 
 const { afz } = useAutoForm()
 const autoForm = useTemplateRef('autoForm')
@@ -37,7 +38,7 @@ const richSchema = afz.object({
     .meta({
       label: 'Field slots',
       fieldSlots: {
-        help: ({ value }) => `当前长度：${String(value ?? '').length}`
+        help: ({ value }: AutoFormFieldContext) => `当前长度：${String(value ?? '').length}`
       }
     }),
   notify: afz.boolean({ type: 'switch' })
@@ -49,8 +50,8 @@ const richSchema = afz.object({
   email: afz.email({ controlProps: { placeholder: 'demo@movk.dev' } })
     .meta({
       label: '通知邮箱',
-      if: ({ state }) => Boolean(state.notify),
-      required: ({ state }) => Boolean(state.notify),
+      if: ({ state }: AutoFormFieldContext) => Boolean(state.notify),
+      required: ({ state }: AutoFormFieldContext) => Boolean(state.notify),
       eagerValidation: true,
       validateOnInputDelay: 200,
       error: '请输入有效邮箱'

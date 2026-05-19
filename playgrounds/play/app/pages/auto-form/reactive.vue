@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { z } from 'zod'
+import type { AutoFormFieldContext } from '@movk/nuxt'
 
 const { afz } = useAutoForm()
 
@@ -14,7 +15,7 @@ const cityItemsByCountry: Record<CountryCode, string[]> = {
 
 const conditionalSchema = afz.object({
   notify: afz.boolean({ type: 'switch' }).default(false).meta({ label: '通知' }),
-  email: afz.email().meta({ label: '通知邮箱', if: ({ state }) => Boolean(state.notify) }),
+  email: afz.email().meta({ label: '通知邮箱', if: ({ state }: AutoFormFieldContext) => Boolean(state.notify) }),
   agreeToTerms: afz
     .boolean()
     .default(false)
@@ -28,7 +29,7 @@ const conditionalSchema = afz.object({
     .meta({
       label: '订阅邮件通知',
       description: '接收产品更新和优惠信息',
-      hidden: ({ state }) => !state?.agreeToTerms
+      hidden: ({ state }: AutoFormFieldContext) => !state?.agreeToTerms
     })
 })
 
