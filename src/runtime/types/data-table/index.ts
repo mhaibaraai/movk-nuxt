@@ -38,3 +38,10 @@ export type {
   DataTableSelectHandler,
   DataTableSlots
 } from './component'
+export type {
+  ExpandedState,
+  PaginationState,
+  RowPinningState,
+  RowSelectionState,
+  SortingState
+} from '@tanstack/vue-table'
