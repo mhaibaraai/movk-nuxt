@@ -53,3 +53,23 @@ pnpm clean
 ```
 
 **重要**：修改 `src/` 后，如果 playground 未热更新，需重新执行 `pnpm dev:prepare`。
+
+## Playground 示例规范
+
+`playgrounds/play/app/pages/**/*.vue` 同时承担「人工演示 + docs 素材」双重职责，标杆：`data-table/columns.vue`、`data-table/tree-and-style.vue`。
+
+- **title**：4–10 字中文名词/动宾短语，无英文括号注解、无 prop 字面值；与未来 docs H2 段同形对应（如 `基础用法`、`函数式列配置`，而非 `列排序 (sortable)`）
+- **description**：一句话「通过哪些 prop/方法 → 预期行为」，中文句号收尾；prop/事件/方法名半角且不加引号；并列用顿号；不写 `X: true 开启、false 关闭` 这类教程腔
+- **一个 Showcase 只演示一项能力**，宁可多段也不漏；同主题页须穷举该主题下所有公开 props/事件/方法/槽位
+- 互斥关系、默认值、边界值要显式演示；列级 vs 全局同名 prop 用「全开 + 个别关」或反向对照，不要同向重复
+- 同时支持布尔/函数形态的 prop（`sortable` / `pinable` / `truncate` 等）两种形态都要有 Showcase
+- 抽离到 docs 的示例组件放 `docs/app/components/content/examples/<scope>/`，命名 `<Scope><Component><Topic>Example.vue`；新增 playground 段前先想「docs 这节叫什么」反推 title
+
+## 类型与导入约定
+
+业务侧代码禁止直接 import `@tanstack/vue-table`，类型统一从 `@movk/nuxt` 取：
+
+- prop 回调用索引访问派生，参数靠 contextual typing 推断：`const fn: DataTableDataColumn<T>['cell' | 'truncate' | 'tooltip'] = ctx => ...`、`DataTableProps<T>['sortable' | 'pinable' | 'resizable']` 同理
+- 事件处理用 `DataTableSelectHandler` / `HoverHandler` / `ContextmenuHandler` / `StateChangeHandler`
+- 独立工具函数等无法派生的场景，从 `@movk/nuxt` re-export 取 `Row` / `Table` / `TableMeta` / `TableState` / `Updater` / `ColumnDef`
+- `CellContext` 不 re-export，强制走派生
