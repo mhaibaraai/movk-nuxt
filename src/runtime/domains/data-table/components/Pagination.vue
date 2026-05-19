@@ -8,8 +8,10 @@ import { tv } from '@nuxt/ui/utils/tv'
 import theme from '#build/movk-ui/data-table-pagination'
 import type { DataTablePaginationProps, DataTablePaginationSlots, DataTablePaginationUi } from '../../../types/data-table/pagination'
 
+type Pagination = ComponentConfig<typeof theme, AppConfig, 'dataTablePagination'>
+
 const props = defineProps<DataTablePaginationProps<T> & {
-  uiConfig?: DataTablePaginationUi & { ui?: ComponentConfig<typeof theme, AppConfig, 'dataTablePagination'>['slots'] }
+  uiConfig?: DataTablePaginationUi & { ui?: Pagination['slots'] }
 }>()
 
 defineSlots<DataTablePaginationSlots<T>>()
@@ -113,8 +115,8 @@ function setPageSize(value: unknown) {
 </script>
 
 <template>
-  <div :class="uiCls.root({ class: cfg.ui?.root })">
-    <div :class="uiCls.summary({ class: cfg.ui?.summary })">
+  <div :class="uiCls.root({ class: cfg.ui?.root })" data-slot="root">
+    <div :class="uiCls.summary({ class: cfg.ui?.summary })" data-slot="summary">
       <slot name="summary" v-bind="summarySlotProps">
         <span :class="uiCls.summaryText({ class: cfg.ui?.summaryText })">{{ summaryText }}</span>
         <span
@@ -126,7 +128,7 @@ function setPageSize(value: unknown) {
       </slot>
     </div>
 
-    <div :class="uiCls.actions({ class: cfg.ui?.actions })">
+    <div :class="uiCls.actions({ class: cfg.ui?.actions })" data-slot="actions">
       <slot name="actions" v-bind="actionsSlotProps">
         <USelect
           v-if="showPageSizeSelect"
@@ -141,6 +143,7 @@ function setPageSize(value: unknown) {
           :total="rowCount"
           :items-per-page="pagination.pageSize"
           v-bind="paginationAttrs"
+          data-slot="pagination"
           @update:page="setPage"
         />
       </slot>

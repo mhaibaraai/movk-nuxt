@@ -22,20 +22,23 @@ import { useExtendedTv } from '../utils/extend-theme'
 import { resolveColumns } from '../domains/data-table/columns/resolve-columns'
 import { resolveCallbackValue } from '../domains/data-table/columns/utils'
 import { computeTreeRowSelection } from '../domains/data-table/tree-selection'
-import { useInfiniteScrollBinding } from '../domains/data-table/composables/useInfiniteScrollBinding'
+import { useInfiniteScrollBinding } from '@movk/core'
 import theme from '#build/movk-ui/data-table'
 import tableTheme from '#build/ui/table'
 import type paginationTheme from '#build/movk-ui/data-table-pagination'
 import DataTablePagination from '../domains/data-table/components/Pagination.vue'
 import type { AppConfig } from 'nuxt/schema'
-import type { DataTableExposed, DataTableProps } from '../types/data-table/component'
+import type { DataTableExposed, DataTableProps, DataTableSlots } from '../types/data-table/component'
 import type { TreeSelectionResult } from '../types/data-table/columns'
 import type { DataTablePaginationUi } from '../types/data-table/pagination'
 
+type DataTable = ComponentConfig<(typeof theme & typeof tableTheme), AppConfig, 'dataTable'>
+type Pagination = ComponentConfig<typeof paginationTheme, AppConfig, 'dataTablePagination'>
+
 const props = withDefaults(defineProps<DataTableProps<T> & {
-  ui?: ComponentConfig<typeof tableTheme & typeof theme, AppConfig, 'dataTable'>['slots']
+  ui?: DataTable['slots']
   paginationUi?: DataTablePaginationUi & {
-    ui?: ComponentConfig<typeof paginationTheme, AppConfig, 'dataTablePagination'>['slots']
+    ui?: Pagination['slots']
   }
 }>(), {
   emptyCell: '-',
@@ -57,6 +60,8 @@ const columnVisibilityKeysState = defineModel<string[]>('columnVisibilityKeys')
 const columnVisibilityExcludeKeysState = defineModel<string[]>('columnVisibilityExcludeKeys')
 const rowSelectionKeysState = defineModel<string[]>('rowSelectionKeys')
 const expandedKeysState = defineModel<string[]>('expandedKeys')
+
+defineSlots<DataTableSlots<T>>()
 
 const resolved = computed(() => resolveColumns<T>(props.columns || [], props))
 
@@ -327,7 +332,10 @@ const { baseUi, extraUi } = useExtendedTv(
   theme,
   () => appConfig.movk?.dataTable,
   () => ({
-    ui: props.ui,
+    ui: {
+      ...props.ui,
+      wrapper: [props.ui?.wrapper, props.class]
+    },
     variants: {
       fitContent: !!props.fitContent,
       bordered: !!props.bordered,
@@ -394,11 +402,16 @@ const uTableProps = computed(() => {
     },
     ...(hasRowClickBehavior && {
       onSelect: (e: Event, row: Row<T>) => {
-        if (props.expandOnRowClick && row.getCanExpand()) row.toggleExpanded()
+        if (props.expandOnRowClick) {
+          const canToggle = isTreeMode.value ? row.getCanExpand() : true
+          if (canToggle) row.toggleExpanded()
+        }
         if (props.selectOnRowClick) row.toggleSelected()
         ;(props.onSelect as DataTableProps<T>['onSelect'])?.(e, row)
       }
-    })
+    }),
+    ...(props.onHover && { onHover: props.onHover }),
+    ...(props.onRowContextmenu && { onContextmenu: props.onRowContextmenu })
   }
 })
 
@@ -506,7 +519,7 @@ defineExpose<DataTableExposed<T>>({
 </script>
 
 <template>
-  <div :class="extraUi.wrapper">
+  <div :class="extraUi.wrapper" data-slot="wrapper">
     <UTable
       :key="tableResetKey"
       ref="tableRef"
@@ -518,6 +531,7 @@ defineExpose<DataTableExposed<T>>({
       v-model:row-pinning="rowPinningState"
       v-model:sorting="sortingState"
       v-model:expanded="effectiveExpanded"
+      data-slot="table"
       :style="borderedStyle"
       v-bind="uTableProps"
     >

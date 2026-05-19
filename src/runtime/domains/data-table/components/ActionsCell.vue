@@ -1,4 +1,10 @@
-<script lang="ts">
+<script lang="ts" setup>
+import { h } from 'vue'
+import { isFunction } from '@movk/core'
+import { resolveCallbackValue } from '../columns/utils'
+import { useMessageBox } from '../../../composables/useMessageBox'
+import { UButton, UDropdownMenu } from '#components'
+import DataTableActionConfirm from './ActionConfirm.vue'
 import type { ButtonProps } from '@nuxt/ui'
 import type { CellContext } from '@tanstack/vue-table'
 import type {
@@ -14,15 +20,6 @@ interface DataTableRendererActionsCellProps {
   cellCtx: CellContext<unknown, unknown>
   options: DataTableProps<any>
 }
-</script>
-
-<script lang="ts" setup>
-import { h } from 'vue'
-import { isFunction } from '@movk/core'
-import { resolveCallbackValue } from '../columns/utils'
-import { useMessageBox } from '../../../composables/useMessageBox'
-import { UButton, UDropdownMenu } from '#components'
-import DataTableActionConfirm from './ActionConfirm.vue'
 
 const props = defineProps<DataTableRendererActionsCellProps>()
 

@@ -6,7 +6,7 @@ import type {
   DataTableSortButtonContext
 } from '../../../types/data-table'
 import type { ResolveContext } from './constants'
-import { h } from 'vue'
+import { h, isVNode } from 'vue'
 import { resolveCallbackValue, resolveColumnFlag, resolveTemplate } from './utils'
 import DataTableCellTooltip from '../components/CellTooltip.vue'
 import { UButton } from '#components'
@@ -39,6 +39,9 @@ function buildDataCellRenderer<T>(
     const formatted = col.cell
       ? resolveTemplate(col.cell, ctx)
       : String(raw ?? '')
+
+    // VNode 直接透传：truncate / tooltip 的字符串化包裹会把 VNode 强转为 "[object Object]"
+    if (isVNode(formatted)) return formatted
 
     const tooltipRaw = col.tooltip !== undefined ? col.tooltip : options.tooltip
     const tooltipVal = resolveCallbackValue(tooltipRaw, ctx)
@@ -149,7 +152,7 @@ export function renderHeaderActions<T>(
   ctx: HeaderContext<T, unknown>,
   col: Pick<DataTableDataColumn<T>, 'pinButtonProps' | 'sortButtonProps'>,
   options: DataTableProps<T>,
-  label: string,
+  label: unknown,
   sortable: boolean,
   pinable: boolean,
   resizable: boolean
@@ -178,9 +181,13 @@ export function renderHeaderActions<T>(
       ])
     : null
 
+  const labelNode = isVNode(label)
+    ? label
+    : h('span', { class: 'truncate' }, String(label ?? ''))
+
   return h('div', { class: 'flex items-center gap-1 relative group' }, [
     ...leading,
-    h('span', { class: 'truncate' }, String(label)),
+    labelNode,
     ...trailing,
     resizeHandle
   ])

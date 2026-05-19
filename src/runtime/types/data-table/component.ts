@@ -2,13 +2,14 @@ import type {
   CellContext,
   ColumnDefTemplate,
   ColumnMeta,
+  PaginationState,
+  Row,
   Table,
-  TableMeta,
-  TableState,
-  Updater
+  TableMeta
 } from '@tanstack/vue-table'
 import type { ButtonProps, TableData, TableProps, TableRow, TooltipProps } from '@nuxt/ui'
-import type { OmitByKey } from '@movk/core'
+import type { FirstParameter, OmitByKey } from '@movk/core'
+import type { VNode } from 'vue'
 import type {
   DataTableActionButtonContext,
   DataTableColumn,
@@ -18,7 +19,7 @@ import type {
   TreeSelectionResult
 } from './columns'
 import type { DataTablePinButtonContext, DataTableSortButtonContext } from './contexts'
-import type { DataTablePaginationUi } from './pagination'
+import type { DataTablePaginationSlots, DataTablePaginationUi } from './pagination'
 import type { ClassNameValue } from '../shared'
 
 export type DataTableSelectHandler<T extends TableData>
@@ -29,9 +30,6 @@ export type DataTableHoverHandler<T extends TableData>
 
 export type DataTableContextmenuHandler<T extends TableData>
   = ((e: Event, row: TableRow<T>) => void) | ((e: Event, row: TableRow<T>) => void)[]
-
-export type DataTableStateChangeHandler
-  = (updater: Updater<TableState>) => void
 
 export interface DataTableExposed<T extends TableData> {
   tableRef: HTMLTableElement | null
@@ -59,7 +57,6 @@ export interface DataTableProps<T extends TableData> extends /* @vue-ignore */ O
   | 'onSelect'
   | 'onHover'
   | 'onContextmenu'
-  | 'onStateChange'
 > {
   /**
    * 行唯一标识字段，自动派生 getRowId；与 getRowId 同传时后者优先
@@ -169,7 +166,6 @@ export interface DataTableProps<T extends TableData> extends /* @vue-ignore */ O
   onSelect?: DataTableSelectHandler<T>
   onHover?: DataTableHoverHandler<T>
   onRowContextmenu?: DataTableContextmenuHandler<T>
-  onStateChange?: DataTableStateChangeHandler
   /**
    * 分页配置，透传给 TanStack / UTable
    * - 客户端分页：传入即启用，自动注入 getPaginationRowModel
@@ -201,5 +197,31 @@ export interface DataTableProps<T extends TableData> extends /* @vue-ignore */ O
    * @defaultValue false
    */
   loadMoreImmediate?: boolean
+  class?: ClassNameValue
   ui?: Record<string, ClassNameValue>
+}
+
+export interface DataTablePaginationSlotProps<T extends TableData> {
+  tableApi: Table<T>
+  pagination: PaginationState
+  page: number
+  rowCount: number
+  pageCount: number
+  currentPageRowCount: number
+  from: number
+  to: number
+  show: boolean
+  selectedCount: number
+}
+
+export interface DataTableSlots<T extends TableData> {
+  'expanded'(props: { row: Row<T> }): VNode[]
+  'empty'(): VNode[]
+  'loading'(): VNode[]
+  'caption'(): VNode[]
+  'body-top'(): VNode[]
+  'body-bottom'(): VNode[]
+  'pagination'(props: DataTablePaginationSlotProps<T>): VNode[]
+  'pagination-summary'(props: FirstParameter<DataTablePaginationSlots<T>['summary']>): VNode[]
+  'pagination-actions'(props: FirstParameter<DataTablePaginationSlots<T>['actions']>): VNode[]
 }

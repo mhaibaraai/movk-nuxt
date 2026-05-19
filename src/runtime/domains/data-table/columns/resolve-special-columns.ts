@@ -13,7 +13,7 @@ import type {
 } from '../../../types/data-table'
 import type { ResolveContext, SpecialColumnType } from './constants'
 import { h } from 'vue'
-import { isFunction, isString } from '@movk/core'
+import { isFunction } from '@movk/core'
 import { SPECIAL_COLUMN_DEFAULTS } from './constants'
 import { resolveCallbackValue } from './utils'
 import DataTableActionsCell from '../components/ActionsCell.vue'
@@ -75,7 +75,7 @@ function buildSpecialColumnDef<T>(
 
   const resolvedHeader = (effectivePinable || effectiveResizable)
     ? (hctx: HeaderContext<T, unknown>) => {
-        const label = isString(render.header) ? render.header : ''
+        const label = isFunction(render.header) ? render.header(hctx) : (render.header ?? '')
         return renderHeaderActions(hctx, col, options, label, false, effectivePinable, effectiveResizable)
       }
     : render.header
@@ -183,23 +183,27 @@ export function resolveExpandColumn<T>(
   ctx: ResolveContext<T>
 ): ColumnDef<T, unknown> {
   ctx.flags.hasExpand = true
+  const isTreeMode = ctx.options.childrenKey != null
   return buildSpecialColumnDef(col, 'expand', ctx, {
     header: undefined,
     cell: (cellCtx: CellContext<T, unknown>) => {
-      if (!cellCtx.row.getCanExpand()) return null
+      if (isTreeMode && !cellCtx.row.getCanExpand()) return null
 
+      const depth = cellCtx.row.depth
       const indentSize = ctx.options.indentSize ?? '1rem'
-      const marginLeft = isFunction(indentSize)
-        ? indentSize(cellCtx)
-        : typeof indentSize === 'number'
-          ? `${cellCtx.row.depth * indentSize}px`
-          : cellCtx.row.depth > 0 ? `calc(${cellCtx.row.depth} * ${indentSize})` : '0px'
+      const marginLeft = isTreeMode
+        ? isFunction(indentSize)
+          ? indentSize(cellCtx)
+          : typeof indentSize === 'number'
+            ? `${depth * indentSize}px`
+            : depth > 0 ? `calc(${depth} * ${indentSize})` : '0px'
+        : '0px'
 
       const isExpanded = cellCtx.row.getIsExpanded()
       const expandCtx: DataTableExpandButtonContext<T> = {
         cellContext: cellCtx,
         isExpanded,
-        depth: cellCtx.row.depth,
+        depth,
         canExpand: true
       }
 

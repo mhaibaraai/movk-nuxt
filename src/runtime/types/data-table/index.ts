@@ -30,10 +30,11 @@ export type {
   DataTablePaginationSlots
 } from './pagination'
 export type {
+  DataTableContextmenuHandler,
   DataTableExposed,
+  DataTableHoverHandler,
+  DataTablePaginationSlotProps,
   DataTableProps,
   DataTableSelectHandler,
-  DataTableHoverHandler,
-  DataTableContextmenuHandler,
-  DataTableStateChangeHandler
+  DataTableSlots
 } from './component'
