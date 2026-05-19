@@ -1,14 +1,15 @@
 <script setup lang="ts">
+import type { PaginationState, SortingState } from '@movk/nuxt'
 import type { Person } from '../../composables/useMockData'
 
 const mode = ref<'client' | 'server'>('server')
 const columns = usePeopleColumns()
 
 const clientData = makePeople(80)
-const clientPagination = ref({ pageIndex: 0, pageSize: 10 })
+const clientPagination = ref<PaginationState>({ pageIndex: 0, pageSize: 10 })
 
-const serverPagination = ref({ pageIndex: 0, pageSize: 10 })
-const sorting = ref<{ id: string, desc: boolean }[]>([])
+const serverPagination = ref<PaginationState>({ pageIndex: 0, pageSize: 10 })
+const sorting = ref<SortingState>([])
 const keyword = ref('')
 
 const queryUrl = computed(() => {

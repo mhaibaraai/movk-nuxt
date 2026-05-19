@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { DataTableColumn, DataTableProps } from '@movk/nuxt'
+import type { DataTableColumn, DataTableProps, PaginationState, RowSelectionState } from '@movk/nuxt'
 import type { Person } from '../../composables/useMockData'
 import { UBadge, UIcon } from '#components'
 
@@ -15,8 +15,8 @@ const customUi: DataTableProps<Person>['ui'] = {
 }
 
 const paginationUiOverride = ref(false)
-const rowSelectionState = ref<Record<string, boolean>>({ P0002: true })
-const paginationState = ref({ pageIndex: 0, pageSize: 4 })
+const rowSelectionState = ref<RowSelectionState>({ P0002: true })
+const paginationState = ref<PaginationState>({ pageIndex: 0, pageSize: 4 })
 const customPaginationUi = {
   root: 'border-t border-default pt-3 mt-1',
   summary: 'text-primary font-medium',

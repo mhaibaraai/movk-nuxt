@@ -3,7 +3,9 @@ import type {
   DataTableContextmenuHandler,
   DataTableExposed,
   DataTableHoverHandler,
-  DataTableSelectHandler
+  DataTableSelectHandler,
+  ExpandedState,
+  RowSelectionState
 } from '@movk/nuxt'
 import type { Person } from '../../composables/useMockData'
 
@@ -18,14 +20,14 @@ function makeLog(limit = 8) {
   return { entries, record }
 }
 
-const selectionState = ref<Record<string, boolean>>({})
+const selectionState = ref<RowSelectionState>({})
 const selectLog = makeLog()
 const onSelect: DataTableSelectHandler<Person> = (_e, row) => selectLog.record(`select: ${row.original.name}`)
 
-const expandedState = ref<Record<string, boolean>>({})
+const expandedState = ref<ExpandedState>({})
 
-const clickModeSelection = ref<Record<string, boolean>>({})
-const clickModeExpanded = ref<Record<string, boolean>>({})
+const clickModeSelection = ref<RowSelectionState>({})
+const clickModeExpanded = ref<ExpandedState>({})
 const selectOnRowClick = ref(true)
 const expandOnRowClick = ref(false)
 
@@ -52,7 +54,7 @@ const onRowContextmenu: DataTableContextmenuHandler<Person> = (e, row) => {
 }
 
 const tableRef = useTemplateRef<DataTableExposed<Person>>('tableRef')
-const exposedSelection = ref<Record<string, boolean>>({})
+const exposedSelection = ref<RowSelectionState>({})
 function callClearSelection() {
   tableRef.value?.clearSelection()
 }
