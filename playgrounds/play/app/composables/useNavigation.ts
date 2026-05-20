@@ -28,7 +28,7 @@ const dataTableNav: NavigationMenuItem = {
     { label: 'Columns', to: '/data-table/columns' },
     { label: 'Rows', to: '/data-table/rows' },
     { label: 'Special Columns', to: '/data-table/special-columns' },
-    { label: 'Data', to: '/data-table/data' },
+    { label: 'Pagination', to: '/data-table/pagination' },
     { label: 'Large Data', to: '/data-table/large-data' },
     { label: 'Tree', to: '/data-table/tree' }
   ]
