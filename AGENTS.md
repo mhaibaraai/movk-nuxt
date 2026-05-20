@@ -67,6 +67,13 @@ pnpm clean
 - prop 回调用索引访问派生，参数靠 contextual typing 推断：`const fn: DataTableDataColumn<T>['cell' | 'truncate' | 'tooltip'] = ctx => ...`、`DataTableProps<T>['sortable' | 'pinable' | 'resizable']` 同理
 - 事件处理用 `DataTableSelectHandler` / `HoverHandler` / `ContextmenuHandler` / `StateChangeHandler`
 - 独立工具函数等无法派生的场景，从 `@movk/nuxt` re-export
+- **类型导出最小必要**：内部合并产物（如 `ResolvedEndpointConfig`）、初始化校验类型（如 `MovkApiFullConfig`）、拦截器/插件内部传值通道（如 `ApiFetchContext`）不得经 `runtime/types/*/index.ts` 暴露到 `@movk/nuxt`；仅导出消费者真实需要的配置、入参、返回值、错误类型。domain 纯函数默认不 re-export。
+
+## 模块默认值与全局配置同步
+
+- **模块默认值不得覆盖 Nuxt UI 全局配置**：凡 `<UApp>` props / `app.config` 已能配置的字段（如 `toaster.duration`），模块默认值保持空缺，仅注入模块语义专属值（如 success/error 的 `icon`/`color`/`show`）。
+- 对外触发 UI 组件的 payload 构造需过滤 `undefined` 键，避免显式传入 `undefined` 干扰 Nuxt UI 的全局回退。
+- 新增模块默认配置时，先核对 `<UApp>` props / `app.config` 是否已提供相同字段，命中即按本原则保留模块专属、删除可继承。
 
 ## 增强、重构规范
 
