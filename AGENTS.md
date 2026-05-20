@@ -26,9 +26,6 @@ pnpm dev:prepare
 # 启动默认 playground
 pnpm dev
 
-# 启动 dashboard playground
-pnpm dev:dashboard
-
 # 构建模块
 pnpm build
 

@@ -31,7 +31,6 @@
     "editor.formatOnPaste": false
   },
   "tailwindCSS.experimental.configFile": {
-    "playgrounds/dashboard/app/assets/css/main.css": "playgrounds/dashboard/**",
     "playgrounds/play/app/assets/css/main.css": "playgrounds/play/**",
     "src/runtime/style.css": "src/**",
     "docs/app/assets/css/main.css": "docs/**"
