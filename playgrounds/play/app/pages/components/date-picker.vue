@@ -150,7 +150,7 @@ const presetCustom = shallowRef<DateValue>()
 
     <Showcase
       title="快捷日期预设"
-      description="presets='default' 会按单选或范围模式生成快捷项，也可传入自定义数组返回业务日期。"
+      description="presets 设为 default 会按单选或范围模式生成快捷项，也可传入自定义数组返回业务日期。"
       :state="{ defaultRange: { start: presetDefault?.start?.toString(), end: presetDefault?.end?.toString() }, custom: presetCustom?.toString() }"
     >
       <div class="space-y-3">

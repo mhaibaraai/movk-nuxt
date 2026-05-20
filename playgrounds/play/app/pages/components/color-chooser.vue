@@ -129,7 +129,7 @@ const enabledFormats = ref<ColorChooserProps['formats']>(['hex', 'rgb', 'hsl'])
       </template>
     </Showcase>
 
-    <Showcase title="色点触发器" description="trigger='chip' 只渲染紧凑色点，适合工具栏、表格单元格或空间受限场景。" :state="{ value: chipValue }">
+    <Showcase title="色点触发器" description="trigger 切换为色点形态后只渲染紧凑色块，适合工具栏、表格单元格或空间受限场景。" :state="{ value: chipValue }">
       <MColorChooser
         v-model="chipValue"
         :ui="{
@@ -140,7 +140,7 @@ const enabledFormats = ref<ColorChooserProps['formats']>(['hex', 'rgb', 'hsl'])
       />
     </Showcase>
 
-    <Showcase title="输入型触发器" description="trigger='input' 提供色点与文本输入，blur 时校验 hex 并同步有效色值。" :state="{ value: inputValue }">
+    <Showcase title="输入型触发器" description="trigger 切换为输入形态后提供色点与文本输入，blur 时校验 hex 并同步有效色值。" :state="{ value: inputValue }">
       <MColorChooser v-model="inputValue" trigger="input" :swatches="tailwindPalette" clearable copyable />
     </Showcase>
 
@@ -159,7 +159,7 @@ const enabledFormats = ref<ColorChooserProps['formats']>(['hex', 'rgb', 'hsl'])
       </MColorChooser>
     </Showcase>
 
-    <Showcase title="覆盖内部 UI slots" description="ui prop 可定制 swatches 网格和 swatch 尺寸，不影响取色、复制和清除机制。" :state="{ value: uiValue }">
+    <Showcase title="覆盖内部样式插槽" description="ui 可定制色板网格与色块尺寸，不影响取色、复制和清除机制。" :state="{ value: uiValue }">
       <MColorChooser
         v-model="uiValue"
         :swatches="tailwindPalette"
@@ -179,16 +179,14 @@ const enabledFormats = ref<ColorChooserProps['formats']>(['hex', 'rgb', 'hsl'])
     </Showcase>
   </div>
 
-  <Matrix v-slot="{ size, trigger }" :attrs="{ size: sizes, trigger: triggers }" class="p-4">
-    <UFormField :label="`${size} · ${trigger}`" size="xs">
-      <MColorChooser
-        v-model="matrixValue"
-        :size="size"
-        :trigger="trigger"
-        :swatches="tailwindPalette"
-        copyable
-        clearable
-      />
-    </UFormField>
+  <Matrix v-slot="{ size, trigger }" :attrs="{ size: sizes, trigger: triggers }">
+    <MColorChooser
+      v-model="matrixValue"
+      :size="size"
+      :trigger="trigger"
+      :swatches="tailwindPalette"
+      copyable
+      clearable
+    />
   </Matrix>
 </template>

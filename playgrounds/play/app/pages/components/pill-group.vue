@@ -51,7 +51,7 @@ const verticalValue = ref<PillItem | undefined>(planItems[1])
 const slotValue = ref<PillItem[]>([planItems[1]!])
 const variantValue = ref<PillItem | undefined>(planItems[1])
 const emitsValue = ref<PillItem[]>([planItems[1]!])
-const matrixValue = ref<PillItem | undefined>(planItems[1])
+const matrixValue = ref<string | undefined>('进行中')
 
 const MIN_COUNT = 1
 const MAX_COUNT = 3
@@ -102,7 +102,7 @@ function getItemLabel(item: PillItem): string {
     <USelect v-model="attrs.color" :items="colors" multiple size="xs" placeholder="color" />
   </Navbar>
 
-  <div class="p-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
+  <div class="p-4 flex flex-col gap-4">
     <Showcase title="继承字段上下文" description="放入 UFormField 后继承 size 与错误态，选项胶囊会按表单状态同步显示。" :state="{ value: formFieldValue }">
       <UFormField label="订阅方案" size="xs" error="示例错误态">
         <MPillGroup v-model="formFieldValue" :items="planItems" />
@@ -130,7 +130,7 @@ function getItemLabel(item: PillItem): string {
 
     <Showcase
       title="多选数量约束"
-      :description="`至少保留 ${MIN_COUNT} 项，最多 ${MAX_COUNT} 项；触顶时未选项变灰，触底时已选不可取消`"
+      :description="`min 与 max 约束选择数量：至少 ${MIN_COUNT} 项、最多 ${MAX_COUNT} 项，触顶时未选项变灰，触底时已选不可取消。`"
       :state="{ value: constrainedValue, min: MIN_COUNT, max: MAX_COUNT }"
     >
       <MPillGroup v-model="constrainedValue" :items="statusItems" multiple :min="MIN_COUNT" :max="MAX_COUNT" />
@@ -140,7 +140,7 @@ function getItemLabel(item: PillItem): string {
       <MPillGroup v-model="deselectableValue" :items="planItems" deselectable />
     </Showcase>
 
-    <Showcase title="自定义字段映射" description="通过 labelKey='name' 与 valueKey='id' 读取业务对象，modelValue 只保存稳定 id。" :state="{ value: userValue }">
+    <Showcase title="自定义字段映射" description="labelKey 与 valueKey 指定从业务对象读取的展示字段与值字段，modelValue 只保存稳定 id。" :state="{ value: userValue }">
       <MPillGroup
         v-model="userValue"
         :items="userItems"
@@ -160,7 +160,7 @@ function getItemLabel(item: PillItem): string {
       </div>
     </Showcase>
 
-    <Showcase title="垂直排列选项" description="orientation='vertical' 将选项改为纵向堆叠，适合描述较长或移动端窄容器。" :state="{ value: verticalValue }">
+    <Showcase title="垂直排列选项" description="orientation 设为 vertical 将选项改为纵向堆叠，适合描述较长或移动端窄容器。" :state="{ value: verticalValue }">
       <MPillGroup v-model="verticalValue" :items="planItems" orientation="vertical" />
     </Showcase>
 
@@ -206,9 +206,7 @@ function getItemLabel(item: PillItem): string {
     </Showcase>
   </div>
 
-  <Matrix v-slot="props" :attrs="attrs" class="p-4">
-    <UFormField :label="`${props.size} · ${props.color}`" size="xs">
-      <MPillGroup v-model="matrixValue" :items="planItems" :size="props.size" :color="props.color" />
-    </UFormField>
+  <Matrix v-slot="props" :attrs="attrs">
+    <MPillGroup v-model="matrixValue" :items="stringItems" :size="props.size" :color="props.color" />
   </Matrix>
 </template>

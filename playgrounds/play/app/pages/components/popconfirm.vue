@@ -66,7 +66,7 @@ async function asyncConfirm() {
         </div>
       </Showcase>
 
-      <Showcase title="定制确认按钮区域" description="cancelButton=false 可隐藏取消按钮，confirmButton 与 cancelButton 可透传 ButtonProps。">
+      <Showcase title="定制确认按钮区域" description="cancelButton 设为 false 可隐藏取消按钮，confirmButton 与 cancelButton 可透传 ButtonProps。">
         <div class="flex gap-2">
           <MPopconfirm
             title="只展示确认入口"

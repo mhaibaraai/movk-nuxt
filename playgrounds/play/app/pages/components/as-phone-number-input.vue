@@ -14,6 +14,7 @@ const phoneUS = ref('5551234567')
 const phoneIntl = ref('')
 const formFieldPhone = ref('13800138000')
 const fieldGroupPhone = ref('5551234567')
+const maskPhone = ref('13800138000')
 </script>
 
 <template>
@@ -44,18 +45,22 @@ const fieldGroupPhone = ref('5551234567')
           <UButton icon="i-lucide-phone-call" color="neutral" variant="subtle" />
         </UFieldGroup>
       </Showcase>
+
+      <Showcase
+        title="自定义号码掩码"
+        description="mask 用 # 表示数字位，按掩码格式化输入，这里演示中国大陆 3-4-4 分段。"
+        :state="{ value: maskPhone }"
+      >
+        <MAsPhoneNumberInput v-model="maskPhone" mask="### #### ####" />
+      </Showcase>
     </div>
 
-    <Matrix v-slot="props" :attrs="attrs" container-class="w-72">
-      <p class="text-xs text-muted font-medium">
-        {{ props.size }} · {{ props.color }}
-      </p>
-
-      <UFormField label="中国大陆（默认 +86）">
+    <Matrix v-slot="props" :attrs="attrs" cell-class="w-72">
+      <UFormField label="中国大陆区号">
         <MAsPhoneNumberInput v-model="phoneCN" :size="props.size" :color="props.color" />
       </UFormField>
 
-      <UFormField label="美国（dial-code 显示）">
+      <UFormField label="美国区号">
         <MAsPhoneNumberInput v-model="phoneUS" dial-code="+1" :size="props.size" :color="props.color" />
       </UFormField>
 

@@ -14,6 +14,13 @@ const formFieldRating = ref(3)
 const fieldGroupRating = ref(4)
 const halfValue = ref(3.5)
 const clearableValue = ref(2.5)
+const readonlyValue = ref(4)
+const disabledValue = ref(2)
+const maxValue = ref(5)
+const iconValue = ref(2.5)
+const badgeValue = ref(3)
+const highlightValue = ref(3)
+const buttonPropsValue = ref(3)
 
 const emitsValue = ref(2.5)
 const hoverValue = ref<number | null>(null)
@@ -73,54 +80,78 @@ function clearLog() {
         <UButton icon="i-lucide-rotate-ccw" color="neutral" variant="subtle" @click="fieldGroupRating = 0" />
       </UFieldGroup>
     </Showcase>
+
+    <Showcase title="允许半星评分" description="allowHalf 让每颗星可取半值，点击左右半区分别记为 .5 与整数评分。" :state="{ value: halfValue }">
+      <MStarRating v-model="halfValue" allow-half />
+    </Showcase>
+
+    <Showcase title="可清除评分" description="clearable 允许再次点击当前值或按 Backspace 将评分清零，适合非必填场景。" :state="{ value: clearableValue }">
+      <MStarRating v-model="clearableValue" allow-half clearable />
+    </Showcase>
+
+    <Showcase title="只读与禁用对照" description="readonly 仅展示评分并保留视觉，disabled 同时阻止交互并降低不透明度。" :state="{ readonly: readonlyValue, disabled: disabledValue }">
+      <div class="flex flex-col gap-3">
+        <MStarRating v-model="readonlyValue" readonly />
+        <MStarRating v-model="disabledValue" disabled />
+      </div>
+    </Showcase>
+
+    <Showcase title="自定义星级总数" description="max 调整星星数量，这里设为 7 颗以适配更细粒度的评分量表。" :state="{ value: maxValue }">
+      <MStarRating v-model="maxValue" :max="7" />
+    </Showcase>
+
+    <Showcase title="替换评分图标" description="emptyIcon、filledIcon、halfIcon 可整体替换为其他图标，配合 allowHalf 呈现半值形态。" :state="{ value: iconValue }">
+      <MStarRating
+        v-model="iconValue"
+        allow-half
+        empty-icon="i-lucide-heart"
+        filled-icon="i-lucide-heart"
+        half-icon="i-lucide-heart-handshake"
+      />
+    </Showcase>
+
+    <Showcase title="隐藏评分徽章" description="showBadge 默认显示当前分值徽章，设为 false 后只保留星星本身。" :state="{ value: badgeValue }">
+      <div class="flex flex-col gap-3">
+        <MStarRating v-model="badgeValue" />
+        <MStarRating v-model="badgeValue" :show-badge="false" />
+      </div>
+    </Showcase>
+
+    <Showcase title="高亮聚焦态" description="highlight 为评分控件加上类聚焦的环形高亮，用于强调当前可操作项。" :state="{ value: highlightValue }">
+      <MStarRating v-model="highlightValue" highlight />
+    </Showcase>
+
+    <Showcase title="透传按钮属性" description="buttonProps 透传到每颗星的按钮，可统一调整变体、内边距等底层样式。" :state="{ value: buttonPropsValue }">
+      <MStarRating v-model="buttonPropsValue" :button-props="{ variant: 'soft' }" />
+    </Showcase>
+
+    <Showcase
+      title="事件回调"
+      description="点击、悬浮与键盘交互依次触发 update:modelValue、change 与 hover，连续 hover 会折叠为一条记录。"
+    >
+      <div class="flex flex-wrap items-start gap-6">
+        <MStarRating
+          v-model="emitsValue"
+          allow-half
+          clearable
+          @update:model-value="(v) => logEvent('update:modelValue', v)"
+          @change="(v) => logEvent('change', v)"
+          @hover="onHover"
+        />
+        <UButton size="xs" variant="ghost" :disabled="!eventLog.length" @click="clearLog">
+          清空记录
+        </UButton>
+      </div>
+      <template #aside>
+        <StateViewer
+          :state="{ modelValue: emitsValue, hoverValue, eventLog }"
+          :label="`事件记录（最近 ${MAX_LOG} 条）`"
+        />
+      </template>
+    </Showcase>
   </div>
 
-  <UFormField label="事件回调" help="点击、悬浮、键盘交互（含 Backspace 清零）都会触发对应事件。" class="p-4">
-    <div class="flex flex-wrap items-start gap-6">
-      <MStarRating
-        v-model="emitsValue"
-        allow-half
-        clearable
-        @update:model-value="(v) => logEvent('update:modelValue', v)"
-        @change="(v) => logEvent('change', v)"
-        @hover="onHover"
-      />
-      <UButton size="xs" variant="ghost" :disabled="!eventLog.length" @click="clearLog">
-        清空记录
-      </UButton>
-    </div>
-    <StateViewer
-      :state="{ modelValue: emitsValue, hoverValue, eventLog }"
-      :label="`事件记录（最近 ${MAX_LOG} 条，连续 hover 已折叠）`"
-      class="mt-3"
-    />
-  </UFormField>
-
   <Matrix v-slot="props" :attrs="attrs">
-    <UFormField :label="`${props.size} · ${props.color}`" size="xs">
-      <MStarRating v-model="value" :size="props.size" :color="props.color" />
-    </UFormField>
-    <MStarRating v-model="halfValue" allow-half :size="props.size" :color="props.color" />
-    <MStarRating :model-value="4" readonly :size="props.size" :color="props.color" />
-    <MStarRating :model-value="2" disabled :size="props.size" :color="props.color" :show-badge="false" />
-    <MStarRating :model-value="3" :max="6" clearable :size="props.size" :color="props.color" />
-    <UFormField label="clearable + allow-half" help="点击当前值或按 Backspace 可清零" size="xs">
-      <MStarRating
-        v-model="clearableValue"
-        allow-half
-        clearable
-        :size="props.size"
-        :color="props.color"
-      />
-    </UFormField>
-    <MStarRating
-      allow-half
-      :model-value="2.5"
-      empty-icon="i-lucide-heart"
-      filled-icon="i-lucide-heart"
-      half-icon="i-lucide-heart-handshake"
-      :size="props.size"
-      :color="props.color"
-    />
+    <MStarRating v-model="value" :size="props.size" :color="props.color" />
   </Matrix>
 </template>

@@ -20,7 +20,7 @@ function record(msg: string) {
 const baseColumns: DataTableColumn<Person>[] = [
   { accessorKey: 'name', header: '姓名', size: 110 },
   { accessorKey: 'department', header: '部门', size: 90 },
-  { accessorKey: 'role', header: '岗位', size: 160 }
+  { accessorKey: 'role', header: '岗位', size: 120 }
 ]
 
 const treeBaseColumns: DataTableColumn<Person>[] = [

@@ -16,6 +16,17 @@ const labeled = ref('')
 const copyable = ref('https://movk.dev')
 const formFieldValue = ref('Field value')
 const fieldGroupValue = ref('Group value')
+
+const clearValue = ref('点击尾部按钮清空')
+const copyValue = ref('https://movk.dev')
+const passwordValue = ref('s3cret-pass')
+const limitValue = ref('计数会随输入更新')
+const floatingValue = ref('')
+
+const log = ref<string[]>([])
+function record(msg: string) {
+  log.value = [`[${new Date().toLocaleTimeString('zh-CN', { hour12: false })}] ${msg}`, ...log.value].slice(0, 8)
+}
 </script>
 
 <template>
@@ -46,13 +57,68 @@ const fieldGroupValue = ref('Group value')
           <UButton icon="i-lucide-search" color="neutral" variant="subtle" />
         </UFieldGroup>
       </Showcase>
+
+      <Showcase
+        title="一键清除输入"
+        description="WithClear 有值时显示清除按钮，点击清空并触发 clear 事件，buttonProps 可定制该按钮。"
+        :state="{ value: clearValue }"
+      >
+        <MWithClear
+          v-model="clearValue"
+          placeholder="输入后出现清除按钮"
+          :button-props="{ icon: 'i-lucide-eraser', color: 'error', variant: 'ghost' }"
+          @clear="record('WithClear → clear')"
+        />
+      </Showcase>
+
+      <Showcase
+        title="复制输入内容"
+        description="WithCopy 在尾部提供复制按钮，复制成功触发 copy 事件，tooltipProps 调整提示气泡。"
+        :state="{ value: copyValue }"
+      >
+        <MWithCopy
+          v-model="copyValue"
+          :tooltip-props="{ text: '复制链接' }"
+          @copy="(v: string) => record(`WithCopy → copy: ${v}`)"
+        />
+      </Showcase>
+
+      <Showcase
+        title="切换密码可见"
+        description="WithPasswordToggle 固定为密码输入，尾部按钮在明文与密文之间切换显示。"
+        :state="{ value: passwordValue }"
+      >
+        <MWithPasswordToggle v-model="passwordValue" placeholder="请输入密码" />
+      </Showcase>
+
+      <Showcase
+        title="限制输入字数"
+        description="WithCharacterLimit 通过 maxLength 设定上限，并实时展示已输入与剩余字数。"
+        :state="{ value: limitValue, length: limitValue.length }"
+      >
+        <MWithCharacterLimit v-model="limitValue" :maxlength="20" placeholder="最多 20 字" />
+      </Showcase>
+
+      <Showcase
+        title="浮动标签输入"
+        description="WithFloatingLabel 的 label 在聚焦或有值时上浮，clearButtonProps 定制内置清除按钮。"
+        :state="{ value: floatingValue }"
+      >
+        <MWithFloatingLabel
+          v-model="floatingValue"
+          label="电子邮箱"
+          placeholder=" "
+          :clear-button-props="{ color: 'neutral' }"
+          @clear="record('WithFloatingLabel → clear')"
+        />
+      </Showcase>
+
+      <Showcase title="交互事件日志" description="清除与复制操作都会写入日志，便于核对 clear 与 copy 事件的触发时机。">
+        <StateViewer :state="log" label="事件日志" />
+      </Showcase>
     </div>
 
-    <Matrix v-slot="props" :attrs="attrs" container-class="w-72">
-      <p class="text-xs text-muted font-medium">
-        {{ props.size }} · {{ props.color }}
-      </p>
-
+    <Matrix v-slot="props" :attrs="attrs" cell-class="w-72">
       <UFormField label="WithClear">
         <MWithClear v-model="text" :size="props.size" :color="props.color" placeholder="可清除" />
       </UFormField>

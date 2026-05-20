@@ -225,7 +225,7 @@ function onValidateSearch(payload: unknown) {
 
     <Showcase
       title="无按钮提交"
-      description="actions=[] 隐藏默认按钮区，表单仍可通过回车触发 submit。"
+      description="传入空 actions 隐藏默认按钮区，表单仍可通过回车触发 submit。"
       :state="{ modelValue: hiddenActionsState }"
     >
       <MSearchForm
