@@ -4,7 +4,7 @@ export interface Person {
   email: string
   department: '研发' | '设计' | '产品' | '运营' | '市场'
   role: string
-  level: 'P5' | 'P6' | 'P7' | 'P8'
+  level?: 'P5' | 'P6' | 'P7' | 'P8'
   status: 'active' | 'leave' | 'offboarded'
   salary: number
   joinedAt: string
@@ -67,13 +67,18 @@ export function makePeople(count: number, offset = 0): Person[] {
   return Array.from({ length: count }, (_, i) => makePerson(offset + i + 1))
 }
 
-export function makePeopleTree(rootCount = 5, childPerRoot = 3): Person[] {
-  return Array.from({ length: rootCount }, (_, i) => {
-    const root = makePerson(i + 1)
+export function makePeopleTree(rootCount = 5, childPerRoot = 3, depth = 1): Person[] {
+  const build = (seed: number, level: number): Person => {
+    const person = makePerson(seed)
+    if (level >= depth) return person
+    // 非叶子节点为「团队负责人」，职级留空以演示 emptyCell 占位
     return {
-      ...root,
+      ...person,
       role: '团队负责人',
-      children: Array.from({ length: childPerRoot }, (_, j) => makePerson((i + 1) * 100 + j + 1))
+      level: undefined,
+      children: Array.from({ length: childPerRoot }, (_, j) =>
+        build(seed * 100 + j + 1, level + 1))
     }
-  })
+  }
+  return Array.from({ length: rootCount }, (_, i) => build(i + 1, 0))
 }

@@ -29,7 +29,7 @@ const dataTableNav: NavigationMenuItem = {
     { label: 'Rows', to: '/data-table/rows' },
     { label: 'Special Columns', to: '/data-table/special-columns' },
     { label: 'Pagination', to: '/data-table/pagination' },
-    { label: 'Large Data', to: '/data-table/large-data' },
+    { label: 'Load More', to: '/data-table/load-more' },
     { label: 'Tree', to: '/data-table/tree' }
   ]
 }
