@@ -1,6 +1,6 @@
 export default () => ({
   slots: {
-    root: 'relative flex items-center select-none overflow-hidden rounded-md border transition-colors duration-300',
+    root: 'w-full relative flex items-center select-none overflow-hidden rounded-md border transition-colors duration-300',
     track: 'absolute inset-0',
     fill: 'absolute inset-y-0 left-0 bg-primary/20 opacity-60',
     text: 'absolute inset-0 flex items-center justify-center font-medium pointer-events-none',

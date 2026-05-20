@@ -70,9 +70,10 @@ const { extendUi } = useExtendedTv(
 )
 
 const rootPaddingX = computed(() => {
+  // 依赖 size 以便切换尺寸时重新测量
+  void effectiveSize.value
   const root = rootRef.value
-  const size = effectiveSize.value
-  if (!root || !size) return 0
+  if (!root) return 0
 
   const style = getComputedStyle(root)
   return (Number.parseFloat(style.paddingLeft) || 0) + (Number.parseFloat(style.paddingRight) || 0)
