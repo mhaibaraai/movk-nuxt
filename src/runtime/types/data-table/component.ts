@@ -38,6 +38,10 @@ export interface DataTableExposed<T extends TableData> {
   el: HTMLElement | null
   scrollToTop: (options?: ScrollToOptions) => void
   clearSelection: () => void
+  /** 展开到指定层级（depth < n 的可展开行展开，其余收起）；depth=0 等价收起全部 */
+  expandToDepth: (depth: number) => void
+  /** 收起全部行 */
+  collapseAll: () => void
   treeSelection: TreeSelectionResult<T>
 }
 
@@ -192,11 +196,6 @@ export interface DataTableProps<T extends TableData> extends /* @vue-ignore */ O
    * @defaultValue 100
    */
   loadMoreDistance?: number
-  /**
-   * mount 后立即触发一次 loadMore
-   * @defaultValue false
-   */
-  loadMoreImmediate?: boolean
   class?: ClassNameValue
   ui?: Record<string, ClassNameValue>
 }

@@ -5,6 +5,7 @@ import type { SemanticColor } from '../shared'
 import type {
   DataTableCheckboxContext,
   DataTableExpandButtonContext,
+  DataTableExpandToggleAllContext,
   DataTablePinButtonContext,
   DataTableRowPinningButtonContext,
   DataTableSortButtonContext
@@ -147,6 +148,13 @@ export interface DataTableExpandColumn<T = unknown> extends DataTableSpecialColu
   type: 'expand'
   /** 展开/折叠按钮 props 透传 */
   buttonProps?: DataTableDynamic<ButtonProps, DataTableExpandButtonContext<T>>
+  /**
+   * 表头是否渲染「全部展开/收起」按钮，仅树形模式生效
+   * @defaultValue true
+   */
+  toggleAll?: boolean
+  /** 表头「全部展开/收起」按钮 props 透传 */
+  toggleAllButtonProps?: DataTableDynamic<ButtonProps, DataTableExpandToggleAllContext<T>>
 }
 
 /** @defaultValue size=48, fixed='left', align='center' */

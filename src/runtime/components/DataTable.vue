@@ -22,7 +22,8 @@ import { useExtendedTv } from '../utils/extend-theme'
 import { resolveColumns } from '../domains/data-table/columns/resolve-columns'
 import { resolveCallbackValue } from '../domains/data-table/columns/utils'
 import { computeTreeRowSelection } from '../domains/data-table/tree-selection'
-import { useInfiniteScrollBinding, separate } from '@movk/core'
+import { resolveMaxIndentPx } from '../domains/data-table/indent'
+import { Tree, useInfiniteScrollBinding, separate } from '@movk/core'
 import theme from '#build/movk-ui/data-table'
 import tableTheme from '#build/ui/table'
 import type paginationTheme from '#build/movk-ui/data-table-pagination'
@@ -272,10 +273,6 @@ useInfiniteScrollBinding(
   }
 )
 
-onMounted(() => {
-  if (props.loadMore && props.loadMoreImmediate) invokeLoadMore()
-})
-
 function scrollToTop(options: ScrollToOptions = { top: 0, behavior: 'smooth' }) {
   tableRef.value?.$el?.scrollTo({ top: 0, ...options })
 }
@@ -284,6 +281,36 @@ const tableApi = computed<Table<T> | null>(() => tableRef.value?.tableApi ?? nul
 const isColumnResizing = computed(() => Boolean(tableApi.value?.getState().columnSizingInfo.isResizingColumn))
 
 const isTreeMode = computed(() => Boolean(props.childrenKey))
+
+const treeMaxDepth = computed(() => {
+  if (!isTreeMode.value || !props.childrenKey) return 0
+  const data = ((attrs as { data?: readonly unknown[] }).data ?? []) as unknown[]
+  if (data.length === 0) return 0
+  return Tree.getStats(data, { children: props.childrenKey }).depth - 1
+})
+
+const EXPAND_DEFAULT_SIZE = 60
+const EXPAND_BUTTON_SLOT = 60
+
+const expandColumnSize = computed<number | null>(() => {
+  if (!isTreeMode.value || !resolved.value.hasExpandColumn) return null
+  const maxButtonDepth = Math.max(0, treeMaxDepth.value - 1)
+  if (maxButtonDepth === 0) return null
+  const indentPx = resolveMaxIndentPx(props.indentSize, maxButtonDepth)
+  return Math.max(EXPAND_DEFAULT_SIZE, EXPAND_BUTTON_SLOT + indentPx * 2)
+})
+
+let autoExpandSize: number | null = null
+watch(expandColumnSize, (target) => {
+  if (target == null) return
+  const state = effectiveSizing.value
+  const current = state.__expand
+  const canOverride = current == null || current === EXPAND_DEFAULT_SIZE || current === autoExpandSize
+  if (!canOverride || current === target) return
+  effectiveSizing.value = { ...state, __expand: target }
+  autoExpandSize = target
+}, { immediate: true })
+
 const isManualPagination = computed(() => props.paginationOptions?.manualPagination === true)
 const hasPaginationIntent = computed(() =>
   !props.loadMore && (
@@ -520,6 +547,20 @@ function clearSelection() {
   if (rowSelectionKeysState.value !== undefined) rowSelectionKeysState.value = []
 }
 
+function expandToDepth(depth: number) {
+  const api = tableApi.value
+  if (!api) return
+  const next: Record<string, boolean> = {}
+  for (const row of api.getPrePaginationRowModel().flatRows) {
+    if (row.getCanExpand() && row.depth < depth) next[row.id] = true
+  }
+  effectiveExpanded.value = next
+}
+
+function collapseAll() {
+  effectiveExpanded.value = {}
+}
+
 const tableResetKey = computed(() => {
   const flags = [
     !!props.resizable,
@@ -528,7 +569,9 @@ const tableResetKey = computed(() => {
     resolved.value.hasColumnPinning,
     resolved.value.hasColumnResizing,
     resolved.value.hasColumnSort,
-    isManualPagination.value
+    isManualPagination.value,
+    resolved.value.selectionMode === 'single',
+    resolved.value.subRowSelection === false
   ].reduce((mask, enabled, index) => mask | ((enabled ? 1 : 0) << index), 0)
 
   return `${props.columnResizeMode === 'onEnd' ? 'e' : 'c'}${flags.toString(36)}`
@@ -540,6 +583,8 @@ defineExpose<DataTableExposed<T>>({
   get el() { return tableRef.value?.$el ?? null },
   scrollToTop,
   clearSelection,
+  expandToDepth,
+  collapseAll,
   get treeSelection() { return treeSelection.value }
 })
 </script>

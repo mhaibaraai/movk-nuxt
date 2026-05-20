@@ -10,7 +10,7 @@ import { h, isVNode } from 'vue'
 import { resolveCallbackValue, resolveColumnFlag, resolveTemplate } from './utils'
 import DataTableCellTooltip from '../components/CellTooltip.vue'
 import { UButton } from '#components'
-import { applyBaseState, buildClassMeta, COLUMN_SIZE_STYLE, resolveAlignClass } from './style'
+import { applyBaseState, buildClassMeta, makeColumnStyle, resolveAlignClass } from './style'
 import type { DataTableProps } from '../../../types/data-table/component'
 
 interface HeaderAction<T> {
@@ -229,7 +229,7 @@ export function resolveDataColumn<T>(
     ...(cellRenderer && { cell: cellRenderer }),
     meta: {
       class: buildClassMeta<T, unknown>(density, resolveAlignClass(col.align), effectiveResizable),
-      style: COLUMN_SIZE_STYLE
+      style: makeColumnStyle<T>(col.align)
     }
   }
 

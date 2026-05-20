@@ -37,6 +37,13 @@ export interface DataTableExpandButtonContext<T> {
   canExpand: boolean
 }
 
+/** 展开列表头「全部展开/收起」按钮回调上下文 */
+export interface DataTableExpandToggleAllContext<T> {
+  headerContext: HeaderContext<T, unknown>
+  isAllExpanded: boolean
+  isSomeExpanded: boolean
+}
+
 /** 行固定列按钮回调上下文 */
 export interface DataTableRowPinningButtonContext<T> {
   cellContext: CellContext<T, unknown>

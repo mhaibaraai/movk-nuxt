@@ -1,6 +1,7 @@
 export type {
   DataTableCheckboxContext,
   DataTableExpandButtonContext,
+  DataTableExpandToggleAllContext,
   DataTablePinButtonContext,
   DataTableRowPinningButtonContext,
   DataTableSortButtonContext
