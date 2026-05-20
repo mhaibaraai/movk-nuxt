@@ -6,6 +6,7 @@ settings:
 
 overrides:
   '@nuxt/content': ^3.14.0
+  '@movk/core': https://pkg.pr.new/@movk/core@e58648f
 
 importers:
 
@@ -24,8 +25,8 @@ importers:
         specifier: ^3.12.1
         version: 3.12.1
       '@movk/core':
-        specifier: ^1.2.5
-        version: 1.2.5(vue@3.5.34(typescript@6.0.3))
+        specifier: https://pkg.pr.new/@movk/core@e58648f
+        version: https://pkg.pr.new/@movk/core@e58648f(vue@3.5.34(typescript@6.0.3))
       '@nuxt/image':
         specifier: ^2.0.0
         version: 2.0.0(db0@0.3.4(better-sqlite3@12.10.0))(ioredis@5.10.1)(magicast@0.5.3)(srvx@0.11.15)
@@ -1381,14 +1382,9 @@ packages:
       '@cfworker/json-schema':
         optional: true
 
-  '@movk/core@1.2.4':
-    resolution: {integrity: sha512-ysxAx44eAIFTtez+f6SEkJt3q5Z84VX4DUh9nQKRwfxZ347OC3v2LyrpWv4qsCCkVtRfVbvzupJZUjWonO6v4g==}
-    hasBin: true
-    peerDependencies:
-      vue: ^3.5.25
-
-  '@movk/core@1.2.5':
-    resolution: {integrity: sha512-whMFIRcOXJAJdv/x3agqFKxUgOx5Gl/09bvd908niPbFlVKC0UYKBRjOO8ZD+dOPgVckrwNixRIGNdONSjaWyg==}
+  '@movk/core@https://pkg.pr.new/@movk/core@e58648f':
+    resolution: {integrity: sha512-n2YDR6T7f0nDZs+INeKp4ZG3lTJ+lSWubZC6ZQdnJrISRaz2Oi3TsOhGacLdKnRcXOqjtEZ5WlvVftN4oHx44g==, tarball: https://pkg.pr.new/@movk/core@e58648f}
+    version: 1.2.5
     hasBin: true
     peerDependencies:
       vue: ^3.5.25
@@ -9404,12 +9400,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@movk/core@1.2.4(vue@3.5.34(typescript@6.0.3))':
-    dependencies:
-      '@vueuse/core': 14.3.0(vue@3.5.34(typescript@6.0.3))
-      vue: 3.5.34(typescript@6.0.3)
-
-  '@movk/core@1.2.5(vue@3.5.34(typescript@6.0.3))':
+  '@movk/core@https://pkg.pr.new/@movk/core@e58648f(vue@3.5.34(typescript@6.0.3))':
     dependencies:
       '@vueuse/core': 14.3.0(vue@3.5.34(typescript@6.0.3))
       vue: 3.5.34(typescript@6.0.3)
@@ -9423,7 +9414,7 @@ snapshots:
       '@iconify-json/lucide': 1.2.108
       '@iconify-json/simple-icons': 1.2.82
       '@iconify-json/vscode-icons': 1.2.49
-      '@movk/core': 1.2.4(vue@3.5.34(typescript@6.0.3))
+      '@movk/core': https://pkg.pr.new/@movk/core@e58648f(vue@3.5.34(typescript@6.0.3))
       '@nuxt/a11y': 1.0.0-alpha.1(magicast@0.5.3)(vite@7.3.3(@types/node@25.8.0)(jiti@2.7.0)(lightningcss@1.32.0)(sass-embedded@1.99.0)(sass@1.99.0)(terser@5.47.1)(yaml@2.9.0))
       '@nuxt/content': 3.14.0(better-sqlite3@12.10.0)(magicast@0.5.3)
       '@nuxt/image': 2.0.0(db0@0.3.4(better-sqlite3@12.10.0))(ioredis@5.10.1)(magicast@0.5.3)(srvx@0.11.15)
