@@ -22,8 +22,16 @@ export type UseApiFetchOptions<T = unknown, DataT = T>
     endpoint?: string
     /** Toast 提示配置，设置为 false 禁用提示 */
     toast?: RequestToastOptions | false
-    /** 是否跳过业务状态码检查 */
+    /**
+     * 是否跳过业务状态码检查
+     * @description 仅跳过 code 校验，仍解包；与 skipUnwrap 正交。
+     */
     skipBusinessCheck?: boolean
+    /**
+     * 是否跳过数据解包
+     * @description 为 true 时返回原始响应；与 skipBusinessCheck 正交。
+     */
+    skipUnwrap?: boolean
   }
 
 /**

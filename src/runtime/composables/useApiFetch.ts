@@ -7,7 +7,7 @@ import { useNuxtApp, useFetch } from '#app'
  * 基于 Nuxt useFetch 的薄封装，自动注入 $api 实例。
  * 所有核心能力（认证、业务检查、数据解包、Toast）由 $api interceptors 统一处理。
  *
- * @typeParam T - 业务数据类型（已由 $api 自动解包）
+ * @typeParam T - 业务数据类型（默认已由 $api 自动解包；skipUnwrap 时为原始响应类型）
  *
  * @example
  * ```ts
@@ -33,12 +33,16 @@ import { useNuxtApp, useFetch } from '#app'
  *   toast: { successMessage: '加载成功' }
  * })
  *
- * // 跳过业务检查（直接返回原始响应）
- * const { data } = await useApiFetch('/external', { skipBusinessCheck: true })
+ * // 跳过业务状态码校验（仍按 dataKey 解包，适合 code 字段缺失的场景）
+ * const { data } = await useApiFetch('/legacy', { skipBusinessCheck: true })
+ *
+ * // 跳过解包，拿原始响应（与 skipBusinessCheck 正交）
+ * const { data } = await useApiFetch<ApiResponse>('/external', { skipUnwrap: true })
  *
  * // 用户自定义 hooks（通过 useFetch 原生选项透传）
  * const { data } = await useApiFetch('/users', {
  *   onResponse({ response }) {
+ *     // response._data 已是解包后的业务数据（除非传入 skipUnwrap: true）
  *     console.log('自定义处理:', response._data)
  *   }
  * })
@@ -54,14 +58,21 @@ export function useApiFetch<T = unknown, DataT = T>(
     endpoint,
     toast,
     skipBusinessCheck,
+    skipUnwrap,
     ...fetchOptions
   } = options
 
   const apiInstance = endpoint ? $api.use(endpoint) : $api
 
+  // 两处断言的必要性：
+  // - `$fetch: apiInstance as typeof $fetch`：ApiInstance = $Fetch & { use }，结构上是 $Fetch 子类型，但 Nuxt useFetch 的
+  //   `$fetch` 选项要求精确的 $Fetch<unknown, NitroFetchRequest> 形态；二者在方法重载方差上不兼容，需要显式断言对齐。
+  // - 整体 options 的 `as Parameters<typeof useFetch>[1]`：Nuxt UseFetchOptions 内部泛型链路 (KeysOf/MaybeRefOrGetter/...)
+  //   嵌套过深，添加 `context` 字段时触发 TS2589 "instantiation excessively deep"。
+  //   `context` 字段语义经 ofetch FetchOptions 模块增强 + ApiFetchContext 接口保证类型正确。
   return useFetch(url, {
     ...fetchOptions,
     $fetch: apiInstance as typeof $fetch,
-    context: { toast, skipBusinessCheck }
+    context: { toast, skipBusinessCheck, skipUnwrap }
   } as Parameters<typeof useFetch>[1]) as UseApiFetchReturn<DataT>
 }

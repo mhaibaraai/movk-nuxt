@@ -1,4 +1,4 @@
-import type { MovkApiFullConfig } from './runtime/types'
+import type { MovkApiFullConfig } from './runtime/types/api/module'
 import type { ModuleOptions as UiModuleOptions } from '@nuxt/ui'
 import type { ModuleOptions as SiteConfigOptions } from 'nuxt-site-config'
 import type { SiteConfigInput } from 'nuxt-site-config/kit'

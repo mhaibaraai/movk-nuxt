@@ -13,8 +13,16 @@ declare module 'ofetch' {
 export interface ApiFetchContext {
   /** Toast 提示配置，设置为 false 禁用提示 */
   toast?: RequestToastOptions | false
-  /** 是否跳过业务状态码检查 */
+  /**
+   * 是否跳过业务状态码检查
+   * @description 仅跳过 code 校验，**仍按 dataKey 解包**业务数据。与 skipUnwrap 正交。
+   */
   skipBusinessCheck?: boolean
+  /**
+   * 是否跳过数据解包
+   * @description 为 true 时拦截器不重写 response._data，调用方拿到原始响应。与 skipBusinessCheck 正交。
+   */
+  skipUnwrap?: boolean
 }
 
 /**

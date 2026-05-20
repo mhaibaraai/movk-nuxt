@@ -124,7 +124,7 @@ function getTemplates(options: ModuleOptions, nuxt?: Nuxt) {
       return `import * as movkUi from '#build/movk-ui'
 import type { TVConfig } from '@nuxt/ui'
 import type { defaultConfig } from 'tailwind-variants'
-import type { EndpointPrivateConfig, MovkApiPublicConfig, ApiInstance, ModuleOptions } from '@movk/nuxt'
+import type { MovkApiPublicConfig, ApiInstance, ModuleOptions } from '@movk/nuxt'
 import type { HookResult } from '@nuxt/schema'
 import type { FetchContext } from 'ofetch'
 
@@ -182,7 +182,7 @@ declare module 'nuxt/schema' {
   }
 
   interface RuntimeConfig {
-    movkApi: { endpoints?: Record<string, EndpointPrivateConfig> }
+    movkApi: { endpoints?: Record<string, { headers?: Record<string, string> }> }
   }
 }
 
