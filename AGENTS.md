@@ -67,3 +67,7 @@ pnpm clean
 - prop 回调用索引访问派生，参数靠 contextual typing 推断：`const fn: DataTableDataColumn<T>['cell' | 'truncate' | 'tooltip'] = ctx => ...`、`DataTableProps<T>['sortable' | 'pinable' | 'resizable']` 同理
 - 事件处理用 `DataTableSelectHandler` / `HoverHandler` / `ContextmenuHandler` / `StateChangeHandler`
 - 独立工具函数等无法派生的场景，从 `@movk/nuxt` re-export
+
+## 增强、重构规范
+
+- 默认不需要考虑兼容性，除非用户明确要求
