@@ -22,7 +22,7 @@ import { useExtendedTv } from '../utils/extend-theme'
 import { resolveColumns } from '../domains/data-table/columns/resolve-columns'
 import { resolveCallbackValue } from '../domains/data-table/columns/utils'
 import { computeTreeRowSelection } from '../domains/data-table/tree-selection'
-import { useInfiniteScrollBinding } from '@movk/core'
+import { useInfiniteScrollBinding, separate } from '@movk/core'
 import theme from '#build/movk-ui/data-table'
 import tableTheme from '#build/ui/table'
 import type paginationTheme from '#build/movk-ui/data-table-pagination'
@@ -394,11 +394,12 @@ const uTableProps = computed(() => {
       ...(resolved.value.hasExpandColumn && { enableExpanding: true }),
       ...props.expandedOptions
     },
+    // pageCount / rowCount 由 MDataTable 自管，不灌进 TanStack，避免 setPageIndex 的 clamp 副作用
     paginationOptions: {
       ...(hasPaginationIntent.value && !isManualPagination.value && {
         getPaginationRowModel: getPaginationRowModel()
       }),
-      ...props.paginationOptions
+      ...separate(props.paginationOptions ?? {}, ['pageCount', 'rowCount']).omitted
     },
     ...(hasRowClickBehavior && {
       onSelect: (e: Event, row: Row<T>) => {
@@ -427,14 +428,11 @@ const paginationView = computed(() => {
   const manual = isManualPagination.value
   const explicitRowCount = props.paginationOptions?.rowCount
   const explicitPageCount = props.paginationOptions?.pageCount
+  const rowCountKnown = !manual || explicitRowCount !== undefined
   const pagination = api.getState().pagination
   const pageIndex = pagination?.pageIndex ?? 0
   const pageSize = pagination?.pageSize ?? 10
   const currentPageRowCount = api.getRowModel().rows.length
-
-  const rowCount = manual
-    ? Math.max(0, explicitRowCount ?? api.getRowCount())
-    : api.getRowCount()
 
   const fallbackManualPageCount = explicitRowCount !== undefined
     ? Math.ceil(Math.max(0, explicitRowCount) / pageSize)
@@ -443,21 +441,46 @@ const paginationView = computed(() => {
     ? Math.max(0, explicitPageCount ?? fallbackManualPageCount)
     : api.getPageCount()
 
-  const from = rowCount > 0 && currentPageRowCount > 0 ? pageIndex * pageSize + 1 : 0
-  const to = rowCount > 0 && currentPageRowCount > 0 ? Math.min(rowCount, from + currentPageRowCount - 1) : 0
+  const rowCount = rowCountKnown
+    ? (manual ? Math.max(0, explicitRowCount!) : api.getRowCount())
+    : 0
+
+  const referenceCount = rowCountKnown ? rowCount : pageCount * pageSize
+  const from = referenceCount > 0 && currentPageRowCount > 0 ? pageIndex * pageSize + 1 : 0
+  const to = referenceCount > 0 && currentPageRowCount > 0
+    ? Math.min(referenceCount, from + currentPageRowCount - 1)
+    : 0
   const show = props.paginationUi?.show
     ?? (pageCount > 1 || (props.paginationUi?.pageSizes?.length ?? 0) > 1)
+
+  const setPage = (value: number) => {
+    const nextPage = Math.floor(Number(value))
+    if (!Number.isFinite(nextPage) || nextPage < 1) return
+    const maxPage = Math.max(1, pageCount)
+    const nextIndex = Math.min(maxPage, nextPage) - 1
+    api.setPagination(prev => ({ ...prev, pageIndex: nextIndex }))
+  }
+
+  const setPageSize = (value: unknown) => {
+    if (value === '' || value == null) return
+    const nextPageSize = Math.floor(Number(value))
+    if (!Number.isFinite(nextPageSize) || nextPageSize <= 0) return
+    api.setPagination(prev => ({ ...prev, pageSize: nextPageSize }))
+  }
 
   return {
     tableApi: api,
     pagination: { pageIndex, pageSize },
     page: pageIndex + 1,
     rowCount,
+    rowCountKnown,
     pageCount,
     currentPageRowCount,
     from,
     to,
-    show
+    show,
+    setPage,
+    setPageSize
   }
 })
 
@@ -469,9 +492,12 @@ const paginationRendererProps = computed(() => {
     pagination: v.pagination,
     page: v.page,
     rowCount: v.rowCount,
+    rowCountKnown: v.rowCountKnown,
     pageCount: v.pageCount,
     from: v.from,
     to: v.to,
+    setPage: v.setPage,
+    setPageSize: v.setPageSize,
     selectedCount: selectedCount.value
   }
 })

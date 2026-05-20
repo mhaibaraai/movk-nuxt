@@ -20,6 +20,7 @@ interface DataTablePaginationUiText {
   item?: string
   range?: string
   selected?: string
+  page?: string
 }
 
 export interface DataTablePaginationUi {
@@ -56,10 +57,13 @@ export interface DataTablePaginationProps<TData extends RowData> {
   pagination: PaginationState
   page: number
   rowCount: number
+  rowCountKnown: boolean
   pageCount: number
   from: number
   to: number
   selectedCount: number
+  setPage: (page: number) => void
+  setPageSize: (pageSize: unknown) => void
   uiConfig?: DataTablePaginationUi
 }
 
@@ -69,6 +73,7 @@ export interface DataTablePaginationSlots<TData extends RowData = RowData> {
     selectedText: string
     selectedCount: number
     rowCount: number
+    rowCountKnown: boolean
     from: number
     to: number
     page: number

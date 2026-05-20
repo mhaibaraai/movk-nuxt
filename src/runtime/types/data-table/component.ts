@@ -206,12 +206,15 @@ export interface DataTablePaginationSlotProps<T extends TableData> {
   pagination: PaginationState
   page: number
   rowCount: number
+  rowCountKnown: boolean
   pageCount: number
   currentPageRowCount: number
   from: number
   to: number
   show: boolean
   selectedCount: number
+  setPage: (page: number) => void
+  setPageSize: (pageSize: unknown) => void
 }
 
 export interface DataTableSlots<T extends TableData> {
