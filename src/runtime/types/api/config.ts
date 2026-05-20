@@ -106,7 +106,7 @@ export interface ApiToastConfig {
     icon?: string
     /**
      * 显示时长（毫秒）
-     * @defaultValue 3000
+     * @defaultValue undefined（继承 `<UApp :toaster>` / app.config 的 toaster.duration）
      */
     duration?: number
   }
@@ -131,7 +131,7 @@ export interface ApiToastConfig {
     icon?: string
     /**
      * 显示时长（毫秒）
-     * @defaultValue 3000
+     * @defaultValue undefined（继承 `<UApp :toaster>` / app.config 的 toaster.duration）
      */
     duration?: number
   }

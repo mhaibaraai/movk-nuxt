@@ -1,5 +1,6 @@
 import defu from 'defu'
-import type { ApiEndpointPublicConfig, EndpointPrivateConfig, ModuleOptions } from '../module'
+import type { ApiEndpointPublicConfig, ModuleOptions } from '../module'
+import type { EndpointPrivateConfig } from '../runtime/types/api/module'
 
 export function getDefaultApiConfig(apiConfig: ModuleOptions['api']) {
   const publicEndpoints: Record<string, ApiEndpointPublicConfig> = {}
@@ -46,12 +47,12 @@ export function getDefaultApiConfig(apiConfig: ModuleOptions['api']) {
         success: {
           show: true,
           color: 'success',
-          duration: 3000
+          icon: 'i-lucide-circle-check'
         },
         error: {
           show: true,
           color: 'error',
-          duration: 3000
+          icon: 'i-lucide-circle-x'
         }
       })
   }
