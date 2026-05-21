@@ -1,5 +1,8 @@
+import type { NitroFetchRequest } from 'nitropack/types'
 import type { UseApiFetchOptions, UseApiFetchReturn } from '../types/api'
+import { computed, toValue } from 'vue'
 import { useNuxtApp, useFetch } from '#app'
+import { buildApiFetchKey } from '../domains/api/fetch-key'
 
 /**
  * API Fetch 组合式函数
@@ -49,7 +52,7 @@ import { useNuxtApp, useFetch } from '#app'
  * ```
  */
 export function useApiFetch<T = unknown, DataT = T>(
-  url: string | (() => string),
+  url: NitroFetchRequest | (() => NitroFetchRequest),
   options: UseApiFetchOptions<T, DataT> = {} as UseApiFetchOptions<T, DataT>
 ): UseApiFetchReturn<DataT> {
   const { $api } = useNuxtApp()
@@ -64,14 +67,24 @@ export function useApiFetch<T = unknown, DataT = T>(
 
   const apiInstance = endpoint ? $api.use(endpoint) : $api
 
-  // 两处断言的必要性：
-  // - `$fetch: apiInstance as typeof $fetch`：ApiInstance = $Fetch & { use }，结构上是 $Fetch 子类型，但 Nuxt useFetch 的
-  //   `$fetch` 选项要求精确的 $Fetch<unknown, NitroFetchRequest> 形态；二者在方法重载方差上不兼容，需要显式断言对齐。
-  // - 整体 options 的 `as Parameters<typeof useFetch>[1]`：Nuxt UseFetchOptions 内部泛型链路 (KeysOf/MaybeRefOrGetter/...)
-  //   嵌套过深，添加 `context` 字段时触发 TS2589 "instantiation excessively deep"。
-  //   `context` 字段语义经 ofetch FetchOptions 模块增强 + ApiFetchContext 接口保证类型正确。
+  const fetchKey = computed<string>(() => {
+    const userKey = toValue(fetchOptions.key)
+    if (userKey) return userKey
+    return buildApiFetchKey({
+      endpoint,
+      skipUnwrap,
+      skipBusinessCheck,
+      toast,
+      method: toValue(fetchOptions.method),
+      url: typeof url === 'function' ? url() : url,
+      query: toValue(fetchOptions.query),
+      body: toValue(fetchOptions.body)
+    })
+  })
+
   return useFetch(url, {
     ...fetchOptions,
+    key: fetchKey,
     $fetch: apiInstance as typeof $fetch,
     context: { toast, skipBusinessCheck, skipUnwrap }
   } as Parameters<typeof useFetch>[1]) as UseApiFetchReturn<DataT>
