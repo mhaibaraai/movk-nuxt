@@ -64,6 +64,7 @@ pnpm clean
 
 ## 类型与导入约定
 
+- 类型来源，优先使用官方类型替换自定义类型
 - prop 回调用索引访问派生，参数靠 contextual typing 推断：`const fn: DataTableDataColumn<T>['cell' | 'truncate' | 'tooltip'] = ctx => ...`、`DataTableProps<T>['sortable' | 'pinable' | 'resizable']` 同理
 - 事件处理用 `DataTableSelectHandler` / `HoverHandler` / `ContextmenuHandler` / `StateChangeHandler`
 - 独立工具函数等无法派生的场景，从 `@movk/nuxt` re-export
