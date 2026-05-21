@@ -1,3 +1,4 @@
+import type { NitroFetchRequest } from 'nitropack/types'
 import type { UseApiFetchOptions, UseApiFetchReturn } from '../types/api'
 import { useApiFetch } from './useApiFetch'
 
@@ -23,7 +24,7 @@ import { useApiFetch } from './useApiFetch'
  * ```
  */
 export function useClientApiFetch<T = unknown, DataT = T>(
-  url: string | (() => string),
+  url: NitroFetchRequest | (() => NitroFetchRequest),
   options: UseApiFetchOptions<T, DataT> = {} as UseApiFetchOptions<T, DataT>
 ): UseApiFetchReturn<DataT> {
   return useApiFetch<T, DataT>(url, {
