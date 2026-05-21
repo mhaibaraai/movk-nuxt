@@ -45,7 +45,6 @@ function compact<T extends Record<string, unknown>>(obj: T): Partial<T> {
  * 触发 Toast 提示
  *
  * @description 决策收敛在本函数内：是否启用 / 类型是否启用 / 提示文案选择 / payload 构造。
- * payload 过滤 undefined 键，确保未配置的字段（如 duration）由 Nuxt UI 全局 toaster / `<UApp :toaster>` 接管。
  *
  * @param type 提示类型
  * @param source 字符串作为 fallback 文案；ApiResponse 时按 responseConfig 抽取 message；undefined 走类型默认文案
