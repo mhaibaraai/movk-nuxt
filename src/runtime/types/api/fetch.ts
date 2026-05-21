@@ -1,6 +1,20 @@
-import type { $Fetch, FetchError } from 'ofetch'
+import type { $Fetch } from 'nitropack/types'
+import type { FetchError } from 'ofetch'
 import type { UseFetchOptions as NuxtUseFetchOptions, AsyncData } from 'nuxt/app'
 import type { RequestToastOptions, ApiError } from './response'
+
+/**
+ * 端点名声明合并入口
+ * @description 构建期由模块按 nuxt.config 的 movk.api.endpoints 自动注入；
+ * 用户也可在自有 d.ts 中通过 `declare module '@movk/nuxt'` 追加自定义端点名
+ */
+export interface MovkApiEndpoints {}
+
+/**
+ * 已声明的端点名联合
+ * @description 派生自 MovkApiEndpoints 的键集合
+ */
+export type MovkApiEndpointName = keyof MovkApiEndpoints & string
 
 /**
  * API 实例类型
@@ -8,7 +22,7 @@ import type { RequestToastOptions, ApiError } from './response'
  */
 export type ApiInstance = $Fetch & {
   /** 切换到指定端点，返回该端点的 $fetch 实例 */
-  use: (endpoint: string) => ApiInstance
+  use: (endpoint: MovkApiEndpointName) => ApiInstance
 }
 
 /**
@@ -19,7 +33,7 @@ export type ApiInstance = $Fetch & {
 export type UseApiFetchOptions<T = unknown, DataT = T>
   = Omit<NuxtUseFetchOptions<T, DataT>, '$fetch' | 'context'> & {
     /** 使用的端点名称（默认使用 defaultEndpoint） */
-    endpoint?: string
+    endpoint?: MovkApiEndpointName
     /** Toast 提示配置，设置为 false 禁用提示 */
     toast?: RequestToastOptions | false
     /**

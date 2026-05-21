@@ -1,4 +1,4 @@
-import type { $Fetch } from 'ofetch'
+import type { $Fetch } from 'nitropack/types'
 import type { ApiInstance, MovkApiPublicConfig } from '../types/api'
 import type { EndpointPrivateConfig, ResolvedEndpointConfig } from '../types/api/module'
 import { resolveEndpointConfig } from '../domains/api/endpoint-config'
@@ -19,15 +19,13 @@ function createEndpointFetch(
   publicConfig: MovkApiPublicConfig,
   nuxtApp: NuxtApp
 ): $Fetch {
-  // ofetch 类型在某些版本未把 $fetch.create() 返回的 native 字段标在 $Fetch<unknown, NitroFetchRequest> 上，
-  // 这里维持显式断言固化「拿到的就是 $Fetch」契约
   return $fetch.create({
     baseURL: resolvedConfig.baseURL,
     headers: resolvedConfig.headers,
     onRequest: createOnRequest(resolvedConfig, publicConfig, nuxtApp),
     onResponse: createOnResponse(resolvedConfig, publicConfig, nuxtApp),
     onResponseError: createOnResponseError(resolvedConfig, publicConfig, nuxtApp)
-  }) as $Fetch
+  })
 }
 
 export default defineNuxtPlugin(() => {
