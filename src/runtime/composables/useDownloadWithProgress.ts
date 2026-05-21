@@ -3,7 +3,7 @@ import { ref, useRuntimeConfig } from '#imports'
 import { extractFilename, triggerDownload } from '@movk/core'
 import { getAuthHeaders } from '../domains/api/auth'
 import { resolveEndpointConfig } from '../domains/api/endpoint-config'
-import { extractToastMessage, showToast } from '../domains/api/toast'
+import { showToast } from '../domains/api/toast'
 
 /**
  * 下载选项(带进度监控)
@@ -111,9 +111,8 @@ export function useDownloadWithProgress() {
       abortController = null
       progress.value = 100
 
-      if (import.meta.client && toast !== false) {
-        const message = extractToastMessage(toast, 'success', `下载成功: ${finalFilename}`)
-        showToast('success', message, toast, config.toast)
+      if (toast !== false) {
+        showToast('success', `下载成功: ${finalFilename}`, toast, config.toast)
       }
 
       onSuccess?.(finalFilename)
@@ -128,9 +127,8 @@ export function useDownloadWithProgress() {
 
       const isAborted = downloadError.name === 'AbortError'
 
-      if (import.meta.client && !isAborted && toast !== false) {
-        const message = extractToastMessage(toast, 'error', downloadError.message || '下载失败')
-        showToast('error', message, toast, config.toast)
+      if (!isAborted && toast !== false) {
+        showToast('error', downloadError.message || '下载失败', toast, config.toast)
       }
 
       if (!isAborted) onError?.(downloadError)

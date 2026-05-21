@@ -8,7 +8,7 @@ import {
   isBusinessSuccess
 } from '../domains/api/response'
 import { resolveEndpointConfig } from '../domains/api/endpoint-config'
-import { extractToastMessage, showToast } from '../domains/api/toast'
+import { showToast } from '../domains/api/toast'
 
 /**
  * 上传选项(带进度监控)
@@ -109,9 +109,8 @@ export function useUploadWithProgress() {
           if (isSuccess) {
             data.value = response
 
-            if (import.meta.client && toast !== false) {
-              const msg = extractToastMessage(toast, 'success', message || '上传成功')
-              showToast('success', msg, toast, config.toast)
+            if (toast !== false) {
+              showToast('success', message || '上传成功', toast, config.toast)
             }
 
             onSuccess?.(response)
@@ -121,9 +120,8 @@ export function useUploadWithProgress() {
             const err = new Error(message || '上传失败')
             error.value = err
 
-            if (import.meta.client && toast !== false) {
-              const msg = extractToastMessage(toast, 'error', message || '上传失败')
-              showToast('error', msg, toast, config.toast)
+            if (toast !== false) {
+              showToast('error', message || '上传失败', toast, config.toast)
             }
 
             onError?.(err)
@@ -134,7 +132,7 @@ export function useUploadWithProgress() {
           const parseError = err instanceof Error ? err : new Error('响应解析失败')
           error.value = parseError
 
-          if (import.meta.client && toast !== false) {
+          if (toast !== false) {
             showToast('error', '上传失败', toast, config.toast)
           }
 
@@ -151,7 +149,7 @@ export function useUploadWithProgress() {
         const err = new Error('网络错误')
         error.value = err
 
-        if (import.meta.client && toast !== false) {
+        if (toast !== false) {
           showToast('error', '上传失败', toast, config.toast)
         }
 

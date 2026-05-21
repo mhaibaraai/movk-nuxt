@@ -1,4 +1,4 @@
-import type { MovkApiFullConfig } from './runtime/types'
+import type { MovkApiFullConfig } from './runtime/types/api/module'
 import type { ModuleOptions as UiModuleOptions } from '@nuxt/ui'
 import type { ModuleOptions as SiteConfigOptions } from 'nuxt-site-config'
 import type { SiteConfigInput } from 'nuxt-site-config/kit'
@@ -127,8 +127,8 @@ export default defineNuxtModule<ModuleOptions>({
     if (apiConfig.enabled !== false) {
       const { publicConfig, privateConfig } = getDefaultApiConfig(apiConfig)
 
-      nuxt.options.runtimeConfig.movkApi = privateConfig
-      nuxt.options.runtimeConfig.public.movkApi = publicConfig
+      nuxt.options.runtimeConfig.movkApi = privateConfig as typeof nuxt.options.runtimeConfig.movkApi
+      nuxt.options.runtimeConfig.public.movkApi = publicConfig as typeof nuxt.options.runtimeConfig.public.movkApi
 
       addPlugin({ src: resolve('runtime/plugins/api.factory'), mode: 'all' })
     }

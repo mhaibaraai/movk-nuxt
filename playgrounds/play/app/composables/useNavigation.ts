@@ -34,6 +34,20 @@ const dataTableNav: NavigationMenuItem = {
   ]
 }
 
+const apiNav: NavigationMenuItem = {
+  label: 'API',
+  icon: 'i-lucide-cable',
+  defaultOpen: true,
+  children: [
+    { label: 'Quickstart', to: '/api/quickstart' },
+    { label: 'Endpoints', to: '/api/endpoints' },
+    { label: 'Unwrap', to: '/api/unwrap' },
+    { label: 'Toast', to: '/api/toast' },
+    { label: 'Errors', to: '/api/errors' },
+    { label: 'Auth', to: '/api/auth' }
+  ]
+}
+
 const componentsNav: NavigationMenuItem = {
   label: 'Components',
   icon: 'i-lucide-box',
@@ -58,7 +72,6 @@ const composablesNav: NavigationMenuItem = {
   icon: 'i-lucide-puzzle',
   defaultOpen: true,
   children: [
-    { label: 'useApiFetch', to: '/composables/use-api-fetch' },
     { label: 'Upload Progress', to: '/composables/use-upload-progress' },
     { label: 'Download Progress', to: '/composables/use-download-progress' },
     { label: 'useDateFormatter', to: '/composables/use-date-formatter' },
@@ -67,7 +80,7 @@ const composablesNav: NavigationMenuItem = {
   ]
 }
 
-const components: NavigationMenuItem[] = [autoFormNav, dataTableNav, componentsNav, composablesNav]
+const components: NavigationMenuItem[] = [autoFormNav, dataTableNav, apiNav, componentsNav, composablesNav]
 
 export const useNavigation = () => {
   const items: NavigationMenuItem[] = [

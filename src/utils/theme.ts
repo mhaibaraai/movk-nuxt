@@ -4,6 +4,7 @@ import type { ModuleOptions } from '../module'
 import { addPlugin } from '@nuxt/kit'
 import defu from 'defu'
 import { getDefaultConfig } from './defaults'
+import type { Direction } from '@nuxt/ui'
 
 export function addTheme(nuxt: Nuxt, resolve: Resolver['resolve'], theme?: ModuleOptions['theme']) {
   if (theme?.enabled === false) return
@@ -16,8 +17,7 @@ export function addTheme(nuxt: Nuxt, resolve: Resolver['resolve'], theme?: Modul
   )
 
   nuxt.options.app.head.htmlAttrs = defu(nuxt.options.app.head.htmlAttrs || {}, {
-    lang: 'zh-CN',
-    dir: 'ltr' as const
+    dir: 'ltr' as Direction
   })
 
   nuxt.options.appConfig.movk = defu(
@@ -26,10 +26,19 @@ export function addTheme(nuxt: Nuxt, resolve: Resolver['resolve'], theme?: Modul
   )
 
   nuxt.options.appConfig.ui = defu(
-    nuxt.options.appConfig.ui || {},
     {
-      colors: { primary: 'blue', secondary: 'blue', success: 'green', info: 'blue', warning: 'yellow', error: 'red', neutral: 'slate' }
-    })
+      colors: {
+        primary: 'blue',
+        secondary: 'blue',
+        success: 'green',
+        info: 'blue',
+        warning: 'yellow',
+        error: 'red',
+        neutral: 'slate'
+      }
+    },
+    nuxt.options.appConfig.ui || {}
+  )
 
   addPlugin({
     src: resolve('runtime/plugins/theme'),

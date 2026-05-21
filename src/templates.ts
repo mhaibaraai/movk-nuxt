@@ -122,9 +122,9 @@ function getTemplates(options: ModuleOptions, nuxt?: Nuxt) {
     filename: 'types/movk-ui.d.ts',
     getContents: () => {
       return `import * as movkUi from '#build/movk-ui'
-import type { TVConfig } from '@nuxt/ui'
+import type { TVConfig, Direction } from '@nuxt/ui'
 import type { defaultConfig } from 'tailwind-variants'
-import type { EndpointPrivateConfig, MovkApiPublicConfig, ApiInstance, ModuleOptions } from '@movk/nuxt'
+import type { MovkApiPublicConfig, ApiInstance, ModuleOptions } from '@movk/nuxt'
 import type { HookResult } from '@nuxt/schema'
 import type { FetchContext } from 'ofetch'
 
@@ -138,6 +138,7 @@ interface PickerFontEntry {
 }
 
 type AppConfigUI = {
+  dir?: Direction,
   radius?: Radius | (number & {})
   blackAsPrimary?: boolean
   font?: FontFamily | (string & {})
@@ -182,7 +183,7 @@ declare module 'nuxt/schema' {
   }
 
   interface RuntimeConfig {
-    movkApi: { endpoints?: Record<string, EndpointPrivateConfig> }
+    movkApi: { endpoints?: Record<string, { headers?: Record<string, string> }> }
   }
 }
 
@@ -197,6 +198,25 @@ declare module '@nuxt/schema' {
      * @see https://nuxt.mhaibaraai.cn/docs/getting-started/theme
      */
     movk?: AppConfigUI
+  }
+}
+
+export {}
+`
+    }
+  })
+
+  templates.push({
+    filename: 'types/movk-api-endpoints.d.ts',
+    getContents: () => {
+      const endpoints = options.api?.endpoints
+      const keys = endpoints && Object.keys(endpoints).length > 0
+        ? Object.keys(endpoints)
+        : ['default']
+      const entries = keys.map(key => `    ${JSON.stringify(key)}: true`).join('\n')
+      return `declare module '@movk/nuxt' {
+  interface MovkApiEndpoints {
+${entries}
   }
 }
 

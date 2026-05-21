@@ -1,5 +1,7 @@
 import defu from 'defu'
-import type { ApiEndpointPublicConfig, EndpointPrivateConfig, ModuleOptions } from '../module'
+import type { ApiEndpointPublicConfig, ModuleOptions } from '../module'
+import type { EndpointPrivateConfig } from '../runtime/types/api/module'
+import type { Direction } from '@nuxt/ui'
 
 export function getDefaultApiConfig(apiConfig: ModuleOptions['api']) {
   const publicEndpoints: Record<string, ApiEndpointPublicConfig> = {}
@@ -46,12 +48,12 @@ export function getDefaultApiConfig(apiConfig: ModuleOptions['api']) {
         success: {
           show: true,
           color: 'success',
-          duration: 3000
+          icon: 'i-lucide-circle-check'
         },
         error: {
           show: true,
           color: 'error',
-          duration: 3000
+          icon: 'i-lucide-circle-x'
         }
       })
   }
@@ -78,6 +80,7 @@ export function getDefaultConfig(theme?: ModuleOptions['theme']) {
   const pickerNeutralColors = theme?.neutralColors ?? ['slate', 'gray', 'zinc', 'neutral', 'stone', 'taupe', 'mauve', 'mist', 'olive']
 
   return {
+    dir: 'ltr' as Direction,
     radius: 0.25,
     blackAsPrimary: false,
     font: 'Alibaba PuHuiTi',
