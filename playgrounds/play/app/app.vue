@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { zh_cn } from '@nuxt/ui/locale'
 
+const appConfig = useAppConfig()
 const { components, groups, items } = useNavigation()
 
 const { color, style, link } = useTheme()
@@ -16,7 +17,7 @@ provide('components', components)
 </script>
 
 <template>
-  <UApp :locale="zh_cn">
+  <UApp :locale="zh_cn" :toaster="appConfig.toaster" :dir="appConfig.movk?.dir">
     <NuxtLoadingIndicator color="var(--ui-primary)" :height="2" />
 
     <UDashboardGroup unit="rem">
