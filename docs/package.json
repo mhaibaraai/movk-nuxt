@@ -9,7 +9,8 @@
   "dependencies": {
     "@iconify-json/vscode-icons": "^1.2.50",
     "@internationalized/date": "^3.12.1",
-    "@movk/nuxt-docs": "^1.18.4",
+    "@movk/nuxt": "workspace:*",
+    "@movk/nuxt-docs": "^1.19.0",
     "@nuxt/content": "^3.14.0",
     "@nuxt/ui": "^4.8.0",
     "better-sqlite3": "^12.10.0",
