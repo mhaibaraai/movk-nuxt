@@ -79,3 +79,17 @@ pnpm clean
 ## 增强、重构规范
 
 - 默认不需要考虑兼容性，除非用户明确要求
+
+## 写作规范
+
+- **每篇 md 的 frontmatter 统一格式**：简洁中文 `title`/`description` + 英文 `seo:` 块（`seo.title`、`seo.description` 用英文，供 SEO/多语言索引）。示例：
+  ```yaml
+  ---
+  title: 安装
+  description: 通过官方项目模板一键创建完整文档站点。
+  seo:
+    title: Installation
+    description: Create a Movk Nuxt Docs site with the official templates or integrate the Nuxt layer into an existing project using npm, pnpm, yarn, or bun.
+  ---
+  ```
+  中文 title/description 保持简洁（title 名词/动宾短语，description 一句话）；组件页另加 `category` 字段。此约定适用于所有内容阶段。
