@@ -1,7 +1,10 @@
 ---
 title: SearchForm
-description: Schema 驱动的可折叠搜索表单组件
+description: Schema 驱动的可折叠搜索表单组件。
 category: form
+seo:
+  title: SearchForm
+  description: A schema-driven, collapsible search form with grid layout, search/reset actions and auto row collapsing.
 ---
 
 ## 简介

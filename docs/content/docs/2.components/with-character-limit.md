@@ -1,7 +1,10 @@
 ---
 title: WithCharacterLimit
-description: 带字符数限制和计数显示的输入框组件
+description: 带字符数限制和计数显示的输入框组件。
 category: input
+seo:
+  title: WithCharacterLimit
+  description: An input with character limit and live counter display, built on the Nuxt UI input.
 ---
 
 ## 简介

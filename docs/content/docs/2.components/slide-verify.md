@@ -1,7 +1,10 @@
 ---
 title: SlideVerify
-description: 流畅的滑动验证组件
+description: 流畅的滑动验证组件。
 category: advanced
+seo:
+  title: SlideVerify
+  description: A smooth slide-to-verify component with configurable threshold, size and success feedback.
 ---
 
 ## 简介

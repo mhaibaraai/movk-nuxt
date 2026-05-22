@@ -1,7 +1,10 @@
 ---
 title: WithCopy
-description: 带复制功能的输入框组件
+description: 带复制功能的输入框组件。
 category: input
+seo:
+  title: WithCopy
+  description: An input with a copy-to-clipboard button, built on the Nuxt UI input.
 ---
 
 ## 简介

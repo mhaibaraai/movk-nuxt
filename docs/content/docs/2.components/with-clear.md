@@ -1,7 +1,10 @@
 ---
 title: WithClear
-description: 带清除按钮的输入框组件
+description: 带清除按钮的输入框组件。
 category: input
+seo:
+  title: WithClear
+  description: An input with a clear button, built on the Nuxt UI input.
 ---
 
 ## 简介

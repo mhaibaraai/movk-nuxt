@@ -1,7 +1,10 @@
 ---
 title: ThemePicker
-description: 可视化主题配置组件
+description: 可视化主题配置组件。
 category: advanced
+seo:
+  title: ThemePicker
+  description: A visual theme configuration component to switch colors, radius, fonts, icon set and dark mode, with CSS/config export.
 ---
 
 ## 简介

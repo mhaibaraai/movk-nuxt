@@ -1,7 +1,10 @@
 ---
 title: DatePicker
-description: 基于国际化标准的日期选择器组件
+description: 基于国际化标准的日期选择器组件。
 category: advanced
+seo:
+  title: DatePicker
+  description: An internationalized date picker supporting single, range and multiple selection, presets and custom output formats.
 ---
 
 ## 简介

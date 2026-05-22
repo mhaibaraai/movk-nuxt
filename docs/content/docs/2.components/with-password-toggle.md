@@ -1,7 +1,10 @@
 ---
 title: WithPasswordToggle
-description: 带显示/隐藏切换的密码输入框组件
+description: 带显示/隐藏切换的密码输入框组件。
 category: input
+seo:
+  title: WithPasswordToggle
+  description: A password input with a show/hide visibility toggle, built on the Nuxt UI input.
 ---
 
 ## 简介

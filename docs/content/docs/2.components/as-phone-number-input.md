@@ -1,7 +1,10 @@
 ---
 title: AsPhoneNumberInput
-description: 带输入掩码格式化的电话号码输入框组件
+description: 带输入掩码格式化的电话号码输入框组件。
 category: input
+seo:
+  title: AsPhoneNumberInput
+  description: A phone number input with mask formatting and dial-code support, built on the Nuxt UI input.
 ---
 
 ## 简介

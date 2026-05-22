@@ -1,7 +1,10 @@
 ---
 title: StarRating
-description: 交互式星级评分组件
+description: 交互式星级评分组件。
 category: advanced
+seo:
+  title: StarRating
+  description: An interactive star rating component supporting half stars, custom icons, colors, readonly and clearable states.
 ---
 
 ## 简介

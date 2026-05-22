@@ -1,7 +1,10 @@
 ---
 title: ColorChooser
-description: 可视化颜色选择器组件
+description: 可视化颜色选择器组件。
 category: advanced
+seo:
+  title: ColorChooser
+  description: A visual color picker supporting hex/rgb/hsl formats, preset swatches, copy and clearable selection.
 ---
 
 ## 简介

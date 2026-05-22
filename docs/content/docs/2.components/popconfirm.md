@@ -1,7 +1,10 @@
 ---
 title: Popconfirm
-description: 基于气泡弹出层的操作确认组件
+description: 基于气泡弹出层的操作确认组件。
 category: feedback
+seo:
+  title: Popconfirm
+  description: A popover-based confirmation component for guarding actions, with async confirm and custom content.
 ---
 
 `MPopconfirm` 是一个气泡式确认组件，在用户执行危险或不可逆操作前弹出确认气泡。支持同步与异步确认回调，并完整透传 `UPopover` 的所有定位参数。

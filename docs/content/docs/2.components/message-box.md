@@ -1,7 +1,10 @@
 ---
 title: MessageBox
-description: 模态消息对话框，支持六种语义类型，提供声明式与编程式两种调用方式
+description: 模态消息对话框，支持六种语义类型，提供声明式与编程式两种调用方式。
 category: feedback
+seo:
+  title: MessageBox
+  description: A modal message dialog with six semantic types, offering both declarative and programmatic (alert/confirm) usage.
 ---
 
 ## 简介
