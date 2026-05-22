@@ -14,6 +14,14 @@ export default defineAppConfig({
         ]
       },
       {
+        category: 'DataTable',
+        items: [
+          '树形数据如何配置级联选择策略？',
+          '列如何固定与拖拽调整宽度？',
+          '服务端分页如何对接 rowCount 与 pageCount？'
+        ]
+      },
+      {
         category: 'API 系统',
         items: [
           '响应数据如何自动从信封结构中解包？',
@@ -25,6 +33,7 @@ export default defineAppConfig({
         category: '组件',
         items: [
           'SearchForm 如何按行数自动折叠？',
+          'PillGroup 如何做多选与字段映射？',
           'SlideVerify 阈值和动画如何配置？',
           'DatePicker 输出格式如何指定？'
         ]
@@ -34,6 +43,7 @@ export default defineAppConfig({
         items: [
           '如何避免主题切换时的 SSR 闪烁？',
           '如何导出当前主题的 CSS 变量？',
+          'useMessageBox 如何命令式弹出确认框？',
           'useDateFormatter 如何批量转换日期数组？'
         ]
       }
