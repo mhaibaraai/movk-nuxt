@@ -26,6 +26,11 @@ export function useHeader() {
     to: '/docs/auto-form',
     active: route.path.startsWith('/docs/auto-form')
   }, {
+    label: 'DataTable',
+    icon: 'i-lucide-table',
+    to: '/docs/data-table',
+    active: route.path.startsWith('/docs/data-table')
+  }, {
     label: 'API',
     icon: 'i-lucide-cloud',
     to: '/docs/api',
