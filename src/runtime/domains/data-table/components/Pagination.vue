@@ -8,8 +8,10 @@ import { tv } from '@nuxt/ui/utils/tv'
 import theme from '#build/movk-ui/data-table-pagination'
 import type { DataTablePaginationProps, DataTablePaginationSlots, DataTablePaginationUi } from '../../../types/data-table/pagination'
 
+type Pagination = ComponentConfig<typeof theme, AppConfig, 'dataTablePagination'>
+
 const props = defineProps<DataTablePaginationProps<T> & {
-  uiConfig?: DataTablePaginationUi & { ui?: ComponentConfig<typeof theme, AppConfig, 'dataTablePagination'>['slots'] }
+  uiConfig?: DataTablePaginationUi & { ui?: Pagination['slots'] }
 }>()
 
 defineSlots<DataTablePaginationSlots<T>>()
@@ -33,13 +35,15 @@ interface PaginationUiText {
   item?: string
   range?: string
   selected?: string
+  page?: string
 }
 
 const text = computed<Required<PaginationUiText>>(() => ({
   total: props.uiConfig?.text?.total ?? '共',
   item: props.uiConfig?.text?.item ?? '条',
   range: props.uiConfig?.text?.range ?? '显示',
-  selected: props.uiConfig?.text?.selected ?? '已选'
+  selected: props.uiConfig?.text?.selected ?? '已选',
+  page: props.uiConfig?.text?.page ?? '页'
 }))
 
 const pageSizeOptions = computed(() =>
@@ -62,6 +66,10 @@ const paginationAttrs = computed(() => ({
 }))
 
 const summaryText = computed(() => {
+  if (!props.rowCountKnown) {
+    if (props.from === 0) return `${text.value.range} 0`
+    return `${text.value.range} ${props.from}-${props.to}，第 ${props.page} / ${props.pageCount} ${text.value.page}`
+  }
   if (!cfg.value.showRowRange || props.rowCount === 0) {
     return `${text.value.total} ${props.rowCount} ${text.value.item}`
   }
@@ -77,6 +85,7 @@ const summarySlotProps = computed(() => ({
   selectedText: selectedText.value,
   selectedCount: props.selectedCount,
   rowCount: props.rowCount,
+  rowCountKnown: props.rowCountKnown,
   from: props.from,
   to: props.to,
   page: props.page,
@@ -93,28 +102,17 @@ const actionsSlotProps = computed(() => ({
   pageSizes: cfg.value.pageSizes,
   pageSizeOptions: pageSizeOptions.value,
   showPageSizeSelect: showPageSizeSelect.value,
-  setPage,
-  setPageSize
+  setPage: props.setPage,
+  setPageSize: props.setPageSize
 }))
 
-function setPage(value: number) {
-  const nextPage = Math.floor(Number(value))
-  if (!Number.isFinite(nextPage) || nextPage < 1) return
-  const maxPage = Math.max(1, props.pageCount)
-  props.tableApi.setPageIndex(Math.min(maxPage, nextPage) - 1)
-}
-
-function setPageSize(value: unknown) {
-  if (value === '' || value == null) return
-  const pageSize = Math.floor(Number(value))
-  if (!Number.isFinite(pageSize) || pageSize <= 0) return
-  props.tableApi.setPageSize(pageSize)
-}
+const setPage = (value: number) => props.setPage(value)
+const setPageSize = (value: unknown) => props.setPageSize(value)
 </script>
 
 <template>
-  <div :class="uiCls.root({ class: cfg.ui?.root })">
-    <div :class="uiCls.summary({ class: cfg.ui?.summary })">
+  <div :class="uiCls.root({ class: cfg.ui?.root })" data-slot="root">
+    <div :class="uiCls.summary({ class: cfg.ui?.summary })" data-slot="summary">
       <slot name="summary" v-bind="summarySlotProps">
         <span :class="uiCls.summaryText({ class: cfg.ui?.summaryText })">{{ summaryText }}</span>
         <span
@@ -126,7 +124,7 @@ function setPageSize(value: unknown) {
       </slot>
     </div>
 
-    <div :class="uiCls.actions({ class: cfg.ui?.actions })">
+    <div :class="uiCls.actions({ class: cfg.ui?.actions })" data-slot="actions">
       <slot name="actions" v-bind="actionsSlotProps">
         <USelect
           v-if="showPageSizeSelect"
@@ -138,9 +136,10 @@ function setPageSize(value: unknown) {
 
         <UPagination
           :page="page"
-          :total="rowCount"
+          :total="pageCount * pagination.pageSize"
           :items-per-page="pagination.pageSize"
           v-bind="paginationAttrs"
+          data-slot="pagination"
           @update:page="setPage"
         />
       </slot>

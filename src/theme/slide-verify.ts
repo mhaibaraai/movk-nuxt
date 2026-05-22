@@ -1,6 +1,6 @@
 export default () => ({
   slots: {
-    root: 'relative flex items-center select-none overflow-hidden rounded-md border transition-colors duration-300',
+    root: 'w-full relative flex items-center select-none overflow-hidden rounded-md border transition-colors duration-300',
     track: 'absolute inset-0',
     fill: 'absolute inset-y-0 left-0 bg-primary/20 opacity-60',
     text: 'absolute inset-0 flex items-center justify-center font-medium pointer-events-none',
@@ -28,6 +28,14 @@ export default () => ({
         root: 'bg-elevated border-default',
         slider: 'bg-default cursor-grab active:cursor-grabbing ring-1 ring-default',
         icon: 'text-primary'
+      }
+    },
+    fieldGroup: {
+      horizontal: {
+        root: 'not-only:first:rounded-e-none not-only:last:rounded-s-none not-last:not-first:rounded-none focus-visible:z-[1]'
+      },
+      vertical: {
+        root: 'not-only:first:rounded-b-none not-only:last:rounded-t-none not-last:not-first:rounded-none focus-visible:z-[1]'
       }
     }
   },

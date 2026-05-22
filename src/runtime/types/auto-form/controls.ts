@@ -17,13 +17,27 @@ export interface AutoFormControl<
   controlSlots?: Partial<ComponentSlots<C>>
 }
 
-export type AutoFormControls = Record<string, AutoFormControl<any, any, any>>
+export type AutoFormControlProps = Partial<Record<string, unknown>>
+export type AutoFormControlSlots = Partial<Record<string, unknown>>
+
+export type AutoFormControls = Record<
+  string,
+  AutoFormControl<IsComponent, AutoFormControlProps, AutoFormControlSlots>
+>
 
 export interface AutoFormControlsMeta<C extends IsComponent = IsComponent> {
   type?: string
   component?: C
   controlProps?: ReactiveValue<ComponentProps<C>, AutoFormFieldContext>
   controlSlots?: ReactiveValue<Partial<ComponentSlots<C>>, AutoFormFieldContext> | Record<string, unknown>
+  error?: string
+}
+
+export interface AutoFormRuntimeControlsMeta {
+  type?: string
+  component?: IsComponent
+  controlProps?: ReactiveValue<AutoFormControlProps, AutoFormFieldContext>
+  controlSlots?: ReactiveValue<AutoFormControlSlots, AutoFormFieldContext> | Record<string, unknown>
   error?: string
 }
 
@@ -38,9 +52,9 @@ export interface AutoFormLayoutConfig<C extends IsComponent = IsComponent> {
 }
 
 export type AutoFormMergeMeta = ZodAutoFormFieldMeta
-  & AutoFormControlsMeta
+  & AutoFormRuntimeControlsMeta
   & {
     mapped?: AutoFormControl
     layout?: AutoFormLayoutConfig
-    overwrite?: AutoFormControlsMeta
+    overwrite?: AutoFormRuntimeControlsMeta
   }

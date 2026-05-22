@@ -7,9 +7,10 @@ defineProps<{
 }>()
 
 defineSlots<{
-  default: () => unknown
-  aside: () => unknown
-  toolbar: () => unknown
+  'default': () => unknown
+  'aside': () => unknown
+  'aside-extra': () => unknown
+  'toolbar': () => unknown
 }>()
 </script>
 
@@ -29,14 +30,16 @@ defineSlots<{
       </div>
     </header>
 
-    <div class="grid gap-4" :class="state !== undefined || $slots.aside ? 'lg:grid-cols-[1fr_320px]' : ''">
+    <div class="grid gap-4" :class="state !== undefined || $slots.aside || $slots['aside-extra'] ? 'lg:grid-cols-[1fr_320px]' : ''">
       <div class="min-w-0 flex flex-col gap-3">
         <slot />
       </div>
-      <aside v-if="state !== undefined || $slots.aside" class="min-w-0 flex flex-col gap-2">
-        <slot name="aside">
-          <StateViewer :state="state" :label="asideLabel" />
-        </slot>
+      <aside v-if="state !== undefined || $slots.aside || $slots['aside-extra']" class="min-w-0 flex flex-col gap-2">
+        <slot v-if="$slots.aside" name="aside" />
+        <template v-else>
+          <StateViewer v-if="state !== undefined" :state="state" :label="asideLabel" />
+          <slot name="aside-extra" />
+        </template>
       </aside>
     </div>
   </section>

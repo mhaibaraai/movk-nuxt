@@ -22,20 +22,24 @@ import { useExtendedTv } from '../utils/extend-theme'
 import { resolveColumns } from '../domains/data-table/columns/resolve-columns'
 import { resolveCallbackValue } from '../domains/data-table/columns/utils'
 import { computeTreeRowSelection } from '../domains/data-table/tree-selection'
-import { useInfiniteScrollBinding } from '../domains/data-table/composables/useInfiniteScrollBinding'
+import { resolveMaxIndentPx } from '../domains/data-table/indent'
+import { Tree, useInfiniteScrollBinding, separate } from '@movk/core'
 import theme from '#build/movk-ui/data-table'
 import tableTheme from '#build/ui/table'
 import type paginationTheme from '#build/movk-ui/data-table-pagination'
 import DataTablePagination from '../domains/data-table/components/Pagination.vue'
 import type { AppConfig } from 'nuxt/schema'
-import type { DataTableExposed, DataTableProps } from '../types/data-table/component'
+import type { DataTableExposed, DataTableProps, DataTableSlots } from '../types/data-table/component'
 import type { TreeSelectionResult } from '../types/data-table/columns'
 import type { DataTablePaginationUi } from '../types/data-table/pagination'
 
+type DataTable = ComponentConfig<(typeof theme & typeof tableTheme), AppConfig, 'dataTable'>
+type Pagination = ComponentConfig<typeof paginationTheme, AppConfig, 'dataTablePagination'>
+
 const props = withDefaults(defineProps<DataTableProps<T> & {
-  ui?: ComponentConfig<typeof tableTheme & typeof theme, AppConfig, 'dataTable'>['slots']
+  ui?: DataTable['slots']
   paginationUi?: DataTablePaginationUi & {
-    ui?: ComponentConfig<typeof paginationTheme, AppConfig, 'dataTablePagination'>['slots']
+    ui?: Pagination['slots']
   }
 }>(), {
   emptyCell: '-',
@@ -57,6 +61,8 @@ const columnVisibilityKeysState = defineModel<string[]>('columnVisibilityKeys')
 const columnVisibilityExcludeKeysState = defineModel<string[]>('columnVisibilityExcludeKeys')
 const rowSelectionKeysState = defineModel<string[]>('rowSelectionKeys')
 const expandedKeysState = defineModel<string[]>('expandedKeys')
+
+defineSlots<DataTableSlots<T>>()
 
 const resolved = computed(() => resolveColumns<T>(props.columns || [], props))
 
@@ -267,10 +273,6 @@ useInfiniteScrollBinding(
   }
 )
 
-onMounted(() => {
-  if (props.loadMore && props.loadMoreImmediate) invokeLoadMore()
-})
-
 function scrollToTop(options: ScrollToOptions = { top: 0, behavior: 'smooth' }) {
   tableRef.value?.$el?.scrollTo({ top: 0, ...options })
 }
@@ -279,6 +281,36 @@ const tableApi = computed<Table<T> | null>(() => tableRef.value?.tableApi ?? nul
 const isColumnResizing = computed(() => Boolean(tableApi.value?.getState().columnSizingInfo.isResizingColumn))
 
 const isTreeMode = computed(() => Boolean(props.childrenKey))
+
+const treeMaxDepth = computed(() => {
+  if (!isTreeMode.value || !props.childrenKey) return 0
+  const data = ((attrs as { data?: readonly unknown[] }).data ?? []) as unknown[]
+  if (data.length === 0) return 0
+  return Tree.getStats(data, { children: props.childrenKey }).depth - 1
+})
+
+const EXPAND_DEFAULT_SIZE = 60
+const EXPAND_BUTTON_SLOT = 60
+
+const expandColumnSize = computed<number | null>(() => {
+  if (!isTreeMode.value || !resolved.value.hasExpandColumn) return null
+  const maxButtonDepth = Math.max(0, treeMaxDepth.value - 1)
+  if (maxButtonDepth === 0) return null
+  const indentPx = resolveMaxIndentPx(props.indentSize, maxButtonDepth)
+  return Math.max(EXPAND_DEFAULT_SIZE, EXPAND_BUTTON_SLOT + indentPx * 2)
+})
+
+let autoExpandSize: number | null = null
+watch(expandColumnSize, (target) => {
+  if (target == null) return
+  const state = effectiveSizing.value
+  const current = state.__expand
+  const canOverride = current == null || current === EXPAND_DEFAULT_SIZE || current === autoExpandSize
+  if (!canOverride || current === target) return
+  effectiveSizing.value = { ...state, __expand: target }
+  autoExpandSize = target
+}, { immediate: true })
+
 const isManualPagination = computed(() => props.paginationOptions?.manualPagination === true)
 const hasPaginationIntent = computed(() =>
   !props.loadMore && (
@@ -327,7 +359,10 @@ const { baseUi, extraUi } = useExtendedTv(
   theme,
   () => appConfig.movk?.dataTable,
   () => ({
-    ui: props.ui,
+    ui: {
+      ...props.ui,
+      wrapper: [props.ui?.wrapper, props.class]
+    },
     variants: {
       fitContent: !!props.fitContent,
       bordered: !!props.bordered,
@@ -386,19 +421,25 @@ const uTableProps = computed(() => {
       ...(resolved.value.hasExpandColumn && { enableExpanding: true }),
       ...props.expandedOptions
     },
+    // pageCount / rowCount 由 MDataTable 自管，不灌进 TanStack，避免 setPageIndex 的 clamp 副作用
     paginationOptions: {
       ...(hasPaginationIntent.value && !isManualPagination.value && {
         getPaginationRowModel: getPaginationRowModel()
       }),
-      ...props.paginationOptions
+      ...separate(props.paginationOptions ?? {}, ['pageCount', 'rowCount']).omitted
     },
     ...(hasRowClickBehavior && {
       onSelect: (e: Event, row: Row<T>) => {
-        if (props.expandOnRowClick && row.getCanExpand()) row.toggleExpanded()
+        if (props.expandOnRowClick) {
+          const canToggle = isTreeMode.value ? row.getCanExpand() : true
+          if (canToggle) row.toggleExpanded()
+        }
         if (props.selectOnRowClick) row.toggleSelected()
         ;(props.onSelect as DataTableProps<T>['onSelect'])?.(e, row)
       }
-    })
+    }),
+    ...(props.onHover && { onHover: props.onHover }),
+    ...(props.onRowContextmenu && { onContextmenu: props.onRowContextmenu })
   }
 })
 
@@ -414,14 +455,11 @@ const paginationView = computed(() => {
   const manual = isManualPagination.value
   const explicitRowCount = props.paginationOptions?.rowCount
   const explicitPageCount = props.paginationOptions?.pageCount
+  const rowCountKnown = !manual || explicitRowCount !== undefined
   const pagination = api.getState().pagination
   const pageIndex = pagination?.pageIndex ?? 0
   const pageSize = pagination?.pageSize ?? 10
   const currentPageRowCount = api.getRowModel().rows.length
-
-  const rowCount = manual
-    ? Math.max(0, explicitRowCount ?? api.getRowCount())
-    : api.getRowCount()
 
   const fallbackManualPageCount = explicitRowCount !== undefined
     ? Math.ceil(Math.max(0, explicitRowCount) / pageSize)
@@ -430,21 +468,46 @@ const paginationView = computed(() => {
     ? Math.max(0, explicitPageCount ?? fallbackManualPageCount)
     : api.getPageCount()
 
-  const from = rowCount > 0 && currentPageRowCount > 0 ? pageIndex * pageSize + 1 : 0
-  const to = rowCount > 0 && currentPageRowCount > 0 ? Math.min(rowCount, from + currentPageRowCount - 1) : 0
+  const rowCount = rowCountKnown
+    ? (manual ? Math.max(0, explicitRowCount!) : api.getRowCount())
+    : 0
+
+  const referenceCount = rowCountKnown ? rowCount : pageCount * pageSize
+  const from = referenceCount > 0 && currentPageRowCount > 0 ? pageIndex * pageSize + 1 : 0
+  const to = referenceCount > 0 && currentPageRowCount > 0
+    ? Math.min(referenceCount, from + currentPageRowCount - 1)
+    : 0
   const show = props.paginationUi?.show
     ?? (pageCount > 1 || (props.paginationUi?.pageSizes?.length ?? 0) > 1)
+
+  const setPage = (value: number) => {
+    const nextPage = Math.floor(Number(value))
+    if (!Number.isFinite(nextPage) || nextPage < 1) return
+    const maxPage = Math.max(1, pageCount)
+    const nextIndex = Math.min(maxPage, nextPage) - 1
+    api.setPagination(prev => ({ ...prev, pageIndex: nextIndex }))
+  }
+
+  const setPageSize = (value: unknown) => {
+    if (value === '' || value == null) return
+    const nextPageSize = Math.floor(Number(value))
+    if (!Number.isFinite(nextPageSize) || nextPageSize <= 0) return
+    api.setPagination(prev => ({ ...prev, pageSize: nextPageSize }))
+  }
 
   return {
     tableApi: api,
     pagination: { pageIndex, pageSize },
     page: pageIndex + 1,
     rowCount,
+    rowCountKnown,
     pageCount,
     currentPageRowCount,
     from,
     to,
-    show
+    show,
+    setPage,
+    setPageSize
   }
 })
 
@@ -456,9 +519,12 @@ const paginationRendererProps = computed(() => {
     pagination: v.pagination,
     page: v.page,
     rowCount: v.rowCount,
+    rowCountKnown: v.rowCountKnown,
     pageCount: v.pageCount,
     from: v.from,
     to: v.to,
+    setPage: v.setPage,
+    setPageSize: v.setPageSize,
     selectedCount: selectedCount.value
   }
 })
@@ -481,6 +547,20 @@ function clearSelection() {
   if (rowSelectionKeysState.value !== undefined) rowSelectionKeysState.value = []
 }
 
+function expandToDepth(depth: number) {
+  const api = tableApi.value
+  if (!api) return
+  const next: Record<string, boolean> = {}
+  for (const row of api.getPrePaginationRowModel().flatRows) {
+    if (row.getCanExpand() && row.depth < depth) next[row.id] = true
+  }
+  effectiveExpanded.value = next
+}
+
+function collapseAll() {
+  effectiveExpanded.value = {}
+}
+
 const tableResetKey = computed(() => {
   const flags = [
     !!props.resizable,
@@ -489,7 +569,9 @@ const tableResetKey = computed(() => {
     resolved.value.hasColumnPinning,
     resolved.value.hasColumnResizing,
     resolved.value.hasColumnSort,
-    isManualPagination.value
+    isManualPagination.value,
+    resolved.value.selectionMode === 'single',
+    resolved.value.subRowSelection === false
   ].reduce((mask, enabled, index) => mask | ((enabled ? 1 : 0) << index), 0)
 
   return `${props.columnResizeMode === 'onEnd' ? 'e' : 'c'}${flags.toString(36)}`
@@ -501,12 +583,14 @@ defineExpose<DataTableExposed<T>>({
   get el() { return tableRef.value?.$el ?? null },
   scrollToTop,
   clearSelection,
+  expandToDepth,
+  collapseAll,
   get treeSelection() { return treeSelection.value }
 })
 </script>
 
 <template>
-  <div :class="extraUi.wrapper">
+  <div :class="extraUi.wrapper" data-slot="wrapper">
     <UTable
       :key="tableResetKey"
       ref="tableRef"
@@ -518,6 +602,7 @@ defineExpose<DataTableExposed<T>>({
       v-model:row-pinning="rowPinningState"
       v-model:sorting="sortingState"
       v-model:expanded="effectiveExpanded"
+      data-slot="table"
       :style="borderedStyle"
       v-bind="uTableProps"
     >

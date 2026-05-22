@@ -8,12 +8,15 @@ import { useAppConfig } from '#imports'
 import theme from '#build/movk-ui/with-password-toggle'
 import inputTheme from '#build/ui/input'
 import { useExtendedTv } from '../../utils/extend-theme'
+import { useFormFieldBridge, useForwardedProps } from '../../utils/form-control'
 import type { AppConfig } from 'nuxt/schema'
 import type { WithPasswordToggleProps } from '../../types/components/input/with-password-toggle'
 
-const props = defineProps<WithPasswordToggleProps<T> & {
+interface _Props extends WithPasswordToggleProps<T> {
   ui?: ComponentConfig<typeof inputTheme & typeof theme, AppConfig, 'withPasswordToggle'>['slots']
-}>()
+}
+
+const props = defineProps<_Props>()
 const emits = defineEmits<InputEmits<T>>()
 const slots = defineSlots<OmitByKey<InputSlots, 'trailing'>>()
 
@@ -22,6 +25,8 @@ defineOptions({ inheritAttrs: false })
 const attrs = useAttrs()
 const appConfig = useAppConfig() as { movk?: { withPasswordToggle?: unknown } }
 const modelValue = defineModel<T>()
+const inputProps = useForwardedProps(props, ['ui', 'buttonProps', 'defaultValue', 'modelModifiers'] as const)
+const { size: buttonSize } = useFormFieldBridge<ButtonProps['size']>(props)
 
 const { baseUi } = useExtendedTv(
   inputTheme,
@@ -38,7 +43,7 @@ const [value, toggle] = useToggle(false)
     v-model="modelValue"
     :type="value ? 'text' : 'password'"
     :ui="baseUi"
-    v-bind="attrs"
+    v-bind="{ ...inputProps, ...attrs }"
     @blur="emits('blur', $event)"
     @change="emits('change', $event)"
   >
@@ -50,7 +55,7 @@ const [value, toggle] = useToggle(false)
       <UButton
         color="neutral"
         variant="link"
-        :size="(attrs.size as ButtonProps['size'])"
+        :size="buttonSize"
         :icon="value ? 'i-lucide-eye-off' : 'i-lucide-eye'"
         :aria-label="value ? 'Hide password' : 'Show password'"
         :aria-pressed="value"

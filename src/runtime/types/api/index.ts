@@ -4,11 +4,7 @@ export type {
   ApiResponseConfig,
   ApiToastConfig
 } from './config'
-export type {
-  EndpointPrivateConfig,
-  MovkApiFullConfig,
-  MovkApiPublicConfig,
-  ResolvedEndpointConfig
-} from './module'
-export type { ApiError, ApiFetchContext, ApiResponse, RequestToastOptions } from './response'
-export type { ApiInstance, UseApiFetchOptions, UseApiFetchReturn } from './fetch'
+export type { MovkApiPublicConfig } from './module'
+export type { ApiError, ApiResponse, RequestToastOptions } from './response'
+export type { ApiInstance, MovkApiEndpointName, MovkApiEndpoints, UseApiFetchOptions, UseApiFetchReturn } from './fetch'
+export type { TransferRequestOptions, TransferResult, TransferStatus } from './transfer'

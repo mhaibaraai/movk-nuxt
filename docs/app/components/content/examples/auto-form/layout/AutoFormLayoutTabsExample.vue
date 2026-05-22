@@ -2,6 +2,7 @@
 import { UTabs } from '#components'
 import type { FormSubmitEvent } from '@nuxt/ui'
 import type { z } from 'zod'
+import type { AutoFormFieldContext } from '#movk/types'
 
 const { afz } = useAutoForm()
 const toast = useToast()
@@ -49,19 +50,19 @@ const schema = afz.object({
     fields: {
       username: afz.string().meta({
         label: '姓名',
-        if: ({ state }) => state?.userType === 'personal'
+        if: ({ state }: AutoFormFieldContext) => state?.userType === 'personal'
       }).optional(),
       age: afz.number().int().min(0).meta({
         label: '年龄',
-        if: ({ state }) => state?.userType === 'personal'
+        if: ({ state }: AutoFormFieldContext) => state?.userType === 'personal'
       }).optional(),
       companyName: afz.string().meta({
         label: '公司名称',
-        if: ({ state }) => state?.userType === 'company'
+        if: ({ state }: AutoFormFieldContext) => state?.userType === 'company'
       }).optional(),
       registrationNumber: afz.string().meta({
         label: '注册号',
-        if: ({ state }) => state?.userType === 'company'
+        if: ({ state }: AutoFormFieldContext) => state?.userType === 'company'
       }).optional(),
       phone: afz.string().meta({ label: '联系电话' }),
       email: afz.email().meta({ label: '邮箱地址' }),

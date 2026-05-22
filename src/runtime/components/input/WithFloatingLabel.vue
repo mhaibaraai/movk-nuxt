@@ -8,12 +8,15 @@ import { useAppConfig } from '#imports'
 import theme from '#build/movk-ui/with-floating-label'
 import inputTheme from '#build/ui/input'
 import { useExtendedTv } from '../../utils/extend-theme'
+import { useFormFieldBridge, useForwardedProps } from '../../utils/form-control'
 import type { AppConfig } from 'nuxt/schema'
 import type { WithFloatingLabelEmits, WithFloatingLabelProps } from '../../types/components/input/with-floating-label'
 
-const props = defineProps<WithFloatingLabelProps<T> & {
+interface _Props extends WithFloatingLabelProps<T> {
   ui?: ComponentConfig<typeof inputTheme & typeof theme, AppConfig, 'withFloatingLabel'>['slots']
-}>()
+}
+
+const props = defineProps<_Props>()
 const emits = defineEmits<WithFloatingLabelEmits<T>>()
 const slots = defineSlots<OmitByKey<InputSlots, 'default' | 'trailing'>>()
 
@@ -22,6 +25,8 @@ defineOptions({ inheritAttrs: false })
 const attrs = useAttrs()
 const appConfig = useAppConfig() as { movk?: { withFloatingLabel?: unknown } }
 const modelValue = defineModel<T>()
+const inputProps = useForwardedProps(props, ['ui', 'label', 'clearButtonProps', 'placeholder', 'defaultValue', 'modelModifiers'] as const)
+const { size: effectiveSize, emitFormChange, emitFormInput } = useFormFieldBridge<WithFloatingLabelProps<T>['size']>(props)
 
 const { baseUi, extraUi } = useExtendedTv(
   inputTheme,
@@ -30,7 +35,7 @@ const { baseUi, extraUi } = useExtendedTv(
   () => ({
     ui: props.ui,
     variants: {
-      size: props.size,
+      size: effectiveSize.value,
       hasLeading: !!(attrs['leading-icon'] || attrs.avatar || attrs.leadingIcon || attrs.icon || slots.leading)
     }
   })
@@ -38,6 +43,8 @@ const { baseUi, extraUi } = useExtendedTv(
 
 function handleClear() {
   modelValue.value = undefined
+  emitFormInput()
+  emitFormChange()
   emits('clear')
 }
 </script>
@@ -47,8 +54,7 @@ function handleClear() {
     v-model="modelValue"
     :placeholder="props.placeholder ?? ''"
     :ui="baseUi"
-    :size="props.size"
-    v-bind="$attrs"
+    v-bind="{ ...inputProps, ...attrs }"
     @blur="emits('blur', $event)"
     @change="emits('change', $event)"
   >
@@ -66,7 +72,7 @@ function handleClear() {
       <UButton
         color="neutral"
         variant="link"
-        :size="props.size"
+        :size="effectiveSize"
         icon="i-lucide-circle-x"
         aria-label="Clear input"
         v-bind="props.clearButtonProps"

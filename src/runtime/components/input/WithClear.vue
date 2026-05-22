@@ -8,12 +8,15 @@ import { useAppConfig } from '#imports'
 import theme from '#build/movk-ui/with-clear'
 import inputTheme from '#build/ui/input'
 import { useExtendedTv } from '../../utils/extend-theme'
+import { useFormFieldBridge, useForwardedProps } from '../../utils/form-control'
 import type { AppConfig } from 'nuxt/schema'
 import type { WithClearEmits, WithClearProps } from '../../types/components/input/with-clear'
 
-const props = defineProps<WithClearProps<T> & {
-  ui?: ComponentConfig<typeof inputTheme & typeof theme, AppConfig, 'withClear'>['slots']
-}>()
+interface _Props extends WithClearProps<T> {
+  ui?: ComponentConfig<typeof inputTheme & typeof theme, AppConfig, 'withCharacterLimit'>['slots']
+}
+
+const props = defineProps<_Props>()
 const emits = defineEmits<WithClearEmits<T>>()
 const slots = defineSlots<OmitByKey<InputSlots, 'trailing'>>()
 
@@ -22,6 +25,8 @@ defineOptions({ inheritAttrs: false })
 const attrs = useAttrs()
 const appConfig = useAppConfig() as { movk?: { withClear?: unknown } }
 const modelValue = defineModel<InputProps<T>['modelValue']>()
+const inputProps = useForwardedProps(props, ['ui', 'buttonProps', 'defaultValue', 'modelModifiers'] as const)
+const { size: buttonSize, emitFormChange, emitFormInput } = useFormFieldBridge<ButtonProps['size']>(props)
 
 const { baseUi } = useExtendedTv(
   inputTheme,
@@ -32,6 +37,8 @@ const { baseUi } = useExtendedTv(
 
 function handleClear() {
   modelValue.value = undefined
+  emitFormInput()
+  emitFormChange()
   emits('clear')
 }
 </script>
@@ -40,7 +47,7 @@ function handleClear() {
   <UInput
     v-model="modelValue"
     :ui="baseUi"
-    v-bind="attrs"
+    v-bind="{ ...inputProps, ...attrs }"
     @blur="emits('blur', $event)"
     @change="emits('change', $event)"
   >
@@ -52,7 +59,7 @@ function handleClear() {
       <UButton
         color="neutral"
         variant="link"
-        :size="(attrs.size as ButtonProps['size'])"
+        :size="buttonSize"
         icon="i-lucide-circle-x"
         aria-label="Clear input"
         v-bind="props.buttonProps"

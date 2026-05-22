@@ -1,10 +1,11 @@
 import type { ButtonProps, CheckboxProps, DropdownMenuProps, IconProps, ModalProps, TableColumn, TooltipProps } from '@nuxt/ui'
-import type { OmitByKey, Suggest } from '@movk/core'
+import type { OmitByKey } from '@movk/core'
 import type { CellContext, ColumnDef, ColumnDefTemplate } from '@tanstack/vue-table'
 import type { SemanticColor } from '../shared'
 import type {
   DataTableCheckboxContext,
   DataTableExpandButtonContext,
+  DataTableExpandToggleAllContext,
   DataTablePinButtonContext,
   DataTableRowPinningButtonContext,
   DataTableSortButtonContext
@@ -35,7 +36,7 @@ interface DataTableBaseColumn {
 
 export interface DataTableDataColumn<T> extends DataTableBaseColumn {
   /** 数据字段键 */
-  accessorKey: Suggest<keyof T & string>
+  accessorKey: keyof T & string | (string & {})
   /**
    * 默认是否可见
    * @defaultValue true
@@ -147,6 +148,13 @@ export interface DataTableExpandColumn<T = unknown> extends DataTableSpecialColu
   type: 'expand'
   /** 展开/折叠按钮 props 透传 */
   buttonProps?: DataTableDynamic<ButtonProps, DataTableExpandButtonContext<T>>
+  /**
+   * 表头是否渲染「全部展开/收起」按钮，仅树形模式生效
+   * @defaultValue true
+   */
+  toggleAll?: boolean
+  /** 表头「全部展开/收起」按钮 props 透传 */
+  toggleAllButtonProps?: DataTableDynamic<ButtonProps, DataTableExpandToggleAllContext<T>>
 }
 
 /** @defaultValue size=48, fixed='left', align='center' */

@@ -25,5 +25,5 @@ export function extractData(
   config: Partial<ApiResponseConfig> = {}
 ): unknown {
   const dataKey = config.dataKey || 'data'
-  return response[dataKey] ?? response
+  return dataKey in response ? response[dataKey] : undefined
 }

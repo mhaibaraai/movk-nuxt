@@ -1,17 +1,18 @@
 <script setup lang="ts">
 const sections = [
-  { label: 'AutoForm', icon: 'i-lucide-form-input', to: '/auto-form/quickstart', desc: 'Schema 驱动的表单引擎，覆盖字段类型、元数据、控件库、响应式逻辑' },
-  { label: 'DataTable', icon: 'i-lucide-table', to: '/data-table/columns', desc: 'TanStack 表格封装，列/行能力、特殊列、数据流、大数据、树形' },
-  { label: 'Components', icon: 'i-lucide-box', to: '/components/star-rating', desc: '展示型组件 + 业务组件，Matrix 笛卡尔积变体演示' },
-  { label: 'Composables', icon: 'i-lucide-puzzle', to: '/composables/use-api-fetch', desc: 'useApiFetch 三件套、上传下载进度、日期格式化、主题、命令式弹窗' }
+  { label: 'AutoForm', icon: 'i-lucide-form-input', to: '/auto-form/quickstart', desc: '用 Zod Schema 生成字段、装配控件并驱动联动' },
+  { label: 'DataTable', icon: 'i-lucide-table', to: '/data-table/columns', desc: '基于 TanStack Table 的列定义、行状态、服务端数据与树形结构' },
+  { label: 'API', icon: 'i-lucide-cable', to: '/api/quickstart', desc: '多端点、数据解包、Toast 决策、错误分类与认证拦截' },
+  { label: 'Components', icon: 'i-lucide-box', to: '/components/star-rating', desc: '展示型与业务型组件，按 Matrix 组合呈现属性变体' },
+  { label: 'Composables', icon: 'i-lucide-puzzle', to: '/composables/use-upload-progress', desc: '传输进度、日期格式化、主题导出与命令式弹窗' }
 ]
 </script>
 
 <template>
   <UPage>
     <UPageHero
-      title="Movk Nuxt Playground"
-      description="按能力维度组织的演示框架，覆盖组件、AutoForm、DataTable 与所有 Composables"
+      title="Movk Nuxt 能力演示"
+      description="按真实使用场景组织模块示例，覆盖组件、AutoForm、DataTable 与 Composables 的能力边界"
       orientation="horizontal"
     />
     <UPageGrid class="gap-4 sm:grid-cols-2">

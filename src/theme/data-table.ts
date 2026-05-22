@@ -11,7 +11,6 @@ const BS = 'var(--m-dt-border-style,solid)'
 export default () => ({
   slots: {
     wrapper: 'flex flex-col min-h-0 relative',
-    root: 'flex-1',
     base: 'border-separate border-spacing-0',
     tbody: 'divide-y-0',
     th: [

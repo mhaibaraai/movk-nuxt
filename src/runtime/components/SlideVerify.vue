@@ -3,18 +3,19 @@ import { UIcon } from '#components'
 import { useAppConfig } from '#imports'
 import { useElementSize } from '@vueuse/core'
 import { computed, ref, useTemplateRef } from 'vue'
-import { tv } from '../utils/tv'
 import theme from '#build/movk-ui/slide-verify'
 import type { ComponentConfig } from '@nuxt/ui'
 import type { AppConfig } from 'nuxt/schema'
 import type { SlideVerifyProps, SlideVerifyEmits, SlideVerifySlots } from '../types/components/slide-verify'
+import { useExtendedTv } from '../utils/extend-theme'
+import { useFieldControl } from '../utils/form-control'
 
-const props = withDefaults(defineProps<SlideVerifyProps & {
+interface _Props extends SlideVerifyProps {
   size?: ComponentConfig<typeof theme, AppConfig, 'slideVerify'>['variants']['size']
   ui?: ComponentConfig<typeof theme, AppConfig, 'slideVerify'>['slots']
-}>(), {
-  size: 'md',
-  disabled: false,
+}
+
+const props = withDefaults(defineProps<_Props>(), {
   text: '请向右滑动验证',
   successText: '验证成功',
   icon: 'i-lucide-chevrons-right',
@@ -27,6 +28,18 @@ defineSlots<SlideVerifySlots>()
 defineOptions({ inheritAttrs: false })
 
 const isVerified = defineModel<boolean>({ default: false })
+const {
+  id,
+  name,
+  size: effectiveSize,
+  disabled: effectiveDisabled,
+  fieldGroupOrientation,
+  ariaAttrs,
+  emitFormBlur,
+  emitFormChange,
+  emitFormFocus,
+  emitFormInput
+} = useFieldControl(props)
 const rootRef = useTemplateRef<HTMLElement>('root')
 const sliderRef = useTemplateRef<HTMLElement>('slider')
 const { width: rootWidth } = useElementSize(rootRef)
@@ -38,18 +51,29 @@ const dragStartX = ref(0)
 
 const appConfig = useAppConfig() as { movk?: { slideVerify?: unknown } }
 
-const uiCls = computed(() =>
-  tv({ extend: tv(theme), ...((appConfig.movk?.slideVerify || {}) as typeof theme) })({
-    disabled: props.disabled,
-    verified: isVerified.value,
-    size: props.size
+const { extendUi } = useExtendedTv(
+  { slots: {} },
+  theme,
+  () => appConfig.movk?.slideVerify,
+  () => ({
+    ui: {
+      ...props.ui,
+      root: [props.ui?.root, props.class]
+    },
+    variants: {
+      disabled: effectiveDisabled.value,
+      verified: isVerified.value,
+      size: effectiveSize.value,
+      fieldGroup: fieldGroupOrientation.value
+    }
   })
 )
 
 const rootPaddingX = computed(() => {
+  // 依赖 size 以便切换尺寸时重新测量
+  void effectiveSize.value
   const root = rootRef.value
-  const size = props.size
-  if (!root || !size) return 0
+  if (!root) return 0
 
   const style = getComputedStyle(root)
   return (Number.parseFloat(style.paddingLeft) || 0) + (Number.parseFloat(style.paddingRight) || 0)
@@ -67,7 +91,7 @@ const progress = computed(() =>
   isVerified.value ? 1 : maxDragDistance.value ? Math.min(dragX.value / maxDragDistance.value, 1) : 0
 )
 
-const canInteract = computed(() => !props.disabled && !isVerified.value && rootWidth.value > 0)
+const canInteract = computed(() => !effectiveDisabled.value && !isVerified.value && rootWidth.value > 0)
 
 const currentTranslateX = computed(() =>
   isVerified.value ? maxDragDistance.value : dragX.value
@@ -78,7 +102,7 @@ function handlePointerDown(e: PointerEvent) {
   pointerStartX.value = e.clientX
   dragStartX.value = dragX.value
   isDragging.value = true
-  ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
+  ; (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
   emits('dragStart')
 }
 
@@ -97,6 +121,8 @@ function handlePointerUp() {
   if (success) {
     isVerified.value = true
     emits('success')
+    emitFormInput()
+    emitFormChange()
   } else {
     dragX.value = 0
   }
@@ -113,23 +139,29 @@ defineExpose({ reset })
 
 <template>
   <div
+    :id="id"
     ref="root"
-    :class="uiCls.root({ class: props.ui?.root })"
+    :name="name"
+    :class="extendUi.root"
     role="slider"
     :aria-label="text"
     :aria-valuenow="Math.round(progress * 100)"
     aria-valuemin="0"
     aria-valuemax="100"
-    :aria-disabled="disabled"
+    :aria-disabled="effectiveDisabled"
+    :tabindex="canInteract ? 0 : -1"
+    v-bind="ariaAttrs"
+    @blur="emitFormBlur"
+    @focus="emitFormFocus"
   >
-    <div ref="track" :class="uiCls.track({ class: props.ui?.track })">
+    <div ref="track" :class="extendUi.track">
       <div
         v-if="!isVerified"
-        :class="[uiCls.fill({ class: props.ui?.fill }), isDragging ? 'transition-none' : 'transition-[width] duration-300']"
+        :class="[extendUi.fill, isDragging ? 'transition-none' : 'transition-[width] duration-300']"
         :style="{ width: `${progress * 100}%` }"
       />
 
-      <div :class="uiCls.text({ class: props.ui?.text })">
+      <div :class="extendUi.text">
         <span
           v-if="!isVerified"
           class="animate-[shimmer_2s_linear_infinite] [background-size:200%_100%] bg-clip-text text-transparent bg-no-repeat select-none"
@@ -145,7 +177,7 @@ defineExpose({ reset })
     <div
       ref="slider"
       :class="[
-        uiCls.slider({ class: props.ui?.slider }),
+        extendUi.slider,
         isDragging ? 'transition-none' : 'transition-transform duration-300 ease-out',
         canInteract ? 'hover:scale-[1.02] active:scale-[0.98]' : ''
       ]"
@@ -155,10 +187,7 @@ defineExpose({ reset })
       @pointerup="handlePointerUp"
     >
       <slot name="slider" :verified="isVerified" :progress="progress">
-        <UIcon
-          :name="isVerified ? successIcon : icon"
-          :class="uiCls.icon({ class: props.ui?.icon })"
-        />
+        <UIcon :name="isVerified ? successIcon : icon" :class="extendUi.icon" />
       </slot>
     </div>
   </div>

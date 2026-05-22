@@ -1,81 +1,106 @@
-<script lang="ts" setup generic="S extends z.ZodObject, T extends boolean = true, N extends boolean = false">
-import type { InferInput, ComponentConfig } from '@nuxt/ui'
+<script lang="ts" setup generic="S extends z.ZodObject">
+import type { ComponentConfig, FormError, InferInput } from '@nuxt/ui'
 import type { z } from 'zod'
-import type { Ref } from 'vue'
+import type { CSSProperties, Ref } from 'vue'
+import type { AppConfig } from 'nuxt/schema'
 import { UButton, UCollapsible, UForm } from '#components'
-import { computed, ref, unref, useAttrs, useTemplateRef, watch } from 'vue'
-import { isFunction } from '@movk/core'
+import { computed, onMounted, ref, toRaw, unref, useAttrs, useTemplateRef, watch } from 'vue'
+import { deepClone, isFunction } from '@movk/core'
 import { useAutoFormProvider } from '../domains/auto-form/provider'
 import { extractPureSchema, introspectSchema } from '../domains/auto-form/schema'
-import { useAutoForm } from '../composables/useAutoForm'
+import { applyFieldDefaults } from '../domains/auto-form/fields'
+import { DEFAULT_CONTROLS } from '../domains/auto-form/controls'
+import { DEFAULT_SEARCH_ACTIONS } from '../domains/auto-form/actions'
 import AutoFormRendererField from '../domains/auto-form/components/Field.vue'
-import { useAppConfig } from '#app'
-import { tv } from '../utils/tv'
+import { useAppConfig } from '#imports'
 import theme from '#build/movk-ui/search-form'
-import type { AppConfig } from 'nuxt/schema'
-import type { SearchFormProps, SearchFormEmits, SearchFormSlots } from '../types/auto-form/search-form'
+import type {
+  SearchFormAction,
+  SearchFormEmits,
+  SearchFormProps,
+  SearchFormSlotProps,
+  SearchFormSlots
+} from '../types/auto-form/search-form'
+import { useExtendedTv } from '../utils/extend-theme'
 
-const props = withDefaults(defineProps<SearchFormProps<S, T, N> & {
+interface _Props extends SearchFormProps<S> {
   ui?: ComponentConfig<typeof theme, AppConfig, 'searchForm'>['slots']
-}>(), {
+}
+
+const props = withDefaults(defineProps<_Props>(), {
   cols: 3,
   visibleRows: 1,
   icon: 'i-lucide-chevron-down',
   expandText: '展开',
   collapseText: '收起',
   defaultExpanded: false,
-  searchText: '搜索',
-  resetText: '重置',
-  showSearchButton: true,
-  showResetButton: true,
-  loading: false,
+  loadingAuto: true,
   validateOn: () => []
 })
-const modelValue = defineModel<Partial<InferInput<S>>>()
-const emits = defineEmits<SearchFormEmits<S>>()
+
+const modelValue = defineModel<Partial<InferInput<S>>>({ default: () => ({}) })
+const expandedModel = defineModel<boolean>('expanded')
+const emits = defineEmits<SearchFormEmits>()
 const slots = defineSlots<SearchFormSlots<S>>()
 defineOptions({ inheritAttrs: false })
 
 const attrs = useAttrs()
 
-const stateModel = ref(modelValue.value ?? props.state ?? {}) as Ref<Partial<InferInput<S>>>
-const initialState = { ...(modelValue.value ?? props.state ?? {}) } as Partial<InferInput<S>>
+let baseline = deepClone(toRaw(modelValue.value)) as Partial<InferInput<S>>
 
-watch(() => stateModel.value, (val) => {
-  if (val !== modelValue.value) {
-    modelValue.value = val
-  }
-}, { deep: true })
+const appConfig = useAppConfig() as {
+  movk?: { searchForm?: unknown }
+}
 
-watch(() => modelValue.value, (val) => {
-  if (val !== undefined && val !== stateModel.value) {
-    stateModel.value = (val ?? {}) as Partial<InferInput<S>>
+const formRef = useTemplateRef('formRef')
+const internalExpanded = ref<boolean>(props.defaultExpanded ?? false)
+
+const expanded = computed<boolean>({
+  get: () => expandedModel.value ?? internalExpanded.value,
+  set: (val) => {
+    internalExpanded.value = val
+    if (expandedModel.value !== undefined) {
+      expandedModel.value = val
+    }
   }
 })
 
-const appConfig = useAppConfig() as { movk?: { searchForm?: unknown }, ui: { icons: Record<string, string> } }
-const formRef = useTemplateRef('formRef')
-const expanded = ref(props.defaultExpanded)
+const { baseUi, extraUi } = useExtendedTv(
+  { slots: { base: '' } },
+  theme,
+  () => appConfig.movk?.searchForm,
+  () => ({
+    ui: {
+      ...props.ui,
+      root: [props.ui?.root, props.class]
+    }
+  })
+)
 
-type ColsConfig = { sm?: number, md?: number, lg?: number, xl?: number }
-
-function maxCols(cols: number | ColsConfig): number {
+function maxCols(cols: SearchFormProps<S>['cols']): number {
   if (typeof cols === 'number') return cols
+  if (!cols) return 1
   return Math.max(cols.sm ?? 1, cols.md ?? 1, cols.lg ?? 1, cols.xl ?? 1)
 }
 
-const colsVariants = computed(() => {
+const gridStyle = computed<CSSProperties>(() => {
   const c = props.cols
-  if (typeof c === 'number') return { cols: String(c) }
-  return { cols: '1', smCols: c.sm ? String(c.sm) : undefined, mdCols: c.md ? String(c.md) : undefined, lgCols: c.lg ? String(c.lg) : undefined, xlCols: c.xl ? String(c.xl) : undefined }
+  const vars: Record<string, string> = {}
+  if (typeof c === 'number') {
+    vars['--m-search-cols'] = String(c)
+  }
+  else if (c) {
+    const base = c.sm ?? c.md ?? c.lg ?? c.xl ?? 1
+    vars['--m-search-cols'] = String(base)
+    if (c.sm !== undefined) vars['--m-search-cols-sm'] = String(c.sm)
+    if (c.md !== undefined) vars['--m-search-cols-md'] = String(c.md)
+    if (c.lg !== undefined) vars['--m-search-cols-lg'] = String(c.lg)
+    if (c.xl !== undefined) vars['--m-search-cols-xl'] = String(c.xl)
+  }
+  return vars as CSSProperties
 })
 
-const uiCls = computed(() =>
-  tv({ extend: tv(theme), ...((appConfig.movk?.searchForm || {}) as typeof theme) })(colsVariants.value as any)
-)
-
-const { DEFAULT_CONTROLS } = useAutoForm()
-useAutoFormProvider(stateModel, slots)
+useAutoFormProvider(modelValue as Ref<unknown>, slots)
 
 const resolvedButtonSize = computed(() => {
   const size = props.globalMeta?.size
@@ -83,23 +108,44 @@ const resolvedButtonSize = computed(() => {
   return unref(size)
 })
 
-const showActionsCell = computed(() => props.showSearchButton || props.showResetButton || !!slots.actions || !!slots.extraActions)
+const pureSchema = computed(() => extractPureSchema(props.schema) as S)
 
-const pureSchema = computed(() => props.schema ? extractPureSchema(props.schema) as S : props.schema)
+const controlsMapping = computed(() => ({ ...DEFAULT_CONTROLS, ...props.controls }))
+const fields = computed(() => introspectSchema(props.schema, controlsMapping.value, '', props.globalMeta))
 
-const controlsMapping = computed(() => ({
-  ...DEFAULT_CONTROLS,
-  ...props.controls
-}))
+const actionsBag = { toggle, search: submit, reset, clear } as const
 
-const fields = computed(() => {
-  if (!props.schema) return []
-  return introspectSchema(props.schema, controlsMapping.value, '', props.globalMeta)
+function buildSlotProps(errors: FormError[], loading: boolean): SearchFormSlotProps<S> {
+  return {
+    ...actionsBag,
+    expanded: expanded.value,
+    loading: props.loading || loading,
+    state: modelValue.value,
+    errors
+  }
+}
+
+function resolveActions(slotCtx: SearchFormSlotProps<S>): SearchFormAction[] {
+  const list = props.actions ?? DEFAULT_SEARCH_ACTIONS
+  return list.filter((action) => {
+    if (action.visible === undefined) return true
+    if (typeof action.visible === 'function') {
+      return action.visible(slotCtx as SearchFormSlotProps<z.ZodObject>)
+    }
+    return action.visible
+  })
+}
+
+const showActionsCell = computed(() => {
+  const list = props.actions ?? DEFAULT_SEARCH_ACTIONS
+  return list.length > 0 || !!slots.actions || !!slots.extraActions
 })
 
 const visibleCount = computed(() => {
-  const base = maxCols(props.cols) * props.visibleRows
-  return Math.max(0, showActionsCell.value ? base - 1 : base)
+  const total = maxCols(props.cols) * props.visibleRows
+  if (!showActionsCell.value) return total
+  if (maxCols(props.cols) <= 1) return total
+  return Math.max(0, total - 1)
 })
 
 const visibleFields = computed(() => fields.value.slice(0, visibleCount.value))
@@ -107,128 +153,164 @@ const collapsedFields = computed(() => fields.value.slice(visibleCount.value))
 const needsCollapse = computed(() => collapsedFields.value.length > 0)
 
 function toggle() {
-  expanded.value = !expanded.value
-  emits('expand', expanded.value)
+  const next = !expanded.value
+  expanded.value = next
+  emits('expand', next)
+  emits('update:expanded', next)
 }
 
-function handleSearch() {
-  emits('search', { ...stateModel.value })
-}
-
-function triggerSearch() {
+function submit() {
   formRef.value?.submit()
 }
 
 function clear() {
-  stateModel.value = {} as Partial<InferInput<S>>
+  modelValue.value = {} as Partial<InferInput<S>>
   formRef.value?.clear()
+  emits('clear')
 }
 
 function reset() {
-  stateModel.value = { ...initialState }
+  modelValue.value = deepClone(baseline)
+  applyFieldDefaults(fields.value, modelValue.value)
   formRef.value?.clear()
   emits('reset')
 }
 
+function setBaseline(value?: Partial<InferInput<S>>) {
+  baseline = deepClone(toRaw(value ?? modelValue.value)) as Partial<InferInput<S>>
+}
+
+function handleAction(action: SearchFormAction, ctx: SearchFormSlotProps<S>) {
+  if (action.onClick) {
+    action.onClick(ctx as SearchFormSlotProps<z.ZodObject>)
+    return
+  }
+  if (action.type === 'submit') return
+  if (action.key === 'reset') reset()
+  else if (action.key === 'search') submit()
+}
+
+function actionLoading(action: SearchFormAction, ctx: SearchFormSlotProps<S>): boolean {
+  if (action.key === 'search' || action.type === 'submit') return ctx.loading
+  return false
+}
+
+watch(() => fields.value, () => {
+  applyFieldDefaults(fields.value, modelValue.value)
+}, { flush: 'post' })
+
+watch(() => props.schema, () => {
+  formRef.value?.clear()
+})
+
+onMounted(() => {
+  applyFieldDefaults(fields.value, modelValue.value)
+  setBaseline()
+})
+
 defineExpose({
   formRef,
+  submit,
   reset,
   clear,
+  setBaseline,
   expanded,
   toggle
 })
 </script>
 
 <template>
-  <UForm
-    ref="formRef"
-    :state="stateModel"
-    :schema="pureSchema"
-    :validate-on="props.validateOn"
-    :ui="{ base: uiCls.base({ class: props.ui?.base }) }"
-    v-bind="attrs"
-    @submit="handleSearch"
-  >
-    <template #default="{ errors, loading: formLoading }">
-      <div :class="uiCls.root({ class: props.ui?.root })">
-        <div :class="uiCls.inner({ class: props.ui?.inner })">
-          <div :class="uiCls.grid({ class: props.ui?.grid })">
+  <div :class="extraUi.root" data-slot="root">
+    <UForm
+      ref="formRef"
+      :state="modelValue"
+      :schema="pureSchema"
+      :loading-auto="props.loadingAuto"
+      :validate-on="props.validateOn"
+      :ui="baseUi"
+      data-slot="form"
+      v-bind="attrs"
+      @error="emits('error', $event)"
+    >
+      <template #default="{ errors, loading }">
+        <div v-if="$slots.header" :class="extraUi.header" data-slot="header">
+          <slot name="header" v-bind="buildSlotProps(errors, loading)" />
+        </div>
+
+        <div :class="extraUi.visible" data-slot="visible">
+          <div :class="extraUi.grid" :style="gridStyle" data-slot="grid">
             <AutoFormRendererField
               v-for="field in visibleFields"
               :key="field.path"
               :field="field"
               :schema="props.schema"
-              :extra-props="{ errors, loading: formLoading, state: stateModel }"
+              :extra-props="{ errors, loading, state: modelValue }"
             />
 
             <slot
               v-if="showActionsCell"
               name="actions"
-              :expanded="expanded"
-              :toggle="toggle"
-              :search="triggerSearch"
-              :reset="reset"
-              :loading="loading"
+              v-bind="buildSlotProps(errors, loading)"
             >
-              <div :class="uiCls.actionWrapper({ class: props.ui?.actionWrapper })">
-                <UButton
-                  v-if="showSearchButton"
-                  type="submit"
-                  icon="i-lucide-search"
-                  :label="searchText"
-                  :loading="loading"
-                  :size="resolvedButtonSize"
-                  v-bind="searchButtonProps"
-                />
-                <UButton
-                  v-if="showResetButton"
-                  :label="resetText"
-                  color="neutral"
-                  variant="outline"
-                  icon="i-lucide-rotate-ccw"
-                  :size="resolvedButtonSize"
-                  v-bind="resetButtonProps"
-                  @click="reset"
-                />
-                <slot name="extraActions" :expanded="expanded" />
+              <div :class="extraUi.actions" data-slot="actions">
+                <template v-for="action in resolveActions(buildSlotProps(errors, loading))" :key="action.key">
+                  <UButton
+                    :label="action.label"
+                    :type="action.type"
+                    :icon="action.icon"
+                    :color="action.color"
+                    :variant="action.variant"
+                    :loading="actionLoading(action, buildSlotProps(errors, loading))"
+                    :size="resolvedButtonSize"
+                    v-bind="action"
+                    @click="handleAction(action, buildSlotProps(errors, loading))"
+                  />
+                </template>
+                <slot name="extraActions" v-bind="buildSlotProps(errors, loading)" />
               </div>
             </slot>
-          </div>
-
-          <div
-            v-if="needsCollapse"
-            :class="uiCls.toggleWrapper({ class: props.ui?.toggleWrapper })"
-          >
-            <UButton
-              :icon="icon || appConfig.ui.icons.chevronDown"
-              color="neutral"
-              :size="resolvedButtonSize"
-              variant="ghost"
-              :data-state="expanded ? 'open' : 'closed'"
-              :label="expanded ? collapseText : expandText"
-              tabindex="-1"
-              :ui="{ leadingIcon: 'size-3.5 group-data-[state=open]:rotate-180 transition-transform duration-200' }"
-              :class="uiCls.toggle({ class: props.ui?.toggle })"
-              v-bind="collapseButtonProps"
-              @click="toggle"
-            />
           </div>
         </div>
 
         <UCollapsible v-if="needsCollapse" v-model:open="expanded">
           <template #content>
-            <div :class="[uiCls.grid({ class: props.ui?.grid }), uiCls.collapsedContent({ class: props.ui?.collapsedContent })]">
+            <div :class="[extraUi.grid, extraUi.collapsed]" :style="gridStyle" data-slot="collapsed">
               <AutoFormRendererField
                 v-for="field in collapsedFields"
                 :key="field.path"
                 :field="field"
                 :schema="props.schema"
-                :extra-props="{ errors, loading: formLoading, state: stateModel }"
+                :extra-props="{ errors, loading, state: modelValue }"
               />
             </div>
           </template>
         </UCollapsible>
-      </div>
-    </template>
-  </UForm>
+
+        <div v-if="needsCollapse" :class="extraUi.toggleWrapper" data-slot="toggle-wrapper">
+          <UButton
+            :icon="icon"
+            color="neutral"
+            :size="resolvedButtonSize"
+            variant="ghost"
+            :data-state="expanded ? 'open' : 'closed'"
+            :label="expanded ? collapseText : expandText"
+            tabindex="-1"
+            :class="extraUi.toggle"
+            v-bind="collapseButtonProps"
+            :ui="{
+              ...(collapseButtonProps?.ui ?? {}),
+              leadingIcon: [collapseButtonProps?.ui?.leadingIcon, extraUi.toggleIcon]
+                .filter(Boolean)
+                .join(' ')
+            }"
+            @click="toggle"
+          />
+        </div>
+
+        <div v-if="$slots.footer" :class="extraUi.footer" data-slot="footer">
+          <slot name="footer" v-bind="buildSlotProps(errors, loading)" />
+        </div>
+      </template>
+    </UForm>
+  </div>
 </template>

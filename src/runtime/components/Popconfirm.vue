@@ -11,14 +11,16 @@ import type { AppConfig } from 'nuxt/schema'
 import type { PopconfirmProps, PopconfirmEmits, PopconfirmSlots } from '../types/components/popconfirm'
 import type { SemanticColor } from '../types/shared'
 
-const props = withDefaults(defineProps<PopconfirmProps & {
+interface _Props extends PopconfirmProps {
+  type?: ComponentConfig<typeof popoverTheme & typeof theme, AppConfig, 'popconfirm'>['variants']['type']
   ui?: ComponentConfig<typeof popoverTheme & typeof theme, AppConfig, 'popconfirm'>['slots']
-}>(), {
+}
+
+const props = withDefaults(defineProps<_Props>(), {
   title: '确认操作',
   description: '请确认是否执行此操作?',
   type: 'neutral',
   icon: 'i-lucide-circle-question-mark',
-  dismissible: false,
   arrow: true,
   cancelButton: true
 })
@@ -32,7 +34,7 @@ const appConfig = useAppConfig() as { movk?: { popconfirm?: unknown } }
 
 const openState = ref(false)
 
-const { ui, extraUi } = useExtendedTv(
+const { baseUi, extraUi } = useExtendedTv(
   popoverTheme,
   theme,
   () => appConfig.movk?.popconfirm,
@@ -98,7 +100,7 @@ async function handleConfirm(close: () => void) {
     v-model:open="openState"
     :dismissible="props.dismissible"
     :arrow="props.arrow"
-    :ui="ui"
+    :ui="baseUi"
   >
     <template #default="{ open }">
       <slot :open="open" />

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { CalendarDate } from '@internationalized/date'
+import type { CalendarDate } from '#movk/types'
 
 const formatter = useDateFormatter()
 const futureDate = shallowRef<CalendarDate>()

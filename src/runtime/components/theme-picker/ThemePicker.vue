@@ -1,35 +1,31 @@
-<script lang="ts">
-import type { ComponentConfig } from '@nuxt/ui'
-import type { AppConfig } from 'nuxt/schema'
-import theme from '#build/movk-ui/theme-picker'
-import popoverTheme from '#build/ui/popover'
-import { useExtendedTv } from '../../utils/extend-theme'
-
-type ThemePicker = ComponentConfig<typeof popoverTheme & typeof theme, AppConfig, 'themePicker'>
-
-interface ThemePickerProps {
-  ui?: ThemePicker['slots']
-}
-</script>
-
 <script lang="ts" setup>
 import { useAppConfig, useColorMode } from '#imports'
 import { useClipboard } from '@vueuse/core'
 import { ref } from 'vue'
 import { useTheme } from '../../composables'
 import ThemePickerButton from './ThemePickerButton.vue'
+import type { ComponentConfig } from '@nuxt/ui'
+import type { AppConfig } from 'nuxt/schema'
+import theme from '#build/movk-ui/theme-picker'
+import popoverTheme from '#build/ui/popover'
+import { useExtendedTv } from '../../utils/extend-theme'
+
+interface ThemePickerProps {
+  ui?: ComponentConfig<typeof popoverTheme & typeof theme, AppConfig, 'themePicker'>['slots']
+}
 
 const props = defineProps<ThemePickerProps>()
-const appConfig = useAppConfig() as ThemePicker['AppConfig']
+const appConfig = useAppConfig() as { movk?: { themePicker?: unknown } }
 const colorMode = useColorMode()
 
-const open = ref(false)
-const { ui } = useExtendedTv(
+const { extendUi } = useExtendedTv(
   popoverTheme,
   theme,
   () => appConfig.movk?.themePicker,
   () => ({ ui: props.ui })
 )
+
+const open = ref(false)
 
 const { copy: copyCSS, copied: copiedCSS } = useClipboard()
 const { copy: copyConfig, copied: copiedConfig } = useClipboard()
@@ -59,7 +55,7 @@ const {
 </script>
 
 <template>
-  <UPopover v-model:open="open" :ui="ui">
+  <UPopover v-model:open="open" :ui="extendUi">
     <template #default>
       <UButton
         icon="i-lucide-swatch-book"

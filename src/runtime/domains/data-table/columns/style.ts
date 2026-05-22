@@ -21,7 +21,13 @@ export function resolveColumnSize<T>(ctx: Header<T, unknown> | Cell<T, unknown>)
   return style
 }
 
-export const COLUMN_SIZE_STYLE = { th: resolveColumnSize, td: resolveColumnSize }
+export function makeColumnStyle<T>(
+  align?: 'left' | 'center' | 'right'
+): { th: (ctx: Header<T, unknown>) => Record<string, string>, td: (ctx: Cell<T, unknown>) => Record<string, string> } {
+  const resolver = (ctx: Header<T, unknown> | Cell<T, unknown>): Record<string, string> =>
+    align ? { ...resolveColumnSize(ctx), textAlign: align } : resolveColumnSize(ctx)
+  return { th: resolver, td: resolver }
+}
 
 export function applyBaseState(
   id: string,

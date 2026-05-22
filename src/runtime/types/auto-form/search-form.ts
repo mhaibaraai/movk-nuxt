@@ -1,66 +1,65 @@
-import type { ButtonProps, FormInputEvents, FormProps, InferInput } from '@nuxt/ui'
+import type {
+  ButtonProps,
+  FormError,
+  FormErrorEvent,
+  IconProps,
+  InferInput
+} from '@nuxt/ui'
 import type { z } from 'zod'
-import type { OmitByKey } from '@movk/core'
-import type { ZodAutoFormFieldMeta } from '../zod'
-import type { AutoFormControls } from './controls'
+import type { Suggest } from '@movk/core'
+import type { BaseAutoFormProps } from './base'
 import type { DynamicFormSlots } from './slots'
-import type { ClassNameValue } from '../shared'
+import type { VNode } from 'vue'
 
-export interface SearchFormProps<S extends z.ZodObject, T extends boolean = true, N extends boolean = false> extends /** @vue-ignore */ OmitByKey<FormProps<S, T, N>, 'schema' | 'state' | 'validateOn' | 'ui'> {
-  /** Zod 对象 schema，定义搜索字段 */
-  schema: S
-  /** 搜索表单的状态对象。 */
-  state?: N extends false ? Partial<InferInput<S>> : never
+export interface SearchFormSlotProps<S extends z.ZodObject> {
+  expanded: boolean
+  loading: boolean
+  state: Partial<InferInput<S>>
+  errors: FormError[]
+  toggle: () => void
+  search: () => void
+  reset: () => void
+  clear: () => void
+}
+
+export interface SearchFormAction extends /** @vue-ignore */ Omit<ButtonProps, 'onClick'> {
+  key: Suggest<'search' | 'reset'>
+  label?: string
+  visible?: boolean | ((ctx: SearchFormSlotProps<z.ZodObject>) => boolean)
+  onClick?: (ctx: SearchFormSlotProps<z.ZodObject>) => void
+}
+
+export interface SearchFormProps<S extends z.ZodObject> extends BaseAutoFormProps<S> {
   /**
    * 网格列数
    * @defaultValue 3
    */
-  cols?: number | { sm?: number, md?: number, lg?: number, xl?: number }
+  cols?: number | {
+    sm?: number
+    md?: number
+    lg?: number
+    xl?: number
+  }
   /**
    * 可见行数（折叠时显示的行数）
    * @defaultValue 1
    */
   visibleRows?: number
-  /** 自定义控件映射（复用 AutoForm 的控件系统） */
-  controls?: AutoFormControls
-  /** 全局字段元数据 */
-  globalMeta?: ZodAutoFormFieldMeta
-  /** 搜索按钮属性 */
-  searchButtonProps?: ButtonProps
-  /** 重置按钮属性 */
-  resetButtonProps?: ButtonProps
+  /**
+   * 动作按钮配置；不传时使用默认 [search, reset]；传 [] 则关闭所有内置按钮
+   * @defaultValue [{ key: 'search', ... }, { key: 'reset', ... }]
+   */
+  actions?: SearchFormAction[]
+  /** 搜索按钮加载状态（作用于 type==='submit' 或 key==='search' 的按钮） */
+  loading?: boolean
   /** 收起按钮属性 */
   collapseButtonProps?: ButtonProps
   /**
-   * 搜索按钮文本
-   * @defaultValue '搜索'
-   */
-  searchText?: string
-  /**
-   * 重置按钮文本
-   * @defaultValue '重置'
-   */
-  resetText?: string
-  /**
-   * 是否显示搜索按钮
-   * @defaultValue true
-   */
-  showSearchButton?: boolean
-  /**
-   * 是否显示重置按钮
-   * @defaultValue true
-   */
-  showResetButton?: boolean
-  /**
-   * 搜索按钮加载状态
-   * @defaultValue false
-   */
-  loading?: boolean
-  /**
    * 展开/收起按钮图标
+   * @IconifyIcon
    * @defaultValue 'i-lucide-chevron-down'
    */
-  icon?: string
+  icon?: IconProps['name']
   /**
    * 展开按钮文本
    * @defaultValue '展开'
@@ -71,32 +70,26 @@ export interface SearchFormProps<S extends z.ZodObject, T extends boolean = true
    * @defaultValue '收起'
    */
   collapseText?: string
+  /** 受控展开状态；优先级高于 defaultExpanded */
+  expanded?: boolean
   /**
    * 默认展开状态
    * @defaultValue false
    */
   defaultExpanded?: boolean
-  /**
-   * 表单验证时机，详见 UForm 的 validateOn 属性
-   * @defaultValue []
-   */
-  validateOn?: FormInputEvents[]
-  ui?: Record<string, ClassNameValue>
 }
 
-export interface SearchFormEmits<S extends z.ZodObject> {
-  search: [value: Partial<InferInput<S>>]
-  reset: []
-  expand: [expanded: boolean]
+export interface SearchFormEmits {
+  'reset': []
+  'clear': []
+  'expand': [expanded: boolean]
+  'update:expanded': [expanded: boolean]
+  'error': [event: FormErrorEvent]
 }
 
 export type SearchFormSlots<S extends z.ZodObject> = {
-  actions(props: {
-    expanded: boolean
-    toggle: () => void
-    search: () => void
-    reset: () => void
-    loading: boolean
-  }): any
-  extraActions(props: { expanded: boolean }): any
+  header(props: SearchFormSlotProps<S>): VNode[]
+  footer(props: SearchFormSlotProps<S>): VNode[]
+  actions(props: SearchFormSlotProps<S>): VNode[]
+  extraActions(props: SearchFormSlotProps<S>): VNode[]
 } & DynamicFormSlots<Partial<InferInput<S>>>

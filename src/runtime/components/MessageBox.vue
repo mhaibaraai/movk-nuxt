@@ -10,15 +10,15 @@ import type { AppConfig } from 'nuxt/schema'
 import type { MessageBoxProps, MessageBoxEmits } from '../types/components/message-box'
 import type { SemanticColor } from '../types/shared'
 
-interface Props extends MessageBoxProps {
+interface _Props extends MessageBoxProps {
+  type?: ComponentConfig<typeof modalTheme & typeof theme, AppConfig, 'messageBox'>['variants']['type']
   ui?: ComponentConfig<typeof modalTheme & typeof theme, AppConfig, 'messageBox'>['slots']
 }
 
-const props = withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<_Props>(), {
   title: '提示',
   type: 'primary',
   mode: 'alert',
-  dismissible: false,
   alertConfirmLabel: '知道了',
   confirmLabel: '确认',
   cancelLabel: '取消'
@@ -72,7 +72,7 @@ function handleUpdateOpen(val: boolean) {
   emits('close', false)
 }
 
-const { ui, extraUi } = useExtendedTv(
+const { baseUi, extraUi } = useExtendedTv(
   modalTheme,
   theme,
   () => appConfig.movk?.messageBox,
@@ -81,7 +81,7 @@ const { ui, extraUi } = useExtendedTv(
 </script>
 
 <template>
-  <UModal v-model:open="open" :dismissible="props.dismissible" :ui="ui" v-bind="attrs" @update:open="handleUpdateOpen">
+  <UModal v-model:open="open" :dismissible="props.dismissible" :ui="baseUi" v-bind="attrs" @update:open="handleUpdateOpen">
     <template #title>
       <UIcon :name="resolvedIcon" :class="extraUi.icon" />
       <span>{{ props.title }}</span>

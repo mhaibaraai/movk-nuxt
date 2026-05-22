@@ -10,7 +10,8 @@ export interface AsPhoneNumberInputProps<T extends InputValue = InputValue> exte
   mask?: string
   /**
    * 区号前缀
-   * @example '+86'、'+1'
+   * @defaultValue '+86'
+   * @example '+1'、'+44'
    */
   dialCode?: string
   ui?: Record<string, ClassNameValue>

@@ -1,3 +1,6 @@
+import type { Suggest } from '@movk/core'
+import type { Toast } from '@nuxt/ui/composables/useToast'
+
 /**
  * API 响应配置
  * @description 定义业务状态码判断规则和数据/消息字段的映射关系
@@ -39,7 +42,7 @@ export interface ApiAuthConfig {
    * 令牌来源类型
    * @defaultValue 'session'
    */
-  tokenSource?: 'session'
+  tokenSource?: Suggest<'session'>
   /**
    * 令牌在会话对象中的路径（支持点号分隔的嵌套路径）
    * @defaultValue 'token'
@@ -50,7 +53,7 @@ export interface ApiAuthConfig {
    * 令牌类型前缀
    * @defaultValue 'Bearer'
    */
-  tokenType?: 'Bearer' | 'Basic' | 'Custom'
+  tokenType?: Suggest<'Bearer' | 'Basic' | 'Custom'>
   /**
    * 自定义令牌类型前缀（当 tokenType 为 'Custom' 时使用）
    */
@@ -73,6 +76,14 @@ export interface ApiAuthConfig {
   }
 }
 
+interface ApiToast extends Toast {
+  /**
+   * 是否显示提示
+   * @defaultValue true
+   */
+  show?: boolean
+}
+
 /**
  * Toast 提示配置
  * @description 定义成功和错误提示的全局样式和行为
@@ -86,53 +97,11 @@ export interface ApiToastConfig {
   /**
    * 成功提示配置
    */
-  success?: {
-    /**
-     * 是否显示成功提示
-     * @defaultValue true
-     */
-    show?: boolean
-    /**
-     * 提示颜色
-     * @defaultValue 'success'
-     */
-    color?: string
-    /**
-     * 图标类名
-     * @defaultValue 'i-lucide-circle-check'
-     */
-    icon?: string
-    /**
-     * 显示时长（毫秒）
-     * @defaultValue 3000
-     */
-    duration?: number
-  }
+  success?: ApiToast
   /**
    * 错误提示配置
    */
-  error?: {
-    /**
-     * 是否显示错误提示
-     * @defaultValue true
-     */
-    show?: boolean
-    /**
-     * 提示颜色
-     * @defaultValue 'error'
-     */
-    color?: string
-    /**
-     * 图标类名
-     * @defaultValue 'i-lucide-circle-x'
-     */
-    icon?: string
-    /**
-     * 显示时长（毫秒）
-     * @defaultValue 3000
-     */
-    duration?: number
-  }
+  error?: ApiToast
 }
 
 /**

@@ -36,28 +36,30 @@ export interface ZodAutoFormFieldMeta {
    * @defaultValue `300`
    */
   validateOnInputDelay?: ZodValue<number>
+  /**
+   * 字段布局方向。
+   * @defaultValue 'vertical'
+   */
+  orientation?: ZodValue<'horizontal' | 'vertical'>
   class?: ZodValue<any>
   ui?: ZodValue<{ root?: ClassNameValue, wrapper?: ClassNameValue, labelWrapper?: ClassNameValue, label?: ClassNameValue, container?: ClassNameValue, description?: ClassNameValue, error?: ClassNameValue, hint?: ClassNameValue, help?: ClassNameValue }>
   /**
    * @see https://ui4.nuxt.com/docs/components/form-field#slots
    */
   fieldSlots?: ZodValue<Partial<AutoFormFieldSlots>>
-
   /** 显示条件 */
   if?: ZodValue<boolean>
   /** 是否隐藏 */
   hidden?: ZodValue<boolean>
-  /**
-   * 对象字段折叠配置。
-   */
+  /** 对象字段折叠配置。 */
   collapsible?: ZodValue<AutoFormNestedCollapsible>
 
-  /** 索引签名，允许动态属性访问 */
-  [key: string]: unknown
 }
 
+type ShallowGlobalMeta<T> = { [K in keyof T]?: unknown }
+
 declare module 'zod' {
-  interface GlobalMeta extends ZodAutoFormFieldMeta { }
+  interface GlobalMeta extends ShallowGlobalMeta<ZodAutoFormFieldMeta> { }
 }
 
 export { }

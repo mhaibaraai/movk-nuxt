@@ -1,28 +1,41 @@
 <script setup lang="ts">
-import { z } from 'zod'
+import type { z } from 'zod'
 
-const { afz } = useFormBuilder()
+const autoForm = useTemplateRef('autoForm')
+const { afz } = useAutoForm()
 
-const schema = z.object({
+const schema = afz.object({
   string: afz.string({ controlProps: { placeholder: '文本' } }),
   number: afz.number({ controlProps: { placeholder: '数字' } }),
   boolean: afz.boolean(),
   email: afz.email(),
   url: afz.url(),
+  uuid: afz.uuid(),
   enum: afz.enum(['low', 'medium', 'high']),
-  calendarDate: afz.calendarDate(),
+  calendarDate: afz.calendarDate({ controlProps: { range: true, valueFormat: 'iso', presets: 'default' } }),
   inputDate: afz.inputDate(),
   inputTime: afz.inputTime(),
+  isoDatetime: afz.isoDatetime(),
   isoDate: afz.isoDate(),
-  array: afz.array(afz.string(), { label: '标签列表' }),
+  isoTime: afz.isoTime(),
+  array: afz.array(afz.string().meta({ label: '标签' })).meta({ label: '标签列表' }),
   object: afz.object({
     sub1: afz.string({ controlProps: { placeholder: 'sub1' } }),
     sub2: afz.number()
-  }, { label: '嵌套对象' }),
+  }).meta({ label: '嵌套对象' }),
+  looseObject: afz.looseObject({
+    sub1: afz.string({ controlProps: { placeholder: 'sub1' } }),
+    sub2: afz.number()
+  }).meta({ label: '宽松嵌套对象' }),
+  strictObject: afz.strictObject({
+    sub1: afz.string({ controlProps: { placeholder: 'sub1' } }),
+    sub2: afz.number()
+  }).meta({ label: '严格嵌套对象' }),
+  tuple: afz.tuple([afz.string(), afz.number()], { type: 'textarea' }).meta({ label: '元组' }),
   file: afz.file()
 })
 
-const state = reactive<Partial<z.input<typeof schema>>>({})
+const state = reactive<Partial<z.output<typeof schema>>>({})
 </script>
 
 <template>
@@ -30,10 +43,13 @@ const state = reactive<Partial<z.input<typeof schema>>>({})
 
   <div class="p-4 grid grid-cols-1 xl:grid-cols-[1fr_360px] gap-4">
     <Showcase
-      title="所有 Zod 类型"
-      description="afz.{string,number,boolean,email,url,enum,calendarDate,inputDate,inputTime,isoDate,array,object,file}"
+      title="Zod 类型控件映射"
+      description="string、number、date、array、object、tuple、file 等 Zod 类型对应的默认控件"
     >
-      <MAutoForm :schema="schema" :state="state" />
+      <template #toolbar>
+        <UButton size="sm" label="重置" @click="autoForm?.reset()" />
+      </template>
+      <MAutoForm ref="autoForm" :schema="schema" :state="state" />
     </Showcase>
 
     <StateViewer :state="state" label="state" />

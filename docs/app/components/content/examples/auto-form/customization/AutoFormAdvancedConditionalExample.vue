@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import type { FormSubmitEvent } from '@nuxt/ui'
 import type { z } from 'zod'
+import type { AutoFormFieldContext } from '#movk/types'
 
 const { afz } = useAutoForm()
 const toast = useToast()
@@ -29,7 +30,7 @@ const schema = afz.object({
     .meta({
       label: '公司名称',
       hint: '仅企业账户需要填写',
-      hidden: ({ state }) => state?.accountType !== 'business'
+      hidden: ({ state }: AutoFormFieldContext) => state?.accountType !== 'business'
     }),
 
   taxId: afz
@@ -38,7 +39,7 @@ const schema = afz.object({
     .meta({
       label: '税号',
       hint: '仅企业账户需要填写',
-      hidden: ({ state }) => state?.accountType !== 'business'
+      hidden: ({ state }: AutoFormFieldContext) => state?.accountType !== 'business'
     }),
 
   agreeToTerms: afz
@@ -55,7 +56,7 @@ const schema = afz.object({
     .meta({
       label: '订阅邮件通知',
       description: '接收产品更新和优惠信息',
-      hidden: ({ state }) => !state?.agreeToTerms
+      hidden: ({ state }: AutoFormFieldContext) => !state?.agreeToTerms
     })
 })
 

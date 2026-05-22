@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { CalendarDate } from '@internationalized/date'
-import type { DateRange } from 'reka-ui'
+import type { DateRange } from '#movk/types'
 
 const dateRange = shallowRef<DateRange>({
   start: new CalendarDate(2025, 11, 1),

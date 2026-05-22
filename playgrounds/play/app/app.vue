@@ -1,20 +1,23 @@
 <script setup lang="ts">
 import { zh_cn } from '@nuxt/ui/locale'
 
+const appConfig = useAppConfig()
 const { components, groups, items } = useNavigation()
+
+const { color, style, link } = useTheme()
 
 useHead({
   title: 'Movk Nuxt · Playground',
-  meta: [
-    { name: 'viewport', content: 'width=device-width, initial-scale=1' }
-  ]
+  meta: [{ key: 'theme-color', name: 'theme-color', content: color }],
+  link,
+  style
 })
 
 provide('components', components)
 </script>
 
 <template>
-  <UApp :locale="zh_cn">
+  <UApp :locale="zh_cn" :toaster="appConfig.toaster" :dir="appConfig.movk?.dir">
     <NuxtLoadingIndicator color="var(--ui-primary)" :height="2" />
 
     <UDashboardGroup unit="rem">

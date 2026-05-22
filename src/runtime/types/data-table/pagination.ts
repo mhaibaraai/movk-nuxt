@@ -1,5 +1,6 @@
 import type { PaginationProps, SelectProps, TableData } from '@nuxt/ui'
 import type { PaginationState, RowData, Table } from '@tanstack/vue-table'
+import type { VNode } from 'vue'
 import type { ClassNameValue } from '../shared'
 
 type DataTablePageSizeSelectProps = Omit<
@@ -19,6 +20,7 @@ interface DataTablePaginationUiText {
   item?: string
   range?: string
   selected?: string
+  page?: string
 }
 
 export interface DataTablePaginationUi {
@@ -55,10 +57,13 @@ export interface DataTablePaginationProps<TData extends RowData> {
   pagination: PaginationState
   page: number
   rowCount: number
+  rowCountKnown: boolean
   pageCount: number
   from: number
   to: number
   selectedCount: number
+  setPage: (page: number) => void
+  setPageSize: (pageSize: unknown) => void
   uiConfig?: DataTablePaginationUi
 }
 
@@ -68,12 +73,13 @@ export interface DataTablePaginationSlots<TData extends RowData = RowData> {
     selectedText: string
     selectedCount: number
     rowCount: number
+    rowCountKnown: boolean
     from: number
     to: number
     page: number
     pageCount: number
     showSelectedCount: boolean
-  }): unknown
+  }): VNode[]
   actions(props: {
     tableApi: Table<TData>
     page: number
@@ -85,7 +91,7 @@ export interface DataTablePaginationSlots<TData extends RowData = RowData> {
     showPageSizeSelect: boolean
     setPage: (page: number) => void
     setPageSize: (pageSize: unknown) => void
-  }): unknown
+  }): VNode[]
 }
 
 export type { TableData }

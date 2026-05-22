@@ -1,26 +1,15 @@
-const COLS = Array.from({ length: 12 }, (_, i) => i + 1)
-
-const colsVariant = (prefix = '') =>
-  Object.fromEntries(
-    COLS.map(n => [n, { grid: `${prefix}grid-cols-${n}` }])
-  )
-
 export default () => ({
   slots: {
-    base: '',
-    root: 'group/search pb-6 -mb-6',
-    inner: 'relative',
-    grid: 'grid gap-4',
-    actionWrapper: 'flex items-end gap-2 justify-end',
-    toggleWrapper: 'absolute inset-x-0 top-full flex justify-center pointer-events-none z-10',
-    toggle: 'group pointer-events-auto opacity-30 group-hover/search:opacity-100 transition-opacity duration-200',
-    collapsedContent: 'mt-4'
-  },
-  variants: {
-    cols: colsVariant(),
-    smCols: colsVariant('sm:'),
-    mdCols: colsVariant('md:'),
-    lgCols: colsVariant('lg:'),
-    xlCols: colsVariant('xl:')
+    root: 'group/search',
+    form: 'space-y-4',
+    visible: 'relative',
+    grid: 'grid gap-4 [grid-template-columns:repeat(var(--m-search-cols,1),minmax(0,1fr))] sm:[grid-template-columns:repeat(var(--m-search-cols-sm,var(--m-search-cols)),minmax(0,1fr))] md:[grid-template-columns:repeat(var(--m-search-cols-md,var(--m-search-cols-sm,var(--m-search-cols))),minmax(0,1fr))] lg:[grid-template-columns:repeat(var(--m-search-cols-lg,var(--m-search-cols-md,var(--m-search-cols-sm,var(--m-search-cols)))),minmax(0,1fr))] xl:[grid-template-columns:repeat(var(--m-search-cols-xl,var(--m-search-cols-lg,var(--m-search-cols-md,var(--m-search-cols-sm,var(--m-search-cols))))),minmax(0,1fr))]',
+    header: '',
+    footer: '',
+    actions: 'flex items-end gap-2 justify-end',
+    toggleWrapper: 'flex justify-center pt-2',
+    toggle: 'group opacity-75 hover:opacity-100 active:opacity-90 transition-all duration-200',
+    toggleIcon: 'size-3.5 transition-all duration-200 opacity-80 group-data-[state=open]:rotate-180 group-data-[state=open]:opacity-100',
+    collapsed: 'mt-4'
   }
 })

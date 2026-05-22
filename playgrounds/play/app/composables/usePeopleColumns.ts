@@ -1,5 +1,6 @@
-import type { DataTableColumn } from '#movk/types/data-table/columns'
+import type { DataTableColumn } from '@movk/nuxt'
 import type { Person } from './useMockData'
+import { UBadge } from '#components'
 
 const STATUS_LABEL: Record<Person['status'], string> = {
   active: '在职',
@@ -27,7 +28,7 @@ export function usePeopleColumns(): DataTableColumn<Person>[] {
       size: 100,
       cell: ({ getValue }) => {
         const v = getValue<Person['status']>()
-        return h(resolveComponent('UBadge'), { color: STATUS_COLOR[v], variant: 'subtle' }, () => STATUS_LABEL[v])
+        return h(UBadge, { color: STATUS_COLOR[v], variant: 'subtle' }, () => STATUS_LABEL[v])
       }
     },
     {

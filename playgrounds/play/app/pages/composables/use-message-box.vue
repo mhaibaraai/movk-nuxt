@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { SemanticColor } from '#movk/types/shared'
+import type { SemanticColor } from '@movk/nuxt'
 
 const { alert, confirm } = useMessageBox()
 const log = ref<string[]>([])
@@ -11,7 +11,7 @@ function record(msg: string) {
 const types: SemanticColor[] = ['primary', 'info', 'success', 'warning', 'error', 'neutral']
 
 async function showAlert(type: SemanticColor) {
-  await alert({ type, title: `${type} alert`, description: '这是一个 alert 模式弹窗' })
+  await alert({ type, title: `${type} alert`, description: '弹窗只暴露确认动作，关闭后 Promise 才会 resolve' })
   record(`alert(${type}) closed`)
 }
 
@@ -19,7 +19,7 @@ async function showConfirm(type: SemanticColor) {
   const ok = await confirm({
     type,
     title: `${type} confirm`,
-    description: '请确认是否执行此操作'
+    description: '弹窗返回确认结果，日志会记录 true/false'
   })
   record(`confirm(${type}) → ${ok}`)
 }
@@ -28,7 +28,7 @@ async function showAsync() {
   const ok = await confirm({
     type: 'warning',
     title: '异步操作',
-    description: '点击确认后将等待 1.5s 模拟网络请求',
+    description: '确认后再执行模拟耗时任务，日志在流程完成时更新',
     confirmButton: { loading: false, label: '提交' }
   })
   if (ok) {
@@ -43,7 +43,10 @@ async function showAsync() {
 
   <div class="p-4 grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-4">
     <div class="flex flex-col gap-4">
-      <Showcase title="alert 模式" description="只有确认按钮，await 直到关闭">
+      <Showcase
+        title="阻塞式提示"
+        description="alert() 返回 Promise，用户关闭弹窗后才继续后续流程"
+      >
         <div class="flex gap-2 flex-wrap">
           <UButton
             v-for="t in types"
@@ -58,7 +61,10 @@ async function showAsync() {
         </div>
       </Showcase>
 
-      <Showcase title="confirm 模式" description="返回 boolean，确认/取消语义清晰">
+      <Showcase
+        title="确认返回布尔"
+        description="confirm() 将确认或取消映射为 boolean 返回给调用方"
+      >
         <div class="flex gap-2 flex-wrap">
           <UButton
             v-for="t in types"
@@ -73,7 +79,10 @@ async function showAsync() {
         </div>
       </Showcase>
 
-      <Showcase title="异步流程" description="await 拿到结果后再继续后续逻辑">
+      <Showcase
+        title="异步确认流程"
+        description="等待 confirm() 结果后再串行执行后续请求"
+      >
         <UButton color="warning" icon="i-lucide-zap" @click="showAsync">
           运行异步流程
         </UButton>

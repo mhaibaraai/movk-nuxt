@@ -1,12 +1,12 @@
+import type { ToasterProps } from '@nuxt/ui'
+
 export default defineAppConfig({
-  ui: {
-    colors: {
-      primary: 'sky',
-      neutral: 'slate'
-    }
-  },
+  movk: {},
   toaster: {
     position: 'top-center' as const,
-    duration: 3000
-  }
+    duration: 1500,
+    max: 5,
+    expand: true,
+    disableSwipe: false
+  } as ToasterProps
 })

@@ -1,51 +1,45 @@
 <script setup lang="ts">
-import { z } from 'zod'
+import type { FormInputEvents } from '@nuxt/ui'
+import type { z } from 'zod'
 
-const { afz } = useFormBuilder()
+const { afz } = useAutoForm()
 
-const minimalSchema = z.object({
+const minimalSchema = afz.object({
   name: afz.string({ controlProps: { placeholder: '姓名' } }),
   email: afz.email()
 })
-const minimalState = reactive<Partial<z.input<typeof minimalSchema>>>({})
+const minimalState = reactive<Partial<z.output<typeof minimalSchema>>>({})
 
-const optionalSchema = z.object({
+const optionalSchema = afz.object({
   name: afz.string(),
   nick: afz.string().optional(),
   age: afz.number().default(18)
 })
-const optionalState = reactive<Partial<z.input<typeof optionalSchema>>>({})
+const optionalState = reactive<Partial<z.output<typeof optionalSchema>>>({})
 
-const validateOnSchema = z.object({
+const validateOnSchema = afz.object({
   email: afz.email('请输入合法邮箱')
 })
-const validateOnState = reactive<Partial<z.input<typeof validateOnSchema>>>({})
-const validateOn = ref<('input' | 'change' | 'blur')[]>(['blur'])
+const validateOnState = ref<Partial<z.output<typeof validateOnSchema>>>({})
+const validateItems: FormInputEvents[] = ['input', 'change', 'blur']
+const validateOn = ref<FormInputEvents[]>(['blur'])
 </script>
 
 <template>
   <Navbar />
 
-  <div class="p-4 grid grid-cols-1 xl:grid-cols-3 gap-4">
-    <Showcase title="最小用例" description="仅 schema + state，自动渲染表单" :state="minimalState">
+  <div class="p-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <Showcase title="Schema 驱动渲染" description="传入 schema 与 state 即可根据字段类型生成控件" :state="minimalState">
       <MAutoForm :schema="minimalSchema" :state="minimalState" />
     </Showcase>
 
-    <Showcase
-      title="optional / default"
-      description="optional() 字段非必填；default() 提供默认值"
-      :state="optionalState"
-    >
+    <Showcase title="可选字段与默认值" description="optional() 标记非必填，default() 在初始化时写入默认值" :state="optionalState">
       <MAutoForm :schema="optionalSchema" :state="optionalState" />
     </Showcase>
 
-    <Showcase
-      title="validateOn 时机"
-      description="切换数组成员观察校验时机变化"
-      :state="validateOnState"
-    >
+    <Showcase title="校验事件策略" description="通过 validate-on 切换 input、change、blur 触发时机" :state="validateOnState">
       <template #toolbar>
-        <USelect v-model="validateOn" :items="['input', 'change', 'blur']" multiple size="xs" class="w-44" />
+        <USelect v-model="validateOn" :items="validateItems" multiple size="xs" class="w-25" />
       </template>
       <MAutoForm :schema="validateOnSchema" :state="validateOnState" :validate-on="validateOn" />
     </Showcase>

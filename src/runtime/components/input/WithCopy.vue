@@ -9,12 +9,15 @@ import { useAppConfig } from '#imports'
 import theme from '#build/movk-ui/with-copy'
 import inputTheme from '#build/ui/input'
 import { useExtendedTv } from '../../utils/extend-theme'
+import { useFormFieldBridge, useForwardedProps } from '../../utils/form-control'
 import type { WithCopyEmits, WithCopyProps } from '../../types/components/input/with-copy'
 import type { AppConfig } from 'nuxt/schema'
 
-const props = defineProps<WithCopyProps<T> & {
+interface _Props extends WithCopyProps<T> {
   ui?: ComponentConfig<typeof inputTheme & typeof theme, AppConfig, 'withCopy'>['slots']
-}>()
+}
+
+const props = defineProps<_Props>()
 const emits = defineEmits<WithCopyEmits<T>>()
 const slots = defineSlots<OmitByKey<InputSlots, 'trailing'>>()
 
@@ -23,6 +26,8 @@ defineOptions({ inheritAttrs: false })
 const attrs = useAttrs()
 const appConfig = useAppConfig() as { movk?: { withCopy?: unknown } }
 const modelValue = defineModel<T>()
+const inputProps = useForwardedProps(props, ['ui', 'buttonProps', 'tooltipProps', 'defaultValue', 'modelModifiers'] as const)
+const { size: buttonSize } = useFormFieldBridge<ButtonProps['size']>(props)
 
 const { baseUi } = useExtendedTv(
   inputTheme,
@@ -45,7 +50,7 @@ function handleCopy() {
   <UInput
     v-model="modelValue"
     :ui="baseUi"
-    v-bind="attrs"
+    v-bind="{ ...inputProps, ...attrs }"
     @blur="emits('blur', $event)"
     @change="emits('change', $event)"
   >
@@ -58,7 +63,7 @@ function handleCopy() {
         <UButton
           :color="copied ? 'success' : 'neutral'"
           variant="link"
-          :size="(attrs.size as ButtonProps['size'])"
+          :size="buttonSize"
           :icon="copied ? 'i-lucide-copy-check' : 'i-lucide-copy'"
           aria-label="Copy to clipboard"
           v-bind="props.buttonProps"

@@ -1,21 +1,21 @@
-import type { ReactiveValue, AnyObject } from '@movk/core'
-import type { AutoFormFieldContext } from '../../types/auto-form'
+import type { AnyObject } from '@movk/core'
+import type { ResolvedAutoFormFieldContext } from '../../types/auto-form'
 import { isFunction, isObject } from '@movk/core'
 import { Fragment, h, isRef, isVNode, unref } from 'vue'
 import { AUTOFORM_LIMITS, AUTOFORM_PATTERNS } from './constants'
 
-function validateContext(context: AutoFormFieldContext): asserts context is AutoFormFieldContext {
+function validateContext(context: ResolvedAutoFormFieldContext): asserts context is ResolvedAutoFormFieldContext {
   if (!context || typeof context !== 'object') {
     throw new TypeError('AutoFormFieldContext must be a valid object')
   }
 }
 
-function validateReactiveValue(value: unknown): value is ReactiveValue<any, any> {
+function validateReactiveValue(value: unknown): boolean {
   return value !== null && value !== undefined
 }
 
 /** 解析单个响应式值：函数则以 context 调用，ref 则解包，否则原样返回 */
-export function resolveReactiveValue(value: ReactiveValue<any, any>, context: AutoFormFieldContext): any {
+export function resolveReactiveValue(value: unknown, context: ResolvedAutoFormFieldContext): any {
   validateContext(context)
 
   if (!validateReactiveValue(value)) {
@@ -23,7 +23,7 @@ export function resolveReactiveValue(value: ReactiveValue<any, any>, context: Au
   }
 
   if (isFunction(value)) {
-    return (value as (ctx: AutoFormFieldContext) => any)(context)
+    return (value as (ctx: ResolvedAutoFormFieldContext) => any)(context)
   }
 
   return unref(value)
@@ -32,7 +32,7 @@ export function resolveReactiveValue(value: ReactiveValue<any, any>, context: Au
 /** 递归解析对象/数组中所有响应式值，VNode 和 ref 不再展开以防止意外渲染 */
 export function resolveReactiveObject<T extends Record<string, any>>(
   obj: T,
-  context: AutoFormFieldContext,
+  context: ResolvedAutoFormFieldContext,
   depth: number = 0
 ): T {
   validateContext(context)
@@ -74,7 +74,7 @@ export function resolveReactiveObject<T extends Record<string, any>>(
 }
 
 /** 为 onXxx 事件 prop 自动追加 context 作为最后一个参数，方便用户在事件回调中访问表单状态 */
-export function enhanceEventProps(originalProps: AnyObject, ctx: AutoFormFieldContext): Record<string, any> {
+export function enhanceEventProps(originalProps: AnyObject, ctx: ResolvedAutoFormFieldContext): Record<string, any> {
   if (!originalProps || typeof originalProps !== 'object') {
     return {}
   }

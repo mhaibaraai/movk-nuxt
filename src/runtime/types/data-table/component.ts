@@ -2,13 +2,14 @@ import type {
   CellContext,
   ColumnDefTemplate,
   ColumnMeta,
+  PaginationState,
+  Row,
   Table,
-  TableMeta,
-  TableState,
-  Updater
+  TableMeta
 } from '@tanstack/vue-table'
 import type { ButtonProps, TableData, TableProps, TableRow, TooltipProps } from '@nuxt/ui'
-import type { OmitByKey, Suggest } from '@movk/core'
+import type { FirstParameter, OmitByKey } from '@movk/core'
+import type { VNode } from 'vue'
 import type {
   DataTableActionButtonContext,
   DataTableColumn,
@@ -18,7 +19,7 @@ import type {
   TreeSelectionResult
 } from './columns'
 import type { DataTablePinButtonContext, DataTableSortButtonContext } from './contexts'
-import type { DataTablePaginationUi } from './pagination'
+import type { DataTablePaginationSlots, DataTablePaginationUi } from './pagination'
 import type { ClassNameValue } from '../shared'
 
 export type DataTableSelectHandler<T extends TableData>
@@ -30,9 +31,6 @@ export type DataTableHoverHandler<T extends TableData>
 export type DataTableContextmenuHandler<T extends TableData>
   = ((e: Event, row: TableRow<T>) => void) | ((e: Event, row: TableRow<T>) => void)[]
 
-export type DataTableStateChangeHandler
-  = (updater: Updater<TableState>) => void
-
 export interface DataTableExposed<T extends TableData> {
   tableRef: HTMLTableElement | null
   tableApi: Table<T> | null
@@ -40,6 +38,10 @@ export interface DataTableExposed<T extends TableData> {
   el: HTMLElement | null
   scrollToTop: (options?: ScrollToOptions) => void
   clearSelection: () => void
+  /** 展开到指定层级（depth < n 的可展开行展开，其余收起）；depth=0 等价收起全部 */
+  expandToDepth: (depth: number) => void
+  /** 收起全部行 */
+  collapseAll: () => void
   treeSelection: TreeSelectionResult<T>
 }
 
@@ -59,13 +61,12 @@ export interface DataTableProps<T extends TableData> extends /* @vue-ignore */ O
   | 'onSelect'
   | 'onHover'
   | 'onContextmenu'
-  | 'onStateChange'
 > {
   /**
    * 行唯一标识字段，自动派生 getRowId；与 getRowId 同传时后者优先
    * @example 'id'
    */
-  rowKey?: Suggest<keyof T & string>
+  rowKey?: keyof T & string | (string & {})
   columns?: DataTableColumn<T>[]
   loading?: TableProps<T>['loading']
   /**
@@ -133,7 +134,7 @@ export interface DataTableProps<T extends TableData> extends /* @vue-ignore */ O
    * @defaultValue false
    */
   tooltip?: boolean | number | ((ctx: CellContext<T, unknown>) => boolean | number)
-  tooltipProps?: Omit<TooltipProps, 'text'>
+  tooltipProps?: OmitByKey<TooltipProps, 'text'>
   /**
    * 单元格文本截断：true 单行 / number 多行 / false 禁用 / 函数 动态
    * @defaultValue true
@@ -147,7 +148,7 @@ export interface DataTableProps<T extends TableData> extends /* @vue-ignore */ O
    * 子行字段名，设置后启用树形模式
    * @example 'children'
    */
-  childrenKey?: Suggest<keyof T & string>
+  childrenKey?: keyof T & string | (string & {})
   /**
    * 树形缩进：number 每层缩进 px / string CSS 值 / 函数 动态返回 CSS
    * @defaultValue '1rem'
@@ -169,7 +170,6 @@ export interface DataTableProps<T extends TableData> extends /* @vue-ignore */ O
   onSelect?: DataTableSelectHandler<T>
   onHover?: DataTableHoverHandler<T>
   onRowContextmenu?: DataTableContextmenuHandler<T>
-  onStateChange?: DataTableStateChangeHandler
   /**
    * 分页配置，透传给 TanStack / UTable
    * - 客户端分页：传入即启用，自动注入 getPaginationRowModel
@@ -196,10 +196,34 @@ export interface DataTableProps<T extends TableData> extends /* @vue-ignore */ O
    * @defaultValue 100
    */
   loadMoreDistance?: number
-  /**
-   * mount 后立即触发一次 loadMore
-   * @defaultValue false
-   */
-  loadMoreImmediate?: boolean
+  class?: ClassNameValue
   ui?: Record<string, ClassNameValue>
+}
+
+export interface DataTablePaginationSlotProps<T extends TableData> {
+  tableApi: Table<T>
+  pagination: PaginationState
+  page: number
+  rowCount: number
+  rowCountKnown: boolean
+  pageCount: number
+  currentPageRowCount: number
+  from: number
+  to: number
+  show: boolean
+  selectedCount: number
+  setPage: (page: number) => void
+  setPageSize: (pageSize: unknown) => void
+}
+
+export interface DataTableSlots<T extends TableData> {
+  'expanded'(props: { row: Row<T> }): VNode[]
+  'empty'(): VNode[]
+  'loading'(): VNode[]
+  'caption'(): VNode[]
+  'body-top'(): VNode[]
+  'body-bottom'(): VNode[]
+  'pagination'(props: DataTablePaginationSlotProps<T>): VNode[]
+  'pagination-summary'(props: FirstParameter<DataTablePaginationSlots<T>['summary']>): VNode[]
+  'pagination-actions'(props: FirstParameter<DataTablePaginationSlots<T>['actions']>): VNode[]
 }

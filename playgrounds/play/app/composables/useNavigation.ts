@@ -9,7 +9,10 @@ const autoFormNav: NavigationMenuItem = {
     { label: 'Field Types', to: '/auto-form/field-types' },
     { label: 'Metadata', to: '/auto-form/metadata' },
     { label: 'Controls', to: '/auto-form/controls' },
+    { label: 'Custom Controls', to: '/auto-form/custom-controls' },
+    { label: 'Global Meta', to: '/auto-form/global-meta' },
     { label: 'Reactive', to: '/auto-form/reactive' },
+    { label: 'Submit', to: '/auto-form/submit' },
     { label: 'Layout', to: '/auto-form/layout' },
     { label: 'Slots', to: '/auto-form/slots' },
     { label: 'Recipes', to: '/auto-form/recipes' }
@@ -21,12 +24,27 @@ const dataTableNav: NavigationMenuItem = {
   icon: 'i-lucide-table',
   defaultOpen: true,
   children: [
+    { label: 'Appearance', to: '/data-table/appearance' },
     { label: 'Columns', to: '/data-table/columns' },
     { label: 'Rows', to: '/data-table/rows' },
     { label: 'Special Columns', to: '/data-table/special-columns' },
-    { label: 'Data', to: '/data-table/data' },
-    { label: 'Large Data', to: '/data-table/large-data' },
-    { label: 'Tree & Style', to: '/data-table/tree-and-style' }
+    { label: 'Pagination', to: '/data-table/pagination' },
+    { label: 'Load More', to: '/data-table/load-more' },
+    { label: 'Tree', to: '/data-table/tree' }
+  ]
+}
+
+const apiNav: NavigationMenuItem = {
+  label: 'API',
+  icon: 'i-lucide-cable',
+  defaultOpen: true,
+  children: [
+    { label: 'Quickstart', to: '/api/quickstart' },
+    { label: 'Endpoints', to: '/api/endpoints' },
+    { label: 'Unwrap', to: '/api/unwrap' },
+    { label: 'Toast', to: '/api/toast' },
+    { label: 'Errors', to: '/api/errors' },
+    { label: 'Auth', to: '/api/auth' }
   ]
 }
 
@@ -40,6 +58,7 @@ const componentsNav: NavigationMenuItem = {
     { label: 'Popconfirm', to: '/components/popconfirm' },
     { label: 'MessageBox', to: '/components/message-box' },
     { label: 'ColorChooser', to: '/components/color-chooser' },
+    { label: 'PillGroup', to: '/components/pill-group' },
     { label: 'DatePicker', to: '/components/date-picker' },
     { label: 'SearchForm', to: '/components/search-form' },
     { label: 'ThemePicker', to: '/components/theme-picker' },
@@ -53,7 +72,6 @@ const composablesNav: NavigationMenuItem = {
   icon: 'i-lucide-puzzle',
   defaultOpen: true,
   children: [
-    { label: 'useApiFetch', to: '/composables/use-api-fetch' },
     { label: 'Upload Progress', to: '/composables/use-upload-progress' },
     { label: 'Download Progress', to: '/composables/use-download-progress' },
     { label: 'useDateFormatter', to: '/composables/use-date-formatter' },
@@ -62,7 +80,7 @@ const composablesNav: NavigationMenuItem = {
   ]
 }
 
-const components: NavigationMenuItem[] = [autoFormNav, dataTableNav, componentsNav, composablesNav]
+const components: NavigationMenuItem[] = [autoFormNav, dataTableNav, apiNav, componentsNav, composablesNav]
 
 export const useNavigation = () => {
   const items: NavigationMenuItem[] = [

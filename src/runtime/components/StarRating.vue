@@ -2,46 +2,72 @@
 import type { ButtonProps, ComponentConfig } from '@nuxt/ui'
 import { UButton, UBadge } from '#components'
 import { computed, ref } from 'vue'
+import { FieldGroupReset } from '@nuxt/ui/composables/useFieldGroup'
 import { useAppConfig } from '#imports'
-import { tv } from '../utils/tv'
 import theme from '#build/movk-ui/star-rating'
 import type { AppConfig } from 'nuxt/schema'
 import type { StarRatingProps, StarRatingEmits } from '../types/components/star-rating'
+import { useExtendedTv } from '../utils/extend-theme'
+import { useFieldControl } from '../utils/form-control'
 
-const props = withDefaults(defineProps<StarRatingProps & {
+interface _Props extends StarRatingProps {
   ui?: ComponentConfig<typeof theme, AppConfig, 'starRating'>['slots']
-}>(), {
-  modelValue: 0,
+}
+
+const props = withDefaults(defineProps<_Props>(), {
   max: 5,
-  disabled: false,
-  readonly: false,
   showBadge: true,
   emptyIcon: 'i-lucide-star',
   filledIcon: 'i-lucide-star',
-  halfIcon: 'i-lucide-star-half',
-  color: 'warning',
-  size: 'md',
-  allowHalf: false,
-  clearable: false
+  halfIcon: 'i-lucide-star-half'
 })
+const modelValue = defineModel<number>({ default: 0 })
 const emits = defineEmits<StarRatingEmits>()
 
 defineOptions({ inheritAttrs: false })
 
+const {
+  id,
+  name,
+  size: effectiveSize,
+  color: effectiveColor,
+  disabled: effectiveDisabled,
+  fieldGroupOrientation,
+  ariaAttrs,
+  emitFormBlur,
+  emitFormChange,
+  emitFormFocus,
+  emitFormInput
+} = useFieldControl(props)
 const hoveredStar = ref<number | null>(null)
 const focusedIndex = ref<number>(0)
 
-const isInteractive = computed(() => !props.disabled && !props.readonly)
+const isInteractive = computed(() => !effectiveDisabled.value && !props.readonly)
 
 const appConfig = useAppConfig() as { movk?: { starRating?: unknown } }
 
-const uiCls = computed(() =>
-  tv({ extend: tv(theme), ...((appConfig.movk?.starRating || {}) as typeof theme) })({
-    interactive: isInteractive.value,
-    disabled: props.disabled,
-    readonly: props.readonly && !props.disabled
+const { extendUi } = useExtendedTv(
+  { slots: {} },
+  theme,
+  () => appConfig.movk?.starRating,
+  () => ({
+    ui: {
+      ...props.ui,
+      root: [props.ui?.root, props.class]
+    },
+    variants: {
+      interactive: isInteractive.value,
+      disabled: effectiveDisabled.value,
+      readonly: props.readonly && !effectiveDisabled.value,
+      fieldGroup: fieldGroupOrientation.value
+    }
   })
 )
+
+function emitFormValueChange() {
+  emitFormInput()
+  emitFormChange()
+}
 
 function calculateHalfStarValue(index: number, event: MouseEvent): number {
   if (!props.allowHalf) return index + 1
@@ -55,14 +81,10 @@ function calculateHalfStarValue(index: number, event: MouseEvent): number {
 }
 
 function updateValue(newValue: number) {
-  if (props.clearable && newValue === props.modelValue) {
-    emits('update:modelValue', 0)
-    emits('change', 0)
-    return
-  }
-
-  emits('update:modelValue', newValue)
-  emits('change', newValue)
+  const finalValue = props.clearable && newValue === modelValue.value ? 0 : newValue
+  modelValue.value = finalValue
+  emits('change', finalValue)
+  emitFormValueChange()
 }
 
 function handleClick(index: number, event?: MouseEvent) {
@@ -107,18 +129,18 @@ function handleKeyDown(event: KeyboardEvent) {
     case 'ArrowRight':
     case 'ArrowUp':
       event.preventDefault()
-      if (props.modelValue < props.max) {
-        updateValue(Math.min(props.modelValue + step, props.max))
-        focusedIndex.value = Math.min(Math.floor(props.modelValue + step), props.max - 1)
+      if (modelValue.value < props.max) {
+        updateValue(Math.min(modelValue.value + step, props.max))
+        focusedIndex.value = Math.min(Math.floor(modelValue.value + step), props.max - 1)
       }
       break
 
     case 'ArrowLeft':
     case 'ArrowDown':
       event.preventDefault()
-      if (props.modelValue > 0) {
-        updateValue(Math.max(props.modelValue - step, 0))
-        focusedIndex.value = Math.max(Math.floor(props.modelValue - step) - 1, 0)
+      if (modelValue.value > 0) {
+        updateValue(Math.max(modelValue.value - step, 0))
+        focusedIndex.value = Math.max(Math.floor(modelValue.value - step) - 1, 0)
       }
       break
 
@@ -156,7 +178,7 @@ function handleKeyDown(event: KeyboardEvent) {
 }
 
 function getStarState(index: number): 'empty' | 'half' | 'full' {
-  const displayValue = hoveredStar.value !== null ? hoveredStar.value + 1 : props.modelValue
+  const displayValue = hoveredStar.value !== null ? hoveredStar.value + 1 : modelValue.value
 
   if (index < Math.floor(displayValue)) {
     return 'full'
@@ -178,61 +200,68 @@ function getStarIcon(index: number): string {
 
 function getStarColor(index: number): ButtonProps['color'] {
   const state = getStarState(index)
-  return state !== 'empty' ? props.color : 'neutral'
+  return state !== 'empty' ? effectiveColor.value : 'neutral'
 }
 
-const badgeLabel = computed(() => `${props.modelValue}/${props.max}`)
+const badgeLabel = computed(() => `${modelValue.value}/${props.max}`)
 </script>
 
 <template>
   <div
-    :class="uiCls.root({ class: props.ui?.root })"
+    :id="id"
+    :name="name"
+    :class="extendUi.root"
     role="slider"
-    :aria-label="`评分 ${props.modelValue} / ${props.max}`"
-    :aria-valuenow="props.modelValue"
+    :aria-label="`评分 ${modelValue} / ${props.max}`"
+    :aria-valuenow="modelValue"
     :aria-valuemin="0"
     :aria-valuemax="props.max"
-    :aria-disabled="props.disabled"
+    :aria-disabled="effectiveDisabled"
     :aria-readonly="props.readonly"
     :tabindex="isInteractive ? 0 : -1"
+    v-bind="ariaAttrs"
+    @blur="emitFormBlur"
+    @focus="emitFormFocus"
     @keydown="handleKeyDown"
   >
-    <slot name="prefix" :value="props.modelValue" :max="props.max" />
-    <div :class="uiCls.stars({ class: props.ui?.stars })">
-      <UButton
-        v-for="index in props.max"
-        :key="index"
-        :icon="getStarIcon(index - 1)"
-        :color="getStarColor(index - 1)"
-        variant="ghost"
-        :size="props.size"
-        :disabled="props.disabled"
-        :aria-label="`${index} 星`"
-        :tabindex="-1"
-        v-bind="buttonProps"
-        :class="uiCls.star({ class: props.ui?.star })"
-        @click="handleClick(index - 1, $event)"
-        @mouseenter="handleMouseEnter(index - 1, $event)"
-        @mousemove="handleMouseMove(index - 1, $event)"
-        @mouseleave="handleMouseLeave"
-      />
-    </div>
+    <FieldGroupReset>
+      <slot name="prefix" :value="modelValue" :max="props.max" />
+      <div :class="extendUi.stars">
+        <UButton
+          v-for="index in props.max"
+          :key="index"
+          :icon="getStarIcon(index - 1)"
+          :color="getStarColor(index - 1)"
+          variant="ghost"
+          :size="effectiveSize"
+          :disabled="effectiveDisabled"
+          :aria-label="`${index} 星`"
+          :tabindex="-1"
+          v-bind="buttonProps"
+          :class="extendUi.star"
+          @click="handleClick(index - 1, $event)"
+          @mouseenter="handleMouseEnter(index - 1, $event)"
+          @mousemove="handleMouseMove(index - 1, $event)"
+          @mouseleave="handleMouseLeave"
+        />
+      </div>
 
-    <slot
-      name="badge"
-      :value="props.modelValue"
-      :max="props.max"
-      :label="badgeLabel"
-    >
-      <UBadge
-        v-if="showBadge && props.modelValue > 0"
+      <slot
+        name="badge"
+        :value="modelValue"
+        :max="props.max"
         :label="badgeLabel"
-        color="primary"
-        variant="subtle"
-        :size="props.size"
-      />
-    </slot>
+      >
+        <UBadge
+          v-if="showBadge && modelValue > 0"
+          :label="badgeLabel"
+          color="primary"
+          variant="subtle"
+          :size="effectiveSize"
+        />
+      </slot>
 
-    <slot name="suffix" :value="props.modelValue" :max="props.max" />
+      <slot name="suffix" :value="modelValue" :max="props.max" />
+    </FieldGroupReset>
   </div>
 </template>

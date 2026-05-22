@@ -14,6 +14,8 @@ type RelativePath<T> = T extends readonly any[]
     ? Extract<keyof T, string>
     : string
 
+type _SetValueRelKey<S, P extends string> = RelativePath<NonUndefinedFieldValue<S, P>>
+
 export interface AutoFormFieldContext<S = any, P extends string = string> {
   readonly state: S
   readonly path: P
@@ -26,7 +28,7 @@ export interface AutoFormFieldContext<S = any, P extends string = string> {
    */
   setValue: {
     (value: FieldValueType<S, P>): void
-    <K extends RelativePath<NonUndefinedFieldValue<S, P>>>(
+    <K extends _SetValueRelKey<S, P>>(
       relativePath: K extends never ? string : K,
       value: any
     ): void
@@ -36,6 +38,18 @@ export interface AutoFormFieldContext<S = any, P extends string = string> {
   readonly loading: boolean
   readonly open?: boolean
   readonly count?: number
+}
+
+export interface ResolvedAutoFormFieldContext {
+  readonly state: Record<string, any>
+  readonly path: string
+  readonly value: any
+  setValue: (valueOrPathOrUpdater: any, value?: any) => void
+  readonly errors: unknown[]
+  readonly loading: boolean
+  readonly open?: boolean
+  readonly count?: number
+  readonly extraProps?: Record<string, unknown>
 }
 
 export interface AutoFormFieldSlots {

@@ -1,16 +1,16 @@
 import type { VNode } from 'vue'
 import type { ClassNameValue } from '../shared'
+import type { IconProps } from '@nuxt/ui'
 
 export interface SlideVerifyProps {
+  id?: string
+  name?: string
   /**
    * 尺寸大小
    * @defaultValue 'md'
    */
   size?: string
-  /**
-   * 是否禁用
-   * @defaultValue false
-   */
+  /** 是否禁用 */
   disabled?: boolean
   /**
    * 待滑动时的提示文本
@@ -24,19 +24,22 @@ export interface SlideVerifyProps {
   successText?: string
   /**
    * 滑块图标
+   * @IconifyIcon
    * @defaultValue 'i-lucide-chevrons-right'
    */
-  icon?: string
+  icon?: IconProps['name']
   /**
    * 验证成功时的图标
+   * @IconifyIcon
    * @defaultValue 'i-lucide-check'
    */
-  successIcon?: string
+  successIcon?: IconProps['name']
   /**
    * 完成验证所需的阈值百分比（0-1）
    * @defaultValue 0.9
    */
   threshold?: number
+  class?: ClassNameValue
   ui?: Record<string, ClassNameValue>
 }
 

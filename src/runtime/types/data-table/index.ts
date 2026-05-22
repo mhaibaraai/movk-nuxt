@@ -1,6 +1,7 @@
 export type {
   DataTableCheckboxContext,
   DataTableExpandButtonContext,
+  DataTableExpandToggleAllContext,
   DataTablePinButtonContext,
   DataTableRowPinningButtonContext,
   DataTableSortButtonContext
@@ -30,10 +31,18 @@ export type {
   DataTablePaginationSlots
 } from './pagination'
 export type {
+  DataTableContextmenuHandler,
   DataTableExposed,
+  DataTableHoverHandler,
+  DataTablePaginationSlotProps,
   DataTableProps,
   DataTableSelectHandler,
-  DataTableHoverHandler,
-  DataTableContextmenuHandler,
-  DataTableStateChangeHandler
+  DataTableSlots
 } from './component'
+export type {
+  ExpandedState,
+  PaginationState,
+  RowPinningState,
+  RowSelectionState,
+  SortingState
+} from '@tanstack/vue-table'

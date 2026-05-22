@@ -1,4 +1,7 @@
-<script lang="ts">
+<script lang="ts" setup>
+import { computed, ref } from 'vue'
+import { resolveCallbackValue } from '../columns/utils'
+import { useMessageBox } from '../../../composables/useMessageBox'
 import type { ButtonProps } from '@nuxt/ui'
 import type { DataTableAction, DataTableActionButtonContext, DataTableDynamic } from '../../../types/data-table'
 
@@ -7,12 +10,6 @@ interface DataTableRendererActionConfirmProps {
   ctx: DataTableActionButtonContext<unknown>
   globalButtonProps?: DataTableDynamic<ButtonProps, DataTableActionButtonContext<unknown>>
 }
-</script>
-
-<script lang="ts" setup>
-import { computed, ref } from 'vue'
-import { resolveCallbackValue } from '../columns/utils'
-import { useMessageBox } from '../../../composables/useMessageBox'
 
 const props = defineProps<DataTableRendererActionConfirmProps>()
 

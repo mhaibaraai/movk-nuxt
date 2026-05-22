@@ -4,6 +4,7 @@ import type {
   DataTableCheckboxContext,
   DataTableExpandButtonContext,
   DataTableExpandColumn,
+  DataTableExpandToggleAllContext,
   DataTableIndexColumn,
   DataTableRowPinningButtonContext,
   DataTableRowPinningColumn,
@@ -13,12 +14,12 @@ import type {
 } from '../../../types/data-table'
 import type { ResolveContext, SpecialColumnType } from './constants'
 import { h } from 'vue'
-import { isFunction, isString } from '@movk/core'
+import { isFunction } from '@movk/core'
 import { SPECIAL_COLUMN_DEFAULTS } from './constants'
 import { resolveCallbackValue } from './utils'
 import DataTableActionsCell from '../components/ActionsCell.vue'
 import { UButton, UCheckbox } from '#components'
-import { applyBaseState, buildClassMeta, COLUMN_SIZE_STYLE, resolveAlignClass } from './style'
+import { applyBaseState, buildClassMeta, makeColumnStyle, resolveAlignClass } from './style'
 import { renderHeaderActions } from './resolve-data-column'
 
 interface LeafAggregate { all: boolean, some: boolean }
@@ -71,11 +72,12 @@ function buildSpecialColumnDef<T>(
   ctx.flags.hasPinning ||= effectivePinable
   ctx.flags.hasResizing ||= effectiveResizable
 
-  const alignClass = resolveAlignClass(col.align ?? defaults.align)
+  const effectiveAlign = col.align ?? defaults.align
+  const alignClass = resolveAlignClass(effectiveAlign)
 
   const resolvedHeader = (effectivePinable || effectiveResizable)
     ? (hctx: HeaderContext<T, unknown>) => {
-        const label = isString(render.header) ? render.header : ''
+        const label = isFunction(render.header) ? render.header(hctx) : (render.header ?? '')
         return renderHeaderActions(hctx, col, options, label, false, effectivePinable, effectiveResizable)
       }
     : render.header
@@ -92,7 +94,7 @@ function buildSpecialColumnDef<T>(
     cell: render.cell,
     meta: {
       class: buildClassMeta(density, alignClass, effectiveResizable, defaults.tdClass),
-      style: COLUMN_SIZE_STYLE
+      style: makeColumnStyle<T>(effectiveAlign)
     }
   }
 
@@ -109,7 +111,7 @@ export function resolveSelectionColumn<T>(
   const isTree = !!ctx.options.childrenKey
   const strategy: DataTableTreeSelectionStrategy = col.strategy ?? 'cascade'
   ctx.selectionStrategy = strategy
-  if (isTree && strategy !== 'cascade') ctx.subRowSelection = false
+  if (isTree && (strategy !== 'cascade' || ctx.selectionMode === 'single')) ctx.subRowSelection = false
 
   const isLeafStrategy = isTree && strategy === 'leaf'
 
@@ -149,8 +151,13 @@ export function resolveSelectionColumn<T>(
           ...resolveCallbackValue(col.checkboxProps ?? {}, cbCtx)
         })
       }
-      const isSelected = cellCtx.row.getIsSelected()
-      const isIndeterminate = cellCtx.row.getIsSomeSelected()
+      const isCascadeParent = isTree && strategy === 'cascade' && cellCtx.row.subRows.length > 0
+      const isSelected = isCascadeParent
+        ? cellCtx.row.getIsSelected() || cellCtx.row.getIsAllSubRowsSelected()
+        : cellCtx.row.getIsSelected()
+      const isIndeterminate = isCascadeParent
+        ? !isSelected && cellCtx.row.getIsSomeSelected()
+        : cellCtx.row.getIsSomeSelected()
       const cbCtx: DataTableCheckboxContext<T> = {
         scope: 'cell',
         cellContext: cellCtx,
@@ -183,31 +190,66 @@ export function resolveExpandColumn<T>(
   ctx: ResolveContext<T>
 ): ColumnDef<T, unknown> {
   ctx.flags.hasExpand = true
+  const isTreeMode = ctx.options.childrenKey != null
+  const showToggleAll = isTreeMode && col.toggleAll !== false
   return buildSpecialColumnDef(col, 'expand', ctx, {
-    header: undefined,
+    header: showToggleAll
+      ? (hctx: HeaderContext<T, unknown>) => {
+          const isAllExpanded = hctx.table.getIsAllRowsExpanded()
+          const isSomeExpanded = hctx.table.getIsSomeRowsExpanded()
+          const toggleCtx: DataTableExpandToggleAllContext<T> = {
+            headerContext: hctx,
+            isAllExpanded,
+            isSomeExpanded
+          }
+          return h(UButton, {
+            'variant': 'outline',
+            'size': 'xs',
+            'color': 'neutral',
+            'aria-label': isAllExpanded ? 'Collapse all rows' : 'Expand all rows',
+            'icon': isAllExpanded ? 'i-lucide-minus' : 'i-lucide-plus',
+            'ui': {
+              base: 'p-0.5 rounded-sm',
+              leadingIcon: 'size-4'
+            },
+            'onClick': (event: Event) => {
+              event.stopPropagation()
+              hctx.table.toggleAllRowsExpanded()
+            },
+            ...resolveCallbackValue(col.toggleAllButtonProps ?? {}, toggleCtx)
+          })
+        }
+      : undefined,
     cell: (cellCtx: CellContext<T, unknown>) => {
-      if (!cellCtx.row.getCanExpand()) return null
+      if (isTreeMode && !cellCtx.row.getCanExpand()) return null
 
+      const depth = cellCtx.row.depth
       const indentSize = ctx.options.indentSize ?? '1rem'
-      const marginLeft = isFunction(indentSize)
-        ? indentSize(cellCtx)
-        : typeof indentSize === 'number'
-          ? `${cellCtx.row.depth * indentSize}px`
-          : cellCtx.row.depth > 0 ? `calc(${cellCtx.row.depth} * ${indentSize})` : '0px'
+      const marginLeft = isTreeMode
+        ? isFunction(indentSize)
+          ? indentSize(cellCtx)
+          : typeof indentSize === 'number'
+            ? `${depth * indentSize}px`
+            : depth > 0 ? `calc(${depth} * ${indentSize})` : '0px'
+        : '0px'
 
       const isExpanded = cellCtx.row.getIsExpanded()
       const expandCtx: DataTableExpandButtonContext<T> = {
         cellContext: cellCtx,
         isExpanded,
-        depth: cellCtx.row.depth,
+        depth,
         canExpand: true
       }
 
       return h(UButton, {
-        variant: 'ghost',
+        variant: 'outline',
         size: 'xs',
         color: 'neutral',
-        icon: isExpanded ? 'i-lucide-chevron-down' : 'i-lucide-chevron-right',
+        icon: isExpanded ? 'i-lucide-minus' : 'i-lucide-plus',
+        ui: {
+          base: 'p-0.5 rounded-sm',
+          leadingIcon: 'size-4'
+        },
         style: { marginLeft },
         onClick: (event: Event) => {
           event.stopPropagation()

@@ -1,4 +1,7 @@
-<script lang="ts">
+<script lang="ts" setup>
+import { UTooltip } from '#components'
+import { computed, useAttrs, useTemplateRef } from 'vue'
+import { useOverflowDetection } from '@movk/core'
 import type { CSSProperties } from 'vue'
 
 interface DataTableRendererCellTooltipProps {
@@ -7,12 +10,6 @@ interface DataTableRendererCellTooltipProps {
   /** true = 单行截断，number = 多行截断行数（-webkit-line-clamp） */
   lines?: boolean | number
 }
-</script>
-
-<script lang="ts" setup>
-import { UTooltip } from '#components'
-import { computed, useAttrs, useTemplateRef } from 'vue'
-import { useOverflowDetection } from '../composables/useOverflowDetection'
 
 defineOptions({ inheritAttrs: false })
 
@@ -26,13 +23,13 @@ const isMultiline = computed(() => typeof props.lines === 'number' && props.line
 const multilineStyle = computed<CSSProperties | undefined>(() =>
   isMultiline.value
     ? {
-        WebkitLineClamp: props.lines as number,
-        display: '-webkit-box',
-        WebkitBoxOrient: 'vertical' as const,
-        overflow: 'hidden',
-        whiteSpace: 'normal' as const,
-        wordBreak: 'break-all' as const
-      }
+        '-webkit-line-clamp': props.lines as number,
+        'display': '-webkit-box',
+        '-webkit-box-orient': 'vertical',
+        'overflow': 'hidden',
+        'white-space': 'normal',
+        'word-break': 'break-all'
+      } as CSSProperties
     : undefined
 )
 </script>

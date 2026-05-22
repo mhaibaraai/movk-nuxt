@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import type { DateValue } from '@internationalized/date'
+import type { DateValue, AutoFormFieldContext } from '#movk/types'
 import type { TabsItem } from '@nuxt/ui'
 import type z from 'zod'
 
@@ -40,7 +40,7 @@ const formSchema = afz.object({
     fields: {
       adminScope: afz.enum(['全局', '部门', '项目'] as const).meta({
         label: '管理范围',
-        if: ({ state }) => state?.role === '管理员'
+        if: ({ state }: AutoFormFieldContext) => state?.role === '管理员'
       }).optional(),
       notifications: afz.boolean({ type: 'switch' }).default(true)
         .meta({ label: '接收通知', hint: '开启后接收系统消息' }),

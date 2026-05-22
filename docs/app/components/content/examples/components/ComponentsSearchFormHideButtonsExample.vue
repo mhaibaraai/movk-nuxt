@@ -15,23 +15,22 @@ const params = ref({})
   <div class="space-y-6">
     <div class="space-y-2">
       <p class="text-sm text-muted">
-        隐藏重置按钮
+        仅保留搜索按钮（actions 只传 search）
       </p>
       <MSearchForm
         v-model="params"
         :schema="schema"
-        :show-reset-button="false"
+        :actions="[{ key: 'search', label: '搜索', icon: 'i-lucide-search', type: 'submit' }]"
       />
     </div>
     <div class="space-y-2">
       <p class="text-sm text-muted">
-        隐藏全部按钮，通过 actions slot 自定义
+        关闭全部内置按钮（actions: []），通过 actions slot 完全自定义
       </p>
       <MSearchForm
         v-model="params"
         :schema="schema"
-        :show-search-button="false"
-        :show-reset-button="false"
+        :actions="[]"
       >
         <template #actions="{ search, reset }">
           <div class="flex items-end gap-2 justify-end">
