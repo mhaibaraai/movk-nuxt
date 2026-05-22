@@ -1,9 +1,7 @@
 export default defineNuxtConfig({
   extends: ['@movk/nuxt-docs'],
 
-  modules: [
-    '../src/module'
-  ],
+  modules: ['@movk/nuxt'],
 
   $development: {
     site: {
