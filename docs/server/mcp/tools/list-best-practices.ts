@@ -1,7 +1,7 @@
 import { queryCollection } from '@nuxt/content/server'
 
 export default defineMcpTool({
-  description: '列出所有可用的 Movk Nuxt 最佳实践指南',
+  description: 'List all available Movk Nuxt best-practice guides',
   annotations: {
     readOnlyHint: true,
     destructiveHint: false,

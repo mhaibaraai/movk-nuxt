@@ -2,7 +2,7 @@ import { queryCollection } from '@nuxt/content/server'
 
 export default defineMcpResource({
   uri: 'resource://movk-nuxt/best-practices',
-  description: 'Movk Nuxt 最佳实践指南列表，包含项目结构和 Composable 模式',
+  description: 'List of Movk Nuxt best-practice guides, including project structure and composable patterns',
   cache: '1h',
   async handler(uri: URL) {
     const event = useEvent()

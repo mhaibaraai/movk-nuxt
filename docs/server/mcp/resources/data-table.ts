@@ -2,7 +2,7 @@ import { queryCollection } from '@nuxt/content/server'
 
 export default defineMcpResource({
   uri: 'resource://movk-nuxt/data-table',
-  description: 'Movk Nuxt DataTable 文档章节的完整页面列表与元数据',
+  description: 'Complete list of Movk Nuxt DataTable documentation pages with metadata',
   cache: '1h',
   async handler(uri: URL) {
     const event = useEvent()

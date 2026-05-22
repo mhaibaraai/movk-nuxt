@@ -2,9 +2,9 @@ import { z } from 'zod'
 import { queryCollection } from '@nuxt/content/server'
 
 export default defineMcpPrompt({
-  description: '为特定使用场景找到最适合的 Movk Nuxt 组件（涵盖独立 UI 组件与 DataTable 表格章节）',
+  description: 'Find the most suitable Movk Nuxt component for a specific use case (covering standalone UI components and the DataTable section)',
   inputSchema: {
-    usecase: z.string().describe('描述你想构建的内容（例如：「用户登录表单」「数据表格」「导航菜单」）')
+    usecase: z.string().describe('Describe what you want to build (e.g. "user login form", "data table", "navigation menu")')
   },
   async handler({ usecase }) {
     const event = useEvent()
@@ -32,7 +32,7 @@ export default defineMcpPrompt({
           role: 'user' as const,
           content: {
             type: 'text' as const,
-            text: `帮我找到最适合这个使用场景的 Movk Nuxt 组件：「${usecase}」。候选集包含独立 UI 组件（category: input/feedback/form/advanced）与 DataTable 章节文档页（category: data-table）：${JSON.stringify(candidates, null, 2)}`
+            text: `Find the most suitable Movk Nuxt component for this use case: "${usecase}". The candidate set includes standalone UI components (category: input/feedback/form/advanced) and DataTable section pages (category: data-table): ${JSON.stringify(candidates, null, 2)}`
           }
         }
       ]

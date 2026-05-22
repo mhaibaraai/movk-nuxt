@@ -2,7 +2,7 @@ import { z } from 'zod'
 import { queryCollection } from '@nuxt/content/server'
 
 export default defineMcpTool({
-  description: '按分类或文本筛选搜索自动表单组件',
+  description: 'Search AutoForm docs by category or text',
   annotations: {
     readOnlyHint: true,
     destructiveHint: false,
@@ -10,12 +10,12 @@ export default defineMcpTool({
     openWorldHint: false
   },
   inputSchema: {
-    category: z.string().optional().describe('按分类筛选组件'),
-    search: z.string().optional().describe('用于按名称或描述筛选组件的搜索词')
+    category: z.string().optional().describe('Filter AutoForm docs by category'),
+    search: z.string().optional().describe('Search term to filter AutoForm docs by name or description')
   },
   inputExamples: [
-    { category: 'field' },
-    { category: 'customization', search: 'custom' }
+    { search: 'field-types' },
+    { search: 'custom controls' }
   ],
   cache: '30m',
   async handler({ category, search }) {

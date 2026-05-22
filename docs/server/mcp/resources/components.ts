@@ -2,7 +2,7 @@ import { queryCollection } from '@nuxt/content/server'
 
 export default defineMcpResource({
   uri: 'resource://movk-nuxt/components',
-  description: 'Movk Nuxt 可用组件完整列表，包含元数据和分类信息',
+  description: 'Complete list of available Movk Nuxt components with metadata and category info',
   cache: '1h',
   async handler(uri: URL) {
     const event = useEvent()

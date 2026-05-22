@@ -1,7 +1,7 @@
 import { queryCollection } from '@nuxt/content/server'
 
 export default defineMcpTool({
-  description: '列出 Movk Nuxt DataTable 章节的全部文档页（数据列、特殊列、树形、行为、外观、分页、加载更多、API）',
+  description: 'List all Movk Nuxt DataTable documentation pages (data columns, special columns, tree data, row behavior, appearance, pagination, load more, API)',
   annotations: {
     readOnlyHint: true,
     destructiveHint: false,

@@ -2,7 +2,7 @@ import { z } from 'zod'
 import { queryCollection } from '@nuxt/content/server'
 
 export default defineMcpTool({
-  description: '按关键字筛选搜索 DataTable 章节的文档页（数据列、特殊列、树形、行为、外观、分页、加载更多、API）',
+  description: 'Search DataTable documentation pages by keyword (data columns, special columns, tree data, row behavior, appearance, pagination, load more, API)',
   annotations: {
     readOnlyHint: true,
     destructiveHint: false,
@@ -10,12 +10,12 @@ export default defineMcpTool({
     openWorldHint: false
   },
   inputSchema: {
-    search: z.string().optional().describe('按名称或描述筛选文档页')
+    search: z.string().optional().describe('Search term to filter pages by name or description')
   },
   inputExamples: [
-    { search: '排序' },
+    { search: 'sorting' },
     { search: 'pagination' },
-    { search: '树形' }
+    { search: 'tree' }
   ],
   cache: '30m',
   async handler({ search }) {
