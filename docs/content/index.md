@@ -21,7 +21,7 @@ Nuxt 4 模块化[工程套件]{.text-primary}
 ---
 transition: { duration: 0.6, delay: 0.3 }
 ---
-基于 Nuxt UI 和 Zod v4 构建，提供 Schema 驱动的自动表单生成、带认证与进度追踪的 API 集成系统、独立 UI 组件和通用 Composables。
+基于 Nuxt UI 和 Zod v4 构建，把表单、表格、API、主题与交互四类高频需求收敛为开箱即用的模块能力：Schema 驱动的 AutoForm、功能完备的 DataTable、带认证与进度追踪的 API 系统，以及独立组件与通用 Composables。
 :::
 
 #links
@@ -65,34 +65,34 @@ transition: { duration: 0.6, delay: 0.5 }
 #features
   :::u-page-feature{icon="i-lucide-zap"}
   #title
-  Schema 驱动
+  AutoForm 表单引擎
 
   #description
-  通过 Zod Schema 定义数据结构，自动生成完整的表单界面和验证逻辑。
+  通过 Zod Schema 定义数据结构，自动生成完整的表单界面、验证逻辑与布局。
+  :::
+
+  :::u-page-feature{icon="i-lucide-table"}
+  #title
+  DataTable 数据表格
+
+  #description
+  数据列、特殊列、树形数据、行交互、外观定制与分页加载，声明式列配置驱动。
   :::
 
   :::u-page-feature{icon="i-lucide-cloud"}
   #title
-  API 集成
+  API 集成系统
 
   #description
-  useApiFetch、useUploadWithProgress、useDownloadWithProgress 等完整的 API 请求方案。
-  :::
-
-  :::u-page-feature{icon="i-lucide-blocks"}
-  #title
-  模块化架构
-
-  #description
-  清晰的分层架构：Core Systems、API System、Standalone Components、Composables。
+  useApiFetch 三件套与上传/下载进度，内置多端点、认证、业务码校验与 Toast。
   :::
 
   :::u-page-feature{icon="i-lucide-package"}
   #title
-  独立组件库
+  组件与 Composables
 
   #description
-  高质量 UI 组件，无需依赖 AutoForm 即可独立使用。
+  DatePicker、PillGroup、SearchForm 等独立组件，搭配 useTheme、useMessageBox 等工具。
   :::
 
   :::u-page-feature{icon="i-lucide-shield-check"}
@@ -100,15 +100,15 @@ transition: { duration: 0.6, delay: 0.5 }
   类型安全
 
   #description
-  完整的 TypeScript 类型推断，从 Schema 到数据全程类型安全。
+  完整的 TypeScript 类型推断，prop 回调与事件处理类型可索引访问派生。
   :::
 
-  :::u-page-feature{icon="i-lucide-wrench"}
+  :::u-page-feature{icon="i-lucide-sparkles"}
   #title
-  通用工具函数
+  AI 友好
 
   #description
-  useDateFormatter 等强大的 composables，提升开发效率。
+  内置 MCP Server 与 llms.txt，组件、composable 与文档可被 AI 智能体检索。
   :::
 
 ::

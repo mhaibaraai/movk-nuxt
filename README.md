@@ -16,13 +16,15 @@
 
 ## ✨ 特性
 
-- **Schema 驱动** - 基于 Zod v4 的声明式表单定义，一份 Schema 同时定义数据结构、验证规则和 UI 配置。
-- **自动化系统** - AutoForm 通过 Schema 自动生成完整表单界面，支持多种控件类型。
-- **API 集成** - 内置 useApiFetch、useUploadWithProgress、useDownloadWithProgress，提供多端点支持、自动认证、业务状态码检查、Toast 提示和进度监控。
-- **模块化设计** - 采用分层架构，按需使用 UI 组件、工具函数或全套自动化系统。
-- **独立组件库** - 内置 DatePicker、StarRating、WithCopy 等个通用 UI 组件。
-- **类型安全** - 完整的 TypeScript 类型推断，从 Schema 到表单数据。
-- **可扩展** - 支持自定义控件、布局系统、条件渲染等高级特性。
+Movk Nuxt 把后台开发的四类高频需求 —— 表单、表格、API、主题与交互 —— 收敛成开箱即用的模块能力：
+
+- **AutoForm — Schema 驱动表单** - 基于 Zod v4 的「定义即渲染」，一份 Schema 同时声明数据结构、验证规则和 UI 配置，自动生成完整表单界面。
+- **DataTable — 数据表格** - 基于 TanStack Table 封装，覆盖数据列、特殊列（选择/索引/展开/操作）、树形数据、行交互、外观定制、分页与加载更多。
+- **API 集成系统** - useApiFetch / useLazyApiFetch / useClientApiFetch 三件套 + useUploadWithProgress / useDownloadWithProgress，提供多端点、自动认证、业务状态码检查、数据解包、Toast 提示和进度监控。
+- **独立组件库** - DatePicker、StarRating、PillGroup、SearchForm、WithCopy 等通用 UI 组件，无需依赖 AutoForm 即可独立使用。
+- **Composables 工具集** - useTheme（主题读写与导出）、useMessageBox（命令式弹窗）、useDateFormatter（国际化日期）等通用组合式函数。
+- **类型安全** - 完整的 TypeScript 类型推断，从 Schema 到表单数据，组件 prop 回调与事件处理类型可索引访问派生。
+- **AI 友好** - 内置 MCP Server 与 llms.txt，组件、composable、文档可被 AI 智能体检索。
 
 ## 🚀 快速开始
 
@@ -99,7 +101,24 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 
 ### 独立组件
 
-可直接使用的高质量 UI 组件
+可直接使用的高质量 UI 组件，涵盖输入增强、表单、反馈与高级交互四类。
+
+### DataTable - 功能完备的数据表格
+
+基于 TanStack Table 封装的 `MDataTable`，以声明式列配置驱动：
+
+```ts
+import type { DataTableColumn } from '@movk/nuxt'
+
+const columns: DataTableColumn<Person>[] = [
+  { type: 'selection' }, // 特殊列：行选择
+  { accessorKey: 'name', header: '姓名', sortable: true, pinable: true },
+  { accessorKey: 'salary', header: '薪资', sortable: true, truncate: true },
+  { type: 'actions', actions: row => [{ label: '编辑', onClick: () => edit(row) }] }
+]
+```
+
+支持数据列（排序/列固定/列宽拖拽/截断+Tooltip/可见性）、特殊列（选择/索引/展开/操作/分组）、树形数据与级联选择、行交互（点击/展开/右键菜单）、外观定制、客户端/服务端分页与加载更多。
 
 ### AutoForm - Schema 驱动的表单系统
 
@@ -223,11 +242,11 @@ await download('/api/export/report', {
 
 Movk Nuxt 采用清晰的分层架构:
 
-- **Core Systems** - AutoForm(已发布)
-- **API System** - useApiFetch、useUploadWithProgress、useDownloadWithProgress，提供完整的 API 请求方案
-- **Standalone Components** - DatePicker、StarRating、WithCopy 等独立 UI 组件
-- **Composables** - useDateFormatter、useAutoForm 等通用组合式函数
-- **Foundation** - 基于 [Nuxt UI](https://ui.nuxt.com)、[Zod v4](https://zod.dev)、[VueUse](https://vueuse.org)
+- **Core Systems** - AutoForm（Schema 驱动表单）、DataTable（数据表格）
+- **API System** - useApiFetch / useLazyApiFetch / useClientApiFetch、useUploadWithProgress、useDownloadWithProgress，提供完整的 API 请求方案
+- **Standalone Components** - DatePicker、StarRating、PillGroup、SearchForm、WithCopy、ThemePicker 等独立 UI 组件
+- **Composables** - useDateFormatter、useTheme、useMessageBox、useAutoForm 等通用组合式函数
+- **Foundation** - 基于 [Nuxt UI](https://ui.nuxt.com)、[Zod v4](https://zod.dev)、[VueUse](https://vueuse.org)、[TanStack Table](https://tanstack.com/table)
 
 ## ⚡ 技术栈
 
