@@ -89,6 +89,10 @@ name: 'components-with-character-limit-form-example'
 
 :component-slots{slug="MWithCharacterLimit"}
 
+## Theme
+
+:component-theme
+
 ## Changelog
 
 :commit-changelog{prefix="components/input"}

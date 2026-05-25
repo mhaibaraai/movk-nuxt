@@ -162,6 +162,10 @@ name: 'components-star-rating-slot-example'
 
 :component-slots{slug="MStarRating"}
 
+## Theme
+
+:component-theme
+
 ## Changelog
 
 :commit-changelog{prefix="components"}

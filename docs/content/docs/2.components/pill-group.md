@@ -161,6 +161,10 @@ name: 'components-pill-group-events-example'
 
 :component-slots{slug="MPillGroup"}
 
+## Theme
+
+:component-theme
+
 ## Changelog
 
 :commit-changelog{prefix="components"}

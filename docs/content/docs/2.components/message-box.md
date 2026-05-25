@@ -128,6 +128,10 @@ name: 'components-message-box-programmatic-example'
 
 :component-slots{slug="MMessageBox"}
 
+## Theme
+
+:component-theme
+
 ## Changelog
 
 :commit-changelog{prefix="components"}

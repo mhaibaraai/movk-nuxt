@@ -69,6 +69,10 @@ name: 'components-with-copy-event-example'
 
 :component-slots{slug=MWithCopy}
 
+## Theme
+
+:component-theme
+
 ## Changelog
 
 :commit-changelog{prefix="components/input"}

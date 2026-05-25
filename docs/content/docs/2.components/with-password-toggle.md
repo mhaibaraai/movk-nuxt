@@ -79,6 +79,10 @@ name: 'components-with-password-toggle-custom-example'
 
 :component-slots{slug="MWithPasswordToggle"}
 
+## Theme
+
+:component-theme
+
 ## Changelog
 
 :commit-changelog{prefix="components/input"}

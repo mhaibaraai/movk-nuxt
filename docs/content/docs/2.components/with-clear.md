@@ -79,6 +79,10 @@ name: 'components-with-clear-custom-example'
 
 :component-slots{slug="MWithClear"}
 
+## Theme
+
+:component-theme
+
 ## Changelog
 
 :commit-changelog{prefix="components/input"}

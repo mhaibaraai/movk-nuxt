@@ -69,6 +69,10 @@ name: 'components-color-chooser-slot-example'
 
 :component-slots{slug=MColorChooser}
 
+## Theme
+
+:component-theme
+
 ## Changelog
 
 :commit-changelog{prefix="components"}

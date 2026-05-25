@@ -97,6 +97,10 @@ name: 'components-slide-verify-events-example'
 | ---- | ---- |
 | `reset()`{lang="ts-type"} | `Promise<void>`{lang="ts-type"} <br> <div class="text-toned mt-1"><p>重置验证状态</p> |
 
+## Theme
+
+:component-theme
+
 ## Changelog
 
 :commit-changelog{prefix="components"}

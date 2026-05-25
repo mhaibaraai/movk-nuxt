@@ -113,6 +113,10 @@ name: 'components-date-picker-button-example'
 
 :component-slots{slug="MDatePicker"}
 
+## Theme
+
+:component-theme
+
 ## Changelog
 
 :commit-changelog{prefix="components"}

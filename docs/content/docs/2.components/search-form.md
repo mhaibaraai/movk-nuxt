@@ -111,6 +111,10 @@ name: 'components-search-form-responsive-example'
 | `expanded`{lang="ts-type"} | `ComputedRef<boolean>`{lang="ts-type"} <br> <div class="text-toned mt-1"><p>当前展开/收起状态</p> |
 | `toggle()`{lang="ts-type"} | `void`{lang="ts-type"} <br> <div class="text-toned mt-1"><p>切换展开/收起，并 emit `expand` 与 `update:expanded`</p> |
 
+## Theme
+
+:component-theme
+
 ## Changelog
 
 :commit-changelog{prefix="components"}

@@ -79,6 +79,10 @@ name: 'components-with-floating-label-form-example'
 
 :component-slots{slug="MWithFloatingLabel"}
 
+## Theme
+
+:component-theme
+
 ## Changelog
 
 :commit-changelog{prefix="components/input"}

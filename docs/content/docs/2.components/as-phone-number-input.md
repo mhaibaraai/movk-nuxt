@@ -69,6 +69,10 @@ name: 'components-as-phone-number-input-form-example'
 
 :component-slots{slug="MAsPhoneNumberInput"}
 
+## Theme
+
+:component-theme
+
 ## Changelog
 
 :commit-changelog{prefix="components/input"}

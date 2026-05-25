@@ -55,6 +55,10 @@ name: 'components-theme-picker-basic-example'
 ---
 ::
 
+## Theme
+
+:component-theme
+
 ## Changelog
 
 :commit-changelog{prefix="components/theme-picker"}

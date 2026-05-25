@@ -32,6 +32,18 @@ export default defineNuxtConfig({
 
   compatibilityDate: 'latest',
 
+  vite: {
+    optimizeDeps: {
+      include: [
+        'tailwindcss/colors',
+        'tailwind-variants',
+        'json5',
+        '@internationalized/date',
+        'maska/vue'
+      ]
+    }
+  },
+
   aiChat: {
     model: 'anthropic/claude-sonnet-4.6',
     models: [
