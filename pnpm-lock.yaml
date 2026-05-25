@@ -128,8 +128,8 @@ importers:
         specifier: workspace:*
         version: link:..
       '@movk/nuxt-docs':
-        specifier: ^1.19.1
-        version: 1.19.1(c3cfcdc07b34b70248c20fd1bcc23a3a)
+        specifier: https://pkg.pr.new/@movk/nuxt-docs@7a85b52
+        version: https://pkg.pr.new/@movk/nuxt-docs@7a85b52(c3cfcdc07b34b70248c20fd1bcc23a3a)
       '@nuxt/content':
         specifier: ^3.14.0
         version: 3.14.0(better-sqlite3@12.10.0)(magicast@0.5.3)
@@ -1398,8 +1398,9 @@ packages:
     peerDependencies:
       vue: ^3.5.25
 
-  '@movk/nuxt-docs@1.19.1':
-    resolution: {integrity: sha512-HlQDH7Ko+L03YQjR0nV68e1sRsCoM/ogtSbOQbkseYIKMhCxjj21chBxjjrTmyaqOTEJKSTzVN3t4/yvsysEDg==}
+  '@movk/nuxt-docs@https://pkg.pr.new/@movk/nuxt-docs@7a85b52':
+    resolution: {integrity: sha512-Sk4cmrz8Ba06Jram0eUpvcOfWEM8ayMBLAj4LglEQmgGmnb/L0lVCB2XRPp0PfvUcHV/rnz03wh27zVo+X6UNw==, tarball: https://pkg.pr.new/@movk/nuxt-docs@7a85b52}
+    version: 1.19.1
     peerDependencies:
       better-sqlite3: 12.x
       dompurify: 3.x
@@ -9449,7 +9450,7 @@ snapshots:
       '@vueuse/core': 14.3.0(vue@3.5.34(typescript@6.0.3))
       vue: 3.5.34(typescript@6.0.3)
 
-  '@movk/nuxt-docs@1.19.1(c3cfcdc07b34b70248c20fd1bcc23a3a)':
+  '@movk/nuxt-docs@https://pkg.pr.new/@movk/nuxt-docs@7a85b52(c3cfcdc07b34b70248c20fd1bcc23a3a)':
     dependencies:
       '@ai-sdk/gateway': 3.0.120(zod@4.4.3)
       '@ai-sdk/mcp': 1.0.43(zod@4.4.3)
