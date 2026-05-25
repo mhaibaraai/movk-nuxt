@@ -1,4 +1,11 @@
 <script setup lang="ts">
+import type { InputProps } from '@nuxt/ui'
+
+defineProps<{
+  size: InputProps['size']
+  leadingIcon: InputProps['leadingIcon']
+}>()
+
 const toast = useToast()
 const content = ref('这是一段可复制的文本')
 
@@ -12,5 +19,10 @@ function handleCopy(value: string) {
 </script>
 
 <template>
-  <MWithCopy v-model="content" @copy="handleCopy" />
+  <MWithCopy
+    v-model="content"
+    :size
+    :leading-icon
+    @copy="handleCopy"
+  />
 </template>

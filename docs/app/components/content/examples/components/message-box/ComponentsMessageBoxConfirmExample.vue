@@ -1,17 +1,23 @@
 <script setup lang="ts">
+import type { SemanticColor } from '@movk/nuxt'
+
+defineProps<{
+  type: SemanticColor
+}>()
+
 const open = ref(false)
 const result = ref('')
 </script>
 
 <template>
   <div class="flex flex-wrap items-center gap-3">
-    <UButton label="删除记录" color="warning" variant="outline" icon="i-lucide-trash-2" @click="open = true" />
+    <UButton label="删除记录" :color="type" variant="outline" icon="i-lucide-trash-2" @click="open = true" />
     <span v-if="result" class="text-sm text-muted">{{ result }}</span>
 
     <MMessageBox
       v-model:open="open"
       mode="confirm"
-      type="warning"
+      :type
       title="确认删除"
       icon="i-lucide-trash-2"
       description="此操作将永久删除该记录，无法恢复，是否继续？"

@@ -1,10 +1,21 @@
 <script setup lang="ts">
+import type { InputProps } from '@nuxt/ui'
+import type { AsPhoneNumberInputProps } from '@movk/nuxt'
+
+defineProps<{
+  size: InputProps['size']
+  mask: AsPhoneNumberInputProps['mask']
+  dialCode: AsPhoneNumberInputProps['dialCode']
+}>()
+
 const phone = ref('')
 </script>
 
 <template>
-  <div class="flex flex-col gap-4">
-    <MAsPhoneNumberInput v-model="phone" dial-code="+1" mask="(###) ###-####" />
-    <MAsPhoneNumberInput v-model="phone" dial-code="+44" mask="#### ### ####" />
-  </div>
+  <MAsPhoneNumberInput
+    v-model="phone"
+    :size
+    :mask
+    :dial-code
+  />
 </template>

@@ -22,6 +22,19 @@ seo:
 ::component-example
 ---
 name: 'components-color-chooser-basic-example'
+options:
+  - name: 'format'
+    label: 'format'
+    items: ['hex', 'rgb', 'hsl']
+    default: 'hex'
+  - name: 'color'
+    label: 'color'
+    items: ['primary', 'secondary', 'success', 'info', 'warning', 'error', 'neutral']
+    default: 'primary'
+  - name: 'variant'
+    label: 'variant'
+    items: ['solid', 'outline', 'soft', 'subtle', 'ghost', 'link']
+    default: 'outline'
 ---
 ::
 
@@ -32,16 +45,30 @@ name: 'components-color-chooser-basic-example'
 ::component-example
 ---
 name: 'components-color-chooser-format-example'
+options:
+  - name: 'format'
+    label: 'format'
+    items: ['hex', 'rgb', 'hsl']
+    default: 'hex'
 ---
 ::
 
 ## 自定义按钮
 
-通过 `buttonProps` 自定义按钮样式：
+通过 `color`、`variant` 等 `UButton` 同名 props 直接调整触发按钮样式：
 
 ::component-example
 ---
 name: 'components-color-chooser-button-example'
+options:
+  - name: 'color'
+    label: 'color'
+    items: ['primary', 'secondary', 'success', 'info', 'warning', 'error', 'neutral']
+    default: 'primary'
+  - name: 'variant'
+    label: 'variant'
+    items: ['solid', 'outline', 'soft', 'subtle', 'ghost', 'link']
+    default: 'outline'
 ---
 ::
 

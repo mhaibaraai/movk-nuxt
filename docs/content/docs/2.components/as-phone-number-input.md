@@ -22,6 +22,19 @@ seo:
 ::component-example
 ---
 name: 'components-as-phone-number-input-basic-example'
+options:
+  - name: 'size'
+    label: 'size'
+    items: ['xs', 'sm', 'md', 'lg', 'xl']
+    default: 'md'
+  - name: 'mask'
+    label: 'mask'
+    items: ['### #### ####', '(###) ###-####', '#### ### ####', '###-####-####']
+    default: '### #### ####'
+  - name: 'dialCode'
+    label: 'dialCode'
+    items: ['+86', '+1', '+44', '+81']
+    default: '+86'
 ---
 ::
 
@@ -32,6 +45,19 @@ name: 'components-as-phone-number-input-basic-example'
 ::component-example
 ---
 name: 'components-as-phone-number-input-dial-code-example'
+options:
+  - name: 'size'
+    label: 'size'
+    items: ['xs', 'sm', 'md', 'lg', 'xl']
+    default: 'md'
+  - name: 'dialCode'
+    label: 'dialCode'
+    items: ['+86', '+1', '+44', '+81']
+    default: '+1'
+  - name: 'mask'
+    label: 'mask'
+    items: ['### #### ####', '(###) ###-####', '#### ### ####', '###-####-####']
+    default: '(###) ###-####'
 ---
 ::
 
@@ -42,6 +68,19 @@ name: 'components-as-phone-number-input-dial-code-example'
 ::component-example
 ---
 name: 'components-as-phone-number-input-mask-example'
+options:
+  - name: 'size'
+    label: 'size'
+    items: ['xs', 'sm', 'md', 'lg', 'xl']
+    default: 'md'
+  - name: 'mask'
+    label: 'mask'
+    items: ['### #### ####', '(###) ###-####', '#### ### ####', '###-####-####']
+    default: '(###) ###-####'
+  - name: 'dialCode'
+    label: 'dialCode'
+    items: ['+86', '+1', '+44', '+81']
+    default: '+1'
 ---
 ::
 

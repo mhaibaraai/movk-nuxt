@@ -1,5 +1,10 @@
 <script setup lang="ts">
+import type { ButtonProps } from '@nuxt/ui'
 import type { PillItem } from '@movk/nuxt'
+
+defineProps<{
+  size: ButtonProps['size']
+}>()
 
 const items: PillItem[] = [
   { value: 'free', label: '免费版', icon: 'i-lucide-gift' },
@@ -10,5 +15,10 @@ const value = ref<PillItem | undefined>(items[0])
 </script>
 
 <template>
-  <MPillGroup v-model="value" :items="items" deselectable />
+  <MPillGroup
+    v-model="value"
+    :items
+    :size
+    deselectable
+  />
 </template>

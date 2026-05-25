@@ -1,4 +1,11 @@
 <script setup lang="ts">
+import type { InputProps } from '@nuxt/ui'
+
+defineProps<{
+  size: InputProps['size']
+  leadingIcon: InputProps['leadingIcon']
+}>()
+
 const toast = useToast()
 const keyword = ref('关键词')
 
@@ -12,5 +19,10 @@ function handleClear() {
 </script>
 
 <template>
-  <MWithClear v-model="keyword" @clear="handleClear" />
+  <MWithClear
+    v-model="keyword"
+    :size
+    :leading-icon
+    @clear="handleClear"
+  />
 </template>

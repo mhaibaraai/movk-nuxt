@@ -22,6 +22,22 @@ seo:
 ::component-example
 ---
 name: 'components-with-clear-basic-example'
+options:
+  - name: 'size'
+    label: 'size'
+    items: ['xs', 'sm', 'md', 'lg', 'xl']
+    default: 'md'
+  - name: 'color'
+    label: 'color'
+    items: ['primary', 'secondary', 'success', 'info', 'warning', 'error', 'neutral']
+    default: 'primary'
+  - name: 'variant'
+    label: 'variant'
+    items: ['outline', 'soft', 'subtle', 'ghost', 'none']
+    default: 'outline'
+  - name: 'leadingIcon'
+    label: 'leadingIcon'
+    default: 'i-lucide-user'
 ---
 ::
 
@@ -32,6 +48,14 @@ name: 'components-with-clear-basic-example'
 ::component-example
 ---
 name: 'components-with-clear-icon-example'
+options:
+  - name: 'size'
+    label: 'size'
+    items: ['xs', 'sm', 'md', 'lg', 'xl']
+    default: 'md'
+  - name: 'leadingIcon'
+    label: 'leadingIcon'
+    default: 'i-lucide-mail'
 ---
 ::
 
@@ -42,6 +66,14 @@ name: 'components-with-clear-icon-example'
 ::component-example
 ---
 name: 'components-with-clear-search-example'
+options:
+  - name: 'size'
+    label: 'size'
+    items: ['xs', 'sm', 'md', 'lg', 'xl']
+    default: 'lg'
+  - name: 'leadingIcon'
+    label: 'leadingIcon'
+    default: 'i-lucide-search'
 ---
 ::
 
@@ -52,6 +84,14 @@ name: 'components-with-clear-search-example'
 ::component-example
 ---
 name: 'components-with-clear-event-example'
+options:
+  - name: 'size'
+    label: 'size'
+    items: ['xs', 'sm', 'md', 'lg', 'xl']
+    default: 'md'
+  - name: 'leadingIcon'
+    label: 'leadingIcon'
+    default: 'i-lucide-search'
 ---
 ::
 

@@ -1,11 +1,13 @@
 <script setup lang="ts">
+import type { ButtonProps } from '@nuxt/ui'
+
+defineProps<{
+  color: ButtonProps['color']
+}>()
+
 const rating = ref(4)
 </script>
 
 <template>
-  <div class="flex flex-col gap-4">
-    <MStarRating v-model="rating" color="error" />
-    <MStarRating v-model="rating" color="success" />
-    <MStarRating v-model="rating" color="primary" />
-  </div>
+  <MStarRating v-model="rating" :color />
 </template>

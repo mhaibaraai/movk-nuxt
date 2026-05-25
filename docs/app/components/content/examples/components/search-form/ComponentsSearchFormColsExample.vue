@@ -1,4 +1,8 @@
 <script setup lang="ts">
+const props = defineProps<{
+  cols: string
+}>()
+
 const { afz } = useAutoForm()
 
 const schema = afz.object({
@@ -10,21 +14,9 @@ const schema = afz.object({
 })
 
 const params = ref({})
+const colsNum = computed(() => Number(props.cols))
 </script>
 
 <template>
-  <div class="space-y-6">
-    <div class="space-y-2">
-      <p class="text-sm text-muted">
-        4 列布局
-      </p>
-      <MSearchForm v-model="params" :schema="schema" :cols="4" />
-    </div>
-    <div class="space-y-2">
-      <p class="text-sm text-muted">
-        2 列布局
-      </p>
-      <MSearchForm v-model="params" :schema="schema" :cols="2" />
-    </div>
-  </div>
+  <MSearchForm v-model="params" :schema="schema" :cols="colsNum" />
 </template>

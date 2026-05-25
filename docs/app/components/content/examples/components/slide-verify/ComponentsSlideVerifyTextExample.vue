@@ -1,14 +1,23 @@
 <script setup lang="ts">
+import type { IconProps } from '@nuxt/ui'
+
+defineProps<{
+  text: string
+  successText: string
+  icon: IconProps['name']
+  successIcon: IconProps['name']
+}>()
+
 const isVerified = ref(false)
 </script>
 
 <template>
   <MSlideVerify
     v-model="isVerified"
-    text="滑动解锁"
-    success-text="解锁成功"
-    icon="i-lucide-lock"
-    success-icon="i-lucide-unlock"
     class="w-sm"
+    :text
+    :success-text
+    :icon
+    :success-icon
   />
 </template>

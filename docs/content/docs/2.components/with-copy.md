@@ -22,6 +22,22 @@ seo:
 ::component-example
 ---
 name: 'components-with-copy-basic-example'
+options:
+  - name: 'size'
+    label: 'size'
+    items: ['xs', 'sm', 'md', 'lg', 'xl']
+    default: 'md'
+  - name: 'color'
+    label: 'color'
+    items: ['primary', 'secondary', 'success', 'info', 'warning', 'error', 'neutral']
+    default: 'primary'
+  - name: 'variant'
+    label: 'variant'
+    items: ['outline', 'soft', 'subtle', 'ghost', 'none']
+    default: 'outline'
+  - name: 'leadingIcon'
+    label: 'leadingIcon'
+    default: 'i-lucide-key'
 ---
 ::
 
@@ -32,6 +48,14 @@ name: 'components-with-copy-basic-example'
 ::component-example
 ---
 name: 'components-with-copy-icon-example'
+options:
+  - name: 'size'
+    label: 'size'
+    items: ['xs', 'sm', 'md', 'lg', 'xl']
+    default: 'md'
+  - name: 'leadingIcon'
+    label: 'leadingIcon'
+    default: 'i-lucide-key'
 ---
 ::
 
@@ -52,6 +76,14 @@ name: 'components-with-copy-custom-example'
 ::component-example
 ---
 name: 'components-with-copy-event-example'
+options:
+  - name: 'size'
+    label: 'size'
+    items: ['xs', 'sm', 'md', 'lg', 'xl']
+    default: 'md'
+  - name: 'leadingIcon'
+    label: 'leadingIcon'
+    default: 'i-lucide-clipboard'
 ---
 ::
 

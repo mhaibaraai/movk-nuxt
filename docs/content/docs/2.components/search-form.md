@@ -40,6 +40,11 @@ name: 'components-search-form-model-example'
 ::component-example
 ---
 name: 'components-search-form-cols-example'
+options:
+  - name: 'cols'
+    label: 'cols'
+    items: ['1', '2', '3', '4']
+    default: '4'
 ---
 ::
 

@@ -22,6 +22,19 @@ seo:
 ::component-example
 ---
 name: 'components-star-rating-basic-example'
+options:
+  - name: 'size'
+    label: 'size'
+    items: ['xs', 'sm', 'md', 'lg', 'xl']
+    default: 'md'
+  - name: 'color'
+    label: 'color'
+    items: ['primary', 'secondary', 'success', 'info', 'warning', 'error', 'neutral']
+    default: 'primary'
+  - name: 'clearable'
+    label: 'clearable'
+    items: ['true', 'false']
+    default: 'false'
 ---
 ::
 
@@ -32,6 +45,10 @@ name: 'components-star-rating-basic-example'
 ::component-example
 ---
 name: 'components-star-rating-max-example'
+options:
+  - name: 'max'
+    label: 'max'
+    default: '10'
 ---
 ::
 
@@ -42,6 +59,11 @@ name: 'components-star-rating-max-example'
 ::component-example
 ---
 name: 'components-star-rating-readonly-example'
+options:
+  - name: 'readonly'
+    label: 'readonly'
+    items: ['true', 'false']
+    default: 'true'
 ---
 ::
 
@@ -52,6 +74,11 @@ name: 'components-star-rating-readonly-example'
 ::component-example
 ---
 name: 'components-star-rating-half-example'
+options:
+  - name: 'allowHalf'
+    label: 'allowHalf'
+    items: ['true', 'false']
+    default: 'true'
 ---
 ::
 
@@ -62,6 +89,11 @@ name: 'components-star-rating-half-example'
 ::component-example
 ---
 name: 'components-star-rating-clearable-example'
+options:
+  - name: 'clearable'
+    label: 'clearable'
+    items: ['true', 'false']
+    default: 'true'
 ---
 ::
 
@@ -72,6 +104,11 @@ name: 'components-star-rating-clearable-example'
 ::component-example
 ---
 name: 'components-star-rating-badge-example'
+options:
+  - name: 'showBadge'
+    label: 'showBadge'
+    items: ['true', 'false']
+    default: 'true'
 ---
 ::
 
@@ -82,6 +119,11 @@ name: 'components-star-rating-badge-example'
 ::component-example
 ---
 name: 'components-star-rating-size-example'
+options:
+  - name: 'size'
+    label: 'size'
+    items: ['xs', 'sm', 'md', 'lg', 'xl']
+    default: 'md'
 ---
 ::
 
@@ -92,6 +134,11 @@ name: 'components-star-rating-size-example'
 ::component-example
 ---
 name: 'components-star-rating-color-example'
+options:
+  - name: 'color'
+    label: 'color'
+    items: ['primary', 'secondary', 'success', 'info', 'warning', 'error', 'neutral']
+    default: 'primary'
 ---
 ::
 
@@ -102,6 +149,20 @@ name: 'components-star-rating-color-example'
 ::component-example
 ---
 name: 'components-star-rating-icon-example'
+options:
+  - name: 'filledIcon'
+    label: 'filledIcon'
+    default: 'i-lucide-heart'
+  - name: 'emptyIcon'
+    label: 'emptyIcon'
+    default: 'i-lucide-heart'
+  - name: 'halfIcon'
+    label: 'halfIcon'
+    default: 'i-lucide-heart'
+  - name: 'color'
+    label: 'color'
+    items: ['primary', 'secondary', 'success', 'info', 'warning', 'error', 'neutral']
+    default: 'error'
 ---
 ::
 
@@ -135,6 +196,11 @@ name: 'components-star-rating-events-example'
 ::component-example
 ---
 name: 'components-star-rating-disabled-example'
+options:
+  - name: 'disabled'
+    label: 'disabled'
+    items: ['true', 'false']
+    default: 'true'
 ---
 ::
 

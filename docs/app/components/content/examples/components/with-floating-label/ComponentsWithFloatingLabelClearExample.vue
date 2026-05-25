@@ -1,4 +1,10 @@
 <script setup lang="ts">
+import type { InputProps } from '@nuxt/ui'
+
+defineProps<{
+  leadingIcon: InputProps['leadingIcon']
+}>()
+
 const toast = useToast()
 const email = ref('user@example.com')
 
@@ -12,5 +18,10 @@ function handleClear() {
 </script>
 
 <template>
-  <MWithFloatingLabel v-model="email" label="邮箱地址" leading-icon="i-lucide-mail" @clear="handleClear" />
+  <MWithFloatingLabel
+    v-model="email"
+    label="邮箱地址"
+    :leading-icon
+    @clear="handleClear"
+  />
 </template>

@@ -20,6 +20,11 @@ seo:
 ::component-example
 ---
 name: 'components-popconfirm-types-example'
+options:
+  - name: 'type'
+    label: 'type'
+    items: ['primary', 'info', 'success', 'warning', 'error', 'neutral']
+    default: 'neutral'
 ---
 ::
 
@@ -30,6 +35,11 @@ name: 'components-popconfirm-types-example'
 ::component-example
 ---
 name: 'components-popconfirm-basic-example'
+options:
+  - name: 'type'
+    label: 'type'
+    items: ['primary', 'info', 'success', 'warning', 'error', 'neutral']
+    default: 'neutral'
 ---
 ::
 
@@ -100,6 +110,11 @@ name: 'components-popconfirm-ui-example'
 ::component-example
 ---
 name: 'components-popconfirm-side-example'
+options:
+  - name: 'side'
+    label: 'side'
+    items: ['top', 'bottom', 'left', 'right']
+    default: 'top'
 ---
 ::
 

@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import type { PillItem } from '@movk/nuxt'
 
+defineProps<{
+  orientation: 'horizontal' | 'vertical'
+}>()
+
 const items: PillItem[] = [
   { value: 'free', label: '免费版', description: '基础功能 / 1 用户', icon: 'i-lucide-gift' },
   { value: 'pro', label: '专业版', description: '团队协作 / 10 用户', icon: 'i-lucide-zap' },
@@ -10,5 +14,9 @@ const value = ref<PillItem | undefined>(items[1])
 </script>
 
 <template>
-  <MPillGroup v-model="value" :items="items" orientation="vertical" />
+  <MPillGroup
+    v-model="value"
+    :items
+    :orientation
+  />
 </template>

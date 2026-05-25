@@ -93,3 +93,8 @@ pnpm clean
   ---
   ```
   中文 title/description 保持简洁（title 名词/动宾短语，description 一句话）；组件页另加 `category` 字段。此约定适用于所有内容阶段。
+
+- **docs 示例优先 options 化**：`::component-example` 演示同一 prop 不同取值时，用 `options:` 配合 `defineProps` 注入，避免硬编码多实例横排。
+  - 枚举/有限集合 → `items: [...]`（SelectMenu）；自由字符串/数字 → 省略 `items`（UInput，数字在示例内 `Number(...)` 转换）；`name` 以 `color` 结尾自动渲染色块
+  - 复杂对象 prop（`buttonProps` / `clearButtonProps` / `tooltipProps` / `ui` 等）与多组件组合（UFormField 嵌套、AutoForm schema）不纳入 options
+  - 示例 `.vue` 删除外层 `<div class="space-y-4 flex flex-col">` 等多实例容器；事件 / Toast 等副作用保留

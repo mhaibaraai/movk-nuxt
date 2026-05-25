@@ -22,6 +22,22 @@ seo:
 ::component-example
 ---
 name: 'components-with-floating-label-basic-example'
+options:
+  - name: 'size'
+    label: 'size'
+    items: ['xs', 'sm', 'md', 'lg', 'xl']
+    default: 'md'
+  - name: 'color'
+    label: 'color'
+    items: ['primary', 'secondary', 'success', 'info', 'warning', 'error', 'neutral']
+    default: 'primary'
+  - name: 'variant'
+    label: 'variant'
+    items: ['outline', 'soft', 'subtle', 'ghost', 'none']
+    default: 'outline'
+  - name: 'leadingIcon'
+    label: 'leadingIcon'
+    default: 'i-lucide-mail'
 ---
 ::
 
@@ -32,6 +48,14 @@ name: 'components-with-floating-label-basic-example'
 ::component-example
 ---
 name: 'components-with-floating-label-icon-example'
+options:
+  - name: 'size'
+    label: 'size'
+    items: ['xs', 'sm', 'md', 'lg', 'xl']
+    default: 'md'
+  - name: 'leadingIcon'
+    label: 'leadingIcon'
+    default: 'i-lucide-user'
 ---
 ::
 
@@ -42,6 +66,10 @@ name: 'components-with-floating-label-icon-example'
 ::component-example
 ---
 name: 'components-with-floating-label-clear-example'
+options:
+  - name: 'leadingIcon'
+    label: 'leadingIcon'
+    default: 'i-lucide-mail'
 ---
 ::
 

@@ -1,5 +1,11 @@
 <script setup lang="ts">
+import type { ButtonProps } from '@nuxt/ui'
 import type { PillItem } from '@movk/nuxt'
+
+defineProps<{
+  activeVariant: ButtonProps['variant']
+  inactiveVariant: ButtonProps['variant']
+}>()
 
 const items: PillItem[] = [
   { value: 'free', label: '免费版', icon: 'i-lucide-gift' },
@@ -10,9 +16,10 @@ const value = ref<PillItem | undefined>(items[1])
 </script>
 
 <template>
-  <div class="flex flex-col gap-3">
-    <MPillGroup v-model="value" :items="items" active-variant="solid" inactive-variant="outline" />
-    <MPillGroup v-model="value" :items="items" active-variant="subtle" inactive-variant="ghost" />
-    <MPillGroup v-model="value" :items="items" active-variant="outline" inactive-variant="link" />
-  </div>
+  <MPillGroup
+    v-model="value"
+    :items
+    :active-variant
+    :inactive-variant
+  />
 </template>

@@ -1,10 +1,17 @@
 <script setup lang="ts">
+import type { SemanticColor } from '@movk/nuxt'
+
+defineProps<{
+  type: SemanticColor
+}>()
+
 const result = ref('')
 </script>
 
 <template>
   <div class="flex flex-wrap items-center gap-3">
     <MPopconfirm
+      :type
       title="确认删除？"
       description="删除后数据将无法恢复。"
       :on-confirm="() => { result = '已确认删除' }"

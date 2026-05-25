@@ -22,6 +22,17 @@ seo:
 ::component-example
 ---
 name: 'components-with-character-limit-basic-example'
+options:
+  - name: 'size'
+    label: 'size'
+    items: ['xs', 'sm', 'md', 'lg', 'xl']
+    default: 'md'
+  - name: 'maxLength'
+    label: 'maxLength'
+    default: '50'
+  - name: 'leadingIcon'
+    label: 'leadingIcon'
+    default: 'i-lucide-message-square'
 ---
 ::
 
@@ -32,6 +43,17 @@ name: 'components-with-character-limit-basic-example'
 ::component-example
 ---
 name: 'components-with-character-limit-custom-example'
+options:
+  - name: 'maxLength'
+    label: 'maxLength'
+    default: '200'
+  - name: 'size'
+    label: 'size'
+    items: ['xs', 'sm', 'md', 'lg', 'xl']
+    default: 'md'
+  - name: 'leadingIcon'
+    label: 'leadingIcon'
+    default: 'i-lucide-message-square'
 ---
 ::
 
@@ -42,6 +64,17 @@ name: 'components-with-character-limit-custom-example'
 ::component-example
 ---
 name: 'components-with-character-limit-icon-example'
+options:
+  - name: 'size'
+    label: 'size'
+    items: ['xs', 'sm', 'md', 'lg', 'xl']
+    default: 'md'
+  - name: 'maxLength'
+    label: 'maxLength'
+    default: '100'
+  - name: 'leadingIcon'
+    label: 'leadingIcon'
+    default: 'i-lucide-message-square'
 ---
 ::
 
@@ -52,6 +85,14 @@ name: 'components-with-character-limit-icon-example'
 ::component-example
 ---
 name: 'components-with-character-limit-size-example'
+options:
+  - name: 'size'
+    label: 'size'
+    items: ['xs', 'sm', 'md', 'lg', 'xl']
+    default: 'md'
+  - name: 'maxLength'
+    label: 'maxLength'
+    default: '50'
 ---
 ::
 

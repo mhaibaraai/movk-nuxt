@@ -26,6 +26,10 @@ seo:
 ::component-example
 ---
 name: 'components-date-picker-basic-example'
+options:
+  - name: 'numberOfMonths'
+    label: 'numberOfMonths'
+    default: '1'
 ---
 ::
 
@@ -36,6 +40,10 @@ name: 'components-date-picker-basic-example'
 ::component-example
 ---
 name: 'components-date-picker-range-example'
+options:
+  - name: 'numberOfMonths'
+    label: 'numberOfMonths'
+    default: '2'
 ---
 ::
 
@@ -86,6 +94,10 @@ name: 'components-date-picker-format-example'
 ::component-example
 ---
 name: 'components-date-picker-months-example'
+options:
+  - name: 'numberOfMonths'
+    label: 'numberOfMonths'
+    default: '3'
 ---
 ::
 

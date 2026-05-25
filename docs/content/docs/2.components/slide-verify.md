@@ -22,6 +22,13 @@ seo:
 ::component-example
 ---
 name: 'components-slide-verify-basic-example'
+options:
+  - name: 'text'
+    label: 'text'
+    default: '请向右滑动验证'
+  - name: 'icon'
+    label: 'icon'
+    default: 'i-lucide-chevrons-right'
 ---
 ::
 
@@ -32,16 +39,34 @@ name: 'components-slide-verify-basic-example'
 ::component-example
 ---
 name: 'components-slide-verify-text-example'
+options:
+  - name: 'text'
+    label: 'text'
+    default: '滑动解锁'
+  - name: 'successText'
+    label: 'successText'
+    default: '解锁成功'
+  - name: 'icon'
+    label: 'icon'
+    default: 'i-lucide-lock'
+  - name: 'successIcon'
+    label: 'successIcon'
+    default: 'i-lucide-unlock'
 ---
 ::
 
 ## 自定义尺寸
 
-通过 `height` 和 `sliderWidth` 调整组件尺寸：
+通过 `size` 调整组件尺寸：
 
 ::component-example
 ---
 name: 'components-slide-verify-size-example'
+options:
+  - name: 'size'
+    label: 'size'
+    items: ['xs', 'sm', 'md', 'lg', 'xl']
+    default: 'md'
 ---
 ::
 
@@ -52,6 +77,11 @@ name: 'components-slide-verify-size-example'
 ::component-example
 ---
 name: 'components-slide-verify-disabled-example'
+options:
+  - name: 'disabled'
+    label: 'disabled'
+    items: ['true', 'false']
+    default: 'true'
 ---
 ::
 
@@ -62,6 +92,10 @@ name: 'components-slide-verify-disabled-example'
 ::component-example
 ---
 name: 'components-slide-verify-threshold-example'
+options:
+  - name: 'threshold'
+    label: 'threshold'
+    default: '0.7'
 ---
 ::
 

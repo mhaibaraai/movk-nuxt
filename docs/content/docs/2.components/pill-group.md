@@ -18,6 +18,19 @@ seo:
 ::component-example
 ---
 name: 'components-pill-group-basic-example'
+options:
+  - name: 'color'
+    label: 'color'
+    items: ['primary', 'secondary', 'success', 'info', 'warning', 'error', 'neutral']
+    default: 'primary'
+  - name: 'size'
+    label: 'size'
+    items: ['xs', 'sm', 'md', 'lg', 'xl']
+    default: 'md'
+  - name: 'orientation'
+    label: 'orientation'
+    items: ['horizontal', 'vertical']
+    default: 'horizontal'
 ---
 ::
 
@@ -28,6 +41,15 @@ name: 'components-pill-group-basic-example'
 ::component-example
 ---
 name: 'components-pill-group-structured-example'
+options:
+  - name: 'color'
+    label: 'color'
+    items: ['primary', 'secondary', 'success', 'info', 'warning', 'error', 'neutral']
+    default: 'primary'
+  - name: 'size'
+    label: 'size'
+    items: ['xs', 'sm', 'md', 'lg', 'xl']
+    default: 'md'
 ---
 ::
 
@@ -38,6 +60,11 @@ name: 'components-pill-group-structured-example'
 ::component-example
 ---
 name: 'components-pill-group-multiple-example'
+options:
+  - name: 'size'
+    label: 'size'
+    items: ['xs', 'sm', 'md', 'lg', 'xl']
+    default: 'md'
 ---
 ::
 
@@ -58,6 +85,11 @@ name: 'components-pill-group-constraint-example'
 ::component-example
 ---
 name: 'components-pill-group-deselectable-example'
+options:
+  - name: 'size'
+    label: 'size'
+    items: ['xs', 'sm', 'md', 'lg', 'xl']
+    default: 'md'
 ---
 ::
 
@@ -98,6 +130,11 @@ name: 'components-pill-group-disabled-example'
 ::component-example
 ---
 name: 'components-pill-group-vertical-example'
+options:
+  - name: 'orientation'
+    label: 'orientation'
+    items: ['horizontal', 'vertical']
+    default: 'vertical'
 ---
 ::
 
@@ -108,6 +145,15 @@ name: 'components-pill-group-vertical-example'
 ::component-example
 ---
 name: 'components-pill-group-variants-example'
+options:
+  - name: 'activeVariant'
+    label: 'activeVariant'
+    items: ['solid', 'outline', 'soft', 'subtle', 'ghost', 'link']
+    default: 'solid'
+  - name: 'inactiveVariant'
+    label: 'inactiveVariant'
+    items: ['solid', 'outline', 'soft', 'subtle', 'ghost', 'link']
+    default: 'outline'
 ---
 ::
 

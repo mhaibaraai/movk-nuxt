@@ -22,6 +22,11 @@ seo:
 ::component-example
 ---
 name: 'components-message-box-alert-example'
+options:
+  - name: 'type'
+    label: 'type'
+    items: ['primary', 'info', 'success', 'warning', 'error', 'neutral']
+    default: 'primary'
 ---
 ::
 
@@ -32,6 +37,11 @@ name: 'components-message-box-alert-example'
 ::component-example
 ---
 name: 'components-message-box-confirm-example'
+options:
+  - name: 'type'
+    label: 'type'
+    items: ['primary', 'info', 'success', 'warning', 'error', 'neutral']
+    default: 'warning'
 ---
 ::
 
@@ -69,6 +79,14 @@ options:
 ::component-example
 ---
 name: 'components-message-box-custom-icon-example'
+options:
+  - name: 'type'
+    label: 'type'
+    items: ['primary', 'info', 'success', 'warning', 'error', 'neutral']
+    default: 'warning'
+  - name: 'icon'
+    label: 'icon'
+    default: 'i-lucide-shield-alert'
 ---
 ::
 

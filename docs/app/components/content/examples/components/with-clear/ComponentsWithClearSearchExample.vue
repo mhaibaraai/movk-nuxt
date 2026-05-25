@@ -1,4 +1,11 @@
 <script setup lang="ts">
+import type { InputProps } from '@nuxt/ui'
+
+defineProps<{
+  size: InputProps['size']
+  leadingIcon: InputProps['leadingIcon']
+}>()
+
 const searchQuery = ref('')
 
 watch(searchQuery, (value) => {
@@ -9,8 +16,8 @@ watch(searchQuery, (value) => {
 <template>
   <MWithClear
     v-model="searchQuery"
-    leading-icon="i-lucide-search"
     placeholder="搜索..."
-    size="lg"
+    :size
+    :leading-icon
   />
 </template>
