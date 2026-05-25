@@ -91,7 +91,7 @@ toast: { success: false }
 // Shortcut text
 toast: { successMessage: 'Created!', errorMessage: 'Please try again' }
 
-// Full Toast props
+// Common Toast props
 toast: {
   success: { title: 'Created', icon: 'i-lucide-check', color: 'primary' },
   error:   { title: 'Failed',  color: 'error', timeout: 5000 }
