@@ -17,102 +17,68 @@ seo:
 
 ## 基础用法
 
-默认限制 50 个字符：
+默认限制 50 个字符，右侧实时显示已输入与上限：
 
-::component-example
+::component-code
 ---
-name: 'components-with-character-limit-basic-example'
-options:
-  - name: 'size'
-    label: 'size'
-    items: ['xs', 'sm', 'md', 'lg', 'xl']
-    default: 'md'
-  - name: 'maxLength'
-    label: 'maxLength'
-    default: '50'
-  - name: 'leadingIcon'
-    label: 'leadingIcon'
-    default: 'i-lucide-message-square'
+name: MWithCharacterLimit
+external: ['modelValue']
+hide: ['modelValue']
+props:
+  modelValue: 最多输入字符...
 ---
 ::
 
-## 自定义限制
+### `maxLength` 限制
 
 通过 `maxLength` 设置最大字符数：
 
-::component-example
+::component-code
 ---
-name: 'components-with-character-limit-custom-example'
-options:
-  - name: 'maxLength'
-    label: 'maxLength'
-    default: '200'
-  - name: 'size'
-    label: 'size'
-    items: ['xs', 'sm', 'md', 'lg', 'xl']
-    default: 'md'
-  - name: 'leadingIcon'
-    label: 'leadingIcon'
-    default: 'i-lucide-message-square'
+name: MWithCharacterLimit
+props:
+  maxLength: 10
 ---
 ::
 
-## 带图标
+### `leadingIcon` 图标
 
-为输入框添加语义化图标：
+通过 `leadingIcon` 为输入框添加语义化图标：
 
-::component-example
+::component-code
 ---
-name: 'components-with-character-limit-icon-example'
-options:
-  - name: 'size'
-    label: 'size'
-    items: ['xs', 'sm', 'md', 'lg', 'xl']
-    default: 'md'
-  - name: 'maxLength'
-    label: 'maxLength'
-    default: '100'
-  - name: 'leadingIcon'
-    label: 'leadingIcon'
-    default: 'i-lucide-message-square'
+name: MWithCharacterLimit
+props:
+  leadingIcon: i-lucide-message-square
 ---
 ::
 
-## 不同尺寸
+### `size` 尺寸
 
-支持多种尺寸：
+通过 `size` 切换输入框与计数器尺寸：
 
-::component-example
+::component-code
 ---
-name: 'components-with-character-limit-size-example'
-options:
-  - name: 'size'
-    label: 'size'
-    items: ['xs', 'sm', 'md', 'lg', 'xl']
-    default: 'md'
-  - name: 'maxLength'
-    label: 'maxLength'
-    default: '50'
+name: MWithCharacterLimit
+props:
+  size: md
+items:
+  size: ['xs', 'sm', 'md', 'lg', 'xl']
 ---
 ::
 
-## 自定义计数器样式
+### `ui` 样式
 
-通过 `counterClass` 自定义计数器样式：
+通过 `ui.counter` 自定义计数器样式：
 
-::component-example
+::component-code
 ---
-name: 'components-with-character-limit-counter-example'
----
-::
-
-## 表单场景
-
-在表单字段中限制输入长度：
-
-::component-example
----
-name: 'components-with-character-limit-form-example'
+name: MWithCharacterLimit
+prettier: true
+props:
+  maxLength: 100
+  ui:
+    counter: text-success
 ---
 ::
 

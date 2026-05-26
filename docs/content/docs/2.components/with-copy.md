@@ -17,73 +17,75 @@ seo:
 
 ## 基础用法
 
-最简单的复制功能输入框：
+右侧复制按钮一键复制内容到剪贴板：
 
-::component-example
+::component-code
 ---
-name: 'components-with-copy-basic-example'
-options:
-  - name: 'size'
-    label: 'size'
-    items: ['xs', 'sm', 'md', 'lg', 'xl']
-    default: 'md'
-  - name: 'color'
-    label: 'color'
-    items: ['primary', 'secondary', 'success', 'info', 'warning', 'error', 'neutral']
-    default: 'primary'
-  - name: 'variant'
-    label: 'variant'
-    items: ['outline', 'soft', 'subtle', 'ghost', 'none']
-    default: 'outline'
-  - name: 'leadingIcon'
-    label: 'leadingIcon'
-    default: 'i-lucide-key'
+name: MWithCopy
+external: ['modelValue']
+hide: ['modelValue']
+props:
+  modelValue: sk-1234567890abcdef
 ---
 ::
 
-## 带图标
+### `leadingIcon` 图标
 
-为输入框添加语义化图标：
+通过 `leadingIcon` 为输入框添加语义化图标：
 
-::component-example
+::component-code
 ---
-name: 'components-with-copy-icon-example'
-options:
-  - name: 'size'
-    label: 'size'
-    items: ['xs', 'sm', 'md', 'lg', 'xl']
-    default: 'md'
-  - name: 'leadingIcon'
-    label: 'leadingIcon'
-    default: 'i-lucide-key'
+name: MWithCopy
+props:
+  leadingIcon: i-lucide-key
 ---
 ::
 
-## 自定义样式
+### `size` 尺寸
+
+通过 `size` 切换输入框与复制按钮尺寸：
+
+::component-code
+---
+name: MWithCopy
+external: ['modelValue']
+hide: ['modelValue']
+props:
+  modelValue: ABC123XYZ
+  size: md
+items:
+  size: ['xs', 'sm', 'md', 'lg', 'xl']
+---
+::
+
+### `buttonProps`
 
 通过 `buttonProps` 自定义复制按钮样式：
 
-::component-example
+::component-code
 ---
-name: 'components-with-copy-custom-example'
+name: MWithCopy
+prettier: true
+props:
+  modelValue: ABC123XYZ
+  buttonProps:
+    variant: soft
+    color: primary
+items:
+  buttonProps.variant: ['solid', 'outline', 'soft', 'subtle', 'ghost', 'link']
+  buttonProps.color: ['primary', 'secondary', 'success', 'info', 'warning', 'error', 'neutral']
 ---
 ::
 
-## 复制事件
+## 示例
+
+### 复制事件
 
 通过 `@copy` 事件监听复制操作：
 
 ::component-example
 ---
-name: 'components-with-copy-event-example'
-options:
-  - name: 'size'
-    label: 'size'
-    items: ['xs', 'sm', 'md', 'lg', 'xl']
-    default: 'md'
-  - name: 'leadingIcon'
-    label: 'leadingIcon'
-    default: 'i-lucide-clipboard'
+name: ComponentsWithCopyEventExample
 ---
 ::
 

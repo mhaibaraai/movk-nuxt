@@ -17,79 +17,77 @@ seo:
 
 ## 基础用法
 
-最简单的浮动标签输入框：
+标签在空值时居中显示，聚焦或有内容时自动上浮：
 
-::component-example
+::component-code
 ---
-name: 'components-with-floating-label-basic-example'
-options:
-  - name: 'size'
-    label: 'size'
-    items: ['xs', 'sm', 'md', 'lg', 'xl']
-    default: 'md'
-  - name: 'color'
-    label: 'color'
-    items: ['primary', 'secondary', 'success', 'info', 'warning', 'error', 'neutral']
-    default: 'primary'
-  - name: 'variant'
-    label: 'variant'
-    items: ['outline', 'soft', 'subtle', 'ghost', 'none']
-    default: 'outline'
-  - name: 'leadingIcon'
-    label: 'leadingIcon'
-    default: 'i-lucide-mail'
+name: MWithFloatingLabel
+external: ['modelValue']
+hide: ['modelValue']
+props:
+  modelValue: test@example.com
+  label: 邮箱地址
 ---
 ::
 
-## 带图标
+### `leadingIcon` 图标
 
-为输入框添加前置图标：
+通过 `leadingIcon` 为输入框添加前置图标：
 
-::component-example
+::component-code
 ---
-name: 'components-with-floating-label-icon-example'
-options:
-  - name: 'size'
-    label: 'size'
-    items: ['xs', 'sm', 'md', 'lg', 'xl']
-    default: 'md'
-  - name: 'leadingIcon'
-    label: 'leadingIcon'
-    default: 'i-lucide-user'
+name: MWithFloatingLabel
+props:
+  label: 用户名
+  leadingIcon: i-lucide-user
 ---
 ::
 
-## 清除事件
+### `size` 尺寸
+
+通过 `size` 切换输入框与标签尺寸：
+
+::component-code
+---
+name: MWithFloatingLabel
+props:
+  label: 尺寸演示
+  size: md
+items:
+  size: ['xs', 'sm', 'md', 'lg', 'xl']
+---
+::
+
+### `clearButtonProps`
+
+::component-code
+---
+name: MWithFloatingLabel
+prettier: true
+external: ['modelValue']
+hide: ['modelValue']
+props:
+  modelValue: test@example.com
+  label: 邮箱地址
+  ui:
+    label: text-warning
+  clearButtonProps:
+    color: error
+    icon: i-lucide-x
+items:
+  clearButtonProps.color: ['primary', 'secondary', 'success', 'info', 'warning', 'error', 'neutral']
+---
+::
+
+## 示例
+
+### 清除事件
 
 通过 `@clear` 事件监听清除操作：
 
 ::component-example
 ---
-name: 'components-with-floating-label-clear-example'
-options:
-  - name: 'leadingIcon'
-    label: 'leadingIcon'
-    default: 'i-lucide-mail'
----
-::
-
-## 自定义样式
-
-通过 `labelClass` 和 `clearButtonProps` 自定义标签与清除按钮：
-
-::component-example
----
-name: 'components-with-floating-label-custom-example'
----
-::
-
-## 表单场景
-
-结合表单字段使用：
-
-::component-example
----
-name: 'components-with-floating-label-form-example'
+name: ComponentsWithFloatingLabelClearExample
 ---
 ::
 

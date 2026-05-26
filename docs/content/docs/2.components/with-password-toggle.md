@@ -17,83 +17,61 @@ seo:
 
 ## 基础用法
 
-最简单的密码切换输入框：
+右侧眼睛按钮在明文与密文间切换：
 
-::component-example
+::component-code
 ---
-name: 'components-with-password-toggle-basic-example'
-options:
-  - name: 'size'
-    label: 'size'
-    items: ['xs', 'sm', 'md', 'lg', 'xl']
-    default: 'md'
-  - name: 'color'
-    label: 'color'
-    items: ['primary', 'secondary', 'success', 'info', 'warning', 'error', 'neutral']
-    default: 'primary'
-  - name: 'variant'
-    label: 'variant'
-    items: ['outline', 'soft', 'subtle', 'ghost', 'none']
-    default: 'outline'
-  - name: 'leadingIcon'
-    label: 'leadingIcon'
-    default: 'i-lucide-lock'
+name: MWithPasswordToggle
+external: ['modelValue']
+hide: ['modelValue']
+props:
+  modelValue: 'hide-me'
 ---
 ::
 
-## 带图标
+### `leadingIcon` 图标
 
-为密码框添加锁的图标：
+通过 `leadingIcon` 为密码框添加语义化图标：
 
-::component-example
+::component-code
 ---
-name: 'components-with-password-toggle-icon-example'
-options:
-  - name: 'size'
-    label: 'size'
-    items: ['xs', 'sm', 'md', 'lg', 'xl']
-    default: 'md'
-  - name: 'leadingIcon'
-    label: 'leadingIcon'
-    default: 'i-lucide-lock'
+name: MWithPasswordToggle
+props:
+  leadingIcon: i-lucide-lock
 ---
 ::
 
-## 登录表单
+### `size` 尺寸
 
-结合表单字段使用：
+通过 `size` 切换输入框与按钮尺寸：
 
-::component-example
+::component-code
 ---
-name: 'components-with-password-toggle-login-example'
----
-::
-
-## 不同尺寸
-
-支持多种尺寸：
-
-::component-example
----
-name: 'components-with-password-toggle-size-example'
-options:
-  - name: 'size'
-    label: 'size'
-    items: ['xs', 'sm', 'md', 'lg', 'xl']
-    default: 'md'
-  - name: 'leadingIcon'
-    label: 'leadingIcon'
-    default: 'i-lucide-lock'
+name: MWithPasswordToggle
+props:
+  modelValue: Test@123
+  size: md
+items:
+  size: ['xs', 'sm', 'md', 'lg', 'xl']
 ---
 ::
 
-## 自定义按钮
+### `buttonProps`
 
 通过 `buttonProps` 自定义切换按钮样式：
 
-::component-example
+::component-code
 ---
-name: 'components-with-password-toggle-custom-example'
+name: MWithPasswordToggle
+prettier: true
+props:
+  modelValue: SecurePass123
+  buttonProps:
+    color: primary
+    variant: soft
+items:
+  buttonProps.color: ['primary', 'secondary', 'success', 'info', 'warning', 'error', 'neutral']
+  buttonProps.variant: ['primary', 'secondary', 'success', 'info', 'warning', 'error', 'neutral']
 ---
 ::
 

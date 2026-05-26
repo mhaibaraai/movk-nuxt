@@ -19,79 +19,66 @@ seo:
 
 `#` 代表数字占位符，默认掩码为 `### #### ####`、区号为 `+86`（中国大陆格式）。
 
-::component-example
+::component-code
 ---
-name: 'components-as-phone-number-input-basic-example'
-options:
-  - name: 'size'
-    label: 'size'
-    items: ['xs', 'sm', 'md', 'lg', 'xl']
-    default: 'md'
-  - name: 'mask'
-    label: 'mask'
-    items: ['### #### ####', '(###) ###-####', '#### ### ####', '###-####-####']
-    default: '### #### ####'
-  - name: 'dialCode'
-    label: 'dialCode'
-    items: ['+86', '+1', '+44', '+81']
-    default: '+86'
+name: MAsPhoneNumberInput
+external: ['modelValue']
+hide: ['modelValue']
+props:
+  modelValue: ''
 ---
 ::
 
-## 带区号
+### `dialCode` 区号
 
-通过 `dialCode` 展示区号前缀，配合自定义掩码使用：
+通过 `dialCode` 在输入框前展示国家或地区区号：
 
-::component-example
+::component-code
 ---
-name: 'components-as-phone-number-input-dial-code-example'
-options:
-  - name: 'size'
-    label: 'size'
-    items: ['xs', 'sm', 'md', 'lg', 'xl']
-    default: 'md'
-  - name: 'dialCode'
-    label: 'dialCode'
-    items: ['+86', '+1', '+44', '+81']
-    default: '+1'
-  - name: 'mask'
-    label: 'mask'
-    items: ['### #### ####', '(###) ###-####', '#### ### ####', '###-####-####']
-    default: '(###) ###-####'
+name: MAsPhoneNumberInput
+props:
+  dialCode: '+1'
+items:
+  dialCode: ['+86', '+1', '+44', '+81']
 ---
 ::
 
-## 自定义掩码
+### `mask` 掩码
 
-通过 `mask` prop 适配不同国家的号码格式：
+通过 `mask` 适配不同国家的号码格式，`#` 代表数字占位符：
 
-::component-example
+::component-code
 ---
-name: 'components-as-phone-number-input-mask-example'
-options:
-  - name: 'size'
-    label: 'size'
-    items: ['xs', 'sm', 'md', 'lg', 'xl']
-    default: 'md'
-  - name: 'mask'
-    label: 'mask'
-    items: ['### #### ####', '(###) ###-####', '#### ### ####', '###-####-####']
-    default: '(###) ###-####'
-  - name: 'dialCode'
-    label: 'dialCode'
-    items: ['+86', '+1', '+44', '+81']
-    default: '+1'
+name: MAsPhoneNumberInput
+props:
+  mask: '(###) ###-####'
+items:
+  mask: ['### #### ####', '(###) ###-####', '#### ### ####', '###-####-####']
 ---
 ::
 
-## 表单场景
+## 示例
 
-结合表单字段使用：
+### 融入分组控件
 
-::component-example
+与按钮置于 `UFieldGroup` 时共用尺寸、圆角和边框衔接，适合组合拨号操作：
+
+::component-code
 ---
-name: 'components-as-phone-number-input-form-example'
+name: UFieldGroup
+prettier: true
+props:
+  size: xs
+items:
+  size: ['xs', 'sm', 'md', 'lg', 'xl']
+slots:
+  default: |
+
+    <MAsPhoneNumberInput dial-code="+1" />
+    <UButton icon="i-lucide-phone-call" color="neutral" variant="subtle" />
 ---
+:m-as-phone-number-input{dial-code="+1"}
+:u-button{color="neutral" variant="subtle" icon="i-lucide-phone-call"}
 ::
 
 ## API

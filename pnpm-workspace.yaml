@@ -10,6 +10,5 @@ allowBuilds:
   unrs-resolver: false
   vue-demi: false
 
-overrides:
-  '@nuxt/content': ^3.14.0
-  '@movk/core': https://pkg.pr.new/@movk/core@e58648f
+minimumReleaseAgeExclude:
+  - '@movk/nuxt-docs@1.19.3'

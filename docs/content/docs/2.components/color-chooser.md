@@ -9,7 +9,7 @@ seo:
 
 ## 简介
 
-`MColorChooser` 是一个可视化的颜色选择器组件，提供直观的颜色拾取界面。用户可以通过色盘、HSL 滑块等方式选择颜色，支持多种颜色格式输出。
+`MColorChooser` 是一个可视化的颜色选择器组件。提供色盘与 HSL 滑块取色，支持自定义触发器形态、预设色板、复制与清除，并将值同步为 hex、rgb 或 hsl 三种格式之一。
 
 ::callout{color="neutral" to="https://ui.nuxt.com/docs/components/color-picker"}
 基于 Nuxt UI 的 ColorPicker 组件封装
@@ -17,68 +17,205 @@ seo:
 
 ## 基础用法
 
-最简单的颜色选择器：
+默认按钮触发器展示当前色值，点击打开 popover 后从面板选择并同步 v-model：
 
-::component-example
+::component-code
 ---
-name: 'components-color-chooser-basic-example'
-options:
-  - name: 'format'
-    label: 'format'
-    items: ['hex', 'rgb', 'hsl']
-    default: 'hex'
-  - name: 'color'
-    label: 'color'
-    items: ['primary', 'secondary', 'success', 'info', 'warning', 'error', 'neutral']
-    default: 'primary'
-  - name: 'variant'
-    label: 'variant'
-    items: ['solid', 'outline', 'soft', 'subtle', 'ghost', 'link']
-    default: 'outline'
+name: MColorChooser
+external: ['modelValue']
+hide: ['modelValue']
+props:
+  modelValue: '#0ea5e9'
 ---
 ::
 
-## 颜色格式
+### 继承字段上下文
 
-通过 `format` 指定颜色输出格式，在表单中选择颜色配置：
+放入 `UFormField` 后继承 `size` 与错误态，触发器按表单状态渲染：
 
-::component-example
+::component-code
 ---
-name: 'components-color-chooser-format-example'
-options:
-  - name: 'format'
-    label: 'format'
-    items: ['hex', 'rgb', 'hsl']
-    default: 'hex'
+name: UFormField
+prettier: true
+props:
+  label: 品牌色
+  size: xs
+  error: 示例错误态
+slots:
+  default: |
+
+    <MColorChooser />
+---
+:m-color-chooser
+::
+
+### 融入分组控件
+
+与按钮置于 `UFieldGroup` 时共用尺寸、圆角和边框衔接，适合表单行内取色：
+
+::component-code
+---
+name: UFieldGroup
+prettier: true
+props:
+  size: xs
+items:
+  size: ['xs', 'sm', 'md', 'lg', 'xl']
+slots:
+  default: |
+
+    <MColorChooser trigger="input" />
+    <UButton icon="i-lucide-pipette" color="neutral" variant="subtle" />
+---
+:m-color-chooser{trigger="input"}
+:u-button{color="neutral" variant="subtle" icon="i-lucide-pipette"}
+::
+
+### 切换颜色输出格式
+
+在 popover 顶部切换 `hex`、`rgb`、`hsl`，当前值会转换为对应格式：
+
+::component-code
+---
+name: MColorChooser
+external: ['modelValue']
+hide: ['modelValue']
+props:
+  modelValue: '#22c55e'
+  formats: ['hex', 'rgb', 'hsl']
 ---
 ::
 
-## 自定义按钮
+### 单组预设色板
 
-通过 `color`、`variant` 等 `UButton` 同名 props 直接调整触发按钮样式：
+一维 `swatches` 渲染为连续色板，点击色块选中颜色并默认关闭弹层：
 
-::component-example
+::component-code
 ---
-name: 'components-color-chooser-button-example'
-options:
-  - name: 'color'
-    label: 'color'
-    items: ['primary', 'secondary', 'success', 'info', 'warning', 'error', 'neutral']
-    default: 'primary'
-  - name: 'variant'
-    label: 'variant'
-    items: ['solid', 'outline', 'soft', 'subtle', 'ghost', 'link']
-    default: 'outline'
+name: MColorChooser
+prettier: true
+external: ['modelValue']
+hide: ['modelValue']
+props:
+  modelValue: '#ef4444'
+  swatches:
+    - '#ef4444'
+    - '#f97316'
+    - '#f59e0b'
+    - '#eab308'
+    - '#84cc16'
+    - '#22c55e'
+    - '#10b981'
+    - '#14b8a6'
+    - '#06b6d4'
+    - '#0ea5e9'
+    - '#3b82f6'
+    - '#6366f1'
+    - '#8b5cf6'
+    - '#a855f7'
+    - '#d946ef'
+    - '#ec4899'
 ---
 ::
 
-## 自定义插槽
+### 分组预设色板
 
-使用默认插槽自定义触发元素：
+二维 `swatches` 按行分组展示色相与中性色，`closeOnSwatch` 控制选择后是否关闭：
+
+::component-code
+---
+name: MColorChooser
+prettier: true
+external: ['modelValue']
+hide: ['modelValue']
+props:
+  modelValue: '#3b82f6'
+  closeOnSwatch: false
+  swatches:
+    - ['#ef4444', '#f97316', '#f59e0b', '#eab308', '#84cc16', '#22c55e', '#10b981', '#14b8a6']
+    - ['#06b6d4', '#0ea5e9', '#3b82f6', '#6366f1', '#8b5cf6', '#a855f7', '#d946ef', '#ec4899']
+    - ['#0a0a0a', '#404040', '#737373', '#a3a3a3', '#d4d4d4', '#e5e5e5', '#f5f5f5', '#ffffff']
+---
+::
+
+### 色点触发器
+
+`trigger` 设为 `chip` 后只渲染紧凑色块，适合工具栏、表格单元格等空间受限场景：
+
+::component-code
+---
+name: MColorChooser
+external: ['modelValue']
+hide: ['modelValue']
+props:
+  modelValue: '#f59e0b'
+  trigger: chip
+items:
+  trigger: ['button', 'chip', 'input']
+---
+::
+
+### 输入型触发器
+
+`trigger` 设为 `input` 后提供色点与文本输入，blur 时校验 hex 并同步有效色值：
+
+::component-code
+---
+name: MColorChooser
+external: ['modelValue']
+hide: ['modelValue']
+props:
+  modelValue: '#10b981'
+  trigger: input
+  clearable: true
+  copyable: true
+---
+::
+
+### 禁用交互状态
+
+`disabled` 阻止 popover 打开，`input` 触发器进入只读状态，当前值保持可展示：
+
+::component-code
+---
+name: MColorChooser
+external: ['modelValue']
+hide: ['modelValue']
+props:
+  modelValue: '#6b7280'
+  disabled: true
+---
+::
+
+## 示例
+
+### 自定义触发器渲染
+
+`default` 插槽可完全接管触发器外观，同时通过 `open` 与 `value` slot props 保持弹层状态可见：
 
 ::component-example
 ---
-name: 'components-color-chooser-slot-example'
+name: ComponentsColorChooserSlotExample
+---
+::
+
+### 复制与清除操作
+
+`copyable` 与 `clearable` 启用底部 actions 区，复制、清除与值变化都会触发对应事件：
+
+::component-example
+---
+name: ComponentsColorChooserActionsExample
+---
+::
+
+### 覆盖内部样式插槽
+
+`ui` 可定制色板网格与色块尺寸，不影响取色、复制和清除机制：
+
+::component-example
+---
+name: ComponentsColorChooserUiExample
 ---
 ::
 
@@ -86,15 +223,15 @@ name: 'components-color-chooser-slot-example'
 
 ### Props
 
-:component-props{slug=MColorChooser}
+:component-props{slug="MColorChooser"}
 
 ### Emits
 
-:component-emits{slug=MColorChooser}
+:component-emits{slug="MColorChooser"}
 
 ### Slots
 
-:component-slots{slug=MColorChooser}
+:component-slots{slug="MColorChooser"}
 
 ## Theme
 

@@ -17,91 +17,78 @@ seo:
 
 ## 基础用法
 
-最简单的清除功能输入框：
+有内容时右侧自动显示清除按钮：
 
-::component-example
+::component-code
 ---
-name: 'components-with-clear-basic-example'
-options:
-  - name: 'size'
-    label: 'size'
-    items: ['xs', 'sm', 'md', 'lg', 'xl']
-    default: 'md'
-  - name: 'color'
-    label: 'color'
-    items: ['primary', 'secondary', 'success', 'info', 'warning', 'error', 'neutral']
-    default: 'primary'
-  - name: 'variant'
-    label: 'variant'
-    items: ['outline', 'soft', 'subtle', 'ghost', 'none']
-    default: 'outline'
-  - name: 'leadingIcon'
-    label: 'leadingIcon'
-    default: 'i-lucide-user'
+name: MWithClear
+external: ['modelValue']
+hide: ['modelValue']
+props:
+  modelValue: 张三
 ---
 ::
 
-## 带图标
+### `leadingIcon` 图标
 
-为输入框添加语义化图标：
+通过 `leadingIcon` 为输入框添加语义化图标：
 
-::component-example
+::component-code
 ---
-name: 'components-with-clear-icon-example'
-options:
-  - name: 'size'
-    label: 'size'
-    items: ['xs', 'sm', 'md', 'lg', 'xl']
-    default: 'md'
-  - name: 'leadingIcon'
-    label: 'leadingIcon'
-    default: 'i-lucide-mail'
+name: MWithClear
+external: ['modelValue']
+hide: ['modelValue']
+props:
+  modelValue: user@example.com
+  leadingIcon: i-lucide-mail
 ---
 ::
 
-## 搜索框
+### `size` 尺寸
 
-常用于搜索场景，快速清除搜索关键词：
+通过 `size` 切换输入框与清除按钮尺寸：
 
-::component-example
+::component-code
 ---
-name: 'components-with-clear-search-example'
-options:
-  - name: 'size'
-    label: 'size'
-    items: ['xs', 'sm', 'md', 'lg', 'xl']
-    default: 'lg'
-  - name: 'leadingIcon'
-    label: 'leadingIcon'
-    default: 'i-lucide-search'
+name: MWithClear
+external: ['modelValue']
+hide: ['modelValue']
+props:
+  modelValue: 内容
+  size: md
+items:
+  size: ['xs', 'sm', 'md', 'lg', 'xl']
 ---
 ::
 
-## 清除事件
+### `buttonProps`
+
+通过 `buttonProps` 自定义清除按钮样式：
+
+::component-code
+---
+name: MWithClear
+prettier: true
+external: ['modelValue']
+hide: ['modelValue']
+props:
+  modelValue: 一些内容
+  buttonProps:
+    color: error
+    icon: i-lucide-x
+---
+::
+
+
+## 示例
+
+### 清除事件
 
 通过 `@clear` 事件监听清除操作：
 
 ::component-example
 ---
-name: 'components-with-clear-event-example'
-options:
-  - name: 'size'
-    label: 'size'
-    items: ['xs', 'sm', 'md', 'lg', 'xl']
-    default: 'md'
-  - name: 'leadingIcon'
-    label: 'leadingIcon'
-    default: 'i-lucide-search'
----
-::
-
-## 自定义按钮
-
-通过 `buttonProps` 自定义清除按钮样式：
-
-::component-example
----
-name: 'components-with-clear-custom-example'
+name: ComponentsWithClearEventExample
 ---
 ::
 

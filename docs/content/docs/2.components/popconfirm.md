@@ -7,114 +7,113 @@ seo:
   description: A popover-based confirmation component for guarding actions, with async confirm and custom content.
 ---
 
+## 简介
+
 `MPopconfirm` 是一个气泡式确认组件，在用户执行危险或不可逆操作前弹出确认气泡。支持同步与异步确认回调，并完整透传 `UPopover` 的所有定位参数。
 
 ::callout{color="neutral" to="https://ui.nuxt.com/docs/components/popover"}
 基于 Nuxt UI 的 Popover 组件封装
 ::
 
-## 类型
-
-通过 `type` 属性设置语义化颜色主题，影响标题图标和颜色：
-
-::component-example
----
-name: 'components-popconfirm-types-example'
-options:
-  - name: 'type'
-    label: 'type'
-    items: ['primary', 'info', 'success', 'warning', 'error', 'neutral']
-    default: 'neutral'
----
-::
-
 ## 基础用法
 
-将触发元素放入默认 slot，通过 `:on-confirm` 传入确认回调，`@cancel` 监听取消事件：
+将触发元素放入默认插槽，通过 `:on-confirm` 传入确认回调，`@cancel` 监听取消事件：
 
 ::component-example
 ---
-name: 'components-popconfirm-basic-example'
-options:
-  - name: 'type'
-    label: 'type'
-    items: ['primary', 'info', 'success', 'warning', 'error', 'neutral']
-    default: 'neutral'
+name: ComponentsPopconfirmBasicExample
 ---
 ::
 
-## 异步确认
+### 按 type 呈现确认语义
+
+`primary`、`info`、`success`、`warning`、`error`、`neutral` 影响图标、按钮颜色和弹层语气：
+
+::component-example
+---
+name: ComponentsPopconfirmTypesExample
+---
+::
+
+### 异步确认
 
 `:on-confirm` 支持返回 `Promise`，期间确认按钮自动进入 loading 状态，成功后自动关闭弹层：
 
 ::component-example
 ---
-name: 'components-popconfirm-async-example'
+name: ComponentsPopconfirmAsyncExample
 ---
 ::
 
-## 自定义外观
+### 自定义外观
 
 通过 `icon`、`confirmButton`、`cancelButton` 自定义图标和按钮：
 
 ::component-example
 ---
-name: 'components-popconfirm-custom-example'
+name: ComponentsPopconfirmCustomExample
 ---
 ::
 
-## 禁用取消按钮
+### 禁用取消按钮
 
 `:cancel-button="false"` 隐藏取消按钮，强制用户完成确认：
 
 ::component-example
 ---
-name: 'components-popconfirm-no-cancel-example'
+name: ComponentsPopconfirmNoCancelExample
 ---
 ::
 
-## 错误处理
+### 自定义内容
 
-当 `onConfirm` 回调抛出异常时，弹层保持打开并触发 `@error` 事件，可在此处展示错误反馈：
+使用 `body` 插槽插入任意内容，`description` 传空字符串可隐藏默认描述区：
 
 ::component-example
 ---
-name: 'components-popconfirm-error-example'
+name: ComponentsPopconfirmSlotExample
 ---
 ::
 
-## 自定义内容
-
-使用 `body` slot 插入任意内容，`description` 传空字符串可隐藏默认描述区：
-
-::component-example
----
-name: 'components-popconfirm-slot-example'
----
-::
-
-## 样式定制
+### 样式定制
 
 通过 `ui` 属性覆盖内部各区块的 class，支持 `title`、`description`、`footer`、`content` 等：
 
 ::component-example
 ---
-name: 'components-popconfirm-ui-example'
+name: ComponentsPopconfirmUiExample
 ---
 ::
 
-## 弹出方向
+### 弹出方向
 
 透传 `content` 属性给底层 `UPopover`，支持 `top`、`bottom`、`left`、`right` 四个方向：
 
 ::component-example
 ---
-name: 'components-popconfirm-side-example'
-options:
-  - name: 'side'
-    label: 'side'
-    items: ['top', 'bottom', 'left', 'right']
-    default: 'top'
+name: ComponentsPopconfirmSideExample
+---
+::
+
+## 示例
+
+### 错误处理
+
+当 `onConfirm` 回调抛出异常时，弹层保持打开并触发 `@error` 事件，可在此处展示错误反馈：
+
+::component-example
+---
+name: ComponentsPopconfirmErrorExample
+---
+::
+
+### 事件回调
+
+同步确认 / 取消、异步确认与异常依次触发 `confirm`、`cancel` 与 `error`：
+
+::component-example
+---
+name: ComponentsPopconfirmEventsExample
 ---
 ::
 

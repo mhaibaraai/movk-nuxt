@@ -14,7 +14,7 @@ export type {
   LabelFormat,
   ValueFormat
 } from './date-picker'
-export type { MessageBoxEmits, MessageBoxProps } from './message-box'
+export type { MessageBoxEmits, MessageBoxProps, MessageBoxSlots } from './message-box'
 export type { PopconfirmEmits, PopconfirmProps, PopconfirmSlots } from './popconfirm'
 export type { SlideVerifyEmits, SlideVerifyProps, SlideVerifySlots } from './slide-verify'
 export type { StarRatingEmits, StarRatingProps } from './star-rating'
