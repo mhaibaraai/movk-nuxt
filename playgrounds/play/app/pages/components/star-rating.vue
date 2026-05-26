@@ -74,7 +74,7 @@ function clearLog() {
       </UFormField>
     </Showcase>
 
-    <Showcase title="融入分组控件" description="评分控件与重置按钮共享 UFieldGroup 尺寸，适合在紧凑表单行内组合操作。" :state="{ value: fieldGroupRating }">
+    <Showcase title="融入`UFieldGroup`" description="评分控件与重置按钮共享 UFieldGroup 尺寸，适合在紧凑表单行内组合操作。" :state="{ value: fieldGroupRating }">
       <UFieldGroup size="xs" class="w-full">
         <MStarRating v-model="fieldGroupRating" />
         <UButton icon="i-lucide-rotate-ccw" color="neutral" variant="subtle" @click="fieldGroupRating = 0" />

@@ -94,7 +94,7 @@ pnpm clean
   ```
   中文 title/description 保持简洁（title 名词/动宾短语，description 一句话）；组件页另加 `category` 字段。此约定适用于所有内容阶段。
 
-- `::component-code` 用于组件的基础用法、`::component-example` 用于组件的组合示例
-  - 基础用法下内容使用 ### 前缀，示例下使用 ## 前缀
+- `::component-code` 用于组件的用法、`::component-example` 用于组件的示例
+  - 基础用法中内容使用 ### 前缀，示例中使用 ## 前缀，基础用户列举了组件的 `props` 参数，标题格式（如 '## `size` 尺寸'）
   - props 如果包含多层级，需要添加 `prettier: true`
   - 字符串不需要添加 ''

@@ -15,7 +15,7 @@ seo:
 基于 Nuxt UI 的 Input 组件封装
 ::
 
-## 基础用法
+## 用法
 
 有内容时右侧自动显示清除按钮：
 
@@ -29,7 +29,7 @@ props:
 ---
 ::
 
-### `leadingIcon` 图标
+### `leadingIcon` 前置图标
 
 通过 `leadingIcon` 为输入框添加语义化图标：
 
@@ -61,7 +61,7 @@ items:
 ---
 ::
 
-### `buttonProps`
+### `buttonProps` 清除按钮
 
 通过 `buttonProps` 自定义清除按钮样式：
 

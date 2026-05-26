@@ -15,7 +15,7 @@ seo:
 基于 Nuxt UI 的 Input 组件封装
 ::
 
-## 基础用法
+## 用法
 
 右侧复制按钮一键复制内容到剪贴板：
 
@@ -29,7 +29,7 @@ props:
 ---
 ::
 
-### `leadingIcon` 图标
+### `leadingIcon` 前置图标
 
 通过 `leadingIcon` 为输入框添加语义化图标：
 
@@ -58,7 +58,7 @@ items:
 ---
 ::
 
-### `buttonProps`
+### `buttonProps` 复制按钮
 
 通过 `buttonProps` 自定义复制按钮样式：
 

@@ -15,7 +15,7 @@ seo:
 基于 Nuxt UI 的 Input 组件封装
 ::
 
-## 基础用法
+## 用法
 
 默认限制 50 个字符，右侧实时显示已输入与上限：
 
@@ -29,7 +29,7 @@ props:
 ---
 ::
 
-### `maxLength` 限制
+### `maxLength` 字符上限
 
 通过 `maxLength` 设置最大字符数：
 
@@ -41,7 +41,7 @@ props:
 ---
 ::
 
-### `leadingIcon` 图标
+### `leadingIcon` 前置图标
 
 通过 `leadingIcon` 为输入框添加语义化图标：
 

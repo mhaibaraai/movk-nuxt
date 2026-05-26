@@ -19,7 +19,7 @@ seo:
 `MThemePicker` 属于主题模块的一部分。若将 [`movk.theme.enabled`](/docs/getting-started/configuration#theme) 设为 `false`，该组件将不会被注册。
 ::
 
-## 基础用法
+## 用法
 
 `MThemePicker` 通常作为全局主题配置入口，放置在应用头部或工具栏：
 

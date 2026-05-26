@@ -14,7 +14,6 @@ async function handleSubmit() {
       title="确认提交？"
       description="提交后将立即生效，请确认操作。"
       :on-confirm="handleSubmit"
-      @confirm="result = '提交成功'"
     >
       <UButton color="primary" label="提交申请" icon="i-lucide-send" />
     </MPopconfirm>

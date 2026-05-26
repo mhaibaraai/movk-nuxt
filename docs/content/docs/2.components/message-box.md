@@ -15,7 +15,7 @@ seo:
 基于 Nuxt UI 的 Modal 组件封装
 ::
 
-## 基础用法
+## 用法
 
 `default` 插槽放置触发元素，组件内部由 `UModal` 自动管理打开状态：
 
@@ -128,7 +128,7 @@ slots:
 :u-button{variant="outline" label="文案覆盖"}
 ::
 
-### `buttonProps`
+### `buttonProps` 按钮属性
 
 `confirmButton` 与 `cancelButton` 接收完整 `ButtonProps`，可定制 icon、color、variant 与 label：
 

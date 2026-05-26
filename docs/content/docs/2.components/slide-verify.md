@@ -15,7 +15,7 @@ seo:
 使用 [Motion](https://motion.dev/) 动画库提供拖拽交互与状态转换动画
 ::
 
-## 基础用法
+## 用法
 
 按住滑块并向右拖动至阈值即可通过验证：
 
@@ -26,9 +26,82 @@ external: ['modelValue']
 hide: ['modelValue']
 props:
   modelValue: false
-  class: w-sm
 ---
 ::
+
+### `threshold` 通过阈值
+
+`threshold` 决定拖动占比达到多少判定通过，默认 `0.9`，调低可放宽校验：
+
+::component-code
+---
+name: MSlideVerify
+props:
+  class: w-sm
+  threshold: 0.5
+  text: 拖到一半即可
+---
+::
+
+### `text` 提示文案
+
+`text` 设定待验证提示，`successText` 设定通过后的文案：
+
+::component-code
+---
+name: MSlideVerify
+prettier: true
+props:
+  class: w-sm
+  text: 按住并向右拖动
+  successText: 人机校验已通过
+---
+::
+
+### `icon` 滑块图标
+
+`icon` 设定待验证图标，`successIcon` 设定通过后的图标：
+
+::component-code
+---
+name: MSlideVerify
+prettier: true
+props:
+  class: w-sm
+  icon: i-lucide-arrow-right
+  successIcon: i-lucide-shield-check
+---
+::
+
+### `size` 尺寸
+
+通过 `size` 调整组件尺寸：
+
+::component-code
+---
+name: MSlideVerify
+props:
+  class: w-sm
+  size: md
+items:
+  size: ['xs', 'sm', 'md', 'lg', 'xl']
+---
+::
+
+### `disabled` 禁用状态
+
+`disabled` 冻结滑块，光标不可拖动且保持当前未验证态：
+
+::component-code
+---
+name: MSlideVerify
+props:
+  class: w-sm
+  disabled: true
+---
+::
+
+## 示例
 
 ### 继承字段上下文
 
@@ -50,7 +123,7 @@ slots:
 :m-slide-verify
 ::
 
-### 融入分组控件
+### 融入`UFieldGroup`
 
 与重置按钮组合时共享 `UFieldGroup` 尺寸，滑块区域和按钮保持统一高度：
 
@@ -71,80 +144,6 @@ slots:
 :m-slide-verify{class="flex-1"}
 :u-button{color="neutral" variant="subtle" icon="i-lucide-rotate-ccw"}
 ::
-
-### 调整通过阈值
-
-`threshold` 决定拖动占比达到多少判定通过，默认 `0.9`，调低可放宽校验：
-
-::component-code
----
-name: MSlideVerify
-props:
-  class: w-sm
-  threshold: 0.5
-  text: 拖到一半即可
----
-::
-
-### 自定义提示文案
-
-`text` 设定待验证提示，`successText` 设定通过后的文案：
-
-::component-code
----
-name: MSlideVerify
-prettier: true
-props:
-  class: w-sm
-  text: 按住并向右拖动
-  successText: 人机校验已通过
----
-::
-
-### 替换滑块图标
-
-`icon` 设定待验证图标，`successIcon` 设定通过后的图标：
-
-::component-code
----
-name: MSlideVerify
-prettier: true
-props:
-  class: w-sm
-  icon: i-lucide-arrow-right
-  successIcon: i-lucide-shield-check
----
-::
-
-### 不同尺寸
-
-通过 `size` 调整组件尺寸：
-
-::component-code
----
-name: MSlideVerify
-props:
-  class: w-sm
-  size: md
-items:
-  size: ['xs', 'sm', 'md', 'lg', 'xl']
----
-::
-
-### 禁用滑动验证
-
-`disabled` 冻结滑块，光标不可拖动且保持当前未验证态：
-
-::component-code
----
-name: MSlideVerify
-props:
-  class: w-sm
-  disabled: true
----
-::
-
-## 示例
 
 ### 自定义滑块内容
 

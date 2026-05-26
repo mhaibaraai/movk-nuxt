@@ -13,7 +13,7 @@ seo:
 
 复用 AutoForm 的底层基础设施（schema 内省、控件映射、字段渲染器），通过 Zod schema 定义搜索字段。
 
-## 基础用法
+## 用法
 
 按 AutoForm schema 渲染字段，`cols` 控制栅格，内置搜索与重置按钮：
 
@@ -23,7 +23,7 @@ name: ComponentsSearchFormBasicExample
 ---
 ::
 
-### v-model 绑定
+### `v-model` 绑定
 
 通过 `v-model` 双向绑定表单数据。传入的初始值会被组件记录为重置基准——点击「重置」按钮时恢复到初始值而非清空：
 
@@ -33,7 +33,7 @@ name: ComponentsSearchFormModelExample
 ---
 ::
 
-### 多列布局
+### `cols` 多列布局
 
 通过 `cols` 属性控制网格列数：
 
@@ -43,7 +43,7 @@ name: ComponentsSearchFormColsExample
 ---
 ::
 
-### 折叠行为
+### `visibleRows` 折叠行为
 
 通过 `visibleRows` 控制可见行数，`defaultExpanded` 设置默认展开状态：
 
@@ -53,7 +53,7 @@ name: ComponentsSearchFormExpandExample
 ---
 ::
 
-### 响应式列数
+### `cols` 响应式列数
 
 `cols` 接收断点对象，列数随窗口宽度在 `sm`、`md`、`lg`、`xl` 间切换：
 
@@ -63,7 +63,7 @@ name: ComponentsSearchFormResponsiveExample
 ---
 ::
 
-### 自定义 actions
+### `actions` 操作按钮
 
 通过 `actions` 数组扩展或裁剪按钮：
 

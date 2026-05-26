@@ -19,15 +19,121 @@ seo:
 使用 `@internationalized/date` 库进行日期处理，确保时区安全和国际化支持。
 ::
 
-## 基础用法
+## 用法
 
 默认按钮触发器展示当前日期，点击打开日历面板后选择并写入 v-model：
 
 ::component-code
 ---
 name: MDatePicker
+external: ['modelValue']
+hide: ['modelValue']
+props:
+  modelValue: ''
 ---
 ::
+
+### `range` 日期范围
+
+`range` 模式维护 `start` / `end` 两端日期，`numberOfMonths` 可同时展示双月日历：
+
+::component-code
+---
+name: MDatePicker
+external: ['modelValue']
+hide: ['modelValue']
+props:
+  modelValue: ''
+  range: true
+  numberOfMonths: 2
+items:
+  range: [true, false]
+---
+::
+
+### `numberOfMonths` 月份数量
+
+`numberOfMonths` 控制弹层内并排展示的月份数量，便于跨月选择：
+
+::component-code
+---
+name: MDatePicker
+props:
+  numberOfMonths: 3
+items:
+  numberOfMonths: [1, 2, 3]
+---
+::
+
+### `clearable` 可清空
+
+`clearable` 在已有值时显示清除入口，点击后重置且不展开日历：
+
+::component-code
+---
+name: MDatePicker
+props:
+  clearable: true
+---
+::
+
+### `presets` 快捷预设
+
+`presets` 设为 `default` 会按当前模式自动生成「今天」「本周」「本月」等快捷项：
+
+::component-code
+---
+name: MDatePicker
+hide: ['placeholder', 'presets']
+props:
+  range: true
+  presets: default
+  placeholder: 选择范围
+items:
+  range: [true, false]
+---
+::
+
+### `multiple` 多日期选择
+
+`multiple` 模式将多个日期保存在数组中，按钮文案可根据已选数量动态展示：
+
+::component-code
+---
+name: MDatePicker
+prettier: true
+props:
+  multiple: true
+  buttonProps:
+    label: 选择多个日期
+    color: primary
+items:
+  multiple: [true, false]
+  buttonProps.color: ['primary', 'info', 'success', 'warning', 'error', 'neutral']
+---
+::
+
+### `buttonProps` 触发按钮
+
+`buttonProps` 透传给触发按钮，可调整 label、color、variant 与 icon：
+
+::component-code
+---
+name: MDatePicker
+prettier: true
+props:
+  buttonProps:
+    label: 选择生日
+    color: primary
+    variant: outline
+    icon: i-lucide-cake
+items:
+  buttonProps.color: ['primary', 'info', 'success', 'warning', 'error', 'neutral']
+  buttonProps.variant: ['solid', 'outline', 'soft', 'subtle', 'ghost', 'link']
+---
+::
+
+## 示例
 
 ### 继承字段上下文
 
@@ -49,7 +155,7 @@ slots:
 :m-date-picker
 ::
 
-### 融入分组控件
+### 融入`UFieldGroup`
 
 与按钮置于 `UFieldGroup` 时共用尺寸与边框衔接，适合筛选栏中组合快捷操作：
 
@@ -69,88 +175,6 @@ slots:
 ---
 :m-date-picker
 :u-button{color="neutral" variant="subtle" icon="i-lucide-calendar-check"}
-::
-
-### 日期范围
-
-`range` 模式维护 `start` / `end` 两端日期，`numberOfMonths` 可同时展示双月日历：
-
-::component-code
----
-name: MDatePicker
-props:
-  range: true
-  numberOfMonths: 2
----
-::
-
-### 多月份日历面板
-
-`numberOfMonths` 控制弹层内并排展示的月份数量，便于跨月选择：
-
-::component-code
----
-name: MDatePicker
-props:
-  numberOfMonths: 3
-items:
-  numberOfMonths: [1, 2, 3]
----
-::
-
-### 可清空选择
-
-`clearable` 在已有值时显示清除入口，点击后重置且不展开日历：
-
-::component-code
----
-name: MDatePicker
-props:
-  clearable: true
----
-::
-
-### 默认快捷预设
-
-`presets` 设为 `default` 会按当前模式自动生成「今天」「本周」「本月」等快捷项：
-
-::component-code
----
-name: MDatePicker
-props:
-  range: true
-  presets: default
-  placeholder: 选择范围
----
-::
-
-### 自定义按钮
-
-`buttonProps` 透传给触发按钮，可调整 label、color、variant 与 icon：
-
-::component-code
----
-name: MDatePicker
-prettier: true
-props:
-  buttonProps:
-    label: 选择生日
-    color: primary
-    variant: outline
-    icon: i-lucide-cake
----
-::
-
-## 示例
-
-### 多日期选择
-
-`multiple` 模式将多个日期保存在数组中，按钮文案可根据已选数量动态展示：
-
-::component-example
----
-name: ComponentsDatePickerMultipleExample
----
 ::
 
 ### 限制可选日期边界

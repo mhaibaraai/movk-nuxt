@@ -43,7 +43,7 @@ function resetFieldGroup() {
       </UFormField>
     </Showcase>
 
-    <Showcase title="融入分组控件" description="与重置按钮组合时共享 UFieldGroup 尺寸，滑块区域和按钮保持统一高度。" :state="{ value: fieldGroupVerified }">
+    <Showcase title="融入`UFieldGroup`" description="与重置按钮组合时共享 UFieldGroup 尺寸，滑块区域和按钮保持统一高度。" :state="{ value: fieldGroupVerified }">
       <UFieldGroup size="xs" class="w-full">
         <MSlideVerify :key="fieldGroupKey" v-model="fieldGroupVerified" class="flex-1" />
         <UButton icon="i-lucide-rotate-ccw" color="neutral" variant="subtle" @click="resetFieldGroup" />

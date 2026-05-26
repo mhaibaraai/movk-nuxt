@@ -15,7 +15,7 @@ seo:
 基于 Nuxt UI 的 Input 组件封装
 ::
 
-## 基础用法
+## 用法
 
 右侧眼睛按钮在明文与密文间切换：
 
@@ -29,7 +29,7 @@ props:
 ---
 ::
 
-### `leadingIcon` 图标
+### `leadingIcon` 前置图标
 
 通过 `leadingIcon` 为密码框添加语义化图标：
 
@@ -56,7 +56,7 @@ items:
 ---
 ::
 
-### `buttonProps`
+### `buttonProps` 切换按钮
 
 通过 `buttonProps` 自定义切换按钮样式：
 

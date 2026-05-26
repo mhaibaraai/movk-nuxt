@@ -36,7 +36,7 @@ const maskPhone = ref('13800138000')
       </Showcase>
 
       <Showcase
-        title="融入分组控件"
+        title="融入`UFieldGroup`"
         description="与按钮置于 UFieldGroup 时共用尺寸、圆角和边框衔接，适合组合拨号操作。"
         :state="{ value: fieldGroupPhone }"
       >

@@ -15,7 +15,7 @@ seo:
 基于 Nuxt UI 的 Input 组件封装
 ::
 
-## 基础用法
+## 用法
 
 标签在空值时居中显示，聚焦或有内容时自动上浮：
 
@@ -30,7 +30,7 @@ props:
 ---
 ::
 
-### `leadingIcon` 图标
+### `leadingIcon` 前置图标
 
 通过 `leadingIcon` 为输入框添加前置图标：
 
@@ -58,7 +58,7 @@ items:
 ---
 ::
 
-### `clearButtonProps`
+### `clearButtonProps` 清除按钮
 
 ::component-code
 ---

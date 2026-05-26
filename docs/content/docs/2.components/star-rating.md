@@ -15,7 +15,7 @@ seo:
 基于 Nuxt UI 的 Button 与 Badge 组件构建
 ::
 
-## 基础用法
+## 用法
 
 默认 5 星评分系统，点击星星写入 v-model：
 
@@ -49,7 +49,7 @@ slots:
 :m-star-rating
 ::
 
-### 融入分组控件
+### 融入`UFieldGroup`
 
 与重置按钮置于 `UFieldGroup` 时共享尺寸，适合在紧凑表单行内组合操作：
 
@@ -71,7 +71,7 @@ slots:
 :u-button{color="neutral" variant="subtle" icon="i-lucide-rotate-ccw"}
 ::
 
-### 允许半星评分
+### `allowHalf` 半星评分
 
 `allowHalf` 让每颗星可取半值，点击左右半区分别记为 `.5` 与整数评分：
 
@@ -86,7 +86,7 @@ hide: ['modelValue']
 ---
 ::
 
-### 可清除评分
+### `clearable` 可清除
 
 `clearable` 允许再次点击当前值或按 Backspace 将评分清零，适合非必填场景：
 
@@ -102,7 +102,7 @@ hide: ['modelValue']
 ---
 ::
 
-### 只读模式
+### `readonly` 只读模式
 
 `readonly` 仅展示评分并保留视觉，用于评价、评级等结果展示：
 
@@ -117,7 +117,7 @@ hide: ['modelValue']
 ---
 ::
 
-### 自定义星级总数
+### `max` 星级总数
 
 `max` 调整星星数量，可适配更细粒度的评分量表：
 
@@ -132,7 +132,7 @@ hide: ['modelValue']
 ---
 ::
 
-### 替换评分图标
+### `emptyIcon` 评分图标
 
 `emptyIcon`、`filledIcon`、`halfIcon` 可整体替换为其他图标，配合 `allowHalf` 呈现半值形态：
 
@@ -151,7 +151,7 @@ props:
 ---
 ::
 
-### 隐藏评分徽章
+### `showBadge` 评分徽章
 
 `showBadge` 默认显示当前分值徽章，设为 `false` 后只保留星星本身：
 
@@ -166,7 +166,7 @@ hide: ['modelValue']
 ---
 ::
 
-### 自定义颜色
+### `color` 颜色
 
 `color` 指定选中星星与徽章颜色：
 
@@ -183,7 +183,7 @@ items:
 ---
 ::
 
-### 高亮聚焦态
+### `highlight` 高亮聚焦
 
 `highlight` 为评分控件加上类聚焦的环形高亮，用于强调当前可操作项：
 
@@ -198,7 +198,7 @@ hide: ['modelValue']
 ---
 ::
 
-### 透传按钮属性
+### `buttonProps` 按钮属性
 
 `buttonProps` 透传到每颗星的按钮，可统一调整变体、内边距等底层样式：
 
@@ -215,7 +215,7 @@ props:
 ---
 ::
 
-### 禁用状态
+### `disabled` 禁用状态
 
 `disabled` 同时阻止交互并降低不透明度：
 

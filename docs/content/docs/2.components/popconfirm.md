@@ -15,25 +15,169 @@ seo:
 基于 Nuxt UI 的 Popover 组件封装
 ::
 
-## 基础用法
+## 用法
 
-将触发元素放入默认插槽，通过 `:on-confirm` 传入确认回调，`@cancel` 监听取消事件：
+`default` 插槽放置触发元素，点击后弹出确认气泡：
 
-::component-example
+::component-code
 ---
-name: ComponentsPopconfirmBasicExample
+name: MPopconfirm
+prettier: true
+props:
+  title: 确认删除？
+  description: 删除后数据将无法恢复。
+slots:
+  default: |
+
+    <UButton label="删除记录" color="neutral" variant="outline" icon="i-lucide-trash" />
 ---
+:u-button{label="删除记录" color="neutral" variant="outline" icon="i-lucide-trash"}
 ::
 
-### 按 type 呈现确认语义
+### `type` 类型
 
-`primary`、`info`、`success`、`warning`、`error`、`neutral` 影响图标、按钮颜色和弹层语气：
+`type` 影响默认图标与确认按钮颜色，包含六种语义化值：
 
-::component-example
+::component-code
 ---
-name: ComponentsPopconfirmTypesExample
+name: MPopconfirm
+prettier: true
+hide: ['title', 'description']
+props:
+  type: warning
+  title: 语义确认
+  description: 切换 type 观察图标与确认按钮颜色变化。
+items:
+  type: ['primary', 'info', 'success', 'warning', 'error', 'neutral']
+slots:
+  default: |
+
+    <UButton label="打开" color="neutral" variant="soft" />
 ---
+:u-button{label="打开" color="neutral" variant="soft"}
 ::
+
+### `icon` 图标
+
+`icon` 覆盖 `type` 默认图标，传入任意 Iconify 图标名称：
+
+::component-code
+---
+name: MPopconfirm
+prettier: true
+hide: ['title', 'description']
+props:
+  type: error
+  icon: i-lucide-trash-2
+  title: 永久删除？
+  description: 此操作不可撤销，数据将永久丢失。
+items:
+  type: ['primary', 'info', 'success', 'warning', 'error', 'neutral']
+slots:
+  default: |
+
+    <UButton label="危险操作" color="error" variant="soft" icon="i-lucide-alert-triangle" />
+---
+:u-button{label="危险操作" color="error" variant="soft" icon="i-lucide-alert-triangle"}
+::
+
+### `confirmButton` 确认按钮
+
+`confirmButton` 接收完整 `ButtonProps`，可定制 label、color、icon、variant：
+
+::component-code
+---
+name: MPopconfirm
+prettier: true
+hide: ['title', 'description', 'type']
+props:
+  title: 永久删除？
+  description: 此操作不可撤销，数据将永久丢失。
+  confirmButton:
+    color: error
+    label: 确认删除
+    icon: i-lucide-trash-2
+items:
+  confirmButton.color: ['primary', 'info', 'success', 'warning', 'error', 'neutral']
+slots:
+  default: |
+
+    <UButton label="删除记录" color="error" variant="soft" />
+---
+:u-button{label="删除记录" color="error" variant="soft"}
+::
+
+### `cancelButton` 取消按钮
+
+`cancelButton` 接收 `ButtonProps` 或 `false`，传 `false` 时隐藏取消按钮以强制确认：
+
+::component-code
+---
+name: MPopconfirm
+prettier: true
+hide: ['title', 'description', 'type']
+props:
+  type: warning
+  title: 强制确认
+  description: 此操作无法取消，请确认后继续。
+  cancelButton: false
+items:
+  cancelButton: [true, false]
+slots:
+  default: |
+
+    <UButton label="强制执行" color="warning" variant="soft" />
+---
+:u-button{label="强制执行" color="warning" variant="soft"}
+::
+
+### `dismissible` 关闭策略
+
+`dismissible` 默认为 `false` 严格模式；开启后允许点击遮罩或按 Esc 关闭气泡：
+
+::component-code
+---
+name: MPopconfirm
+prettier: true
+hide: ['title', 'description']
+props:
+  title: 严格确认高风险操作
+  description: 关闭策略受 dismissible 控制。
+  dismissible: false
+items:
+  dismissible: [true, false]
+slots:
+  default: |
+
+    <UButton label="关闭策略" color="neutral" variant="outline" />
+---
+:u-button{label="关闭策略" color="neutral" variant="outline"}
+::
+
+### `arrow` 箭头
+
+`arrow` 控制气泡指向触发器的箭头，默认开启：
+
+::component-code
+---
+name: MPopconfirm
+prettier: true
+hide: ['title', 'description']
+props:
+  title: 箭头指示
+  description: 切换 arrow 观察箭头开关。
+  arrow: true
+items:
+  arrow: [true, false]
+slots:
+  default: |
+
+    <UButton label="箭头开关" color="neutral" variant="subtle" />
+---
+:u-button{label="箭头开关" color="neutral" variant="subtle"}
+::
+
+## 示例
 
 ### 异步确认
 
@@ -42,36 +186,18 @@ name: ComponentsPopconfirmTypesExample
 ::component-example
 ---
 name: ComponentsPopconfirmAsyncExample
+prettier: true
 ---
 ::
 
-### 自定义外观
-
-通过 `icon`、`confirmButton`、`cancelButton` 自定义图标和按钮：
-
-::component-example
----
-name: ComponentsPopconfirmCustomExample
----
-::
-
-### 禁用取消按钮
-
-`:cancel-button="false"` 隐藏取消按钮，强制用户完成确认：
-
-::component-example
----
-name: ComponentsPopconfirmNoCancelExample
----
-::
-
-### 自定义内容
+### 正文插槽
 
 使用 `body` 插槽插入任意内容，`description` 传空字符串可隐藏默认描述区：
 
 ::component-example
 ---
 name: ComponentsPopconfirmSlotExample
+prettier: true
 ---
 ::
 
@@ -95,8 +221,6 @@ name: ComponentsPopconfirmSideExample
 ---
 ::
 
-## 示例
-
 ### 错误处理
 
 当 `onConfirm` 回调抛出异常时，弹层保持打开并触发 `@error` 事件，可在此处展示错误反馈：
@@ -109,7 +233,7 @@ name: ComponentsPopconfirmErrorExample
 
 ### 事件回调
 
-同步确认 / 取消、异步确认与异常依次触发 `confirm`、`cancel` 与 `error`：
+同步确认、取消、异步确认与异常依次触发 `confirm`、`cancel` 与 `error`：
 
 ::component-example
 ---

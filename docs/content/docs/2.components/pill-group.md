@@ -11,7 +11,7 @@ seo:
 
 `MPillGroup` 是一个胶囊（pill）样式的选项组组件，支持单选与多选。接受字符串数组或对象数组作为选项，通过 `labelKey`、`valueKey`、`descriptionKey` 映射业务对象字段，支持数量约束、按项语义色、激活 / 未激活样式区分以及插槽定制。
 
-## 基础用法
+## 用法
 
 传入字符串数组即可生成单选胶囊，选中值直接写入 v-model：
 
@@ -37,7 +37,7 @@ name: ComponentsPillGroupFormFieldExample
 ---
 ::
 
-### 融入分组控件
+### 融入`UFieldGroup`
 
 与操作按钮放入 `UFieldGroup` 后共享尺寸和圆角，适合行内筛选与快捷清除：
 
@@ -47,7 +47,7 @@ name: ComponentsPillGroupFieldGroupBasicExample
 ---
 ::
 
-### 结构化选项
+### `items` 结构化选项
 
 对象 `items` 可通过 `label`、`description` 与 `icon` 渲染复合内容，同时保留原始对象作为值：
 
@@ -67,7 +67,7 @@ props:
 ---
 ::
 
-### 多选集合管理
+### `multiple` 多选模式
 
 开启 `multiple` 后 `modelValue` 变为数组；配合 `valueKey` 让选中值只保存稳定字段：
 
@@ -89,7 +89,7 @@ props:
 ---
 ::
 
-### 单选可取消
+### `deselectable` 单选可取消
 
 `deselectable` 允许再次点击当前项清空选择，适合非必选筛选条件（多选模式下忽略该属性）：
 
@@ -110,7 +110,7 @@ props:
 ---
 ::
 
-### 垂直排列
+### `orientation` 排列方向
 
 `orientation` 设为 `vertical` 将选项纵向堆叠，适合描述较长或窄容器场景：
 
@@ -131,7 +131,7 @@ props:
 ---
 ::
 
-### 区分激活与未激活样式
+### `activeVariant` 激活样式
 
 `activeVariant` 与 `inactiveVariant` 分别控制选中与未选状态的视觉变体：
 
