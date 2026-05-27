@@ -94,7 +94,14 @@ pnpm clean
   ```
   中文 title/description 保持简洁（title 名词/动宾短语，description 一句话）；组件页另加 `category` 字段。此约定适用于所有内容阶段。
 
-- `::component-code` 用于组件的用法、`::component-example` 用于组件的示例
-  - 基础用法中内容使用 ### 前缀，示例中使用 ## 前缀，基础用户列举了组件的 `props` 参数，标题格式（如 '## `size` 尺寸'）
-  - props 如果包含多层级，需要添加 `prettier: true`
-  - 字符串不需要添加 ''
+- **`::component-code` 与 `::component-example` 的取舍**：按「示例能否用内联 props 表达」选择，而非按用法 / 示例区段。
+  - `::component-code`：由 `props`/`model`/`external` 内联合成代码，仅适用于全部 props 可用 YAML 内联表达的简单组件（如 `MStarRating`、`MSlideVerify`）。
+  - `::component-example`：加载并展示外部 `.vue` 源码，适用于需脚本构建或 schema 驱动的组件（如 AutoForm 全家、`MSearchForm`，Zod schema 无法内联）；外部文件置于 `docs/app/components/content/examples/<scope>/`，命名 `<Scope><Component><Topic>Example.vue`。
+  - 两类块在「用法」「示例」区段均可出现；schema 驱动组件全程使用 `::component-example`。
+- **标题层级**：`## 用法` 与 `## 示例` 均为 H2，其下条目统一用 H3。
+  - 用法条目按 prop 命名，格式 `### \`prop\` 中文名`（如 `### \`size\` 尺寸`），逐项列举公开 props，首段一句「`prop` 作用：行为」。
+  - 示例条目用描述性短语，格式 `### 场景名`（如 `### 异步提交与校验`）。
+- **交互演示（`options:`）**：`::component-example` 的 `options:`/`props:` 会作为 props 注入外部示例组件，示例 `.vue` 用 `defineProps` 接收并绑定到目标组件。离散值 prop 优先用 `options:`（每项须带 `items`）做实时下拉，沿用「string items + `Number()`」模式；schema、数组、断点对象、自由文案保持静态。
+- **转发事件**：底层组件转发的事件（如 `MSearchForm` 转发 `UForm` 的 `@submit`）不会进入 `:component-emits` 自动表，需在 Emits 段手动补说明。
+- **`prettier: true`**：props 含多层级结构时添加。
+- **内联标量不加引号**：`::component-code` 的 `props:` 标量值直接写（`size: md`，而非 `size: 'md'`）；但 `options:`/`items:` 中须保持字符串类型的离散值（如 cols `'1'`–`'4'`）仍加引号。
