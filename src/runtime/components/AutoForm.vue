@@ -38,7 +38,7 @@ const attrs = useAttrs()
 const appConfig = useAppConfig() as { movk?: { autoForm?: unknown } }
 
 const initialState = deepClone(toRaw(props.state ?? {})) as AutoFormStateType
-const stateModel = ref(deepClone(initialState)) as Ref<AutoFormStateType>
+const stateModel = ref(props.state ?? {}) as Ref<AutoFormStateType>
 const formRef = useTemplateRef('formRef')
 const { resolveFieldProp } = useAutoFormProvider(stateModel, slots)
 
@@ -86,13 +86,16 @@ const { extendUi } = useExtendedTv(
 )
 
 function reset() {
-  stateModel.value = deepClone(initialState)
-  applyFieldDefaults(fields.value, stateModel.value as Record<string, any>)
+  const target = stateModel.value as Record<string, any>
+  for (const key of Object.keys(target)) Reflect.deleteProperty(target, key)
+  Object.assign(target, deepClone(initialState))
+  applyFieldDefaults(fields.value, target)
   formRef.value?.clear()
 }
 
 function clear() {
-  stateModel.value = {} as AutoFormStateType
+  const target = stateModel.value as Record<string, any>
+  for (const key of Object.keys(target)) Reflect.deleteProperty(target, key)
   formRef.value?.clear()
 }
 
