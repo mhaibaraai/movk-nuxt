@@ -13,5 +13,5 @@ const schema = afz.object({
 </script>
 
 <template>
-  <MSearchForm :schema="schema" />
+  <MSearchForm :schema="schema" :collapse-button-props="{ color: 'primary', variant: 'soft' }" />
 </template>

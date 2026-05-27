@@ -10,8 +10,18 @@ const schema = afz.object({
   phone: afz.string({ controlProps: { placeholder: '请输入' } }).meta({ label: '手机号' }).optional(),
   keyword: afz.string({ controlProps: { placeholder: '请输入' } }).meta({ label: '关键词' }).optional()
 })
+
+const expanded = ref(false)
 </script>
 
 <template>
-  <MSearchForm :schema="schema" />
+  <div class="space-y-3">
+    <div class="flex items-center gap-2 text-sm text-muted">
+      <UButton size="sm" color="neutral" variant="outline" @click="expanded = !expanded">
+        外部{{ expanded ? '收起' : '展开' }}
+      </UButton>
+      <span>expanded = {{ expanded }}</span>
+    </div>
+    <MSearchForm v-model:expanded="expanded" :schema="schema" />
+  </div>
 </template>

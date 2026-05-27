@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type z from 'zod'
+
 const { afz } = useAutoForm()
 
 const schema = afz.object({
@@ -7,7 +9,7 @@ const schema = afz.object({
   keyword: afz.string({ controlProps: { placeholder: '请输入关键词' } }).meta({ label: '关键词' }).optional()
 })
 
-const params = ref<Record<string, unknown>>({
+const state = ref<Partial<z.output<typeof schema>>>({
   name: '张三',
   status: '启用'
 })
@@ -15,13 +17,13 @@ const params = ref<Record<string, unknown>>({
 
 <template>
   <div class="space-y-4">
-    <MSearchForm v-model="params" :schema="schema" />
-    <pre class="text-sm bg-muted p-3 rounded-(--ui-radius)">{{ JSON.stringify(params, null, 2) }}</pre>
+    <MSearchForm v-model="state" :schema="schema" />
+    <pre class="text-sm bg-muted p-3 rounded-(--ui-radius)">{{ JSON.stringify(state, null, 2) }}</pre>
     <UButton
       size="sm"
       color="neutral"
       variant="outline"
-      @click="params = { name: '李四', status: '禁用', keyword: '测试' }"
+      @click="state = { name: '李四', status: '禁用', keyword: '测试' }"
     >
       外部设值
     </UButton>

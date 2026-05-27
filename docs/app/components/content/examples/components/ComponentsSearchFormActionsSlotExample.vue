@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type z from 'zod'
+
 const { afz } = useAutoForm()
 
 const schema = afz.object({
@@ -6,7 +8,7 @@ const schema = afz.object({
   status: afz.enum(['启用', '禁用']).meta({ label: '状态' }).optional()
 })
 
-const state = ref<Record<string, unknown>>({})
+const state = ref<Partial<z.output<typeof schema>>>({})
 </script>
 
 <template>

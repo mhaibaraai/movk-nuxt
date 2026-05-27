@@ -29,6 +29,171 @@ props:
 ---
 ::
 
+### `allowHalf` 半星评分
+
+`allowHalf` 让每颗星可取半值，点击左右半区分别记为 `.5` 与整数评分：
+
+::component-code
+---
+name: MStarRating
+external: ['modelValue']
+hide: ['modelValue']
+props:
+  modelValue: 3.5
+  allowHalf: true
+---
+::
+
+### `clearable` 可清除
+
+`clearable` 允许再次点击当前值或按 Backspace 将评分清零，适合非必填场景：
+
+::component-code
+---
+name: MStarRating
+external: ['modelValue']
+hide: ['modelValue']
+props:
+  modelValue: 2.5
+  allowHalf: true
+  clearable: true
+---
+::
+
+### `readonly` 只读模式
+
+`readonly` 仅展示评分并保留视觉，用于评价、评级等结果展示：
+
+::component-code
+---
+name: MStarRating
+external: ['modelValue']
+hide: ['modelValue']
+props:
+  modelValue: 4
+  readonly: true
+---
+::
+
+### `max` 星级总数
+
+`max` 调整星星数量，可适配更细粒度的评分量表：
+
+::component-code
+---
+name: MStarRating
+external: ['modelValue']
+hide: ['modelValue']
+props:
+  modelValue: 5
+  max: 7
+---
+::
+
+### `emptyIcon` 评分图标
+
+`emptyIcon`、`filledIcon`、`halfIcon` 可整体替换为其他图标，配合 `allowHalf` 呈现半值形态：
+
+::component-code
+---
+name: MStarRating
+prettier: true
+external: ['modelValue']
+hide: ['modelValue']
+props:
+  modelValue: 2.5
+  allowHalf: true
+  emptyIcon: i-lucide-heart
+  filledIcon: i-lucide-heart
+  halfIcon: i-lucide-heart-handshake
+---
+::
+
+### `showBadge` 评分徽章
+
+`showBadge` 默认显示当前分值徽章，设为 `false` 后只保留星星本身：
+
+::component-code
+---
+name: MStarRating
+external: ['modelValue']
+hide: ['modelValue']
+props:
+  modelValue: 3
+  showBadge: false
+---
+::
+
+### `color` 颜色
+
+`color` 指定选中星星与徽章颜色：
+
+::component-code
+---
+name: MStarRating
+external: ['modelValue']
+hide: ['modelValue']
+props:
+  modelValue: 4
+  color: primary
+items:
+  color: ['primary', 'secondary', 'success', 'info', 'warning', 'error', 'neutral']
+---
+::
+
+### `highlight` 高亮聚焦
+
+`highlight` 为评分控件加上类聚焦的环形高亮，用于强调当前可操作项：
+
+::component-code
+---
+name: MStarRating
+external: ['modelValue']
+hide: ['modelValue']
+props:
+  modelValue: 3
+  highlight: true
+---
+::
+
+### `buttonProps` 按钮属性
+
+`buttonProps` 透传到每颗星的按钮，可统一调整变体、内边距等底层样式：
+
+::component-code
+---
+name: MStarRating
+prettier: true
+external: ['modelValue']
+hide: ['modelValue']
+props:
+  modelValue: 3
+  buttonProps:
+    variant: soft
+    size: xs
+items:
+  buttonProps.variant: ['solid', 'outline', 'soft', 'subtle', 'ghost', 'link']
+  buttonProps.size: ['xs', 'sm', 'md', 'lg', 'xl']
+---
+::
+
+### `disabled` 禁用状态
+
+`disabled` 同时阻止交互并降低不透明度：
+
+::component-code
+---
+name: MStarRating
+external: ['modelValue']
+hide: ['modelValue']
+props:
+  modelValue: 4
+  disabled: true
+---
+::
+
+## 示例
+
 ### 继承字段上下文
 
 放入 `UFormField` 后接收字段尺寸与错误态，评分图标随表单状态更新：
@@ -41,6 +206,8 @@ props:
   label: 满意度
   size: xs
   error: 示例错误态
+items:
+  size: ['xs', 'sm', 'md', 'lg', 'xl']
 slots:
   default: |
 
@@ -71,167 +238,6 @@ slots:
 :u-button{color="neutral" variant="subtle" icon="i-lucide-rotate-ccw"}
 ::
 
-### `allowHalf` 半星评分
-
-`allowHalf` 让每颗星可取半值，点击左右半区分别记为 `.5` 与整数评分：
-
-::component-code
----
-name: MStarRating
-props:
-  modelValue: 3.5
-  allowHalf: true
-external: ['modelValue']
-hide: ['modelValue']
----
-::
-
-### `clearable` 可清除
-
-`clearable` 允许再次点击当前值或按 Backspace 将评分清零，适合非必填场景：
-
-::component-code
----
-name: MStarRating
-props:
-  modelValue: 2.5
-  allowHalf: true
-  clearable: true
-external: ['modelValue']
-hide: ['modelValue']
----
-::
-
-### `readonly` 只读模式
-
-`readonly` 仅展示评分并保留视觉，用于评价、评级等结果展示：
-
-::component-code
----
-name: MStarRating
-props:
-  modelValue: 4
-  readonly: true
-external: ['modelValue']
-hide: ['modelValue']
----
-::
-
-### `max` 星级总数
-
-`max` 调整星星数量，可适配更细粒度的评分量表：
-
-::component-code
----
-name: MStarRating
-props:
-  modelValue: 5
-  max: 7
-external: ['modelValue']
-hide: ['modelValue']
----
-::
-
-### `emptyIcon` 评分图标
-
-`emptyIcon`、`filledIcon`、`halfIcon` 可整体替换为其他图标，配合 `allowHalf` 呈现半值形态：
-
-::component-code
----
-name: MStarRating
-prettier: true
-external: ['modelValue']
-hide: ['modelValue']
-props:
-  modelValue: 2.5
-  allowHalf: true
-  emptyIcon: i-lucide-heart
-  filledIcon: i-lucide-heart
-  halfIcon: i-lucide-heart-handshake
----
-::
-
-### `showBadge` 评分徽章
-
-`showBadge` 默认显示当前分值徽章，设为 `false` 后只保留星星本身：
-
-::component-code
----
-name: MStarRating
-props:
-  modelValue: 3
-  showBadge: false
-external: ['modelValue']
-hide: ['modelValue']
----
-::
-
-### `color` 颜色
-
-`color` 指定选中星星与徽章颜色：
-
-::component-code
----
-name: MStarRating
-external: ['modelValue']
-hide: ['modelValue']
-props:
-  modelValue: 4
-  color: primary
-items:
-  color: ['primary', 'secondary', 'success', 'info', 'warning', 'error', 'neutral']
----
-::
-
-### `highlight` 高亮聚焦
-
-`highlight` 为评分控件加上类聚焦的环形高亮，用于强调当前可操作项：
-
-::component-code
----
-name: MStarRating
-props:
-  modelValue: 3
-  highlight: true
-external: ['modelValue']
-hide: ['modelValue']
----
-::
-
-### `buttonProps` 按钮属性
-
-`buttonProps` 透传到每颗星的按钮，可统一调整变体、内边距等底层样式：
-
-::component-code
----
-name: MStarRating
-prettier: true
-external: ['modelValue']
-hide: ['modelValue']
-props:
-  modelValue: 3
-  buttonProps:
-    variant: soft
----
-::
-
-### `disabled` 禁用状态
-
-`disabled` 同时阻止交互并降低不透明度：
-
-::component-code
----
-name: MStarRating
-props:
-  modelValue: 4
-  disabled: true
-external: ['modelValue']
-hide: ['modelValue']
----
-::
-
-## 示例
-
 ### 事件回调
 
 点击、悬浮与键盘交互依次触发 `update:modelValue`、`change` 与 `hover`：
@@ -239,6 +245,7 @@ hide: ['modelValue']
 ::component-example
 ---
 name: ComponentsStarRatingEventsExample
+prettier: true
 ---
 ::
 
@@ -249,6 +256,7 @@ name: ComponentsStarRatingEventsExample
 ::component-example
 ---
 name: ComponentsStarRatingSlotExample
+prettier: true
 ---
 ::
 

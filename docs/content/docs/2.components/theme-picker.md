@@ -23,29 +23,13 @@ seo:
 
 `MThemePicker` 通常作为全局主题配置入口，放置在应用头部或工具栏：
 
-::component-example
----
-name: ComponentsThemePickerBasicExample
----
-::
-
-### 实时主题状态
-
+::tip
 当前主题 token 在面板操作后即时更新，便于确认配置是否生效。配合 [`useTheme`](/docs/composables/use-theme) 读取响应式状态：
+::
 
 ::component-example
 ---
 name: ComponentsThemePickerStateExample
----
-::
-
-### 组件主题预览
-
-按钮、徽章、复选框和开关会实时响应主题变量变化，展示全局视觉影响：
-
-::component-example
----
-name: ComponentsThemePickerPreviewExample
 ---
 ::
 

@@ -72,7 +72,7 @@ export default defineNuxtConfig({
   },
 
   movk: {
-    theme: { enabled: false },
+    theme: { enabled: true },
     api: {
       enabled: true,
       endpoints: {

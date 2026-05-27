@@ -6,12 +6,10 @@ const schema = afz.object({
   status: afz.enum(['启用', '禁用']).meta({ label: '状态' }).optional(),
   keyword: afz.string({ controlProps: { placeholder: '请输入' } }).meta({ label: '关键词' }).optional()
 })
-
-const state = ref<Record<string, unknown>>({})
 </script>
 
 <template>
-  <MSearchForm v-model="state" :schema="schema" :cols="3">
+  <MSearchForm :schema="schema" :cols="3">
     <template #header="{ expanded }">
       <div class="rounded border border-dashed border-primary/40 bg-primary/5 px-3 py-2 text-xs text-primary">
         #header · expanded={{ expanded }}

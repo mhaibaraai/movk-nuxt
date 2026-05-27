@@ -37,7 +37,6 @@ props:
 ---
 name: MSlideVerify
 props:
-  class: w-sm
   threshold: 0.5
   text: 拖到一半即可
 ---
@@ -50,9 +49,7 @@ props:
 ::component-code
 ---
 name: MSlideVerify
-prettier: true
 props:
-  class: w-sm
   text: 按住并向右拖动
   successText: 人机校验已通过
 ---
@@ -65,9 +62,7 @@ props:
 ::component-code
 ---
 name: MSlideVerify
-prettier: true
 props:
-  class: w-sm
   icon: i-lucide-arrow-right
   successIcon: i-lucide-shield-check
 ---
@@ -81,7 +76,6 @@ props:
 ---
 name: MSlideVerify
 props:
-  class: w-sm
   size: md
 items:
   size: ['xs', 'sm', 'md', 'lg', 'xl']
@@ -96,7 +90,6 @@ items:
 ---
 name: MSlideVerify
 props:
-  class: w-sm
   disabled: true
 ---
 ::
@@ -111,10 +104,14 @@ props:
 ---
 name: UFormField
 prettier: true
+hide: ['class']
 props:
+  class: w-sm
   label: 滑动验证
   size: xs
   error: 示例错误态
+items:
+  size: ['xs', 'sm', 'md', 'lg', 'xl']
 slots:
   default: |
 
@@ -131,7 +128,9 @@ slots:
 ---
 name: UFieldGroup
 prettier: true
+hide: ['class']
 props:
+  class: w-sm
   size: xs
 items:
   size: ['xs', 'sm', 'md', 'lg', 'xl']
@@ -152,6 +151,7 @@ slots:
 ::component-example
 ---
 name: ComponentsSlideVerifySliderSlotExample
+prettier: true
 ---
 ::
 
@@ -162,6 +162,7 @@ name: ComponentsSlideVerifySliderSlotExample
 ::component-example
 ---
 name: ComponentsSlideVerifyEventsExample
+prettier: true
 ---
 ::
 
