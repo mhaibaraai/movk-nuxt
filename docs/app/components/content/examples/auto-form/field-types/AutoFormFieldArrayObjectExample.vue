@@ -44,7 +44,5 @@ async function onSubmit(event: FormSubmitEvent<z.output<typeof schema>>) {
 </script>
 
 <template>
-  <UCard>
-    <MAutoForm :schema="schema" @submit="onSubmit" />
-  </UCard>
+  <MAutoForm :schema="schema" @submit="onSubmit" />
 </template>

@@ -28,54 +28,50 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 </script>
 
 <template>
-  <UCard>
-    <MAutoForm
-      :schema="schema"
-      :state="form"
-      :global-meta="{ collapsible: { defaultOpen: true } }"
-      @submit="onSubmit"
-    >
-      <template #field-default:email="{ value, error, setValue }">
-        <UInput
-          :model-value="value"
-          type="email"
-          placeholder="your@email.com"
-          icon="i-lucide-mail"
-          class="w-full"
-          :trailing-icon="value ? 'i-lucide-circle-check' : undefined"
-          :color="error ? 'error' : 'primary'"
-          @update:model-value="setValue"
-        />
-      </template>
+  <MAutoForm
+    :schema="schema"
+    :state="form"
+    :global-meta="{ collapsible: { defaultOpen: true } }"
+    @submit="onSubmit"
+  >
+    <template #field-default:email="{ value, error, setValue }">
+      <UInput
+        :model-value="value"
+        type="email"
+        placeholder="your@email.com"
+        icon="i-lucide-mail"
+        class="w-full"
+        :trailing-icon="value ? 'i-lucide-circle-check' : undefined"
+        :color="error ? 'error' : 'primary'"
+        @update:model-value="setValue"
+      />
+    </template>
 
-      <template #field-content:notifications="{ value, setValue }">
-        <UCard>
-          <div class="space-y-3">
-            <div
-              v-for="key in ['email', 'sms', 'push']"
-              :key="key"
-              class="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors cursor-pointer"
-              @click="setValue(key, !value?.[key as keyof typeof value])"
-            >
-              <div class="flex items-center gap-3">
-                <UIcon
-                  :name="key === 'email' ? 'i-lucide-mail' : key === 'sms' ? 'i-lucide-message-square' : 'i-lucide-bell'"
-                  class="size-5"
-                />
-                <div>
-                  <p class="font-medium text-sm capitalize">
-                    {{ key }} 通知
-                  </p>
-                  <p class="text-xs text-gray-500">
-                    {{ key === 'email' ? '接收邮件通知' : key === 'sms' ? '接收短信通知' : '接收推送通知' }}
-                  </p>
-                </div>
-              </div>
-              <UCheckbox disabled :model-value="value?.[key as keyof typeof value]" />
+    <template #field-content:notifications="{ value, setValue }">
+      <div class="space-y-3">
+        <div
+          v-for="key in ['email', 'sms', 'push']"
+          :key="key"
+          class="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors cursor-pointer"
+          @click="setValue(key, !value?.[key as keyof typeof value])"
+        >
+          <div class="flex items-center gap-3">
+            <UIcon
+              :name="key === 'email' ? 'i-lucide-mail' : key === 'sms' ? 'i-lucide-message-square' : 'i-lucide-bell'"
+              class="size-5"
+            />
+            <div>
+              <p class="font-medium text-sm capitalize">
+                {{ key }} 通知
+              </p>
+              <p class="text-xs text-gray-500">
+                {{ key === 'email' ? '接收邮件通知' : key === 'sms' ? '接收短信通知' : '接收推送通知' }}
+              </p>
             </div>
           </div>
-        </UCard>
-      </template>
-    </MAutoForm>
-  </UCard>
+          <UCheckbox disabled :model-value="value?.[key as keyof typeof value]" />
+        </div>
+      </div>
+    </template>
+  </MAutoForm>
 </template>

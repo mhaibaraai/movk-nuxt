@@ -34,35 +34,33 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 </script>
 
 <template>
-  <UCard>
-    <MAutoForm :schema="schema" :state="form" @submit="onSubmit">
-      <template #field-after:address="{ value }">
-        <UAlert
-          v-if="value && value.street && value.city && value.zipCode"
-          color="success"
-          variant="subtle"
-          icon="i-lucide-check-circle"
-          class="mt-4"
-        >
-          <template #title>
-            地址验证通过
-          </template>
-          <template #description>
-            完整地址: {{ value.street }}, {{ value.city }}, {{ value.zipCode }}
-          </template>
-        </UAlert>
-      </template>
+  <MAutoForm :schema="schema" :state="form" @submit="onSubmit">
+    <template #field-after:address="{ value }">
+      <UAlert
+        v-if="value && value.street && value.city && value.zipCode"
+        color="success"
+        variant="subtle"
+        icon="i-lucide-check-circle"
+        class="mt-4"
+      >
+        <template #title>
+          地址验证通过
+        </template>
+        <template #description>
+          完整地址: {{ value.street }}, {{ value.city }}, {{ value.zipCode }}
+        </template>
+      </UAlert>
+    </template>
 
-      <template #field-hint:skills="{ value }">
-        <UBadge
-          v-if="value && value.length >= 5"
-          color="success"
-          variant="subtle"
-          icon="i-lucide-award"
-        >
-          技能丰富
-        </UBadge>
-      </template>
-    </MAutoForm>
-  </UCard>
+    <template #field-hint:skills="{ value }">
+      <UBadge
+        v-if="value && value.length >= 5"
+        color="success"
+        variant="subtle"
+        icon="i-lucide-award"
+      >
+        技能丰富
+      </UBadge>
+    </template>
+  </MAutoForm>
 </template>

@@ -61,12 +61,10 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 </script>
 
 <template>
-  <UCard>
-    <MAutoForm
-      ref="autoFormRef"
-      :schema="schema"
-      :state="form"
-      @submit="onSubmit"
-    />
-  </UCard>
+  <MAutoForm
+    ref="autoFormRef"
+    :schema="schema"
+    :state="form"
+    @submit="onSubmit"
+  />
 </template>

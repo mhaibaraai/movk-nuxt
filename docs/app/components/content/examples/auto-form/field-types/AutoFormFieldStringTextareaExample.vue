@@ -9,7 +9,7 @@ const schema = afz.object({
   description: afz.string({
     type: 'textarea',
     controlProps: {
-      maxrows: 4,
+      maxrows: 2,
       autoresize: true
     }
   })
@@ -17,7 +17,7 @@ const schema = afz.object({
     .meta({
       label: '文本域',
       placeholder: '请输入多行文本...',
-      hint: '自动调整高度，最多 8 行'
+      hint: '这是一个长文本,将自动调整高度,最多 2 行。'
     })
 })
 

@@ -226,7 +226,7 @@ function clear() { form.value?.clear() }
 </script>
 
 <template>
-  <MAutoForm ref="form" :schema="schema" :state="state" :submit-button="false" @submit="onSubmit" />
+  <MAutoForm ref="form" :schema="schema" :state="state" :submit="false" @submit="onSubmit" />
   <UButton label="Save" @click="save" />
   <UButton label="Reset" variant="outline" @click="reset" />
 </template>

@@ -44,124 +44,122 @@ const progress = computed(() => Math.round((completedFields.value / totalFields)
 </script>
 
 <template>
-  <UCard>
-    <MAutoForm
-      :schema="schema"
-      :state="form"
-      class="w-lg"
-      @submit="onSubmit"
-    >
-      <template #header="{ loading }">
-        <div class="mb-6 space-y-4">
-          <UAlert
-            color="primary"
-            variant="subtle"
-            icon="i-lucide-rocket"
-            title="创建您的账户"
-            description="完成以下步骤开始使用我们的服务"
-          >
-            <template v-if="loading" #actions>
-              <UBadge color="primary" variant="subtle">
-                处理中...
-              </UBadge>
-            </template>
-          </UAlert>
-
-          <UCard>
-            <div class="flex items-center justify-between text-sm mb-2">
-              <span class="text-gray-600 dark:text-gray-400">完成进度</span>
-              <UBadge color="primary" variant="subtle">
-                {{ progress }}%
-              </UBadge>
-            </div>
-            <UProgress :value="progress" color="primary" />
-          </UCard>
-        </div>
-      </template>
-
-      <template #field-label:username="{ label }">
-        <UBadge
-          icon="i-lucide-user"
-          :label="label"
+  <MAutoForm
+    :schema="schema"
+    :state="form"
+    class="w-lg"
+    @submit="onSubmit"
+  >
+    <template #header="{ loading }">
+      <div class="mb-6 space-y-4">
+        <UAlert
           color="primary"
           variant="subtle"
-          size="xs"
-        />
-        <UBadge
+          icon="i-lucide-rocket"
+          title="创建您的账户"
+          description="完成以下步骤开始使用我们的服务"
+        >
+          <template v-if="loading" #actions>
+            <UBadge color="primary" variant="subtle">
+              处理中...
+            </UBadge>
+          </template>
+        </UAlert>
+
+        <UCard>
+          <div class="flex items-center justify-between text-sm mb-2">
+            <span class="text-gray-600 dark:text-gray-400">完成进度</span>
+            <UBadge color="primary" variant="subtle">
+              {{ progress }}%
+            </UBadge>
+          </div>
+          <UProgress :value="progress" color="primary" />
+        </UCard>
+      </div>
+    </template>
+
+    <template #field-label:username="{ label }">
+      <UBadge
+        icon="i-lucide-user"
+        :label="label"
+        color="primary"
+        variant="subtle"
+        size="xs"
+      />
+      <UBadge
+        color="error"
+        variant="subtle"
+        size="xs"
+        class="ml-2"
+      >
+        必填
+      </UBadge>
+    </template>
+
+    <template #field-label:password="{ label }">
+      <UBadge
+        icon="i-lucide-lock"
+        :label="label"
+        color="success"
+        variant="subtle"
+        size="xs"
+      />
+    </template>
+
+    <template #field-help:password>
+      <UAlert
+        color="warning"
+        variant="subtle"
+        icon="i-lucide-shield-check"
+        title="密码强度建议"
+        class="my-2"
+      >
+        <template #actions>
+          <ul class="space-y-1 text-xs list-disc list-inside">
+            <li>至少 8 个字符</li>
+            <li>包含大小写字母</li>
+            <li>包含数字</li>
+          </ul>
+        </template>
+      </UAlert>
+    </template>
+
+    <template #field-before:profile>
+      <USeparator icon="i-lucide-circle-user" />
+    </template>
+
+    <template #field-hint:tags="{ value }">
+      <UBadge icon="i-lucide-tags" color="info" variant="subtle">
+        您已添加 {{ value?.length || 0 }} 个标签
+      </UBadge>
+    </template>
+
+    <template #footer="{ errors }">
+      <div class="mt-6 space-y-4">
+        <UAlert
+          v-if="errors.length > 0"
           color="error"
           variant="subtle"
-          size="xs"
-          class="ml-2"
-        >
-          必填
-        </UBadge>
-      </template>
-
-      <template #field-label:password="{ label }">
-        <UBadge
-          icon="i-lucide-lock"
-          :label="label"
-          color="success"
-          variant="subtle"
-          size="xs"
-        />
-      </template>
-
-      <template #field-help:password>
-        <UAlert
-          color="warning"
-          variant="subtle"
-          icon="i-lucide-shield-check"
-          title="密码强度建议"
-          class="my-2"
+          icon="i-lucide-circle-alert"
+          :title="`发现 ${errors.length} 个错误`"
+          description="请修正以下错误后重新提交"
         >
           <template #actions>
-            <ul class="space-y-1 text-xs list-disc list-inside">
-              <li>至少 8 个字符</li>
-              <li>包含大小写字母</li>
-              <li>包含数字</li>
+            <ul class="space-y-1 text-sm list-disc list-inside">
+              <li v-for="(error, index) in errors" :key="index">
+                {{ error.message }}
+              </li>
             </ul>
           </template>
         </UAlert>
-      </template>
 
-      <template #field-before:profile>
-        <USeparator icon="i-lucide-circle-user" />
-      </template>
-
-      <template #field-hint:tags="{ value }">
-        <UBadge icon="i-lucide-tags" color="info" variant="subtle">
-          您已添加 {{ value?.length || 0 }} 个标签
-        </UBadge>
-      </template>
-
-      <template #footer="{ errors }">
-        <div class="mt-6 space-y-4">
-          <UAlert
-            v-if="errors.length > 0"
-            color="error"
-            variant="subtle"
-            icon="i-lucide-circle-alert"
-            :title="`发现 ${errors.length} 个错误`"
-            description="请修正以下错误后重新提交"
-          >
-            <template #actions>
-              <ul class="space-y-1 text-sm list-disc list-inside">
-                <li v-for="(error, index) in errors" :key="index">
-                  {{ error.message }}
-                </li>
-              </ul>
-            </template>
-          </UAlert>
-
-          <UAlert
-            color="neutral"
-            variant="subtle"
-            icon="i-lucide-info"
-            description="提交表单即表示您同意我们的服务条款和隐私政策"
-          />
-        </div>
-      </template>
-    </MAutoForm>
-  </UCard>
+        <UAlert
+          color="neutral"
+          variant="subtle"
+          icon="i-lucide-info"
+          description="提交表单即表示您同意我们的服务条款和隐私政策"
+        />
+      </div>
+    </template>
+  </MAutoForm>
 </template>

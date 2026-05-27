@@ -67,7 +67,7 @@ async function click() {
       </div>
     </template>
 
-    <MAutoForm :schema="schema" :submit-button="false">
+    <MAutoForm :schema="schema" :submit="false">
       <template #footer>
         <UButton color="primary" @click="click">
           验证类型

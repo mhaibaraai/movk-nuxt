@@ -88,7 +88,7 @@ function createTodo() {
       <MAutoForm
         :schema="formSlotSchema"
         :state="formSlotState"
-        :submit-button="false"
+        :submit="false"
         @submit="onFormSlotSubmit"
       >
         <template #header="{ loading }">

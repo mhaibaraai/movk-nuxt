@@ -15,7 +15,7 @@ const schema = afz.object({
   }),
 
   $contactInfo: afz.layout({
-    class: 'space-y-4 mt-4',
+    class: 'space-y-4 mt-10',
     fields: {
       email: afz.email().meta({ label: '邮箱地址' }),
       $phoneLayout: afz.layout({
@@ -47,7 +47,5 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 </script>
 
 <template>
-  <UCard>
-    <MAutoForm :schema="schema" :state="form" @submit="onSubmit" />
-  </UCard>
+  <MAutoForm :schema="schema" :state="form" @submit="onSubmit" />
 </template>

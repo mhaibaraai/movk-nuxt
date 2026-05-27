@@ -42,85 +42,83 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 </script>
 
 <template>
-  <UCard>
-    <MAutoForm
-      ref="autoForm"
-      :schema="schema"
-      :state="form"
-      :submit-button="false"
-      @submit="onSubmit"
-    >
-      <template #submit="{ loading, errors, fields, state }">
-        <div class="space-y-4">
-          <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-            <div class="flex items-center gap-2">
-              <UIcon
-                :name="Object.keys(errors).length > 0 ? 'i-lucide-circle-alert' : 'i-lucide-circle-check'"
-                :class="Object.keys(errors).length > 0 ? 'text-red-500' : 'text-green-500'"
-              />
-              <span class="text-sm font-medium">
-                {{ Object.keys(errors).length > 0 ? '请修复表单错误' : '表单准备就绪' }}
-              </span>
-            </div>
-
-            <div class="text-xs text-gray-500 dark:text-gray-400">
-              已填写 {{ Object.keys(state).filter(k => state[k as keyof Schema] !== undefined && state[k as keyof Schema]
-                !== '').length }} / {{ fields.length }} 字段
-            </div>
+  <MAutoForm
+    ref="autoForm"
+    :schema="schema"
+    :state="form"
+    :submit="false"
+    @submit="onSubmit"
+  >
+    <template #submit="{ loading, errors, fields, state }">
+      <div class="space-y-4">
+        <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+          <div class="flex items-center gap-2">
+            <UIcon
+              :name="Object.keys(errors).length > 0 ? 'i-lucide-circle-alert' : 'i-lucide-circle-check'"
+              :class="Object.keys(errors).length > 0 ? 'text-red-500' : 'text-green-500'"
+            />
+            <span class="text-sm font-medium">
+              {{ Object.keys(errors).length > 0 ? '请修复表单错误' : '表单准备就绪' }}
+            </span>
           </div>
 
-          <div class="flex gap-3">
-            <UButton
-              type="submit"
-              :loading="loading || isSubmitting"
-              color="primary"
-              size="lg"
-              icon="i-lucide-user-plus"
-              :disabled="!form.agreeToTerms"
-            >
-              {{ loading || isSubmitting ? '正在注册...' : '创建账户' }}
-            </UButton>
-
-            <UButton
-              type="button"
-              variant="outline"
-              color="neutral"
-              size="lg"
-              icon="i-lucide-rotate-ccw"
-              @click="resetForm()"
-            >
-              重置
-            </UButton>
-
-            <UButton
-              type="button"
-              variant="outline"
-              color="neutral"
-              size="lg"
-              icon="i-lucide-eraser"
-              @click="clearForm()"
-            >
-              清空
-            </UButton>
+          <div class="text-xs text-gray-500 dark:text-gray-400">
+            已填写 {{ Object.keys(state).filter(k => state[k as keyof Schema] !== undefined && state[k as keyof Schema]
+              !== '').length }} / {{ fields.length }} 字段
           </div>
-
-          <UAlert
-            v-if="Object.keys(errors).length > 0"
-            color="error"
-            variant="subtle"
-            icon="i-lucide-triangle-alert"
-            title="表单验证失败"
-          >
-            <template #description>
-              <ul class="mt-2 space-y-1">
-                <li v-for="(error, field) in errors" :key="field" class="text-sm">
-                  • {{ error }}
-                </li>
-              </ul>
-            </template>
-          </UAlert>
         </div>
-      </template>
-    </MAutoForm>
-  </UCard>
+
+        <div class="flex gap-3">
+          <UButton
+            type="submit"
+            :loading="loading || isSubmitting"
+            color="primary"
+            size="lg"
+            icon="i-lucide-user-plus"
+            :disabled="!form.agreeToTerms"
+          >
+            {{ loading || isSubmitting ? '正在注册...' : '创建账户' }}
+          </UButton>
+
+          <UButton
+            type="button"
+            variant="outline"
+            color="neutral"
+            size="lg"
+            icon="i-lucide-rotate-ccw"
+            @click="resetForm()"
+          >
+            重置
+          </UButton>
+
+          <UButton
+            type="button"
+            variant="outline"
+            color="neutral"
+            size="lg"
+            icon="i-lucide-eraser"
+            @click="clearForm()"
+          >
+            清空
+          </UButton>
+        </div>
+
+        <UAlert
+          v-if="Object.keys(errors).length > 0"
+          color="error"
+          variant="subtle"
+          icon="i-lucide-triangle-alert"
+          title="表单验证失败"
+        >
+          <template #description>
+            <ul class="mt-2 space-y-1">
+              <li v-for="(error, field) in errors" :key="field" class="text-sm">
+                • {{ error }}
+              </li>
+            </ul>
+          </template>
+        </UAlert>
+      </div>
+    </template>
+  </MAutoForm>
 </template>

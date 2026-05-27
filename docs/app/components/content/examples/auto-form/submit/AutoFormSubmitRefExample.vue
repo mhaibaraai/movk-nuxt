@@ -24,6 +24,6 @@ async function onSubmit() {
       <UButton size="sm" variant="soft" label="reset()" @click="apiForm?.reset()" />
       <UButton size="sm" variant="soft" color="neutral" label="clear()" @click="apiForm?.clear()" />
     </div>
-    <MAutoForm ref="apiForm" :schema="schema" :state="state" :submit-button="false" @submit="onSubmit" />
+    <MAutoForm ref="apiForm" :schema="schema" :state="state" :submit="false" @submit="onSubmit" />
   </div>
 </template>

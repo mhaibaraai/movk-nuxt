@@ -36,68 +36,66 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 </script>
 
 <template>
-  <UCard>
-    <MAutoForm
-      :schema="schema"
-      :state="form"
-      :global-meta="{ collapsible: { defaultOpen: true } }"
-      @submit="onSubmit"
-    >
-      <template #field-content:profile="{ path, value, setValue }">
-        <UAlert
-          color="primary"
-          variant="subtle"
-          icon="i-lucide-user"
-          title="个人资料"
-          description="完善您的个人信息"
-        />
+  <MAutoForm
+    :schema="schema"
+    :state="form"
+    :global-meta="{ collapsible: { defaultOpen: true } }"
+    @submit="onSubmit"
+  >
+    <template #field-content:profile="{ path, value, setValue }">
+      <UAlert
+        color="primary"
+        variant="subtle"
+        icon="i-lucide-user"
+        title="个人资料"
+        description="完善您的个人信息"
+      />
 
-        <div class="grid grid-cols-2 gap-4">
-          <UFormField label="姓名" :name="`${path}.name`" required>
-            <UInput
-              :model-value="value?.name"
-              placeholder="请输入您的姓名"
-              icon="i-lucide-user"
-              class="w-full"
-              @update:model-value="setValue('name', $event)"
-            />
-          </UFormField>
-          <UFormField label="电子邮箱" :name="`${path}.email`" required>
-            <UInput
-              :model-value="value?.email"
-              placeholder="请输入您的电子邮箱"
-              icon="i-lucide-mail"
-              type="email"
-              class="w-full"
-              @update:model-value="setValue('email', $event)"
-            />
-          </UFormField>
-        </div>
-        <UFormField label="简介" :name="`${path}.bio`" hint="可选">
-          <UTextarea
-            :model-value="value?.bio"
-            placeholder="请输入您的个人简介"
-            :rows="3"
-            resize
+      <div class="grid grid-cols-2 gap-4">
+        <UFormField label="姓名" :name="`${path}.name`" required>
+          <UInput
+            :model-value="value?.name"
+            placeholder="请输入您的姓名"
+            icon="i-lucide-user"
             class="w-full"
-            @update:model-value="setValue('bio', $event)"
+            @update:model-value="setValue('name', $event)"
           />
         </UFormField>
-      </template>
-
-      <template #field-before:contact="{ value, path }">
-        <UAlert
-          color="neutral"
-          variant="subtle"
-          icon="i-lucide-book-user"
-          title="联系方式"
-          description="提供您的联系信息，方便其他人与您交流"
+        <UFormField label="电子邮箱" :name="`${path}.email`" required>
+          <UInput
+            :model-value="value?.email"
+            placeholder="请输入您的电子邮箱"
+            icon="i-lucide-mail"
+            type="email"
+            class="w-full"
+            @update:model-value="setValue('email', $event)"
+          />
+        </UFormField>
+      </div>
+      <UFormField label="简介" :name="`${path}.bio`" hint="可选">
+        <UTextarea
+          :model-value="value?.bio"
+          placeholder="请输入您的个人简介"
+          :rows="3"
+          resize
+          class="w-full"
+          @update:model-value="setValue('bio', $event)"
         />
+      </UFormField>
+    </template>
 
-        <p class="text-gray-600 dark:text-gray-400 text-xs">
-          {{ path }} 数据 :{{ value }}
-        </p>
-      </template>
-    </MAutoForm>
-  </UCard>
+    <template #field-before:contact="{ value, path }">
+      <UAlert
+        color="neutral"
+        variant="subtle"
+        icon="i-lucide-book-user"
+        title="联系方式"
+        description="提供您的联系信息，方便其他人与您交流"
+      />
+
+      <p class="text-gray-600 dark:text-gray-400 text-xs">
+        {{ path }} 数据 :{{ value }}
+      </p>
+    </template>
+  </MAutoForm>
 </template>

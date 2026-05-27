@@ -24,23 +24,21 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 </script>
 
 <template>
-  <UCard>
-    <MAutoForm :schema="schema" :state="form" @submit="onSubmit">
-      <template #footer="{ state }">
-        <UCard class="mt-6">
-          <div class="flex items-center justify-between text-sm mb-2">
-            <span class="text-gray-600 dark:text-gray-400">表单完成度</span>
-            <UBadge color="primary" variant="subtle">
-              {{ Object.keys(state).filter(k => state[k as keyof Schema]).length }} / {{
-                Object.keys(schema.shape).length }}
-            </UBadge>
-          </div>
-          <UProgress
-            :value="(Object.keys(state).filter(k => state[k as keyof Schema]).length / Object.keys(schema.shape).length) * 100"
-            color="primary"
-          />
-        </UCard>
-      </template>
-    </MAutoForm>
-  </UCard>
+  <MAutoForm :schema="schema" :state="form" @submit="onSubmit">
+    <template #footer="{ state }">
+      <UCard class="mt-6">
+        <div class="flex items-center justify-between text-sm mb-2">
+          <span class="text-gray-600 dark:text-gray-400">表单完成度</span>
+          <UBadge color="primary" variant="subtle">
+            {{ Object.keys(state).filter(k => state[k as keyof Schema]).length }} / {{
+              Object.keys(schema.shape).length }}
+          </UBadge>
+        </div>
+        <UProgress
+          :value="(Object.keys(state).filter(k => state[k as keyof Schema]).length / Object.keys(schema.shape).length) * 100"
+          color="primary"
+        />
+      </UCard>
+    </template>
+  </MAutoForm>
 </template>

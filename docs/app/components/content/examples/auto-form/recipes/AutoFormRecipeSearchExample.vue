@@ -28,7 +28,7 @@ function onReset() {
     :schema="schema"
     :state="state"
     :global-meta="{ orientation: 'horizontal', size: 'sm' }"
-    :submit-button="false"
+    :submit="false"
     @submit="onSubmit"
   >
     <template #footer="{ loading }">

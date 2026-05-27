@@ -33,20 +33,18 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 </script>
 
 <template>
-  <UCard>
-    <MAutoForm
-      :global-meta="{ collapsible: { defaultOpen: true } }"
-      :schema="schema"
-      :state="form"
-      @submit="onSubmit"
-    >
-      <template #field-before:profile>
-        <USeparator icon="i-lucide-circle-user" label="个人资料" />
-      </template>
+  <MAutoForm
+    :global-meta="{ collapsible: { defaultOpen: true } }"
+    :schema="schema"
+    :state="form"
+    @submit="onSubmit"
+  >
+    <template #field-before:profile>
+      <USeparator icon="i-lucide-circle-user" label="个人资料" />
+    </template>
 
-      <template #field-description:skills="{ value }">
-        {{ value?.length || 0 }} 项已添加技能
-      </template>
-    </MAutoForm>
-  </UCard>
+    <template #field-description:skills="{ value }">
+      {{ value?.length || 0 }} 项已添加技能
+    </template>
+  </MAutoForm>
 </template>

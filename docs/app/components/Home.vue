@@ -94,7 +94,7 @@ const phoneText = ref('')
     <UTabs :items="items" class="w-full">
       <template #autoform>
         <div class="p-4 sm:p-6 h-90 overflow-y-auto">
-          <MAutoForm :schema="formSchema" :state="formState" :submit-button="false" />
+          <MAutoForm :schema="formSchema" :state="formState" :submit="false" />
         </div>
       </template>
 

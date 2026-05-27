@@ -25,18 +25,16 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 </script>
 
 <template>
-  <UCard>
-    <MAutoForm :schema="schema" :state="form" @submit="onSubmit">
-      <template #header>
-        <UAlert
-          color="primary"
-          variant="subtle"
-          icon="i-lucide-info"
-          title="欢迎注册"
-          description="请填写以下信息完成注册，所有字段均为必填项"
-          class="mb-6"
-        />
-      </template>
-    </MAutoForm>
-  </UCard>
+  <MAutoForm :schema="schema" :state="form" @submit="onSubmit">
+    <template #header>
+      <UAlert
+        color="primary"
+        variant="subtle"
+        icon="i-lucide-info"
+        title="欢迎注册"
+        description="请填写以下信息完成注册，所有字段均为必填项"
+        class="mb-6"
+      />
+    </template>
+  </MAutoForm>
 </template>
