@@ -9,7 +9,7 @@ const schema = afz.object({
   remember: afz.boolean({ type: 'switch', controlProps: { label: '记住登录状态' } }).default(true).meta({ label: '记住我' })
 })
 
-const state = reactive<Partial<z.output<typeof schema>>>({})
+const form = reactive<Partial<z.output<typeof schema>>>({})
 
 async function onSubmit() {
   await new Promise(resolve => setTimeout(resolve, 1200))
@@ -19,7 +19,7 @@ async function onSubmit() {
 <template>
   <MAutoForm
     :schema="schema"
-    :state="state"
+    :state="form"
     :submit="false"
     @submit="onSubmit"
   >

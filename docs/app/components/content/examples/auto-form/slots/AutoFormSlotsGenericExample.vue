@@ -5,7 +5,7 @@ const { afz } = useAutoForm()
 
 const schema = afz.object({
   username: afz.string().min(3).meta({ label: '用户名', hint: '至少 3 个字符' }),
-  email: afz.email().meta({ label: '邮箱' }),
+  email: afz.email().meta({ label: '邮箱', description: '用于接收通知' }),
   role: afz.enum(['admin', 'user', 'guest']).meta({ label: '角色' }),
   active: afz.boolean({ controlProps: { label: '启用账户' } }).default(true).meta({ label: '状态' })
 })
@@ -23,6 +23,15 @@ const state = reactive<Partial<z.output<typeof schema>>>({})
         <span class="text-xs text-muted">
           {{ path }}
         </span>
+      </span>
+    </template>
+
+    <template #field-description="{ description }">
+      <span
+        v-if="description"
+        class="text-xs text-toned"
+      >
+        {{ description }}
       </span>
     </template>
 
