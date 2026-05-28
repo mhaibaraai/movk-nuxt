@@ -3,23 +3,17 @@ import type { DataTableColumn, RowPinningState } from '@movk/nuxt'
 import type { Person } from '~/composables/useTableMock'
 
 const data = makePeople(8)
-const pinning = ref<RowPinningState>({ top: [], bottom: [] })
+const pinning = ref<RowPinningState>({ top: ['P0001'], bottom: ['P0004', 'P0008'] })
 
 const columns: DataTableColumn<Person>[] = [
   { type: 'row-pinning', position: 'top', header: '顶' },
-  { accessorKey: 'name', header: '姓名', size: 110 },
+  { accessorKey: 'id', header: 'ID', size: 80 },
+  { accessorKey: 'name', header: '姓名' },
   { accessorKey: 'department', header: '部门', size: 90 },
   { accessorKey: 'role', header: '岗位', size: 120 }
 ]
 </script>
 
 <template>
-  <MDataTable
-    v-model:row-pinning="pinning"
-    row-key="id"
-    :columns="columns"
-    :data="data"
-    bordered
-    :ui="{ root: 'max-h-65' }"
-  />
+  <MDataTable v-model:row-pinning="pinning" row-key="id" :columns="columns" :data="data" :ui="{ root: 'max-h-65' }" />
 </template>

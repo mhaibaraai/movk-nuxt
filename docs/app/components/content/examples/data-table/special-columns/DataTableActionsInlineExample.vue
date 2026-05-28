@@ -7,10 +7,11 @@ const toast = useToast()
 const notify = (msg: string): void => { toast.add({ title: msg, duration: 1500 }) }
 
 const columns: DataTableColumn<Person>[] = [
-  { accessorKey: 'name', header: '姓名', size: 110 },
-  { accessorKey: 'department', header: '部门', size: 90 },
+  { accessorKey: 'name', header: '姓名' },
+  { accessorKey: 'department', header: '部门' },
   {
     type: 'actions',
+    minSize: 80,
     maxInline: 2,
     actions: [
       { key: 'view', buttonProps: { icon: 'i-lucide-eye', variant: 'ghost', size: 'xs' }, onClick: ({ row }) => notify(`查看 ${row.name}`) },
@@ -23,5 +24,5 @@ const columns: DataTableColumn<Person>[] = [
 </script>
 
 <template>
-  <MDataTable row-key="id" :columns="columns" :data="data" bordered />
+  <MDataTable row-key="id" :columns="columns" :data="data" />
 </template>

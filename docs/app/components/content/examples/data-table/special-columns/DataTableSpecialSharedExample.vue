@@ -12,12 +12,12 @@ const columns: DataTableColumn<Person>[] = [
   { type: 'selection', pinable: true, resizable: true },
   { type: 'index', visibility: false },
   { type: 'row-pinning', pinable: false },
-  { accessorKey: 'name', header: '姓名', size: 110 },
+  { accessorKey: 'name', header: '姓名' },
   { accessorKey: 'department', header: '部门', size: 90 },
-  { type: 'actions', resizable: true, actions }
+  { type: 'actions', resizable: true, size: 80, actions }
 ]
 </script>
 
 <template>
-  <MDataTable row-key="id" :columns="columns" :data="data" bordered />
+  <MDataTable row-key="id" :columns="columns" :data="data" />
 </template>

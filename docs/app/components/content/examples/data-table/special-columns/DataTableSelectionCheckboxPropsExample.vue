@@ -3,7 +3,13 @@ import type { DataTableColumn, RowSelectionState } from '@movk/nuxt'
 import type { Person } from '~/composables/useTableMock'
 
 const treeData = makePeopleTree(3, 3)
-const selection = ref<RowSelectionState>({})
+const selection = ref<RowSelectionState>({
+  P0101: true,
+  P0102: true,
+  P0201: true,
+  P0202: true,
+  P0203: true
+})
 
 const columns: DataTableColumn<Person>[] = [
   {
@@ -20,7 +26,7 @@ const columns: DataTableColumn<Person>[] = [
   },
   { type: 'expand' },
   { accessorKey: 'name', header: '姓名', size: 160 },
-  { accessorKey: 'status', header: '状态', size: 90 }
+  { accessorKey: 'status', header: '状态' }
 ]
 </script>
 
@@ -31,6 +37,5 @@ const columns: DataTableColumn<Person>[] = [
     children-key="children"
     :columns="columns"
     :data="treeData"
-    bordered
   />
 </template>

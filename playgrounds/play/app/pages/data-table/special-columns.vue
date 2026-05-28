@@ -18,7 +18,7 @@ function record(msg: string) {
 }
 
 const baseColumns: DataTableColumn<Person>[] = [
-  { accessorKey: 'name', header: '姓名', size: 110 },
+  { accessorKey: 'name', header: '姓名' },
   { accessorKey: 'department', header: '部门', size: 90 },
   { accessorKey: 'role', header: '岗位', size: 120 }
 ]
@@ -71,7 +71,7 @@ const dynamicCheckboxColumns: DataTableColumn<Person>[] = [
   },
   { type: 'expand' },
   { accessorKey: 'name', header: '姓名', size: 160 },
-  { accessorKey: 'status', header: '状态', size: 90 }
+  { accessorKey: 'status', header: '状态' }
 ]
 
 // A5 rowSelectionKeys 数组 v-model + treeSelection expose
@@ -223,7 +223,7 @@ const asyncActionsColumns: DataTableColumn<Person>[] = [
 // D4 二次确认 + 动态 confirmProps
 const confirmActionsColumns: DataTableColumn<Person>[] = [
   ...baseColumns,
-  { accessorKey: 'status', header: '状态', size: 90 },
+  { accessorKey: 'status', header: '状态' },
   {
     type: 'actions',
     size: 120,
@@ -250,7 +250,7 @@ const confirmActionsColumns: DataTableColumn<Person>[] = [
 // D5 动态 disabled 与 visibility
 const dynamicStateActionsColumns: DataTableColumn<Person>[] = [
   ...baseColumns,
-  { accessorKey: 'status', header: '状态', size: 90 },
+  { accessorKey: 'status', header: '状态' },
   {
     type: 'actions',
     maxInline: 3,

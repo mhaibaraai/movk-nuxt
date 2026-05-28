@@ -7,8 +7,8 @@ const toast = useToast()
 const notify = (msg: string): void => { toast.add({ title: msg, duration: 1500 }) }
 
 const columns: DataTableColumn<Person>[] = [
-  { accessorKey: 'name', header: '姓名', size: 110 },
-  { accessorKey: 'status', header: '状态', size: 90 },
+  { accessorKey: 'name', header: '姓名' },
+  { accessorKey: 'status', header: '状态' },
   {
     type: 'actions',
     size: 120,
@@ -32,5 +32,5 @@ const columns: DataTableColumn<Person>[] = [
 </script>
 
 <template>
-  <MDataTable row-key="id" :columns="columns" :data="data" bordered />
+  <MDataTable row-key="id" :columns="columns" :data="data" />
 </template>

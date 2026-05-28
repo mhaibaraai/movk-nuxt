@@ -29,7 +29,6 @@ function strategyColumns(strategy: DataTableTreeSelectionStrategy): DataTableCol
         children-key="children"
         :columns="strategyColumns('cascade')"
         :data="treeData"
-        bordered
       />
     </div>
     <div class="flex flex-col gap-2">
@@ -42,7 +41,6 @@ function strategyColumns(strategy: DataTableTreeSelectionStrategy): DataTableCol
         children-key="children"
         :columns="strategyColumns('isolated')"
         :data="treeData"
-        bordered
       />
     </div>
     <div class="flex flex-col gap-2">
@@ -55,7 +53,6 @@ function strategyColumns(strategy: DataTableTreeSelectionStrategy): DataTableCol
         children-key="children"
         :columns="strategyColumns('leaf')"
         :data="treeData"
-        bordered
       />
     </div>
   </div>

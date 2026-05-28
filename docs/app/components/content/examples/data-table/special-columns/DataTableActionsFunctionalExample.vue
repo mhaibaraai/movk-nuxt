@@ -21,12 +21,12 @@ const actions: DataTableActionsColumn<Person>['actions'] = ({ row: { original } 
 }
 
 const columns: DataTableColumn<Person>[] = [
-  { accessorKey: 'name', header: '姓名', size: 110 },
-  { accessorKey: 'department', header: '部门', size: 90 },
+  { accessorKey: 'name', header: '姓名' },
+  { accessorKey: 'department', header: '部门' },
   { type: 'actions', maxInline: 4, actions, size: 120 }
 ]
 </script>
 
 <template>
-  <MDataTable row-key="id" :columns="columns" :data="data" bordered />
+  <MDataTable row-key="id" :columns="columns" :data="data" />
 </template>

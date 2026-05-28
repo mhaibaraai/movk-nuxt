@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import type { DataTableColumn } from '@movk/nuxt'
+import type { DataTableColumn, PaginationState } from '@movk/nuxt'
 import type { Person } from '~/composables/useTableMock'
 
-const data = makePeople(6)
+const data = makePeople(80)
+const pagination = ref<PaginationState>({ pageIndex: 0, pageSize: 5 })
 
 const columns: DataTableColumn<Person>[] = [
   { type: 'index', header: '序' },
@@ -13,5 +14,5 @@ const columns: DataTableColumn<Person>[] = [
 </script>
 
 <template>
-  <MDataTable row-key="id" :columns="columns" :data="data" sortable bordered />
+  <MDataTable v-model:pagination="pagination" row-key="id" :columns="columns" :data="data" sortable />
 </template>

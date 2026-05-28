@@ -32,7 +32,6 @@ const columns: DataTableColumn<Person>[] = [
       children-key="children"
       :columns="columns"
       :data="treeData"
-      bordered
     />
     <pre class="text-xs p-3 rounded-md bg-muted overflow-auto">treeSelection: {{ derived }}</pre>
   </div>
