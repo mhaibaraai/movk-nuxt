@@ -6,12 +6,12 @@ const data = makePeople(8)
 
 const columns: DataTableColumn<Person>[] = [
   { accessorKey: 'name', header: '姓名', size: 100 },
-  { accessorKey: 'bio', header: '个人简介', size: 240, tooltip: 2 },
-  { accessorKey: 'address', header: '地址', size: 200, truncate: true },
-  { accessorKey: 'department', header: '部门', size: 100, truncate: false }
+  { accessorKey: 'bio', header: '个人简介', size: 240, tooltip: 1 },
+  { accessorKey: 'role', header: '角色', size: 60 },
+  { accessorKey: 'address', header: '地址', size: 200, truncate: true }
 ]
 </script>
 
 <template>
-  <MDataTable :columns="columns" :data="data" bordered :ui="{ root: 'max-w-3xl' }" />
+  <MDataTable :columns="columns" :data="data" :ui="{ root: 'max-w-3xl' }" />
 </template>

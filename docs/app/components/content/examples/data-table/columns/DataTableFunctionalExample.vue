@@ -26,7 +26,6 @@ const tooltipFn: DataTableDataColumn<Person>['tooltip'] = ctx => ctx.column.id =
   <MDataTable
     :columns="columns"
     :data="data"
-    bordered
     :sortable="sortableFn"
     :pinable="pinableFn"
     :resizable="resizableFn"

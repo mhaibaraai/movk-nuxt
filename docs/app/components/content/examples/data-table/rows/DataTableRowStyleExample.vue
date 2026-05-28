@@ -5,8 +5,8 @@ import type { Person } from '~/composables/useTableMock'
 const data = makePeople(10)
 
 const columns: DataTableColumn<Person>[] = [
-  { accessorKey: 'name', header: '姓名', size: 110 },
-  { accessorKey: 'status', header: '状态', size: 90 },
+  { accessorKey: 'name', header: '姓名' },
+  { accessorKey: 'status', header: '状态' },
   { accessorKey: 'salary', header: '薪资', align: 'right', size: 110 }
 ]
 

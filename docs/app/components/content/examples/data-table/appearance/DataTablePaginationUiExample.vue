@@ -7,7 +7,7 @@ const selection = ref<RowSelectionState>({ P0002: true })
 const pagination = ref<PaginationState>({ pageIndex: 0, pageSize: 4 })
 const columns: DataTableColumn<Person>[] = [
   { type: 'selection', mode: 'multiple' },
-  { accessorKey: 'name', header: '姓名', size: 110 },
+  { accessorKey: 'name', header: '姓名' },
   { accessorKey: 'department', header: '部门', size: 90 },
   { accessorKey: 'role', header: '岗位', size: 130 }
 ]

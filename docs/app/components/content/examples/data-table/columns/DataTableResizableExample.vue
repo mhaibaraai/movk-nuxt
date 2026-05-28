@@ -9,10 +9,10 @@ const columns: DataTableColumn<Person>[] = [
   { accessorKey: 'name', header: '姓名', size: 120 },
   { accessorKey: 'level', header: '职级', size: 100, resizable: false },
   { accessorKey: 'address', header: '地址', size: 180 },
-  { accessorKey: 'bio', header: '个人简介', size: 200 }
+  { accessorKey: 'bio', header: '个人简介', size: 200, resizable: true }
 ]
 </script>
 
 <template>
-  <MDataTable :columns="columns" :data="data" resizable bordered />
+  <MDataTable :columns="columns" :data="data" />
 </template>

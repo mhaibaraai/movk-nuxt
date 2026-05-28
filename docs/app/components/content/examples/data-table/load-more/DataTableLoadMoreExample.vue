@@ -9,7 +9,7 @@ const loaded = ref(0)
 
 const columns: DataTableColumn<Person>[] = [
   { accessorKey: 'id', header: '工号', size: 90 },
-  { accessorKey: 'name', header: '姓名', size: 110 },
+  { accessorKey: 'name', header: '姓名' },
   { accessorKey: 'department', header: '部门', size: 90 },
   { accessorKey: 'role', header: '岗位', size: 130 }
 ]

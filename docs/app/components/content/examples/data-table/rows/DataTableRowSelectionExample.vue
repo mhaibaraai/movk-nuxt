@@ -8,7 +8,7 @@ const lastSelected = ref('')
 
 const columns: DataTableColumn<Person>[] = [
   { type: 'selection' },
-  { accessorKey: 'name', header: '姓名', size: 110 },
+  { accessorKey: 'name', header: '姓名' },
   { accessorKey: 'department', header: '部门', size: 90 },
   { accessorKey: 'role', header: '岗位', size: 120 }
 ]
