@@ -64,7 +64,7 @@ name: ComponentsSearchFormResponsiveExample
 ---
 name: ComponentsSearchFormExpandExample
 options:
-  - name: visibleRows
+  - name: visible-rows
     label: visibleRows
     items: [1, 2, 3]
     default: 1
@@ -96,10 +96,10 @@ options:
   - name: icon
     label: icon
     default: 'i-lucide-chevron-down'
-  - name: expandText
+  - name: expand-text
     label: expandText
     default: '更多筛选'
-  - name: collapseText
+  - name: collapse-text
     label: collapseText
     default: '收起'
 ---
