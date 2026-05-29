@@ -204,7 +204,7 @@ export function resolveExpandColumn<T>(
 ): ColumnDef<T, unknown> {
   ctx.flags.hasExpand = true
   const isTreeMode = ctx.options.childrenKey != null
-  const showToggleAll = isTreeMode && col.toggleAll !== false
+  const showToggleAll = col.toggleAll !== false
   return buildSpecialColumnDef(col, 'expand', ctx, {
     header: showToggleAll
       ? (hctx: HeaderContext<T, unknown>) => {

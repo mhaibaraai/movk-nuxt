@@ -149,7 +149,7 @@ export interface DataTableExpandColumn<T = unknown> extends DataTableSpecialColu
   /** 展开/折叠按钮 props 透传 */
   buttonProps?: DataTableDynamic<ButtonProps, DataTableExpandButtonContext<T>>
   /**
-   * 表头是否渲染「全部展开/收起」按钮，仅树形模式生效
+   * 表头是否渲染「全部展开/收起」按钮，树形与行详情展开模式均生效
    * @defaultValue true
    */
   toggleAll?: boolean
