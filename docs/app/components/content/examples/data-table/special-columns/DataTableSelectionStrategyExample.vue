@@ -9,8 +9,8 @@ const leaf = ref<RowSelectionState>({})
 
 const treeBase: DataTableColumn<Person>[] = [
   { type: 'expand' },
-  { accessorKey: 'name', header: '姓名', size: 160 },
-  { accessorKey: 'department', header: '部门', size: 90 }
+  { accessorKey: 'name', header: '姓名' },
+  { accessorKey: 'department', header: '部门' }
 ]
 function strategyColumns(strategy: DataTableTreeSelectionStrategy): DataTableColumn<Person>[] {
   return [{ type: 'selection', strategy }, ...treeBase]

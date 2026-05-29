@@ -25,7 +25,7 @@ const columns: DataTableColumn<Person>[] = [
     }
   },
   { type: 'expand' },
-  { accessorKey: 'name', header: '姓名', size: 160 },
+  { accessorKey: 'name', header: '姓名' },
   { accessorKey: 'status', header: '状态' }
 ]
 </script>

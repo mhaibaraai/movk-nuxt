@@ -11,7 +11,7 @@ const distance = ref(100)
 const columns: DataTableColumn<Person>[] = [
   { accessorKey: 'id', header: '工号', size: 90 },
   { accessorKey: 'name', header: '姓名' },
-  { accessorKey: 'department', header: '部门', size: 90 }
+  { accessorKey: 'department', header: '部门' }
 ]
 
 async function loadMore() {

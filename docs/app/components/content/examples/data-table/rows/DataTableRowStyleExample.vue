@@ -29,7 +29,6 @@ function rowStyleBySalary(row: Person): Record<string, string> {
     :data="data"
     :row-class="rowClassByStatus"
     :row-style="rowStyleBySalary"
-    bordered
     :ui="{ root: 'max-h-[50vh]' }"
   />
 </template>

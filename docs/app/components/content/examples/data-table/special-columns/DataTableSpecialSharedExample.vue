@@ -13,8 +13,8 @@ const columns: DataTableColumn<Person>[] = [
   { type: 'index', visibility: false },
   { type: 'row-pinning', pinable: false },
   { accessorKey: 'name', header: '姓名' },
-  { accessorKey: 'department', header: '部门', size: 90 },
-  { type: 'actions', resizable: true, size: 80, actions }
+  { accessorKey: 'department', header: '部门', resizable: true },
+  { type: 'actions', size: 80, actions }
 ]
 </script>
 

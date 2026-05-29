@@ -7,10 +7,10 @@ const pinning = ref<RowPinningState>({ top: ['P0001'], bottom: ['P0004', 'P0008'
 
 const columns: DataTableColumn<Person>[] = [
   { type: 'row-pinning', position: 'top', header: '顶' },
-  { accessorKey: 'id', header: 'ID', size: 80 },
+  { accessorKey: 'id', header: 'ID' },
   { accessorKey: 'name', header: '姓名' },
-  { accessorKey: 'department', header: '部门', size: 90 },
-  { accessorKey: 'role', header: '岗位', size: 120 }
+  { accessorKey: 'department', header: '部门' },
+  { accessorKey: 'role', header: '岗位' }
 ]
 </script>
 

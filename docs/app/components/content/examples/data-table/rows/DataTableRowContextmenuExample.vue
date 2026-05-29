@@ -7,8 +7,8 @@ const toast = useToast()
 
 const columns: DataTableColumn<Person>[] = [
   { accessorKey: 'name', header: '姓名' },
-  { accessorKey: 'department', header: '部门', size: 90 },
-  { accessorKey: 'role', header: '岗位', size: 120 }
+  { accessorKey: 'department', header: '部门' },
+  { accessorKey: 'role', header: '岗位' }
 ]
 
 const onRowContextmenu: DataTableContextmenuHandler<Person> = (e, row) => {
@@ -22,7 +22,6 @@ const onRowContextmenu: DataTableContextmenuHandler<Person> = (e, row) => {
     row-key="id"
     :columns="columns"
     :data="data"
-    bordered
     :ui="{ root: 'max-h-[50vh]' }"
     @row-contextmenu="onRowContextmenu"
   />

@@ -14,8 +14,8 @@ const columns = computed<DataTableColumn<Person>[]>(() => [
     ? { type: 'selection', mode: 'single', header: '选择', size: 80 }
     : { type: 'selection' },
   { accessorKey: 'name', header: '姓名' },
-  { accessorKey: 'department', header: '部门', size: 90 },
-  { accessorKey: 'role', header: '岗位', size: 120 }
+  { accessorKey: 'department', header: '部门' },
+  { accessorKey: 'role', header: '岗位' }
 ])
 </script>
 

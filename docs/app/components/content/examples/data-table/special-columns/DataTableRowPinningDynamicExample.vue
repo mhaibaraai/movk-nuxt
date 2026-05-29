@@ -12,8 +12,8 @@ const columns: DataTableColumn<Person>[] = [
       : { icon: 'i-lucide-pin', color: 'neutral', variant: 'ghost' }
   },
   { accessorKey: 'name', header: '姓名' },
-  { accessorKey: 'department', header: '部门', size: 90 },
-  { accessorKey: 'role', header: '岗位', size: 120 }
+  { accessorKey: 'department', header: '部门' },
+  { accessorKey: 'role', header: '岗位' }
 ]
 </script>
 

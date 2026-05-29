@@ -19,14 +19,14 @@ function record(msg: string) {
 
 const baseColumns: DataTableColumn<Person>[] = [
   { accessorKey: 'name', header: '姓名' },
-  { accessorKey: 'department', header: '部门', size: 90 },
-  { accessorKey: 'role', header: '岗位', size: 120 }
+  { accessorKey: 'department', header: '部门' },
+  { accessorKey: 'role', header: '岗位' }
 ]
 
 const treeBaseColumns: DataTableColumn<Person>[] = [
   { type: 'expand' },
   { accessorKey: 'name', header: '姓名', size: 160 },
-  { accessorKey: 'department', header: '部门', size: 90 }
+  { accessorKey: 'department', header: '部门' }
 ]
 
 // A1 多选列基础

@@ -6,11 +6,11 @@ const data = makePeople(8)
 const moneyCell: DataTableDataColumn<Person>['cell'] = ({ getValue }) => `¥${getValue<number>().toLocaleString()}`
 
 const columns: DataTableColumn<Person>[] = [
-  { accessorKey: 'id', header: '工号', fixed: 'left', size: 100, pinable: true },
-  { accessorKey: 'name', header: '姓名', size: 120 },
-  { accessorKey: 'department', header: '部门', size: 100, pinable: false },
-  { accessorKey: 'role', header: '岗位', size: 140 },
-  { accessorKey: 'salary', header: '薪资', align: 'right', size: 120, cell: moneyCell }
+  { accessorKey: 'id', header: '工号', fixed: 'left', pinable: true },
+  { accessorKey: 'name', header: '姓名' },
+  { accessorKey: 'department', header: '部门', pinable: false },
+  { accessorKey: 'role', header: '岗位' },
+  { accessorKey: 'salary', header: '薪资', align: 'right', cell: moneyCell }
 ]
 </script>
 

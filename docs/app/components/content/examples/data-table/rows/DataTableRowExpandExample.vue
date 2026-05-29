@@ -8,8 +8,8 @@ const expanded = ref<ExpandedState>({})
 const columns: DataTableColumn<Person>[] = [
   { type: 'expand' },
   { accessorKey: 'name', header: '姓名' },
-  { accessorKey: 'department', header: '部门', size: 90 },
-  { accessorKey: 'role', header: '岗位', size: 120 }
+  { accessorKey: 'department', header: '部门' },
+  { accessorKey: 'role', header: '岗位' }
 ]
 </script>
 
@@ -19,7 +19,6 @@ const columns: DataTableColumn<Person>[] = [
     row-key="id"
     :columns="columns"
     :data="data"
-    bordered
     :ui="{ root: 'max-h-[50vh]' }"
   >
     <template #expanded="{ row }">

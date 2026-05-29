@@ -8,7 +8,7 @@ const notify = (msg: string): void => { toast.add({ title: msg, duration: 1500 }
 
 const columns: DataTableColumn<Person>[] = [
   { accessorKey: 'name', header: '姓名' },
-  { accessorKey: 'department', header: '部门', size: 90 },
+  { accessorKey: 'department', header: '部门' },
   {
     type: 'actions',
     maxInline: 2,

@@ -7,9 +7,9 @@ const selection = ref<RowSelectionState>({})
 
 const columns: DataTableColumn<Person>[] = [
   { type: 'selection' },
-  { accessorKey: 'id', header: '工号', size: 100 },
+  { accessorKey: 'id', header: '工号' },
   { accessorKey: 'name', header: '姓名' },
-  { accessorKey: 'department', header: '部门', size: 100 }
+  { accessorKey: 'department', header: '部门' }
 ]
 
 function shuffle(): void {
@@ -24,12 +24,7 @@ function shuffle(): void {
         打乱数据
       </UButton>
     </div>
-    <MDataTable
-      v-model:row-selection="selection"
-      row-key="id"
-      :columns="columns"
-      :data="rows"
-      bordered
-    />
+    <MDataTable v-model:row-selection="selection" row-key="id" :columns="columns" :data="rows" />
+    <pre class="text-xs p-3 rounded-md bg-muted overflow-auto">selection: {{ selection }}</pre>
   </div>
 </template>
