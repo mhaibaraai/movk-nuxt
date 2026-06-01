@@ -8,7 +8,7 @@ const mode = ref<DataTableSelectionColumn['mode']>('multiple')
 const columns = computed<DataTableColumn<Person>[]>(() => [
   { type: 'selection', mode: mode.value, strategy: mode.value === 'single' ? 'isolated' : 'cascade' },
   { type: 'expand' },
-  { accessorKey: 'name', header: '成员', size: 200 },
+  { accessorKey: 'name', header: '成员' },
   { accessorKey: 'department', header: '部门' },
   { accessorKey: 'role', header: '岗位' }
 ])
@@ -21,6 +21,6 @@ const columns = computed<DataTableColumn<Person>[]>(() => [
       label="single 单选"
       @update:model-value="mode = $event ? 'single' : 'multiple'"
     />
-    <MDataTable :data="treeData" :columns="columns" children-key="children" row-key="id" bordered />
+    <MDataTable :data="treeData" :columns="columns" children-key="children" row-key="id" />
   </div>
 </template>

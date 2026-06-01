@@ -9,7 +9,7 @@ const loaded = ref(0)
 const distance = ref(100)
 
 const columns: DataTableColumn<Person>[] = [
-  { accessorKey: 'id', header: '工号', size: 90 },
+  { accessorKey: 'id', header: '工号' },
   { accessorKey: 'name', header: '姓名' },
   { accessorKey: 'department', header: '部门' }
 ]
@@ -54,7 +54,6 @@ function reset(): void {
       :load-more="loadMore"
       :can-load-more="canLoadMore"
       :load-more-distance="distance"
-      bordered
       :ui="{ root: 'h-[50vh]' }"
     />
   </div>

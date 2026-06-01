@@ -9,7 +9,7 @@ const loaded = ref(0)
 const paused = ref(false)
 
 const columns: DataTableColumn<Person>[] = [
-  { accessorKey: 'id', header: '工号', size: 90 },
+  { accessorKey: 'id', header: '工号' },
   { accessorKey: 'name', header: '姓名' },
   { accessorKey: 'department', header: '部门' }
 ]
@@ -43,7 +43,6 @@ function reset(): void {
       :columns="columns"
       :load-more="loadMore"
       :can-load-more="canLoadMore"
-      bordered
       :ui="{ root: 'h-[50vh]' }"
     />
   </div>

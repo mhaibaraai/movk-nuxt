@@ -5,7 +5,7 @@ import type { Person } from '~/composables/useTableMock'
 const data = makePeople(80)
 const pagination = ref<PaginationState>({ pageIndex: 0, pageSize: 5 })
 const columns: DataTableColumn<Person>[] = [
-  { accessorKey: 'id', header: '工号', size: 90 },
+  { accessorKey: 'id', header: '工号' },
   { accessorKey: 'name', header: '姓名' },
   { accessorKey: 'department', header: '部门' },
   { accessorKey: 'role', header: '岗位' }
@@ -17,7 +17,6 @@ const columns: DataTableColumn<Person>[] = [
     v-model:pagination="pagination"
     :data="data"
     :columns="columns"
-    bordered
     :pagination-ui="{
       pageSizes: [5, 10, 20],
       paginationProps: { showEdges: true, siblingCount: 1, color: 'success' },

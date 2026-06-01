@@ -11,6 +11,7 @@ const result = computed(() => {
   const r = tableRef.value?.treeSelection
   if (!r) return {}
   return {
+    selectionKeys: selectionKeys.value,
     leaves: names(r.leaves),
     parents: names(r.parents),
     halfSelected: names(r.halfSelected),
@@ -21,7 +22,7 @@ const result = computed(() => {
 const columns: DataTableColumn<Person>[] = [
   { type: 'selection', strategy: 'cascade' },
   { type: 'expand' },
-  { accessorKey: 'name', header: '成员', size: 200 },
+  { accessorKey: 'name', header: '成员' },
   { accessorKey: 'department', header: '部门' }
 ]
 </script>
@@ -38,7 +39,6 @@ const columns: DataTableColumn<Person>[] = [
       :columns="columns"
       children-key="children"
       row-key="id"
-      bordered
     />
     <pre class="text-xs p-3 rounded-md bg-muted overflow-auto">{{ result }}</pre>
   </div>

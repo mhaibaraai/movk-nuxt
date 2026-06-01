@@ -5,7 +5,6 @@ import type { Person } from '~/composables/useTableMock'
 const treeData = makePeopleTree(3, 3, 3)
 const tableRef = useTemplateRef<DataTableExposed<Person>>('tableRef')
 const expandOnRowClick = ref(false)
-const expandedKeys = ref<string[]>([])
 
 const columns: DataTableColumn<Person>[] = [
   {
@@ -21,7 +20,7 @@ const columns: DataTableColumn<Person>[] = [
       color: 'primary'
     })
   },
-  { accessorKey: 'name', header: '成员', size: 200 },
+  { accessorKey: 'name', header: '成员' },
   { accessorKey: 'department', header: '部门' },
   { accessorKey: 'role', header: '岗位' }
 ]
@@ -43,13 +42,11 @@ const columns: DataTableColumn<Person>[] = [
     </div>
     <MDataTable
       ref="tableRef"
-      v-model:expanded-keys="expandedKeys"
       :data="treeData"
       :columns="columns"
       children-key="children"
       row-key="id"
       :expand-on-row-click="expandOnRowClick"
-      bordered
     />
   </div>
 </template>

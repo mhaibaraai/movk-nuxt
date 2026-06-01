@@ -8,7 +8,7 @@ const strategy = ref<DataTableSelectionColumn['strategy']>('cascade')
 const columns = computed<DataTableColumn<Person>[]>(() => [
   { type: 'selection', strategy: strategy.value },
   { type: 'expand' },
-  { accessorKey: 'name', header: '成员', size: 200 },
+  { accessorKey: 'name', header: '成员' },
   { accessorKey: 'department', header: '部门' },
   { accessorKey: 'role', header: '岗位' }
 ])
@@ -27,6 +27,6 @@ const columns = computed<DataTableColumn<Person>[]>(() => [
       size="xs"
       class="w-56"
     />
-    <MDataTable :data="treeData" :columns="columns" children-key="children" row-key="id" bordered />
+    <MDataTable :data="treeData" :columns="columns" children-key="children" row-key="id" />
   </div>
 </template>
