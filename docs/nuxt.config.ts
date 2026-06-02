@@ -25,9 +25,7 @@ export default defineNuxtConfig({
     '/docs': { redirect: '/docs/getting-started', prerender: false },
     '/docs/components': { redirect: '/docs/components/as-phone-number-input', prerender: false },
     '/docs/auto-form': { redirect: '/docs/auto-form/quickstart', prerender: false },
-    '/docs/composables': { redirect: '/docs/composables/use-auto-form', prerender: false },
-    '/docs/examples': { redirect: '/docs/examples/auto-form', prerender: false },
-    '/docs/best-practices': { redirect: '/docs/best-practices/project-structure', prerender: false }
+    '/docs/composables': { redirect: '/docs/composables/use-auto-form', prerender: false }
   },
 
   compatibilityDate: 'latest',
