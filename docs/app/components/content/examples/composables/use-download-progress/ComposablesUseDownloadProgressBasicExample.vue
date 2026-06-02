@@ -1,18 +1,18 @@
 <script setup lang="ts">
-const basic = useDownloadWithProgress()
+const STATUS = {
+  idle: { color: 'neutral', label: '空闲' },
+  pending: { color: 'info', label: '传输中' },
+  success: { color: 'success', label: '完成' },
+  error: { color: 'error', label: '失败' },
+  aborted: { color: 'warning', label: '已取消' }
+} as const
 
-function tip(s: string, e: { message: string } | null): string {
-  if (s === 'pending') return '传输中'
-  if (s === 'aborted') return '已取消'
-  if (s === 'error') return e?.message || '失败'
-  if (s === 'success') return '完成'
-  return '空闲'
-}
+const basic = useDownloadWithProgress()
 </script>
 
 <template>
   <div class="flex flex-col gap-3">
-    <div class="flex gap-2">
+    <div class="flex items-center gap-2">
       <UButton
         :loading="basic.status.value === 'pending'"
         icon="i-lucide-download"
@@ -29,13 +29,16 @@ function tip(s: string, e: { message: string } | null): string {
       >
         中止
       </UButton>
+      <UBadge :color="STATUS[basic.status.value].color" variant="subtle">
+        {{ basic.progress.value ?? 0 }}% · {{ STATUS[basic.status.value].label }}
+      </UBadge>
     </div>
     <UProgress :model-value="basic.progress.value ?? undefined" :max="100" />
-    <p class="text-xs text-muted">
-      {{ basic.progress.value ?? 0 }}% · {{ tip(basic.status.value, basic.error.value) }}
-    </p>
-    <p class="text-xs text-muted">
-      GET <code>/download/large</code>；<code>content-length</code> 已知时进度按比例更新。
-    </p>
+    <UAlert
+      v-if="basic.error.value"
+      color="error"
+      variant="subtle"
+      :description="basic.error.value.message"
+    />
   </div>
 </template>

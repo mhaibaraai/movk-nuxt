@@ -1,24 +1,34 @@
 <script setup lang="ts">
+const STATUS = {
+  idle: { color: 'neutral', label: '空闲' },
+  pending: { color: 'info', label: '传输中' },
+  success: { color: 'success', label: '完成' },
+  error: { color: 'error', label: '失败' },
+  aborted: { color: 'warning', label: '已取消' }
+} as const
+
 const custom = useDownloadWithProgress()
 </script>
 
 <template>
   <div class="flex flex-col gap-3">
-    <UButton
-      icon="i-lucide-file-down"
-      @click="custom.download('/download/large', {
-        filename: 'custom-name.bin',
-        headers: { 'X-Demo': 'movk' },
-        toast: { successMessage: '导出已开始' }
-      })"
-    >
-      自定义下载
-    </UButton>
-    <p class="text-xs text-muted">
-      状态：{{ custom.status.value }}
-    </p>
-    <p class="text-xs text-muted">
-      <code>filename</code> 覆盖响应头；<code>headers</code> 透传到请求；<code>toast.successMessage</code> 替换默认成功文案。
-    </p>
+    <div class="flex items-center gap-2">
+      <UButton
+        :loading="custom.status.value === 'pending'"
+        icon="i-lucide-file-down"
+        @click="custom.download('/download/large', { filename: 'custom-name.bin' })"
+      >
+        自定义文件名下载
+      </UButton>
+      <UBadge :color="STATUS[custom.status.value].color" variant="subtle">
+        {{ STATUS[custom.status.value].label }}
+      </UBadge>
+    </div>
+    <UAlert
+      v-if="custom.error.value"
+      color="error"
+      variant="subtle"
+      :description="custom.error.value.message"
+    />
   </div>
 </template>

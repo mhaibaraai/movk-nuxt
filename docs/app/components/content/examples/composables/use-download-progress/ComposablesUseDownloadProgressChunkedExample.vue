@@ -1,23 +1,30 @@
 <script setup lang="ts">
+const STATUS = {
+  idle: { color: 'neutral', label: '空闲' },
+  pending: { color: 'info', label: '传输中' },
+  success: { color: 'success', label: '完成' },
+  error: { color: 'error', label: '失败' },
+  aborted: { color: 'warning', label: '已取消' }
+} as const
+
 const chunked = useDownloadWithProgress()
 </script>
 
 <template>
   <div class="flex flex-col gap-3">
-    <UButton
-      :loading="chunked.status.value === 'pending'"
-      icon="i-lucide-download"
-      @click="chunked.download('/download/chunked')"
-    >
-      开始下载
-    </UButton>
+    <div class="flex items-center gap-2">
+      <UButton
+        :loading="chunked.status.value === 'pending'"
+        icon="i-lucide-download"
+        @click="chunked.download('/download/chunked')"
+      >
+        开始下载
+      </UButton>
+      <UBadge :color="STATUS[chunked.status.value].color" variant="subtle">
+        {{ chunked.progress.value === null ? '不确定' : `${chunked.progress.value}%` }}
+        · {{ STATUS[chunked.status.value].label }}
+      </UBadge>
+    </div>
     <UProgress :model-value="chunked.progress.value ?? undefined" :max="100" />
-    <p class="text-xs text-muted">
-      {{ chunked.progress.value === null ? '不确定' : `${chunked.progress.value}%` }}
-      · 状态 {{ chunked.status.value }}
-    </p>
-    <p class="text-xs text-muted">
-      GET <code>/download/chunked</code> 未返回 <code>content-length</code>，<code>progress</code> 为 <code>null</code>，<code>UProgress</code> 进入 indeterminate 状态。
-    </p>
   </div>
 </template>
