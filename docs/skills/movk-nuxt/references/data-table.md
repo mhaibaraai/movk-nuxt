@@ -33,7 +33,7 @@ const columns: DataTableDataColumn<User>[] = [
 ## Key rules
 
 - **Always set `row-key`** — selection, expansion, tree data and pinning all use it to identify rows.
-- **Derive callback / event types from official exports** — `DataTableDataColumn<T>['cell' | 'truncate' | 'tooltip']`, `DataTableProps<T>['sortable' | 'pinable' | 'resizable']`, and `DataTableSelectHandler` / `HoverHandler` / `ContextmenuHandler` / `StateChangeHandler` for events.
+- **Derive callback / event types from official exports** — `DataTableDataColumn<T>['cell' | 'truncate' | 'tooltip']`, `DataTableProps<T>['sortable' | 'pinable' | 'resizable']`, and `DataTableSelectHandler` / `DataTableHoverHandler` / `DataTableContextmenuHandler` for events.
 - **Per-column prop > global prop** — use "global on + individual off" or vice versa to express exceptions, not row-by-row repetition.
 - **Server-side pagination**: set `paginationOptions.manualPagination: true` + `rowCount`, and reset `pagination.pageIndex` to 0 whenever the search/filter changes.
 
@@ -244,19 +244,19 @@ Replace the whole pagination bar with `#pagination`, or just the summary / actio
 <script setup lang="ts">
 import type {
   DataTableSelectHandler,
-  HoverHandler,
-  ContextmenuHandler
+  DataTableHoverHandler,
+  DataTableContextmenuHandler
 } from '@movk/nuxt'
 
 const onSelect: DataTableSelectHandler<User> = (event, row) => {
   console.log('clicked', row.original.id)
 }
 
-const onHover: HoverHandler<User> = (event, row) => {
+const onHover: DataTableHoverHandler<User> = (event, row) => {
   hoveredId.value = row?.original.id ?? null
 }
 
-const onContextmenu: ContextmenuHandler<User> = (event, row) => {
+const onContextmenu: DataTableContextmenuHandler<User> = (event, row) => {
   event.preventDefault()
   openMenu(event, row.original)
 }

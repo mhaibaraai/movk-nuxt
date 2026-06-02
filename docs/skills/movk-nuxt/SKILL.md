@@ -27,7 +27,6 @@ Key MCP tools:
 - `list-components` — list all components with category and basic info
 - `list-api` — list API system docs (plugin, hooks, composables)
 - `list-data-table` — list DataTable doc pages (data/special columns, tree, row behavior, appearance, pagination, load more, API)
-- `list-best-practices` — list best-practice guides
 - `search-components-by-category` — search components by category or text
 - `search-auto-form-by-category` — search AutoForm docs by category or text
 - `search-data-table-by-category` — search DataTable doc pages by keyword
@@ -36,6 +35,7 @@ Key MCP tools:
 Prompts:
 - `find-component-for-usecase` — guided selection of the best component for a use case (covers standalone widgets and DataTable)
 - `find-autoform-solution` — guided selection of AutoForm field types, config, and customization for a form requirement
+- `implement-component-with-props` — guided implementation of a component given a set of target props
 
 When you need to know **what a component accepts** or **how its API works**, use the MCP. This skill teaches you **when to use which component** and **how to build well**.
 
@@ -45,7 +45,7 @@ When you need to know **what a component accepts** or **how its API works**, use
 2. **Configure module-wide behavior in `nuxt.config.ts` under `movk.*`** — `movk.api.endpoints / successCodes / dataKey / sessionTokenPath` for API behavior, `movk.autoForm` for global field meta, `movk.prefix` for component prefix. Override per-call (`{ endpoint, toast, skipUnwrap, skipBusinessCheck }`) only when the change is truly local.
 3. **Use `useApiFetch`, never raw `$fetch`** — fetch data with `useApiFetch` / `useLazyApiFetch` / `useClientApiFetch`; call imperatively via `const { $api } = useNuxtApp()` and `$api.use('endpoint')` to switch endpoints. The wrapper provides endpoint switching, auth-token injection, business-code checking, response unwrapping (`dataKey`), and toast — none of which `$fetch` provides.
 4. **Build forms from a Zod schema with `afz`** — get the factory via `const { afz } = useAutoForm()`, declare fields with `afz.string() / number() / boolean() / calendarDate() / enum() / array() / object() / file()`, attach UI via `.meta({ label, placeholder, description, controlProps })`, render with `<MAutoForm :schema :state @submit>`, and type state as `z.output<typeof schema>`. Never declare a parallel `interface` next to the schema.
-5. **Derive column / event types from official exports** — for `DataTable`, type column callbacks via index access (`DataTableDataColumn<T>['cell' | 'truncate' | 'tooltip']`, `DataTableProps<T>['sortable' | 'pinable' | 'resizable']`) and use the exported handler types (`DataTableSelectHandler`, `HoverHandler`, `ContextmenuHandler`, `StateChangeHandler`). Don't hand-write callback signatures.
+5. **Derive column / event types from official exports** — for `DataTable`, type column callbacks via index access (`DataTableDataColumn<T>['cell' | 'truncate' | 'tooltip']`, `DataTableProps<T>['sortable' | 'pinable' | 'resizable']`) and use the exported handler types (`DataTableSelectHandler`, `DataTableHoverHandler`, `DataTableContextmenuHandler`). Don't hand-write callback signatures.
 
 ## How to use this skill
 

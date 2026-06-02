@@ -51,7 +51,11 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 | `afz.array(...)` | repeatable group |
 | `afz.object({...})` | nested fieldset (`collapsible` for accordion) |
 
-For `afz.string()`, switch the rendered control via `meta({ type })`: `'textarea'`, `'withClear'`, `'withPasswordToggle'`, `'withCopy'`, `'withCharacterLimit'`, `'asPhoneNumberInput'` — each maps to the corresponding `M`-component wrapper.
+The table lists the common methods; the factory also exposes `afz.email() / url() / uuid() / isoDatetime() / inputDate() / inputTime() / tuple()` and the strict/loose object variants. Full list: MCP `get-component-metadata` on `MAutoForm`.
+
+For `afz.string()`, switch the rendered control via `meta({ type })`: `'textarea'`, `'withClear'`, `'withPasswordToggle'`, `'withCopy'`, `'withCharacterLimit'`, `'withFloatingLabel'`, `'asPhoneNumberInput'` — each maps to the corresponding `M`-component wrapper.
+
+`meta({ type })` also targets any other registered control regardless of field type — Nuxt UI controls (`'switch'`, `'slider'`, `'selectMenu'`, `'inputMenu'`, `'checkboxGroup'`, `'radioGroup'`, `'inputTags'`, `'pinInput'`, `'listbox'`) and Movk widgets (`'starRating'`, `'colorChooser'`, `'slideVerify'`, `'pillGroup'`), plus custom controls from `defineControl`. This list is non-exhaustive; see the control registry or the docs for the full set.
 
 ## Field metadata
 

@@ -50,4 +50,4 @@ Notes:
 ## MCP & docs
 
 - Docs: `/docs/composables` (use-auto-form, use-date-formatter, use-theme, use-message-box, use-upload-with-progress, use-download-with-progress)
-- MCP: `mcp__movk-nuxt__list-composables`, `mcp__movk-nuxt__search-composables`, `mcp__movk-nuxt__get-documentation-page`, `mcp__movk-nuxt__get-example`
+- MCP: `mcp__movk-nuxt__search-composables`, `mcp__movk-nuxt__get-documentation-page`, `mcp__movk-nuxt__get-example`
