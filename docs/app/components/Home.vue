@@ -1,21 +1,27 @@
 <script lang="ts" setup>
-import type { DateValue, AutoFormFieldContext } from '#movk/types'
-import type { TabsItem } from '@nuxt/ui'
+import type { DateValue, AutoFormFieldContext, DataTableColumn } from '#movk/types'
 import type z from 'zod'
 
-const items = [{
+const slides = [{
+  key: 'autoform',
   label: 'AutoForm',
-  icon: 'i-lucide-square-pen',
-  slot: 'autoform'
+  icon: 'i-lucide-square-pen'
 }, {
+  key: 'datatable',
+  label: 'DataTable',
+  icon: 'i-lucide-table'
+}, {
+  key: 'components',
   label: 'UI 组件',
-  icon: 'i-lucide-layout-grid',
-  slot: 'components'
+  icon: 'i-lucide-layout-grid'
 }, {
+  key: 'enhanced',
   label: '输入增强',
-  icon: 'i-lucide-sparkles',
-  slot: 'enhanced'
-}] satisfies TabsItem[]
+  icon: 'i-lucide-sparkles'
+}]
+
+const active = ref(0)
+const activeSlide = computed(() => slides[active.value]!)
 
 const { afz } = useAutoForm()
 
@@ -66,6 +72,37 @@ const formState = ref<Partial<Schema>>({
   interests: ['Vue', 'Nuxt']
 })
 
+interface Member {
+  id: string
+  name: string
+  role: string
+  level: 'P5' | 'P6' | 'P7' | 'P8'
+  salary: number
+}
+
+const tableData: Member[] = [
+  { id: 'P0001', name: '张伟', role: '前端工程师', level: 'P7', salary: 42000 },
+  { id: 'P0002', name: '李娜', role: 'UI 设计师', level: 'P6', salary: 36000 },
+  { id: 'P0003', name: '王强', role: '产品经理', level: 'P7', salary: 45000 },
+  { id: 'P0004', name: '陈静', role: '后端工程师', level: 'P6', salary: 38000 },
+  { id: 'P0005', name: '刘洋', role: '数据分析师', level: 'P5', salary: 28000 },
+  { id: 'P0006', name: '杨磊', role: '全栈工程师', level: 'P8', salary: 52000 }
+]
+
+const tableColumns: DataTableColumn<Member>[] = [
+  { type: 'selection' },
+  { accessorKey: 'name', header: '姓名', size: 120 },
+  { accessorKey: 'role', header: '岗位', size: 140 },
+  { accessorKey: 'level', header: '职级', size: 100 },
+  {
+    accessorKey: 'salary',
+    header: '薪资',
+    align: 'right',
+    size: 120,
+    cell: ({ getValue }) => `¥${getValue<number>().toLocaleString()}`
+  }
+]
+
 const pickedDate = ref<DateValue | undefined>()
 const color = ref('#3B82F6')
 const verified = ref(false)
@@ -82,24 +119,38 @@ const phoneText = ref('')
   <UCard class="w-full max-w-2xl mx-auto shadow-lg">
     <template #header>
       <div class="flex items-center justify-between">
-        <h2 class="text-base font-semibold">
-          交互式演示
-        </h2>
+        <div class="flex items-center gap-2">
+          <UIcon :name="activeSlide.icon" class="size-5 text-primary" />
+          <h2 class="text-base font-semibold">
+            {{ activeSlide.label }}
+          </h2>
+        </div>
         <UBadge color="primary" variant="subtle" size="xs">
           Live Demo
         </UBadge>
       </div>
     </template>
 
-    <UTabs :items="items" class="w-full">
-      <template #autoform>
-        <div class="p-4 sm:p-6 h-90 overflow-y-auto">
+    <UCarousel
+      v-slot="{ item }"
+      :items="slides"
+      :autoplay="{ delay: 6000, stopOnInteraction: false, stopOnMouseEnter: true, stopOnFocusIn: true }"
+      :dots="true"
+      loop
+      class="w-full"
+      :ui="{ item: 'basis-full min-w-0', dots: 'mt-4' }"
+      @select="active = $event"
+    >
+      <div class="h-90 overflow-y-auto">
+        <div v-if="item.key === 'autoform'" class="p-4 sm:p-6">
           <MAutoForm :schema="formSchema" :state="formState" :submit="false" />
         </div>
-      </template>
 
-      <template #components>
-        <div class="p-4 sm:p-6 h-90 overflow-y-auto space-y-3">
+        <div v-else-if="item.key === 'datatable'" class="p-4 sm:p-6">
+          <MDataTable :columns="tableColumns" :data="tableData" sortable />
+        </div>
+
+        <div v-else-if="item.key === 'components'" class="p-4 sm:p-6 space-y-3">
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div class="rounded-xl border border-default bg-elevated p-4">
               <div class="flex items-center justify-between mb-2">
@@ -150,11 +201,9 @@ const phoneText = ref('')
             <MSlideVerify v-model="verified" @success="verified = true" />
           </div>
         </div>
-      </template>
 
-      <template #enhanced>
-        <div class="p-4 sm:p-6 h-90 overflow-y-auto">
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-3">
+        <div v-else class="p-4 sm:p-6">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div class="rounded-xl border border-default bg-elevated p-3 space-y-2.5">
               <div class="flex items-center justify-between">
                 <p class="text-xs font-medium">
@@ -228,7 +277,7 @@ const phoneText = ref('')
             </div>
           </div>
         </div>
-      </template>
-    </UTabs>
+      </div>
+    </UCarousel>
   </UCard>
 </template>

@@ -1,4 +1,9 @@
 export default defineAppConfig({
+  aside: {
+    filter: {
+      enabled: true
+    }
+  },
   toaster: {
     position: 'top-center' as const,
     duration: 3000
