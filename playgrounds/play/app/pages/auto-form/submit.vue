@@ -122,7 +122,7 @@ async function onRefSubmit() {
         ref="apiForm"
         :schema="refSchema"
         :state="refState"
-        :submit-button="false"
+        :submit="false"
         @submit="onRefSubmit"
       />
     </Showcase>

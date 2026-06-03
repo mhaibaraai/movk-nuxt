@@ -2,6 +2,10 @@ packages:
   - playgrounds/*
   - docs
 
+ignoreWorkspaceRootCheck: true
+linkWorkspacePackages: true
+minimumReleaseAge: 0
+
 allowBuilds:
   '@parcel/watcher': false
   better-sqlite3: true
@@ -9,7 +13,3 @@ allowBuilds:
   sharp: true
   unrs-resolver: false
   vue-demi: false
-
-overrides:
-  '@nuxt/content': ^3.14.0
-  '@movk/core': https://pkg.pr.new/@movk/core@e58648f

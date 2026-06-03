@@ -1,7 +1,10 @@
 ---
 title: WithPasswordToggle
-description: 带显示/隐藏切换的密码输入框组件
+description: 带显示/隐藏切换的密码输入框组件。
 category: input
+seo:
+  title: WithPasswordToggle
+  description: A password input with a show/hide visibility toggle, built on the Nuxt UI input.
 ---
 
 ## 简介
@@ -12,53 +15,63 @@ category: input
 基于 Nuxt UI 的 Input 组件封装
 ::
 
-## 基础用法
+## 用法
 
-最简单的密码切换输入框：
+右侧眼睛按钮在明文与密文间切换：
 
-::component-example
+::component-code
 ---
-name: 'components-with-password-toggle-basic-example'
----
-::
-
-## 带图标
-
-为密码框添加锁的图标：
-
-::component-example
----
-name: 'components-with-password-toggle-icon-example'
+name: MWithPasswordToggle
+external: ['modelValue']
+hide: ['modelValue']
+props:
+  modelValue: 'hide-me'
 ---
 ::
 
-## 登录表单
+### `leadingIcon` 前置图标
 
-结合表单字段使用：
+通过 `leadingIcon` 为密码框添加语义化图标：
 
-::component-example
+::component-code
 ---
-name: 'components-with-password-toggle-login-example'
----
-::
-
-## 不同尺寸
-
-支持多种尺寸：
-
-::component-example
----
-name: 'components-with-password-toggle-size-example'
+name: MWithPasswordToggle
+props:
+  leadingIcon: i-lucide-lock
 ---
 ::
 
-## 自定义按钮
+### `size` 尺寸
+
+通过 `size` 切换输入框与按钮尺寸：
+
+::component-code
+---
+name: MWithPasswordToggle
+props:
+  modelValue: Test@123
+  size: md
+items:
+  size: ['xs', 'sm', 'md', 'lg', 'xl']
+---
+::
+
+### `buttonProps` 切换按钮
 
 通过 `buttonProps` 自定义切换按钮样式：
 
-::component-example
+::component-code
 ---
-name: 'components-with-password-toggle-custom-example'
+name: MWithPasswordToggle
+prettier: true
+props:
+  modelValue: SecurePass123
+  buttonProps:
+    color: primary
+    variant: soft
+items:
+  buttonProps.color: ['primary', 'secondary', 'success', 'info', 'warning', 'error', 'neutral']
+  buttonProps.variant: ['primary', 'secondary', 'success', 'info', 'warning', 'error', 'neutral']
 ---
 ::
 
@@ -75,6 +88,10 @@ name: 'components-with-password-toggle-custom-example'
 ### Slots
 
 :component-slots{slug="MWithPasswordToggle"}
+
+## Theme
+
+:component-theme
 
 ## Changelog
 

@@ -1,7 +1,10 @@
 ---
 title: AsPhoneNumberInput
-description: 带输入掩码格式化的电话号码输入框组件
+description: 带输入掩码格式化的电话号码输入框组件。
 category: input
+seo:
+  title: AsPhoneNumberInput
+  description: A phone number input with mask formatting and dial-code support, built on the Nuxt UI input.
 ---
 
 ## 简介
@@ -12,44 +15,70 @@ category: input
 基于 Nuxt UI 的 Input 组件封装，使用 [maska](https://beholdr.github.io/maska/) 处理输入掩码
 ::
 
-## 基础用法
+## 用法
 
 `#` 代表数字占位符，默认掩码为 `### #### ####`、区号为 `+86`（中国大陆格式）。
 
-::component-example
+::component-code
 ---
-name: 'components-as-phone-number-input-basic-example'
----
-::
-
-## 带区号
-
-通过 `dialCode` 展示区号前缀，配合自定义掩码使用：
-
-::component-example
----
-name: 'components-as-phone-number-input-dial-code-example'
+name: MAsPhoneNumberInput
+external: ['modelValue']
+hide: ['modelValue']
+props:
+  modelValue: ''
 ---
 ::
 
-## 自定义掩码
+### `dialCode` 区号
 
-通过 `mask` prop 适配不同国家的号码格式：
+通过 `dialCode` 在输入框前展示国家或地区区号：
 
-::component-example
+::component-code
 ---
-name: 'components-as-phone-number-input-mask-example'
+name: MAsPhoneNumberInput
+props:
+  dialCode: '+1'
+items:
+  dialCode: ['+86', '+1', '+44', '+81']
 ---
 ::
 
-## 表单场景
+### `mask` 掩码
 
-结合表单字段使用：
+通过 `mask` 适配不同国家的号码格式，`#` 代表数字占位符：
 
-::component-example
+::component-code
 ---
-name: 'components-as-phone-number-input-form-example'
+name: MAsPhoneNumberInput
+props:
+  mask: '(###) ###-####'
+items:
+  mask: ['### #### ####', '(###) ###-####', '#### ### ####', '###-####-####']
 ---
+::
+
+## 示例
+
+### 融入`UFieldGroup`
+
+与按钮置于 `UFieldGroup` 时共用尺寸、圆角和边框衔接，适合组合拨号操作：
+
+::component-code
+---
+name: UFieldGroup
+prettier: true
+props:
+  size: xs
+items:
+  size: ['xs', 'sm', 'md', 'lg', 'xl']
+slots:
+  default: |
+
+    <MAsPhoneNumberInput dial-code="+1" />
+    <UButton icon="i-lucide-phone-call" color="neutral" variant="subtle" />
+---
+:m-as-phone-number-input{dial-code="+1"}
+:u-button{color="neutral" variant="subtle" icon="i-lucide-phone-call"}
 ::
 
 ## API
@@ -65,6 +94,10 @@ name: 'components-as-phone-number-input-form-example'
 ### Slots
 
 :component-slots{slug="MAsPhoneNumberInput"}
+
+## Theme
+
+:component-theme
 
 ## Changelog
 

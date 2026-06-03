@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import type { FormSubmitEvent } from '@nuxt/ui'
+import type z from 'zod'
+
 const { afz } = useAutoForm()
 
 const schema = afz.object({
@@ -9,11 +12,11 @@ const schema = afz.object({
   email: afz.email({ controlProps: { placeholder: '请输入邮箱' } }).meta({ label: '邮箱' }).optional()
 })
 
-const params = ref({})
+const state = ref<Partial<z.output<typeof schema>>>({})
 const result = ref('')
 
-function handleSearch(value: Record<string, unknown>) {
-  result.value = JSON.stringify(value, null, 2)
+function handleSearch(event: FormSubmitEvent<Record<string, unknown>>) {
+  result.value = JSON.stringify(event.data, null, 2)
 }
 
 function handleReset() {
@@ -24,9 +27,9 @@ function handleReset() {
 <template>
   <div class="space-y-4">
     <MSearchForm
-      v-model="params"
+      v-model="state"
       :schema="schema"
-      @search="handleSearch"
+      @submit="handleSearch"
       @reset="handleReset"
     />
     <pre v-if="result" class="text-sm bg-muted p-3 rounded-(--ui-radius)">{{ result }}</pre>

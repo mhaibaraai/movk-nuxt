@@ -2,9 +2,9 @@ import { z } from 'zod'
 import { queryCollection } from '@nuxt/content/server'
 
 export default defineMcpPrompt({
-  description: '根据表单需求找到最适合的 AutoForm 字段类型、配置和自定义方案',
+  description: 'Find the most suitable AutoForm field types, configuration and customization approach for a form requirement',
   inputSchema: {
-    requirement: z.string().describe('描述你的表单需求（例如：「用户注册表单，需要用户名、邮箱、密码和确认密码」「产品信息表单，包含名称、价格、分类和图片上传」）')
+    requirement: z.string().describe('Describe your form requirement (e.g. "a sign-up form with username, email, password and confirm password", "a product form with name, price, category and image upload")')
   },
   async handler({ requirement }) {
     const event = useEvent()
@@ -15,47 +15,28 @@ export default defineMcpPrompt({
       .select('path', 'title', 'description', 'category')
       .all()
 
-    const fieldTypes = autoFormDocs.filter(doc => doc.path.includes('/field/'))
-    const slots = autoFormDocs.filter(doc => doc.path.includes('/slots/'))
-    const customizations = autoFormDocs.filter(doc => doc.path.includes('/customization/'))
-    const basics = autoFormDocs.filter(doc =>
-      !doc.path.includes('/field/')
-      && !doc.path.includes('/slots/')
-      && !doc.path.includes('/customization/')
-    )
-
     return {
       messages: [
         {
           role: 'user' as const,
           content: {
             type: 'text' as const,
-            text: `我需要构建以下表单：「${requirement}」
+            text: `I need to build the following form: "${requirement}".
 
-请根据需求推荐：
-1. 最适合的字段类型（String、Number、Boolean、Date、Enum、Array、Object、File）
-2. 可能需要的自定义配置（条件渲染、折叠面板、自定义控件、布局等）
-3. 相关的插槽使用方法（如果需要高度自定义）
+Based on the requirement, please recommend:
+1. The most suitable field types (String, Number, Boolean, Date, Enum, Array, Object, File)
+2. Any customization that may be needed (conditional rendering, collapsible panels, custom controls, layout, etc.)
+3. Relevant slot usage (if heavy customization is required)
 
-以下是所有可用的 AutoForm 文档资源：
+Here are all available AutoForm documentation pages:
 
-**基础文档**：
-${JSON.stringify(basics, null, 2)}
+${JSON.stringify(autoFormDocs, null, 2)}
 
-**字段类型**：
-${JSON.stringify(fieldTypes, null, 2)}
-
-**插槽系统**：
-${JSON.stringify(slots, null, 2)}
-
-**自定义功能**：
-${JSON.stringify(customizations, null, 2)}
-
-请提供：
-- 推荐的 Zod Schema 结构
-- 需要使用的字段配置
-- 示例代码（如果适用）
-- 相关文档链接`
+Please provide:
+- A recommended Zod schema structure
+- The field configuration to use
+- Example code (if applicable)
+- Relevant documentation links`
           }
         }
       ]

@@ -1,0 +1,27 @@
+<script setup lang="ts">
+const { afz } = useAutoForm()
+
+const schema = afz.object({
+  name: afz.string({ controlProps: { placeholder: '请输入' } }).meta({ label: '姓名' }).optional(),
+  status: afz.enum(['启用', '禁用', '待审核']).meta({ label: '状态' }).optional(),
+  department: afz.string({ controlProps: { placeholder: '请输入' } }).meta({ label: '部门' }).optional(),
+  role: afz.enum(['管理员', '编辑', '查看者']).meta({ label: '角色' }).optional(),
+  email: afz.email({ controlProps: { placeholder: '请输入' } }).meta({ label: '邮箱' }).optional(),
+  phone: afz.string({ controlProps: { placeholder: '请输入' } }).meta({ label: '手机号' }).optional(),
+  keyword: afz.string({ controlProps: { placeholder: '请输入' } }).meta({ label: '关键词' }).optional()
+})
+
+const expanded = ref(false)
+</script>
+
+<template>
+  <div class="space-y-3">
+    <div class="flex items-center gap-2 text-sm text-muted">
+      <UButton size="sm" color="neutral" variant="outline" @click="expanded = !expanded">
+        外部{{ expanded ? '收起' : '展开' }}
+      </UButton>
+      <span>expanded = {{ expanded }}</span>
+    </div>
+    <MSearchForm v-model:expanded="expanded" :schema="schema" />
+  </div>
+</template>

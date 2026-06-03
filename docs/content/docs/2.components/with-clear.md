@@ -1,7 +1,10 @@
 ---
 title: WithClear
-description: 带清除按钮的输入框组件
+description: 带清除按钮的输入框组件。
 category: input
+seo:
+  title: WithClear
+  description: An input with a clear button, built on the Nuxt UI input.
 ---
 
 ## 简介
@@ -12,53 +15,80 @@ category: input
 基于 Nuxt UI 的 Input 组件封装
 ::
 
-## 基础用法
+## 用法
 
-最简单的清除功能输入框：
+有内容时右侧自动显示清除按钮：
 
-::component-example
+::component-code
 ---
-name: 'components-with-clear-basic-example'
----
-::
-
-## 带图标
-
-为输入框添加语义化图标：
-
-::component-example
----
-name: 'components-with-clear-icon-example'
+name: MWithClear
+external: ['modelValue']
+hide: ['modelValue']
+props:
+  modelValue: 张三
 ---
 ::
 
-## 搜索框
+### `leadingIcon` 前置图标
 
-常用于搜索场景，快速清除搜索关键词：
+通过 `leadingIcon` 为输入框添加语义化图标：
 
-::component-example
+::component-code
 ---
-name: 'components-with-clear-search-example'
+name: MWithClear
+external: ['modelValue']
+hide: ['modelValue']
+props:
+  modelValue: user@example.com
+  leadingIcon: i-lucide-mail
 ---
 ::
 
-## 清除事件
+### `size` 尺寸
+
+通过 `size` 切换输入框与清除按钮尺寸：
+
+::component-code
+---
+name: MWithClear
+external: ['modelValue']
+hide: ['modelValue']
+props:
+  modelValue: 内容
+  size: md
+items:
+  size: ['xs', 'sm', 'md', 'lg', 'xl']
+---
+::
+
+### `buttonProps` 清除按钮
+
+通过 `buttonProps` 自定义清除按钮样式：
+
+::component-code
+---
+name: MWithClear
+prettier: true
+external: ['modelValue']
+hide: ['modelValue']
+props:
+  modelValue: 一些内容
+  buttonProps:
+    color: error
+    icon: i-lucide-x
+---
+::
+
+
+## 示例
+
+### 清除事件
 
 通过 `@clear` 事件监听清除操作：
 
 ::component-example
 ---
-name: 'components-with-clear-event-example'
----
-::
-
-## 自定义按钮
-
-通过 `buttonProps` 自定义清除按钮样式：
-
-::component-example
----
-name: 'components-with-clear-custom-example'
+name: ComponentsWithClearEventExample
 ---
 ::
 
@@ -75,6 +105,10 @@ name: 'components-with-clear-custom-example'
 ### Slots
 
 :component-slots{slug="MWithClear"}
+
+## Theme
+
+:component-theme
 
 ## Changelog
 

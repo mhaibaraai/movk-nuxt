@@ -10,23 +10,8 @@ const schema = afz.object({
   phone: afz.string({ controlProps: { placeholder: '请输入' } }).meta({ label: '手机号' }).optional(),
   keyword: afz.string({ controlProps: { placeholder: '请输入' } }).meta({ label: '关键词' }).optional()
 })
-
-const params = ref({})
 </script>
 
 <template>
-  <div class="space-y-6">
-    <div class="space-y-2">
-      <p class="text-sm text-muted">
-        2 行可见（cols=3），默认展开
-      </p>
-      <MSearchForm
-        v-model="params"
-        :schema="schema"
-        :cols="3"
-        :visible-rows="2"
-        default-expanded
-      />
-    </div>
-  </div>
+  <MSearchForm :schema="schema" />
 </template>

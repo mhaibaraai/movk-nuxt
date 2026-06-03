@@ -183,6 +183,17 @@ function handleOpenUpdate(val: boolean) {
   emits('update:open', val)
 }
 
+function toggleOpen() {
+  if (effectiveDisabled.value) return
+  handleOpenUpdate(!openState.value)
+}
+
+function handleInputFocus() {
+  emitFormFocus()
+  if (effectiveDisabled.value) return
+  if (!openState.value) handleOpenUpdate(true)
+}
+
 function commitValue(value: string | undefined) {
   modelValue.value = value
   emits('change', value)
@@ -193,7 +204,7 @@ function commitValue(value: string | undefined) {
 
 <template>
   <UPopover v-bind="attrs" :open="openState" :ui="baseUi" @update:open="handleOpenUpdate">
-    <template #default="{ open }">
+    <template v-if="props.trigger !== 'input'" #default="{ open }">
       <slot :open="open" :value="modelValue">
         <UButton
           v-if="props.trigger === 'chip'"
@@ -208,40 +219,6 @@ function commitValue(value: string | undefined) {
             <UIcon v-if="!modelValue" :name="props.icon" :class="extraUi.triggerIcon" />
           </span>
         </UButton>
-
-        <UInput
-          v-else-if="props.trigger === 'input'"
-          :id="id"
-          v-model="inputDraft"
-          :name="name"
-          :size="effectiveSize"
-          :color="effectiveColor"
-          :highlight="highlight"
-          :placeholder="props.placeholder"
-          :disabled="effectiveDisabled"
-          v-bind="ariaAttrs"
-          @blur="handleInputBlur"
-          @focus="emitFormFocus"
-          @keydown.enter="($event.target as HTMLInputElement).blur()"
-        >
-          <template #leading>
-            <slot name="leading" :value="modelValue">
-              <span
-                v-if="modelValue"
-                :class="extraUi.triggerChip"
-                :style="{ backgroundColor: modelValue }"
-              />
-              <UIcon
-                v-else
-                :name="props.icon"
-                :class="extraUi.triggerIcon"
-              />
-            </slot>
-          </template>
-          <template v-if="!!slots.trailing" #trailing>
-            <slot name="trailing" :value="modelValue" />
-          </template>
-        </UInput>
 
         <UButton
           v-else
@@ -263,6 +240,50 @@ function commitValue(value: string | undefined) {
           </template>
         </UButton>
       </slot>
+    </template>
+
+    <template v-if="props.trigger === 'input'" #anchor>
+      <UInput
+        :id="id"
+        v-model="inputDraft"
+        :name="name"
+        :size="effectiveSize"
+        :color="effectiveColor"
+        :highlight="highlight"
+        :placeholder="props.placeholder"
+        :disabled="effectiveDisabled"
+        v-bind="ariaAttrs"
+        @blur="handleInputBlur"
+        @focus="handleInputFocus"
+        @keydown.enter="($event.target as HTMLInputElement).blur()"
+      >
+        <template #leading>
+          <slot name="leading" :value="modelValue">
+            <button
+              type="button"
+              :disabled="effectiveDisabled"
+              :aria-label="modelValue || props.placeholder"
+              class="inline-flex items-center justify-center cursor-pointer focus:outline-none disabled:cursor-not-allowed"
+              @mousedown.prevent
+              @click="toggleOpen"
+            >
+              <span
+                v-if="modelValue"
+                :class="extraUi.triggerChip"
+                :style="{ backgroundColor: modelValue }"
+              />
+              <UIcon
+                v-else
+                :name="props.icon"
+                :class="extraUi.triggerIcon"
+              />
+            </button>
+          </slot>
+        </template>
+        <template v-if="!!slots.trailing" #trailing>
+          <slot name="trailing" :value="modelValue" />
+        </template>
+      </UInput>
     </template>
 
     <template #content>

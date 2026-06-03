@@ -2,7 +2,7 @@ import { z } from 'zod'
 import { queryCollection } from '@nuxt/content/server'
 
 export default defineMcpTool({
-  description: '按分类或文本筛选搜索组件',
+  description: 'Search components by category or text',
   annotations: {
     readOnlyHint: true,
     destructiveHint: false,
@@ -10,8 +10,8 @@ export default defineMcpTool({
     openWorldHint: false
   },
   inputSchema: {
-    category: z.string().optional().describe('按分类筛选组件'),
-    search: z.string().optional().describe('用于按名称或描述筛选组件的搜索词')
+    category: z.string().optional().describe('Filter components by category (input / feedback / form / advanced)'),
+    search: z.string().optional().describe('Search term to filter components by name or description')
   },
   inputExamples: [
     { category: 'input' },

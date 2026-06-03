@@ -1,12 +1,15 @@
 ---
 title: DatePicker
-description: 基于国际化标准的日期选择器组件
+description: 基于国际化标准的日期选择器组件。
 category: advanced
+seo:
+  title: DatePicker
+  description: An internationalized date picker supporting single, range and multiple selection, presets and custom output formats.
 ---
 
 ## 简介
 
-`MDatePicker` 是一个功能强大的日期选择器组件，基于 `@internationalized/date` 提供国际化日期处理能力。支持单日期、日期范围、多日期选择等多种模式，并提供丰富的日期验证和格式化选项。
+`MDatePicker` 是一个国际化日期选择器，基于 `@internationalized/date` 处理时区与本地化。支持单日期、日期范围、多日期选择，并提供按钮触发、可清空、快捷预设等多种交互形态。
 
 ::callout{color="neutral" to="https://ui.nuxt.com/docs/components/calendar"}
 基于 Nuxt UI 的 Calendar 组件封装
@@ -16,83 +19,201 @@ category: advanced
 使用 `@internationalized/date` 库进行日期处理，确保时区安全和国际化支持。
 ::
 
-## 基础用法
+## 用法
 
-最基础的日期选择器：
+默认按钮触发器展示当前日期，点击打开日历面板后选择并写入 v-model：
 
-::component-example
+::component-code
 ---
-name: 'components-date-picker-basic-example'
----
-::
-
-## 日期范围
-
-通过 `range` 启用范围选择模式：
-
-::component-example
----
-name: 'components-date-picker-range-example'
+name: MDatePicker
+external: ['modelValue']
+hide: ['modelValue']
+props:
+  modelValue: ''
 ---
 ::
 
-## 多日期选择
+### `range` 日期范围
 
-通过 `multiple` 启用多选模式：
+`range` 模式维护 `start` / `end` 两端日期，`numberOfMonths` 可同时展示双月日历：
 
-::component-example
+::component-code
 ---
-name: 'components-date-picker-multiple-example'
----
-::
-
-## 日期限制
-
-限制可选日期范围：
-
-::component-example
----
-name: 'components-date-picker-validation-example'
+name: MDatePicker
+external: ['modelValue']
+hide: ['modelValue']
+props:
+  modelValue: ''
+  range: true
+  numberOfMonths: 2
+items:
+  range: [true, false]
 ---
 ::
 
-## 禁用特定日期
+### `numberOfMonths` 月份数量
 
-使用 `isDateUnavailable` 禁用特定日期：
+`numberOfMonths` 控制弹层内并排展示的月份数量，便于跨月选择：
 
-::component-example
+::component-code
 ---
-name: 'components-date-picker-unavailable-example'
----
-::
-
-## 格式化显示
-
-支持多种日期格式输出：
-
-::component-example
----
-name: 'components-date-picker-format-example'
+name: MDatePicker
+props:
+  numberOfMonths: 3
+items:
+  numberOfMonths: [1, 2, 3]
 ---
 ::
 
-## 多月份显示
+### `clearable` 可清空
 
-通过 `numberOfMonths` 同时显示多个月份的日历：
+`clearable` 在已有值时显示清除入口，点击后重置且不展开日历：
 
-::component-example
+::component-code
 ---
-name: 'components-date-picker-months-example'
+name: MDatePicker
+props:
+  clearable: true
 ---
 ::
 
-## 自定义按钮
+### `presets` 快捷预设
 
-通过 `buttonProps` 自定义按钮样式：
+`presets` 设为 `default` 会按当前模式自动生成「今天」「本周」「本月」等快捷项：
+
+::component-code
+---
+name: MDatePicker
+hide: ['placeholder', 'presets']
+props:
+  range: true
+  presets: default
+  placeholder: 选择范围
+items:
+  range: [true, false]
+---
+::
+
+### `multiple` 多日期选择
+
+`multiple` 模式将多个日期保存在数组中，按钮文案可根据已选数量动态展示：
+
+::component-code
+---
+name: MDatePicker
+prettier: true
+props:
+  multiple: true
+  buttonProps:
+    label: 选择多个日期
+    color: primary
+items:
+  multiple: [true, false]
+  buttonProps.color: ['primary', 'info', 'success', 'warning', 'error', 'neutral']
+---
+::
+
+### `buttonProps` 触发按钮
+
+`buttonProps` 透传给触发按钮，可调整 label、color、variant 与 icon：
+
+::component-code
+---
+name: MDatePicker
+prettier: true
+props:
+  buttonProps:
+    label: 选择生日
+    color: primary
+    variant: outline
+    icon: i-lucide-cake
+items:
+  buttonProps.color: ['primary', 'info', 'success', 'warning', 'error', 'neutral']
+  buttonProps.variant: ['solid', 'outline', 'soft', 'subtle', 'ghost', 'link']
+---
+::
+
+## 示例
+
+### 继承字段上下文
+
+放入 `UFormField` 后继承 `size` 与错误态，触发按钮按表单状态渲染：
+
+::component-code
+---
+name: UFormField
+prettier: true
+props:
+  label: 预约日期
+  size: xs
+  error: 示例错误态
+slots:
+  default: |
+
+    <MDatePicker />
+---
+:m-date-picker
+::
+
+### 融入`UFieldGroup`
+
+与按钮置于 `UFieldGroup` 时共用尺寸与边框衔接，适合筛选栏中组合快捷操作：
+
+::component-code
+---
+name: UFieldGroup
+prettier: true
+props:
+  size: xs
+items:
+  size: ['xs', 'sm', 'md', 'lg', 'xl']
+slots:
+  default: |
+
+    <MDatePicker />
+    <UButton icon="i-lucide-calendar-check" color="neutral" variant="subtle" />
+---
+:m-date-picker
+:u-button{color="neutral" variant="subtle" icon="i-lucide-calendar-check"}
+::
+
+### 限制可选日期边界
+
+`minValue` 与 `maxValue` 会禁用边界外日期，分别约束只能选择未来或过去日期：
 
 ::component-example
 ---
-name: 'components-date-picker-button-example'
+name: ComponentsDatePickerValidationExample
+---
+::
+
+### 按规则禁用日期
+
+`isDateUnavailable` 可按业务规则禁用日期（如示例中的周末）：
+
+::component-example
+---
+name: ComponentsDatePickerUnavailableExample
+---
+::
+
+### 自定义触发按钮文案
+
+`labelFormat` 接收格式化工具和当前值，可把日期与星期信息组合为按钮 label：
+
+::component-example
+---
+name: ComponentsDatePickerFormatExample
+---
+::
+
+### 自定义快捷预设
+
+`presets` 传入数组可按业务规则返回日期，每项 `value` 是接收 `formatter` 的函数：
+
+::component-example
+---
+name: ComponentsDatePickerPresetsExample
 ---
 ::
 
@@ -109,6 +230,10 @@ name: 'components-date-picker-button-example'
 ### Slots
 
 :component-slots{slug="MDatePicker"}
+
+## Theme
+
+:component-theme
 
 ## Changelog
 

@@ -82,6 +82,16 @@ function buildSpecialColumnDef<T>(
       }
     : render.header
 
+  const classMeta = buildClassMeta(density, alignClass, effectiveResizable, defaults.tdClass)
+  // 选择列复选框命中 Nuxt UI 的 [&:has([role=checkbox])]:pe-0，右 padding 被清零，
+  // 同变体覆盖为 px-0 让左右对称，使居中复选框真正居中
+  const checkboxClass = type === 'selection'
+    ? {
+        td: [classMeta?.td, '[&:has([role=checkbox])]:px-0'].filter(Boolean).join(' '),
+        th: [classMeta?.th, '[&:has([role=checkbox])]:px-0'].filter(Boolean).join(' ')
+      }
+    : classMeta
+
   const def: ColumnDef<T, unknown> = {
     id,
     header: resolvedHeader,
@@ -93,7 +103,7 @@ function buildSpecialColumnDef<T>(
     enablePinning: effectivePinable,
     cell: render.cell,
     meta: {
-      class: buildClassMeta(density, alignClass, effectiveResizable, defaults.tdClass),
+      class: checkboxClass,
       style: makeColumnStyle<T>(effectiveAlign)
     }
   }
@@ -128,6 +138,7 @@ export function resolveSelectionColumn<T>(
           }
           return h(UCheckbox, {
             'aria-label': 'Select all rows',
+            'class': 'inline-flex',
             'modelValue': isIndeterminate ? 'indeterminate' : isAllSelected,
             'onUpdate:modelValue': (value: unknown) => hctx.table.toggleAllPageRowsSelected(!!(value as boolean | 'indeterminate')),
             ...resolveCallbackValue(col.checkboxProps ?? {}, cbCtx)
@@ -146,6 +157,7 @@ export function resolveSelectionColumn<T>(
         }
         return h(UCheckbox, {
           'aria-label': 'Select parent row',
+          'class': 'inline-flex',
           'disabled': true,
           'modelValue': all ? true : some ? 'indeterminate' : false,
           ...resolveCallbackValue(col.checkboxProps ?? {}, cbCtx)
@@ -167,6 +179,7 @@ export function resolveSelectionColumn<T>(
       }
       return h(UCheckbox, {
         'aria-label': 'Select row',
+        'class': 'inline-flex',
         'modelValue': isSelected ? true : isIndeterminate ? 'indeterminate' : false,
         'onUpdate:modelValue': (value: unknown) => cellCtx.row.toggleSelected(!!(value as boolean | 'indeterminate')),
         ...resolveCallbackValue(col.checkboxProps ?? {}, cbCtx)
@@ -191,7 +204,7 @@ export function resolveExpandColumn<T>(
 ): ColumnDef<T, unknown> {
   ctx.flags.hasExpand = true
   const isTreeMode = ctx.options.childrenKey != null
-  const showToggleAll = isTreeMode && col.toggleAll !== false
+  const showToggleAll = col.toggleAll !== false
   return buildSpecialColumnDef(col, 'expand', ctx, {
     header: showToggleAll
       ? (hctx: HeaderContext<T, unknown>) => {

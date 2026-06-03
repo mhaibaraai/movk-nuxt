@@ -1,7 +1,10 @@
 ---
 title: WithFloatingLabel
-description: 带浮动标签和清除按钮的输入框组件
+description: 带浮动标签和清除按钮的输入框组件。
 category: input
+seo:
+  title: WithFloatingLabel
+  description: An input with a floating label and clear button, built on the Nuxt UI input.
 ---
 
 ## 简介
@@ -12,53 +15,79 @@ category: input
 基于 Nuxt UI 的 Input 组件封装
 ::
 
-## 基础用法
+## 用法
 
-最简单的浮动标签输入框：
+标签在空值时居中显示，聚焦或有内容时自动上浮：
 
-::component-example
+::component-code
 ---
-name: 'components-with-floating-label-basic-example'
----
-::
-
-## 带图标
-
-为输入框添加前置图标：
-
-::component-example
----
-name: 'components-with-floating-label-icon-example'
+name: MWithFloatingLabel
+external: ['modelValue']
+hide: ['modelValue']
+props:
+  modelValue: test@example.com
+  label: 邮箱地址
 ---
 ::
 
-## 清除事件
+### `leadingIcon` 前置图标
+
+通过 `leadingIcon` 为输入框添加前置图标：
+
+::component-code
+---
+name: MWithFloatingLabel
+props:
+  label: 用户名
+  leadingIcon: i-lucide-user
+---
+::
+
+### `size` 尺寸
+
+通过 `size` 切换输入框与标签尺寸：
+
+::component-code
+---
+name: MWithFloatingLabel
+props:
+  label: 尺寸演示
+  size: md
+items:
+  size: ['xs', 'sm', 'md', 'lg', 'xl']
+---
+::
+
+### `clearButtonProps` 清除按钮
+
+::component-code
+---
+name: MWithFloatingLabel
+prettier: true
+external: ['modelValue']
+hide: ['modelValue']
+props:
+  modelValue: test@example.com
+  label: 邮箱地址
+  ui:
+    label: text-warning
+  clearButtonProps:
+    color: error
+    icon: i-lucide-x
+items:
+  clearButtonProps.color: ['primary', 'secondary', 'success', 'info', 'warning', 'error', 'neutral']
+---
+::
+
+## 示例
+
+### 清除事件
 
 通过 `@clear` 事件监听清除操作：
 
 ::component-example
 ---
-name: 'components-with-floating-label-clear-example'
----
-::
-
-## 自定义样式
-
-通过 `labelClass` 和 `clearButtonProps` 自定义标签与清除按钮：
-
-::component-example
----
-name: 'components-with-floating-label-custom-example'
----
-::
-
-## 表单场景
-
-结合表单字段使用：
-
-::component-example
----
-name: 'components-with-floating-label-form-example'
+name: ComponentsWithFloatingLabelClearExample
 ---
 ::
 
@@ -75,6 +104,10 @@ name: 'components-with-floating-label-form-example'
 ### Slots
 
 :component-slots{slug="MWithFloatingLabel"}
+
+## Theme
+
+:component-theme
 
 ## Changelog
 

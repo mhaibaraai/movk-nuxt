@@ -44,7 +44,7 @@ const resizableColumns: DataTableColumn<Person>[] = [
 
 // 5. 截断 + tooltip
 const truncateColumns: DataTableColumn<Person>[] = [
-  { accessorKey: 'name', header: '姓名', size: 100 },
+  { accessorKey: 'name', header: '姓名' },
   { accessorKey: 'bio', header: '个人简介', size: 240, tooltip: 2 },
   { accessorKey: 'address', header: '地址', size: 200, truncate: true },
   { accessorKey: 'department', header: '部门', size: 100, truncate: false }

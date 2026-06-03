@@ -67,7 +67,7 @@ const enabledFormats = ref<ColorChooserProps['formats']>(['hex', 'rgb', 'hsl'])
       </UFormField>
     </Showcase>
 
-    <Showcase title="融入分组控件" description="颜色输入触发器与按钮共享 UFieldGroup 尺寸，适合表单行内的取色操作。" :state="{ value: fieldGroupValue }">
+    <Showcase title="融入`UFieldGroup`" description="颜色输入触发器与按钮共享 UFieldGroup 尺寸，适合表单行内的取色操作。" :state="{ value: fieldGroupValue }">
       <UFieldGroup size="xs" class="w-full">
         <MColorChooser v-model="fieldGroupValue" trigger="input" />
         <UButton icon="i-lucide-pipette" color="neutral" variant="subtle" />

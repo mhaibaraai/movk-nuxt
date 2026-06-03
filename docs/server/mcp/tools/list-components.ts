@@ -1,7 +1,7 @@
 import { queryCollection } from '@nuxt/content/server'
 
 export default defineMcpTool({
-  description: '列出所有可用的 Movk Nuxt 组件及其分类和基本信息',
+  description: 'List all available Movk Nuxt components with their category and basic info',
   annotations: {
     readOnlyHint: true,
     destructiveHint: false,

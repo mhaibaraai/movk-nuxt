@@ -175,7 +175,7 @@ export function renderHeaderActions<T>(
             'h-full transition-colors',
             ctx.column.getIsResizing()
               ? 'w-0.5 bg-primary'
-              : 'w-px opacity-0 group-hover:opacity-100 bg-(--ui-border-accented) group-hover/resize:w-0.5 group-hover/resize:bg-primary'
+              : 'w-px opacity-50 group-hover:opacity-100 bg-(--ui-border-accented) group-hover/resize:w-0.5 group-hover/resize:bg-primary'
           ].join(' ')
         })
       ])

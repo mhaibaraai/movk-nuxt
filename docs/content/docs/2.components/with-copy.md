@@ -1,7 +1,10 @@
 ---
 title: WithCopy
-description: 带复制功能的输入框组件
+description: 带复制功能的输入框组件。
 category: input
+seo:
+  title: WithCopy
+  description: An input with a copy-to-clipboard button, built on the Nuxt UI input.
 ---
 
 ## 简介
@@ -12,43 +15,77 @@ category: input
 基于 Nuxt UI 的 Input 组件封装
 ::
 
-## 基础用法
+## 用法
 
-最简单的复制功能输入框：
+右侧复制按钮一键复制内容到剪贴板：
 
-::component-example
+::component-code
 ---
-name: 'components-with-copy-basic-example'
----
-::
-
-## 带图标
-
-为输入框添加语义化图标：
-
-::component-example
----
-name: 'components-with-copy-icon-example'
+name: MWithCopy
+external: ['modelValue']
+hide: ['modelValue']
+props:
+  modelValue: sk-1234567890abcdef
 ---
 ::
 
-## 自定义样式
+### `leadingIcon` 前置图标
+
+通过 `leadingIcon` 为输入框添加语义化图标：
+
+::component-code
+---
+name: MWithCopy
+props:
+  leadingIcon: i-lucide-key
+---
+::
+
+### `size` 尺寸
+
+通过 `size` 切换输入框与复制按钮尺寸：
+
+::component-code
+---
+name: MWithCopy
+external: ['modelValue']
+hide: ['modelValue']
+props:
+  modelValue: ABC123XYZ
+  size: md
+items:
+  size: ['xs', 'sm', 'md', 'lg', 'xl']
+---
+::
+
+### `buttonProps` 复制按钮
 
 通过 `buttonProps` 自定义复制按钮样式：
 
-::component-example
+::component-code
 ---
-name: 'components-with-copy-custom-example'
+name: MWithCopy
+prettier: true
+props:
+  modelValue: ABC123XYZ
+  buttonProps:
+    variant: soft
+    color: primary
+items:
+  buttonProps.variant: ['solid', 'outline', 'soft', 'subtle', 'ghost', 'link']
+  buttonProps.color: ['primary', 'secondary', 'success', 'info', 'warning', 'error', 'neutral']
 ---
 ::
 
-## 复制事件
+## 示例
+
+### 复制事件
 
 通过 `@copy` 事件监听复制操作：
 
 ::component-example
 ---
-name: 'components-with-copy-event-example'
+name: ComponentsWithCopyEventExample
 ---
 ::
 
@@ -65,6 +102,10 @@ name: 'components-with-copy-event-example'
 ### Slots
 
 :component-slots{slug=MWithCopy}
+
+## Theme
+
+:component-theme
 
 ## Changelog
 

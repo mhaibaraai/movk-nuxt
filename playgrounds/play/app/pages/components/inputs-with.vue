@@ -48,7 +48,7 @@ function record(msg: string) {
       </Showcase>
 
       <Showcase
-        title="融入分组控件"
+        title="融入`UFieldGroup`"
         description="与按钮放入 UFieldGroup 后共享尺寸和圆角，输入框与操作按钮保持一体化边界。"
         :state="{ value: fieldGroupValue }"
       >

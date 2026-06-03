@@ -116,7 +116,7 @@ function onSearchReset() {
         :schema="searchSchema"
         :state="searchState"
         :global-meta="{ orientation: 'horizontal', size: 'sm' }"
-        :submit-button="false"
+        :submit="false"
         @submit="onSearch"
       >
         <template #footer="{ loading }">

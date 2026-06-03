@@ -40,7 +40,7 @@ const truncateValue = computed<DataTableProps<Person>['truncate']>(() => {
 
 const truncateColumns: DataTableColumn<Person>[] = [
   { accessorKey: 'id', header: '工号', size: 90 },
-  { accessorKey: 'name', header: '姓名', size: 100 },
+  { accessorKey: 'name', header: '姓名' },
   { accessorKey: 'department', header: '部门', size: 80 },
   { accessorKey: 'address', header: '住址', size: 180 },
   { accessorKey: 'bio', header: '简介', size: 240 }
@@ -50,15 +50,15 @@ const tooltipEnabled = ref(true)
 
 const fitContent = ref(false)
 const fitColumns: DataTableColumn<Person>[] = [
-  { accessorKey: 'id', header: '工号', size: 80 },
-  { accessorKey: 'name', header: '姓名', size: 100 },
+  { accessorKey: 'id', header: '工号' },
+  { accessorKey: 'name', header: '姓名' },
   { accessorKey: 'department', header: '部门', size: 80 },
   { accessorKey: 'level', header: '职级', size: 80 }
 ]
 
 const emptyColumns: DataTableColumn<Person>[] = [
-  { accessorKey: 'id', header: '工号', size: 80 },
-  { accessorKey: 'name', header: '姓名', size: 90 },
+  { accessorKey: 'id', header: '工号' },
+  { accessorKey: 'name', header: '姓名' },
   { accessorKey: 'address', header: '住址', size: 200 },
   { accessorKey: 'bio', header: '简介', size: 220 }
 ]

@@ -1,4 +1,4 @@
-import type { ButtonProps, IconProps, ModalProps } from '@nuxt/ui'
+import type { ButtonProps, IconProps, ModalProps, ModalSlots } from '@nuxt/ui'
 import type { OmitByKey } from '@movk/core'
 import type { ClassNameValue, SemanticColor } from '../shared'
 
@@ -67,3 +67,5 @@ export interface MessageBoxEmits {
    */
   close: [confirmed: boolean]
 }
+
+export interface MessageBoxSlots extends ModalSlots {}

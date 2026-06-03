@@ -12,6 +12,12 @@ import type { Person } from '../../composables/useMockData'
 const data = makePeople(15)
 const columns = usePeopleColumns()
 
+const rowKeyData = ref(makePeople(6))
+const rowKeySelection = ref<RowSelectionState>({})
+function shuffleRowKeyData() {
+  rowKeyData.value = [...rowKeyData.value].sort(() => Math.random() - 0.5)
+}
+
 function makeLog(limit = 8) {
   const entries = ref<string[]>([])
   const record = (msg: string) => {
@@ -67,6 +73,28 @@ function callScrollToTop() {
   <Navbar />
 
   <div class="p-4 flex flex-col gap-4">
+    <Showcase
+      title="行标识"
+      description="row-key 指定行唯一标识并派生 getRowId，选中态按 id 追踪，打乱 data 顺序后仍指向同一行"
+      :state="rowKeySelection"
+      aside-label="rowSelection"
+    >
+      <template #toolbar>
+        <UButton size="xs" variant="soft" icon="i-lucide-shuffle" @click="shuffleRowKeyData">
+          打乱数据
+        </UButton>
+      </template>
+
+      <MDataTable
+        v-model:row-selection="rowKeySelection"
+        row-key="id"
+        :columns="[{ type: 'selection' }, ...columns]"
+        :data="rowKeyData"
+        bordered
+        :ui="{ root: 'max-h-[50vh]' }"
+      />
+    </Showcase>
+
     <Showcase
       title="基础行选择"
       description="v-model:rowSelection 双向同步选中 id 集合，select 事件返回当前点击行"

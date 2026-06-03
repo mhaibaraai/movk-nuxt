@@ -57,7 +57,7 @@ const presetCustom = shallowRef<DateValue>()
       </UFormField>
     </Showcase>
 
-    <Showcase title="融入分组控件" description="日期触发按钮与操作按钮共享 UFieldGroup 尺寸，适合在筛选栏中组合快捷操作。" :state="{ value: fieldGroupDate?.toString() }">
+    <Showcase title="融入`UFieldGroup`" description="日期触发按钮与操作按钮共享 UFieldGroup 尺寸，适合在筛选栏中组合快捷操作。" :state="{ value: fieldGroupDate?.toString() }">
       <UFieldGroup size="xs" class="w-full">
         <MDatePicker v-model="fieldGroupDate" />
         <UButton icon="i-lucide-calendar-check" color="neutral" variant="subtle" />

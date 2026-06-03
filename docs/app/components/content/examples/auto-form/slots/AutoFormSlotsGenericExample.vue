@@ -1,69 +1,56 @@
 <script lang="ts" setup>
-import type { FormSubmitEvent } from '@nuxt/ui'
 import type { z } from 'zod'
 
-const toast = useToast()
 const { afz } = useAutoForm()
 
 const schema = afz.object({
-  username: afz.string().min(3).meta({ label: '用户名' }),
-  email: afz.email().meta({ label: '邮箱' }),
+  username: afz.string().min(3).meta({ label: '用户名', hint: '至少 3 个字符' }),
+  email: afz.email().meta({ label: '邮箱', description: '用于接收通知' }),
   role: afz.enum(['admin', 'user', 'guest']).meta({ label: '角色' }),
-  active: afz.boolean({ controlProps: { label: '是否激活账户' } }).meta({ label: '激活状态' })
+  active: afz.boolean({ controlProps: { label: '启用账户' } }).default(true).meta({ label: '状态' })
 })
 
-type Schema = z.output<typeof schema>
-
-const form = ref<Partial<Schema>>({})
-
-async function onSubmit(event: FormSubmitEvent<Schema>) {
-  toast.add({
-    title: '提交成功',
-    color: 'success',
-    description: JSON.stringify(event.data, null, 2)
-  })
-}
+const state = reactive<Partial<z.output<typeof schema>>>({})
 </script>
 
 <template>
-  <UCard>
-    <MAutoForm :schema="schema" :state="form" @submit="onSubmit">
-      <template #field-label="{ label, path }">
-        <UBadge
-          :color="path === 'username' ? 'primary' : path === 'email' ? 'success' : path === 'role' ? 'info' : 'warning'"
-          variant="subtle"
-          size="xs"
-        >
+  <MAutoForm :schema="schema" :state="state" :validate-on="['input', 'blur']">
+    <template #field-label="{ label, path }">
+      <span class="inline-flex items-center gap-2">
+        <UBadge color="primary" variant="subtle" size="xs">
           {{ label }}
         </UBadge>
-      </template>
-
-      <template #field-hint="{ path }">
-        <span class="inline-flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 mt-1">
-          <UIcon name="i-lucide-sparkles" class="size-3" />
-          <span>字段路径: {{ path }}</span>
+        <span class="text-xs text-muted">
+          {{ path }}
         </span>
-      </template>
+      </span>
+    </template>
 
-      <template #field-error="{ error }">
-        <transition
-          enter-active-class="transition duration-200 ease-out"
-          enter-from-class="opacity-0 -translate-y-1"
-          enter-to-class="opacity-100 translate-y-0"
-          leave-active-class="transition duration-150 ease-in"
-          leave-from-class="opacity-100 translate-y-0"
-          leave-to-class="opacity-0 -translate-y-1"
-        >
-          <UAlert
-            v-if="error"
-            color="error"
-            variant="subtle"
-            icon="i-lucide-triangle-alert"
-            :description="String(error)"
-            class="mt-2"
-          />
-        </transition>
-      </template>
-    </MAutoForm>
-  </UCard>
+    <template #field-description="{ description }">
+      <span
+        v-if="description"
+        class="text-xs text-toned"
+      >
+        {{ description }}
+      </span>
+    </template>
+
+    <template #field-hint="{ hint }">
+      <span class="inline-flex items-center gap-1 text-xs text-muted">
+        <UIcon name="i-lucide-info" class="size-3" />
+        <span>{{ hint || '通用 hint slot' }}</span>
+      </span>
+    </template>
+
+    <template #field-error="{ error }">
+      <UAlert
+        v-if="error"
+        color="error"
+        variant="subtle"
+        icon="i-lucide-triangle-alert"
+        :description="String(error)"
+        class="mt-2"
+      />
+    </template>
+  </MAutoForm>
 </template>

@@ -109,7 +109,7 @@ function getItemLabel(item: PillItem): string {
       </UFormField>
     </Showcase>
 
-    <Showcase title="融入分组控件" description="与操作按钮放入 UFieldGroup 后共享尺寸和圆角，适合行内筛选与快捷清除。" :state="{ value: fieldGroupValue }">
+    <Showcase title="融入`UFieldGroup`" description="与操作按钮放入 UFieldGroup 后共享尺寸和圆角，适合行内筛选与快捷清除。" :state="{ value: fieldGroupValue }">
       <UFieldGroup size="xs" class="w-full">
         <MPillGroup v-model="fieldGroupValue" :items="stringItems" />
         <UButton icon="i-lucide-rotate-ccw" color="neutral" variant="subtle" @click="fieldGroupValue = undefined" />
