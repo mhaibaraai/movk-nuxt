@@ -117,7 +117,7 @@ transition: { duration: 0.6, delay: 0.5 }
 orientation: horizontal
 links:
   - label: 查看 AutoForm 文档
-    to: /docs/auto-form/quickstart
+    to: /docs/auto-form
     color: neutral
     variant: outline
     trailingIcon: i-lucide-arrow-right
@@ -154,9 +154,11 @@ Schema 即表单
   :::
 
 #default
-  :::code-group
+  :::code-group{class="lg:[&_pre]:min-h-[362px]"}
   ```vue [AutoForm.vue]
   <script setup lang="ts">
+  import type { z } from 'zod'
+
   const { afz } = useAutoForm()
 
   const schema = afz.object({
@@ -167,7 +169,9 @@ Schema 即表单
     email: afz.email({ error: '请输入有效的邮箱地址' })
   })
 
-  const state = ref({})
+  type Schema = z.output<typeof schema>
+
+  const state = ref<Partial<Schema>>({})
   </script>
 
   <template>
