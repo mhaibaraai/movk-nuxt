@@ -58,7 +58,7 @@ const fitColumns: DataTableColumn<Person>[] = [
 
 const emptyColumns: DataTableColumn<Person>[] = [
   { accessorKey: 'id', header: '工号' },
-  { accessorKey: 'name', header: '姓名'},
+  { accessorKey: 'name', header: '姓名' },
   { accessorKey: 'address', header: '住址', size: 200 },
   { accessorKey: 'bio', header: '简介', size: 220 }
 ]
