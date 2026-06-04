@@ -39,5 +39,8 @@ jobs:
       - name: Build
         run: pnpm run build
 
+      - name: Build Vue playground
+        run: pnpm run dev:vue:build
+
       - name: Publish
         run: pnpx pkg-pr-new publish --compact --no-template --pnpm
