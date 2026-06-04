@@ -3,7 +3,7 @@ import type { Nuxt } from '@nuxt/schema'
 import type { ModuleOptions } from '../module'
 import { addPlugin } from '@nuxt/kit'
 import defu from 'defu'
-import { getDefaultConfig } from './defaults'
+import { getDefaultConfig } from '../runtime/utils/theme-defaults'
 import type { Direction } from '@nuxt/ui'
 
 export function addTheme(nuxt: Nuxt, resolve: Resolver['resolve'], theme?: ModuleOptions['theme']) {

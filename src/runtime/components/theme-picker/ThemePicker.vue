@@ -2,7 +2,7 @@
 import { useAppConfig, useColorMode } from '#imports'
 import { useClipboard } from '@vueuse/core'
 import { ref } from 'vue'
-import { useTheme } from '../../composables'
+import { useTheme } from '../../composables/useTheme'
 import ThemePickerButton from './ThemePickerButton.vue'
 import type { ComponentConfig } from '@nuxt/ui'
 import type { AppConfig } from 'nuxt/schema'

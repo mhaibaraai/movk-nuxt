@@ -4,7 +4,7 @@ import { omit, kebabCase } from '@movk/core'
 import { useLocalStorage } from '@vueuse/core'
 import colors from 'tailwindcss/colors'
 import { computed } from 'vue'
-import { getDefaultConfig } from '../../utils/defaults'
+import { getDefaultConfig } from '../utils/theme-defaults'
 
 export function useTheme() {
   const { movk, ui } = useAppConfig()
