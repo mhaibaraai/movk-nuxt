@@ -1,13 +1,12 @@
 import type { NuxtTemplate, NuxtTypeTemplate } from '@nuxt/schema'
 import { fileURLToPath } from 'node:url'
-import { addTemplate, addTypeTemplate, getLayerDirectories } from '@nuxt/kit'
 import { kebabCase } from 'scule'
 import * as theme from './theme'
 import type { ModuleOptions } from './module'
 import type { Nuxt } from 'nuxt/schema'
 import { applyDefaultVariants, applyPrefixToObject } from './utils/theme-variants'
 
-function getTemplates(options: ModuleOptions, nuxt?: Nuxt) {
+export function getTemplates(options: ModuleOptions, nuxt?: Nuxt) {
   const templates: NuxtTemplate[] = []
 
   const isDev = process.argv.includes('--uiDev')
@@ -88,6 +87,7 @@ function getTemplates(options: ModuleOptions, nuxt?: Nuxt) {
     }
 
     const sources: string[] = []
+    const { getLayerDirectories } = await import('@nuxt/kit')
     const layers = getLayerDirectories(nuxt).map(layer => layer.app)
 
     // Add layer sources
@@ -228,7 +228,8 @@ export {}
   return templates
 }
 
-export function addTemplates(options: ModuleOptions, nuxt: Nuxt) {
+export async function addTemplates(options: ModuleOptions, nuxt: Nuxt) {
+  const { addTemplate, addTypeTemplate } = await import('@nuxt/kit')
   const templates = getTemplates(options, nuxt)
   for (const template of templates) {
     if (template.filename!.endsWith('.d.ts')) {
