@@ -12,11 +12,9 @@ import { useFormFieldBridge, useForwardedProps } from '../../utils/form-control'
 import type { AppConfig } from 'nuxt/schema'
 import type { WithClearEmits, WithClearProps } from '../../types/components/input/with-clear'
 
-interface _Props extends WithClearProps<T> {
+const props = defineProps<WithClearProps<T> & {
   ui?: ComponentConfig<typeof inputTheme & typeof theme, AppConfig, 'withCharacterLimit'>['slots']
-}
-
-const props = defineProps<_Props>()
+}>()
 const emits = defineEmits<WithClearEmits<T>>()
 const slots = defineSlots<OmitByKey<InputSlots, 'trailing'>>()
 

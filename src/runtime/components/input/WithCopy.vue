@@ -13,11 +13,9 @@ import { useFormFieldBridge, useForwardedProps } from '../../utils/form-control'
 import type { WithCopyEmits, WithCopyProps } from '../../types/components/input/with-copy'
 import type { AppConfig } from 'nuxt/schema'
 
-interface _Props extends WithCopyProps<T> {
+const props = defineProps<WithCopyProps<T> & {
   ui?: ComponentConfig<typeof inputTheme & typeof theme, AppConfig, 'withCopy'>['slots']
-}
-
-const props = defineProps<_Props>()
+}>()
 const emits = defineEmits<WithCopyEmits<T>>()
 const slots = defineSlots<OmitByKey<InputSlots, 'trailing'>>()
 

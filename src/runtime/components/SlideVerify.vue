@@ -10,12 +10,10 @@ import type { SlideVerifyProps, SlideVerifyEmits, SlideVerifySlots } from '../ty
 import { useExtendedTv } from '../utils/extend-theme'
 import { useFieldControl } from '../utils/form-control'
 
-interface _Props extends SlideVerifyProps {
+const props = withDefaults(defineProps<SlideVerifyProps & {
   size?: ComponentConfig<typeof theme, AppConfig, 'slideVerify'>['variants']['size']
   ui?: ComponentConfig<typeof theme, AppConfig, 'slideVerify'>['slots']
-}
-
-const props = withDefaults(defineProps<_Props>(), {
+}>(), {
   text: '请向右滑动验证',
   successText: '验证成功',
   icon: 'i-lucide-chevrons-right',

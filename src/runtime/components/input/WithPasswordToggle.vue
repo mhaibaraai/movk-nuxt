@@ -12,11 +12,9 @@ import { useFormFieldBridge, useForwardedProps } from '../../utils/form-control'
 import type { AppConfig } from 'nuxt/schema'
 import type { WithPasswordToggleProps } from '../../types/components/input/with-password-toggle'
 
-interface _Props extends WithPasswordToggleProps<T> {
+const props = defineProps<WithPasswordToggleProps<T> & {
   ui?: ComponentConfig<typeof inputTheme & typeof theme, AppConfig, 'withPasswordToggle'>['slots']
-}
-
-const props = defineProps<_Props>()
+}>()
 const emits = defineEmits<InputEmits<T>>()
 const slots = defineSlots<OmitByKey<InputSlots, 'trailing'>>()
 

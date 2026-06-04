@@ -23,11 +23,9 @@ import type {
 } from '../types/auto-form/search-form'
 import { useExtendedTv } from '../utils/extend-theme'
 
-interface _Props extends SearchFormProps<S> {
+const props = withDefaults(defineProps<SearchFormProps<S> & {
   ui?: ComponentConfig<typeof theme, AppConfig, 'searchForm'>['slots']
-}
-
-const props = withDefaults(defineProps<_Props>(), {
+}>(), {
   cols: 3,
   visibleRows: 1,
   icon: 'i-lucide-chevron-down',

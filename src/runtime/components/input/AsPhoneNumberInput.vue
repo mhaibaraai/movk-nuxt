@@ -11,11 +11,9 @@ import { useForwardedProps } from '../../utils/form-control'
 import type { AsPhoneNumberInputProps } from '../../types/components/input/as-phone-number-input'
 import type { AppConfig } from 'nuxt/schema'
 
-interface _Props extends AsPhoneNumberInputProps<T> {
+const props = withDefaults(defineProps<AsPhoneNumberInputProps<T> & {
   ui?: ComponentConfig<typeof inputTheme & typeof theme, AppConfig, 'asPhoneNumberInput'>['slots']
-}
-
-const props = withDefaults(defineProps<_Props>(), {
+}>(), {
   mask: '(###) ###-####',
   dialCode: '+86'
 })
