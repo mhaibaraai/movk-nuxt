@@ -1,17 +1,17 @@
 <script setup lang="ts">
 import { zh_cn } from '@nuxt/ui/locale'
 
-// useNavigation / computed / provide 由 movk unplugin 自动导入（共享自 playgrounds/play）
+// useNavigation / provide 由 movk unplugin 自动导入（共享自 playgrounds/play）
 const appConfig = useAppConfig()
 const { components, items } = useNavigation()
 
 // Vue + Vite 模式不含 API 域：过滤 API 分组与上传/下载进度条目（对应 main.ts 排除的路由）
 const PROGRESS = ['Upload Progress', 'Download Progress']
-const navComponents = computed(() => components
+const navComponents = components
   .filter(group => group.label !== 'API')
   .map(group => group.label === 'Composables'
     ? { ...group, children: group.children?.filter(child => !PROGRESS.includes(child.label as string)) }
-    : group))
+    : group)
 
 provide('components', navComponents)
 </script>

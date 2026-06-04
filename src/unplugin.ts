@@ -41,8 +41,13 @@ export const UI_COMPONENTS = [
   'UInputTime', 'UListbox'
 ] as const
 
-/** movk 在 vue 模式自动导入的非服务端 composables（排除 API 域） */
-const MOVK_COMPOSABLES = ['useAutoForm', 'useTheme', 'useDateFormatter', 'useMessageBox'] as const
+/** movk 在 vue 模式自动导入的非服务端 composables 及其公开导出（排除 API 域），对齐 Nuxt addImportsDir 的导出面 */
+const MOVK_COMPOSABLES: Record<string, readonly string[]> = {
+  useAutoForm: ['useAutoForm', 'defineControl', 'DEFAULT_CONTROLS', 'getAutoFormMetadata'],
+  useTheme: ['useTheme'],
+  useDateFormatter: ['useDateFormatter', 'CalendarDate'],
+  useMessageBox: ['useMessageBox']
+}
 
 interface MovkComponentSource {
   resolve: (name: string) => { name: string, from: string } | undefined
@@ -81,9 +86,11 @@ export const MovkPlugin = createUnplugin<MovkUIOptions | undefined>((_options = 
       autoImport: options.autoImport === false
         ? false
         : defu(options.autoImport, {
-            imports: MOVK_COMPOSABLES.map(name => ({
-              from: join(runtimeDir, 'composables', name),
-              imports: [name]
+            // 对齐 Nuxt：允许在 <template> 内使用自动导入（如复用页里 :data="makePeople(30)"）
+            vueTemplate: true,
+            imports: Object.entries(MOVK_COMPOSABLES).map(([from, names]) => ({
+              from: join(runtimeDir, 'composables', from),
+              imports: [...names]
             }))
           }),
       components: options.components === false

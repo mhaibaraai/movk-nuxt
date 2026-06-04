@@ -1,1 +1,3 @@
+@import "tailwindcss" theme(static) source("../../../../..");
+@import "@nuxt/ui";
 @import "@movk/nuxt";

@@ -87,10 +87,20 @@ pnpm clean
 `@movk/nuxt` 既是 Nuxt 模块，也通过 unplugin 在纯 Vue + Vite 下工作（对齐 `@nuxt/ui`）。
 
 - **解析覆盖**：`MovkPlugin` 链入 `NuxtUIPlugin.raw()` 后，把 movk 子插件**先注册**以赢得 `#imports`（→ `runtime/vue/stubs/<router>`）、`#components`（→ `U*` shim 到 `@nuxt/ui/components/*`、`UIcon`/`Link` 用 `@nuxt/ui/runtime/vue/` 覆盖版）、`#build/app.config`（注入 `movk` 键）、`#build/movk-ui/*`（写盘 + alias，供 Tailwind `@source` 扫描）的解析。
-- **API 域隔离**：vue 模式 auto-import 白名单（`MOVK_COMPOSABLES`）与组件 glob **不得**纳入 `domains/api/*` 与 `useApiFetch*`/上传下载；它们仅 Nuxt 模式可用。
+- **API 域隔离**：vue 模式 auto-import 映射（`MOVK_COMPOSABLES`，模块→公开导出名）与组件 glob **不得**纳入 `domains/api/*` 与 `useApiFetch*`/上传下载；它们仅 Nuxt 模式可用。
 - **共享逻辑**：主题模板 `getTemplates`（`src/templates.ts`）、`getDefaultConfig`（`src/runtime/utils/theme-defaults.ts`）由两模式共用，**改动须同步两模式**。
-- **同步面**：修改主题模板、`MOVK_COMPOSABLES` 名单、`UI_COMPONENTS` shim 名单或组件结构后，须同时验证 Nuxt（`pnpm dev:prepare`）与 Vue（`pnpm dev:vue:build`）两条链路。
+- **同步面**：修改主题模板、`MOVK_COMPOSABLES` 映射、`UI_COMPONENTS` shim 名单或组件结构后，须同时验证 Nuxt（`pnpm dev:prepare`）与 Vue（`pnpm dev:vue:build`）两条链路。
 - **已知约束**：`DatePicker` 等透传 `@nuxt/ui` `CalendarProps` 的组件，声明发射期会产生 reka-ui 类型不可移植告警（TS2883，reka-ui 未从公共入口导出 `Matcher`/`WeekDayFormat`/`WeekStartsOn`）；非致命、不影响 `pnpm typecheck`（`--noEmit`），属上游限制。
+
+### 新增 src 内容时：是否需要双模式 & 如何处理
+
+- **判定**：看是否依赖 Nuxt 服务端运行时（nitro / `server/` / `useApiFetch*` / 上传下载 / `nuxt-auth-utils` 等）。依赖 → 仅 Nuxt（归 `domains/api/*`，不纳入 vue 模式）；纯 UI / 主题 / 非服务端 composable → 需双模式可用。
+- **新增组件（`runtime/components/**/*.vue`）**：由组件 glob（`createMovkComponentSource`）自动纳入 vue 模式，通常零配置。仅当 ① 从 `#components` 具名引入新的 `U*` → 补 `src/unplugin.ts` 的 `UI_COMPONENTS`；② 从 `#imports` 用到桩未导出的符号 → 补 `src/runtime/vue/stubs/movk-extra.ts`。
+- **新增 composable（`runtime/composables/*.ts`）**：vue 模式按 `MOVK_COMPOSABLES`（`src/unplugin.ts`）**显式登记**，非自动。非 API 的须把文件名及其**全部公开导出**（含 re-export，如 `defineControl`/`CalendarDate`）列入；API 域不得登记。
+- **给已有 composable 文件加 re-export/具名导出**：同步补进该模块在 `MOVK_COMPOSABLES` 的数组——Nuxt 侧靠 `addImportsDir` 自动可用，易漏掉 vue 侧。
+- **模板内自动导入**：`autoImport.vueTemplate: true` 已开启，自动导入可直接用于 `<template>`（对齐 Nuxt），无需改写为脚本常量。
+- **两模式共享纯函数**放 `src/runtime/utils/`；`runtime/**` 不得反向 import 构建期 `src/utils/`。
+- **改动后必验**：动了 `MOVK_COMPOSABLES` / `UI_COMPONENTS` / stub / 主题模板 / 组件结构，须同跑 `pnpm dev:prepare`（Nuxt）与 `pnpm dev:vue:build`（Vue）。
 
 ## 开发工作流
 
