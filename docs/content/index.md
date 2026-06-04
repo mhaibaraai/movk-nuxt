@@ -1,7 +1,7 @@
 ---
 seo:
-  title: Nuxt 4 模块化工程套件 — Schema 驱动表单、API 集成、UI 组件
-  description: 基于 Zod v4 的 Schema 驱动自动表单生成、带认证与进度追踪的 API 集成系统、独立 UI 组件和通用 Composables 工具函数。
+  title: 构建在 Nuxt UI 之上的 UI 工程套件 — AutoForm、DataTable、Vue/Vite 通用
+  description: Schema 驱动的 AutoForm（Zod v4）、功能完备的 DataTable、独立组件与 Composables；Nuxt 4 中含认证与进度追踪的 API 集成的完整能力，UI 层亦可经 Vite 插件用于纯 Vue + Vite（API 集成域仅 Nuxt）。
 ---
 
 ::u-page-hero{class="dark:bg-gradient-to-b from-neutral-900 to-neutral-950"}
@@ -13,7 +13,7 @@ orientation: horizontal
 
 #title
 :::motion
-Nuxt 4 模块化[工程套件]{.text-primary}
+构建在 Nuxt UI 之上的 [UI 工程套件]{.text-primary}
 :::
 
 #description
@@ -21,7 +21,7 @@ Nuxt 4 模块化[工程套件]{.text-primary}
 ---
 transition: { duration: 0.6, delay: 0.3 }
 ---
-基于 Nuxt UI 和 Zod v4 构建，把表单、表格、API、主题与交互四类高频需求收敛为开箱即用的模块能力：Schema 驱动的 AutoForm、功能完备的 DataTable、带认证与进度追踪的 API 系统，以及独立组件与通用 Composables。
+基于 Nuxt UI 与 Zod v4 构建的 UI 工程套件：Schema 驱动的 AutoForm、功能完备的 DataTable、独立组件与 Composables。在 Nuxt 4 中获得含认证与进度追踪的 API 集成在内的完整能力；其 UI、表单、表格与主题亦可经 Vite 插件直接用于纯 Vue + Vite 项目（API 集成域仅 Nuxt）。
 :::
 
 #links
@@ -81,10 +81,18 @@ transition: { duration: 0.6, delay: 0.5 }
 
   :::u-page-feature{icon="i-lucide-cloud"}
   #title
-  API 集成系统
+  API 集成系统（仅 Nuxt）
 
   #description
-  useApiFetch 三件套与上传/下载进度，内置多端点、认证、业务码校验与 Toast。
+  useApiFetch 三件套与上传/下载进度，内置多端点、认证、业务码校验与 Toast；依赖 Nuxt 服务端运行时。
+  :::
+
+  :::u-page-feature{icon="i-lucide-blocks"}
+  #title
+  Nuxt / Vue 双模式
+
+  #description
+  既是 Nuxt 模块，也提供 @movk/nuxt/vite + vue-plugin，让 UI 层在纯 Vue + Vite 项目中直接可用。
   :::
 
   :::u-page-feature{icon="i-lucide-package"}

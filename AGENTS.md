@@ -6,6 +6,8 @@ This file provides guidance for AI coding agents working on this repository.
 
 `@movk/nuxt` 是一个 Nuxt 4 模块，提供 Schema 驱动的 AutoForm（基于 Zod v4）、API 集成系统（useApiFetch + 进度监控）、独立 UI 组件和通用 Composables。四大能力域：AutoForm（表单）、DataTable（表格）、API 集成、独立组件 + Composables。
 
+此外提供 **Vite/Vue 兼容层**（`@movk/nuxt/vite` + `@movk/nuxt/vue-plugin`），让独立 UI 组件、主题与非服务端 Composables 在纯 Vue + Vite 项目中可用（**不含 API 域**——其依赖 Nuxt 服务端运行时）。详见下文「Vite/Vue 双模式」。
+
 **peerDependencies**：`@nuxt/ui >=4.6.0`、`zod >=4.3.6`
 
 **moduleDependencies**（模块会自动校验版本）：
@@ -27,10 +29,15 @@ pnpm dev:prepare
 # 启动默认 playground（playgrounds/play）
 pnpm dev
 
+# 启动纯 Vite + Vue playground（playgrounds/vue，验证非 Nuxt 模式）
+pnpm dev:vue
+# 构建该 playground（CI 与 dev:prepare 均会执行）
+pnpm dev:vue:build
+
 # 构建模块
 pnpm build
 
-# 类型检查（覆盖 src + playgrounds/play + docs）
+# 类型检查（覆盖 src + playgrounds/play + docs + playgrounds/vue）
 pnpm typecheck
 
 # Lint
@@ -55,19 +62,35 @@ pnpm clean
 | 路径 | 职责 |
 | --- | --- |
 | `src/module.ts` | 模块入口：moduleDependencies 版本校验、API/主题初始化、注册组件与 composables |
-| `src/templates.ts` | Nuxt 虚拟模板生成 |
+| `src/templates.ts` | 虚拟模板生成；`getTemplates` 由 Nuxt 模块与 Vue unplugin 共享 |
+| `src/unplugin.ts` | Vue 模式 unplugin 工厂：链入 `@nuxt/ui` unplugin 后叠加 movk 子插件 |
+| `src/vite.ts` | Vite 插件入口（`export default MovkPlugin.vite`） |
+| `src/plugins/` | Vue 模式 unplugin 子插件：`environment`（`#imports`/`#components`/Icon 覆盖）、`templates`（`#build/movk-ui` 写盘 + alias）、`app-config`（注入 movk 键）、`plugins`（`@movk/nuxt/vue-plugin` 虚拟） |
 | `src/runtime/components/` | 对外组件：10 个主组件（AutoForm、DataTable、SearchForm、DatePicker、ColorChooser、MessageBox、PillGroup、Popconfirm、StarRating、SlideVerify）+ `input/` 6 个输入增强 + `theme-picker/` |
 | `src/runtime/domains/` | 业务逻辑层 + 私有子组件，按域划分：`api/`（拦截器、端点、错误、传输）、`auto-form/`（字段、控件、Schema 解析）、`data-table/`（列解析、特殊列、树选择）、`theme/` |
 | `src/runtime/composables/` | 10 个：`useApiFetch` / `useLazyApiFetch` / `useClientApiFetch`、`useAutoForm`、`useTheme`、`useDateFormatter`、`useMessageBox`、`useUploadWithProgress` / `useDownloadWithProgress` |
 | `src/runtime/types/` | 类型来源，按域聚合：`api/`、`auto-form/`、`components/`、`data-table/`、`shared`，每域 `index.ts` 统一 re-export |
-| `src/runtime/utils/` | 运行时工具：`meta`、`form-control`、`tv`、`extend-theme` |
+| `src/runtime/utils/` | 运行时工具：`meta`、`form-control`、`tv`、`extend-theme`、`theme-defaults`（主题默认 app.config，两模式共用） |
+| `src/runtime/vue/` | 非 Nuxt 桩层：`stubs/`（`#imports` 桩，转发 `@nuxt/ui` 同模式桩 + `useSiteConfig`/`useOverlay`）、`composables/useSiteConfig`、`plugins/theme`（剥离 SSR 的 vue 主题插件） |
 | `src/theme/` | 主题配置，每组件/功能一个文件（约 22 个），`index.ts` 聚合 |
 | `src/utils/` | 模块构建期工具：`defaults`、`theme-variants`、`theme` |
-| `playgrounds/play/` | 唯一 playground，含 `app/pages/` 演示页与 `server/api/` mock |
+| `playgrounds/play/` | Nuxt playground，含 `app/pages/` 演示页与 `server/api/` mock |
+| `playgrounds/vue/` | 纯 Vite + Vue playground，验证非 Nuxt 模式（`vite.config.ts` 用 `@movk/nuxt/vite`，入口 `app.use(@movk/nuxt/vue-plugin)`） |
+| 根 `vue-plugin.d.ts` | `@movk/nuxt/vue-plugin` 类型声明 |
 | `docs/` | 文档站：`content/` 文档、`app/components/content/examples/` 示例组件、`server/mcp/` MCP Server、`skills/` |
 | `test/` | Vitest 用例：`composables/`、`domains/api/`、`domains/auto-form/`、`utils/` |
 
 **核心约定**：业务逻辑落在 `runtime/domains/<域>`，对外组件保持薄壳；私有子组件放在对应域的 `components/` 下，不进入 `runtime/components/`。
+
+## Vite/Vue 双模式
+
+`@movk/nuxt` 既是 Nuxt 模块，也通过 unplugin 在纯 Vue + Vite 下工作（对齐 `@nuxt/ui`）。
+
+- **解析覆盖**：`MovkPlugin` 链入 `NuxtUIPlugin.raw()` 后，把 movk 子插件**先注册**以赢得 `#imports`（→ `runtime/vue/stubs/<router>`）、`#components`（→ `U*` shim 到 `@nuxt/ui/components/*`、`UIcon`/`Link` 用 `@nuxt/ui/runtime/vue/` 覆盖版）、`#build/app.config`（注入 `movk` 键）、`#build/movk-ui/*`（写盘 + alias，供 Tailwind `@source` 扫描）的解析。
+- **API 域隔离**：vue 模式 auto-import 白名单（`MOVK_COMPOSABLES`）与组件 glob **不得**纳入 `domains/api/*` 与 `useApiFetch*`/上传下载；它们仅 Nuxt 模式可用。
+- **共享逻辑**：主题模板 `getTemplates`（`src/templates.ts`）、`getDefaultConfig`（`src/runtime/utils/theme-defaults.ts`）由两模式共用，**改动须同步两模式**。
+- **同步面**：修改主题模板、`MOVK_COMPOSABLES` 名单、`UI_COMPONENTS` shim 名单或组件结构后，须同时验证 Nuxt（`pnpm dev:prepare`）与 Vue（`pnpm dev:vue:build`）两条链路。
+- **已知约束**：`DatePicker` 等透传 `@nuxt/ui` `CalendarProps` 的组件，声明发射期会产生 reka-ui 类型不可移植告警（TS2883，reka-ui 未从公共入口导出 `Matcher`/`WeekDayFormat`/`WeekStartsOn`）；非致命、不影响 `pnpm typecheck`（`--noEmit`），属上游限制。
 
 ## 开发工作流
 
@@ -82,6 +105,7 @@ pnpm clean
 - 事件处理用 `DataTableSelectHandler` / `DataTableHoverHandler` / `DataTableContextmenuHandler`
 - 独立工具函数等无法派生的场景，从 `@movk/nuxt` re-export
 - **类型导出最小必要**：内部合并产物（如 `ResolvedEndpointConfig`）、初始化校验类型（如 `MovkApiFullConfig`）、拦截器/插件内部传值通道（如 `ApiFetchContext`）不得经 `runtime/types/*/index.ts` 暴露到 `@movk/nuxt`；仅导出消费者真实需要的配置、入参、返回值、错误类型。domain 纯函数默认不 re-export。
+- **runtime 不得反向依赖构建期 `src/utils/`**：`src/runtime/**` 只能 import `src/runtime/**`（构建期 `src/utils` 不进 dist，会导致 dist 运行时解析失败）。两模式共用的纯函数放 `src/runtime/utils/`（如 `theme-defaults`）。
 
 ## 模块默认值与全局配置同步
 

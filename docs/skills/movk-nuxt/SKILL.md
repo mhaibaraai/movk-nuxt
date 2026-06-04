@@ -1,6 +1,6 @@
 ---
 name: movk-nuxt
-description: Build with the Movk Nuxt (@movk/nuxt) module — Schema-driven AutoForm (Zod v4), an API integration system (useApiFetch + upload/download progress), standalone M-prefixed UI components, the MDataTable grid, and utility composables (date formatting, theming, message boxes). Use when generating forms, fetching data, rendering tables, adding UI controls, or calling Movk Nuxt composables.
+description: Build with the Movk Nuxt (@movk/nuxt) module — Schema-driven AutoForm (Zod v4), an API integration system (useApiFetch + upload/download progress), standalone M-prefixed UI components, the MDataTable grid, and utility composables (date formatting, theming, message boxes). Works as a Nuxt module and in plain Vue + Vite (via @movk/nuxt/vite + @movk/nuxt/vue-plugin) for UI, forms, tables and theming; the API domain is Nuxt-only. Use when generating forms, fetching data, rendering tables, adding UI controls, or calling Movk Nuxt composables.
 ---
 
 # Movk Nuxt
@@ -46,6 +46,7 @@ When you need to know **what a component accepts** or **how its API works**, use
 3. **Use `useApiFetch`, never raw `$fetch`** — fetch data with `useApiFetch` / `useLazyApiFetch` / `useClientApiFetch`; call imperatively via `const { $api } = useNuxtApp()` and `$api.use('endpoint')` to switch endpoints. The wrapper provides endpoint switching, auth-token injection, business-code checking, response unwrapping (`dataKey`), and toast — none of which `$fetch` provides.
 4. **Build forms from a Zod schema with `afz`** — get the factory via `const { afz } = useAutoForm()`, declare fields with `afz.string() / number() / boolean() / calendarDate() / enum() / array() / object() / file()`, attach UI via `.meta({ label, placeholder, description, controlProps })`, render with `<MAutoForm :schema :state @submit>`, and type state as `z.output<typeof schema>`. Never declare a parallel `interface` next to the schema.
 5. **Derive column / event types from official exports** — for `DataTable`, type column callbacks via index access (`DataTableDataColumn<T>['cell' | 'truncate' | 'tooltip']`, `DataTableProps<T>['sortable' | 'pinable' | 'resizable']`) and use the exported handler types (`DataTableSelectHandler`, `DataTableHoverHandler`, `DataTableContextmenuHandler`). Don't hand-write callback signatures.
+6. **Dual-mode (Nuxt / Vue + Vite)** — `@movk/nuxt` is a Nuxt module **and** a Vite plugin. In plain Vue + Vite (`@movk/nuxt/vite` + `@movk/nuxt/vue-plugin`) the standalone components, theming, AutoForm, DataTable and non-server composables (`useAutoForm` / `useTheme` / `useDateFormatter` / `useMessageBox`) all work. The **API domain is Nuxt-only**: `useApiFetch` / `useLazyApiFetch` / `useClientApiFetch`, `useUploadWithProgress` / `useDownloadWithProgress`, the `$api` plugin, auth and toast require the Nuxt server runtime — do not use them in Vue mode.
 
 ## How to use this skill
 
@@ -97,6 +98,44 @@ export default defineNuxtConfig({
 ```
 
 > **pnpm users:** set `shamefully-hoist=true` in `.npmrc`, or install `tailwindcss` at the project root, so Nuxt UI's Tailwind tree resolves correctly.
+
+### Add to a Vue project (Vite, no Nuxt)
+
+Use the Vite plugin + Vue plugin to consume the UI layer (components, theming, AutoForm, DataTable, non-server composables) in a plain Vue + Vite app. The **API domain is not available** in this mode.
+
+```bash
+pnpm add @movk/nuxt @nuxt/ui zod tailwindcss vue-router
+```
+
+```ts
+// vite.config.ts
+import { defineConfig } from 'vite'
+import vue from '@vitejs/plugin-vue'
+import movk from '@movk/nuxt/vite'
+
+export default defineConfig({
+  plugins: [vue(), movk()]
+})
+```
+
+```ts
+// src/main.ts
+import './assets/css/main.css'
+import { createApp } from 'vue'
+import { createRouter, createWebHistory } from 'vue-router'
+import movk from '@movk/nuxt/vue-plugin'
+import App from './App.vue'
+
+const router = createRouter({ routes: [], history: createWebHistory() })
+createApp(App).use(router).use(movk).mount('#app')
+```
+
+```css
+/* src/assets/css/main.css — chains Tailwind CSS + Nuxt UI + Movk theme */
+@import "@movk/nuxt";
+```
+
+Wrap the root in `<UApp>` (required for Toast / Tooltip / `useMessageBox`). Full guide: [Vue / Vite](https://nuxt.mhaibaraai.cn/docs/getting-started/vue).
 
 ### Optional config
 
