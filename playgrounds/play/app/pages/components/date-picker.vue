@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { CalendarDate } from '@movk/nuxt/composables'
+import { CalendarDate } from '@internationalized/date'
 import type { DateValue, DateRange } from '@movk/nuxt'
 
 const formatter = useDateFormatter()
