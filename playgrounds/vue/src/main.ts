@@ -1,5 +1,5 @@
 import './assets/css/main.css'
-import { createApp } from 'vue'
+import { createApp, defineComponent } from 'vue'
 import { createRouter, createWebHistory } from 'vue-router'
 import type { RouteRecordRaw } from 'vue-router'
 import movkVuePlugin from '@movk/nuxt/vue-plugin'
@@ -37,7 +37,16 @@ const router = createRouter({
   history: createWebHistory()
 })
 
+// 纯 Vite CSR 下 ClientOnly 退化为透传，补齐复用 Nuxt 演示页所需的全局组件
+const ClientOnly = defineComponent({
+  name: 'ClientOnly',
+  setup(_, { slots }) {
+    return () => slots.default?.()
+  }
+})
+
 createApp(App)
+  .component('ClientOnly', ClientOnly)
   .use(router)
   .use(movkVuePlugin)
   .mount('#app')

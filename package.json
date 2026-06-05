@@ -119,7 +119,8 @@
     "lint:fix": "eslint . --fix",
     "typecheck": "vue-tsc --noEmit && nuxt typecheck playgrounds/play && nuxt typecheck docs && cd playgrounds/vue && vue-tsc --noEmit",
     "clean": "movk-clean",
-    "test": "vitest"
+    "test": "vitest",
+    "test:vue": "vitest --project vue"
   },
   "dependencies": {
     "@iconify-json/lucide": "^1.2.111",
