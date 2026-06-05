@@ -68,7 +68,7 @@ pnpm clean
 | `src/plugins/` | Vue 模式 unplugin 子插件：`environment`（`#imports`/`#components`/Icon 覆盖）、`templates`（`#build/movk-ui` 写盘 + alias）、`app-config`（注入 movk 键）、`plugins`（`@movk/nuxt/vue-plugin` 虚拟） |
 | `src/runtime/components/` | 对外组件：10 个主组件（AutoForm、DataTable、SearchForm、DatePicker、ColorChooser、MessageBox、PillGroup、Popconfirm、StarRating、SlideVerify）+ `input/` 6 个输入增强 + `theme-picker/` |
 | `src/runtime/domains/` | 业务逻辑层 + 私有子组件，按域划分：`api/`（拦截器、端点、错误、传输）、`auto-form/`（字段、控件、Schema 解析）、`data-table/`（列解析、特殊列、树选择）、`theme/` |
-| `src/runtime/composables/` | 10 个：`useApiFetch` / `useLazyApiFetch` / `useClientApiFetch`、`useAutoForm`、`useTheme`、`useDateFormatter`、`useMessageBox`、`useUploadWithProgress` / `useDownloadWithProgress` |
+| `src/runtime/composables/` | 9 个：`useApiFetch` / `useLazyApiFetch` / `useClientApiFetch`、`useAutoForm`、`useTheme`、`useDateFormatter`、`useMessageBox`、`useUploadWithProgress` / `useDownloadWithProgress` |
 | `src/runtime/types/` | 类型来源，按域聚合：`api/`、`auto-form/`、`components/`、`data-table/`、`shared`，每域 `index.ts` 统一 re-export |
 | `src/runtime/utils/` | 运行时工具：`meta`、`form-control`、`tv`、`extend-theme`、`theme-defaults`（主题默认 app.config，两模式共用） |
 | `src/runtime/vue/` | 非 Nuxt 桩层：`stubs/`（`#imports` 桩，转发 `@nuxt/ui` 同模式桩 + `useSiteConfig`/`useOverlay`）、`composables/useSiteConfig`、`plugins/theme`（剥离 SSR 的 vue 主题插件） |

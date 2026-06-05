@@ -5,7 +5,7 @@ description: Build with the Movk Nuxt (@movk/nuxt) module — Schema-driven Auto
 
 # Movk Nuxt
 
-`@movk/nuxt` is a Nuxt 4 module providing four capability domains on top of Nuxt UI: a Schema-driven **AutoForm** (Zod v4), an **API** integration system (`useApiFetch` + progress upload/download), standalone **components** (the `M` prefix), the **MDataTable** grid, and general-purpose **composables**.
+`@movk/nuxt` is a Nuxt 4 module providing four capability domains on top of Nuxt UI: a Schema-driven **AutoForm** (Zod v4), the **DataTable** grid, an **API** integration system (`useApiFetch` + progress upload/download), and standalone **components** (the `M` prefix) plus general-purpose **composables**.
 
 ## MCP Server
 
