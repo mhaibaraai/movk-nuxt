@@ -4,7 +4,9 @@ import { globSync } from 'tinyglobby'
 import { defu } from 'defu'
 import { createUnplugin } from 'unplugin'
 import type { UnpluginOptions } from 'unplugin'
+import type { Options as ComponentsOptions } from 'unplugin-vue-components/types'
 import { NuxtUIPlugin } from '@nuxt/ui/unplugin'
+import type { NuxtUIOptions } from '@nuxt/ui/unplugin'
 
 import type { ModuleOptions } from './module'
 import MovkEnvironmentPlugin from './plugins/environment'
@@ -13,20 +15,13 @@ import MovkAppConfigPlugin from './plugins/app-config'
 import MovkPluginsPlugin from './plugins/plugins'
 
 export interface MovkUIOptions extends Pick<ModuleOptions, 'prefix' | 'theme'> {
-  /** 透传给 @nuxt/ui 的 unplugin 选项（colorMode、icon、ui、router 等） */
-  ui?: Record<string, any>
-  /** 站点名称，注入 app.config.movkSite，用于主题 localStorage key 前缀 */
-  site?: { name?: string }
-  /** 是否生成自动导入声明文件 @defaultValue true */
-  dts?: boolean
-  /** 覆盖 unplugin-auto-import 选项，false 关闭 composable 自动导入 */
-  autoImport?: false | Record<string, any>
-  /** 覆盖 unplugin-vue-components 选项，false 关闭组件自动导入 */
-  components?: false | Record<string, any>
-  /** 路由模式，对齐 @nuxt/ui */
-  router?: boolean | 'inertia'
-  /** 启用/禁用 @vueuse/core color-mode @defaultValue true */
-  colorMode?: boolean
+  /** 站点信息，注入 app.config.movkSite；name 作为主题 localStorage key 前缀 */
+  site?: { url?: string, name?: string, description?: string }
+  /**
+   * Nuxt UI 配置项
+   * @see https://ui.nuxt.com/docs/getting-started/installation/vue#options
+   */
+  ui?: Partial<NuxtUIOptions>
 }
 
 export const runtimeDir = normalize(fileURLToPath(new URL('./runtime', import.meta.url)))
@@ -49,11 +44,7 @@ const MOVK_COMPOSABLES: Record<string, readonly string[]> = {
   useMessageBox: ['useMessageBox']
 }
 
-interface MovkComponentSource {
-  resolve: (name: string) => { name: string, from: string } | undefined
-}
-
-function createMovkComponentSource(cwd: string, prefix: string, ignore: string[] = []): MovkComponentSource {
+function createMovkComponentSource(cwd: string, prefix: string, ignore: string[] = []) {
   const files = globSync('**/*.vue', { cwd, ignore: ignore.filter(Boolean) })
   const paths = new Map(files.map((c) => {
     const componentName = `${prefix}${c.split('/').pop()?.replace(/\.vue$/, '')}`
@@ -61,7 +52,7 @@ function createMovkComponentSource(cwd: string, prefix: string, ignore: string[]
   }))
 
   return {
-    resolve: (componentName) => {
+    resolve: (componentName: string) => {
       const relativePath = paths.get(componentName)
       if (!relativePath) return
       return { name: 'default', from: join(cwd, relativePath) }
@@ -75,17 +66,15 @@ export const MovkPlugin = createUnplugin<MovkUIOptions | undefined>((_options = 
   const componentIgnore = options.theme?.enabled === false ? ['theme-picker/**'] : []
   const movkComponents = createMovkComponentSource(join(runtimeDir, 'components'), options.prefix, componentIgnore)
 
-  // movk 组件解析器注入 @nuxt/ui 的 unplugin-vue-components（defu 数组拼接），避免第二个实例触发重复检测
+  // @nuxt/ui 的 unplugin 配置统一从 ui 透传口读取；movk 仅对 autoImport/components 注入自有贡献后整体下发
+  const ui = options.ui || {}
   const uiOptions = defu(
     {
-      prefix: 'U',
-      colorMode: options.colorMode,
-      router: options.router,
-      dts: options.dts,
+      prefix: 'U', // movk 强制 U 前缀（U* shim 依赖），不可被 ui.prefix 覆盖
       // 把 movk 非服务端 composables 注入 @nuxt/ui 的 unplugin-auto-import 单实例（避免第二实例）
-      autoImport: options.autoImport === false
+      autoImport: ui.autoImport === false
         ? false
-        : defu(options.autoImport, {
+        : defu(ui.autoImport, {
             // 对齐 Nuxt：允许在 <template> 内使用自动导入（如复用页里 :data="makePeople(30)"）
             vueTemplate: true,
             imports: Object.entries(MOVK_COMPOSABLES).map(([from, names]) => ({
@@ -93,17 +82,17 @@ export const MovkPlugin = createUnplugin<MovkUIOptions | undefined>((_options = 
               imports: [...names]
             }))
           }),
-      components: options.components === false
+      // movk 组件解析器注入 @nuxt/ui 的 unplugin-vue-components（defu 数组拼接），避免第二个实例触发重复检测
+      components: ui.components === false
         ? false
-        : defu(options.components, { resolvers: [(name: string) => movkComponents.resolve(name)] })
+        : defu(ui.components, { resolvers: [(name: string) => movkComponents.resolve(name)] } as ComponentsOptions)
     },
-    options.ui || {}
+    ui
   )
 
-  const uiPlugins = NuxtUIPlugin.raw(uiOptions as any, meta) as UnpluginOptions | UnpluginOptions[]
+  const uiPlugins = NuxtUIPlugin.raw(uiOptions as NuxtUIOptions, meta) as UnpluginOptions | UnpluginOptions[]
 
   return [
-    // movk 覆盖插件先注册，赢得 #imports/#components/#build/app.config 解析
     MovkEnvironmentPlugin(options),
     MovkAppConfigPlugin(options),
     ...(Array.isArray(uiPlugins) ? uiPlugins : [uiPlugins]),

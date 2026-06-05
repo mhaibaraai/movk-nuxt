@@ -7,8 +7,8 @@ import { runtimeDir, UI_COMPONENTS } from '../unplugin'
 import type { MovkUIOptions } from '../unplugin'
 
 function resolveRouterMode(options: MovkUIOptions): 'vue-router' | 'inertia' | 'none' {
-  if (options.router === false) return 'none'
-  if (options.router === 'inertia') return 'inertia'
+  if (options.ui?.router === false) return 'none'
+  if (options.ui?.router === 'inertia') return 'inertia'
   return 'vue-router'
 }
 

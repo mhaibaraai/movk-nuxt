@@ -1,6 +1,9 @@
 import type { UnpluginOptions } from 'unplugin'
 import type { MovkUIOptions } from '../unplugin'
+import { defu } from 'defu'
+import { kebabCase } from 'scule'
 import { getDefaultConfig } from '../runtime/utils/theme-defaults'
+import { getPackageJsonMetadata } from '../runtime/utils/meta'
 
 const UI_COLOR_DEFAULTS = {
   primary: 'blue',
@@ -19,10 +22,19 @@ const UI_COLOR_DEFAULTS = {
 export default function MovkAppConfigPlugin(options: MovkUIOptions): UnpluginOptions {
   const movkDefault = JSON.stringify(getDefaultConfig(options.theme))
   const colorDefaults = JSON.stringify(UI_COLOR_DEFAULTS)
-  const siteName = JSON.stringify(options.site?.name ?? 'movk')
+  let movkSite = JSON.stringify(options.site ?? {})
 
   return {
     name: 'movk:app-config',
+    vite: {
+      async configResolved(config) {
+        const meta = await getPackageJsonMetadata(config.root)
+        movkSite = JSON.stringify(defu(options.site, {
+          name: kebabCase(meta.name || '') || 'movk',
+          description: meta.description
+        }))
+      }
+    },
     transform(code, id) {
       if (!id.includes('nuxt-ui-app-config')) return
       if (!code.includes('export default')) return
@@ -32,7 +44,7 @@ export default function MovkAppConfigPlugin(options: MovkUIOptions): UnpluginOpt
         code.replace('export default', 'const __movkUiAppConfig ='),
         `export default __movkDefu({`,
         `  movk: ${movkDefault},`,
-        `  movkSite: { name: ${siteName} },`,
+        `  movkSite: ${movkSite},`,
         `  ui: __movkDefu({ colors: ${colorDefaults} }, __movkUiAppConfig.ui || {})`,
         `}, __movkUiAppConfig)`
       ].join('\n')

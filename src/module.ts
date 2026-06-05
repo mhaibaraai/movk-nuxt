@@ -137,7 +137,8 @@ export default defineNuxtModule<ModuleOptions>({
 
     nuxt.hook('modules:done', async () => {
       const site = defu((nuxt as NuxtWithExtra).options.site, {
-        name: kebabCase(meta.name || ''),
+        name: kebabCase(meta.name || '') || 'movk',
+        description: meta.description,
         debug: false
       })
 
