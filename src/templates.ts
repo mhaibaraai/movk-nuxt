@@ -1,6 +1,7 @@
 import type { NuxtTemplate, NuxtTypeTemplate } from '@nuxt/schema'
 import { fileURLToPath } from 'node:url'
 import { kebabCase } from 'scule'
+import { addTemplate, addTypeTemplate, getLayerDirectories } from '@nuxt/kit'
 import * as theme from './theme'
 import type { ModuleOptions } from './module'
 import type { Nuxt } from 'nuxt/schema'
@@ -87,7 +88,6 @@ export function getTemplates(options: ModuleOptions, nuxt?: Nuxt) {
     }
 
     const sources: string[] = []
-    const { getLayerDirectories } = await import('@nuxt/kit')
     const layers = getLayerDirectories(nuxt).map(layer => layer.app)
 
     // Add layer sources
@@ -229,7 +229,6 @@ export {}
 }
 
 export async function addTemplates(options: ModuleOptions, nuxt: Nuxt) {
-  const { addTemplate, addTypeTemplate } = await import('@nuxt/kit')
   const templates = getTemplates(options, nuxt)
   for (const template of templates) {
     if (template.filename!.endsWith('.d.ts')) {

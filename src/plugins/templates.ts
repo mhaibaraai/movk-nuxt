@@ -37,7 +37,6 @@ export default function MovkTemplatePlugin(options: MovkUIOptions): UnpluginOpti
       }
     },
     resolveId(id) {
-      // 仅处理 .ts 主题模块（运行时具名导入）；.css 走 vite alias → 磁盘文件，保留 @source 相对路径
       if (templateKeys.has(id + '.ts')) {
         return id.replace('#build/', 'virtual:movk-templates/') + '.ts'
       }
