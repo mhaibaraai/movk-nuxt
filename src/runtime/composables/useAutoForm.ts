@@ -151,8 +151,6 @@ function createEnumFactory() {
   }
 }
 
-export { defineControl, DEFAULT_CONTROLS, getAutoFormMetadata }
-
 type UseAutoFormReturn<TControls extends AutoFormControls> = {
   defineControl: typeof defineControl
   afz: TypedZodFactory<TControls>
@@ -218,3 +216,5 @@ export function useAutoForm<const TControls extends AutoFormControls>(controls?:
     getAutoFormMetadata
   } as UseAutoFormReturn<FinalControls>
 }
+
+export { defineControl, DEFAULT_CONTROLS, getAutoFormMetadata }
