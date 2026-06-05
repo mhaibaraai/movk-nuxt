@@ -80,7 +80,7 @@ Based on the task, load the relevant reference files **before writing any code**
 
 ### Requirements
 
-- **Node.js** — `^22.x || >=24.x`
+- **Node.js** — `^20.19.0 || >=22.12.0`
 - **Nuxt** — `>=4.4.2` (Nuxt 4)
 - Peer deps: `@nuxt/ui >=4.6.0`, `zod >=4.3.6`
 
