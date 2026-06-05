@@ -1,3 +1,5 @@
+import pkg from '../package.json'
+
 export default defineNuxtConfig({
   extends: ['@movk/nuxt-docs'],
 
@@ -15,10 +17,18 @@ export default defineNuxtConfig({
     }
   },
 
+  devtools: { enabled: true },
+
   css: ['~/assets/css/main.css'],
 
   site: {
     name: 'Movk Nuxt'
+  },
+
+  runtimeConfig: {
+    public: {
+      version: pkg.version
+    }
   },
 
   routeRules: {
