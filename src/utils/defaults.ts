@@ -1,7 +1,6 @@
 import defu from 'defu'
 import type { ApiEndpointPublicConfig, ModuleOptions } from '../module'
 import type { EndpointPrivateConfig } from '../runtime/types/api/module'
-import type { Direction } from '@nuxt/ui'
 
 export function getDefaultApiConfig(apiConfig: ModuleOptions['api']) {
   const publicEndpoints: Record<string, ApiEndpointPublicConfig> = {}
@@ -63,36 +62,6 @@ export function getDefaultApiConfig(apiConfig: ModuleOptions['api']) {
   }
 
   return { publicConfig, privateConfig }
-}
-
-export function getDefaultConfig(theme?: ModuleOptions['theme']) {
-  const pickerFonts = theme?.fonts ?? [
-    { name: 'Alibaba PuHuiTi', href: 'https://cdn.mhaibaraai.cn/fonts/alibaba-puhuiti.css' },
-    { name: 'Public Sans' },
-    { name: 'DM Sans' },
-    { name: 'Geist' },
-    { name: 'Inter' },
-    { name: 'Poppins' },
-    { name: 'Outfit' },
-    { name: 'Raleway' }
-  ]
-  const pickerRadiuses = theme?.radiuses ?? [0, 0.125, 0.25, 0.375, 0.5]
-  const pickerNeutralColors = theme?.neutralColors ?? ['slate', 'gray', 'zinc', 'neutral', 'stone', 'taupe', 'mauve', 'mist', 'olive']
-
-  return {
-    dir: 'ltr' as Direction,
-    radius: 0.25,
-    blackAsPrimary: false,
-    font: 'Alibaba PuHuiTi',
-    icons: 'lucide',
-    prefix: theme?.prefix,
-    tv: {
-      twMergeConfig: {
-        prefix: theme?.prefix
-      }
-    },
-    picker: { fonts: pickerFonts, radiuses: pickerRadiuses, neutralColors: pickerNeutralColors }
-  }
 }
 
 export const defaultOptions = {

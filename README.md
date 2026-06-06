@@ -1,6 +1,6 @@
 [![Movk Nuxt](https://nuxt.mhaibaraai.cn/og-image.png)](https://nuxt.mhaibaraai.cn/)
 
-> Nuxt 4 模块化工程套件 — 基于 Zod v4 的 Schema 驱动自动表单、带认证与进度追踪的 API 集成系统、独立 UI 组件和通用 Composables。
+> 构建在 Nuxt UI 之上的 UI 工程套件 —— Schema 驱动的 AutoForm（Zod v4）、功能完备的 DataTable、独立组件与 Composables。在 Nuxt 4 中获得含认证与进度追踪的 API 集成在内的完整能力；其 UI、表单、表格与主题亦可经 Vite 插件直接用于纯 Vue + Vite 项目（API 集成域仅 Nuxt）。
 
 [![Install MCP in Cursor](https://nuxt.mhaibaraai.cn/mcp/badge.svg)](https://nuxt.mhaibaraai.cn/mcp/deeplink)
 [![Install MCP in VS Code](https://nuxt.mhaibaraai.cn/mcp/badge.svg?ide=vscode)](https://nuxt.mhaibaraai.cn/mcp/deeplink?ide=vscode)
@@ -16,13 +16,13 @@
 
 ## ✨ 特性
 
-Movk Nuxt 把后台开发的四类高频需求 —— 表单、表格、API、主题与交互 —— 收敛成开箱即用的模块能力：
+Movk Nuxt 是构建在 Nuxt UI 之上的 UI 工程套件，提供两种使用方式：在 **Nuxt 4** 中享受含 API 集成的完整能力，或经 **Vite 插件**在纯 **Vue + Vite** 项目中使用其 UI 层。各能力的可用框架如下：
 
-- **AutoForm — Schema 驱动表单** - 基于 Zod v4 的「定义即渲染」，一份 Schema 同时声明数据结构、验证规则和 UI 配置，自动生成完整表单界面。
-- **DataTable — 数据表格** - 基于 TanStack Table 封装，覆盖数据列、特殊列（选择/索引/展开/操作）、树形数据、行交互、外观定制、分页与加载更多。
-- **API 集成系统** - useApiFetch / useLazyApiFetch / useClientApiFetch 三件套 + useUploadWithProgress / useDownloadWithProgress，提供多端点、自动认证、业务状态码检查、数据解包、Toast 提示和进度监控。
-- **独立组件库** - DatePicker、StarRating、PillGroup、SearchForm、WithCopy 等通用 UI 组件，无需依赖 AutoForm 即可独立使用。
-- **Composables 工具集** - useTheme（主题读写与导出）、useMessageBox（命令式弹窗）、useDateFormatter（国际化日期）等通用组合式函数。
+- **AutoForm — Schema 驱动表单**（✅ Nuxt ｜ ✅ Vue + Vite）- 基于 Zod v4 的「定义即渲染」，一份 Schema 同时声明数据结构、验证规则和 UI 配置，自动生成完整表单界面。
+- **DataTable — 数据表格**（✅ Nuxt ｜ ✅ Vue + Vite）- 基于 TanStack Table 封装，覆盖数据列、特殊列（选择/索引/展开/操作）、树形数据、行交互、外观定制、分页与加载更多。
+- **独立组件库**（✅ Nuxt ｜ ✅ Vue + Vite）- DatePicker、StarRating、PillGroup、SearchForm、WithCopy、ThemePicker 等通用 UI 组件，无需依赖 AutoForm 即可独立使用。
+- **主题与 Composables**（✅ Nuxt ｜ ✅ Vue + Vite）- useTheme（主题读写与导出）、useMessageBox（命令式弹窗）、useDateFormatter（国际化日期）等非服务端组合式函数。
+- **API 集成系统**（✅ Nuxt ｜ ❌ Vue + Vite）- useApiFetch / useLazyApiFetch / useClientApiFetch 三件套 + useUploadWithProgress / useDownloadWithProgress，提供多端点、自动认证、业务状态码检查、数据解包、Toast 提示和进度监控；**依赖 Nuxt 服务端运行时，仅 Nuxt 模式可用**。
 - **类型安全** - 完整的 TypeScript 类型推断，从 Schema 到表单数据，组件 prop 回调与事件处理类型可索引访问派生。
 - **AI 友好** - 内置 MCP Server 与 llms.txt，组件、composable、文档可被 AI 智能体检索。
 
@@ -41,17 +41,9 @@ yarn add @movk/nuxt @nuxt/ui zod
 npm install @movk/nuxt @nuxt/ui zod
 ```
 
-### 配置
+### Nuxt
 
 在 `nuxt.config.ts` 中注册模块:
-
-```ts
-export default defineNuxtConfig({
-  modules: ['@movk/nuxt']
-})
-```
-
-可选配置项:
 
 ```ts
 export default defineNuxtConfig({
@@ -61,6 +53,44 @@ export default defineNuxtConfig({
   }
 })
 ```
+
+### Vue / Vite
+
+在纯 Vue + Vite 项目中，经 Vite 插件 + Vue 插件使用 UI 层（组件、主题、AutoForm、DataTable、非服务端 Composables）。**API 集成域在此模式下不可用。**
+
+```bash
+pnpm add @movk/nuxt @nuxt/ui zod tailwindcss vue-router
+```
+
+```ts
+// vite.config.ts
+import { defineConfig } from 'vite'
+import vue from '@vitejs/plugin-vue'
+import movk from '@movk/nuxt/vite'
+
+export default defineConfig({
+  plugins: [vue(), movk()]
+})
+```
+
+```ts
+// src/main.ts
+import './assets/css/main.css'
+import { createApp } from 'vue'
+import { createRouter, createWebHistory } from 'vue-router'
+import movk from '@movk/nuxt/vue-plugin'
+import App from './App.vue'
+
+const router = createRouter({ routes: [], history: createWebHistory() })
+createApp(App).use(router).use(movk).mount('#app')
+```
+
+```css
+/* src/assets/css/main.css —— 已串联 Tailwind CSS + Nuxt UI + Movk 主题 */
+@import "@movk/nuxt";
+```
+
+根组件用 `<UApp>` 包裹（Toast / Tooltip / useMessageBox 必需）。详见[在线文档 · Vue / Vite](https://nuxt.mhaibaraai.cn/docs/getting-started/vue)。
 
 ### 基础示例
 

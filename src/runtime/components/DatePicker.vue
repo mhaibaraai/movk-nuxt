@@ -22,11 +22,9 @@ import type {
   LabelFormat
 } from '../types/components/date-picker'
 
-interface _Props extends DatePickerProps<R, M, P, V> {
+const props = withDefaults(defineProps<DatePickerProps<R, M, P, V> & {
   ui?: ComponentConfig<typeof popoverTheme & typeof theme, AppConfig, 'datePicker'>['slots']
-}
-
-const props = withDefaults(defineProps<_Props>(), {
+}>(), {
   placeholder: '选择日期',
   labelFormat: 'formatted'
 })

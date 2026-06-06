@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { NavigationMenuItem } from '@nuxt/ui'
+import { useRoute, useRouter } from '#imports'
 import { upperName } from '../utils'
 import { flattenNav } from '../composables/useFlatNav'
 
@@ -44,7 +45,11 @@ defineShortcuts({
 </script>
 
 <template>
-  <UDashboardNavbar :title="title" class="absolute top-0 inset-x-0 z-5 bg-default">
+  <UDashboardNavbar
+    :title="title"
+    :ui="{ left: 'shrink-0', right: 'shrink overflow-x-auto py-2' }"
+    class="absolute top-0 inset-x-0 z-5 bg-default"
+  >
     <template #toggle>
       <UDashboardSidebarToggle size="sm" variant="outline" class="ring-default" />
       <UDashboardSidebarCollapse size="sm" variant="outline" class="ring-default" />

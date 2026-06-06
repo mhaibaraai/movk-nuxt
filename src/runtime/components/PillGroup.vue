@@ -19,12 +19,10 @@ import type {
 
 type PillGroup = ComponentConfig<typeof theme, AppConfig, 'pillGroup'>
 
-interface _Props extends PillGroupProps<T, VK, M> {
+const props = withDefaults(defineProps<PillGroupProps<T, VK, M> & {
   orientation?: PillGroup['variants']['orientation']
   ui?: PillGroup['slots']
-}
-
-const props = withDefaults(defineProps<_Props>(), {
+}>(), {
   orientation: 'horizontal',
   activeVariant: 'solid',
   inactiveVariant: 'soft',

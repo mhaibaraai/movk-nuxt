@@ -135,9 +135,10 @@ export default defineNuxtModule<ModuleOptions>({
 
     const meta = await getPackageJsonMetadata(nuxt.options.rootDir)
 
-    nuxt.hook('modules:done', () => {
+    nuxt.hook('modules:done', async () => {
       const site = defu((nuxt as NuxtWithExtra).options.site, {
-        name: kebabCase(meta.name || ''),
+        name: kebabCase(meta.name || '') || 'movk',
+        description: meta.description,
         debug: false
       })
 
@@ -153,7 +154,7 @@ export default defineNuxtModule<ModuleOptions>({
       options.theme = defu(options.theme || {}, themeDefaults)
 
       addTheme(nuxt, resolve, options.theme)
-      addTemplates(options, nuxt)
+      await addTemplates(options, nuxt)
     })
 
     nuxt.hook('prepare:types', ({ references }) => {

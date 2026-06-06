@@ -8,6 +8,8 @@ export default createConfigForNuxt({
       braceStyle: '1tbs'
     }
   }
+}).append({
+  ignores: ['**/auto-imports.d.ts', '**/components.d.ts']
 }).overrideRules({
   '@typescript-eslint/no-explicit-any': 'off',
   '@typescript-eslint/no-empty-object-type': 'off',

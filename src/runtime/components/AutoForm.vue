@@ -19,11 +19,9 @@ import { useAppConfig } from '#imports'
 
 type AutoFormStateType = N extends false ? Partial<InferInput<S>> : never
 
-interface _Props extends AutoFormProps<S, T, N> {
+const props = withDefaults(defineProps<AutoFormProps<S, T, N> & {
   ui?: ComponentConfig<typeof theme, AppConfig, 'autoForm'>['slots']
-}
-
-const props = withDefaults(defineProps<_Props>(), {
+}>(), {
   submit: true,
   loadingAuto: true,
   validateOn: () => []

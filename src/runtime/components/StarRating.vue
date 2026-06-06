@@ -10,11 +10,9 @@ import type { StarRatingProps, StarRatingEmits } from '../types/components/star-
 import { useExtendedTv } from '../utils/extend-theme'
 import { useFieldControl } from '../utils/form-control'
 
-interface _Props extends StarRatingProps {
+const props = withDefaults(defineProps<StarRatingProps & {
   ui?: ComponentConfig<typeof theme, AppConfig, 'starRating'>['slots']
-}
-
-const props = withDefaults(defineProps<_Props>(), {
+}>(), {
   max: 5,
   showBadge: true,
   emptyIcon: 'i-lucide-star',

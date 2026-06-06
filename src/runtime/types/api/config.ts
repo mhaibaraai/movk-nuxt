@@ -76,7 +76,7 @@ export interface ApiAuthConfig {
   }
 }
 
-interface ApiToast extends Toast {
+export interface ApiToast extends Toast {
   /**
    * 是否显示提示
    * @defaultValue true
