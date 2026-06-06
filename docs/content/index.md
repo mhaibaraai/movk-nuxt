@@ -343,12 +343,12 @@ orientation: horizontal
 reverse: true
 links:
   - label: 浏览组件
-    to: /docs/components/date-picker
+    to: /docs/components
     color: neutral
     variant: outline
     trailingIcon: i-lucide-arrow-right
   - label: 浏览 Composables
-    to: /docs/composables/use-theme
+    to: /docs/composables
     color: neutral
     variant: ghost
     trailingIcon: i-lucide-arrow-right
