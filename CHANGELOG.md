@@ -1,5 +1,59 @@
 # 📋 Changelog
 
+## [1.3.0](https://github.com/mhaibaraai/movk-nuxt/compare/v1.2.0...v1.3.0) (2026-06-07)
+
+### ⚠ BREAKING CHANGES
+
+- `@movk/nuxt` 不再导出 `ResolvedEndpointConfig`、`MovkApiFullConfig`、`EndpointPrivateConfig`、`ApiFetchContext`；如有直接消费请改为读取 `MovkApiPublicConfig` 或 `ModuleOptions`。
+
+### ✨ Features
+
+- **DataTable 组件系统全新上线**（基于 TanStack Table 的全功能表格）
+	- 列配置：函数式动态列、`truncate`、列宽拖拽调整、固定列阴影、水平滚动状态检测。
+	- 特殊列系统：选择列（单/多选三种 strategy）、展开列、操作列（`DataTableAction` API，异步 loading、溢出菜单、`useMessageBox` 确认）、行固定。
+	- 树形数据：展开 `v-model`、`expandedOptions`、三种勾选 strategy、`selectOnRowClick`，表头支持一键全部展开/收起。
+	- 分页能力：手动/自动分页、加载更多、无限滚动，并补充分页主题。
+	- 数组形态 keys API（列可见性 / 行选中 / 展开状态）、状态变更回调，并再导出 TanStack 状态类型。
+- **Vite/Vue 双模式兼容层**
+	- 通过 `@movk/nuxt/vite` + `@movk/nuxt/vue-plugin`，在纯 Vue + Vite 项目中复用独立 UI 组件、主题与非服务端 Composables（不含 API 域）。
+- **新增独立组件**
+	- MessageBox：声明式 + 编程式 `useMessageBox`，支持 `v-model:open` 与 SemanticColor/neutral 主题。
+	- Popconfirm：接入 tailwind-variants 样式系统。
+	- PillGroup：新增 `activeVariant` 与容器视觉变体。
+	- ColorChooser 重写并接入主题系统，支持多格式颜色切换与改进的输入体验。
+	- DatePicker 增强选择器格式与快捷操作。
+- **AutoForm 增强**
+	- 新增 `valueFormat` 选项、FieldGroup 编排、字段控件状态继承。
+	- 注册 PillGroup 与 UListbox 默认控件，透传全局 `size` 与 `validateOn`。
+- **API 与请求扩展**
+	- 端点名类型化与声明合并、自动生成 useFetch 缓存 key、新增 `skipUnwrap` 选项。
+	- toast 配置收敛为 `ApiToast` 并复用 Nuxt UI `Toast` 类型。
+- **主题系统增强**
+	- 支持 `dir` 文本方向配置与主题选择器配置；主色默认值由 `sky` 改为 `blue`。
+- **类型导出**：组件 Props/Emits 接口经 `index.ts` 统一公开导出。
+- **AI 集成**：新增 movk-nuxt Agent Skill 单技能包。
+
+### 🐛 Bug Fixes
+
+- 修复 AutoForm 表单 state 无法回写父级。
+- 修复 DataTable 多项交互：手动分页 pageCount/rowCount 不响应、selection indeterminate 状态、固定列阴影与分组列 sticky 错位、列宽锁定策略等。
+- 修复 SlideVerify size 切换未触发重算、SearchForm 折叠按钮样式合并 undefined 类，以及声明可移植性问题（内联组件 props、导出 `ApiToast`）。
+
+### ♻️ Code Refactoring
+
+- runtime 领域目录重组（按域划分 `domains/`），模块目录结构与主题系统重构。
+- 统一组件 Props 接口命名规范，统一主题扩展机制并拆分列解析模块。
+
+### 📝 Documentation
+
+- 文档体系按 AutoForm / DataTable / API / Composables 四大能力域整体重构。
+- 新增 DataTable 全套文档；组件文档对齐书写规范并补齐英文 `seo` frontmatter。
+- MCP 与 Skills 文档重构，新增 DataTable 章节资源，MCP 描述统一为英文。
+
+### 🔧 Chores
+
+- 升级 `@nuxt/ui` 至 4.8.x，调整 Node.js 版本要求至 `^20.19.0 || >=22.12.0`，依赖升级与 lockfile 去重。
+
 ## [1.2.0](https://github.com/mhaibaraai/movk-nuxt/compare/v1.1.2...v1.2.0) (2026-04-06)
 
 ### ⚠ BREAKING CHANGES
