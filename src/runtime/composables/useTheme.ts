@@ -6,12 +6,14 @@ import colors from 'tailwindcss/colors'
 import { computed } from 'vue'
 import { getDefaultConfig } from '../utils/theme-defaults'
 
+type IconSet = 'lucide' | 'phosphor' | 'tabler'
+
 export function useTheme() {
   const { movk, ui } = useAppConfig()
   const colorMode = useColorMode()
   const name = kebabCase(useSiteConfig().name)
 
-  const color = computed(() => colorMode.value === 'dark' ? (colors as any)[ui.colors.neutral][900] : 'white')
+  const color = computed<string>(() => colorMode.value === 'dark' ? (colors as any)[ui.colors.neutral][900] : 'white')
 
   const defaultConfig = getDefaultConfig()
 
@@ -20,34 +22,34 @@ export function useTheme() {
   const _iconSet = useLocalStorage(`${name}-ui-icons`, movk?.icons ?? defaultConfig.icons)
   const _blackAsPrimary = useLocalStorage(`${name}-ui-black-as-primary`, defaultConfig.blackAsPrimary)
 
-  const pickerFonts = movk?.picker?.fonts ?? []
+  const pickerFonts: { name: string, href?: string }[] = movk?.picker?.fonts ?? []
 
-  const neutralColors = movk?.picker?.neutralColors ?? []
-  const neutral = computed({
+  const neutralColors: string[] = movk?.picker?.neutralColors ?? []
+  const neutral = computed<string>({
     get() {
       return ui.colors.neutral
     },
     set(option) {
-      ui.colors.neutral = option
+      ui.colors.neutral = option as typeof ui.colors.neutral
       window.localStorage.setItem(`${name}-ui-neutral`, ui.colors.neutral)
     }
   })
 
   const colorsToOmit = ['inherit', 'current', 'transparent', 'black', 'white', ...neutralColors]
   const primaryColors = Object.keys(omit(colors, colorsToOmit as any))
-  const primary = computed({
+  const primary = computed<string>({
     get() {
       return ui.colors.primary
     },
     set(option) {
-      ui.colors.primary = option
+      ui.colors.primary = option as typeof ui.colors.primary
       window.localStorage.setItem(`${name}-ui-primary`, ui.colors.primary)
       setBlackAsPrimary(false)
     }
   })
 
-  const radiuses = movk?.picker?.radiuses ?? []
-  const radius = computed({
+  const radiuses: number[] = movk?.picker?.radiuses ?? []
+  const radius = computed<number>({
     get() {
       return _radius.value
     },
@@ -56,8 +58,8 @@ export function useTheme() {
     }
   })
 
-  const fonts = pickerFonts.map(f => f.name)
-  const font = computed({
+  const fonts: string[] = pickerFonts.map(f => f.name)
+  const font = computed<string>({
     get() {
       return _font.value
     },
@@ -66,14 +68,14 @@ export function useTheme() {
     }
   })
 
-  const icons = [
+  const icons: { label: string, icon: string, value: IconSet }[] = [
     { label: 'Lucide', icon: 'i-lucide-feather', value: 'lucide' },
     { label: 'Phosphor', icon: 'i-ph-phosphor-logo', value: 'phosphor' },
     { label: 'Tabler', icon: 'i-tabler-brand-tabler', value: 'tabler' }
   ]
-  const icon = computed({
+  const icon = computed<IconSet>({
     get() {
-      return _iconSet.value
+      return _iconSet.value as IconSet
     },
     set(option) {
       _iconSet.value = option
@@ -86,7 +88,7 @@ export function useTheme() {
     { label: 'dark', icon: ui.icons.dark },
     { label: 'system', icon: ui.icons.system }
   ])
-  const mode = computed({
+  const mode = computed<string>({
     get() {
       return colorMode.value
     },
