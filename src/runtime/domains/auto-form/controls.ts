@@ -61,7 +61,8 @@ const DEFAULT_CONTROL_COMPONENTS = {
   boolean: UCheckbox,
   enum: USelect,
   file: UFileUpload,
-  calendarDate: DatePicker,
+  // reka-ui 未公开导出 Calendar 相关类型，收宽避免声明发射 TS2883（详见 AGENTS.md）
+  calendarDate: DatePicker as IsComponent,
   inputDate: UInputDate,
   inputTime: UInputTime,
 
