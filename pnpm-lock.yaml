@@ -112,7 +112,7 @@ importers:
         specifier: ^10.4.1
         version: 10.4.1(jiti@2.7.0)
       happy-dom:
-        specifier: ^20.10.1
+        specifier: ^20.10.2
         version: 20.10.2
       nuxt:
         specifier: ^4.4.7
