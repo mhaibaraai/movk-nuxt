@@ -323,3 +323,26 @@ export function extractPureSchema<T extends z.ZodObject<any, any>>(schema: T): z
 
   return zod.object(pureShape) as z.ZodObject<any, any>
 }
+
+/**
+ * 从校验 schema 中剔除指定顶层字段。
+ * 用于让 meta.if 隐藏的字段不参与校验，使校验集与渲染保持一致。
+ */
+export function omitFields(schema: z.ZodObject<any, any>, keys: string[]): z.ZodObject<any, any> {
+  const shape = (schema as any).shape
+
+  if (!shape || typeof shape !== 'object') {
+    return schema
+  }
+
+  const present = keys.filter(key => key in shape)
+
+  if (!present.length) {
+    return schema
+  }
+
+  const mask: Record<string, true> = {}
+  for (const key of present) mask[key] = true
+
+  return schema.omit(mask) as z.ZodObject<any, any>
+}

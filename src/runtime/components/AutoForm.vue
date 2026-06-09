@@ -7,7 +7,7 @@ import { computed, onMounted, ref, toRaw, unref, useAttrs, useTemplateRef } from
 import { deepClone, isFunction } from '@movk/core'
 import { useAutoFormProvider } from '../domains/auto-form/provider'
 import { applyFieldDefaults, classifyFields } from '../domains/auto-form/fields'
-import { extractPureSchema, introspectSchema } from '../domains/auto-form/schema'
+import { extractPureSchema, introspectSchema, omitFields } from '../domains/auto-form/schema'
 import { DEFAULT_CONTROLS } from '../domains/auto-form/controls'
 import AutoFormRendererChildren from '../domains/auto-form/components/Children.vue'
 import AutoFormRendererField from '../domains/auto-form/components/Field.vue'
@@ -46,8 +46,6 @@ const resolvedButtonSize = computed(() => {
   return unref(size)
 })
 
-const pureSchema = computed(() => props.schema ? extractPureSchema(props.schema) as S : props.schema)
-
 const controlsMapping = computed(() => ({ ...DEFAULT_CONTROLS, ...props.controls }))
 const fields = computed(() => props.schema
   ? introspectSchema(props.schema, controlsMapping.value, '', props.globalMeta)
@@ -58,6 +56,16 @@ const visibleFields = computed(() =>
     field && (field.meta?.if === undefined || resolveFieldProp<boolean>(field, 'if') === true)
   )
 )
+
+// 校验 schema 与渲染保持一致：剔除「带 if 且当前隐藏」的顶层字段，使 if 隐藏的字段不参与校验
+const pureSchema = computed(() => {
+  if (!props.schema) return props.schema
+  const base = extractPureSchema(props.schema)
+  const hiddenKeys = fields.value
+    .filter(field => field?.meta?.if !== undefined && resolveFieldProp<boolean>(field, 'if') !== true)
+    .map(field => field.path)
+  return omitFields(base, hiddenKeys) as S
+})
 
 const renderData = computed(() => {
   if (!fields.value.length) return null

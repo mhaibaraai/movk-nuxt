@@ -3,7 +3,7 @@ import { z } from 'zod'
 
 import { AUTOFORM_META } from '../../../src/runtime/domains/auto-form/constants'
 import { applyMeta } from '../../../src/runtime/domains/auto-form/metadata'
-import { extractPureSchema, introspectSchema } from '../../../src/runtime/domains/auto-form/schema'
+import { extractPureSchema, introspectSchema, omitFields } from '../../../src/runtime/domains/auto-form/schema'
 import { useAutoForm } from '../../../src/runtime/composables/useAutoForm'
 
 // controls 顶层 import 了多个 .vue 文件，vitest 默认无 @vitejs/plugin-vue 会解析失败；按 useAutoForm.test.ts 的方式打桩
@@ -59,5 +59,30 @@ describe('auto-form schema', () => {
     const shape = (pureSchema as any).shape
 
     expect(Object.keys(shape)).toEqual(['title', 'count', 'status'])
+  })
+
+  describe('omitFields（meta.if 隐藏字段不参与校验）', () => {
+    const schema = afz.object({
+      username: z.string().min(1),
+      password: z.string().min(6)
+    })
+
+    it('剔除隐藏字段后，该字段不再参与校验', () => {
+      const omitted = omitFields(schema, ['password'])
+
+      expect(Object.keys((omitted as any).shape)).toEqual(['username'])
+      expect(omitted.safeParse({ username: 'admin' }).success).toBe(true)
+    })
+
+    it('不剔除时保留必填校验', () => {
+      expect(schema.safeParse({ username: 'admin' }).success).toBe(false)
+      expect(omitFields(schema, []).safeParse({ username: 'admin' }).success).toBe(false)
+    })
+
+    it('忽略不存在的 key，返回原 schema', () => {
+      const result = omitFields(schema, ['nope'])
+
+      expect(Object.keys((result as any).shape)).toEqual(['username', 'password'])
+    })
   })
 })
