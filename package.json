@@ -107,12 +107,12 @@
   "scripts": {
     "prepack": "pnpm build",
     "build": "nuxt-module-build build",
-    "dev": "cross-env TMPDIR=/tmp nuxt dev playgrounds/play --uiDev",
+    "dev": "nuxt dev playgrounds/play --uiDev",
     "dev:build": "nuxt build playgrounds/play",
     "dev:vue": "pnpm --filter './playgrounds/vue' dev",
     "dev:vue:build": "pnpm --filter './playgrounds/vue' build",
     "dev:prepare": "nuxt-module-build build --stub && nuxt-module-build prepare && nuxt prepare playgrounds/play && nuxt prepare docs && pnpm dev:vue:build",
-    "docs": "cross-env TMPDIR=/tmp nuxt dev docs --uiDev",
+    "docs": "nuxt dev docs --uiDev",
     "docs:build": "nuxt build docs",
     "release": "release-it && npm publish",
     "lint": "eslint .",
@@ -152,21 +152,20 @@
   },
   "devDependencies": {
     "@nuxt/eslint-config": "^1.15.2",
-    "@nuxt/kit": "^4.4.7",
+    "@nuxt/kit": "^4.4.8",
     "@nuxt/module-builder": "^1.0.2",
-    "@nuxt/schema": "^4.4.7",
+    "@nuxt/schema": "^4.4.8",
     "@release-it/bumper": "^7.0.6",
     "@release-it/conventional-changelog": "^11.0.1",
-    "cross-env": "^10.1.0",
     "eslint": "^10.4.1",
     "happy-dom": "^20.10.2",
-    "nuxt": "^4.4.7",
+    "nuxt": "^4.4.8",
     "typescript": "^6.0.3",
     "unbuild": "^3.6.1",
     "unplugin-auto-import": "^21.0.0",
     "unplugin-vue-components": "^32.1.0",
     "vitest": "^4.1.8",
     "vue": "^3.5.35",
-    "vue-tsc": "^3.3.3"
+    "vue-tsc": "^3.3.4"
   }
 }
