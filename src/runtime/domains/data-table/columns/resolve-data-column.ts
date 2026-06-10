@@ -163,55 +163,11 @@ export function renderHeaderActions<T>(
   const leading = actions.filter(a => a.position === 'leading').map(a => a.render(ctx))
   const trailing = actions.filter(a => a.position === 'trailing').map(a => a.render(ctx))
 
-  // table-auto 下仅固定被拖列、其余列自适应会在拖拽中持续重排导致抖动。
-  // 拖拽起始时把全部自适应列按当前真实渲染宽测量并锁定（整表固定，拖拽平滑、起始无跳变）；
-  // 松手后释放本次临时锁定的未拖列，使其回到自适应，仅保留被拖列的固定宽。
-  const startResize = (event: Event): void => {
-    const th = (event.target as HTMLElement).closest('th')
-    const tr = th?.closest('tr')
-    const draggedId = ctx.column.id
-    const tempIds: string[] = []
-
-    if (tr) {
-      const sizing = ctx.table.getState().columnSizing
-      const cells = Array.from(tr.children) as HTMLElement[]
-      const leafHeaders = ctx.table.getHeaderGroups().at(-1)?.headers ?? []
-      const seed: Record<string, number> = { ...sizing }
-
-      leafHeaders.forEach((header, i) => {
-        const { column } = header
-        const cell = cells[i]
-        if (!cell || column.id in sizing || column.columnDef.size != null) return
-        const w = Math.round(cell.getBoundingClientRect().width)
-        if (w <= 0) return
-        seed[column.id] = w
-        if (column.id !== draggedId) tempIds.push(column.id)
-      })
-
-      ctx.table.setColumnSizing(seed)
-    }
-
-    if (tempIds.length > 0) {
-      const tempSet = new Set(tempIds)
-      const release = (): void => {
-        ctx.table.setColumnSizing(prev =>
-          Object.fromEntries(Object.entries(prev).filter(([id]) => !tempSet.has(id)))
-        )
-        window.removeEventListener('mouseup', release)
-        window.removeEventListener('touchend', release)
-      }
-      window.addEventListener('mouseup', release)
-      window.addEventListener('touchend', release)
-    }
-
-    ctx.header.getResizeHandler()(event)
-  }
-
   const resizeHandle = resizable
     ? h('div', {
         class: 'absolute top-0 bottom-0 right-0 w-4 -mr-2 cursor-col-resize select-none touch-none flex items-center justify-center group/resize',
-        onMousedown: startResize,
-        onTouchstart: startResize,
+        onMousedown: ctx.header.getResizeHandler(),
+        onTouchstart: ctx.header.getResizeHandler(),
         onClick: (e: Event) => e.stopPropagation()
       }, [
         h('div', {
