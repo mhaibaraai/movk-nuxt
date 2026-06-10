@@ -20,7 +20,8 @@ import {
   isToday,
   parseDate,
   parseDateTime,
-  parseZonedDateTime
+  parseZonedDateTime,
+  parseAbsolute
 } from '@internationalized/date'
 import type { DateValue } from '@internationalized/date'
 import type { DateRange } from 'reka-ui'
@@ -50,6 +51,9 @@ export interface DateFormatterOptions {
 
 const DEFAULT_LOCALE = 'zh-CN'
 const DEFAULT_FORMAT_OPTIONS: Intl.DateTimeFormatOptions = { dateStyle: 'medium' }
+
+// 匹配 ISO 末尾的 Z 或 ±HH:mm / ±HHmm 时区偏移
+const ABSOLUTE_RE = /(?:Z|[+-]\d{2}:?\d{2})$/
 
 function safe<T>(fn: () => T, fallback: T): T {
   try { return fn() }
@@ -264,10 +268,10 @@ export function useDateFormatter(options: DateFormatterOptions = {}) {
    */
   function parse(value: string) {
     try {
-      if (value.includes('T')) {
-        return value.includes('[') ? parseZonedDateTime(value) : parseDateTime(value)
-      }
-      return parseDate(value)
+      if (!value.includes('T')) return parseDate(value)
+      if (value.includes('[')) return parseZonedDateTime(value)
+      if (ABSOLUTE_RE.test(value)) return parseAbsolute(value, timeZone)
+      return parseDateTime(value)
     }
     catch {
       return null

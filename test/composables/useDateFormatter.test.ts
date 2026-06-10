@@ -97,6 +97,29 @@ describe('useDateFormatter', () => {
       expect(dateTime).toBeDefined()
       expect(dateTime?.toString()).toContain('2025-11-29T10:30:00')
     })
+
+    it('parse: 解析带时区偏移的 ISO 字符串', () => {
+      const date = formatter.parse('2026-01-23T17:15:22.040205+08:00')
+      expect(date).not.toBeNull()
+      expect(date?.year).toBe(2026)
+      expect(date?.month).toBe(1)
+      expect(date?.day).toBe(23)
+    })
+
+    it('parse: 解析负偏移与 Z 后缀的 ISO 字符串', () => {
+      expect(formatter.parse('2026-01-23T17:15:22-05:00')).not.toBeNull()
+      expect(formatter.parse('2026-01-23T17:15:22Z')).not.toBeNull()
+    })
+
+    it('parse: 解析 IANA 命名时区的 ISO 字符串', () => {
+      const date = formatter.parse('2026-01-23T17:15:22[Asia/Shanghai]')
+      expect(date).not.toBeNull()
+      expect(date?.day).toBe(23)
+    })
+
+    it('parse: 非法字符串返回 null', () => {
+      expect(formatter.parse('not-a-date')).toBeNull()
+    })
   })
 
   describe('工具方法 - 获取日期', () => {
