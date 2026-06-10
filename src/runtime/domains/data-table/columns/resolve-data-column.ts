@@ -163,11 +163,21 @@ export function renderHeaderActions<T>(
   const leading = actions.filter(a => a.position === 'leading').map(a => a.render(ctx))
   const trailing = actions.filter(a => a.position === 'trailing').map(a => a.render(ctx))
 
+  // 自适应列拖拽前先测量真实渲染宽写入 columnSizing，使起始宽=实测宽，避免从默认 size 跳变。
+  const startResize = (event: Event): void => {
+    const th = (event.target as HTMLElement).closest('th')
+    if (th && !(ctx.column.id in ctx.table.getState().columnSizing)) {
+      const w = Math.ceil(th.getBoundingClientRect().width)
+      if (w > 0) ctx.table.setColumnSizing(prev => ({ ...prev, [ctx.column.id]: w }))
+    }
+    ctx.header.getResizeHandler()(event)
+  }
+
   const resizeHandle = resizable
     ? h('div', {
         class: 'absolute top-0 bottom-0 right-0 w-4 -mr-2 cursor-col-resize select-none touch-none flex items-center justify-center group/resize',
-        onMousedown: ctx.header.getResizeHandler(),
-        onTouchstart: ctx.header.getResizeHandler(),
+        onMousedown: startResize,
+        onTouchstart: startResize,
         onClick: (e: Event) => e.stopPropagation()
       }, [
         h('div', {
