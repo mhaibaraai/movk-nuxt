@@ -163,11 +163,47 @@ export function renderHeaderActions<T>(
   const leading = actions.filter(a => a.position === 'leading').map(a => a.render(ctx))
   const trailing = actions.filter(a => a.position === 'trailing').map(a => a.render(ctx))
 
+  // 抓住拖动线时仅给当前列种入真实渲染宽（getSize 立即权威），避免 TanStack 取默认宽 150 造成 snap/起拖抖动；
+  // 纯点击（未实际拖动）松手后回滚该条目，使列回到自适应。
+  const startResize = (e: MouseEvent | TouchEvent): void => {
+    const id = ctx.column.id
+    const seeded = !(id in ctx.table.getState().columnSizing)
+    if (seeded) {
+      const th = (e.currentTarget as HTMLElement | null)?.closest('th')
+      const w = th ? Math.round(th.getBoundingClientRect().width) : 0
+      if (w > 0) ctx.table.setColumnSizing(prev => ({ ...prev, [id]: w }))
+    }
+    ctx.header.getResizeHandler()(e)
+    if (!seeded) return
+
+    const startX = 'touches' in e ? e.touches[0]?.clientX ?? 0 : e.clientX
+    let moved = false
+    const onMove = (ev: MouseEvent | TouchEvent): void => {
+      const x = 'touches' in ev ? ev.touches[0]?.clientX : ev.clientX
+      if (typeof x === 'number' && Math.abs(x - startX) > 2) moved = true
+    }
+    const onEnd = (): void => {
+      if (!moved) {
+        ctx.table.setColumnSizing(prev =>
+          Object.fromEntries(Object.entries(prev).filter(([key]) => key !== id))
+        )
+      }
+      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('mouseup', onEnd)
+      window.removeEventListener('touchmove', onMove)
+      window.removeEventListener('touchend', onEnd)
+    }
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('mouseup', onEnd)
+    window.addEventListener('touchmove', onMove)
+    window.addEventListener('touchend', onEnd)
+  }
+
   const resizeHandle = resizable
     ? h('div', {
         class: 'absolute top-0 bottom-0 right-0 w-4 -mr-2 cursor-col-resize select-none touch-none flex items-center justify-center group/resize',
-        onMousedown: ctx.header.getResizeHandler(),
-        onTouchstart: ctx.header.getResizeHandler(),
+        onMousedown: startResize,
+        onTouchstart: startResize,
         onClick: (e: Event) => e.stopPropagation()
       }, [
         h('div', {

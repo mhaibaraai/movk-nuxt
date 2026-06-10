@@ -7,10 +7,13 @@ import { resolvePresetSize } from './utils'
 export function resolveColumnSize<T>(ctx: Header<T, unknown> | Cell<T, unknown>): Record<string, string> {
   const { columnDef } = ctx.column
   const table = ctx.getContext().table
-  const isPinned = ctx.column.getIsPinned()
-  const hasMeasuredSize = isPinned && (ctx.column.id in table.getState().columnSizing)
+  // 固定宽的三种情形：列已 pin（sticky 偏移需具体宽）/ 显式设了 size / 已被测量或拖拽过（进入 columnSizing）。
+  // 仅开启 resizable 但未拖拽的列保持自适应，拖拽起始时再测量真实宽度写入 columnSizing。
+  const isPinned = !!ctx.column.getIsPinned()
+  const isSized = ctx.column.id in table.getState().columnSizing
+  const hasExplicitSize = columnDef.size != table._getDefaultColumnDef().size
 
-  if (hasMeasuredSize || columnDef.size != table._getDefaultColumnDef().size || columnDef.enableResizing === true) {
+  if (isPinned || isSized || hasExplicitSize) {
     const w = `${ctx.column.getSize()}px`
     return { width: w, minWidth: w, maxWidth: w }
   }

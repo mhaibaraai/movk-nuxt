@@ -67,7 +67,9 @@ function buildSpecialColumnDef<T>(
   ctx.allColumnIds.push(id)
 
   const effectivePinable = col.pinable ?? (options.pinable === true)
-  const effectiveResizable = col.resizable ?? (options.resizable === true)
+  // 特殊列（selection/index/expand/row-pinning/actions）不继承全局 resizable，
+  // 否则表头会被包进 flex + resize handle，导致勾选框与单元格错位；需要时按列显式开启。
+  const effectiveResizable = col.resizable ?? false
 
   ctx.flags.hasPinning ||= effectivePinable
   ctx.flags.hasResizing ||= effectiveResizable
