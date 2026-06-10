@@ -163,13 +163,47 @@ export function renderHeaderActions<T>(
   const leading = actions.filter(a => a.position === 'leading').map(a => a.render(ctx))
   const trailing = actions.filter(a => a.position === 'trailing').map(a => a.render(ctx))
 
-  // 自适应列拖拽前先测量真实渲染宽写入 columnSizing，使起始宽=实测宽，避免从默认 size 跳变。
+  // table-auto 下仅固定被拖列、其余列自适应会在拖拽中持续重排导致抖动。
+  // 拖拽起始时把全部自适应列按当前真实渲染宽测量并锁定（整表固定，拖拽平滑、起始无跳变）；
+  // 松手后释放本次临时锁定的未拖列，使其回到自适应，仅保留被拖列的固定宽。
   const startResize = (event: Event): void => {
     const th = (event.target as HTMLElement).closest('th')
-    if (th && !(ctx.column.id in ctx.table.getState().columnSizing)) {
-      const w = Math.ceil(th.getBoundingClientRect().width)
-      if (w > 0) ctx.table.setColumnSizing(prev => ({ ...prev, [ctx.column.id]: w }))
+    const tr = th?.closest('tr')
+    const draggedId = ctx.column.id
+    const tempIds: string[] = []
+
+    if (tr) {
+      const sizing = ctx.table.getState().columnSizing
+      const cells = Array.from(tr.children) as HTMLElement[]
+      const leafHeaders = ctx.table.getHeaderGroups().at(-1)?.headers ?? []
+      const seed: Record<string, number> = { ...sizing }
+
+      leafHeaders.forEach((header, i) => {
+        const { column } = header
+        const cell = cells[i]
+        if (!cell || column.id in sizing || column.columnDef.size != null) return
+        const w = Math.round(cell.getBoundingClientRect().width)
+        if (w <= 0) return
+        seed[column.id] = w
+        if (column.id !== draggedId) tempIds.push(column.id)
+      })
+
+      ctx.table.setColumnSizing(seed)
     }
+
+    if (tempIds.length > 0) {
+      const tempSet = new Set(tempIds)
+      const release = (): void => {
+        ctx.table.setColumnSizing(prev =>
+          Object.fromEntries(Object.entries(prev).filter(([id]) => !tempSet.has(id)))
+        )
+        window.removeEventListener('mouseup', release)
+        window.removeEventListener('touchend', release)
+      }
+      window.addEventListener('mouseup', release)
+      window.addEventListener('touchend', release)
+    }
+
     ctx.header.getResizeHandler()(event)
   }
 
