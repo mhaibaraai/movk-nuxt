@@ -141,9 +141,12 @@ export function useAutoFormProvider(
       {
         ...wrappedProps,
         'onUpdate:modelValue': (v: any) => {
-          context.setValue(v)
+          // 单选 select/selectMenu 清空时 reka 写入 null，而 optional 字段 schema 仅接受 undefined，
+          // 会导致校验失败（Invalid option）。optional 字段的 null 归一为 undefined。
+          const next = (v === null && field.decorators?.isOptional) ? undefined : v
+          context.setValue(next)
           if (typeof userOnUpdate === 'function') {
-            userOnUpdate(v, context)
+            userOnUpdate(next, context)
           }
         },
         'modelValue': unref(context.value)
