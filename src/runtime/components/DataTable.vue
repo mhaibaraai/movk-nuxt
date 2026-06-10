@@ -17,7 +17,7 @@ import type { TableData, TableProps, ComponentConfig } from '@nuxt/ui'
 import { UTable } from '#components'
 import { useAppConfig } from '#imports'
 import type { Ref, WritableComputedRef } from 'vue'
-import { computed, nextTick, onMounted, ref, useAttrs, useTemplateRef, watch } from 'vue'
+import { computed, onMounted, ref, useAttrs, useTemplateRef, watch } from 'vue'
 import { useExtendedTv } from '../utils/extend-theme'
 import { resolveColumns } from '../domains/data-table/columns/resolve-columns'
 import { resolveCallbackValue } from '../domains/data-table/columns/utils'
@@ -280,49 +280,6 @@ function scrollToTop(options: ScrollToOptions = { top: 0, behavior: 'smooth' }) 
 const tableApi = computed<Table<T> | null>(() => tableRef.value?.tableApi ?? null)
 const isColumnResizing = computed(() => Boolean(tableApi.value?.getState().columnSizingInfo.isResizingColumn))
 
-const resizableEnabled = computed(() => !!props.resizable || resolved.value.hasColumnResizing)
-
-// resizable 列首次有数据后测量各列内容宽写入 columnSizing：列宽权威化（配合 w-fit）
-// 后拖拽稳定、起点为内容宽、纯点击不改宽。仅补未显式 size 且未在 sizing 中的可调整列。
-let widthsMeasured = false
-function measureColumnWidths(): void {
-  const tableEl = tableRef.value?.tableRef
-  const api = tableApi.value
-  if (!tableEl || !api) return
-  const headerRows = tableEl.querySelectorAll('thead tr')
-  const leafRow = headerRows[headerRows.length - 1]
-  if (!leafRow) return
-  const cells = Array.from(leafRow.children) as HTMLElement[]
-  const current = effectiveSizing.value
-  const seed: Record<string, number> = { ...current }
-  let changed = false
-  api.getVisibleLeafColumns().forEach((column, i) => {
-    const cell = cells[i]
-    if (!cell || !column.getCanResize() || column.columnDef.size != null || column.id in current) return
-    const w = Math.round(cell.getBoundingClientRect().width)
-    if (w <= 0) return
-    seed[column.id] = w
-    changed = true
-  })
-  if (changed) effectiveSizing.value = seed
-}
-
-function scheduleMeasure(): void {
-  if (widthsMeasured || !resizableEnabled.value) return
-  if (!tableApi.value?.getRowModel().rows.length) return
-  nextTick(() => {
-    measureColumnWidths()
-    widthsMeasured = true
-  })
-}
-
-onMounted(scheduleMeasure)
-watch(() => tableApi.value?.getRowModel().rows.length ?? 0, scheduleMeasure)
-watch(() => resolved.value.allColumnIds, () => {
-  widthsMeasured = false
-  scheduleMeasure()
-}, { flush: 'post' })
-
 const isTreeMode = computed(() => Boolean(props.childrenKey))
 
 const treeMaxDepth = computed(() => {
@@ -407,8 +364,7 @@ const { baseUi, extraUi } = useExtendedTv(
       wrapper: [props.ui?.wrapper, props.class]
     },
     variants: {
-      // 开启 resizable 时走 w-fit：表宽=各列宽之和、无 slack 重排，单列设宽权威生效、拖拽稳定
-      fitContent: !!props.fitContent || resizableEnabled.value,
+      fitContent: !!props.fitContent,
       bordered: !!props.bordered,
       striped: !!props.stripe,
       tree: isTreeMode.value,
