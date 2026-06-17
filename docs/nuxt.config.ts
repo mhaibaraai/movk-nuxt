@@ -43,11 +43,14 @@ export default defineNuxtConfig({
   vite: {
     optimizeDeps: {
       include: [
-        'tailwindcss/colors',
-        'tailwind-variants',
-        'json5',
         '@internationalized/date',
-        'maska/vue'
+        '@tanstack/vue-table',
+        'colortranslator',
+        'json5',
+        'maska/vue',
+        'tailwind-variants',
+        'tailwindcss/colors',
+        'zod'
       ]
     }
   },

@@ -18,6 +18,7 @@ import { kebabCase } from 'scule'
 import { updateSiteConfig } from 'nuxt-site-config/kit'
 import { defaultOptions, getDefaultApiConfig } from './utils/defaults'
 import { addTheme } from './utils/theme'
+import { UI_COMPONENTS } from './utils/ui-components'
 
 export * from './runtime/types'
 
@@ -108,6 +109,19 @@ export default defineNuxtModule<ModuleOptions>({
 
     nuxt.options.css = nuxt.options.css || []
     nuxt.options.css.push(resolve('runtime/index.css'))
+
+    // movk 组件层内部渲染、但消费方通常不会直接书写的 @nuxt/ui 组件,需向 componentDetection 声明,
+    // 否则其主题类(如 Table 的 min-w-full)不会被 @source 扫描生成。复用组件层导入清单,去 U 前缀。
+    const movkUiDeps = UI_COMPONENTS.map(name => name.slice(1))
+    const uiOptions = (nuxt as NuxtWithExtra).options
+    const ui = (uiOptions.ui ??= {})
+    const experimental = (ui.experimental ??= {})
+    const detection = experimental.componentDetection
+    if (detection === true) {
+      experimental.componentDetection = movkUiDeps
+    } else if (Array.isArray(detection)) {
+      experimental.componentDetection = [...new Set([...detection, ...movkUiDeps])]
+    }
 
     const componentIgnore: string[] = []
     if (options.theme?.enabled === false) {

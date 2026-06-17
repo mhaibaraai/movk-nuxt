@@ -3,7 +3,24 @@ export default defineNuxtConfig({
 
   devtools: { enabled: true },
 
+  ui: {
+    experimental: {
+      componentDetection: true
+    }
+  },
+
   compatibilityDate: 'latest',
+
+  vite: {
+    optimizeDeps: {
+      include: [
+        '@movk/core',
+        '@tanstack/vue-table',
+        'tailwind-variants',
+        'tailwindcss/colors'
+      ]
+    }
+  },
 
   movk: {
     api: {
