@@ -88,7 +88,6 @@ describe('useDownloadWithProgress', () => {
   })
 
   it('无 content-length 时 progress 切到 null（不确定）', async () => {
-    let inflightProgress: number | null = 0
     const chunks = [new Uint8Array([1]), new Uint8Array([2])]
     const response = new Response(makeReadable(chunks), {
       status: 200,
@@ -103,7 +102,7 @@ describe('useDownloadWithProgress', () => {
     // 等待第一帧到达
     await Promise.resolve()
     await Promise.resolve()
-    inflightProgress = progress.value
+    const inflightProgress = progress.value
     await p
 
     expect(inflightProgress).toBeNull()
