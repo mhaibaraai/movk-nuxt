@@ -1,5 +1,32 @@
 # 📋 Changelog
 
+## [1.3.1](https://github.com/mhaibaraai/movk-nuxt/compare/v1.3.0...v1.3.1) (2026-06-17)
+
+### ✨ Features
+
+* **auto-form:** 新增 omitFields 函数，支持从 schema 中剔除隐藏字段 ([8da015f](https://github.com/mhaibaraai/movk-nuxt/commit/8da015fb0d98d197c14a57bedec723fde17cc666))
+* **docs:** 替换站点 Logo 与 favicon 并随主题动态切换 ([b8e7d5b](https://github.com/mhaibaraai/movk-nuxt/commit/b8e7d5bc91531fa10e25a020b4de8536ff299bf4))
+
+### 🐛 Bug Fixes
+
+* **auto-form:** 收宽 calendarDate 控件类型修复声明发射 TS2883 ([8a27adf](https://github.com/mhaibaraai/movk-nuxt/commit/8a27adfa29cd592448eae59e02b20846c7ff8b30))
+* **auto-form:** 清空单选控件后 optional 字段校验报错 ([822d7e5](https://github.com/mhaibaraai/movk-nuxt/commit/822d7e5e567edd233e5673d4e2d9248f3bc8a018))
+* **data-table:** resizable 列保持自适应并修正特殊列勾选框对齐 ([7df715c](https://github.com/mhaibaraai/movk-nuxt/commit/7df715cdd77d802e94be5313cc11bb52e707dba7))
+* **data-table:** resizable 恢复列自适应并修复点击拖动线即变宽 ([f4fc4ff](https://github.com/mhaibaraai/movk-nuxt/commit/f4fc4ff40b3b2949521ba19203f81595bf7c1a43))
+* **data-table:** 消除 resizable 拖拽起始的列宽抖动 ([e8fa9ae](https://github.com/mhaibaraai/movk-nuxt/commit/e8fa9ae230a27b7639fbd6a61765682f1f108fdb))
+* **data-table:** 重做 resizable 列宽，权威化布局消除点击变宽与抖动 ([76ecc0a](https://github.com/mhaibaraai/movk-nuxt/commit/76ecc0ad21d4a6d7bccc31370f8120823e6b84ec))
+* **date-formatter:** 修复 fromISO 无法解析带时区偏移的 ISO 字符串 ([3160098](https://github.com/mhaibaraai/movk-nuxt/commit/3160098e756add507763ea5b4204690693a5ad70))
+
+### ♻️ Code Refactoring
+
+* **theme:** 为 useTheme 显式标注返回类型 ([1c2abea](https://github.com/mhaibaraai/movk-nuxt/commit/1c2abea4bd543ec9630bb904454fc031187576d4))
+
+### 🔧 Chores
+
+* **deps:** lock file maintenance ([0d8753e](https://github.com/mhaibaraai/movk-nuxt/commit/0d8753ecfdc95a1637bf6a063fd1dd3a1a8b0591))
+* **deps:** update all non-major dependencies to ^20.10.2 ([6ed6148](https://github.com/mhaibaraai/movk-nuxt/commit/6ed61480ecb255f107f43abee8dc3c3666642d03))
+* **deps:** 升级 Nuxt 和相关依赖到 4.4.8，移除 cross-env ([ee97023](https://github.com/mhaibaraai/movk-nuxt/commit/ee970238335b20fe468884e0562003be30c851bd))
+
 ## [1.3.0](https://github.com/mhaibaraai/movk-nuxt/compare/v1.2.0...v1.3.0) (2026-06-07)
 
 ### ⚠ BREAKING CHANGES
