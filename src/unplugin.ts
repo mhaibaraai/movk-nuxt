@@ -26,15 +26,7 @@ export interface MovkUIOptions extends Pick<ModuleOptions, 'prefix' | 'theme'> {
 
 export const runtimeDir = normalize(fileURLToPath(new URL('./runtime', import.meta.url)))
 
-/** movk 组件层从 `#components` 具名导入的 @nuxt/ui 组件（去 U 前缀映射到 @nuxt/ui/components/<Name>.vue） */
-export const UI_COMPONENTS = [
-  'UAccordion',
-  'UButton', 'UBadge', 'UCheckbox', 'UCollapsible', 'UForm', 'UDropdownMenu', 'UIcon', 'UInput',
-  'UModal', 'UPagination', 'USelect', 'UPopover', 'UCalendar', 'UColorPicker', 'UTable', 'UFormField',
-  'UTooltip', 'UInputNumber', 'USwitch', 'UTextarea', 'USlider', 'UPinInput', 'UInputTags',
-  'UFileUpload', 'USelectMenu', 'UInputMenu', 'UCheckboxGroup', 'URadioGroup', 'UInputDate',
-  'UInputTime', 'UListbox'
-] as const
+export { UI_COMPONENTS } from './utils/ui-components'
 
 /** movk 在 vue 模式自动导入的非服务端 composables 及其公开导出（排除 API 域），对齐 Nuxt addImportsDir 的导出面 */
 const MOVK_COMPOSABLES: Record<string, readonly string[]> = {
