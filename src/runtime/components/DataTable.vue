@@ -18,6 +18,7 @@ import { UTable } from '#components'
 import { useAppConfig } from '#imports'
 import type { Ref, WritableComputedRef } from 'vue'
 import { computed, onMounted, ref, useAttrs, useTemplateRef, watch } from 'vue'
+import { useResizeObserver, useScroll } from '@vueuse/core'
 import { useExtendedTv } from '../utils/extend-theme'
 import { resolveColumns } from '../domains/data-table/columns/resolve-columns'
 import { resolveCallbackValue } from '../domains/data-table/columns/utils'
@@ -248,6 +249,13 @@ const tableRef = useTemplateRef<{
   tableApi: Table<T>
   tableRef: HTMLTableElement | null
 }>('tableRef')
+
+// 横向滚动感知:固定列浮于滚动内容之上时显隐边界阴影(tableRef.$el 为 UTable 的 overflow-auto 滚动根)
+const scrollTarget = () => tableRef.value?.$el ?? null
+const { arrivedState, measure } = useScroll(scrollTarget, { offset: { left: 1, right: 1 } })
+const pinStart = computed(() => !arrivedState.left)
+const pinEnd = computed(() => !arrivedState.right)
+useResizeObserver(scrollTarget, () => measure())
 
 const internalLoading = ref(false)
 
@@ -590,7 +598,12 @@ defineExpose<DataTableExposed<T>>({
 </script>
 
 <template>
-  <div :class="extraUi.wrapper" data-slot="wrapper">
+  <div
+    :class="extraUi.wrapper"
+    data-slot="wrapper"
+    :data-pin-start="pinStart || undefined"
+    :data-pin-end="pinEnd || undefined"
+  >
     <UTable
       :key="tableResetKey"
       ref="tableRef"
