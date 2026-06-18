@@ -14,10 +14,14 @@ export default defineNuxtConfig({
   vite: {
     optimizeDeps: {
       include: [
+        '@internationalized/date',
         '@movk/core',
         '@tanstack/vue-table',
+        'colortranslator',
+        'maska/vue',
         'tailwind-variants',
-        'tailwindcss/colors'
+        'tailwindcss/colors',
+        'zod'
       ]
     }
   },
