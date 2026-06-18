@@ -23,6 +23,7 @@ import { useExtendedTv } from '../utils/extend-theme'
 import { resolveColumns } from '../domains/data-table/columns/resolve-columns'
 import { resolveCallbackValue } from '../domains/data-table/columns/utils'
 import { computeTreeRowSelection } from '../domains/data-table/tree-selection'
+import { computeDefaultExpandedKeys } from '../domains/data-table/default-expand'
 import { resolveMaxIndentPx } from '../domains/data-table/indent'
 import { Tree, useInfiniteScrollBinding, separate } from '@movk/core'
 import theme from '#build/movk-ui/data-table'
@@ -124,16 +125,18 @@ function areSameKeys(a: readonly (string | number)[], b: readonly (string | numb
 function useEffectiveModel<V>(
   model: Ref<V | undefined>,
   getDefault: () => V,
-  syncBack?: (value: V) => boolean
+  syncBack?: (value: V) => boolean,
+  // expanded 模型类型含布尔字面量 true，未绑定时 Vue 会将其降级为 false（而非 undefined），需视作未设置
+  isUnset: (value: V | undefined) => boolean = value => value === undefined
 ): WritableComputedRef<V> {
   const effective = computed<V>({
-    get: () => model.value !== undefined ? model.value : getDefault(),
+    get: () => isUnset(model.value) ? getDefault() : model.value as V,
     set: (value) => { model.value = value }
   })
 
   if (syncBack !== undefined) {
     onMounted(() => {
-      if (model.value !== undefined) return
+      if (!isUnset(model.value)) return
       const defaults = getDefault()
       if (syncBack(defaults)) model.value = defaults
     })
@@ -207,12 +210,24 @@ const effectiveRowSelection = useEffectiveModel(
   hasEntries
 )
 
+const defaultExpandedRecord = computed<Record<string, boolean>>(() => {
+  if (!props.childrenKey || !props.defaultExpanded) return {}
+  const data = ((attrs as { data?: T[] }).data ?? []) as T[]
+  return computeDefaultExpandedKeys(data, {
+    defaultExpanded: props.defaultExpanded,
+    childrenKey: props.childrenKey,
+    rowKey: props.rowKey
+  })
+})
+
 const effectiveExpanded = useEffectiveModel(
   expandedState,
   () => expandedKeysState.value !== undefined
     ? keysToExpanded(expandedKeysState.value)
-    : {},
-  hasEntries
+    : defaultExpandedRecord.value,
+  hasEntries,
+  // 运行时 Vue 把未绑定的布尔型 expanded 模型降级为 false，类型层不体现，故断言比较
+  value => value === undefined || (value as unknown) === false
 )
 
 useSyncKeys(

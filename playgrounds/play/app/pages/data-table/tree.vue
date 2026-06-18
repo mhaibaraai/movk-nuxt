@@ -4,21 +4,6 @@ import type { Person } from '../../composables/useMockData'
 
 const treeData = makePeopleTree(3, 3, 3)
 
-// 收集满足条件的行 id，用于默认展开
-function collectIds(
-  rows: Person[],
-  pred: (row: Person, depth: number) => boolean,
-  depth = 0,
-  acc: string[] = []
-): string[] {
-  for (const row of rows) {
-    if (pred(row, depth)) acc.push(row.id)
-    if (row.children?.length) collectIds(row.children, pred, depth + 1, acc)
-  }
-  return acc
-}
-const allParentIds = collectIds(treeData, row => Boolean(row.children?.length))
-
 // 1. 树形数据基础
 const baseColumns: DataTableColumn<Person>[] = [
   { type: 'expand' },
@@ -85,10 +70,23 @@ const indentColumns: DataTableColumn<Person>[] = [
   { accessorKey: 'department', header: '部门' },
   { accessorKey: 'role', header: '岗位' }
 ]
-// 默认展开全部父节点，使逐层缩进首屏即可见
-const indentExpandedKeys = ref<string[]>([...allParentIds])
 
-// 6. 展开行为控制
+// 6. 默认展开
+const defaultExpandMode = ref<'all' | 'depth1' | 'depth2' | 'fn'>('all')
+const defaultExpanded = computed<DataTableProps<Person>['defaultExpanded']>(() => {
+  if (defaultExpandMode.value === 'depth1') return 1
+  if (defaultExpandMode.value === 'depth2') return 2
+  if (defaultExpandMode.value === 'fn') return row => row.department === '设计'
+  return true
+})
+const defaultExpandColumns: DataTableColumn<Person>[] = [
+  { type: 'expand' },
+  { accessorKey: 'name', header: '成员', size: 200 },
+  { accessorKey: 'department', header: '部门' },
+  { accessorKey: 'role', header: '岗位' }
+]
+
+// 7. 展开行为控制
 const expandRef = useTemplateRef<DataTableExposed<Person>>('expandRef')
 const expandOnRowClick = ref(false)
 const expandedKeys = ref<string[]>([])
@@ -222,13 +220,45 @@ const expandColumns: DataTableColumn<Person>[] = [
       </template>
 
       <MDataTable
-        v-model:expanded-keys="indentExpandedKeys"
+        :default-expanded="1"
         :data="treeData"
         :columns="indentColumns"
         children-key="children"
         row-key="id"
         :indent-size="indentSize"
         bordered
+      />
+    </Showcase>
+
+    <Showcase
+      title="默认展开"
+      description="defaultExpanded 在未受控时决定初始展开：true 展开全部父级行、数字按 depth 展开、函数按行与深度自定义"
+      :state="{ defaultExpandMode }"
+    >
+      <template #toolbar>
+        <USelect
+          v-model="defaultExpandMode"
+          :items="[
+            { label: 'true 全部父级', value: 'all' },
+            { label: '数字 1 一级', value: 'depth1' },
+            { label: '数字 2 两级', value: 'depth2' },
+            { label: '函数 仅设计部门', value: 'fn' }
+          ]"
+          value-key="value"
+          size="xs"
+          class="w-56"
+        />
+      </template>
+
+      <MDataTable
+        :key="defaultExpandMode"
+        :default-expanded="defaultExpanded"
+        :data="treeData"
+        :columns="defaultExpandColumns"
+        children-key="children"
+        row-key="id"
+        bordered
+        class="max-h-150"
       />
     </Showcase>
 

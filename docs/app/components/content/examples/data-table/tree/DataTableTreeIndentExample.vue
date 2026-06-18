@@ -13,5 +13,5 @@ const columns: DataTableColumn<Person>[] = [
 </script>
 
 <template>
-  <MDataTable :data="treeData" :columns="columns" children-key="children" row-key="id" />
+  <MDataTable :default-expanded="1" :data="treeData" :columns="columns" children-key="children" row-key="id" />
 </template>

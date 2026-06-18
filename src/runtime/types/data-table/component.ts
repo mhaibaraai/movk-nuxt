@@ -154,6 +154,11 @@ export interface DataTableProps<T extends TableData> extends /* @vue-ignore */ O
    * @defaultValue '1rem'
    */
   indentSize?: number | string | ((ctx: CellContext<T, unknown>) => string)
+  /**
+   * 树形模式下的默认展开行为，仅在未提供 expanded / expandedKeys 时生效。true 展开全部父级行，number 展开 depth 小于该值的父级行，函数按行与深度自定义
+   * @defaultValue false
+   */
+  defaultExpanded?: boolean | number | ((row: T, depth: number) => boolean)
   expandedOptions?: TableProps<T>['expandedOptions']
   /** @defaultValue false */
   expandOnRowClick?: boolean
