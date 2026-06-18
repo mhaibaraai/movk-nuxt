@@ -100,6 +100,8 @@ tooltip:   (ctx) => ctx.column.id === 'address'`
       <MDataTable
         :columns="fixedColumns"
         :data="data"
+        bordered
+        stripe
         :ui="{ root: 'max-w-2xl' }"
       />
     </Showcase>
