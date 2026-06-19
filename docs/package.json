@@ -12,7 +12,7 @@
     "@movk/nuxt": "workspace:*",
     "@movk/nuxt-docs": "^1.19.8",
     "@nuxt/content": "^3.14.0",
-    "@nuxt/ui": "^4.8.2",
+    "@nuxt/ui": "^4.9.0",
     "better-sqlite3": "^12.10.0",
     "json5": "^2.2.3",
     "motion-v": "^2.3.0",

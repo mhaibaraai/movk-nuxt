@@ -1,13 +1,13 @@
 import type { ComputedRef } from 'vue'
 import { computed } from 'vue'
+import type { SlotClass } from '@nuxt/ui'
 import { tv } from './tv'
-import type { ClassNameValue } from '../types'
 
 type SlotsLike = { slots: Record<string, unknown> }
 type SlotFn = (opts: { class?: unknown }) => string
 type SlotMap = Record<string, SlotFn>
 type MergeParams = {
-  ui?: Record<string, ClassNameValue>
+  ui?: Record<string, SlotClass | SlotClass[]>
   variants?: Record<string, unknown>
 }
 
