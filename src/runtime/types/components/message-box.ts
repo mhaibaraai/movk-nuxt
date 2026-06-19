@@ -1,6 +1,6 @@
-import type { ButtonProps, IconProps, ModalProps, ModalSlots } from '@nuxt/ui'
+import type { ButtonProps, IconProps, ModalProps, ModalSlots, SlotClass } from '@nuxt/ui'
 import type { OmitByKey } from '@movk/core'
-import type { ClassNameValue, SemanticColor } from '../shared'
+import type { SemanticColor } from '../shared'
 
 export interface MessageBoxProps extends /** @vue-ignore */ OmitByKey<ModalProps, 'title' | 'open' | 'defaultOpen' | 'dismissible' | 'ui'> {
   /**
@@ -56,7 +56,7 @@ export interface MessageBoxProps extends /** @vue-ignore */ OmitByKey<ModalProps
    * 仅在 `mode='confirm'` 时渲染。
    */
   cancelButton?: ButtonProps
-  ui?: Record<string, ClassNameValue>
+  ui?: Record<string, SlotClass>
 }
 
 export interface MessageBoxEmits {
