@@ -79,9 +79,9 @@ export interface SearchFormProps<S extends z.ZodObject> extends BaseAutoFormProp
   defaultExpanded?: boolean
 }
 
-export interface SearchFormEmits {
-  'reset': []
-  'clear': []
+export interface SearchFormEmits<S extends z.ZodObject = z.ZodObject> {
+  'reset': [state: Partial<InferInput<S>>]
+  'clear': [state: Partial<InferInput<S>>]
   'expand': [expanded: boolean]
   'update:expanded': [expanded: boolean]
   'error': [event: FormErrorEvent]
