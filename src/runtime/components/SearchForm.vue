@@ -162,26 +162,30 @@ function submit() {
 }
 
 // 覆盖全部 schema 字段的载荷：清空字段为 undefined，有默认值的字段为其默认值，
-// 供合并语义的消费方（handleSearch）据此覆盖每个搜索字段
-function buildFieldPayload(): Partial<InferInput<S>> {
+// 供合并语义的消费方（handleSearch）据此覆盖每个搜索字段。
+// 基于即将写入的 state 构造，而非回读 modelValue——defineModel 写入不会同步回流，
+// 回读会拿到旧值导致已填字段无法清空
+function buildFieldPayload(state: Partial<InferInput<S>>): Partial<InferInput<S>> {
   const keys = Object.keys(props.schema.shape) as (keyof InferInput<S>)[]
   return keys.reduce((acc, key) => {
-    acc[key] = modelValue.value[key]
+    acc[key] = state[key]
     return acc
   }, {} as Partial<InferInput<S>>)
 }
 
 function clear() {
-  modelValue.value = {} as Partial<InferInput<S>>
+  const next = {} as Partial<InferInput<S>>
+  modelValue.value = next
   formRef.value?.clear()
-  emits('clear', buildFieldPayload())
+  emits('clear', buildFieldPayload(next))
 }
 
 function reset() {
-  modelValue.value = deepClone(baseline)
-  applyFieldDefaults(fields.value, modelValue.value)
+  const next = deepClone(baseline)
+  applyFieldDefaults(fields.value, next)
+  modelValue.value = next
   formRef.value?.clear()
-  emits('reset', buildFieldPayload())
+  emits('reset', buildFieldPayload(next))
 }
 
 function setBaseline(value?: Partial<InferInput<S>>) {
