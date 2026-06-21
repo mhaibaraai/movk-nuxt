@@ -5,5 +5,5 @@ export const UI_COMPONENTS = [
   'UModal', 'UPagination', 'USelect', 'UPopover', 'UCalendar', 'UColorPicker', 'UTable', 'UFormField',
   'UTooltip', 'UInputNumber', 'USwitch', 'UTextarea', 'USlider', 'UPinInput', 'UInputTags',
   'UFileUpload', 'USelectMenu', 'UInputMenu', 'UCheckboxGroup', 'URadioGroup', 'UInputDate',
-  'UInputTime', 'UListbox'
+  'UInputTime', 'UListbox', 'UTree'
 ] as const
