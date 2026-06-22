@@ -9,5 +9,5 @@ const items: TreeItem[] = Array.from({ length: 60 }, (_, group) => ({
 </script>
 
 <template>
-  <MTree :items="items" :virtualize="true" class="max-h-72" />
+  <MTree :items="items" :virtualize="true" class="max-h-72 w-md" />
 </template>

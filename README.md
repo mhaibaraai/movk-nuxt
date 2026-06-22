@@ -20,7 +20,7 @@ Movk Nuxt 是构建在 Nuxt UI 之上的 UI 工程套件，提供两种使用方
 
 - **AutoForm — Schema 驱动表单**（✅ Nuxt ｜ ✅ Vue + Vite）- 基于 Zod v4 的「定义即渲染」，一份 Schema 同时声明数据结构、验证规则和 UI 配置，自动生成完整表单界面。
 - **DataTable — 数据表格**（✅ Nuxt ｜ ✅ Vue + Vite）- 基于 TanStack Table 封装，覆盖数据列、特殊列（选择/索引/展开/操作）、树形数据、行交互、外观定制、分页与加载更多。
-- **独立组件库**（✅ Nuxt ｜ ✅ Vue + Vite）- DatePicker、StarRating、PillGroup、SearchForm、WithCopy、ThemePicker 等通用 UI 组件，无需依赖 AutoForm 即可独立使用。
+- **独立组件库**（✅ Nuxt ｜ ✅ Vue + Vite）- DatePicker、StarRating、PillGroup、SearchForm、Tree、WithCopy、ThemePicker 等通用 UI 组件，无需依赖 AutoForm 即可独立使用。
 - **主题与 Composables**（✅ Nuxt ｜ ✅ Vue + Vite）- useTheme（主题读写与导出）、useMessageBox（命令式弹窗）、useDateFormatter（国际化日期）等非服务端组合式函数。
 - **API 集成系统**（✅ Nuxt ｜ ❌ Vue + Vite）- useApiFetch / useLazyApiFetch / useClientApiFetch 三件套 + useUploadWithProgress / useDownloadWithProgress，提供多端点、自动认证、业务状态码检查、数据解包、Toast 提示和进度监控；**依赖 Nuxt 服务端运行时，仅 Nuxt 模式可用**。
 - **类型安全** - 完整的 TypeScript 类型推断，从 Schema 到表单数据，组件 prop 回调与事件处理类型可索引访问派生。
@@ -274,7 +274,7 @@ Movk Nuxt 采用清晰的分层架构:
 
 - **Core Systems** - AutoForm（Schema 驱动表单）、DataTable（数据表格）
 - **API System** - useApiFetch / useLazyApiFetch / useClientApiFetch、useUploadWithProgress、useDownloadWithProgress，提供完整的 API 请求方案
-- **Standalone Components** - DatePicker、StarRating、PillGroup、SearchForm、WithCopy、ThemePicker 等独立 UI 组件
+- **Standalone Components** - DatePicker、StarRating、PillGroup、SearchForm、Tree、WithCopy、ThemePicker 等独立 UI 组件
 - **Composables** - useDateFormatter、useTheme、useMessageBox、useAutoForm 等通用组合式函数
 - **Foundation** - 基于 [Nuxt UI](https://ui.nuxt.com)、[Zod v4](https://zod.dev)、[VueUse](https://vueuse.org)、[TanStack Table](https://tanstack.com/table)
 

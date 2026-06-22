@@ -18,10 +18,14 @@ export type { MessageBoxEmits, MessageBoxProps, MessageBoxSlots } from './messag
 export type {
   MTreeItem,
   TreeEmits,
+  TreeExposed,
   TreeFilter,
   TreeItem,
   TreeLoadChildren,
   TreeProps,
+  TreeSelectionResult,
+  TreeSelectionStrategy,
+  TreeSelectionSummary,
   TreeSlots
 } from './tree'
 export type { PopconfirmEmits, PopconfirmProps, PopconfirmSlots } from './popconfirm'

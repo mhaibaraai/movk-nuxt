@@ -50,6 +50,7 @@ Standalone interactive controls, usable inside or outside a form.
 | `MStarRating` | Interactive star rating control |
 | `MColorChooser` | Visual color picker |
 | `MSlideVerify` | Slide-to-verify human-check widget |
+| `MTree` | Hierarchical tree with search, lazy load, toolbar, cascading checkboxes and parent/child strategy |
 | `MThemePicker` | Visual theme configuration panel (paired with `MThemePickerButton` as the launcher) |
 
 Notes:

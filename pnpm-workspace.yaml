@@ -5,10 +5,6 @@ packages:
 ignoreWorkspaceRootCheck: true
 linkWorkspacePackages: true
 minimumReleaseAge: 0
-blockExoticSubdeps: false
-
-overrides:
-  '@movk/core': https://pkg.pr.new/@movk/core@112
 
 allowBuilds:
   '@parcel/watcher': false

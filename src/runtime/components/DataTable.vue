@@ -22,8 +22,8 @@ import { useResizeObserver, useScroll } from '@vueuse/core'
 import { useExtendedTv } from '../utils/extend-theme'
 import { resolveColumns } from '../domains/data-table/columns/resolve-columns'
 import { resolveCallbackValue } from '../domains/data-table/columns/utils'
-import { computeTreeRowSelection } from '../domains/data-table/tree-selection'
-import { computeDefaultExpandedKeys } from '../domains/data-table/default-expand'
+import { computeTreeSelection } from '../utils/tree-selection'
+import { resolveDefaultExpandedKeys } from '../utils/tree-expand'
 import { resolveMaxIndentPx } from '../domains/data-table/indent'
 import { Tree, useInfiniteScrollBinding, separate } from '@movk/core'
 import theme from '#build/movk-ui/data-table'
@@ -213,11 +213,16 @@ const effectiveRowSelection = useEffectiveModel(
 const defaultExpandedRecord = computed<Record<string, boolean>>(() => {
   if (!props.childrenKey || !props.defaultExpanded) return {}
   const data = ((attrs as { data?: T[] }).data ?? []) as T[]
-  return computeDefaultExpandedKeys(data, {
-    defaultExpanded: props.defaultExpanded,
-    childrenKey: props.childrenKey,
-    rowKey: props.rowKey
+  const childrenKey = props.childrenKey
+  const rowKey = props.rowKey
+  // 复刻 TanStack getRowId：有 rowKey 取 String(row[rowKey])，否则根层 index、子层 parentId.index
+  const keys = resolveDefaultExpandedKeys(data, props.defaultExpanded, {
+    getChildren: row => (row as Record<string, unknown>)[childrenKey],
+    getKey: (row, { index, parentKey }) => rowKey !== undefined
+      ? String((row as Record<string, unknown>)[rowKey])
+      : parentKey !== undefined ? `${parentKey}.${index}` : `${index}`
   })
+  return keysToExpanded(keys)
 })
 
 const effectiveExpanded = useEffectiveModel(
@@ -558,9 +563,13 @@ const treeSelection = computed<TreeSelectionResult<T>>(() => {
   const data = ((attrs as { data?: T[] }).data ?? []) as T[]
   const keys = rowSelectionKeysState.value
     ?? Object.keys(effectiveRowSelection.value).filter(k => effectiveRowSelection.value[k])
-  return computeTreeRowSelection(data, keys, {
-    rowKey: props.rowKey,
-    childrenKey: props.childrenKey,
+  const rowKey = props.rowKey ?? 'id'
+  const childrenKey = props.childrenKey
+  return computeTreeSelection(data, keys, {
+    getKey: row => String((row as Record<string, unknown>)[rowKey]),
+    getChildren: childrenKey
+      ? row => (row as Record<string, unknown>)[childrenKey] as T[] | undefined
+      : () => undefined,
     strategy: resolved.value.selectionStrategy
   })
 })
