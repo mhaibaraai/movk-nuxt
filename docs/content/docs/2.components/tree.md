@@ -47,7 +47,7 @@ name: ComponentsTreeSearchExample
 
 ### `checkable` 复选框级联
 
-`checkable` 作用：在节点前渲染复选框，内部启用 `multiple` 与父子级联、子级半选冒泡，`v-model` 收集选中节点数组：
+`checkable` 作用：在节点前渲染复选框，内部启用 `multiple` 与父子级联、子级半选冒泡，`v-model` 收集选中节点数组。复选框与节点 `icon`、父节点 folder 图标共存：
 
 ::component-example
 ---
@@ -131,6 +131,20 @@ name: ComponentsTreeFieldExample
 ---
 name: ComponentsTreeVirtualizeExample
 ---
+::
+
+### `disabled` 禁用
+
+`disabled` 作用：禁用整棵树，同时阻断点击节点、工具栏控件与复选框的展开、折叠、选中操作；节点级 `item.disabled` 单独禁用该节点的复选框：
+
+::component-example
+---
+name: ComponentsTreeDisabledExample
+---
+::
+
+::note
+命令式 API（`expandToDepth`、`selectAll` 等）属显式调用，不受 `disabled` 影响；`disabled` 仅拦截用户的点击与工具栏交互。
 ::
 
 ## 示例

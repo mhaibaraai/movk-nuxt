@@ -91,6 +91,21 @@ const bigTree: TreeItem[] = Array.from({ length: 60 }, (_, group) => ({
 }))
 
 const matrixValue = ref<TreeItem>()
+const disabledChecked = ref<TreeItem[]>([{ label: 'useAuth.ts' }])
+
+const nodeDisabledTree: TreeItem[] = [
+  {
+    label: 'app',
+    icon: 'i-lucide-folder',
+    defaultExpanded: true,
+    children: [
+      { label: 'app.vue', icon: 'i-vscode-icons-file-type-vue' },
+      { label: 'nuxt.config.ts', icon: 'i-vscode-icons-file-type-nuxt', disabled: true }
+    ]
+  },
+  { label: 'composables', icon: 'i-lucide-folder', disabled: true, children: [{ label: 'useAuth.ts', icon: 'i-vscode-icons-file-type-typescript' }] }
+]
+const nodeDisabledChecked = ref<TreeItem[]>([])
 </script>
 
 <template>
@@ -161,6 +176,21 @@ const matrixValue = ref<TreeItem>()
 
     <Showcase title="虚拟滚动" description="virtualize 透传 UTree 虚拟化，仅渲染可视区节点，适配大数据量树。">
       <MTree :items="bigTree" :virtualize="true" class="max-h-72" />
+    </Showcase>
+
+    <Showcase title="整树禁用" description="disabled 禁用整棵树，点击节点与工具栏展开折叠、全选、搜索均不可操作。" :state="{ checked: disabledChecked.map(n => n.label) }">
+      <MTree
+        v-model="disabledChecked"
+        :items="fileTree"
+        checkable
+        toolbar
+        searchable
+        disabled
+      />
+    </Showcase>
+
+    <Showcase title="节点禁用" description="节点数据的 disabled 字段单独禁用该节点复选框，不影响其余节点。" :state="{ checked: nodeDisabledChecked.map(n => n.label) }">
+      <MTree v-model="nodeDisabledChecked" :items="nodeDisabledTree" checkable />
     </Showcase>
 
     <Showcase title="自定义节点" description="通过 item-trailing 插槽为节点追加徽章等内容，未覆盖的插槽仍由 UTree 默认渲染。">

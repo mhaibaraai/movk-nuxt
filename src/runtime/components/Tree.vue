@@ -13,6 +13,7 @@ import { useExtendedTv } from '../utils/extend-theme'
 import treeTheme from '#build/ui/tree'
 import theme from '#build/movk-ui/tree'
 import { createGetKey, normalizeChildren } from '../domains/tree/resolve-tree'
+import { resolveLeadingIcon } from '../domains/tree/tree-icon'
 import { matchLabel } from '../domains/tree/tree-search'
 import { isPlaceholder, LAZY_KEY_FIELD, markLazyPlaceholders } from '../domains/tree/tree-lazy'
 import { computeTreeSelection, selectionSummary } from '../utils/tree-selection'
@@ -41,8 +42,20 @@ const search = defineModel<string>('search', { default: '' })
 const expanded = defineModel<string[]>('expanded', { default: () => [] })
 
 const slots = useSlots()
-const appConfig = useAppConfig() as { movk?: { tree?: unknown } }
+const appConfig = useAppConfig() as { movk?: { tree?: unknown }, ui?: { icons?: Record<string, string> } }
 const labelKey = computed(() => props.labelKey ?? 'label')
+
+const folderIcons = computed(() => ({
+  folderOpen: appConfig.ui?.icons?.folderOpen ?? 'i-lucide-folder-open',
+  folder: appConfig.ui?.icons?.folder ?? 'i-lucide-folder'
+}))
+function leadingIcon(node: WorkNode, expanded: boolean) {
+  return resolveLeadingIcon(node, expanded, {
+    expandedIcon: props.expandedIcon,
+    collapsedIcon: props.collapsedIcon,
+    ...folderIcons.value
+  })
+}
 const getKey = computed(() => createGetKey<WorkNode>(props.getKey as ((node: WorkNode) => string) | undefined, labelKey.value))
 
 const { baseUi, extraUi } = useExtendedTv(
@@ -99,6 +112,7 @@ watch([searching, displayItems], () => {
 
 const loadingKeys = ref(new Set<string>())
 async function onExpandedUpdate(keys: string[]) {
+  if (props.disabled) return
   const previous = expanded.value
   expanded.value = keys
   if (!props.lazy || !props.loadChildren) return
@@ -218,6 +232,12 @@ function setModel(value: ModelValue) {
   emit('change', { value, keys, selection })
 }
 
+// 仅门控用户交互路径（UTree 派发的 model 变化）；命令式 selectAll/clearSelection 直调 setModel 不受限
+function onModelUpdate(value: ModelValue) {
+  if (props.disabled) return
+  setModel(value)
+}
+
 const expandableKeys = computed(() =>
   Tree.findAll(baseItems.value, ({ node }) => !!node.children?.length).map(n => getKey.value(n))
 )
@@ -271,6 +291,7 @@ defineExpose<TreeExposed<T>>({
       :select-all="selectAll"
       :clear="clearSelection"
       :search="search"
+      :disabled="props.disabled"
       :selection-summary="selectionSummaryValue"
     >
       <TreeToolbar
@@ -280,6 +301,7 @@ defineExpose<TreeExposed<T>>({
         :search="search"
         :size="props.size"
         :color="props.color"
+        :disabled="props.disabled"
         :expanded="allExpanded"
         :selection-summary="selectionSummaryValue"
         :ui="{ toolbar: extraUi.toolbar, toolbarButton: extraUi.toolbarButton, search: extraUi.search }"
@@ -310,23 +332,29 @@ defineExpose<TreeExposed<T>>({
       :model-value="(effectiveModel as any)"
       :expanded="expanded"
       :ui="(baseUi as any)"
-      @update:model-value="setModel($event as ModelValue)"
+      @update:model-value="onModelUpdate($event as ModelValue)"
       @update:expanded="onExpandedUpdate"
     >
       <template v-for="name in forwardSlots" #[name]="slotProps" :key="name">
         <slot :name="name" v-bind="slotProps ?? {}" />
       </template>
 
-      <template v-if="props.checkable && !slots['item-leading']" #item-leading="{ item, selected, indeterminate, handleSelect }">
+      <template v-if="props.checkable && !slots['item-leading']" #item-leading="{ item, expanded: nodeExpanded, selected, indeterminate, handleSelect, ui: nodeUi }">
         <UCheckbox
           v-if="!isPlaceholder(item)"
           :model-value="indeterminate ? 'indeterminate' : selected"
           :size="props.size"
           :color="props.color"
+          :disabled="item.disabled || props.disabled"
           :class="extraUi.checkbox"
           tabindex="-1"
           @change="handleSelect"
           @click.stop
+        />
+        <UIcon
+          v-if="leadingIcon(item, nodeExpanded)"
+          :name="leadingIcon(item, nodeExpanded)!"
+          :class="(nodeUi as any).linkLeadingIcon({ class: item.ui?.linkLeadingIcon })"
         />
       </template>
 

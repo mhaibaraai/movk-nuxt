@@ -15,15 +15,14 @@ const items: TreeItem[] = [
     label: 'composables',
     icon: 'i-lucide-folder',
     children: [
-      { label: 'useAuth.ts', icon: 'i-vscode-icons-file-type-typescript' },
-      { label: 'useUser.ts', icon: 'i-vscode-icons-file-type-typescript' }
+      { label: 'useAuth.ts', icon: 'i-vscode-icons-file-type-typescript' }
     ]
   }
 ]
 
-const checked = ref<TreeItem[]>([])
+const checked = ref<TreeItem[]>([{ label: 'useAuth.ts' }])
 </script>
 
 <template>
-  <MTree v-model="checked" :items="items" checkable />
+  <MTree v-model="checked" :items="items" checkable toolbar disabled />
 </template>

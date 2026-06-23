@@ -66,6 +66,18 @@ export interface TreeProps<T extends TreeItem[] = TreeItem[], M extends boolean 
   size?: NuxtTreeProps<T, M>['size']
   /** 主色 */
   color?: NuxtTreeProps<T, M>['color']
+  /**
+   * 父节点展开时的图标
+   * @defaultValue 取 app.config 的 ui.icons.folderOpen
+   */
+  expandedIcon?: NuxtTreeProps<T, M>['expandedIcon']
+  /**
+   * 父节点折叠时的图标
+   * @defaultValue 取 app.config 的 ui.icons.folder
+   */
+  collapsedIcon?: NuxtTreeProps<T, M>['collapsedIcon']
+  /** 禁用整棵树，阻断点击、工具栏与复选框的展开、折叠、选中 */
+  disabled?: NuxtTreeProps<T, M>['disabled']
   /** 开启顶部搜索过滤 */
   searchable?: boolean
   /** 自定义匹配谓词，缺省按 labelKey 文本不区分大小写包含匹配 */
@@ -136,6 +148,7 @@ interface TreeExtraSlots<T extends TreeItem[] = TreeItem[]> {
     selectAll: () => void
     clear: () => void
     search: string
+    disabled?: boolean
     selectionSummary: TreeSelectionSummary
   }): VNode[]
   /** 默认工具栏起始处追加内容 */

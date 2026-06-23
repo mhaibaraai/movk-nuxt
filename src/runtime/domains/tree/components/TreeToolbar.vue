@@ -13,6 +13,8 @@ const props = defineProps<{
   color?: TreeProps['color']
   /** 是否已全部展开，驱动展开/折叠切换按钮 */
   expanded?: boolean
+  /** 禁用工具栏全部控件 */
+  disabled?: boolean
   selectionSummary?: TreeSelectionSummary
   ui: { toolbar?: string, toolbarButton?: string, search?: string }
 }>()
@@ -47,6 +49,7 @@ function onToggleAll(checked: boolean) {
       icon="i-lucide-search"
       placeholder="搜索节点"
       :size="size"
+      :disabled="disabled"
       :class="ui.search"
       @update:model-value="emit('update:search', String($event))"
     >
@@ -56,6 +59,7 @@ function onToggleAll(checked: boolean) {
           color="neutral"
           variant="link"
           :size="size"
+          :disabled="disabled"
           aria-label="清除搜索"
           @click="emit('update:search', '')"
         />
@@ -68,6 +72,7 @@ function onToggleAll(checked: boolean) {
         color="neutral"
         variant="ghost"
         :size="size"
+        :disabled="disabled"
         :class="ui.toolbarButton"
         :aria-label="expandTooltip"
         @click="emit('toggle-expand')"
@@ -80,6 +85,7 @@ function onToggleAll(checked: boolean) {
       :indeterminate="selectionSummary?.indeterminate ?? false"
       :size="size"
       :color="color"
+      :disabled="disabled"
       :label="checkboxLabel"
       @update:model-value="onToggleAll(Boolean($event))"
     />
