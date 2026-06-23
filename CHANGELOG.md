@@ -1,5 +1,44 @@
 # 📋 Changelog
 
+## [1.4.0](https://github.com/mhaibaraai/movk-nuxt/compare/v1.3.1...v1.4.0) (2026-06-23)
+
+### ✨ Features
+
+* **search-form:** reset/clear 事件携带可清空字段载荷 ([a934b1d](https://github.com/mhaibaraai/movk-nuxt/commit/a934b1d52ddd1ba48ea0479057d168f7767b83f5))
+* **tree:** 新增 MTree 树形组件 ([3575f16](https://github.com/mhaibaraai/movk-nuxt/commit/3575f1674b8468918ff1921b7f92633f0ecfa5b3))
+
+### 🐛 Bug Fixes
+
+* **api:** 修复上传/下载 composable data 泛型拆包导致的类型错误 ([3f05e80](https://github.com/mhaibaraai/movk-nuxt/commit/3f05e80c789eb849d482e08c41c3b0390630e28a))
+* **data-table:** 修复固定列缺少不透明背景与滚动边界阴影 ([5c0a78a](https://github.com/mhaibaraai/movk-nuxt/commit/5c0a78a3d094de968a67cef7813cd2ee96159ebf))
+* **module:** 向 componentDetection 声明组件层使用的 @nuxt/ui 组件 ([0989f06](https://github.com/mhaibaraai/movk-nuxt/commit/0989f0600a43903673da1317b97352f431e5842b))
+* **search-form:** 重置/清空载荷基于待写入 state 构造 ([2425e6c](https://github.com/mhaibaraai/movk-nuxt/commit/2425e6c4ca7b43e206b21c2bb77c6cbd7b01fef9))
+* **types:** 适配 @nuxt/ui 4.9 SlotClass 类型变更 ([50a7c6e](https://github.com/mhaibaraai/movk-nuxt/commit/50a7c6e3272ed60dbcfb9982a549f7d08ec87e57))
+
+### 📝 Documentation
+
+* **data-table:** 调整 resizable 示例列宽与容器宽度 ([741745c](https://github.com/mhaibaraai/movk-nuxt/commit/741745c6fdbc7227db60a2dedd2731de865dc238))
+* **tree:** 新增 Tree 组件文档与示例 ([6ede92f](https://github.com/mhaibaraai/movk-nuxt/commit/6ede92f47fe4af69c1c754f50ccdbaa879b7bb28))
+* **tree:** 澄清 propagateSelect/bubbleSelect 注释语义 ([7b4658e](https://github.com/mhaibaraai/movk-nuxt/commit/7b4658e54bcdb9a978308cb394ceab43663c2868))
+
+### ♻️ Code Refactoring
+
+* **tree:** 抽取展开/选中纯函数至 runtime/utils 并补全文档示例 ([fdbe81c](https://github.com/mhaibaraai/movk-nuxt/commit/fdbe81c2d7a45ae5317ebc45910f444476be5a61))
+
+### ✅ Tests
+
+* **tree:** 补充 domain 纯函数用例 ([782a493](https://github.com/mhaibaraai/movk-nuxt/commit/782a493fef191a4b31717a482bb7444717a2e590))
+* **tree:** 补充懒加载内部 key 字段用例 ([97f2f90](https://github.com/mhaibaraai/movk-nuxt/commit/97f2f901a28b30a89d4ae9d1c9c2205e956b3c48))
+
+### 🔧 Chores
+
+* **deps:** update actions/checkout action to v7 ([1c54296](https://github.com/mhaibaraai/movk-nuxt/commit/1c54296cd2f0d8bb367c2feb59af803130de74f7))
+* **deps:** 接入含 Tree 工具的 @movk/core 预览版 ([bbcd04a](https://github.com/mhaibaraai/movk-nuxt/commit/bbcd04af1f44901392f5de8b53da38b7ddc149f9))
+* **deps:** 锁定 reka-ui 版本为 2.9.10 ([21c29ee](https://github.com/mhaibaraai/movk-nuxt/commit/21c29eeceaa2811c01b17eb1c502d0c5738248f0))
+* **docs:** 补充 vite 预构建依赖 ([307a947](https://github.com/mhaibaraai/movk-nuxt/commit/307a9478160a88ef8217c8b03a028c137a8fa2c5))
+* **playground:** 启用 componentDetection 并补充 vite 预构建依赖 ([5f89850](https://github.com/mhaibaraai/movk-nuxt/commit/5f898509a68cb3972f844200527ef9b4064d0d2a))
+* **playground:** 补充 vite 预构建依赖 ([bc9d1f3](https://github.com/mhaibaraai/movk-nuxt/commit/bc9d1f380fa1f6b3ab5db5d059a92613f8c0b014))
+
 ## [1.3.1](https://github.com/mhaibaraai/movk-nuxt/compare/v1.3.0...v1.3.1) (2026-06-17)
 
 ### ✨ Features
