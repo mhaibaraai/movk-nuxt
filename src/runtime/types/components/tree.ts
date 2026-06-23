@@ -58,9 +58,9 @@ export interface TreeProps<T extends TreeItem[] = TreeItem[], M extends boolean 
    * @defaultValue 'cascade'
    */
   strategy?: TreeSelectionStrategy
-  /** 选中父节点时级联选中子节点，缺省由 strategy 推导 */
+  /** 选中父节点时级联选中子节点。cascade 策略下默认开启，显式 true 可在 isolated 下强制开启；关闭级联请用 strategy='isolated' */
   propagateSelect?: NuxtTreeProps<T, M>['propagateSelect']
-  /** 子节点全部选中时回填父节点，缺省由 strategy 推导 */
+  /** 子节点全部选中时回填父节点。cascade 策略下默认开启，显式 true 可在 isolated 下强制开启；关闭级联请用 strategy='isolated' */
   bubbleSelect?: NuxtTreeProps<T, M>['bubbleSelect']
   /** 尺寸 */
   size?: NuxtTreeProps<T, M>['size']
