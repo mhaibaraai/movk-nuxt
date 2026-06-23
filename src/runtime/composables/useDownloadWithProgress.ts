@@ -1,3 +1,4 @@
+import type { Ref } from 'vue'
 import type { NitroFetchRequest } from 'nitropack/types'
 import type {
   ApiError,
@@ -6,7 +7,8 @@ import type {
   TransferResult,
   TransferStatus
 } from '../types/api'
-import { ref, useNuxtApp, useRuntimeConfig } from '#imports'
+import { ref } from 'vue'
+import { useNuxtApp, useRuntimeConfig } from '#imports'
 import { triggerDownload } from '@movk/core'
 import {
   buildFetchContext,
@@ -48,7 +50,20 @@ export interface DownloadWithProgressOptions extends TransferRequestOptions {
  * })
  * ```
  */
-export function useDownloadWithProgress<T = Blob>() {
+export function useDownloadWithProgress<T = Blob>(): {
+  /** 下载进度 0-100；后端未返回 content-length 时为 null（不确定） */
+  progress: Ref<number | null>
+  /** 传输状态 */
+  status: Ref<TransferStatus>
+  /** 业务数据（默认 Blob；JSON 响应时为解包后的业务数据） */
+  data: Ref<T | null>
+  /** 错误信息 */
+  error: Ref<ApiError | Error | null>
+  /** 执行下载 */
+  download: (url: NitroFetchRequest, options?: DownloadWithProgressOptions) => Promise<TransferResult<T>>
+  /** 中止下载 */
+  abort: () => void
+} {
   const publicConfig = useRuntimeConfig().public.movkApi as MovkApiPublicConfig
   const nuxtApp = useNuxtApp()
 
@@ -248,18 +263,5 @@ export function useDownloadWithProgress<T = Blob>() {
     }
   }
 
-  return {
-    /** 下载进度 0-100；后端未返回 content-length 时为 null（不确定） */
-    progress,
-    /** 传输状态 */
-    status,
-    /** 业务数据（默认 Blob；JSON 响应时为解包后的业务数据） */
-    data,
-    /** 错误信息 */
-    error,
-    /** 执行下载 */
-    download,
-    /** 中止下载 */
-    abort
-  }
+  return { progress, status, data, error, download, abort }
 }
