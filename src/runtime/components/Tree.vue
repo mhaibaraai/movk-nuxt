@@ -14,7 +14,7 @@ import treeTheme from '#build/ui/tree'
 import theme from '#build/movk-ui/tree'
 import { createGetKey, normalizeChildren } from '../domains/tree/resolve-tree'
 import { matchLabel } from '../domains/tree/tree-search'
-import { isPlaceholder, markLazyPlaceholders } from '../domains/tree/tree-lazy'
+import { isPlaceholder, LAZY_KEY_FIELD, markLazyPlaceholders } from '../domains/tree/tree-lazy'
 import { computeTreeSelection, selectionSummary } from '../utils/tree-selection'
 import { resolveDefaultExpandedKeys } from '../utils/tree-expand'
 import TreeToolbar from '../domains/tree/components/TreeToolbar.vue'
@@ -69,10 +69,11 @@ watch(() => props.items, (items) => {
   if (!initialized) {
     initialized = true
     if (expanded.value.length === 0) {
-      // defaultExpanded 类型含 boolean，未传时 Vue 将其降级为 false（而非 undefined），
-      // 故按真值分支：真值用 prop 策略，假值（含未传）回退节点级 defaultExpanded 标记
-      expanded.value = props.defaultExpanded
-        ? resolveDefaultExpandedKeys(baseItems.value, props.defaultExpanded as DefaultExpanded, { getKey: getKey.value })
+      // 按类型走策略分支，确保 number 0（收起全部）不被当作假值；
+      // undefined / false（含未传时 Vue 对 boolean prop 的降级）回退节点级 defaultExpanded 标记
+      const de = props.defaultExpanded as DefaultExpanded
+      expanded.value = (de === true || typeof de === 'number' || typeof de === 'function')
+        ? resolveDefaultExpandedKeys(baseItems.value, de, { getKey: getKey.value })
         : Tree.findAll(baseItems.value, ({ node }) => !!node.defaultExpanded).map(n => getKey.value(n))
     }
   }
@@ -115,7 +116,7 @@ async function onExpandedUpdate(keys: string[]) {
         baseItems.value,
         key,
         ({ node }) => ({ ...node, children: loaded.length ? loaded : undefined, isLeaf: loaded.length === 0 }),
-        { id: labelKey.value }
+        { id: LAZY_KEY_FIELD }
       )
     }
     finally {
