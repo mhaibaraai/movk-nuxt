@@ -46,7 +46,6 @@ export default defineNuxtConfig({
         '@internationalized/date',
         '@movk/core',
         '@tanstack/vue-table',
-        '@unhead/schema-org/vue',
         'colortranslator',
         'json5',
         'maska/vue',
