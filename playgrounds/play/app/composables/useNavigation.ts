@@ -63,7 +63,8 @@ const componentsNav: NavigationMenuItem = {
     { label: 'SearchForm', to: '/components/search-form' },
     { label: 'ThemePicker', to: '/components/theme-picker' },
     { label: 'Inputs · With*', to: '/components/inputs-with' },
-    { label: 'AsPhoneNumberInput', to: '/components/as-phone-number-input' }
+    { label: 'AsPhoneNumberInput', to: '/components/as-phone-number-input' },
+    { label: 'Tree', to: '/components/tree' }
   ]
 }
 

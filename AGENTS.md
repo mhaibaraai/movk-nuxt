@@ -66,11 +66,11 @@ pnpm clean
 | `src/unplugin.ts` | Vue 模式 unplugin 工厂：链入 `@nuxt/ui` unplugin 后叠加 movk 子插件 |
 | `src/vite.ts` | Vite 插件入口（`export default MovkPlugin.vite`） |
 | `src/plugins/` | Vue 模式 unplugin 子插件：`environment`（`#imports`/`#components`/Icon 覆盖）、`templates`（`#build/movk-ui` 写盘 + alias）、`app-config`（注入 movk 键）、`plugins`（`@movk/nuxt/vue-plugin` 虚拟） |
-| `src/runtime/components/` | 对外组件：10 个主组件（AutoForm、DataTable、SearchForm、DatePicker、ColorChooser、MessageBox、PillGroup、Popconfirm、StarRating、SlideVerify）+ `input/` 6 个输入增强 + `theme-picker/` |
-| `src/runtime/domains/` | 业务逻辑层 + 私有子组件，按域划分：`api/`（拦截器、端点、错误、传输）、`auto-form/`（字段、控件、Schema 解析）、`data-table/`（列解析、特殊列、树选择）、`theme/` |
+| `src/runtime/components/` | 对外组件：11 个主组件（AutoForm、DataTable、SearchForm、DatePicker、ColorChooser、MessageBox、PillGroup、Popconfirm、StarRating、SlideVerify、Tree）+ `input/` 6 个输入增强 + `theme-picker/` |
+| `src/runtime/domains/` | 业务逻辑层 + 私有子组件，按域划分：`api/`（拦截器、端点、错误、传输）、`auto-form/`（字段、控件、Schema 解析）、`data-table/`（列解析、特殊列）、`tree/`（树归一化、搜索、懒加载、工具栏子组件）、`theme/` |
 | `src/runtime/composables/` | 9 个：`useApiFetch` / `useLazyApiFetch` / `useClientApiFetch`、`useAutoForm`、`useTheme`、`useDateFormatter`、`useMessageBox`、`useUploadWithProgress` / `useDownloadWithProgress` |
 | `src/runtime/types/` | 类型来源，按域聚合：`api/`、`auto-form/`、`components/`、`data-table/`、`shared`，每域 `index.ts` 统一 re-export |
-| `src/runtime/utils/` | 运行时工具：`meta`、`form-control`、`tv`、`extend-theme`、`theme-defaults`（主题默认 app.config，两模式共用） |
+| `src/runtime/utils/` | 运行时工具：`meta`、`form-control`、`tv`、`extend-theme`、`theme-defaults`（主题默认 app.config，两模式共用）、`tree-expand` / `tree-selection`（树形展开/选中纯函数，Tree 与 DataTable 共用） |
 | `src/runtime/vue/` | 非 Nuxt 桩层：`stubs/`（`#imports` 桩，转发 `@nuxt/ui` 同模式桩 + `useSiteConfig`/`useOverlay`）、`composables/useSiteConfig`、`plugins/theme`（剥离 SSR 的 vue 主题插件） |
 | `src/theme/` | 主题配置，每组件/功能一个文件（约 22 个），`index.ts` 聚合 |
 | `src/utils/` | 模块构建期工具：`defaults`、`theme-variants`、`theme` |
@@ -133,6 +133,20 @@ pnpm clean
 - 互斥关系、默认值、边界值要显式演示；列级 vs 全局同名 prop 用「全开 + 个别关」或反向对照，不要同向重复
 - 同时支持布尔/函数形态的 prop（`sortable` / `pinable` / `truncate` 等）两种形态都要有 Showcase
 - 抽离到 docs 的示例组件放 `docs/app/components/content/examples/<scope>/`，命名 `<Scope><Component><Topic>Example.vue`；新增 playground 段前先想「docs 这节叫什么」反推 title
+
+## 文档同步面
+
+新增 / 修改公开组件或功能（含新增 props、事件、方法、槽位）后，须同步下列文档面，保持各处组件清单与措辞一致；按就近原则增改，不要遗漏发现性入口。
+
+1. **组件文档** `docs/content/docs/2.components/<slug>.md`：用法（逐 prop，H3）、示例（场景，H3）、API（Props/Emits/Slots/Expose）、必要 `::note` / `::callout` 提示易踩点
+2. **示例组件** `docs/app/components/content/examples/<scope>/`：与文档 `::component-example` 一一对应，命名 `<Scope><Component><Topic>Example.vue`
+3. **Playground** `playgrounds/play/app/pages/**`：穷举公开 props/事件/方法/槽位，与文档同形对应
+4. **站点介绍与 keywords**：根 `package.json` 的 `keywords`、`docs/nuxt.config.ts` 的 `site.description` / `llms.*.description` / `llms.notes`、`README.md` 的独立组件列举、`docs/content/index.md` 的组件短语
+5. **首页展示** `docs/app/components/Home.vue`：必要时新增组件卡片
+6. **skills 参考** `docs/skills/movk-nuxt/references/*.md`（按域归类）、必要时 `SKILL.md` 选型指引
+7. **本指南目录表**：目录/计数漂移时同步校正
+
+> 站点描述、README、skills 三处的组件列举须指向同一组件集合、同一风格，避免清单各处不一致。
 
 ## 写作规范
 

@@ -1,3 +1,4 @@
+import type { Ref } from 'vue'
 import type { NitroFetchRequest } from 'nitropack/types'
 import type {
   ApiError,
@@ -6,7 +7,8 @@ import type {
   TransferResult,
   TransferStatus
 } from '../types/api'
-import { ref, useNuxtApp, useRuntimeConfig } from '#imports'
+import { ref, shallowRef } from 'vue'
+import { useNuxtApp, useRuntimeConfig } from '#imports'
 import {
   buildFetchContext,
   finalizeTransfer,
@@ -46,13 +48,26 @@ export interface UploadWithProgressOptions<T = unknown> extends TransferRequestO
  * await upload('/api/upload', files, { fieldName: 'files' })
  * ```
  */
-export function useUploadWithProgress<T = unknown>() {
+export function useUploadWithProgress<T = unknown>(): {
+  /** 上传进度 0-100 */
+  progress: Ref<number | null>
+  /** 传输状态 */
+  status: Ref<TransferStatus>
+  /** 解包后的业务数据 */
+  data: Ref<T | null>
+  /** 错误信息 */
+  error: Ref<ApiError | Error | null>
+  /** 执行上传 */
+  upload: (url: NitroFetchRequest, files: File | File[], options?: UploadWithProgressOptions<T>) => Promise<TransferResult<T>>
+  /** 中止上传 */
+  abort: () => void
+} {
   const publicConfig = useRuntimeConfig().public.movkApi as MovkApiPublicConfig
   const nuxtApp = useNuxtApp()
 
   const progress = ref<number | null>(0)
   const status = ref<TransferStatus>('idle')
-  const data = ref<T | null>(null)
+  const data = shallowRef<T | null>(null)
   const error = ref<ApiError | Error | null>(null)
 
   let currentXhr: XMLHttpRequest | null = null
@@ -179,18 +194,5 @@ export function useUploadWithProgress<T = unknown>() {
     })
   }
 
-  return {
-    /** 上传进度 0-100 */
-    progress,
-    /** 传输状态 */
-    status,
-    /** 解包后的业务数据 */
-    data,
-    /** 错误信息 */
-    error,
-    /** 执行上传 */
-    upload,
-    /** 中止上传 */
-    abort
-  }
+  return { progress, status, data, error, upload, abort }
 }

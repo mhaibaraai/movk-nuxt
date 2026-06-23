@@ -100,7 +100,7 @@ transition: { duration: 0.6, delay: 0.5 }
   组件与 Composables
 
   #description
-  DatePicker、PillGroup、SearchForm 等独立组件，搭配 useTheme、useMessageBox 等工具。
+  DatePicker、PillGroup、SearchForm、Tree 等独立组件，搭配 useTheme、useMessageBox 等工具。
   :::
 
   :::u-page-feature{icon="i-lucide-shield-check"}
@@ -357,7 +357,7 @@ links:
 组件与 Composables
 
 #description
-DatePicker、SearchForm、PillGroup、SlideVerify 等独立组件即取即用，搭配 useTheme、useMessageBox、useDateFormatter 等命令式工具覆盖常见交互场景。
+DatePicker、SearchForm、PillGroup、SlideVerify、Tree 等独立组件即取即用，搭配 useTheme、useMessageBox、useDateFormatter 等命令式工具覆盖常见交互场景。
 
 #features
   :::u-page-feature{icon="i-lucide-blocks"}

@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import type { DateValue, AutoFormFieldContext, DataTableColumn } from '#movk/types'
+import type { DateValue, AutoFormFieldContext, DataTableColumn, TreeItem } from '#movk/types'
 import type z from 'zod'
 
 const slides = [{
@@ -105,6 +105,19 @@ const pickedDate = ref<DateValue | undefined>()
 const color = ref('#3B82F6')
 const verified = ref(false)
 
+const treeItems: TreeItem[] = [
+  {
+    label: 'app',
+    icon: 'i-lucide-folder',
+    defaultExpanded: true,
+    children: [
+      { label: 'app.vue', icon: 'i-vscode-icons-file-type-vue' },
+      { label: 'nuxt.config.ts', icon: 'i-vscode-icons-file-type-nuxt' }
+    ]
+  },
+  { label: 'package.json', icon: 'i-vscode-icons-file-type-json' }
+]
+
 const copyText = ref('Hello Movk Nuxt!')
 const passwordText = ref('secret123')
 const clearText = ref('可清除的内容')
@@ -145,7 +158,7 @@ const phoneText = ref('')
         <MDataTable :columns="tableColumns" :data="tableData" sortable />
       </div>
 
-      <div v-else-if="item.key === 'components'" class="p-4 sm:p-6 space-y-3">
+      <div v-else-if="item.key === 'components'" class="p-4 sm:p-6">
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div class="rounded-xl border border-default bg-elevated p-4">
             <div class="flex items-center justify-between mb-2">
@@ -179,21 +192,38 @@ const phoneText = ref('')
               <code class="text-xs text-muted">{{ color }}</code>
             </div>
           </div>
-        </div>
 
-        <div class="rounded-xl border border-default bg-elevated p-4">
-          <div class="flex items-center justify-between mb-2">
-            <p class="text-sm font-medium">
-              滑动验证
+          <div class="rounded-xl border border-default bg-elevated p-4">
+            <div class="flex items-center justify-between mb-2">
+              <p class="text-sm font-medium">
+                滑动验证
+              </p>
+              <UBadge variant="outline" size="xs" class="font-mono text-[10px]">
+                MSlideVerify
+              </UBadge>
+            </div>
+            <p class="text-xs text-muted mb-3">
+              Motion.js 流畅动画 · 可配置验证阈值
             </p>
-            <UBadge variant="outline" size="xs" class="font-mono text-[10px]">
-              MSlideVerify
-            </UBadge>
+            <MSlideVerify v-model="verified" @success="verified = true" />
           </div>
-          <p class="text-xs text-muted mb-3">
-            Motion.js 流畅动画 · 可配置验证阈值
-          </p>
-          <MSlideVerify v-model="verified" @success="verified = true" />
+
+          <div class="rounded-xl border border-default bg-elevated p-4">
+            <div class="flex items-center justify-between mb-2">
+              <p class="text-sm font-medium">
+                树形组件
+              </p>
+              <UBadge variant="outline" size="xs" class="font-mono text-[10px]">
+                MTree
+              </UBadge>
+            </div>
+            <p class="text-xs text-muted mb-3">
+              搜索过滤 · 懒加载 · 工具栏 · 复选框级联
+            </p>
+            <div class="max-h-44 overflow-auto">
+              <MTree :items="treeItems" searchable />
+            </div>
+          </div>
         </div>
       </div>
 
