@@ -7,7 +7,7 @@ import type {
   TransferResult,
   TransferStatus
 } from '../types/api'
-import { ref } from 'vue'
+import { ref, shallowRef } from 'vue'
 import { useNuxtApp, useRuntimeConfig } from '#imports'
 import {
   buildFetchContext,
@@ -67,7 +67,7 @@ export function useUploadWithProgress<T = unknown>(): {
 
   const progress = ref<number | null>(0)
   const status = ref<TransferStatus>('idle')
-  const data = ref<T | null>(null)
+  const data = shallowRef<T | null>(null)
   const error = ref<ApiError | Error | null>(null)
 
   let currentXhr: XMLHttpRequest | null = null

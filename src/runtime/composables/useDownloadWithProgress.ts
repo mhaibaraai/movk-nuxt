@@ -7,7 +7,7 @@ import type {
   TransferResult,
   TransferStatus
 } from '../types/api'
-import { ref } from 'vue'
+import { ref, shallowRef } from 'vue'
 import { useNuxtApp, useRuntimeConfig } from '#imports'
 import { triggerDownload } from '@movk/core'
 import {
@@ -69,7 +69,7 @@ export function useDownloadWithProgress<T = Blob>(): {
 
   const progress = ref<number | null>(0)
   const status = ref<TransferStatus>('idle')
-  const data = ref<T | null>(null)
+  const data = shallowRef<T | null>(null)
   const error = ref<ApiError | Error | null>(null)
 
   let controller: AbortController | null = null
