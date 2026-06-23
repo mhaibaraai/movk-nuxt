@@ -1,12 +1,14 @@
 import { describe, expect, it } from 'vitest'
 
-import { isPlaceholder, markLazyPlaceholders } from '../../../src/runtime/domains/tree/tree-lazy'
+import { isPlaceholder, LAZY_KEY_FIELD, markLazyPlaceholders } from '../../../src/runtime/domains/tree/tree-lazy'
 
 interface Node {
+  id?: string
   label?: string
   children?: Node[]
   isLeaf?: boolean
   __movkLazyPlaceholder?: boolean
+  __movkKey?: string
 }
 
 const getKey = (node: Node) => String(node.label)
@@ -49,5 +51,18 @@ describe('markLazyPlaceholders', () => {
     const src: Node[] = [{ label: 'a' }]
     markLazyPlaceholders<Node>(src, getKey)
     expect(src[0]!.children).toBeUndefined()
+  })
+
+  it('懒父节点写入稳定内部 key 字段，取值为 getKey(node)', () => {
+    const out = markLazyPlaceholders<Node>([{ label: 'a' }], getKey)
+    expect(out[0]![LAZY_KEY_FIELD]).toBe('a')
+  })
+
+  it('自定义 getKey 与 labelKey 不一致时，内部 key 仍取 getKey(node)', () => {
+    const byId = (node: Node) => String(node.id)
+    const out = markLazyPlaceholders<Node>([{ id: '1', label: 'a' }], byId, 'label')
+    // updateNode 按 LAZY_KEY_FIELD 匹配的值须等于展开时传入的 getKey 值
+    expect(out[0]![LAZY_KEY_FIELD]).toBe('1')
+    expect(out[0]![LAZY_KEY_FIELD]).not.toBe(out[0]!.label)
   })
 })
