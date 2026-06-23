@@ -66,7 +66,7 @@ const baseItems = ref<WorkNode[]>([])
 let initialized = false
 watch(() => props.items, (items) => {
   baseItems.value = buildBase((items ?? []) as WorkNode[])
-  if (!initialized) {
+  if (!initialized && baseItems.value.length > 0) {
     initialized = true
     if (expanded.value.length === 0) {
       // 按类型走策略分支，确保 number 0（收起全部）不被当作假值；
