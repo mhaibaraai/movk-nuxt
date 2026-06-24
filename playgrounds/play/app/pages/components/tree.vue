@@ -90,7 +90,8 @@ const bigTree: TreeItem[] = Array.from({ length: 60 }, (_, group) => ({
   children: Array.from({ length: 30 }, (_, leaf) => ({ label: `节点 ${group + 1}-${leaf + 1}` }))
 }))
 
-const matrixValue = ref<TreeItem>()
+const matrixValue = ref<TreeItem>({ label: 'app.vue' })
+const colorSelected = ref<TreeItem>({ label: 'app.vue' })
 const disabledChecked = ref<TreeItem[]>([{ label: 'useAuth.ts' }])
 
 const nodeDisabledTree: TreeItem[] = [
@@ -176,6 +177,10 @@ const nodeDisabledChecked = ref<TreeItem[]>([])
 
     <Showcase title="虚拟滚动" description="virtualize 透传 UTree 虚拟化，仅渲染可视区节点，适配大数据量树。">
       <MTree :items="bigTree" :virtualize="true" class="max-h-72" />
+    </Showcase>
+
+    <Showcase title="主色" description="color 透传 UTree 主色，作用于选中节点文字与焦点环，预选一个节点以便观察。" :state="{ selected: colorSelected?.label }">
+      <MTree v-model="colorSelected" :items="fileTree" color="error" />
     </Showcase>
 
     <Showcase title="整树禁用" description="disabled 禁用整棵树，点击节点与工具栏展开折叠、全选、搜索均不可操作。" :state="{ checked: disabledChecked.map(n => n.label) }">

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { createGetKey, normalizeChildren } from '../../../src/runtime/domains/tree/resolve-tree'
+import { createGetKey, getByPath, normalizeChildren } from '../../../src/runtime/domains/tree/resolve-tree'
 
 interface Node {
   label?: string
@@ -8,7 +8,22 @@ interface Node {
   id?: string
   children?: Node[]
   nodes?: Node[]
+  meta?: { title?: string }
 }
+
+describe('getByPath', () => {
+  it('无点路径直接取字段', () => {
+    expect(getByPath({ label: 'a' }, 'label')).toBe('a')
+  })
+
+  it('点路径按段深取', () => {
+    expect(getByPath({ meta: { title: 't' } }, 'meta.title')).toBe('t')
+  })
+
+  it('中间层缺失时返回 undefined 而非抛错', () => {
+    expect(getByPath({}, 'meta.title')).toBeUndefined()
+  })
+})
 
 describe('createGetKey', () => {
   it('缺省按 label 字段取键', () => {
@@ -17,6 +32,10 @@ describe('createGetKey', () => {
 
   it('自定义 labelKey 取对应字段', () => {
     expect(createGetKey<Node>(undefined, 'name')({ name: 'foo' })).toBe('foo')
+  })
+
+  it('labelKey 支持点路径深取', () => {
+    expect(createGetKey<Node>(undefined, 'meta.title')({ meta: { title: 'deep' } })).toBe('deep')
   })
 
   it('提供 getKey 时优先使用其返回值', () => {

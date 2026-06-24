@@ -12,7 +12,7 @@ import { useAppConfig } from '#imports'
 import { useExtendedTv } from '../utils/extend-theme'
 import treeTheme from '#build/ui/tree'
 import theme from '#build/movk-ui/tree'
-import { createGetKey, normalizeChildren } from '../domains/tree/resolve-tree'
+import { createGetKey, getByPath, normalizeChildren } from '../domains/tree/resolve-tree'
 import { resolveLeadingIcon } from '../domains/tree/tree-icon'
 import { matchLabel } from '../domains/tree/tree-search'
 import { isPlaceholder, LAZY_KEY_FIELD, markLazyPlaceholders } from '../domains/tree/tree-lazy'
@@ -170,7 +170,7 @@ const RESERVED_SLOTS = ['toolbar', 'toolbar-leading', 'toolbar-trailing', 'empty
 const forwardSlots = computed(() => Object.keys(slots).filter(name => !RESERVED_SLOTS.includes(name)) as (keyof TreeSlots<T>)[])
 
 function nodeLabel(node: WorkNode): string {
-  const value = node[labelKey.value]
+  const value = getByPath(node, labelKey.value)
   return value == null ? '' : String(value)
 }
 
@@ -358,7 +358,7 @@ defineExpose<TreeExposed<T>>({
         />
       </template>
 
-      <template v-if="!slots['item-label']" #item-label="{ item }">
+      <template v-if="!slots['item-label'] && (props.lazy || (searching && props.highlight))" #item-label="{ item }">
         <slot v-if="isPlaceholder(item)" name="loading" :node="item">
           <span :class="extraUi.loading">
             <UIcon name="i-lucide-loader-circle" :class="extraUi.loadingIcon" />加载中

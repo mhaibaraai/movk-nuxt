@@ -133,6 +133,25 @@ name: ComponentsTreeVirtualizeExample
 ---
 ::
 
+### `color` 主色
+
+`color` 作用：透传 Nuxt UI Tree 的主色，作用于选中节点的文字色与键盘聚焦环；下例预选一个节点以便观察：
+
+::component-example
+---
+name: ComponentsTreeColorExample
+options:
+  - name: color
+    label: color
+    items: [primary, success, info, warning, error, neutral]
+    default: error
+---
+::
+
+::note
+UTree 的 `color` 仅作用于选中节点文字与焦点环；未选中任何节点时不会有可见变化。单色图标（如 lucide）随文字色继承，多色图标（如 vscode-icons）保持自身配色。
+::
+
 ### `disabled` 禁用
 
 `disabled` 作用：禁用整棵树，同时阻断点击节点、工具栏控件与复选框的展开、折叠、选中操作；节点级 `item.disabled` 单独禁用该节点的复选框：
