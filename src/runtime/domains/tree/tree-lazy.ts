@@ -1,4 +1,4 @@
-type AnyNode = Record<string, any>
+import type { AnyObject } from '@movk/core'
 
 /** 懒加载占位节点标记字段 */
 export const PLACEHOLDER_FLAG = '__movkLazyPlaceholder'
@@ -12,7 +12,7 @@ export const PLACEHOLDER_FLAG = '__movkLazyPlaceholder'
 export const LAZY_KEY_FIELD = '__movkKey'
 
 /** 判断节点是否为懒加载占位 */
-export function isPlaceholder(node: AnyNode): boolean {
+export function isPlaceholder(node: AnyObject): boolean {
   return !!node[PLACEHOLDER_FLAG]
 }
 
@@ -22,7 +22,7 @@ export function isPlaceholder(node: AnyNode): boolean {
  * UTree 仅在 `children.length` 为真时渲染展开箭头；对 `children` 未加载（缺省）且非叶子的节点，
  * 注入一个占位子节点使其可展开。展开时再由 `Tree.updateNode` 用真实子节点替换。不修改入参。
  */
-export function markLazyPlaceholders<T extends AnyNode>(
+export function markLazyPlaceholders<T extends AnyObject>(
   items: T[],
   getKey: (node: T) => string,
   labelKey = 'label'

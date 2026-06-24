@@ -14,7 +14,7 @@ import treeTheme from '#build/ui/tree'
 import theme from '#build/movk-ui/tree'
 import { createGetKey, normalizeChildren } from '../domains/tree/resolve-tree'
 import { resolveLeadingIcon } from '../domains/tree/tree-icon'
-import { matchLabel } from '../domains/tree/tree-search'
+import { matchNode } from '../domains/tree/tree-search'
 import { isPlaceholder, LAZY_KEY_FIELD, markLazyPlaceholders } from '../domains/tree/tree-lazy'
 import { collectDisabledKeys } from '../domains/tree/tree-disabled'
 import { computeTreeSelection, selectionSummary } from '../utils/tree-selection'
@@ -46,16 +46,14 @@ const slots = useSlots()
 const appConfig = useAppConfig() as { movk?: { tree?: unknown }, ui?: { icons?: Record<string, string> } }
 const labelKey = computed(() => props.labelKey ?? 'label')
 
-const folderIcons = computed(() => ({
-  folderOpen: appConfig.ui?.icons?.folderOpen ?? 'i-lucide-folder-open',
-  folder: appConfig.ui?.icons?.folder ?? 'i-lucide-folder'
-}))
-function leadingIcon(node: WorkNode, expanded: boolean) {
-  return resolveLeadingIcon(node, expanded, {
-    expandedIcon: props.expandedIcon,
-    collapsedIcon: props.collapsedIcon,
-    ...folderIcons.value
-  })
+// 父节点 leading 图标：prop 优先，回退 app.config，最终回退 lucide 默认（与 UTree 一致）
+function folderIcon(expanded: boolean): string {
+  return expanded
+    ? props.expandedIcon ?? appConfig.ui?.icons?.folderOpen ?? 'i-lucide-folder-open'
+    : props.collapsedIcon ?? appConfig.ui?.icons?.folder ?? 'i-lucide-folder'
+}
+function leadingIcon(node: WorkNode, expanded: boolean): string | undefined {
+  return resolveLeadingIcon(node, folderIcon(expanded))
 }
 const getKey = computed(() => createGetKey<WorkNode>(props.getKey as ((node: WorkNode) => string) | undefined, labelKey.value))
 
@@ -95,12 +93,34 @@ watch(() => props.items, (items) => {
 
 const searching = computed(() => !!(props.searchable && search.value.trim()))
 
+// disabled 子树（节点自身或祖先 disabled）的 key 集合，是 disabled 级联的唯一真相来源。
+const disabledKeys = computed(() => collectDisabledKeys(baseItems.value, getKey.value))
+
+// 向 disabled 子树注入 disabled，交由 UTree 原生置灰整棵后代；无 disabled 时零拷贝，
+// 有 disabled 时仅克隆受影响节点，保留其余节点引用，避免污染 v-model 节点 identity。
+function applyDisabled(nodes: WorkNode[]): WorkNode[] {
+  if (!disabledKeys.value.size) return nodes
+  const inject = (list: WorkNode[]): WorkNode[] => list.map((node) => {
+    const rawChildren = node.children
+    const children = Array.isArray(rawChildren) ? inject(rawChildren as WorkNode[]) : rawChildren
+    const disabled = disabledKeys.value.has(getKey.value(node))
+    if (!disabled && children === rawChildren) return node
+    return {
+      ...node,
+      ...(disabled ? { disabled: true } : null),
+      ...(children !== rawChildren ? { children } : null)
+    }
+  })
+  return inject(nodes)
+}
+
 const displayItems = computed<WorkNode[]>(() => {
-  if (!searching.value) return baseItems.value
   const term = search.value
-  return Tree.filter(baseItems.value, ({ node }) =>
-    props.filter ? props.filter(node as T[number], term) : matchLabel(node[labelKey.value], term)
-  )
+  const filtered = !searching.value
+    ? baseItems.value
+    : Tree.filter(baseItems.value, ({ node }) =>
+        props.filter ? props.filter(node as T[number], term) : matchNode(node, labelKey.value, term))
+  return applyDisabled(filtered)
 })
 
 const isEmpty = computed(() => searching.value && displayItems.value.length === 0)
@@ -181,12 +201,6 @@ function nodeLabel(node: WorkNode): string {
 
 const isMultiple = computed(() => !!(props.checkable || props.multiple))
 
-// disabled 子树（节点自身或祖先 disabled）的 key 集合，连同根 disabled 决定节点是否禁用。
-const disabledKeys = computed(() => collectDisabledKeys(baseItems.value, getKey.value))
-function isNodeDisabled(node: WorkNode): boolean {
-  return !!props.disabled || disabledKeys.value.has(getKey.value(node))
-}
-
 // 可选节点：排除懒加载占位与 disabled 子树。
 const selectableNodes = computed<WorkNode[]>(() =>
   Tree.findAll(baseItems.value, ({ node }) => !isPlaceholder(node) && !disabledKeys.value.has(getKey.value(node)))
@@ -246,15 +260,18 @@ function setModel(value: ModelValue) {
 // 仅门控用户交互路径（UTree 派发的 model 变化）；命令式 selectAll/clearSelection 直调 setModel 不受限
 function onModelUpdate(value: ModelValue) {
   if (props.disabled) return
-  // 剔除 disabled 子树选中：数组态过滤，单选态命中 disabled 则忽略（级联也无法选入 disabled 子树）
+  // 派发的节点取自 displayItems，disabled 子树已注入 disabled：数组态过滤，
+  // 单选态命中 disabled 则忽略（级联也无法选入 disabled 子树）
   if (Array.isArray(value)) {
-    setModel(value.filter(node => !disabledKeys.value.has(getKey.value(node as WorkNode))) as ModelValue)
+    setModel(value.filter(node => !(node as WorkNode).disabled) as ModelValue)
     return
   }
-  if (value && disabledKeys.value.has(getKey.value(value as WorkNode))) return
+  if (value && (value as WorkNode).disabled) return
   setModel(value)
 }
 
+// 含 disabled 父节点：命令式 expandAll/expandToDepth 不受 onExpandedUpdate 的展开冻结约束
+// （与 selectAll 一致——命令式属显式调用），冻结仅作用于用户点击 chevron 的交互路径
 const expandableKeys = computed(() =>
   Tree.findAll(baseItems.value, ({ node }) => !!node.children?.length).map(n => getKey.value(n))
 )
@@ -362,7 +379,7 @@ defineExpose<TreeExposed<T>>({
           :model-value="indeterminate ? 'indeterminate' : selected"
           :size="props.size"
           :color="props.color"
-          :disabled="isNodeDisabled(item)"
+          :disabled="item.disabled || props.disabled"
           :class="extraUi.checkbox"
           tabindex="-1"
           @change="handleSelect"

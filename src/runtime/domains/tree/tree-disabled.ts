@@ -1,7 +1,7 @@
-type AnyNode = Record<string, any>
+import type { AnyObject } from '@movk/core'
 
 /** 收集 disabled 子树的全部 key：节点自身 disabled 或祖先 disabled 即纳入 */
-export function collectDisabledKeys<T extends AnyNode>(items: T[], getKey: (node: T) => string): Set<string> {
+export function collectDisabledKeys<T extends AnyObject>(items: T[], getKey: (node: T) => string): Set<string> {
   const set = new Set<string>()
   const walk = (nodes: T[], ancestorDisabled: boolean) => {
     for (const node of nodes) {
