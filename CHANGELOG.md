@@ -1,5 +1,14 @@
 # 📋 Changelog
 
+## [1.4.1](https://github.com/mhaibaraai/movk-nuxt/compare/v1.4.0...v1.4.1) (2026-06-24)
+
+### 🐛 Bug Fixes
+
+* **tree:** disabled 子树注入级联禁用并按点路径搜索取值 ([511ff22](https://github.com/mhaibaraai/movk-nuxt/commit/511ff222b9f392067da60880162499737f3f0dd6))
+* **tree:** 修复 labelKey 点路径与 item-label 默认接管，补全 color 演示 ([68b6e8d](https://github.com/mhaibaraai/movk-nuxt/commit/68b6e8d3d0614eb47de16954bebdfe4e1718662f))
+* **tree:** 节点级 disabled 级联子树并复用 getPath，补图标 props 示例 ([a03ec21](https://github.com/mhaibaraai/movk-nuxt/commit/a03ec211802c4a8761817a08185050a3e4e2b078))
+* **tree:** 补全 checkable 节点 leading 图标与 disabled 门控 ([860a9c2](https://github.com/mhaibaraai/movk-nuxt/commit/860a9c284e918afba797b8508ed4c5c421c81c85)), closes [#item-leading](https://github.com/mhaibaraai/movk-nuxt/issues/item-leading)
+
 ## [1.4.0](https://github.com/mhaibaraai/movk-nuxt/compare/v1.3.1...v1.4.0) (2026-06-23)
 
 ### ✨ Features
