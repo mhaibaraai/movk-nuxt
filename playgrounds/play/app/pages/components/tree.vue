@@ -68,6 +68,18 @@ const deptTree = [
 ]
 const deptValue = ref()
 
+const metaTree = [
+  {
+    meta: { title: '技术中心' },
+    children: [
+      { meta: { title: '前端组' }, children: [{ meta: { title: '组件库' } }, { meta: { title: '可视化' } }] },
+      { meta: { title: '后端组' } }
+    ]
+  },
+  { meta: { title: '产品中心' }, children: [{ meta: { title: '交互设计' } }] }
+]
+const metaValue = ref()
+
 const lazyTree: TreeItem[] = [
   { label: '区域 A' },
   { label: '区域 B' },
@@ -188,6 +200,10 @@ const nodeDisabledChecked = ref<TreeItem[]>([])
       <MTree v-model="deptValue" :items="deptTree" children-key="nodes" label-key="name" />
     </Showcase>
 
+    <Showcase title="点路径取值" description="labelKey 传点路径深取嵌套字段，键派生、搜索与高亮均按同一路径取值。" :state="{ selected: metaValue?.meta?.title }">
+      <MTree v-model="metaValue" :items="metaTree" label-key="meta.title" searchable />
+    </Showcase>
+
     <Showcase title="虚拟滚动" description="virtualize 透传 UTree 虚拟化，仅渲染可视区节点，适配大数据量树。">
       <MTree :items="bigTree" :virtualize="true" class="max-h-72" />
     </Showcase>
@@ -215,7 +231,7 @@ const nodeDisabledChecked = ref<TreeItem[]>([])
       />
     </Showcase>
 
-    <Showcase title="节点禁用" description="节点数据的 disabled 字段单独禁用该节点复选框，不影响其余节点。" :state="{ checked: nodeDisabledChecked.map(n => n.label) }">
+    <Showcase title="节点禁用" description="节点数据的 disabled 字段禁用该节点并级联其整棵子树，冻结展开态、子树复选框禁用且不可选中，兄弟节点不受影响。" :state="{ checked: nodeDisabledChecked.map(n => n.label) }">
       <MTree v-model="nodeDisabledChecked" :items="nodeDisabledTree" checkable />
     </Showcase>
 
