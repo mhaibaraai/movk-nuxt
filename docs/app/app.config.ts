@@ -52,7 +52,8 @@ export default defineAppConfig({
           'SearchForm 如何按行数自动折叠？',
           'PillGroup 如何做多选与字段映射？',
           'DatePicker 输出格式与预设如何配置？',
-          'With* 输入增强（清除/复制/字数/密码）怎么用？'
+          'With* 输入增强（清除/复制/字数/密码）怎么用？',
+          'Tree 复选框级联、父子策略与异步懒加载如何配置？'
         ]
       },
       {

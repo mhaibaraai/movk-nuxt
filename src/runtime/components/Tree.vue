@@ -365,7 +365,7 @@ defineExpose<TreeExposed<T>>({
       :items="(displayItems as any)"
       :model-value="(effectiveModel as any)"
       :expanded="expanded"
-      :ui="(baseUi as any)"
+      :ui="baseUi"
       @update:model-value="onModelUpdate($event as ModelValue)"
       @update:expanded="onExpandedUpdate"
     >

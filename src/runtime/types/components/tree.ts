@@ -96,6 +96,7 @@ export interface TreeProps<T extends TreeItem[] = TreeItem[], M extends boolean 
   /** 渲染复选框并启用多选（multiple + strategy，默认 cascade） */
   checkable?: M & boolean
   ui?: Record<string, ClassNameValue>
+  class?: ClassNameValue
 }
 
 /** 父子勾选策略 */
