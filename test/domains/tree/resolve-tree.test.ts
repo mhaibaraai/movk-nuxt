@@ -8,6 +8,7 @@ interface Node {
   id?: string
   children?: Node[]
   nodes?: Node[]
+  meta?: { title?: string }
 }
 
 describe('createGetKey', () => {
@@ -17,6 +18,10 @@ describe('createGetKey', () => {
 
   it('自定义 labelKey 取对应字段', () => {
     expect(createGetKey<Node>(undefined, 'name')({ name: 'foo' })).toBe('foo')
+  })
+
+  it('labelKey 支持点路径深取', () => {
+    expect(createGetKey<Node>(undefined, 'meta.title')({ meta: { title: 'deep' } })).toBe('deep')
   })
 
   it('提供 getKey 时优先使用其返回值', () => {

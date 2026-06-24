@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { matchLabel } from '../../../src/runtime/domains/tree/tree-search'
+import { matchLabel, matchNode } from '../../../src/runtime/domains/tree/tree-search'
 
 describe('matchLabel', () => {
   it('不区分大小写包含匹配', () => {
@@ -19,5 +19,20 @@ describe('matchLabel', () => {
 
   it('label 为空且关键字非空时不命中', () => {
     expect(matchLabel(undefined, 'app')).toBe(false)
+  })
+})
+
+describe('matchNode', () => {
+  it('顶层 labelKey 正常匹配', () => {
+    expect(matchNode({ label: 'Cherry' }, 'label', 'err')).toBe(true)
+  })
+
+  it('按点路径 labelKey 取值匹配', () => {
+    expect(matchNode({ meta: { title: 'Apple' } }, 'meta.title', 'app')).toBe(true)
+    expect(matchNode({ meta: { title: 'Banana' } }, 'meta.title', 'app')).toBe(false)
+  })
+
+  it('点路径取值缺失视为不命中', () => {
+    expect(matchNode({}, 'meta.title', 'x')).toBe(false)
   })
 })

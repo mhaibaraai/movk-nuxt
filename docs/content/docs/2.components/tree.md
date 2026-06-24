@@ -19,9 +19,37 @@ seo:
 
 传入 `items` 渲染层级结构，节点 `defaultExpanded` 控制初始展开，`v-model` 绑定选中节点：
 
-::component-example
+::component-code
 ---
-name: ComponentsTreeBasicExample
+name: MTree
+collapse: true
+prettier: true
+ignore:
+  - items
+external:
+  - items
+  - modelValue
+hide:
+  - modelValue
+props:
+  modelValue:
+    label: app.vue
+  items:
+    - label: app
+      icon: i-lucide-folder
+      defaultExpanded: true
+      children:
+        - label: app.vue
+          icon: i-vscode-icons-file-type-vue
+        - label: nuxt.config.ts
+          icon: i-vscode-icons-file-type-nuxt
+    - label: composables
+      icon: i-lucide-folder
+      children:
+        - label: useAuth.ts
+          icon: i-vscode-icons-file-type-typescript
+        - label: useUser.ts
+          icon: i-vscode-icons-file-type-typescript
 ---
 ::
 
@@ -29,9 +57,34 @@ name: ComponentsTreeBasicExample
 
 `defaultExpanded` 作用：以策略推导初始展开的父节点，缺省回退节点上的 `defaultExpanded` 标记。传 `true` 展开全部父级、传 `number` 仅展开 depth 小于该值的父级、传函数按节点与深度自定义：
 
-::component-example
+::component-code
 ---
-name: ComponentsTreeDefaultExpandedExample
+name: MTree
+collapse: true
+prettier: true
+ignore:
+  - items
+external:
+  - items
+props:
+  items:
+    - label: app
+      icon: i-lucide-folder
+      children:
+        - label: composables
+          icon: i-lucide-folder
+          children:
+            - label: useAuth.ts
+              icon: i-vscode-icons-file-type-typescript
+            - label: useUser.ts
+              icon: i-vscode-icons-file-type-typescript
+        - label: app.vue
+          icon: i-vscode-icons-file-type-vue
+    - label: nuxt.config.ts
+      icon: i-vscode-icons-file-type-nuxt
+  defaultExpanded: true
+items:
+  defaultExpanded: [true, 1]
 ---
 ::
 
@@ -39,19 +92,72 @@ name: ComponentsTreeDefaultExpandedExample
 
 `searchable` 作用：在顶部渲染搜索框，按关键字剪枝并保留命中节点的祖先链；`highlight` 默认开启，高亮命中文本，命中后自动展开。`filter` 可自定义匹配谓词，`search` 支持 `v-model:search` 双向绑定关键字：
 
-::component-example
+::component-code
 ---
-name: ComponentsTreeSearchExample
+name: MTree
+collapse: true
+prettier: true
+ignore:
+  - items
+external:
+  - items
+props:
+  items:
+    - label: app
+      icon: i-lucide-folder
+      children:
+        - label: useAuth.ts
+          icon: i-vscode-icons-file-type-typescript
+        - label: useUser.ts
+          icon: i-vscode-icons-file-type-typescript
+    - label: components
+      icon: i-lucide-folder
+      children:
+        - label: Card.vue
+          icon: i-vscode-icons-file-type-vue
+        - label: Button.vue
+          icon: i-vscode-icons-file-type-vue
+  searchable: true
 ---
 ::
 
 ### `checkable` 复选框级联
 
-`checkable` 作用：在节点前渲染复选框，内部启用 `multiple` 与父子级联、子级半选冒泡，`v-model` 收集选中节点数组：
+`checkable` 作用：在节点前渲染复选框，内部启用 `multiple` 与父子级联、子级半选冒泡，`v-model` 收集选中节点数组。复选框与节点 `icon`、父节点 folder 图标共存：
 
-::component-example
+::component-code
 ---
-name: ComponentsTreeCheckableExample
+name: MTree
+collapse: true
+prettier: true
+ignore:
+  - items
+external:
+  - items
+  - modelValue
+hide:
+  - modelValue
+props:
+  modelValue: []
+  items:
+    - label: app
+      icon: i-lucide-folder
+      defaultExpanded: true
+      children:
+        - label: app.vue
+          icon: i-vscode-icons-file-type-vue
+        - label: nuxt.config.ts
+          icon: i-vscode-icons-file-type-nuxt
+    - label: composables
+      icon: i-lucide-folder
+      children:
+        - label: useAuth.ts
+          icon: i-vscode-icons-file-type-typescript
+        - label: useUser.ts
+          icon: i-vscode-icons-file-type-typescript
+  checkable: true
+items:
+  checkable: [true, false]
 ---
 ::
 
@@ -63,9 +169,35 @@ name: ComponentsTreeCheckableExample
 
 `multiple` 作用：开启多选但不渲染复选框，点击节点累加选中，`v-model` 收集选中节点数组：
 
-::component-example
+::component-code
 ---
-name: ComponentsTreeMultipleExample
+name: MTree
+collapse: true
+prettier: true
+ignore:
+  - items
+external:
+  - items
+  - modelValue
+hide:
+  - modelValue
+props:
+  modelValue: []
+  items:
+    - label: 技术中心
+      defaultExpanded: true
+      children:
+        - label: 前端组
+          children:
+            - label: 组件库
+            - label: 可视化
+        - label: 后端组
+    - label: 产品中心
+      children:
+        - label: 交互设计
+  multiple: true
+items:
+  multiple: [true, false]
 ---
 ::
 
@@ -73,9 +205,39 @@ name: ComponentsTreeMultipleExample
 
 `strategy` 作用：控制多选 / `checkable` 下的父子勾选关系。`cascade`（默认）父子级联且子级全选时回填父级，`isolated` 父子互不关联、半选不冒泡：
 
-::component-example
+::component-code
 ---
-name: ComponentsTreeStrategyExample
+name: MTree
+collapse: true
+prettier: true
+ignore:
+  - items
+external:
+  - items
+  - modelValue
+hide:
+  - modelValue
+items:
+  strategy:
+    - cascade
+    - isolated
+  checkable: [true, false]
+props:
+  modelValue: []
+  items:
+    - label: 技术中心
+      defaultExpanded: true
+      children:
+        - label: 前端组
+          children:
+            - label: 组件库
+            - label: 可视化
+        - label: 后端组
+          children:
+            - label: 网关
+            - label: 存储
+  checkable: true
+  strategy: cascade
 ---
 ::
 
@@ -83,9 +245,32 @@ name: ComponentsTreeStrategyExample
 
 `selectedKeys` 作用：以节点 key 数组双向绑定选中，适合从后端回显或与路由同步。`v-model:selectedKeys` 与 `v-model` 互通，键由 `getKey` / `labelKey` 派生：
 
-::component-example
+::component-code
 ---
-name: ComponentsTreeSelectedKeysExample
+name: MTree
+collapse: true
+prettier: true
+ignore:
+  - items
+external:
+  - items
+model:
+  - selectedKeys
+props:
+  selectedKeys:
+    - app.vue
+  items:
+    - label: app
+      icon: i-lucide-folder
+      defaultExpanded: true
+      children:
+        - label: app.vue
+          icon: i-vscode-icons-file-type-vue
+        - label: nuxt.config.ts
+          icon: i-vscode-icons-file-type-nuxt
+  checkable: true
+items:
+  checkable: [true, false]
 ---
 ::
 
@@ -93,9 +278,42 @@ name: ComponentsTreeSelectedKeysExample
 
 `toolbar` 作用：渲染顶部工具栏，提供展开 / 折叠切换按钮；`searchable` 时内嵌可清除的搜索框，`checkable` 时附带三态全选复选框与选中计数：
 
-::component-example
+::component-code
 ---
-name: ComponentsTreeToolbarExample
+name: MTree
+collapse: true
+prettier: true
+ignore:
+  - items
+external:
+  - items
+  - modelValue
+hide:
+  - modelValue
+props:
+  modelValue: []
+  items:
+    - label: 技术中心
+      children:
+        - label: 前端组
+          children:
+            - label: 组件库
+            - label: 可视化
+        - label: 后端组
+          children:
+            - label: 网关
+            - label: 存储
+    - label: 产品中心
+      children:
+        - label: 交互设计
+        - label: 用户研究
+  toolbar: true
+  searchable: true
+  checkable: true
+items:
+  checkable: [true, false]
+  toolbar: [true, false]
+  searchable: [true, false]
 ---
 ::
 
@@ -117,10 +335,71 @@ name: ComponentsTreeLazyExample
 
 `childrenKey` 作用：将后端的子节点字段归一化为 `children`，`labelKey` 指定展示字段，无需预先改造数据结构：
 
-::component-example
+::component-code
 ---
-name: ComponentsTreeFieldExample
+name: MTree
+collapse: true
+prettier: true
+ignore:
+  - items
+external:
+  - items
+props:
+  items:
+    - name: 技术中心
+      nodes:
+        - name: 前端组
+          nodes:
+            - name: 组件库
+            - name: 可视化
+        - name: 后端组
+    - name: 产品中心
+      nodes:
+        - name: 交互设计
+  childrenKey: nodes
+  labelKey: name
 ---
+::
+
+### `labelKey` 点路径取值
+
+`labelKey` 作用：指定节点展示字段，支持 `meta.title` 形式的点路径深取嵌套字段；键派生、搜索与高亮均按同一路径取值：
+
+::component-code
+---
+name: MTree
+collapse: true
+prettier: true
+ignore:
+  - items
+external:
+  - items
+props:
+  items:
+    - meta:
+        title: 技术中心
+      children:
+        - meta:
+            title: 前端组
+          children:
+            - meta:
+                title: 组件库
+            - meta:
+                title: 可视化
+        - meta:
+            title: 后端组
+    - meta:
+        title: 产品中心
+      children:
+        - meta:
+            title: 交互设计
+  labelKey: meta.title
+  searchable: true
+---
+::
+
+::note
+点路径需与 UTree 内部取值一致，仅支持点分隔（`a.b.c`），不支持括号下标（`a[0].b`）。
 ::
 
 ### `virtualize` 虚拟滚动
@@ -131,6 +410,170 @@ name: ComponentsTreeFieldExample
 ---
 name: ComponentsTreeVirtualizeExample
 ---
+::
+
+### `color` 主色
+
+`color` 作用：透传 Nuxt UI Tree 的主色，作用于选中节点的文字色与键盘聚焦环；下例预选一个节点以便观察：
+
+::component-code
+---
+name: MTree
+collapse: true
+prettier: true
+ignore:
+  - items
+external:
+  - items
+  - modelValue
+hide:
+  - modelValue
+items:
+  color:
+    - primary
+    - success
+    - info
+    - warning
+    - error
+    - neutral
+props:
+  modelValue:
+    label: app.vue
+  items:
+    - label: app
+      icon: i-lucide-folder
+      defaultExpanded: true
+      children:
+        - label: app.vue
+          icon: i-vscode-icons-file-type-vue
+        - label: nuxt.config.ts
+          icon: i-vscode-icons-file-type-nuxt
+    - label: composables
+      icon: i-lucide-folder
+      children:
+        - label: useAuth.ts
+          icon: i-vscode-icons-file-type-typescript
+  color: error
+---
+::
+
+::note
+UTree 的 `color` 仅作用于选中节点文字与焦点环；未选中任何节点时不会有可见变化。单色图标（如 lucide）随文字色继承，多色图标（如 vscode-icons）保持自身配色。
+::
+
+### `trailingIcon` 末尾图标
+
+`trailingIcon` 作用：替换父节点末尾的展开指示图标（默认 `i-lucide-chevron-down`）；节点数据的 `item.trailingIcon` 优先级更高：
+
+::component-code
+---
+name: MTree
+collapse: true
+prettier: true
+ignore:
+  - items
+external:
+  - items
+props:
+  items:
+    - label: app
+      icon: i-lucide-folder
+      trailingIcon: i-lucide-arrow-down
+      defaultExpanded: true
+      children:
+        - label: app.vue
+          icon: i-vscode-icons-file-type-vue
+        - label: nuxt.config.ts
+          icon: i-vscode-icons-file-type-nuxt
+    - label: composables
+      icon: i-lucide-folder
+      children:
+        - label: useAuth.ts
+          icon: i-vscode-icons-file-type-typescript
+  trailingIcon: i-lucide-chevron-right
+---
+::
+
+### `expandedIcon` 展开图标
+
+`expandedIcon` / `collapsedIcon` 作用：自定义父节点展开 / 折叠时的 leading 图标（默认 `i-lucide-folder-open` / `i-lucide-folder`）：
+
+::component-code
+---
+name: MTree
+collapse: true
+prettier: true
+ignore:
+  - items
+external:
+  - items
+props:
+  items:
+    - label: app
+      defaultExpanded: true
+      children:
+        - label: app.vue
+          icon: i-vscode-icons-file-type-vue
+        - label: nuxt.config.ts
+          icon: i-vscode-icons-file-type-nuxt
+    - label: composables
+      children:
+        - label: useAuth.ts
+          icon: i-vscode-icons-file-type-typescript
+  expandedIcon: i-lucide-book-open
+  collapsedIcon: i-lucide-book
+---
+::
+
+::note
+节点的 `item.icon` 优先级高于 `expandedIcon` / `collapsedIcon`，故需要随展开态切换图标的文件夹不应设置 `item.icon`。
+::
+
+### `disabled` 禁用
+
+`disabled` 作用：禁用整棵树，阻断点击节点、工具栏控件与复选框的展开、折叠、选中操作；节点级 `item.disabled` 连同其整棵子树一并禁用——冻结该节点展开态，子树内复选框禁用且不可选中：
+
+::component-code
+---
+name: MTree
+collapse: true
+prettier: true
+ignore:
+  - items
+external:
+  - items
+  - modelValue
+hide:
+  - modelValue
+props:
+  modelValue:
+    - label: useAuth.ts
+  items:
+    - label: app
+      icon: i-lucide-folder
+      defaultExpanded: true
+      children:
+        - label: app.vue
+          icon: i-vscode-icons-file-type-vue
+        - label: nuxt.config.ts
+          icon: i-vscode-icons-file-type-nuxt
+    - label: composables
+      icon: i-lucide-folder
+      children:
+        - label: useAuth.ts
+          icon: i-vscode-icons-file-type-typescript
+  checkable: true
+  toolbar: true
+  disabled: true
+items:
+  checkable: [true, false]
+  toolbar: [true, false]
+  disabled: [true, false]
+---
+::
+
+::note
+命令式 API（`expandToDepth`、`selectAll` 等）属显式调用，不受 `disabled` 影响；`disabled` 仅拦截用户的点击与工具栏交互。
 ::
 
 ## 示例

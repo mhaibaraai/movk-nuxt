@@ -6,15 +6,17 @@ import type { ComponentConfig, TreeItem } from '@nuxt/ui'
 import type { TreeItemSelectEvent } from 'reka-ui'
 import { computed, ref, useSlots, watch } from 'vue'
 import { reactiveOmit } from '@vueuse/core'
-import { Tree, omitUndefined, splitHighlight } from '@movk/core'
+import { Tree, omitUndefined, splitHighlight, getPath } from '@movk/core'
 import { UCheckbox, UIcon, UTree } from '#components'
 import { useAppConfig } from '#imports'
 import { useExtendedTv } from '../utils/extend-theme'
 import treeTheme from '#build/ui/tree'
 import theme from '#build/movk-ui/tree'
 import { createGetKey, normalizeChildren } from '../domains/tree/resolve-tree'
-import { matchLabel } from '../domains/tree/tree-search'
+import { resolveLeadingIcon } from '../domains/tree/tree-icon'
+import { matchNode } from '../domains/tree/tree-search'
 import { isPlaceholder, LAZY_KEY_FIELD, markLazyPlaceholders } from '../domains/tree/tree-lazy'
+import { collectDisabledKeys } from '../domains/tree/tree-disabled'
 import { computeTreeSelection, selectionSummary } from '../utils/tree-selection'
 import { resolveDefaultExpandedKeys } from '../utils/tree-expand'
 import TreeToolbar from '../domains/tree/components/TreeToolbar.vue'
@@ -41,8 +43,18 @@ const search = defineModel<string>('search', { default: '' })
 const expanded = defineModel<string[]>('expanded', { default: () => [] })
 
 const slots = useSlots()
-const appConfig = useAppConfig() as { movk?: { tree?: unknown } }
+const appConfig = useAppConfig() as { movk?: { tree?: unknown }, ui?: { icons?: Record<string, string> } }
 const labelKey = computed(() => props.labelKey ?? 'label')
+
+// 父节点 leading 图标：prop 优先，回退 app.config，最终回退 lucide 默认（与 UTree 一致）
+function folderIcon(expanded: boolean): string {
+  return expanded
+    ? props.expandedIcon ?? appConfig.ui?.icons?.folderOpen ?? 'i-lucide-folder-open'
+    : props.collapsedIcon ?? appConfig.ui?.icons?.folder ?? 'i-lucide-folder'
+}
+function leadingIcon(node: WorkNode, expanded: boolean): string | undefined {
+  return resolveLeadingIcon(node, folderIcon(expanded))
+}
 const getKey = computed(() => createGetKey<WorkNode>(props.getKey as ((node: WorkNode) => string) | undefined, labelKey.value))
 
 const { baseUi, extraUi } = useExtendedTv(
@@ -81,12 +93,34 @@ watch(() => props.items, (items) => {
 
 const searching = computed(() => !!(props.searchable && search.value.trim()))
 
+// disabled 子树（节点自身或祖先 disabled）的 key 集合，是 disabled 级联的唯一真相来源。
+const disabledKeys = computed(() => collectDisabledKeys(baseItems.value, getKey.value))
+
+// 向 disabled 子树注入 disabled，交由 UTree 原生置灰整棵后代；无 disabled 时零拷贝，
+// 有 disabled 时仅克隆受影响节点，保留其余节点引用，避免污染 v-model 节点 identity。
+function applyDisabled(nodes: WorkNode[]): WorkNode[] {
+  if (!disabledKeys.value.size) return nodes
+  const inject = (list: WorkNode[]): WorkNode[] => list.map((node) => {
+    const rawChildren = node.children
+    const children = Array.isArray(rawChildren) ? inject(rawChildren as WorkNode[]) : rawChildren
+    const disabled = disabledKeys.value.has(getKey.value(node))
+    if (!disabled && children === rawChildren) return node
+    return {
+      ...node,
+      ...(disabled ? { disabled: true } : null),
+      ...(children !== rawChildren ? { children } : null)
+    }
+  })
+  return inject(nodes)
+}
+
 const displayItems = computed<WorkNode[]>(() => {
-  if (!searching.value) return baseItems.value
   const term = search.value
-  return Tree.filter(baseItems.value, ({ node }) =>
-    props.filter ? props.filter(node as T[number], term) : matchLabel(node[labelKey.value], term)
-  )
+  const filtered = !searching.value
+    ? baseItems.value
+    : Tree.filter(baseItems.value, ({ node }) =>
+        props.filter ? props.filter(node as T[number], term) : matchNode(node, labelKey.value, term))
+  return applyDisabled(filtered)
 })
 
 const isEmpty = computed(() => searching.value && displayItems.value.length === 0)
@@ -98,8 +132,13 @@ watch([searching, displayItems], () => {
 })
 
 const loadingKeys = ref(new Set<string>())
-async function onExpandedUpdate(keys: string[]) {
+async function onExpandedUpdate(incoming: string[]) {
+  if (props.disabled) return
   const previous = expanded.value
+  // 冻结 disabled 子树展开态：新值仅取非 disabled 键，disabled 键保留前值
+  const keys = disabledKeys.value.size
+    ? [...incoming.filter(k => !disabledKeys.value.has(k)), ...previous.filter(k => disabledKeys.value.has(k))]
+    : incoming
   expanded.value = keys
   if (!props.lazy || !props.loadChildren) return
 
@@ -156,15 +195,15 @@ const RESERVED_SLOTS = ['toolbar', 'toolbar-leading', 'toolbar-trailing', 'empty
 const forwardSlots = computed(() => Object.keys(slots).filter(name => !RESERVED_SLOTS.includes(name)) as (keyof TreeSlots<T>)[])
 
 function nodeLabel(node: WorkNode): string {
-  const value = node[labelKey.value]
+  const value = getPath(node, labelKey.value)
   return value == null ? '' : String(value)
 }
 
 const isMultiple = computed(() => !!(props.checkable || props.multiple))
 
-// 可选节点：排除懒加载占位与 disabled。
+// 可选节点：排除懒加载占位与 disabled 子树。
 const selectableNodes = computed<WorkNode[]>(() =>
-  Tree.findAll(baseItems.value, ({ node }) => !isPlaceholder(node) && !node.disabled)
+  Tree.findAll(baseItems.value, ({ node }) => !isPlaceholder(node) && !disabledKeys.value.has(getKey.value(node)))
 )
 const nodesByKey = computed(() => {
   const map = new Map<string, WorkNode>()
@@ -200,7 +239,7 @@ const treeSelection = computed(() =>
 // 工具栏摘要按叶子计：级联下 selectedKeys 含父级会重复计数，故用选中叶子数 / 可选叶子总数
 const selectableLeafCount = computed(() =>
   Tree.findAll(baseItems.value, ({ node }) =>
-    !isPlaceholder(node) && !node.disabled && !(Array.isArray(node.children) && node.children.length > 0)).length
+    !isPlaceholder(node) && !disabledKeys.value.has(getKey.value(node)) && !(Array.isArray(node.children) && node.children.length > 0)).length
 )
 const selectionSummaryValue = computed(() =>
   selectionSummary(treeSelection.value.leaves.length, selectableLeafCount.value)
@@ -218,6 +257,21 @@ function setModel(value: ModelValue) {
   emit('change', { value, keys, selection })
 }
 
+// 仅门控用户交互路径（UTree 派发的 model 变化）；命令式 selectAll/clearSelection 直调 setModel 不受限
+function onModelUpdate(value: ModelValue) {
+  if (props.disabled) return
+  // 派发的节点取自 displayItems，disabled 子树已注入 disabled：数组态过滤，
+  // 单选态命中 disabled 则忽略（级联也无法选入 disabled 子树）
+  if (Array.isArray(value)) {
+    setModel(value.filter(node => !(node as WorkNode).disabled) as ModelValue)
+    return
+  }
+  if (value && (value as WorkNode).disabled) return
+  setModel(value)
+}
+
+// 含 disabled 父节点：命令式 expandAll/expandToDepth 不受 onExpandedUpdate 的展开冻结约束
+// （与 selectAll 一致——命令式属显式调用），冻结仅作用于用户点击 chevron 的交互路径
 const expandableKeys = computed(() =>
   Tree.findAll(baseItems.value, ({ node }) => !!node.children?.length).map(n => getKey.value(n))
 )
@@ -271,6 +325,7 @@ defineExpose<TreeExposed<T>>({
       :select-all="selectAll"
       :clear="clearSelection"
       :search="search"
+      :disabled="props.disabled"
       :selection-summary="selectionSummaryValue"
     >
       <TreeToolbar
@@ -280,6 +335,7 @@ defineExpose<TreeExposed<T>>({
         :search="search"
         :size="props.size"
         :color="props.color"
+        :disabled="props.disabled"
         :expanded="allExpanded"
         :selection-summary="selectionSummaryValue"
         :ui="{ toolbar: extraUi.toolbar, toolbarButton: extraUi.toolbarButton, search: extraUi.search }"
@@ -310,27 +366,33 @@ defineExpose<TreeExposed<T>>({
       :model-value="(effectiveModel as any)"
       :expanded="expanded"
       :ui="(baseUi as any)"
-      @update:model-value="setModel($event as ModelValue)"
+      @update:model-value="onModelUpdate($event as ModelValue)"
       @update:expanded="onExpandedUpdate"
     >
       <template v-for="name in forwardSlots" #[name]="slotProps" :key="name">
         <slot :name="name" v-bind="slotProps ?? {}" />
       </template>
 
-      <template v-if="props.checkable && !slots['item-leading']" #item-leading="{ item, selected, indeterminate, handleSelect }">
+      <template v-if="props.checkable && !slots['item-leading']" #item-leading="{ item, expanded: nodeExpanded, selected, indeterminate, handleSelect, ui: nodeUi }">
         <UCheckbox
           v-if="!isPlaceholder(item)"
           :model-value="indeterminate ? 'indeterminate' : selected"
           :size="props.size"
           :color="props.color"
+          :disabled="item.disabled || props.disabled"
           :class="extraUi.checkbox"
           tabindex="-1"
           @change="handleSelect"
           @click.stop
         />
+        <UIcon
+          v-if="leadingIcon(item, nodeExpanded)"
+          :name="leadingIcon(item, nodeExpanded)!"
+          :class="(nodeUi as any).linkLeadingIcon({ class: item.ui?.linkLeadingIcon })"
+        />
       </template>
 
-      <template v-if="!slots['item-label']" #item-label="{ item }">
+      <template v-if="!slots['item-label'] && (props.lazy || (searching && props.highlight))" #item-label="{ item }">
         <slot v-if="isPlaceholder(item)" name="loading" :node="item">
           <span :class="extraUi.loading">
             <UIcon name="i-lucide-loader-circle" :class="extraUi.loadingIcon" />加载中

@@ -68,6 +68,18 @@ const deptTree = [
 ]
 const deptValue = ref()
 
+const metaTree = [
+  {
+    meta: { title: '技术中心' },
+    children: [
+      { meta: { title: '前端组' }, children: [{ meta: { title: '组件库' } }, { meta: { title: '可视化' } }] },
+      { meta: { title: '后端组' } }
+    ]
+  },
+  { meta: { title: '产品中心' }, children: [{ meta: { title: '交互设计' } }] }
+]
+const metaValue = ref()
+
 const lazyTree: TreeItem[] = [
   { label: '区域 A' },
   { label: '区域 B' },
@@ -90,7 +102,36 @@ const bigTree: TreeItem[] = Array.from({ length: 60 }, (_, group) => ({
   children: Array.from({ length: 30 }, (_, leaf) => ({ label: `节点 ${group + 1}-${leaf + 1}` }))
 }))
 
-const matrixValue = ref<TreeItem>()
+const matrixValue = ref<TreeItem>({ label: 'app.vue' })
+const colorSelected = ref<TreeItem>({ label: 'app.vue' })
+
+// 文件夹不设 item.icon，方可观察 expandedIcon / collapsedIcon
+const noIconTree: TreeItem[] = [
+  {
+    label: 'app',
+    defaultExpanded: true,
+    children: [
+      { label: 'app.vue', icon: 'i-vscode-icons-file-type-vue' },
+      { label: 'components', children: [{ label: 'Card.vue', icon: 'i-vscode-icons-file-type-vue' }] }
+    ]
+  },
+  { label: 'composables', children: [{ label: 'useAuth.ts', icon: 'i-vscode-icons-file-type-typescript' }] }
+]
+const disabledChecked = ref<TreeItem[]>([{ label: 'useAuth.ts' }])
+
+const nodeDisabledTree: TreeItem[] = [
+  {
+    label: 'app',
+    icon: 'i-lucide-folder',
+    defaultExpanded: true,
+    children: [
+      { label: 'app.vue', icon: 'i-vscode-icons-file-type-vue' },
+      { label: 'nuxt.config.ts', icon: 'i-vscode-icons-file-type-nuxt', disabled: true }
+    ]
+  },
+  { label: 'composables', icon: 'i-lucide-folder', disabled: true, defaultExpanded: true, children: [{ label: 'useAuth.ts', icon: 'i-vscode-icons-file-type-typescript' }] }
+]
+const nodeDisabledChecked = ref<TreeItem[]>([])
 </script>
 
 <template>
@@ -159,8 +200,39 @@ const matrixValue = ref<TreeItem>()
       <MTree v-model="deptValue" :items="deptTree" children-key="nodes" label-key="name" />
     </Showcase>
 
+    <Showcase title="点路径取值" description="labelKey 传点路径深取嵌套字段，键派生、搜索与高亮均按同一路径取值。" :state="{ selected: metaValue?.meta?.title }">
+      <MTree v-model="metaValue" :items="metaTree" label-key="meta.title" searchable />
+    </Showcase>
+
     <Showcase title="虚拟滚动" description="virtualize 透传 UTree 虚拟化，仅渲染可视区节点，适配大数据量树。">
       <MTree :items="bigTree" :virtualize="true" class="max-h-72" />
+    </Showcase>
+
+    <Showcase title="主色" description="color 透传 UTree 主色，作用于选中节点文字与焦点环，预选一个节点以便观察。" :state="{ selected: colorSelected?.label }">
+      <MTree v-model="colorSelected" :items="fileTree" color="error" />
+    </Showcase>
+
+    <Showcase title="末尾图标" description="trailingIcon 替换父节点末尾的展开指示图标，item.trailingIcon 优先级更高。">
+      <MTree :items="fileTree" trailing-icon="i-lucide-chevron-right" />
+    </Showcase>
+
+    <Showcase title="展开图标" description="expandedIcon、collapsedIcon 自定义父节点展开/折叠的 leading 图标，未设 item.icon 的文件夹随展开态切换。">
+      <MTree :items="noIconTree" expanded-icon="i-lucide-book-open" collapsed-icon="i-lucide-book" />
+    </Showcase>
+
+    <Showcase title="整树禁用" description="disabled 禁用整棵树，点击节点与工具栏展开折叠、全选、搜索均不可操作。" :state="{ checked: disabledChecked.map(n => n.label) }">
+      <MTree
+        v-model="disabledChecked"
+        :items="fileTree"
+        checkable
+        toolbar
+        searchable
+        disabled
+      />
+    </Showcase>
+
+    <Showcase title="节点禁用" description="节点数据的 disabled 字段禁用该节点并级联其整棵子树，冻结展开态、子树复选框禁用且不可选中，兄弟节点不受影响。" :state="{ checked: nodeDisabledChecked.map(n => n.label) }">
+      <MTree v-model="nodeDisabledChecked" :items="nodeDisabledTree" checkable />
     </Showcase>
 
     <Showcase title="自定义节点" description="通过 item-trailing 插槽为节点追加徽章等内容，未覆盖的插槽仍由 UTree 默认渲染。">
