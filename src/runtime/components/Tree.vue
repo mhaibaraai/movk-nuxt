@@ -6,16 +6,17 @@ import type { ComponentConfig, TreeItem } from '@nuxt/ui'
 import type { TreeItemSelectEvent } from 'reka-ui'
 import { computed, ref, useSlots, watch } from 'vue'
 import { reactiveOmit } from '@vueuse/core'
-import { Tree, omitUndefined, splitHighlight } from '@movk/core'
+import { Tree, omitUndefined, splitHighlight, getPath } from '@movk/core'
 import { UCheckbox, UIcon, UTree } from '#components'
 import { useAppConfig } from '#imports'
 import { useExtendedTv } from '../utils/extend-theme'
 import treeTheme from '#build/ui/tree'
 import theme from '#build/movk-ui/tree'
-import { createGetKey, getByPath, normalizeChildren } from '../domains/tree/resolve-tree'
+import { createGetKey, normalizeChildren } from '../domains/tree/resolve-tree'
 import { resolveLeadingIcon } from '../domains/tree/tree-icon'
 import { matchLabel } from '../domains/tree/tree-search'
 import { isPlaceholder, LAZY_KEY_FIELD, markLazyPlaceholders } from '../domains/tree/tree-lazy'
+import { collectDisabledKeys } from '../domains/tree/tree-disabled'
 import { computeTreeSelection, selectionSummary } from '../utils/tree-selection'
 import { resolveDefaultExpandedKeys } from '../utils/tree-expand'
 import TreeToolbar from '../domains/tree/components/TreeToolbar.vue'
@@ -111,9 +112,13 @@ watch([searching, displayItems], () => {
 })
 
 const loadingKeys = ref(new Set<string>())
-async function onExpandedUpdate(keys: string[]) {
+async function onExpandedUpdate(incoming: string[]) {
   if (props.disabled) return
   const previous = expanded.value
+  // 冻结 disabled 子树展开态：新值仅取非 disabled 键，disabled 键保留前值
+  const keys = disabledKeys.value.size
+    ? [...incoming.filter(k => !disabledKeys.value.has(k)), ...previous.filter(k => disabledKeys.value.has(k))]
+    : incoming
   expanded.value = keys
   if (!props.lazy || !props.loadChildren) return
 
@@ -170,15 +175,21 @@ const RESERVED_SLOTS = ['toolbar', 'toolbar-leading', 'toolbar-trailing', 'empty
 const forwardSlots = computed(() => Object.keys(slots).filter(name => !RESERVED_SLOTS.includes(name)) as (keyof TreeSlots<T>)[])
 
 function nodeLabel(node: WorkNode): string {
-  const value = getByPath(node, labelKey.value)
+  const value = getPath(node, labelKey.value)
   return value == null ? '' : String(value)
 }
 
 const isMultiple = computed(() => !!(props.checkable || props.multiple))
 
-// 可选节点：排除懒加载占位与 disabled。
+// disabled 子树（节点自身或祖先 disabled）的 key 集合，连同根 disabled 决定节点是否禁用。
+const disabledKeys = computed(() => collectDisabledKeys(baseItems.value, getKey.value))
+function isNodeDisabled(node: WorkNode): boolean {
+  return !!props.disabled || disabledKeys.value.has(getKey.value(node))
+}
+
+// 可选节点：排除懒加载占位与 disabled 子树。
 const selectableNodes = computed<WorkNode[]>(() =>
-  Tree.findAll(baseItems.value, ({ node }) => !isPlaceholder(node) && !node.disabled)
+  Tree.findAll(baseItems.value, ({ node }) => !isPlaceholder(node) && !disabledKeys.value.has(getKey.value(node)))
 )
 const nodesByKey = computed(() => {
   const map = new Map<string, WorkNode>()
@@ -214,7 +225,7 @@ const treeSelection = computed(() =>
 // 工具栏摘要按叶子计：级联下 selectedKeys 含父级会重复计数，故用选中叶子数 / 可选叶子总数
 const selectableLeafCount = computed(() =>
   Tree.findAll(baseItems.value, ({ node }) =>
-    !isPlaceholder(node) && !node.disabled && !(Array.isArray(node.children) && node.children.length > 0)).length
+    !isPlaceholder(node) && !disabledKeys.value.has(getKey.value(node)) && !(Array.isArray(node.children) && node.children.length > 0)).length
 )
 const selectionSummaryValue = computed(() =>
   selectionSummary(treeSelection.value.leaves.length, selectableLeafCount.value)
@@ -235,6 +246,12 @@ function setModel(value: ModelValue) {
 // 仅门控用户交互路径（UTree 派发的 model 变化）；命令式 selectAll/clearSelection 直调 setModel 不受限
 function onModelUpdate(value: ModelValue) {
   if (props.disabled) return
+  // 剔除 disabled 子树选中：数组态过滤，单选态命中 disabled 则忽略（级联也无法选入 disabled 子树）
+  if (Array.isArray(value)) {
+    setModel(value.filter(node => !disabledKeys.value.has(getKey.value(node as WorkNode))) as ModelValue)
+    return
+  }
+  if (value && disabledKeys.value.has(getKey.value(value as WorkNode))) return
   setModel(value)
 }
 
@@ -345,7 +362,7 @@ defineExpose<TreeExposed<T>>({
           :model-value="indeterminate ? 'indeterminate' : selected"
           :size="props.size"
           :color="props.color"
-          :disabled="item.disabled || props.disabled"
+          :disabled="isNodeDisabled(item)"
           :class="extraUi.checkbox"
           tabindex="-1"
           @change="handleSelect"

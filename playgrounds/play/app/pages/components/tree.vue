@@ -92,6 +92,19 @@ const bigTree: TreeItem[] = Array.from({ length: 60 }, (_, group) => ({
 
 const matrixValue = ref<TreeItem>({ label: 'app.vue' })
 const colorSelected = ref<TreeItem>({ label: 'app.vue' })
+
+// 文件夹不设 item.icon，方可观察 expandedIcon / collapsedIcon
+const noIconTree: TreeItem[] = [
+  {
+    label: 'app',
+    defaultExpanded: true,
+    children: [
+      { label: 'app.vue', icon: 'i-vscode-icons-file-type-vue' },
+      { label: 'components', children: [{ label: 'Card.vue', icon: 'i-vscode-icons-file-type-vue' }] }
+    ]
+  },
+  { label: 'composables', children: [{ label: 'useAuth.ts', icon: 'i-vscode-icons-file-type-typescript' }] }
+]
 const disabledChecked = ref<TreeItem[]>([{ label: 'useAuth.ts' }])
 
 const nodeDisabledTree: TreeItem[] = [
@@ -104,7 +117,7 @@ const nodeDisabledTree: TreeItem[] = [
       { label: 'nuxt.config.ts', icon: 'i-vscode-icons-file-type-nuxt', disabled: true }
     ]
   },
-  { label: 'composables', icon: 'i-lucide-folder', disabled: true, children: [{ label: 'useAuth.ts', icon: 'i-vscode-icons-file-type-typescript' }] }
+  { label: 'composables', icon: 'i-lucide-folder', disabled: true, defaultExpanded: true, children: [{ label: 'useAuth.ts', icon: 'i-vscode-icons-file-type-typescript' }] }
 ]
 const nodeDisabledChecked = ref<TreeItem[]>([])
 </script>
@@ -181,6 +194,14 @@ const nodeDisabledChecked = ref<TreeItem[]>([])
 
     <Showcase title="主色" description="color 透传 UTree 主色，作用于选中节点文字与焦点环，预选一个节点以便观察。" :state="{ selected: colorSelected?.label }">
       <MTree v-model="colorSelected" :items="fileTree" color="error" />
+    </Showcase>
+
+    <Showcase title="末尾图标" description="trailingIcon 替换父节点末尾的展开指示图标，item.trailingIcon 优先级更高。">
+      <MTree :items="fileTree" trailing-icon="i-lucide-chevron-right" />
+    </Showcase>
+
+    <Showcase title="展开图标" description="expandedIcon、collapsedIcon 自定义父节点展开/折叠的 leading 图标，未设 item.icon 的文件夹随展开态切换。">
+      <MTree :items="noIconTree" expanded-icon="i-lucide-book-open" collapsed-icon="i-lucide-book" />
     </Showcase>
 
     <Showcase title="整树禁用" description="disabled 禁用整棵树，点击节点与工具栏展开折叠、全选、搜索均不可操作。" :state="{ checked: disabledChecked.map(n => n.label) }">

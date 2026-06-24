@@ -152,9 +152,33 @@ options:
 UTree 的 `color` 仅作用于选中节点文字与焦点环；未选中任何节点时不会有可见变化。单色图标（如 lucide）随文字色继承，多色图标（如 vscode-icons）保持自身配色。
 ::
 
+### `trailingIcon` 末尾图标
+
+`trailingIcon` 作用：替换父节点末尾的展开指示图标（默认 `i-lucide-chevron-down`）；节点数据的 `item.trailingIcon` 优先级更高：
+
+::component-example
+---
+name: ComponentsTreeTrailingIconExample
+---
+::
+
+### `expandedIcon` 展开图标
+
+`expandedIcon` / `collapsedIcon` 作用：自定义父节点展开 / 折叠时的 leading 图标（默认 `i-lucide-folder-open` / `i-lucide-folder`）：
+
+::component-example
+---
+name: ComponentsTreeExpandedIconExample
+---
+::
+
+::note
+节点的 `item.icon` 优先级高于 `expandedIcon` / `collapsedIcon`，故需要随展开态切换图标的文件夹不应设置 `item.icon`。
+::
+
 ### `disabled` 禁用
 
-`disabled` 作用：禁用整棵树，同时阻断点击节点、工具栏控件与复选框的展开、折叠、选中操作；节点级 `item.disabled` 单独禁用该节点的复选框：
+`disabled` 作用：禁用整棵树，阻断点击节点、工具栏控件与复选框的展开、折叠、选中操作；节点级 `item.disabled` 连同其整棵子树一并禁用——冻结该节点展开态，子树内复选框禁用且不可选中：
 
 ::component-example
 ---
