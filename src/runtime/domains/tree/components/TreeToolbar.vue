@@ -40,7 +40,7 @@ function onToggleAll(checked: boolean) {
 </script>
 
 <template>
-  <div :class="ui.toolbar">
+  <div :class="ui.toolbar" data-slot="toolbar">
     <slot name="leading" />
 
     <UInput

@@ -314,7 +314,7 @@ defineExpose<TreeExposed<T>>({
 </script>
 
 <template>
-  <div :class="extraUi.container">
+  <div :class="extraUi.container" data-slot="container">
     <slot
       v-if="props.toolbar || props.searchable || slots.toolbar"
       name="toolbar"
@@ -353,7 +353,7 @@ defineExpose<TreeExposed<T>>({
       </TreeToolbar>
     </slot>
 
-    <div v-if="isEmpty" :class="extraUi.empty">
+    <div v-if="isEmpty" :class="extraUi.empty" data-slot="empty">
       <slot name="empty">
         无匹配结果
       </slot>
@@ -365,7 +365,7 @@ defineExpose<TreeExposed<T>>({
       :items="(displayItems as any)"
       :model-value="(effectiveModel as any)"
       :expanded="expanded"
-      :ui="(baseUi as any)"
+      :ui="baseUi"
       @update:model-value="onModelUpdate($event as ModelValue)"
       @update:expanded="onExpandedUpdate"
     >
