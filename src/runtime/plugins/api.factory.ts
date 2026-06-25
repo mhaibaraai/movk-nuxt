@@ -5,6 +5,7 @@ import { resolveEndpointConfig } from '../domains/api/endpoint-config'
 import { createOnRequest } from '../domains/api/interceptors/request'
 import { createOnResponse } from '../domains/api/interceptors/response'
 import { createOnResponseError } from '../domains/api/interceptors/error'
+import { attachInterceptors } from '../domains/api/interceptors/compose'
 import { defineNuxtPlugin, useNuxtApp, useRuntimeConfig } from '#imports'
 
 type NuxtApp = ReturnType<typeof useNuxtApp>
@@ -19,13 +20,22 @@ function createEndpointFetch(
   publicConfig: MovkApiPublicConfig,
   nuxtApp: NuxtApp
 ): $Fetch {
-  return $fetch.create({
-    baseURL: resolvedConfig.baseURL,
-    headers: resolvedConfig.headers,
+  const interceptors = {
     onRequest: createOnRequest(resolvedConfig, publicConfig, nuxtApp),
     onResponse: createOnResponse(resolvedConfig, publicConfig, nuxtApp),
     onResponseError: createOnResponseError(resolvedConfig, publicConfig, nuxtApp)
+  }
+
+  const instance = $fetch.create({
+    baseURL: resolvedConfig.baseURL,
+    headers: resolvedConfig.headers,
+    ...interceptors
   })
+
+  // 挂到实例供 useApiFetch 组合复用：用户传同名钩子时不致覆盖内置拦截器
+  attachInterceptors(instance, interceptors)
+
+  return instance
 }
 
 export default defineNuxtPlugin(() => {

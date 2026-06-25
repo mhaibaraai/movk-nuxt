@@ -4,6 +4,7 @@ import { computed, toValue } from 'vue'
 import { useNuxtApp, useFetch } from '#app'
 import { buildApiFetchKey } from '../domains/api/fetch-key'
 import { deepToValue } from '../domains/api/deep-to-value'
+import { composeHook, getInterceptors } from '../domains/api/interceptors/compose'
 
 /**
  * API Fetch 组合式函数
@@ -43,13 +44,16 @@ import { deepToValue } from '../domains/api/deep-to-value'
  * // 跳过解包，拿原始响应（与 skipBusinessCheck 正交）
  * const { data } = await useApiFetch<ApiResponse>('/external', { skipUnwrap: true })
  *
- * // 用户自定义 hooks（通过 useFetch 原生选项透传）
+ * // 用户自定义 hooks：与内置拦截器组合（内置先执行），不会覆盖认证/业务校验/解包/Toast
  * const { data } = await useApiFetch('/users', {
  *   onResponse({ response }) {
  *     // response._data 已是解包后的业务数据（除非传入 skipUnwrap: true）
+ *     // 仅业务成功时触发；返回值被 ofetch 忽略，副作用专用
  *     console.log('自定义处理:', response._data)
  *   }
  * })
+ *
+ * // 变形输出请用 transform 或直接消费自动解包后的 data，而非在 onResponse 中 return
  * ```
  */
 export function useApiFetch<T = unknown, DataT = T>(
@@ -68,6 +72,19 @@ export function useApiFetch<T = unknown, DataT = T>(
 
   const apiInstance = endpoint ? $api.use(endpoint) : $api
 
+  // 用户钩子与内置拦截器组合为数组（内置先执行）；仅覆写用户实际传入的钩子，避免顶掉实例 default
+  const movk = getInterceptors(apiInstance)
+  const composedHooks = movk
+    ? {
+        onRequest: composeHook(movk.onRequest, fetchOptions.onRequest),
+        onResponse: composeHook(movk.onResponse, fetchOptions.onResponse),
+        onResponseError: composeHook(movk.onResponseError, fetchOptions.onResponseError)
+      }
+    : {}
+  const definedHooks = Object.fromEntries(
+    Object.entries(composedHooks).filter(([, value]) => value !== undefined)
+  )
+
   const fetchKey = computed<string>(() => {
     const userKey = toValue(fetchOptions.key)
     if (userKey) return userKey
@@ -85,6 +102,7 @@ export function useApiFetch<T = unknown, DataT = T>(
 
   return useFetch(url, {
     ...fetchOptions,
+    ...definedHooks,
     key: fetchKey,
     $fetch: apiInstance as typeof $fetch,
     context: { toast, skipBusinessCheck, skipUnwrap }
