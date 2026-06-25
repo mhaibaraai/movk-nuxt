@@ -61,6 +61,19 @@ export interface DatePickerProps<
   ui?: Record<string, ClassNameValue>
 }
 
+// reka-ui 未从公共入口导出这些 prop 的类型（Matcher / WeekStartsOn / WeekDayFormat），收窄避免声明发射 TS2883
+type CalendarUnportableKeys
+  = 'isDateDisabled' | 'isDateUnavailable'
+    | 'isMonthDisabled' | 'isMonthUnavailable'
+    | 'isYearDisabled' | 'isYearUnavailable'
+    | 'weekStartsOn' | 'weekdayFormat'
+
+/** AutoForm calendarDate 控件可移植 props（DatePicker props 去除 reka-ui 不可移植项），用于 controlProps 类型提示 */
+export type CalendarDateControlProps = OmitByKey<
+  DatePickerProps<boolean, boolean, PopoverMode, ValueFormat>,
+  CalendarUnportableKeys
+>
+
 export type DatePickerEmits<
   R extends boolean,
   M extends boolean,
