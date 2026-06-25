@@ -3,6 +3,7 @@ import type { UseApiFetchOptions, UseApiFetchReturn } from '../types/api'
 import { computed, toValue } from 'vue'
 import { useNuxtApp, useFetch } from '#app'
 import { buildApiFetchKey } from '../domains/api/fetch-key'
+import { deepToValue } from '../domains/api/deep-to-value'
 
 /**
  * API Fetch 组合式函数
@@ -77,8 +78,8 @@ export function useApiFetch<T = unknown, DataT = T>(
       toast,
       method: toValue(fetchOptions.method),
       url: typeof url === 'function' ? url() : url,
-      query: toValue(fetchOptions.query),
-      body: toValue(fetchOptions.body)
+      query: deepToValue(fetchOptions.query),
+      body: deepToValue(fetchOptions.body)
     })
   })
 
