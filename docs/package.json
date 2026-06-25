@@ -7,7 +7,7 @@
     "dev": "nuxt dev"
   },
   "dependencies": {
-    "@iconify-json/vscode-icons": "^1.2.59",
+    "@iconify-json/vscode-icons": "^1.2.61",
     "@internationalized/date": "^3.12.2",
     "@movk/nuxt": "workspace:*",
     "@movk/nuxt-docs": "^1.19.10",

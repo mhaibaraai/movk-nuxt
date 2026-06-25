@@ -4,6 +4,7 @@ import type {
   InputProps, InputSlots,
   TextareaProps, TextareaSlots
 } from '@nuxt/ui'
+import type { CalendarDateControlProps } from '../../types/components/date-picker'
 import WithClear from '../../components/input/WithClear.vue'
 import WithPasswordToggle from '../../components/input/WithPasswordToggle.vue'
 import WithCopy from '../../components/input/WithCopy.vue'
@@ -99,7 +100,9 @@ type DefaultControlMap = {
     ? AutoFormControl<typeof UInput, InputProps, InputSlots>
     : K extends 'textarea'
       ? AutoFormControl<typeof UTextarea, TextareaProps, TextareaSlots>
-      : AutoFormControl<DefaultControlComponents[K]>
+      : K extends 'calendarDate'
+        ? AutoFormControl<DefaultControlComponents[K], CalendarDateControlProps>
+        : AutoFormControl<DefaultControlComponents[K]>
 }
 
 export const DEFAULT_CONTROLS: DefaultControlMap

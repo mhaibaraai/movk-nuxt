@@ -1,6 +1,5 @@
 import type { z } from 'zod'
-import type { DateRange } from 'reka-ui'
-import type { CalendarDate, DateValue, Time } from '@internationalized/date'
+import type { CalendarDate, Time } from '@internationalized/date'
 import type {
   ComponentProps,
   ComponentSlots,
@@ -13,6 +12,7 @@ import type {
   UnionToIntersection,
   WidenLiteral
 } from '@movk/core'
+import type { ValueFormat } from '../../composables/useDateFormatter'
 import type { AutoFormFieldContext } from './fields'
 import type { AutoFormControl, AutoFormControls, AutoFormControlsMeta, _Unset, AutoFormLayoutConfig } from './controls'
 import type { AUTOFORM_META } from '../../domains/auto-form/constants'
@@ -168,16 +168,39 @@ type EnumFactory<TControls extends AutoFormControls> = {
   ): EnumFactoryResult<T>
 }
 
+// 与 date-picker.ts 的 FormattedSingle 对齐，但 'date-value'/未配置时回退到 CalendarDate（保持既有默认）
+type _CalendarSingle<V>
+  = V extends 'iso' ? string
+    : V extends 'timestamp' | 'unix' ? number
+      : V extends 'date' ? Date
+        : CalendarDate
+
+// 仅静态识别「字面量对象」与「getter 返回值」两种 controlProps；ref / 无法推导时回退
+type _ResolveControlProps<CP>
+  = CP extends (...args: any[]) => infer R ? R : CP
+
+type _ValueFormatOf<CP> = CP extends { valueFormat: infer V extends ValueFormat } ? V : 'date-value'
+
+type InferCalendarDateValue<Meta>
+  = Meta extends { controlProps?: infer CP }
+    ? _ResolveControlProps<CP> extends infer P
+      ? P extends { multiple: true } ? _CalendarSingle<_ValueFormatOf<P>>[]
+        : P extends { range: true }
+          ? { start: _CalendarSingle<_ValueFormatOf<P>> | undefined, end: _CalendarSingle<_ValueFormatOf<P>> | undefined } | undefined
+          : _CalendarSingle<_ValueFormatOf<P>>
+      : CalendarDate
+    : CalendarDate
+
 type CalendarDateFactory<TControls extends AutoFormControls> = {
-  <T extends DateValue | DateRange | DateValue[] = CalendarDate, K extends ControlKey<TControls> = ControlKey<TControls>>(
-    meta?: MetaByControlKey<TControls, K>
-  ): z.ZodType<T>
-  <T extends DateValue | DateRange | DateValue[] = CalendarDate>(
-    meta: MetaByDefaultIfExists<TControls, 'calendarDate'>
-  ): z.ZodType<T>
-  <C extends IsComponent, T extends DateValue | DateRange | DateValue[] = CalendarDate>(
-    meta: MetaByComponent<C>
-  ): z.ZodType<T>
+  <const Meta = unknown>(
+    meta?: Meta & MetaByDefaultIfExists<TControls, 'calendarDate'>
+  ): z.ZodType<InferCalendarDateValue<Meta>>
+  <const Meta = unknown, K extends ControlKey<TControls> = ControlKey<TControls>>(
+    meta: Meta & MetaByControlKey<TControls, K>
+  ): z.ZodType<InferCalendarDateValue<Meta>>
+  <const Meta = unknown, C extends IsComponent = IsComponent>(
+    meta: Meta & MetaByComponent<C>
+  ): z.ZodType<InferCalendarDateValue<Meta>>
 }
 
 type ArrayFactory<TControls extends AutoFormControls> = {

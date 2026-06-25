@@ -84,7 +84,8 @@ props:
 ::component-code
 ---
 name: MDatePicker
-hide: ['placeholder', 'presets']
+hide: ['placeholder']
+ignore: ['presets']
 props:
   range: true
   presets: default
