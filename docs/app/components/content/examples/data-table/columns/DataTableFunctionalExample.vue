@@ -10,7 +10,7 @@ const columns: DataTableColumn<Person>[] = [
   { accessorKey: 'name', header: '姓名' },
   { accessorKey: 'department', header: '部门' },
   { accessorKey: 'bio', header: '个人简介' },
-  { accessorKey: 'address', header: '地址' },
+  { accessorKey: 'address', header: '地址', size: 200 },
   { accessorKey: 'salary', header: '薪资', align: 'right', cell: moneyCell }
 ]
 
