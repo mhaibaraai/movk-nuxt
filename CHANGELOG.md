@@ -1,5 +1,30 @@
 # 📋 Changelog
 
+## [1.4.2](https://github.com/mhaibaraai/movk-nuxt/compare/v1.4.1...v1.4.2) (2026-06-26)
+
+### ✨ Features
+
+* **data-table:** 列宽支持 minSize/maxSize 自适应与自管拖拽 ([a97fc6b](https://github.com/mhaibaraai/movk-nuxt/commit/a97fc6b837d5758d543b9927d82436d83538a66b))
+* **tree:** 为根容器、空状态与工具栏补充 data-slot 标记 ([d0851e3](https://github.com/mhaibaraai/movk-nuxt/commit/d0851e384842971eb68063138c4eb1d4cf65f326))
+
+### 🐛 Bug Fixes
+
+* **api:** useApiFetch 用户钩子与内置拦截器组合而非覆盖 ([c7cb08a](https://github.com/mhaibaraai/movk-nuxt/commit/c7cb08aceb814920d2e542d41e56e7c1386c2478))
+* **api:** useApiFetch 缓存键深解包 query 与 body 内嵌套 ref ([a96f5bf](https://github.com/mhaibaraai/movk-nuxt/commit/a96f5bf58a0609cfbb1b81a773a1f6f52daedd66))
+* **auto-form:** calendarDate 按 controlProps 推导输出类型并恢复 prop 补全 ([e3d1f65](https://github.com/mhaibaraai/movk-nuxt/commit/e3d1f65cf136a76b78b4785f5bf1a2092ce266dc))
+* **tree:** 声明 class prop 使根容器正确继承用户透传 class ([6f532e5](https://github.com/mhaibaraai/movk-nuxt/commit/6f532e5071a7af87d895546ae6d05d7e6bce3c7c))
+
+### 📝 Documentation
+
+* **auto-form:** 补充异步 items 须用函数式 controlProps 的提示 ([cb9a2c3](https://github.com/mhaibaraai/movk-nuxt/commit/cb9a2c3693d80c7c083a243be0af2e2c15062628))
+* **data-table:** 函数式列示例补充地址列固定宽度 ([00e0462](https://github.com/mhaibaraai/movk-nuxt/commit/00e04621f6e01adcb0adb34adaa392e9cedb0e14))
+* **data-table:** 补充列宽规则文档与 playground 示例 ([db8f88a](https://github.com/mhaibaraai/movk-nuxt/commit/db8f88a214edddfba37984807da11c9510f690b6))
+* 新增英文 README 与语言切换 ([6155fc6](https://github.com/mhaibaraai/movk-nuxt/commit/6155fc6f72a7a5457a05acbc91af088cedd20cac))
+
+### ✅ Tests
+
+* **data-table:** 补充列宽解析与边界用例 ([9117012](https://github.com/mhaibaraai/movk-nuxt/commit/91170127c716b2b88504b4437ed0502014deb154))
+
 ## [1.4.1](https://github.com/mhaibaraai/movk-nuxt/compare/v1.4.0...v1.4.1) (2026-06-24)
 
 ### 🐛 Bug Fixes
