@@ -73,6 +73,25 @@ const emptyVNodeCell: DataTableProps<Person>['emptyCell'] = () =>
     ' 暂无'
   ])
 
+const sizeColumns: DataTableColumn<Person>[] = [
+  { accessorKey: 'name', header: '姓名', minSize: 140, resizable: true },
+  { accessorKey: 'department', header: '部门', size: 80, resizable: true },
+  { accessorKey: 'bio', header: '简介', maxSize: 320, resizable: true },
+  {
+    type: 'actions',
+    fixed: 'right',
+    minSize: 60,
+    resizable: true,
+    actions: [
+      { key: 'view', buttonProps: { icon: 'i-lucide-eye', variant: 'ghost', size: 'xs', color: 'neutral' }, onClick: () => {} },
+      { key: 'edit', buttonProps: { icon: 'i-lucide-pencil', variant: 'ghost', size: 'xs', color: 'neutral' }, onClick: () => {} },
+      { key: 'key', buttonProps: { icon: 'i-lucide-key-round', variant: 'ghost', size: 'xs', color: 'neutral' }, onClick: () => {} },
+      { key: 'remove', buttonProps: { icon: 'i-lucide-trash-2', variant: 'ghost', size: 'xs', color: 'error' }, onClick: () => {} }
+    ],
+    maxInline: 4
+  }
+]
+
 const stickyEnabled = ref(true)
 
 const rowClassFn: DataTableProps<Person>['rowClass'] = row =>
@@ -196,6 +215,17 @@ const rowStyleFn: DataTableProps<Person>['rowStyle'] = row =>
         :data="data.slice(0, 4)"
         :columns="fitColumns"
         :fit-content="fitContent"
+        bordered
+      />
+    </Showcase>
+
+    <Showcase
+      title="列宽与边界自适应"
+      description="size 固定列宽；仅设 minSize/maxSize 时列按内容自适应，minSize 为下限、maxSize 为拖拽上限；resizable 拖拽时实时显示当前列宽，右侧唯一的固定操作列设 minSize 后随按钮数撑开"
+    >
+      <MDataTable
+        :data="data.slice(0, 5)"
+        :columns="sizeColumns"
         bordered
       />
     </Showcase>
