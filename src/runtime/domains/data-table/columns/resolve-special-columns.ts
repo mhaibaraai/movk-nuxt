@@ -56,10 +56,12 @@ function buildSpecialColumnDef<T>(
   const { options, density } = ctx
   const { id } = defaults
 
+  // 用户显式给了 minSize/maxSize（且未给 size）时不注入默认 size，让列在边界内按内容自适应
+  const hasExplicitBounds = col.minSize != null || col.maxSize != null
   const resolvedSize = applyBaseState(
     id,
     col.fixed ?? defaults.fixed,
-    col.size ?? defaults.size,
+    col.size ?? (hasExplicitBounds ? undefined : defaults.size),
     ctx as ResolveContext<unknown>
   )
 

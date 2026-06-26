@@ -1,23 +1,52 @@
-import type { Cell, ColumnMeta, Header } from '@tanstack/vue-table'
+import type { Cell, Column, ColumnDef, ColumnMeta, Header, Table } from '@tanstack/vue-table'
 import type { DataTableSizePreset } from '../../../types/data-table'
 import type { ResolveContext } from './constants'
 import { isString } from '@movk/core'
 import { resolvePresetSize } from './utils'
 
+// 数值 clamp 到 [min, max]，供自管拖拽计算目标列宽
+export function clampSize(n: number, min: number, max: number): number {
+  return Math.min(Math.max(n, min), max)
+}
+
+// 定宽列样式：width/minWidth/maxWidth 同值，锁死该像素宽
+function fixedWidth(n: number): Record<string, string> {
+  const w = `${n}px`
+  return { width: w, minWidth: w, maxWidth: w }
+}
+
+function clampWidth<T>(size: number, columnDef: ColumnDef<T, unknown>): Record<string, string> {
+  return fixedWidth(clampSize(size, columnDef.minSize ?? -Infinity, columnDef.maxSize ?? Infinity))
+}
+
+// 仅守 minSize 下限：maxSize 上限已在拖拽时由 clampSize 写入 columnSizing，渲染处不再夹，
+// 免得自适应列（auto 布局忽略单元格 max-width 而撑过 maxSize）被夹回造成跳变
+function clampMinWidth<T>(size: number, columnDef: ColumnDef<T, unknown>): Record<string, string> {
+  return fixedWidth(clampSize(size, columnDef.minSize ?? -Infinity, Infinity))
+}
+
+// 内侧固定列（贴近滚动区）无人依赖其宽度，可省略宽度按内容自适应：右固定取首个、左固定取末个 leaf
+function isInnermostPinned<T>(column: Column<T, unknown>, table: Table<T>, pinned: 'left' | 'right'): boolean {
+  const cols = pinned === 'left' ? table.getLeftLeafColumns() : table.getRightLeafColumns()
+  const target = pinned === 'left' ? cols[cols.length - 1] : cols[0]
+  return target?.id === column.id
+}
+
 export function resolveColumnSize<T>(ctx: Header<T, unknown> | Cell<T, unknown>): Record<string, string> {
   const { columnDef } = ctx.column
   const table = ctx.getContext().table
-  // 固定宽的三种情形：列已 pin（sticky 偏移需具体宽）/ 显式设了 size / 已被测量或拖拽过（进入 columnSizing）。
-  // 仅开启 resizable 但未拖拽的列保持自适应，拖拽起始时再测量真实宽度写入 columnSizing。
-  const isPinned = !!ctx.column.getIsPinned()
+  const pinned = ctx.column.getIsPinned()
   const isSized = ctx.column.id in table.getState().columnSizing
   const hasExplicitSize = columnDef.size != table._getDefaultColumnDef().size
 
-  if (isPinned || isSized || hasExplicitSize) {
-    const w = `${ctx.column.getSize()}px`
-    return { width: w, minWidth: w, maxWidth: w }
-  }
+  // 用户显式 size 双向收敛（含 maxSize），保留文档承诺
+  if (hasExplicitSize) return clampWidth(ctx.column.getSize(), columnDef)
+  // 拖拽测得的自适应列仅守 minSize，maxSize 已在拖拽时夹定，避免抓取闪烁
+  if (isSized) return clampMinWidth(ctx.column.getSize(), columnDef)
+  // 非内侧固定列需确定宽度供相邻固定列 sticky 偏移（getStart/getAfter）计算
+  if (pinned && !isInnermostPinned(ctx.column, table, pinned)) return clampWidth(ctx.column.getSize(), columnDef)
 
+  // 普通列 / 内侧固定列且无显式宽：按内容自适应，仅施加 min/max 边界
   const style: Record<string, string> = {}
   if (columnDef.minSize != null) style.minWidth = `${columnDef.minSize}px`
   if (columnDef.maxSize != null) style.maxWidth = `${columnDef.maxSize}px`
