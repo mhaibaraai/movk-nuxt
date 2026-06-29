@@ -5,6 +5,7 @@ category: advanced
 seo:
   title: Tree
   description: A tree component built on Nuxt UI Tree, adding search filtering with highlight, async lazy loading, a toolbar, cascading checkboxes, parent/child strategy, key-based binding and an imperative API.
+navigation.badge: v1.4.2
 ---
 
 ## 简介
