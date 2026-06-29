@@ -1,52 +1,55 @@
 export function useCategory() {
-  const categories = {
+  const { t } = useI18n()
+
+  const categories = computed(() => ({
     'getting-started': [
       {
         id: 'ai',
-        title: 'AI 集成',
+        title: t('category.gettingStarted.ai'),
         icon: 'i-lucide-bot'
       }
     ],
     'components': [
       {
         id: 'input',
-        title: '输入框',
+        title: t('category.components.input'),
         icon: 'i-lucide-pencil-line'
       },
       {
         id: 'feedback',
-        title: '反馈组件',
+        title: t('category.components.feedback'),
         icon: 'i-lucide-message-square-dot'
       },
       {
         id: 'advanced',
-        title: '进阶组件',
+        title: t('category.components.advanced'),
         icon: 'i-lucide-blocks'
       },
       {
         id: 'form',
-        title: '表单组件',
+        title: t('category.components.form'),
         icon: 'i-lucide-clipboard-list'
       }
     ],
     'auto-form': [
       {
         id: 'field-types',
-        title: '字段类型',
+        title: t('category.autoForm.fieldTypes'),
         icon: 'i-lucide-shapes'
       },
       {
         id: 'config',
-        title: '配置',
+        title: t('category.autoForm.config'),
         icon: 'i-lucide-settings-2'
       },
       {
         id: 'advanced',
-        title: '进阶',
+        title: t('category.autoForm.advanced'),
         icon: 'i-lucide-blocks'
       }
     ]
-  }
+  }))
+
   return {
     categories
   }

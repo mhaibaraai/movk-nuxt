@@ -1,0 +1,29 @@
+{
+  "nav": {
+    "docs": "Docs",
+    "releases": "Releases",
+    "quickstart": "Quick Start",
+    "components": "Components",
+    "autoForm": "AutoForm",
+    "dataTable": "DataTable",
+    "api": "API",
+    "composables": "Composables",
+    "github": "GitHub"
+  },
+  "category": {
+    "gettingStarted": {
+      "ai": "AI Integration"
+    },
+    "components": {
+      "input": "Input",
+      "feedback": "Feedback",
+      "advanced": "Advanced",
+      "form": "Form"
+    },
+    "autoForm": {
+      "fieldTypes": "Field Types",
+      "config": "Config",
+      "advanced": "Advanced"
+    }
+  }
+}

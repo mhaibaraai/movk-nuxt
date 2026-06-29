@@ -3,7 +3,7 @@ import pkg from '../package.json'
 export default defineNuxtConfig({
   extends: ['@movk/nuxt-docs'],
 
-  modules: ['@movk/nuxt'],
+  modules: ['@movk/nuxt', '@nuxtjs/i18n'],
 
   $development: {
     site: {
@@ -35,7 +35,11 @@ export default defineNuxtConfig({
     '/docs': { redirect: '/docs/getting-started', prerender: false },
     '/docs/components': { redirect: '/docs/components/as-phone-number-input', prerender: false },
     '/docs/auto-form': { redirect: '/docs/auto-form/quickstart', prerender: false },
-    '/docs/composables': { redirect: '/docs/composables/use-auto-form', prerender: false }
+    '/docs/composables': { redirect: '/docs/composables/use-auto-form', prerender: false },
+    '/en/docs': { redirect: '/en/docs/getting-started', prerender: false },
+    '/en/docs/components': { redirect: '/en/docs/components/as-phone-number-input', prerender: false },
+    '/en/docs/auto-form': { redirect: '/en/docs/auto-form/quickstart', prerender: false },
+    '/en/docs/composables': { redirect: '/en/docs/composables/use-auto-form', prerender: false }
   },
 
   compatibilityDate: 'latest',
@@ -62,6 +66,14 @@ export default defineNuxtConfig({
       'alibaba/qwen3.7-plus',
       'alibaba/glm-5.1',
       'alibaba/deepseek-v3.2'
+    ]
+  },
+
+  i18n: {
+    defaultLocale: 'zh-CN',
+    locales: [
+      { code: 'zh-CN', name: '简体中文', file: 'zh-CN.json' },
+      { code: 'en', name: 'English', file: 'en.json' }
     ]
   },
 

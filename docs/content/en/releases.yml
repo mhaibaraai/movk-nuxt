@@ -1,0 +1,14 @@
+title: Releases
+description: Browse version updates, feature enhancements, and bug fixes for Movk Nuxt.
+navigation: false
+releases: https://ungh.cc/repos/mhaibaraai/movk-nuxt/releases
+hero:
+  title: Releases
+  description: Browse version updates, feature enhancements, and bug fixes for Movk Nuxt.
+  links:
+    - label: Star on GitHub
+      color: neutral
+      variant: outline
+      to: https://github.com/mhaibaraai/movk-nuxt
+      target: _blank
+      icon: i-lucide-star

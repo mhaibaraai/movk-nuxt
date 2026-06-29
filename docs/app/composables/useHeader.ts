@@ -1,55 +1,47 @@
 export function useHeader() {
+  const { t } = useI18n()
+  const { localePath } = useMovkI18n()
   const route = useRoute()
 
+  const isActive = (path: string) => route.path.startsWith(localePath(path))
+
   const desktopLinks = computed(() => [{
-    label: '文档',
-    to: '/docs/getting-started',
-    active: route.path.startsWith('/docs/')
+    label: t('nav.docs'),
+    to: localePath('/docs/getting-started'),
+    active: isActive('/docs')
   }, {
-    label: '版本发布',
-    to: '/releases'
+    label: t('nav.releases'),
+    to: localePath('/releases')
   }])
 
-  const mobileLinks = computed(() => [{
-    label: '快速开始',
-    icon: 'i-lucide-rocket',
-    to: '/docs/getting-started',
-    active: route.path.startsWith('/docs/getting-started')
-  }, {
-    label: 'Components',
-    icon: 'i-lucide-box',
-    to: '/docs/components',
-    active: route.path.startsWith('/docs/components')
-  }, {
-    label: 'AutoForm',
-    icon: 'i-lucide-square-pen',
-    to: '/docs/auto-form',
-    active: route.path.startsWith('/docs/auto-form')
-  }, {
-    label: 'DataTable',
-    icon: 'i-lucide-table',
-    to: '/docs/data-table',
-    active: route.path.startsWith('/docs/data-table')
-  }, {
-    label: 'API',
-    icon: 'i-lucide-cloud',
-    to: '/docs/api',
-    active: route.path.startsWith('/docs/api')
-  }, {
-    label: 'Composables',
-    icon: 'i-lucide-square-function',
-    to: '/docs/composables',
-    active: route.path.startsWith('/docs/composables')
-  }, {
-    label: '发布版本',
-    icon: 'i-lucide-newspaper',
-    to: '/releases'
-  }, {
-    label: 'GitHub',
-    to: 'https://github.com/mhaibaraai/movk-nuxt',
-    icon: 'i-simple-icons-github',
-    target: '_blank'
-  }])
+  const docsNav = [
+    { key: 'quickstart', icon: 'i-lucide-rocket', slug: 'getting-started' },
+    { key: 'components', icon: 'i-lucide-box', slug: 'components' },
+    { key: 'autoForm', icon: 'i-lucide-square-pen', slug: 'auto-form' },
+    { key: 'dataTable', icon: 'i-lucide-table', slug: 'data-table' },
+    { key: 'api', icon: 'i-lucide-cloud', slug: 'api' },
+    { key: 'composables', icon: 'i-lucide-square-function', slug: 'composables' }
+  ]
+
+  const mobileLinks = computed(() => [
+    ...docsNav.map(({ key, icon, slug }) => ({
+      label: t(`nav.${key}`),
+      icon,
+      to: localePath(`/docs/${slug}`),
+      active: isActive(`/docs/${slug}`)
+    })),
+    {
+      label: t('nav.releases'),
+      icon: 'i-lucide-newspaper',
+      to: localePath('/releases')
+    },
+    {
+      label: t('nav.github'),
+      to: 'https://github.com/mhaibaraai/movk-nuxt',
+      icon: 'i-simple-icons-github',
+      target: '_blank'
+    }
+  ])
 
   return {
     desktopLinks,

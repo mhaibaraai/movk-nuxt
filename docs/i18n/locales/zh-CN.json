@@ -1,0 +1,29 @@
+{
+  "nav": {
+    "docs": "文档",
+    "releases": "版本发布",
+    "quickstart": "快速开始",
+    "components": "Components",
+    "autoForm": "AutoForm",
+    "dataTable": "DataTable",
+    "api": "API",
+    "composables": "Composables",
+    "github": "GitHub"
+  },
+  "category": {
+    "gettingStarted": {
+      "ai": "AI 集成"
+    },
+    "components": {
+      "input": "输入框",
+      "feedback": "反馈组件",
+      "advanced": "进阶组件",
+      "form": "表单组件"
+    },
+    "autoForm": {
+      "fieldTypes": "字段类型",
+      "config": "配置",
+      "advanced": "进阶"
+    }
+  }
+}
