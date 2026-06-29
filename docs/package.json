@@ -7,13 +7,13 @@
     "dev": "nuxt dev"
   },
   "dependencies": {
-    "@iconify-json/vscode-icons": "^1.2.61",
+    "@iconify-json/vscode-icons": "^1.2.62",
     "@internationalized/date": "^3.12.2",
     "@movk/nuxt": "workspace:*",
     "@movk/nuxt-docs": "^1.19.10",
     "@nuxt/content": "^3.14.0",
     "@nuxt/ui": "^4.9.0",
-    "better-sqlite3": "^12.10.1",
+    "better-sqlite3": "^12.11.1",
     "json5": "^2.2.3",
     "motion-v": "^2.3.0",
     "nuxt": "^4.4.8",
