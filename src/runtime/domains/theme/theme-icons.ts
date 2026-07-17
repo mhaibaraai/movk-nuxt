@@ -1,3 +1,14 @@
+export type ThemeIconSet = keyof typeof themeIcons
+
+/**
+ * 按图标集覆盖当前图标表，图标集未收录的键回退当前值。
+ * 整体替换会丢失 @nuxt/ui 新增而图标集尚未跟进的键（如 4.10 的 star），故此处合并。
+ */
+export function resolveThemeIcons(set: string, current: Record<string, string>): Record<string, string> {
+  const icons = themeIcons[set as ThemeIconSet]
+  return icons ? { ...current, ...icons } : current
+}
+
 export const themeIcons = {
   lucide: {
     arrowDown: 'i-lucide-arrow-down',
@@ -37,6 +48,7 @@ export const themeIcons = {
     reload: 'i-lucide-rotate-ccw',
     search: 'i-lucide-search',
     stop: 'i-lucide-square',
+    star: 'i-lucide-star',
     success: 'i-lucide-circle-check',
     system: 'i-lucide-monitor',
     tip: 'i-lucide-lightbulb',
@@ -81,6 +93,7 @@ export const themeIcons = {
     reload: 'i-ph-arrow-counter-clockwise',
     search: 'i-ph-magnifying-glass',
     stop: 'i-ph-square',
+    star: 'i-ph-star',
     success: 'i-ph-check-circle',
     system: 'i-ph-monitor',
     tip: 'i-ph-lightbulb',
@@ -125,6 +138,7 @@ export const themeIcons = {
     reload: 'i-tabler-reload',
     search: 'i-tabler-search',
     stop: 'i-tabler-player-stop',
+    star: 'i-tabler-star',
     success: 'i-tabler-square-rounded-check',
     system: 'i-tabler-device-desktop',
     tip: 'i-tabler-bulb',

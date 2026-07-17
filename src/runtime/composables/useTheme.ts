@@ -1,5 +1,5 @@
 import { useAppConfig, useColorMode, useSiteConfig } from '#imports'
-import { themeIcons } from '../domains/theme/theme-icons'
+import { resolveThemeIcons, themeIcons } from '../domains/theme/theme-icons'
 import { omit, kebabCase } from '@movk/core'
 import { useLocalStorage } from '@vueuse/core'
 import colors from 'tailwindcss/colors'
@@ -79,7 +79,7 @@ export function useTheme() {
     },
     set(option) {
       _iconSet.value = option
-      ui.icons = themeIcons[option as keyof typeof themeIcons] as any
+      ui.icons = resolveThemeIcons(option, ui.icons) as any
     }
   })
 
@@ -214,7 +214,7 @@ export function useTheme() {
     _radius.value = movk?.radius ?? defaultConfig.radius
     _font.value = movk?.font ?? defaultConfig.font
     _iconSet.value = defaultIcon
-    ui.icons = themeIcons[defaultIcon as keyof typeof themeIcons] as any
+    ui.icons = resolveThemeIcons(defaultIcon, ui.icons) as any
     _blackAsPrimary.value = movk?.blackAsPrimary ?? defaultConfig.blackAsPrimary
   }
 
