@@ -71,7 +71,7 @@ Based on the task, load the relevant reference files **before writing any code**
 | Render a data table with pagination, selection, or sorting | data-table |
 | Render tree-structured rows or grouped columns | data-table |
 | Display hierarchical data with search, lazy load, or cascading checkboxes (`MTree`) | components |
-| Add a standalone widget (date picker, rating, input wrapper) | components |
+| Add a standalone widget (date picker, color chooser, input wrapper) | components |
 | Format / parse / compare dates or ranges | composables |
 | Switch theme, export CSS variables, build a theme picker | composables |
 | Open an imperative `confirm` / `alert` dialog | composables |

@@ -1,6 +1,6 @@
 import { defineNuxtPlugin, useAppConfig, useSiteConfig } from '#imports'
 import { kebabCase } from '@movk/core'
-import { themeIcons } from '../../domains/theme/theme-icons'
+import { resolveThemeIcons } from '../../domains/theme/theme-icons'
 
 /**
  * Vue 模式主题插件：仅做 color-mode 初始化（从 localStorage 恢复主色/中性色/图标集）。
@@ -18,5 +18,5 @@ export default defineNuxtPlugin(() => {
   if (neutral) appConfig.ui.colors.neutral = neutral
 
   const icons = localStorage.getItem(`${name}-ui-icons`)
-  if (icons) appConfig.ui.icons = themeIcons[icons as keyof typeof themeIcons] as any
+  if (icons) appConfig.ui.icons = resolveThemeIcons(icons, appConfig.ui.icons) as any
 })

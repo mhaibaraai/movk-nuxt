@@ -47,7 +47,6 @@ Standalone interactive controls, usable inside or outside a form.
 | Component | Purpose |
 | --- | --- |
 | `MDatePicker` | Calendar-backed date picker built on `@internationalized/date` |
-| `MStarRating` | Interactive star rating control |
 | `MColorChooser` | Visual color picker |
 | `MSlideVerify` | Slide-to-verify human-check widget |
 | `MTree` | Hierarchical tree with search, lazy load, toolbar, cascading checkboxes and parent/child strategy |

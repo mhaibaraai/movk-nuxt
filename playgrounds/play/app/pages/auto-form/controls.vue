@@ -38,7 +38,6 @@ const schema = afz.object({
     .default({ name: 'svelte', age: 1 })
     .meta({ label: 'listboxObject' }),
 
-  starRating: afz.number({ type: 'starRating', controlProps: { allowHalf: true } }).default(3.5).meta({ label: 'starRating' }),
   colorChooser: afz.string({ type: 'colorChooser', controlProps: { formats: ['hex', 'rgb'] } }).default('#0ea5e9').meta({ label: 'colorChooser' }),
   slideVerify: afz.boolean({ type: 'slideVerify', controlProps: { size: 'sm' } }).meta({ label: 'slideVerify' }),
   pillGroupString: afz.string({ type: 'pillGroup', controlProps: { items: ['vue', 'react', 'svelte', 'solid'] } }).default('react').meta({ label: 'pillGroupString' }),

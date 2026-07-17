@@ -365,7 +365,7 @@ Standalone components like DatePicker, SearchForm, PillGroup, SlideVerify and Tr
   Standalone Components
 
   #description
-  Date picking, color choosing, slide verification, star rating and input enhancements — no extra wrapping required.
+  Date picking, color choosing, slide verification, tree structures and input enhancements — no extra wrapping required.
   :::
 
   :::u-page-feature{icon="i-lucide-square-function"}

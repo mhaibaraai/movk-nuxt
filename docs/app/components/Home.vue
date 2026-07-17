@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import type { DateValue, AutoFormFieldContext, DataTableColumn, TreeItem } from '#movk/types'
 import type z from 'zod'
+import { UInputRating } from '#components'
 
 const slides = [{
   key: 'autoform',
@@ -50,7 +51,7 @@ const formSchema = afz.object({
       }).optional(),
       notifications: afz.boolean({ type: 'switch' }).default(true)
         .meta({ label: '接收通知', hint: '开启后接收系统消息' }),
-      rating: afz.number({ type: 'starRating', controlProps: { allowHalf: true } })
+      rating: afz.number({ component: UInputRating, controlProps: { step: 0.5 } })
         .min(0).max(5).default(4)
         .meta({ label: '满意度评分' }),
       interests: afz.array(afz.string(), { type: 'inputTags' })
