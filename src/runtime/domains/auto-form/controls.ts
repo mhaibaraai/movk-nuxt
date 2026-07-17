@@ -13,7 +13,6 @@ import AsPhoneNumberInput from '../../components/input/AsPhoneNumberInput.vue'
 import WithFloatingLabel from '../../components/input/WithFloatingLabel.vue'
 import DatePicker from '../../components/DatePicker.vue'
 import ColorChooser from '../../components/ColorChooser.vue'
-import StarRating from '../../components/StarRating.vue'
 import SlideVerify from '../../components/SlideVerify.vue'
 import PillGroup from '../../components/PillGroup.vue'
 import {
@@ -86,7 +85,6 @@ const DEFAULT_CONTROL_COMPONENTS = {
   pinInput: UPinInput,
   listbox: UListbox,
 
-  starRating: StarRating,
   colorChooser: ColorChooser,
   slideVerify: SlideVerify,
   pillGroup: PillGroup

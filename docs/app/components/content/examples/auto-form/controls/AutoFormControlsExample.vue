@@ -32,7 +32,6 @@ const schema = afz.object({
 
       number: 'number',
       slider: 'number',
-      starRating: 'number',
 
       boolean: 'boolean',
       switch: 'boolean',
@@ -66,7 +65,6 @@ const schema = afz.object({
 
       number: afz.number({ controlProps: { placeholder: '默认数字' } }).meta({ label: 'InputNumber' }),
       slider: afz.number({ type: 'slider', controlProps: { min: 0, max: 100, step: 5 } }).default(40).meta({ label: 'Slider' }),
-      starRating: afz.number({ type: 'starRating', controlProps: { allowHalf: true } }).default(3.5).meta({ label: 'StarRating' }),
 
       boolean: afz.boolean().meta({ label: 'Checkbox' }),
       switch: afz.boolean({ type: 'switch' }).meta({ label: 'Switch' }),

@@ -53,7 +53,6 @@ const componentsNav: NavigationMenuItem = {
   icon: 'i-lucide-box',
   defaultOpen: true,
   children: [
-    { label: 'StarRating', to: '/components/star-rating' },
     { label: 'SlideVerify', to: '/components/slide-verify' },
     { label: 'Popconfirm', to: '/components/popconfirm' },
     { label: 'MessageBox', to: '/components/message-box' },

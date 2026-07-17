@@ -1,22 +1,23 @@
 <script lang="ts" setup>
 import type { FormSubmitEvent } from '@nuxt/ui'
 import type { z } from 'zod'
+import { UInputRating } from '#components'
 
 const { afz } = useAutoForm()
 const toast = useToast()
 
 const schema = afz.object({
   rating: afz.number({
-    type: 'starRating',
+    component: UInputRating,
     controlProps: {
-      allowHalf: true,
-      max: 10
+      step: 0.5,
+      length: 10
     }
   })
     .min(0, '评分不能小于 0')
     .max(10, '评分不能大于 10')
     .meta({
-      label: '星级评分',
+      label: '评分',
       hint: '支持半星评分'
     })
 })

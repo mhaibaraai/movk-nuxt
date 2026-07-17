@@ -365,7 +365,7 @@ DatePicker、SearchForm、PillGroup、SlideVerify、Tree 等独立组件即取�
   独立组件
 
   #description
-  日期选择、颜色选择、滑动验证、星级评分与输入增强，无需额外封装。
+  日期选择、颜色选择、滑动验证、树形结构与输入增强，无需额外封装。
   :::
 
   :::u-page-feature{icon="i-lucide-square-function"}

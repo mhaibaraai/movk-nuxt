@@ -66,13 +66,13 @@ pnpm clean
 | `src/unplugin.ts` | Vue 模式 unplugin 工厂：链入 `@nuxt/ui` unplugin 后叠加 movk 子插件 |
 | `src/vite.ts` | Vite 插件入口（`export default MovkPlugin.vite`） |
 | `src/plugins/` | Vue 模式 unplugin 子插件：`environment`（`#imports`/`#components`/Icon 覆盖）、`templates`（`#build/movk-ui` 写盘 + alias）、`app-config`（注入 movk 键）、`plugins`（`@movk/nuxt/vue-plugin` 虚拟） |
-| `src/runtime/components/` | 对外组件：11 个主组件（AutoForm、DataTable、SearchForm、DatePicker、ColorChooser、MessageBox、PillGroup、Popconfirm、StarRating、SlideVerify、Tree）+ `input/` 6 个输入增强 + `theme-picker/` |
+| `src/runtime/components/` | 对外组件：10 个主组件（AutoForm、DataTable、SearchForm、DatePicker、ColorChooser、MessageBox、PillGroup、Popconfirm、SlideVerify、Tree）+ `input/` 6 个输入增强 + `theme-picker/` |
 | `src/runtime/domains/` | 业务逻辑层 + 私有子组件，按域划分：`api/`（拦截器、端点、错误、传输）、`auto-form/`（字段、控件、Schema 解析）、`data-table/`（列解析、特殊列）、`tree/`（树归一化、搜索、懒加载、工具栏子组件）、`theme/` |
 | `src/runtime/composables/` | 9 个：`useApiFetch` / `useLazyApiFetch` / `useClientApiFetch`、`useAutoForm`、`useTheme`、`useDateFormatter`、`useMessageBox`、`useUploadWithProgress` / `useDownloadWithProgress` |
 | `src/runtime/types/` | 类型来源，按域聚合：`api/`、`auto-form/`、`components/`、`data-table/`、`shared`，每域 `index.ts` 统一 re-export |
 | `src/runtime/utils/` | 运行时工具：`meta`、`form-control`、`tv`、`extend-theme`、`theme-defaults`（主题默认 app.config，两模式共用）、`tree-expand` / `tree-selection`（树形展开/选中纯函数，Tree 与 DataTable 共用） |
 | `src/runtime/vue/` | 非 Nuxt 桩层：`stubs/`（`#imports` 桩，转发 `@nuxt/ui` 同模式桩 + `useSiteConfig`/`useOverlay`）、`composables/useSiteConfig`、`plugins/theme`（剥离 SSR 的 vue 主题插件） |
-| `src/theme/` | 主题配置，每组件/功能一个文件（约 22 个），`index.ts` 聚合 |
+| `src/theme/` | 主题配置，每组件/功能一个文件（约 18 个），`index.ts` 聚合 |
 | `src/utils/` | 模块构建期工具：`defaults`、`theme-variants`、`theme` |
 | `playgrounds/play/` | Nuxt playground，含 `app/pages/` 演示页与 `server/api/` mock |
 | `playgrounds/vue/` | 纯 Vite + Vue playground，验证非 Nuxt 模式（`vite.config.ts` 用 `@movk/nuxt/vite`，入口 `app.use(@movk/nuxt/vue-plugin)`） |
@@ -163,7 +163,7 @@ pnpm clean
   中文 title/description 保持简洁（title 名词/动宾短语，description 一句话）；组件页另加 `category` 字段。此约定适用于所有内容阶段。
 
 - **`::component-code` 与 `::component-example` 的取舍**：按「示例能否用内联 props 表达」选择，而非按用法 / 示例区段。
-  - `::component-code`：由 `props`/`model`/`external` 内联合成代码，仅适用于全部 props 可用 YAML 内联表达的简单组件（如 `MStarRating`、`MSlideVerify`）。
+  - `::component-code`：由 `props`/`model`/`external` 内联合成代码，仅适用于全部 props 可用 YAML 内联表达的简单组件（如 `MSlideVerify`）。
   - `::component-example`：加载并展示外部 `.vue` 源码，适用于需脚本构建或 schema 驱动的组件（如 AutoForm 全家、`MSearchForm`，Zod schema 无法内联）；外部文件置于 `docs/app/components/content/examples/<scope>/`，命名 `<Scope><Component><Topic>Example.vue`。
   - 两类块在「用法」「示例」区段均可出现；schema 驱动组件全程使用 `::component-example`。
 - **标题层级**：`## 用法` 与 `## 示例` 均为 H2，其下条目统一用 H3。
@@ -173,7 +173,3 @@ pnpm clean
 - **转发事件**：底层组件转发的事件（如 `MSearchForm` 转发 `UForm` 的 `@submit`）不会进入 `:component-emits` 自动表，需在 Emits 段手动补说明。
 - **`prettier: true`**：props 含多层级结构时添加。
 - **内联标量不加引号**：`::component-code` 的 `props:` 标量值直接写（`size: md`，而非 `size: 'md'`）；但 `options:`/`items:` 中须保持字符串类型的离散值（如 cols `'1'`–`'4'`）仍加引号。
-
-## 增强、重构规范
-
-- 默认不需要考虑兼容性，除非用户明确要求

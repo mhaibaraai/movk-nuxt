@@ -55,7 +55,7 @@ The table lists the common methods; the factory also exposes `afz.email() / url(
 
 For `afz.string()`, switch the rendered control via `meta({ type })`: `'textarea'`, `'withClear'`, `'withPasswordToggle'`, `'withCopy'`, `'withCharacterLimit'`, `'withFloatingLabel'`, `'asPhoneNumberInput'` — each maps to the corresponding `M`-component wrapper.
 
-`meta({ type })` also targets any other registered control regardless of field type — Nuxt UI controls (`'switch'`, `'slider'`, `'selectMenu'`, `'inputMenu'`, `'checkboxGroup'`, `'radioGroup'`, `'inputTags'`, `'pinInput'`, `'listbox'`) and Movk widgets (`'starRating'`, `'colorChooser'`, `'slideVerify'`, `'pillGroup'`), plus custom controls from `defineControl`. This list is non-exhaustive; see the control registry or the docs for the full set.
+`meta({ type })` also targets any other registered control regardless of field type — Nuxt UI controls (`'switch'`, `'slider'`, `'selectMenu'`, `'inputMenu'`, `'checkboxGroup'`, `'radioGroup'`, `'inputTags'`, `'pinInput'`, `'listbox'`) and Movk widgets (`'colorChooser'`, `'slideVerify'`, `'pillGroup'`), plus custom controls from `defineControl` or a component instance passed directly via `component` (e.g. `UInputRating`, requires `@nuxt/ui >=4.10.0`). This list is non-exhaustive; see the control registry or the docs for the full set.
 
 ## Field metadata
 

@@ -22,7 +22,7 @@ Movk Nuxt is a UI engineering toolkit built on top of Nuxt UI, offering two ways
 
 - **AutoForm — Schema-driven forms** (✅ Nuxt ｜ ✅ Vue + Vite) - Built on Zod v4 with a "define-is-render" model: a single Schema declares the data structure, validation rules, and UI configuration at once, automatically generating a complete form interface.
 - **DataTable — Data table** (✅ Nuxt ｜ ✅ Vue + Vite) - Wraps TanStack Table, covering data columns, special columns (selection / index / expand / actions), tree-structured data, row interactions, appearance customization, pagination, and load-more.
-- **Standalone component library** (✅ Nuxt ｜ ✅ Vue + Vite) - General-purpose UI components such as DatePicker, StarRating, PillGroup, SearchForm, Tree, WithCopy, and ThemePicker, usable on their own without AutoForm.
+- **Standalone component library** (✅ Nuxt ｜ ✅ Vue + Vite) - General-purpose UI components such as DatePicker, PillGroup, SearchForm, Tree, WithCopy, and ThemePicker, usable on their own without AutoForm.
 - **Theming and Composables** (✅ Nuxt ｜ ✅ Vue + Vite) - Non-server composition functions such as useTheme (theme read/write and export), useMessageBox (imperative dialogs), and useDateFormatter (i18n dates).
 - **API integration system** (✅ Nuxt ｜ ❌ Vue + Vite) - The useApiFetch / useLazyApiFetch / useClientApiFetch trio plus useUploadWithProgress / useDownloadWithProgress, providing multi-endpoint support, automatic authentication, business status-code checks, data unwrapping, Toast notifications, and progress monitoring; **depends on the Nuxt server runtime and is available in Nuxt mode only**.
 - **Type safety** - Full TypeScript type inference, from Schema to form data, with component prop callbacks and event handler types derivable via indexed access.
@@ -276,7 +276,7 @@ Movk Nuxt adopts a clear layered architecture:
 
 - **Core Systems** - AutoForm (Schema-driven forms), DataTable (data table)
 - **API System** - useApiFetch / useLazyApiFetch / useClientApiFetch, useUploadWithProgress, useDownloadWithProgress, providing a complete API request solution
-- **Standalone Components** - Standalone UI components such as DatePicker, StarRating, PillGroup, SearchForm, Tree, WithCopy, and ThemePicker
+- **Standalone Components** - Standalone UI components such as DatePicker, PillGroup, SearchForm, Tree, WithCopy, and ThemePicker
 - **Composables** - General-purpose composition functions such as useDateFormatter, useTheme, useMessageBox, and useAutoForm
 - **Foundation** - Built on [Nuxt UI](https://ui.nuxt.com), [Zod v4](https://zod.dev), [VueUse](https://vueuse.org), and [TanStack Table](https://tanstack.com/table)
 

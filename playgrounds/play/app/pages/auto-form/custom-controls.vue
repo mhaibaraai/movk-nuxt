@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import type { FormSubmitEvent } from '@nuxt/ui'
 import type { z } from 'zod'
+// 本页被 vue playground 复用，vue 模式 #components shim 不含 UInputRating，改用子路径导入
+import UInputRating from '@nuxt/ui/components/InputRating.vue'
 
 const Counter = defineComponent({
   name: 'CounterControl',
@@ -110,6 +112,15 @@ const schema = afz.object({
 type Schema = z.output<typeof schema>
 const state = reactive<Partial<Schema>>({})
 
+const directSchema = afz.object({
+  rating: afz
+    .number({ component: UInputRating, controlProps: { step: 0.5, length: 10 } })
+    .default(3.5)
+    .meta({ label: '评分', description: '半星粒度，共 10 星' })
+})
+
+const directState = reactive<Partial<z.output<typeof directSchema>>>({})
+
 function onSubmit(event: FormSubmitEvent<Schema>) {
   console.log(event)
   return new Promise<void>(res => setTimeout(res, 3000))
@@ -124,5 +135,10 @@ function onSubmit(event: FormSubmitEvent<Schema>) {
       <MAutoForm :schema="schema" :state="state" :controls="controls" @submit="onSubmit" />
     </Showcase>
     <StateViewer :state="state" label="state" />
+
+    <Showcase title="直接传入组件" description="在 schema 的 component 中直接传入组件实例（如 UInputRating），无需注册控件即可渲染。">
+      <MAutoForm :schema="directSchema" :state="directState" />
+    </Showcase>
+    <StateViewer :state="directState" label="directState" />
   </div>
 </template>
