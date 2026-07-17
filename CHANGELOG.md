@@ -1,5 +1,41 @@
 # 📋 Changelog
 
+## [1.5.0](https://github.com/mhaibaraai/movk-nuxt/compare/v1.4.2...v1.5.0) (2026-07-17)
+
+### ⚠ BREAKING CHANGES
+
+* **components:** 移除 MStarRating 组件及 StarRatingProps、StarRatingEmits 类型导出，
+AutoForm 不再支持 type: 'starRating'。评分字段改用 @nuxt/ui 的 InputRating：
+afz.number({ component: UInputRating, controlProps: { step: 0.5, length: 10 } })，
+需 @nuxt/ui >= 4.10.0。
+
+### ✨ Features
+
+* **docs:** 文档站国际化支持 ([6116a53](https://github.com/mhaibaraai/movk-nuxt/commit/6116a53f21f21ad362b63092d42801c87d963331))
+
+### 🐛 Bug Fixes
+
+* **theme:** 修复图标集覆盖导致 star 图标丢失 ([eeb1a2f](https://github.com/mhaibaraai/movk-nuxt/commit/eeb1a2f3df077bd038c6a9f5bd9c60319237eda9))
+
+### 📝 Documentation
+
+* **tree:** 添加 v1.4.2 版本徽标 ([4fc2d92](https://github.com/mhaibaraai/movk-nuxt/commit/4fc2d922af7ca960976fb09e105c1cf31ddae811))
+
+### ♻️ Code Refactoring
+
+* **components:** 移除 StarRating，改用 @nuxt/ui InputRating ([5445490](https://github.com/mhaibaraai/movk-nuxt/commit/544549044c71c053d381f8d8f5f96db448b17b7c))
+
+### 📦 Build System
+
+* **deps:** 对齐 @nuxt/ui 至 4.10 并升级 @movk/nuxt-docs 至 2.0.5 ([c257398](https://github.com/mhaibaraai/movk-nuxt/commit/c25739833e43014a4dd28057036a0ed9952e02e3))
+
+### 🔧 Chores
+
+* **deps:** update actions/cache action to v6 ([1cc357b](https://github.com/mhaibaraai/movk-nuxt/commit/1cc357b240b85ac142355dd363026475252ebe44))
+* **deps:** update all non-major dependencies ([9b32617](https://github.com/mhaibaraai/movk-nuxt/commit/9b32617f72423e9cab3b4ca7a7174ce6a1ce98f9))
+* **deps:** 更新依赖版本并升级 pnpm 至 11.13.1 ([b1e4b7b](https://github.com/mhaibaraai/movk-nuxt/commit/b1e4b7b93e0b97484c6d5bea78ec8a4c26f686bd))
+* 忽略 Playwright MCP 输出目录 ([dca5a82](https://github.com/mhaibaraai/movk-nuxt/commit/dca5a826f2e0ad4a3c6d8ff87edd83dd68ddd20b))
+
 ## [1.4.2](https://github.com/mhaibaraai/movk-nuxt/compare/v1.4.1...v1.4.2) (2026-06-26)
 
 ### ✨ Features
