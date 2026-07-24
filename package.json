@@ -2,7 +2,7 @@
   "name": "@movk/nuxt",
   "type": "module",
   "version": "1.5.0",
-  "packageManager": "pnpm@11.15.1",
+  "packageManager": "pnpm@11.17.0",
   "description": "An engineering suite built on Nuxt UI: schema-driven AutoForm (Zod v4), a full-featured DataTable, standalone UI components and composables. Get the full capabilities — including API integration with auth & progress — in Nuxt 4, and use its UI, forms, tables and theming in plain Vue + Vite via the Vite plugin.",
   "author": "YiXuan <mhaibaraai@gmail.com>",
   "license": "MIT",
@@ -124,7 +124,7 @@
     "test:vue": "vitest --project vue"
   },
   "dependencies": {
-    "@iconify-json/lucide": "^1.2.118",
+    "@iconify-json/lucide": "^1.2.119",
     "@iconify-json/ph": "^1.2.2",
     "@iconify-json/tabler": "^1.2.37",
     "@internationalized/date": "^3.12.2",
@@ -136,7 +136,7 @@
     "@vueuse/nuxt": "^14.3.0",
     "colortranslator": "^6.1.1",
     "defu": "^6.1.7",
-    "magic-string": "^0.30.21",
+    "magic-string": "^1.1.0",
     "maska": "^3.2.0",
     "mlly": "^1.8.2",
     "nuxt-auth-utils": "^0.5.29",
@@ -153,13 +153,13 @@
   },
   "devDependencies": {
     "@nuxt/eslint-config": "^1.16.0",
-    "@nuxt/kit": "^4.4.8",
-    "@nuxt/module-builder": "^1.0.2",
-    "@nuxt/schema": "^4.4.8",
+    "@nuxt/kit": "^4.5.0",
+    "@nuxt/module-builder": "^1.0.3",
+    "@nuxt/schema": "^4.5.0",
     "@release-it/conventional-changelog": "^11.0.1",
     "eslint": "^10.7.0",
-    "happy-dom": "^20.11.0",
-    "nuxt": "^4.4.8",
+    "happy-dom": "^20.11.1",
+    "nuxt": "^4.5.0",
     "release-it": "^20.2.1",
     "typescript": "^6.0.3",
     "unbuild": "^3.6.1",
@@ -167,6 +167,6 @@
     "unplugin-vue-components": "^32.1.0",
     "vitest": "^4.1.10",
     "vue": "^3.5.40",
-    "vue-tsc": "^3.3.7"
+    "vue-tsc": "^3.3.8"
   }
 }
