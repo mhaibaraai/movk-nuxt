@@ -42,13 +42,19 @@ export interface ApiAuthConfig {
    * 令牌来源类型
    * @defaultValue 'session'
    */
-  tokenSource?: Suggest<'session'>
+  tokenSource?: Suggest<'session' | 'public-runtime-config'>
   /**
    * 令牌在会话对象中的路径（支持点号分隔的嵌套路径）
    * @defaultValue 'token'
    * @example 'token' | 'user.accessToken' | 'auth.credentials.token'
    */
   sessionTokenPath?: string
+  /**
+   * 令牌在 runtimeConfig.public 中的路径（支持点号分隔的嵌套路径），仅当 tokenSource 为 'public-runtime-config' 时生效
+   * @defaultValue 'apiToken'
+   * @example 'llmApiKey' | 'api.token'
+   */
+  tokenPath?: string
   /**
    * 令牌类型前缀
    * @defaultValue 'Bearer'
