@@ -29,6 +29,7 @@ export default defineNuxtConfig({
   movk: {
     api: {
       enabled: true,
+      toast: { success: { show: true } },
       endpoints: {
         default: { baseURL: '/api' },
         v2: { baseURL: '/api/demo/v2' }
