@@ -93,6 +93,6 @@ export interface ResolvedEndpointConfig extends Omit<ApiEndpointPublicConfig, 'a
   toast: ApiToastConfig
   /** 响应配置（已合并全局默认值，必然存在） */
   response: ApiResponseConfig
-  /** 自定义请求头（仅服务端配置） */
+  /** 请求头（服务端私有 headers 与端点 publicHeaders 的合并结果，同名键私有优先） */
   headers?: Record<string, string>
 }

@@ -1,6 +1,6 @@
 import type { ApiAuthConfig } from '../../types/api'
 import { getPath } from '@movk/core'
-import { useNuxtApp, useUserSession } from '#imports'
+import { useNuxtApp, useRuntimeConfig, useUserSession } from '#imports'
 
 function getUserSession(): ReturnType<typeof useUserSession> | null {
   try {
@@ -20,6 +20,15 @@ function getTokenFromSession(tokenPath: string): string | null {
   return (getPath(sessionData, tokenPath) as string) || null
 }
 
+function getTokenFromPublicRuntimeConfig(tokenPath: string): string | null {
+  try {
+    return (getPath(useRuntimeConfig().public, tokenPath) as string) || null
+  }
+  catch {
+    return null
+  }
+}
+
 function buildAuthHeaderValue(token: string, config: ApiAuthConfig): string {
   const tokenType = config.tokenType === 'Custom'
     ? (config.customTokenType || '')
@@ -33,8 +42,9 @@ export function getAuthHeaders(auth: ApiAuthConfig): Record<string, string> {
 
   if (!auth.enabled) return headers
 
-  const tokenPath = auth.sessionTokenPath || 'token'
-  const token = getTokenFromSession(tokenPath)
+  const token = auth.tokenSource === 'public-runtime-config'
+    ? getTokenFromPublicRuntimeConfig(auth.tokenPath || 'apiToken')
+    : getTokenFromSession(auth.sessionTokenPath || 'token')
 
   if (token) {
     const headerName = auth.headerName || 'Authorization'

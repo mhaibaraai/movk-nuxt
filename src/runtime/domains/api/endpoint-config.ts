@@ -7,7 +7,7 @@ import type { EndpointPrivateConfig, ResolvedEndpointConfig } from '../../types/
  *
  * @param publicConfig 模块公共配置
  * @param endpoint 端点名称；未指定时使用 defaultEndpoint
- * @param privateEndpoints 服务端私有端点配置（含 headers），仅在服务端可用
+ * @param privateEndpoints 服务端私有端点配置（含机密 headers），仅在服务端可用；与端点 publicHeaders 合并后生效
  * @description 端点不存在时降级到 defaultEndpoint，并打印警告
  */
 export function resolveEndpointConfig(
@@ -23,10 +23,15 @@ export function resolveEndpointConfig(
     return resolveEndpointConfig(publicConfig, publicConfig.defaultEndpoint || 'default', privateEndpoints)
   }
 
+  const mergedHeaders = defu(
+    privateEndpoints?.[endpointName]?.headers,
+    endpointConfig.publicHeaders
+  )
+
   return {
     ...endpointConfig,
     baseURL: endpointConfig.baseURL || '',
-    headers: privateEndpoints?.[endpointName]?.headers,
+    headers: Object.keys(mergedHeaders).length > 0 ? mergedHeaders : undefined,
     auth: defu(endpointConfig.auth, publicConfig.auth) as ApiAuthConfig,
     toast: defu(endpointConfig.toast, publicConfig.toast) as ApiToastConfig,
     response: defu(endpointConfig.response, publicConfig.response) as ApiResponseConfig
