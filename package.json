@@ -160,7 +160,7 @@
     "eslint": "^10.7.0",
     "happy-dom": "^20.11.1",
     "nuxt": "^4.5.1",
-    "release-it": "^20.2.1",
+    "release-it": "^21.0.0",
     "typescript": "^6.0.3",
     "unbuild": "^3.6.1",
     "unplugin-auto-import": "^21.0.0",
