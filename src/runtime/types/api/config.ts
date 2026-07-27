@@ -124,6 +124,11 @@ export interface ApiEndpointPublicConfig {
    */
   alias?: string
   /**
+   * 该端点的公开请求头，会进入 public runtimeConfig，服务端与客户端均注入
+   * @description 仅用于非机密固定头（如 API 版本、租户标识），机密请用 headers
+   */
+  publicHeaders?: Record<string, string>
+  /**
    * 端点级别的认证配置（覆盖全局配置）
    */
   auth?: ApiAuthConfig
