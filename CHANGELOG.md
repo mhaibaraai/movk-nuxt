@@ -1,5 +1,32 @@
 # 📋 Changelog
 
+## [1.5.1](https://github.com/mhaibaraai/movk-nuxt/compare/v1.5.0...v1.5.1) (2026-07-27)
+
+### ✨ Features
+
+* **api:** auth 支持从 public runtimeConfig 读取令牌 ([af60f72](https://github.com/mhaibaraai/movk-nuxt/commit/af60f7217c03263e34a06a2abd39bdf458887453))
+* **api:** 端点支持 publicHeaders 公开请求头 ([aa73020](https://github.com/mhaibaraai/movk-nuxt/commit/aa730205cf0e4f5d1cb0ffff1bbdd6a5b4073050))
+
+### 📝 Documentation
+
+* **api:** 补充 publicHeaders 与 public runtimeConfig 令牌来源 ([d1194e3](https://github.com/mhaibaraai/movk-nuxt/commit/d1194e3ba0d349cdd82766d6bda2f8fbbda06a07))
+
+### ✅ Tests
+
+* **api:** 覆盖 API 配置公私拆分行为 ([cf806c8](https://github.com/mhaibaraai/movk-nuxt/commit/cf806c89265d126afd17e5f8b299bc5da5db0225))
+
+### 🔧 Chores
+
+* **deps:** update actions/setup-node action to v7 ([c65f827](https://github.com/mhaibaraai/movk-nuxt/commit/c65f827ef085f369c3aaf8fad5f493677cca3be9))
+* **deps:** update all non-major dependencies ([52d57b0](https://github.com/mhaibaraai/movk-nuxt/commit/52d57b09e77c619d6f68810c6863b6e92d1afebb))
+* **deps:** update all non-major dependencies ([b574ae7](https://github.com/mhaibaraai/movk-nuxt/commit/b574ae75a07463e382b6b55e95087b18c7c8065f))
+* **deps:** update devdependency @release-it/conventional-changelog to v12 ([c05b59c](https://github.com/mhaibaraai/movk-nuxt/commit/c05b59c3a7459cc8fdc365cd0eefa8d57fc1c0c6))
+* **deps:** update devdependency release-it to v21 ([96e4be6](https://github.com/mhaibaraai/movk-nuxt/commit/96e4be6ff6ee26319afc4ef4e636fe2c9235b601))
+* **deps:** update nuxt framework to ^4.5.0 ([851c3b3](https://github.com/mhaibaraai/movk-nuxt/commit/851c3b3ea7880bde1c8ce6cac465af864a7dfc68))
+* **deps:** update nuxt framework to ^4.5.1 ([bcf366c](https://github.com/mhaibaraai/movk-nuxt/commit/bcf366cffe4c2822ad4f9c63edbb5cf0871c38cb))
+* **deps:** 升级依赖版本并将 pnpm 升级至 11.16.0 ([4119de6](https://github.com/mhaibaraai/movk-nuxt/commit/4119de60b0c6c9a0fa0d61422fe8a6983c51c5cc))
+* **deps:** 升级依赖版本并将 pnpm 升级至 11.17.0 ([e1f3f94](https://github.com/mhaibaraai/movk-nuxt/commit/e1f3f94363faa634521c05eb1c6776cda341b824))
+
 ## [1.5.0](https://github.com/mhaibaraai/movk-nuxt/compare/v1.4.2...v1.5.0) (2026-07-17)
 
 ### ⚠ BREAKING CHANGES

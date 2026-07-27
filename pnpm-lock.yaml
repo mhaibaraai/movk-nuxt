@@ -24,8 +24,8 @@ importers:
         specifier: ^3.12.2
         version: 3.12.2
       '@movk/core':
-        specifier: ^1.4.0
-        version: 1.4.0(vue@3.5.40(typescript@6.0.3))
+        specifier: ^1.4.1
+        version: 1.4.1(vue@3.5.40(typescript@6.0.3))
       '@nuxt/image':
         specifier: ^2.0.0
         version: 2.0.0(db0@0.3.4(better-sqlite3@13.0.1))(ioredis@5.11.1(supports-color@10.2.2))(magic-string@1.1.0)(magicast@0.5.3)(oxc-parser@0.140.0)(rolldown@1.2.0)(srvx@0.11.22)(unplugin@3.3.0(esbuild@0.28.1)(rolldown@1.2.0)(rollup@4.62.2)(vite@8.1.5(@types/node@26.0.0)(esbuild@0.28.1)(jiti@2.7.0)(sass-embedded@1.100.0)(sass@1.100.0)(terser@5.48.0)(yaml@2.9.0)))
@@ -1611,6 +1611,12 @@ packages:
 
   '@movk/core@1.4.0':
     resolution: {integrity: sha512-Y5GAfl+hehB+PiLpH14mY6AuiPKMDpZiaeWD34pY7WrddTgxGh1kj9KMJdfPal9/s8mTTnICPmkQBi9c791qFA==}
+    hasBin: true
+    peerDependencies:
+      vue: ^3.5.25
+
+  '@movk/core@1.4.1':
+    resolution: {integrity: sha512-xm1sO4h6kkuT/D4abZ9ntbr4TEYK9UzHlJAdFQ5/F71L3KaMrZ9WMT+BQBJwh8OWckSqj5Xng/WEDT1azH2rmQ==}
     hasBin: true
     peerDependencies:
       vue: ^3.5.25
@@ -10024,6 +10030,11 @@ snapshots:
       - supports-color
 
   '@movk/core@1.4.0(vue@3.5.40(typescript@6.0.3))':
+    dependencies:
+      '@vueuse/core': 14.3.0(vue@3.5.40(typescript@6.0.3))
+      vue: 3.5.40(typescript@6.0.3)
+
+  '@movk/core@1.4.1(vue@3.5.40(typescript@6.0.3))':
     dependencies:
       '@vueuse/core': 14.3.0(vue@3.5.40(typescript@6.0.3))
       vue: 3.5.40(typescript@6.0.3)
