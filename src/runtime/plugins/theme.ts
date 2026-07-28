@@ -1,6 +1,7 @@
 import { kebabCase } from '@movk/core'
 import { defineNuxtPlugin, useAppConfig, useHead, useSiteConfig } from '#imports'
 import { resolveThemeIcons } from '../domains/theme/theme-icons'
+import { resolveFontHrefMap, type ThemeFontOption } from '../domains/theme/theme-font'
 
 export default defineNuxtPlugin({
   enforce: 'post',
@@ -21,12 +22,8 @@ export default defineNuxtPlugin({
     }
 
     if (import.meta.server) {
-      const pickerFonts = (appConfig.movk?.picker?.fonts ?? []) as Array<{ name: string, href?: string }>
-      const fontHrefMap: Record<string, string> = {}
-      for (const f of pickerFonts) {
-        if (f.href) fontHrefMap[f.name] = f.href
-      }
-      const fontHrefMapJson = JSON.stringify(fontHrefMap)
+      const pickerFonts = (appConfig.movk?.picker?.fonts ?? []) as ThemeFontOption[]
+      const fontHrefMapJson = JSON.stringify(resolveFontHrefMap(pickerFonts))
 
       useHead({
         script: [{
@@ -75,8 +72,8 @@ export default defineNuxtPlugin({
           tagPriority: -1
         }, {
           innerHTML: `
-            var r = localStorage.getItem('${name}-ui-radius');
-            if (r) document.documentElement.style.setProperty('--ui-radius', r + 'rem');
+            var r = parseFloat(localStorage.getItem('${name}-ui-radius'));
+            if (isFinite(r)) document.documentElement.style.setProperty('--ui-radius', r + 'rem');
           `.replace(/\s+/g, ' '),
           type: 'text/javascript',
           tagPriority: -1
@@ -89,16 +86,22 @@ export default defineNuxtPlugin({
           `.replace(/\s+/g, ' ')
         }, {
           innerHTML: [
-            `if (localStorage.getItem('${name}-ui-font')) {`,
             `var font = localStorage.getItem('${name}-ui-font');`,
+            `if (font) {`,
             `var fontEl = document.querySelector('style#nuxt-ui-font');`,
-            `if (fontEl) { fontEl.innerHTML = ':root { --font-sans: \\'' + font + '\\', sans-serif; }'; }`,
+            // textContent 而非 innerHTML：字体名来自 localStorage，避免被当作标记解析
+            `if (fontEl) { fontEl.textContent = ':root { --font-sans: ' + JSON.stringify(font) + ', sans-serif; }'; }`,
             `var fontMap = ${fontHrefMapJson};`,
+            `var href = fontMap[font];`,
+            `var id = 'font-' + font.toLowerCase().replace(/\\s+/g, '-');`,
+            // 未登记的字体不猜测来源；已由 SSR 输出的 link 不重复插入
+            `if (href && !document.getElementById(id)) {`,
             `var lnk = document.createElement('link');`,
             `lnk.rel = 'stylesheet';`,
-            `lnk.href = fontMap[font] || ('https://fonts.googleapis.com/css2?family=' + encodeURIComponent(font) + ':wght@400;500;600;700&display=swap');`,
-            `lnk.id = 'font-' + font.toLowerCase().replace(/\\s+/g, '-');`,
+            `lnk.href = href;`,
+            `lnk.id = id;`,
             `document.head.appendChild(lnk);`,
+            `}`,
             `}`
           ].join(' ')
         }]

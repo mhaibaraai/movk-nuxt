@@ -1,1 +1,3 @@
+/* 项目侧样式入口，需保持在 nuxt.config 的 css 中注册：
+   模块的 runtime/index.css 注册在它之前，此处可覆盖主题变量 */
 @import "tailwindcss" theme(static) source("../../../../..");
