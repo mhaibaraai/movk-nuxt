@@ -1,4 +1,4 @@
-import type { Toast } from '@nuxt/ui/composables'
+import type { ApiToast } from './config'
 
 declare module 'ofetch' {
   interface FetchOptions {
@@ -30,10 +30,10 @@ export interface ApiFetchContext {
  * @description 用于单个请求的 Toast 配置，可覆盖全局配置
  */
 export interface RequestToastOptions {
-  /** 成功提示配置，设置为 false 禁用成功提示 */
-  success?: Partial<Toast> | false
-  /** 错误提示配置，设置为 false 禁用错误提示 */
-  error?: Partial<Toast> | false
+  /** 成功提示配置，设置为 false 禁用成功提示；`show: true` 可覆盖全局关闭 */
+  success?: ApiToast | false
+  /** 错误提示配置，设置为 false 禁用错误提示；`show: true` 可覆盖全局关闭 */
+  error?: ApiToast | false
   /** 自定义成功消息 */
   successMessage?: string
   /** 自定义错误消息 */
