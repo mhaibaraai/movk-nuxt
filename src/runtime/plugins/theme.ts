@@ -2,6 +2,7 @@ import { kebabCase } from '@movk/core'
 import { defineNuxtPlugin, useAppConfig, useHead, useSiteConfig } from '#imports'
 import { resolveThemeIcons } from '../domains/theme/theme-icons'
 import { resolveFontHrefMap, type ThemeFontOption } from '../domains/theme/theme-font'
+import { legacyStorageKeys, storageKey } from '../domains/theme/theme-storage'
 
 export default defineNuxtPlugin({
   enforce: 'post',
@@ -11,13 +12,16 @@ export default defineNuxtPlugin({
     const name = kebabCase(site.name)
 
     if (import.meta.client) {
-      const primary = localStorage.getItem(`${name}-ui-primary`)
+      // 清理升级前写入的 font/radius，避免历史默认值被当作用户选择
+      legacyStorageKeys(name).forEach(key => localStorage.removeItem(key))
+
+      const primary = localStorage.getItem(storageKey(name, 'primary'))
       if (primary) appConfig.ui.colors.primary = primary
 
-      const neutral = localStorage.getItem(`${name}-ui-neutral`)
+      const neutral = localStorage.getItem(storageKey(name, 'neutral'))
       if (neutral) appConfig.ui.colors.neutral = neutral
 
-      const icons = localStorage.getItem(`${name}-ui-icons`)
+      const icons = localStorage.getItem(storageKey(name, 'icons'))
       if (icons) appConfig.ui.icons = resolveThemeIcons(icons, appConfig.ui.icons) as any
     }
 
@@ -29,8 +33,8 @@ export default defineNuxtPlugin({
         script: [{
           innerHTML: `
             (function() {
-              var primaryColor = localStorage.getItem('${name}-ui-primary');
-              var neutralColor = localStorage.getItem('${name}-ui-neutral');
+              var primaryColor = localStorage.getItem('${storageKey(name, 'primary')}');
+              var neutralColor = localStorage.getItem('${storageKey(name, 'neutral')}');
               if (!primaryColor && !neutralColor) return;
               function swapColors(el) {
                 var html = el.innerHTML;
@@ -72,21 +76,21 @@ export default defineNuxtPlugin({
           tagPriority: -1
         }, {
           innerHTML: `
-            var r = parseFloat(localStorage.getItem('${name}-ui-radius'));
+            var r = parseFloat(localStorage.getItem('${storageKey(name, 'radius')}'));
             if (isFinite(r)) document.documentElement.style.setProperty('--ui-radius', r + 'rem');
           `.replace(/\s+/g, ' '),
           type: 'text/javascript',
           tagPriority: -1
         }, {
           innerHTML: `
-            if (localStorage.getItem('${name}-ui-black-as-primary') === 'true') {
+            if (localStorage.getItem('${storageKey(name, 'black-as-primary')}') === 'true') {
               var isDark = document.documentElement.classList.contains('dark');
               document.documentElement.style.setProperty('--ui-primary', isDark ? 'white' : 'black');
             }
           `.replace(/\s+/g, ' ')
         }, {
           innerHTML: [
-            `var font = localStorage.getItem('${name}-ui-font');`,
+            `var font = localStorage.getItem('${storageKey(name, 'font')}');`,
             `if (font) {`,
             `var fontEl = document.querySelector('style#nuxt-ui-font');`,
             // textContent 而非 innerHTML：字体名来自 localStorage，避免被当作标记解析

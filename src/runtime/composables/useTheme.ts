@@ -2,6 +2,7 @@ import { useAppConfig, useColorMode, useSiteConfig } from '#imports'
 import { resolveThemeIcons, themeIcons } from '../domains/theme/theme-icons'
 import { resolveActiveFont, resolveFontLinks, resolveFontStyle, type ThemeFontOption } from '../domains/theme/theme-font'
 import { resolveActiveRadius, resolveRadiusStyle } from '../domains/theme/theme-radius'
+import { storageKey } from '../domains/theme/theme-storage'
 import { omit, kebabCase } from '@movk/core'
 import { useLocalStorage } from '@vueuse/core'
 import colors from 'tailwindcss/colors'
@@ -23,10 +24,10 @@ export function useTheme() {
   const defaultConfig = getDefaultConfig()
 
   // writeDefaults: false —— 未主动选择时不落盘，避免默认值被固化为历史残留
-  const _radius = useLocalStorage<number | null>(`${name}-ui-radius`, null, { writeDefaults: false })
-  const _font = useLocalStorage(`${name}-ui-font`, '', { writeDefaults: false })
-  const _iconSet = useLocalStorage(`${name}-ui-icons`, movk?.icons ?? defaultConfig.icons)
-  const _blackAsPrimary = useLocalStorage(`${name}-ui-black-as-primary`, defaultConfig.blackAsPrimary)
+  const _radius = useLocalStorage<number | null>(storageKey(name, 'radius'), null, { writeDefaults: false })
+  const _font = useLocalStorage(storageKey(name, 'font'), '', { writeDefaults: false })
+  const _iconSet = useLocalStorage(storageKey(name, 'icons'), movk?.icons ?? defaultConfig.icons)
+  const _blackAsPrimary = useLocalStorage(storageKey(name, 'black-as-primary'), defaultConfig.blackAsPrimary)
 
   const pickerFonts: ThemeFontOption[] = movk?.picker?.fonts ?? []
   const configuredFont: string = movk?.font ?? defaultConfig.font
@@ -42,7 +43,7 @@ export function useTheme() {
     },
     set(option) {
       ui.colors.neutral = option as typeof ui.colors.neutral
-      window.localStorage.setItem(`${name}-ui-neutral`, ui.colors.neutral)
+      window.localStorage.setItem(storageKey(name, 'neutral'), ui.colors.neutral)
     }
   })
 
@@ -54,7 +55,7 @@ export function useTheme() {
     },
     set(option) {
       ui.colors.primary = option as typeof ui.colors.primary
-      window.localStorage.setItem(`${name}-ui-primary`, ui.colors.primary)
+      window.localStorage.setItem(storageKey(name, 'primary'), ui.colors.primary)
       setBlackAsPrimary(false)
     }
   })
@@ -207,10 +208,10 @@ export function useTheme() {
     const defaultIcon = movk?.icons ?? defaultConfig.icons
 
     ui.colors.primary = defaultPrimary
-    window.localStorage.removeItem(`${name}-ui-primary`)
+    window.localStorage.removeItem(storageKey(name, 'primary'))
 
     ui.colors.neutral = defaultNeutral
-    window.localStorage.removeItem(`${name}-ui-neutral`)
+    window.localStorage.removeItem(storageKey(name, 'neutral'))
 
     _radius.value = null
     // 清空用户选择，activeFont 自然回落到配置的默认字体
