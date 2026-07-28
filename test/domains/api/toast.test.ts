@@ -66,6 +66,33 @@ describe('domains/api/toast.showToast', () => {
     expect(toastAdd).not.toHaveBeenCalled()
   })
 
+  it('请求级 show=true 覆盖全局 typeConfig.show=false', () => {
+    showToast(
+      'success',
+      'x',
+      { success: { show: true } },
+      { ...baseGlobal, success: { ...baseGlobal.success, show: false } }
+    )
+    expect(toastAdd).toHaveBeenCalledTimes(1)
+  })
+
+  it('请求级 show=true 覆盖全局 enabled=false', () => {
+    showToast('success', 'x', { success: { show: true } }, { ...baseGlobal, enabled: false })
+    expect(toastAdd).toHaveBeenCalledTimes(1)
+  })
+
+  it('请求级 show=false 覆盖全局 typeConfig.show=true', () => {
+    showToast('success', 'x', { success: { show: false } }, baseGlobal)
+    expect(toastAdd).not.toHaveBeenCalled()
+  })
+
+  it('请求级 show 不进入 payload', () => {
+    showToast('success', 'x', { success: { show: true, color: 'info' } }, baseGlobal)
+    const payload = toastAdd.mock.calls[0][0] as Record<string, unknown>
+    expect('show' in payload).toBe(false)
+    expect(payload.color).toBe('info')
+  })
+
   it('ApiResponse 来源时按 responseConfig 抽取 message', () => {
     const response = { code: 0, message: '来自响应' }
     showToast('success', response, undefined, baseGlobal, { messageKey: 'message' })

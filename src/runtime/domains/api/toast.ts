@@ -1,5 +1,6 @@
 import type { ToastProps } from '@nuxt/ui'
 import type { ApiResponse, ApiResponseConfig, ApiToastConfig, RequestToastOptions } from '../../types/api'
+import type { ApiToast } from '../../types/api/config'
 import { extractMessage } from './response'
 import { useNuxtApp, useToast } from '#imports'
 
@@ -51,6 +52,8 @@ function compact<T extends Record<string, unknown>>(obj: T): Partial<T> {
  * @param requestOptions 单次请求覆盖配置；为 false 时整体禁用
  * @param globalConfig 全局 Toast 配置（已合并端点级覆盖）
  * @param responseConfig 用于从 ApiResponse 抽取 message 的字段映射；source 为字符串时可省略
+ * @description 开关优先级：请求级 show 显式声明 > 全局 typeConfig.show > 全局 enabled。
+ * 请求级 `show: true` 可在全局关闭时单次开启。
  */
 export function showToast(
   type: ToastType,
@@ -59,11 +62,15 @@ export function showToast(
   globalConfig: Partial<ApiToastConfig>,
   responseConfig?: Partial<ApiResponseConfig>
 ): void {
-  if (globalConfig.enabled === false || requestOptions === false) return
+  if (requestOptions === false) return
+
+  const requestTypeOptions = requestOptions?.[type]
+  if (requestTypeOptions === false) return
 
   const typeConfig = globalConfig[type]
-  if (typeConfig?.show === false) return
-  if (requestOptions?.[type] === false) return
+  const requestShow = requestTypeOptions?.show
+  const globalShow = globalConfig.enabled !== false && typeConfig?.show !== false
+  if (requestShow === false || (requestShow === undefined && !globalShow)) return
 
   const message = pickMessage(type, source, requestOptions, responseConfig)
   if (!message) return
@@ -72,9 +79,7 @@ export function showToast(
   if (!toast) return
 
   const { show: _show, ...typeConfigProps } = typeConfig ?? {}
-  const requestTypeConfig = typeof requestOptions?.[type] === 'object'
-    ? requestOptions[type] as Partial<ToastProps>
-    : {}
+  const { show: _requestShow, ...requestTypeConfig } = (requestTypeOptions ?? {}) as ApiToast
 
   toast.add(compact({
     title: message,
