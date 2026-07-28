@@ -77,6 +77,12 @@ export interface ModuleOptions {
      * @example 'tw'
      */
     prefix?: StrictUiTheme['prefix']
+    /**
+     * 默认字体，取值需与 `fonts` 中某一项的 `name` 一致。
+     * 缺省时不注入 `--font-sans`，字体由项目 CSS 的 `@theme` 决定
+     * @example 'Alibaba PuHuiTi'
+     */
+    font?: string
     /** ThemePicker 字体可选项；提供时完整替换内置列表 */
     fonts?: ThemeFontConfig[]
     /** ThemePicker 圆角可选项 */
@@ -107,8 +113,9 @@ export default defineNuxtModule<ModuleOptions>({
     nuxt.options.movk = options
     nuxt.options.alias['#movk'] = resolve('./runtime')
 
+    // 置于项目 CSS 之前：模块样式作为基线，项目的 @theme 与 @layer 覆盖得以生效
     nuxt.options.css = nuxt.options.css || []
-    nuxt.options.css.push(resolve('runtime/index.css'))
+    nuxt.options.css.unshift(resolve('runtime/index.css'))
 
     // movk 组件层内部渲染、但消费方通常不会直接书写的 @nuxt/ui 组件,需向 componentDetection 声明,
     // 否则其主题类(如 Table 的 min-w-full)不会被 @source 扫描生成。复用组件层导入清单,去 U 前缀。

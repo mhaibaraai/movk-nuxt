@@ -1,5 +1,6 @@
 import { useAppConfig, useColorMode, useSiteConfig } from '#imports'
 import { resolveThemeIcons, themeIcons } from '../domains/theme/theme-icons'
+import { resolveActiveFont, resolveFontLinks, resolveFontStyle, type ThemeFontOption } from '../domains/theme/theme-font'
 import { omit, kebabCase } from '@movk/core'
 import { useLocalStorage } from '@vueuse/core'
 import colors from 'tailwindcss/colors'
@@ -18,11 +19,13 @@ export function useTheme() {
   const defaultConfig = getDefaultConfig()
 
   const _radius = useLocalStorage(`${name}-ui-radius`, movk?.radius ?? defaultConfig.radius)
-  const _font = useLocalStorage(`${name}-ui-font`, movk?.font ?? defaultConfig.font)
+  const _font = useLocalStorage(`${name}-ui-font`, '')
   const _iconSet = useLocalStorage(`${name}-ui-icons`, movk?.icons ?? defaultConfig.icons)
   const _blackAsPrimary = useLocalStorage(`${name}-ui-black-as-primary`, defaultConfig.blackAsPrimary)
 
-  const pickerFonts: { name: string, href?: string }[] = movk?.picker?.fonts ?? []
+  const pickerFonts: ThemeFontOption[] = movk?.picker?.fonts ?? []
+  const configuredFont: string = movk?.font ?? defaultConfig.font
+  const activeFont = computed(() => resolveActiveFont(_font.value, configuredFont))
 
   const neutralColors: string[] = movk?.picker?.neutralColors ?? []
   const neutral = computed<string>({
@@ -61,7 +64,7 @@ export function useTheme() {
   const fonts: string[] = pickerFonts.map(f => f.name)
   const font = computed<string>({
     get() {
-      return _font.value
+      return activeFont.value
     },
     set(option) {
       _font.value = option
@@ -105,19 +108,9 @@ export function useTheme() {
 
   const radiusStyle = computed(() => `:root { --ui-radius: ${_radius.value}rem; }`)
   const blackAsPrimaryStyle = computed(() => _blackAsPrimary.value ? `:root { --ui-primary: black; } .dark { --ui-primary: white; }` : ':root {}')
-  const fontStyle = computed(() => `:root { --font-sans: '${_font.value}', sans-serif; }`)
+  const fontStyle = computed(() => resolveFontStyle(activeFont.value))
 
-  const link = computed(() => {
-    const fontName = _font.value
-    const fontConfig = pickerFonts.find(f => f.name === fontName)
-    const href = fontConfig?.href
-      ?? `https://fonts.googleapis.com/css2?family=${encodeURIComponent(fontName)}:wght@400;500;600;700&display=swap`
-    return [{
-      rel: 'stylesheet' as const,
-      href,
-      id: `font-${fontName.toLowerCase().replace(/\s+/g, '-')}`
-    }]
-  })
+  const link = computed(() => resolveFontLinks(activeFont.value, pickerFonts))
 
   const style = [
     { innerHTML: radiusStyle, id: `nuxt-ui-radius`, tagPriority: -2 },
@@ -128,7 +121,7 @@ export function useTheme() {
   const hasCSSChanges = computed(() => {
     return _radius.value !== (movk?.radius ?? defaultConfig.radius)
       || _blackAsPrimary.value
-      || _font.value !== (movk?.font ?? defaultConfig.font)
+      || activeFont.value !== configuredFont
   })
 
   const hasConfigChanges = computed(() => {
@@ -143,8 +136,8 @@ export function useTheme() {
       '@import "@nuxt/ui";'
     ]
 
-    if (_font.value !== defaultConfig.font) {
-      lines.push('', '@theme {', `  --font-sans: '${_font.value}', sans-serif;`, '}')
+    if (activeFont.value && activeFont.value !== configuredFont) {
+      lines.push('', '@theme {', `  --font-sans: ${JSON.stringify(activeFont.value)}, sans-serif;`, '}')
     }
 
     const rootLines: string[] = []
@@ -212,7 +205,8 @@ export function useTheme() {
     window.localStorage.removeItem(`${name}-ui-neutral`)
 
     _radius.value = movk?.radius ?? defaultConfig.radius
-    _font.value = movk?.font ?? defaultConfig.font
+    // 清空用户选择，activeFont 自然回落到配置的默认字体
+    _font.value = ''
     _iconSet.value = defaultIcon
     ui.icons = resolveThemeIcons(defaultIcon, ui.icons) as any
     _blackAsPrimary.value = movk?.blackAsPrimary ?? defaultConfig.blackAsPrimary
