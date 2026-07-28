@@ -79,7 +79,7 @@ const { data } = await useApiFetch<User[]>('/users', {
 })
 ```
 
-`toast` accepts four shapes:
+`toast` accepts five shapes:
 
 ```ts
 // Disable all toasts
@@ -96,6 +96,10 @@ toast: {
   success: { title: 'Created', icon: 'i-lucide-check', color: 'primary' },
   error:   { title: 'Failed',  color: 'error', timeout: 5000 }
 }
+
+// Re-enable a toast the global config turned off
+// precedence: request-level show > global success/error.show > global enabled
+toast: { success: { show: true } }
 ```
 
 ## Error handling
