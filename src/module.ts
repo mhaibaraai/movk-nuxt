@@ -85,6 +85,12 @@ export interface ModuleOptions {
     font?: string
     /** ThemePicker 字体可选项；提供时完整替换内置列表 */
     fonts?: ThemeFontConfig[]
+    /**
+     * 默认圆角（单位 rem）。缺省时不注入 `--ui-radius`，
+     * 沿用 `@nuxt/ui` 的默认值或项目 CSS 的声明
+     * @example 0.5
+     */
+    radius?: number
     /** ThemePicker 圆角可选项 */
     radiuses?: number[]
     /** ThemePicker neutral 颜色可选项 */

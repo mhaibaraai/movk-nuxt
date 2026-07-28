@@ -1,6 +1,7 @@
 import { useAppConfig, useColorMode, useSiteConfig } from '#imports'
 import { resolveThemeIcons, themeIcons } from '../domains/theme/theme-icons'
 import { resolveActiveFont, resolveFontLinks, resolveFontStyle, type ThemeFontOption } from '../domains/theme/theme-font'
+import { resolveActiveRadius, resolveRadiusStyle } from '../domains/theme/theme-radius'
 import { omit, kebabCase } from '@movk/core'
 import { useLocalStorage } from '@vueuse/core'
 import colors from 'tailwindcss/colors'
@@ -8,6 +9,9 @@ import { computed } from 'vue'
 import { getDefaultConfig } from '../utils/theme-defaults'
 
 type IconSet = 'lucide' | 'phosphor' | 'tabler'
+
+/** @nuxt/ui 自身的 --ui-radius 默认值，仅用于 ThemePicker 在未配置时的回显 */
+const UI_DEFAULT_RADIUS = 0.25
 
 export function useTheme() {
   const { movk, ui } = useAppConfig()
@@ -18,14 +22,18 @@ export function useTheme() {
 
   const defaultConfig = getDefaultConfig()
 
-  const _radius = useLocalStorage(`${name}-ui-radius`, movk?.radius ?? defaultConfig.radius)
-  const _font = useLocalStorage(`${name}-ui-font`, '')
+  // writeDefaults: false —— 未主动选择时不落盘，避免默认值被固化为历史残留
+  const _radius = useLocalStorage<number | null>(`${name}-ui-radius`, null, { writeDefaults: false })
+  const _font = useLocalStorage(`${name}-ui-font`, '', { writeDefaults: false })
   const _iconSet = useLocalStorage(`${name}-ui-icons`, movk?.icons ?? defaultConfig.icons)
   const _blackAsPrimary = useLocalStorage(`${name}-ui-black-as-primary`, defaultConfig.blackAsPrimary)
 
   const pickerFonts: ThemeFontOption[] = movk?.picker?.fonts ?? []
   const configuredFont: string = movk?.font ?? defaultConfig.font
   const activeFont = computed(() => resolveActiveFont(_font.value, configuredFont))
+
+  const configuredRadius: number | undefined = movk?.radius ?? defaultConfig.radius
+  const activeRadius = computed(() => resolveActiveRadius(_radius.value, configuredRadius))
 
   const neutralColors: string[] = movk?.picker?.neutralColors ?? []
   const neutral = computed<string>({
@@ -54,7 +62,7 @@ export function useTheme() {
   const radiuses: number[] = movk?.picker?.radiuses ?? []
   const radius = computed<number>({
     get() {
-      return _radius.value
+      return activeRadius.value ?? UI_DEFAULT_RADIUS
     },
     set(option) {
       _radius.value = option
@@ -106,7 +114,7 @@ export function useTheme() {
     _blackAsPrimary.value = value
   }
 
-  const radiusStyle = computed(() => `:root { --ui-radius: ${_radius.value}rem; }`)
+  const radiusStyle = computed(() => resolveRadiusStyle(activeRadius.value))
   const blackAsPrimaryStyle = computed(() => _blackAsPrimary.value ? `:root { --ui-primary: black; } .dark { --ui-primary: white; }` : ':root {}')
   const fontStyle = computed(() => resolveFontStyle(activeFont.value))
 
@@ -119,7 +127,7 @@ export function useTheme() {
   ]
 
   const hasCSSChanges = computed(() => {
-    return _radius.value !== (movk?.radius ?? defaultConfig.radius)
+    return activeRadius.value !== configuredRadius
       || _blackAsPrimary.value
       || activeFont.value !== configuredFont
   })
@@ -141,8 +149,8 @@ export function useTheme() {
     }
 
     const rootLines: string[] = []
-    if (_radius.value !== defaultConfig.radius) {
-      rootLines.push(`  --ui-radius: ${_radius.value}rem;`)
+    if (activeRadius.value !== undefined && activeRadius.value !== configuredRadius) {
+      rootLines.push(`  --ui-radius: ${activeRadius.value}rem;`)
     }
     if (_blackAsPrimary.value) {
       rootLines.push('  --ui-primary: black;')
@@ -204,7 +212,7 @@ export function useTheme() {
     ui.colors.neutral = defaultNeutral
     window.localStorage.removeItem(`${name}-ui-neutral`)
 
-    _radius.value = movk?.radius ?? defaultConfig.radius
+    _radius.value = null
     // 清空用户选择，activeFont 自然回落到配置的默认字体
     _font.value = ''
     _iconSet.value = defaultIcon

@@ -72,8 +72,8 @@ export default defineNuxtPlugin({
           tagPriority: -1
         }, {
           innerHTML: `
-            var r = localStorage.getItem('${name}-ui-radius');
-            if (r) document.documentElement.style.setProperty('--ui-radius', r + 'rem');
+            var r = parseFloat(localStorage.getItem('${name}-ui-radius'));
+            if (isFinite(r)) document.documentElement.style.setProperty('--ui-radius', r + 'rem');
           `.replace(/\s+/g, ' '),
           type: 'text/javascript',
           tagPriority: -1

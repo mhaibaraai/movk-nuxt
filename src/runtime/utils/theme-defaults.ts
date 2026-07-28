@@ -22,7 +22,8 @@ export function getDefaultConfig(theme?: ModuleOptions['theme']) {
 
   return {
     dir: 'ltr' as Direction,
-    radius: 0.25,
+    // 缺省不指定圆角：运行时不注入 --ui-radius，沿用 @nuxt/ui 默认值或项目 CSS
+    radius: theme?.radius,
     blackAsPrimary: false,
     // 缺省不指定字体：运行时不注入 --font-sans，交由项目 CSS 的 @theme 决定
     font: theme?.font ?? '',
