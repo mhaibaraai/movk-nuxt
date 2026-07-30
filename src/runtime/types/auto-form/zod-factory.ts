@@ -1,4 +1,5 @@
 import type { z } from 'zod'
+import type { VNodeProps } from 'vue'
 import type { CalendarDate, Time } from '@internationalized/date'
 import type {
   ComponentProps,
@@ -41,8 +42,16 @@ type ExtractLayoutShape<S extends Record<string, any>>
     ? LayoutRestShape<S> & LayoutFieldShape<S>
     : S
 
+// vue 注入的 VNode 级 props（key / ref / onVnode*）不属于控件配置面，剔除避免污染补全
 type StrictComponentProps<C extends IsComponent> = {
-  [K in keyof ComponentProps<C> as {} extends Record<K, unknown> ? never : K]: ComponentProps<C>[K]
+  [K in keyof ComponentProps<C> as K extends keyof VNodeProps
+    ? never
+    : {} extends Record<K, unknown> ? never : K]: ComponentProps<C>[K]
+}
+
+/** 控件事件监听通道；回调由 enhanceEventProps 追加字段上下文作为末位参数 */
+type ControlEventProps = {
+  [K in `on${string}`]?: (...args: any[]) => void
 }
 
 type StrictComponentSlots<C extends IsComponent>
@@ -53,8 +62,23 @@ type ControlKey<TControls extends AutoFormControls> = Extract<KnownKeys<TControl
 type ControlEntryByKey<TControls extends AutoFormControls, K extends string>
   = K extends keyof TControls ? TControls[K] : never
 
+type _IsUnion<T, U = T> = T extends U ? ([U] extends [T] ? false : true) : never
+
+/**
+ * 单一字面量放宽、多成员联合保留。
+ *
+ * Nuxt UI 的 props 泛型默认值偏窄（`M extends boolean = false`、`VK = 'value'`），
+ * 不放宽会让 `multiple: true` 之类的合法取值报错；而 `size` / `color` / `orientation`
+ * 这类真实字面量联合必须原样保留，否则失去补全。
+ */
+type _WidenNarrow<T>
+  = IsAny<T> extends true ? T
+    : [NonNullable<T>] extends [never] ? unknown
+        : _IsUnion<NonNullable<T>> extends true ? T
+          : WidenLiteral<T>
+
 type _WidenForFactory<T> = {
-  [K in keyof T]+?: WidenLiteral<T[K]>
+  [K in keyof T]+?: _WidenNarrow<T[K]>
 }
 
 type _IsUnsetLike<P>
@@ -65,7 +89,9 @@ type _IsUnsetLike<P>
               : false
 
 type ResolveControlProps<C extends IsComponent, P>
-  = _IsUnsetLike<P> extends true ? StrictComponentProps<C> : Prettify<_WidenForFactory<P> & {}>
+  = _IsUnsetLike<P> extends true
+    ? StrictComponentProps<C>
+    : Prettify<_WidenForFactory<P> & {}> & ControlEventProps
 
 type ExtractControlProps<T> = T extends AutoFormControl<infer C, infer P, any>
   ? ResolveControlProps<C, P>
