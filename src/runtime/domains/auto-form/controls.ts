@@ -1,7 +1,22 @@
 import type { IsComponent } from '@movk/core'
 import type { AutoFormControl, _Unset } from '../../types/auto-form/controls'
 import type {
+  CheckboxGroupProps, CheckboxGroupSlots,
+  CheckboxProps, CheckboxSlots,
+  FileUploadProps, FileUploadSlots,
+  InputDateProps, InputDateSlots,
+  InputMenuProps, InputMenuSlots,
+  InputNumberProps, InputNumberSlots,
   InputProps, InputSlots,
+  InputTagsProps, InputTagsSlots,
+  InputTimeProps, InputTimeSlots,
+  ListboxProps, ListboxSlots,
+  PinInputProps, PinInputSlots,
+  RadioGroupProps, RadioGroupSlots,
+  SelectMenuProps, SelectMenuSlots,
+  SelectProps, SelectSlots,
+  SliderProps,
+  SwitchProps, SwitchSlots,
   TextareaProps, TextareaSlots
 } from '@nuxt/ui'
 import type { CalendarDateControlProps } from '../../types/components/date-picker'
@@ -92,15 +107,54 @@ const DEFAULT_CONTROL_COMPONENTS = {
 
 type DefaultControlComponents = typeof DEFAULT_CONTROL_COMPONENTS
 
+/** 本地 .vue 控件：组件类型在声明发射期可解析，controlProps 由组件推导 */
+type LocalControlKey
+  = 'calendarDate'
+    | 'withClear' | 'withPasswordToggle' | 'withCopy'
+    | 'withCharacterLimit' | 'withFloatingLabel' | 'asPhoneNumberInput'
+    | 'colorChooser' | 'slideVerify' | 'pillGroup'
+
+/**
+ * Nuxt UI 控件的 `[props, slots]` 类型登记表。
+ *
+ * `#components` 在模块声明发射期无法解析，`U*` 组件类型会退化为 `any`，
+ * 使 `controlProps` / `controlSlots` 在消费端失去类型提示；此处显式登记以绕开组件推导。
+ */
+interface NuxtUIControlTypes {
+  string: [InputProps, InputSlots]
+  number: [InputNumberProps, InputNumberSlots]
+  boolean: [CheckboxProps, CheckboxSlots]
+  enum: [SelectProps, SelectSlots]
+  file: [FileUploadProps, FileUploadSlots]
+  inputDate: [InputDateProps, InputDateSlots]
+  inputTime: [InputTimeProps, InputTimeSlots]
+  textarea: [TextareaProps, TextareaSlots]
+  switch: [SwitchProps, SwitchSlots]
+  slider: [SliderProps, _Unset]
+  selectMenu: [SelectMenuProps, SelectMenuSlots]
+  inputMenu: [InputMenuProps, InputMenuSlots]
+  checkboxGroup: [CheckboxGroupProps, CheckboxGroupSlots]
+  radioGroup: [RadioGroupProps, RadioGroupSlots]
+  inputTags: [InputTagsProps, InputTagsSlots]
+  pinInput: [PinInputProps, PinInputSlots]
+  listbox: [ListboxProps, ListboxSlots]
+}
+
+/** 约束为 never；有未归类控件时此处直接报错 */
+type _AssertNever<T extends never> = T
+
+// 新增控件必须二选一归类：Nuxt UI 控件登记进 NuxtUIControlTypes，本地 .vue 控件登记进 LocalControlKey
+type _AssertControlsClassified = _AssertNever<
+  Exclude<keyof DefaultControlComponents, keyof NuxtUIControlTypes | LocalControlKey>
+>
+
 type DefaultControlMap = {
   readonly [K in keyof DefaultControlComponents]:
-  K extends 'string'
-    ? AutoFormControl<typeof UInput, InputProps, InputSlots>
-    : K extends 'textarea'
-      ? AutoFormControl<typeof UTextarea, TextareaProps, TextareaSlots>
-      : K extends 'calendarDate'
-        ? AutoFormControl<DefaultControlComponents[K], CalendarDateControlProps>
-        : AutoFormControl<DefaultControlComponents[K]>
+  K extends keyof NuxtUIControlTypes
+    ? AutoFormControl<DefaultControlComponents[K], NuxtUIControlTypes[K][0], NuxtUIControlTypes[K][1]>
+    : K extends 'calendarDate'
+      ? AutoFormControl<DefaultControlComponents[K], CalendarDateControlProps>
+      : AutoFormControl<DefaultControlComponents[K]>
 }
 
 export const DEFAULT_CONTROLS: DefaultControlMap
