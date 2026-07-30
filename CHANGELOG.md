@@ -21,6 +21,45 @@
 * **api:** ApiToast 继承 Partial<Toast> 允许省略字段 ([94a0c1e](https://github.com/mhaibaraai/movk-nuxt/commit/94a0c1e758a95fa6e86a93f1a828268529d36137))
 * **api:** 请求级 toast show 可覆盖全局关闭 ([8b02ac0](https://github.com/mhaibaraai/movk-nuxt/commit/8b02ac045b78588414f0a4cd8ad78e9677bca8b6))
 * **auto-form:** 修复 controlProps 在消费端丢失类型提示 ([8b8c44d](https://github.com/mhaibaraai/movk-nuxt/commit/8b8c44da89926bf00be4ab57521ab55079f3f54a))
+* **form-control:** 显式标注 useFieldControl 返回类型修复声明发射报错 ([5940cb7](https://github.com/mhaibaraai/movk-nuxt/commit/5940cb7c35dd94fdd6745b62027eb1d56aa90dde))
+* **playground:** 重新注册项目样式入口 ([0ca8417](https://github.com/mhaibaraai/movk-nuxt/commit/0ca8417c4ae1d059befb783e4a48f0beae035d18))
+
+### 📝 Documentation
+
+* **api:** 补充 toast 开关优先级与请求级开启说明 ([5c29ad4](https://github.com/mhaibaraai/movk-nuxt/commit/5c29ad40785c0c1083e35cf5ca30bc7530cb92e7))
+* **theme:** 补充圆角优先级说明与 theme.radius 配置 ([e251b52](https://github.com/mhaibaraai/movk-nuxt/commit/e251b522ab56a586857b3e690e2bcfb7ebfd1cfd))
+* **theme:** 补充字体优先级说明与 theme.font 配置 ([9b6e610](https://github.com/mhaibaraai/movk-nuxt/commit/9b6e6103b71d2facb833af79f59ee15f1a378496))
+
+### ✅ Tests
+
+* **theme:** 补充圆角解析单测 ([e2731c7](https://github.com/mhaibaraai/movk-nuxt/commit/e2731c7282438957340fc1a08380047aca385796))
+* **theme:** 补充字体解析单测 ([6ef2e61](https://github.com/mhaibaraai/movk-nuxt/commit/6ef2e61a883d8f67c479e4e44929157819e9edef))
+
+### 🔧 Chores
+
+* **release:** v1.6.0 ([bcd8cc4](https://github.com/mhaibaraai/movk-nuxt/commit/bcd8cc484eeb81f9367cc485c5a7621f442d9b78))
+
+## [1.6.0](https://github.com/mhaibaraai/movk-nuxt/compare/v1.5.1...v1.6.0) (2026-07-30)
+
+### ⚠ BREAKING CHANGES
+
+* **theme:** 未配置 movk.theme.font 的项目不再自动应用 Alibaba PuHuiTi，
+  将回落到 Tailwind 默认字体栈。需保持原有外观的项目应显式声明 theme.font 及
+  fonts 中对应的条目。
+* **theme:** 未配置 movk.theme.radius 的项目不再由模块注入 --ui-radius，
+  改为沿用 @nuxt/ui 默认值或项目 CSS 的声明。依赖模块强制注入该变量的项目应显式
+  声明 theme.radius。
+
+### ✨ Features
+
+* **theme:** 圆角默认值改由 theme.radius 声明，交还项目 CSS 控制权 ([8985884](https://github.com/mhaibaraai/movk-nuxt/commit/8985884fda1309c63ebef67eee814ad310e2c2d3))
+* **theme:** 字体默认值改由 theme.font 声明，交还项目 CSS 控制权 ([313d4b0](https://github.com/mhaibaraai/movk-nuxt/commit/313d4b06578f0ba69484115e9659e93e1cd7d27d))
+
+### 🐛 Bug Fixes
+
+* **api:** ApiToast 继承 Partial<Toast> 允许省略字段 ([94a0c1e](https://github.com/mhaibaraai/movk-nuxt/commit/94a0c1e758a95fa6e86a93f1a828268529d36137))
+* **api:** 请求级 toast show 可覆盖全局关闭 ([8b02ac0](https://github.com/mhaibaraai/movk-nuxt/commit/8b02ac045b78588414f0a4cd8ad78e9677bca8b6))
+* **auto-form:** 修复 controlProps 在消费端丢失类型提示 ([8b8c44d](https://github.com/mhaibaraai/movk-nuxt/commit/8b8c44da89926bf00be4ab57521ab55079f3f54a))
 * **playground:** 重新注册项目样式入口 ([0ca8417](https://github.com/mhaibaraai/movk-nuxt/commit/0ca8417c4ae1d059befb783e4a48f0beae035d18))
 
 ### 📝 Documentation

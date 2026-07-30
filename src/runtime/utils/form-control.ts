@@ -73,8 +73,8 @@ type FieldColor<T extends FieldControlProps> = NonNullable<T['color']> | 'error'
 
 // 显式标注返回类型：直接展开 useFormField 会让推断结果引用 @vueuse/shared 的
 // UseDebounceFnReturn，声明发射期报 TS2883（不可移植）。
-type FieldControl<T extends FieldControlProps> =
-  Omit<ReturnType<typeof useFormField<T>>, 'size' | 'color' | 'disabled'> & {
+type FieldControl<T extends FieldControlProps>
+  = Omit<ReturnType<typeof useFormField<T>>, 'size' | 'color' | 'disabled'> & {
     size: ComputedRef<FieldSize<T>>
     disabled: ComputedRef<boolean>
     color: ComputedRef<FieldColor<T>>
