@@ -6,17 +6,6 @@ import type { ModuleOptions } from '../../module'
  * 放在 runtime 内，避免 runtime 反向依赖构建期 `src/utils`（dist 运行时无法解析）。
  */
 export function getDefaultConfig(theme?: ModuleOptions['theme']) {
-  // 结构化注解避免 dts 引用私有 ThemeFontConfig（保持类型导出最小必要）
-  const pickerFonts: Array<{ name: string, href?: string }> = theme?.fonts ?? [
-    { name: 'Alibaba PuHuiTi', href: 'https://cdn.mhaibaraai.cn/fonts/alibaba-puhuiti.css' },
-    { name: 'Public Sans' },
-    { name: 'DM Sans' },
-    { name: 'Geist' },
-    { name: 'Inter' },
-    { name: 'Poppins' },
-    { name: 'Outfit' },
-    { name: 'Raleway' }
-  ]
   const pickerRadiuses = theme?.radiuses ?? [0, 0.125, 0.25, 0.375, 0.5]
   const pickerNeutralColors = theme?.neutralColors ?? ['slate', 'gray', 'zinc', 'neutral', 'stone', 'taupe', 'mauve', 'mist', 'olive']
 
@@ -25,8 +14,6 @@ export function getDefaultConfig(theme?: ModuleOptions['theme']) {
     // 缺省不指定圆角：运行时不注入 --ui-radius，沿用 @nuxt/ui 默认值或项目 CSS
     radius: theme?.radius,
     blackAsPrimary: false,
-    // 缺省不指定字体：运行时不注入 --font-sans，交由项目 CSS 的 @theme 决定
-    font: theme?.font ?? '',
     icons: 'lucide',
     prefix: theme?.prefix,
     tv: {
@@ -34,6 +21,6 @@ export function getDefaultConfig(theme?: ModuleOptions['theme']) {
         prefix: theme?.prefix
       }
     },
-    picker: { fonts: pickerFonts, radiuses: pickerRadiuses, neutralColors: pickerNeutralColors }
+    picker: { radiuses: pickerRadiuses, neutralColors: pickerNeutralColors }
   }
 }

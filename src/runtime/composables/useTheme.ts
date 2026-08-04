@@ -1,6 +1,5 @@
 import { useAppConfig, useColorMode, useSiteConfig } from '#imports'
 import { resolveThemeIcons, themeIcons } from '../domains/theme/theme-icons'
-import { resolveActiveFont, resolveFontLinks, resolveFontStyle, type ThemeFontOption } from '../domains/theme/theme-font'
 import { resolveActiveRadius, resolveRadiusStyle } from '../domains/theme/theme-radius'
 import { omit, kebabCase } from '@movk/core'
 import { useLocalStorage } from '@vueuse/core'
@@ -24,13 +23,8 @@ export function useTheme() {
 
   // writeDefaults: false —— 未主动选择时不落盘，避免默认值被固化为历史残留
   const _radius = useLocalStorage<number | null>(`${name}-ui-radius`, null, { writeDefaults: false })
-  const _font = useLocalStorage(`${name}-ui-font`, '', { writeDefaults: false })
   const _iconSet = useLocalStorage(`${name}-ui-icons`, movk?.icons ?? defaultConfig.icons)
   const _blackAsPrimary = useLocalStorage(`${name}-ui-black-as-primary`, defaultConfig.blackAsPrimary)
-
-  const pickerFonts: ThemeFontOption[] = movk?.picker?.fonts ?? []
-  const configuredFont: string = movk?.font ?? defaultConfig.font
-  const activeFont = computed(() => resolveActiveFont(_font.value, configuredFont))
 
   const configuredRadius: number | undefined = movk?.radius ?? defaultConfig.radius
   const activeRadius = computed(() => resolveActiveRadius(_radius.value, configuredRadius))
@@ -66,16 +60,6 @@ export function useTheme() {
     },
     set(option) {
       _radius.value = option
-    }
-  })
-
-  const fonts: string[] = pickerFonts.map(f => f.name)
-  const font = computed<string>({
-    get() {
-      return activeFont.value
-    },
-    set(option) {
-      _font.value = option
     }
   })
 
@@ -116,20 +100,15 @@ export function useTheme() {
 
   const radiusStyle = computed(() => resolveRadiusStyle(activeRadius.value))
   const blackAsPrimaryStyle = computed(() => _blackAsPrimary.value ? `:root { --ui-primary: black; } .dark { --ui-primary: white; }` : ':root {}')
-  const fontStyle = computed(() => resolveFontStyle(activeFont.value))
-
-  const link = computed(() => resolveFontLinks(activeFont.value, pickerFonts))
 
   const style = [
     { innerHTML: radiusStyle, id: `nuxt-ui-radius`, tagPriority: -2 },
-    { innerHTML: blackAsPrimaryStyle, id: `nuxt-ui-black-as-primary`, tagPriority: -2 },
-    { innerHTML: fontStyle, id: `nuxt-ui-font`, tagPriority: -2 }
+    { innerHTML: blackAsPrimaryStyle, id: `nuxt-ui-black-as-primary`, tagPriority: -2 }
   ]
 
   const hasCSSChanges = computed(() => {
     return activeRadius.value !== configuredRadius
       || _blackAsPrimary.value
-      || activeFont.value !== configuredFont
   })
 
   const hasConfigChanges = computed(() => {
@@ -143,10 +122,6 @@ export function useTheme() {
       '@import "tailwindcss";',
       '@import "@nuxt/ui";'
     ]
-
-    if (activeFont.value && activeFont.value !== configuredFont) {
-      lines.push('', '@theme {', `  --font-sans: ${JSON.stringify(activeFont.value)}, sans-serif;`, '}')
-    }
 
     const rootLines: string[] = []
     if (activeRadius.value !== undefined && activeRadius.value !== configuredRadius) {
@@ -213,8 +188,6 @@ export function useTheme() {
     window.localStorage.removeItem(`${name}-ui-neutral`)
 
     _radius.value = null
-    // 清空用户选择，activeFont 自然回落到配置的默认字体
-    _font.value = ''
     _iconSet.value = defaultIcon
     ui.icons = resolveThemeIcons(defaultIcon, ui.icons) as any
     _blackAsPrimary.value = movk?.blackAsPrimary ?? defaultConfig.blackAsPrimary
@@ -223,7 +196,6 @@ export function useTheme() {
   return {
     color,
     style,
-    link,
     neutralColors,
     neutral,
     primaryColors,
@@ -232,8 +204,6 @@ export function useTheme() {
     setBlackAsPrimary,
     radiuses,
     radius,
-    fonts,
-    font,
     icon,
     icons,
     modes,

@@ -1,4 +1,5 @@
 import type { MovkApiFullConfig } from './runtime/types/api/module'
+import type { MovkFontFamily, ThemeFontOption } from './runtime/domains/theme/theme-font'
 import type { ModuleOptions as UiModuleOptions } from '@nuxt/ui'
 import type { ModuleOptions as SiteConfigOptions } from 'nuxt-site-config'
 import type { SiteConfigInput } from 'nuxt-site-config/kit'
@@ -27,16 +28,6 @@ interface NuxtWithExtra {
     ui?: UiModuleOptions
     site?: SiteConfigOptions
   }
-}
-
-interface ThemeFontConfig {
-  /** 字体名称 */
-  name: string
-  /**
-   * 字体 CSS 文件的完整 URL；未提供时运行时回退到 Google Fonts URL
-   * @example 'https://cdn.mhaibaraai.cn/fonts/alibaba-puhuiti.css'
-   */
-  href?: string
 }
 
 type StrictUiTheme = {
@@ -78,13 +69,13 @@ export interface ModuleOptions {
      */
     prefix?: StrictUiTheme['prefix']
     /**
-     * 默认字体，取值需与 `fonts` 中某一项的 `name` 一致。
+     * 全局字体。内置字体给名字即可，模块在构建期注入样式表与带中文回退栈的 `--font-sans`；
+     * 自托管字体用 `{ name, href }` 形式补上入口 CSS 地址。
      * 缺省时不注入 `--font-sans`，字体由项目 CSS 的 `@theme` 决定
      * @example 'Alibaba PuHuiTi'
+     * @see https://github.com/mhaibaraai/movk-fonts
      */
-    font?: string
-    /** ThemePicker 字体可选项；提供时完整替换内置列表 */
-    fonts?: ThemeFontConfig[]
+    font?: MovkFontFamily | (string & {}) | ThemeFontOption
     /**
      * 默认圆角（单位 rem）。缺省时不注入 `--ui-radius`，
      * 沿用 `@nuxt/ui` 的默认值或项目 CSS 的声明

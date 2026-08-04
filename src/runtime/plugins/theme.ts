@@ -1,7 +1,6 @@
 import { kebabCase } from '@movk/core'
 import { defineNuxtPlugin, useAppConfig, useHead, useSiteConfig } from '#imports'
 import { resolveThemeIcons } from '../domains/theme/theme-icons'
-import { resolveFontHrefMap, type ThemeFontOption } from '../domains/theme/theme-font'
 
 export default defineNuxtPlugin({
   enforce: 'post',
@@ -22,9 +21,6 @@ export default defineNuxtPlugin({
     }
 
     if (import.meta.server) {
-      const pickerFonts = (appConfig.movk?.picker?.fonts ?? []) as ThemeFontOption[]
-      const fontHrefMapJson = JSON.stringify(resolveFontHrefMap(pickerFonts))
-
       useHead({
         script: [{
           innerHTML: `
@@ -84,26 +80,6 @@ export default defineNuxtPlugin({
               document.documentElement.style.setProperty('--ui-primary', isDark ? 'white' : 'black');
             }
           `.replace(/\s+/g, ' ')
-        }, {
-          innerHTML: [
-            `var font = localStorage.getItem('${name}-ui-font');`,
-            `if (font) {`,
-            `var fontEl = document.querySelector('style#nuxt-ui-font');`,
-            // textContent 而非 innerHTML：字体名来自 localStorage，避免被当作标记解析
-            `if (fontEl) { fontEl.textContent = ':root { --font-sans: ' + JSON.stringify(font) + ', sans-serif; }'; }`,
-            `var fontMap = ${fontHrefMapJson};`,
-            `var href = fontMap[font];`,
-            `var id = 'font-' + font.toLowerCase().replace(/\\s+/g, '-');`,
-            // 未登记的字体不猜测来源；已由 SSR 输出的 link 不重复插入
-            `if (href && !document.getElementById(id)) {`,
-            `var lnk = document.createElement('link');`,
-            `lnk.rel = 'stylesheet';`,
-            `lnk.href = href;`,
-            `lnk.id = id;`,
-            `document.head.appendChild(lnk);`,
-            `}`,
-            `}`
-          ].join(' ')
         }]
       })
     }

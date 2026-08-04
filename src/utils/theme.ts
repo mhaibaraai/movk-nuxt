@@ -1,9 +1,10 @@
 import type { Resolver } from '@nuxt/kit'
 import type { Nuxt } from '@nuxt/schema'
 import type { ModuleOptions } from '../module'
-import { addPlugin } from '@nuxt/kit'
+import { addPlugin, useLogger } from '@nuxt/kit'
 import defu from 'defu'
 import { getDefaultConfig } from '../runtime/utils/theme-defaults'
+import { resolveFontLinks, resolveFontSource } from '../runtime/domains/theme/theme-font'
 import type { Direction } from '@nuxt/ui'
 
 export function addTheme(nuxt: Nuxt, resolve: Resolver['resolve'], theme?: ModuleOptions['theme']) {
@@ -15,6 +16,8 @@ export function addTheme(nuxt: Nuxt, resolve: Resolver['resolve'], theme?: Modul
     { charset: 'utf-8' },
     { name: 'viewport', content: 'width=device-width, initial-scale=1' }
   )
+
+  addFontLinks(nuxt, theme?.font)
 
   nuxt.options.app.head.htmlAttrs = defu(nuxt.options.app.head.htmlAttrs || {}, {
     dir: 'ltr' as Direction
@@ -44,4 +47,28 @@ export function addTheme(nuxt: Nuxt, resolve: Resolver['resolve'], theme?: Modul
     src: resolve('runtime/plugins/theme'),
     mode: 'all'
   })
+}
+
+/**
+ * 字体样式表在构建期写入 `<head>`，随 SSR 直出，不依赖运行时 JS。
+ * `--font-sans` 由 `movk-ui.css` 模板注入，二者共用同一份 `theme.font`。
+ */
+function addFontLinks(nuxt: Nuxt, font: NonNullable<ModuleOptions['theme']>['font']) {
+  const source = resolveFontSource(font)
+  if (!source) return
+
+  const links = resolveFontLinks(source)
+  if (!links.length) {
+    // 未登记的字体不猜测来源：在无法访问 Google Fonts 的网络环境下，
+    // 猜测只会换来一个必然超时的请求
+    useLogger('movk').warn(
+      `Font "${source.name}" is not a built-in family and has no href, `
+      + 'so only --font-sans is injected and no stylesheet is loaded. '
+      + 'Use a built-in family name, or pass { name, href } with the stylesheet URL.'
+    )
+    return
+  }
+
+  nuxt.options.app.head.link = nuxt.options.app.head.link || []
+  nuxt.options.app.head.link.push(...links)
 }

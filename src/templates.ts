@@ -6,6 +6,7 @@ import * as theme from './theme'
 import type { ModuleOptions } from './module'
 import type { Nuxt } from 'nuxt/schema'
 import { applyDefaultVariants, applyPrefixToObject } from './utils/theme-variants'
+import { resolveFontFamily, resolveFontSource } from './runtime/domains/theme/theme-font'
 
 export function getTemplates(options: ModuleOptions, nuxt?: Nuxt) {
   const templates: NuxtTemplate[] = []
@@ -100,13 +101,26 @@ export function getTemplates(options: ModuleOptions, nuxt?: Nuxt) {
     return sources.join('\n')
   }
 
+  /**
+   * 走 `@theme` 而非无层级的 `:root`：本模板经 `runtime/index.css` 引入，
+   * 而后者被置于项目 CSS 之前，项目自己的 `@theme` 因此仍能覆盖。
+   */
+  function generateFontTheme() {
+    if (options.theme?.enabled === false) return ''
+
+    const source = resolveFontSource(options.theme?.font)
+    if (!source) return ''
+
+    return `@theme {\n  --font-sans: ${resolveFontFamily(source.name)};\n}`
+  }
+
   templates.push({
     filename: 'movk-ui.css',
     write: true,
     getContents: async () => {
       const sources = await generateSources()
       const inlineSafelist = '@source inline("{,sm:,md:,lg:,xl:}grid-cols-{1,2,3,4,5,6,7,8,9,10,11,12}");'
-      return `${sources}\n${inlineSafelist}`
+      return [sources, inlineSafelist, generateFontTheme()].filter(Boolean).join('\n')
     }
   })
 
@@ -129,24 +143,16 @@ import type { HookResult } from '@nuxt/schema'
 import type { FetchContext } from 'ofetch'
 
 type Radius = 0 | 0.125 | 0.25 | 0.375 | 0.5
-type FontFamily = 'Alibaba PuHuiTi' | 'Public Sans' | 'DM Sans' | 'Geist' | 'Inter' | 'Poppins' | 'Outfit' | 'Raleway'
 type Icons = 'lucide' | 'phosphor' | 'tabler'
-
-interface PickerFontEntry {
-  name: string
-  href?: string
-}
 
 type AppConfigUI = {
   dir?: Direction,
   radius?: Radius | (number & {})
   blackAsPrimary?: boolean
-  font?: FontFamily | (string & {})
   icons?: Icons | (string & {})
   prefix?: string
   tv?: typeof defaultConfig
   picker?: {
-    fonts?: PickerFontEntry[]
     radiuses?: number[]
     neutralColors?: string[]
   }
