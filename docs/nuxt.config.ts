@@ -3,7 +3,12 @@ import pkg from '../package.json'
 export default defineNuxtConfig({
   extends: ['@movk/nuxt-docs'],
 
-  modules: ['@movk/nuxt', '@nuxtjs/i18n'],
+  modules: [
+    '../src/module',
+    '@nuxtjs/i18n',
+    '@vercel/analytics',
+    '@vercel/speed-insights'
+  ],
 
   $development: {
     site: {
@@ -42,7 +47,7 @@ export default defineNuxtConfig({
     '/en/docs/composables': { redirect: '/en/docs/composables/use-auto-form', prerender: false }
   },
 
-  compatibilityDate: 'latest',
+  compatibilityDate: '2026-06-30',
 
   vite: {
     optimizeDeps: {
