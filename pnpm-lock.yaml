@@ -81,9 +81,6 @@ importers:
       tinyglobby:
         specifier: ^0.2.17
         version: 0.2.17
-      unifont:
-        specifier: ^0.7.4
-        version: 0.7.4
       unplugin:
         specifier: ^3.3.0
         version: 3.3.0(esbuild@0.28.1)(rolldown@1.2.1)(rollup@4.62.3)(vite@8.2.0(@types/node@26.1.2)(esbuild@0.28.1)(jiti@2.7.0)(sass-embedded@1.100.0)(sass@1.100.0)(terser@5.49.0)(yaml@2.9.0))
