@@ -4,12 +4,11 @@ import { zh_cn } from '@nuxt/ui/locale'
 const appConfig = useAppConfig()
 const { components, groups, items } = useNavigation()
 
-const { color, style, link } = useTheme()
+const { color, style } = useTheme()
 
 useHead({
   title: 'Movk Nuxt · Playground',
   meta: [{ key: 'theme-color', name: 'theme-color', content: color }],
-  link,
   style
 })
 

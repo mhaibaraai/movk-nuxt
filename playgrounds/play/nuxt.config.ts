@@ -29,6 +29,9 @@ export default defineNuxtConfig({
   },
 
   movk: {
+    theme: {
+      font: 'Alibaba PuHuiTi'
+    },
     api: {
       enabled: true,
       toast: { success: { show: true } },
