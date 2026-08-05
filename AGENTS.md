@@ -61,11 +61,11 @@ pnpm clean
 
 | 路径 | 职责 |
 | --- | --- |
-| `src/module.ts` | 模块入口：moduleDependencies 版本校验、API/主题初始化、注册组件与 composables |
+| `src/module.ts` | 模块入口：moduleDependencies 版本校验、API/主题初始化、注册组件与 composables、校验项目已引入模块样式 |
 | `src/templates.ts` | 虚拟模板生成；`getTemplates` 由 Nuxt 模块与 Vue unplugin 共享 |
 | `src/unplugin.ts` | Vue 模式 unplugin 工厂：链入 `@nuxt/ui` unplugin 后叠加 movk 子插件 |
 | `src/vite.ts` | Vite 插件入口（`export default MovkPlugin.vite`） |
-| `src/plugins/` | Vue 模式 unplugin 子插件：`environment`（`#imports`/`#components`/Icon 覆盖）、`templates`（`#build/movk-ui` 写盘 + alias）、`app-config`（注入 movk 键）、`plugins`（`@movk/nuxt/vue-plugin` 虚拟） |
+| `src/plugins/` | Vue 模式 unplugin 子插件：`environment`（`#imports`/`#components`/Icon 覆盖）、`templates`（`#build/movk-ui` 写盘 + alias）、`app-config`（注入 movk 键）、`font`（字体样式表 `<link>` 注入 `index.html`）、`plugins`（`@movk/nuxt/vue-plugin` 虚拟） |
 | `src/runtime/components/` | 对外组件：10 个主组件（AutoForm、DataTable、SearchForm、DatePicker、ColorChooser、MessageBox、PillGroup、Popconfirm、SlideVerify、Tree）+ `input/` 6 个输入增强 + `theme-picker/` |
 | `src/runtime/domains/` | 业务逻辑层 + 私有子组件，按域划分：`api/`（拦截器、端点、错误、传输）、`auto-form/`（字段、控件、Schema 解析）、`data-table/`（列解析、特殊列）、`tree/`（树归一化、搜索、懒加载、工具栏子组件）、`theme/` |
 | `src/runtime/composables/` | 9 个：`useApiFetch` / `useLazyApiFetch` / `useClientApiFetch`、`useAutoForm`、`useTheme`、`useDateFormatter`、`useMessageBox`、`useUploadWithProgress` / `useDownloadWithProgress` |
@@ -73,14 +73,16 @@ pnpm clean
 | `src/runtime/utils/` | 运行时工具：`meta`、`form-control`、`tv`、`extend-theme`、`theme-defaults`（主题默认 app.config，两模式共用）、`tree-expand` / `tree-selection`（树形展开/选中纯函数，Tree 与 DataTable 共用） |
 | `src/runtime/vue/` | 非 Nuxt 桩层：`stubs/`（`#imports` 桩，转发 `@nuxt/ui` 同模式桩 + `useSiteConfig`/`useOverlay`）、`composables/useSiteConfig`、`plugins/theme`（剥离 SSR 的 vue 主题插件） |
 | `src/theme/` | 主题配置，每组件/功能一个文件（约 18 个），`index.ts` 聚合 |
-| `src/utils/` | 模块构建期工具：`defaults`、`theme-variants`、`theme` |
+| `src/utils/` | 模块构建期工具：`defaults`、`theme-variants`、`theme`、`css`（校验项目已 `@import "@movk/nuxt"`） |
 | `playgrounds/play/` | Nuxt playground，含 `app/pages/` 演示页与 `server/api/` mock |
 | `playgrounds/vue/` | 纯 Vite + Vue playground，验证非 Nuxt 模式（`vite.config.ts` 用 `@movk/nuxt/vite`，入口 `app.use(@movk/nuxt/vue-plugin)`） |
 | 根 `vue-plugin.d.ts` | `@movk/nuxt/vue-plugin` 类型声明 |
 | `docs/` | 文档站：`content/` 文档、`app/components/content/examples/` 示例组件、`server/mcp/` MCP Server、`skills/` |
-| `test/` | Vitest 用例：`composables/`、`domains/api/`、`domains/auto-form/`、`utils/` |
+| `test/` | Vitest 用例：`composables/`、`domains/api/`、`domains/auto-form/`、`plugins/`、`utils/` |
 
 **核心约定**：业务逻辑落在 `runtime/domains/<域>`，对外组件保持薄壳；私有子组件放在对应域的 `components/` 下，不进入 `runtime/components/`。
+
+**样式入口约定**：`src/runtime/index.css` 是被引入的片段（不含 `@import "tailwindcss"`），对齐 `@nuxt/ui`；模块不往 `nuxt.options.css` 注册它，由项目 CSS 写 `@import "@movk/nuxt"`。全项目只能有一个 Tailwind 入口——第二个 `@import "tailwindcss"` 会形成独立上下文，其默认主题转储会覆盖模块注入的 `--font-sans` 等内置主题变量。漏引时 `src/utils/css.ts` 在构建期告警。
 
 ## Vite/Vue 双模式
 
