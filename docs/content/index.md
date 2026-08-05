@@ -381,7 +381,7 @@ DatePicker、SearchForm、PillGroup、SlideVerify、Tree 等独立组件即取�
   运行时主题
 
   #description
-  颜色、圆角、字体、图标集与明暗模式可在运行时切换，配套 ThemePicker。
+  颜色、圆角、图标集与明暗模式可在运行时切换，配套 ThemePicker。
   :::
 
 #default

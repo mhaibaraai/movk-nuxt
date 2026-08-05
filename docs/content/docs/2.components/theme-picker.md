@@ -4,12 +4,12 @@ description: 可视化主题配置组件。
 category: advanced
 seo:
   title: ThemePicker
-  description: A visual theme configuration component to switch colors, radius, fonts, icon set and dark mode, with CSS/config export.
+  description: A visual theme configuration component to switch colors, radius, icon set and dark mode, with CSS/config export.
 ---
 
 ## 简介
 
-`MThemePicker` 是一个可视化的主题配置组件，允许用户实时预览并自定义应用主题。统一调整 `primary`、`neutral`、圆角、字体、图标集与颜色模式，并支持导出 CSS 变量与 `app.config.ts` 配置代码。
+`MThemePicker` 是一个可视化的主题配置组件，允许用户实时预览并自定义应用主题。统一调整 `primary`、`neutral`、圆角、图标集与颜色模式，并支持导出 CSS 变量与 `app.config.ts` 配置代码。
 
 ::note{to="https://github.com/nuxt/ui/tree/v4/docs/app/components/theme-picker"}
 配置变更会存储在本地，下次访问时自动恢复。组件源码来自 Nuxt UI
@@ -43,7 +43,6 @@ name: ComponentsThemePickerStateExample
 ### 样式配置
 
 - **Radius**：调整全局圆角大小（0–5 级别）
-- **Font**：选择字体系列（默认字体 Alibaba PuHuiTi）
 - **Icons**：切换图标集（Lucide、Phosphor、Tabler）
 
 ### 颜色模式

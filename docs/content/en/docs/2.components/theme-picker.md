@@ -4,12 +4,12 @@ description: A visual theme configuration component.
 category: advanced
 seo:
   title: ThemePicker
-  description: A visual theme configuration component to switch colors, radius, fonts, icon set and dark mode, with CSS/config export.
+  description: A visual theme configuration component to switch colors, radius, icon set and dark mode, with CSS/config export.
 ---
 
 ## Introduction
 
-`MThemePicker` is a visual theme configuration component that allows users to preview and customize the application theme in real time. It unifies adjustments to `primary`, `neutral`, border-radius, fonts, icon sets, and color mode, with support for exporting CSS variables and `app.config.ts` configuration code.
+`MThemePicker` is a visual theme configuration component that allows users to preview and customize the application theme in real time. It unifies adjustments to `primary`, `neutral`, border-radius, icon sets, and color mode, with support for exporting CSS variables and `app.config.ts` configuration code.
 
 ::note{to="https://github.com/nuxt/ui/tree/v4/docs/app/components/theme-picker"}
 Configuration changes are stored locally and automatically restored on the next visit. The component source originates from Nuxt UI.
@@ -43,7 +43,6 @@ name: ComponentsThemePickerStateExample
 ### Style Configuration
 
 - **Radius**: Adjust global border-radius size (0–5 levels)
-- **Font**: Select font family (default font: Alibaba PuHuiTi)
 - **Icons**: Switch icon sets (Lucide, Phosphor, Tabler)
 
 ### Color Mode
