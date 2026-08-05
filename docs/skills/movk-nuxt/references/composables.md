@@ -7,7 +7,7 @@ Movk Nuxt provides auto-imported utility composables. No imports needed in `<scr
 ## When to Use
 
 - Formatting, parsing, or comparing dates / ranges / arrays (`useDateFormatter`)
-- Reading or writing theme state (color, neutral, radius, font, icon, mode) and exporting CSS variables or app.config code (`useTheme`)
+- Reading or writing theme state (color, neutral, radius, icon, mode) and exporting CSS variables or app.config code (`useTheme`)
 - Opening alert / confirm dialogs imperatively and awaiting the result (`useMessageBox`)
 - Building a Zod schema and inspecting field metadata (`useAutoForm` — see [auto-form](auto-form.md))
 - When NOT to use: HTTP / upload / download — see [api](api.md)
@@ -17,7 +17,7 @@ Movk Nuxt provides auto-imported utility composables. No imports needed in `<scr
 | Composable | Key API |
 | --- | --- |
 | `useDateFormatter` | `format`, `parse`, `toISO`, `formatRange`, `formatArray`, `getToday`, `isWeekend`, `getStartOfMonth` |
-| `useTheme` | `color`, `mode`, `radius`, `font`, `icon` (writable refs); `exportCSS()`, `exportConfig()`, `resetTheme()`, `hasCSSChanges`, `hasConfigChanges` |
+| `useTheme` | `color`, `mode`, `radius`, `icon` (writable refs); `exportCSS()`, `exportConfig()`, `resetTheme()`, `hasCSSChanges`, `hasConfigChanges` |
 | `useMessageBox` | `alert(options) → Promise<void>`, `confirm(options) → Promise<boolean>` |
 | `useAutoForm` | `afz`, `defineControl`, `getAutoFormMetadata` |
 

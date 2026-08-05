@@ -13,8 +13,10 @@ import MovkEnvironmentPlugin from './plugins/environment'
 import MovkTemplatePlugin from './plugins/templates'
 import MovkAppConfigPlugin from './plugins/app-config'
 import MovkPluginsPlugin from './plugins/plugins'
+import MovkFontPlugin from './plugins/font'
+import { formatMissingCollections, resolveMovkIcons } from './utils/icons'
 
-export interface MovkUIOptions extends Pick<ModuleOptions, 'prefix' | 'theme'> {
+export interface MovkUIOptions extends Pick<ModuleOptions, 'prefix' | 'theme' | 'icon'> {
   /** 站点信息，注入 app.config.movkSite；name 作为主题 localStorage key 前缀 */
   site?: { url?: string, name?: string, description?: string }
   /**
@@ -34,6 +36,24 @@ const MOVK_COMPOSABLES: Record<string, readonly string[]> = {
   useTheme: ['useTheme'],
   useDateFormatter: ['useDateFormatter', 'CalendarDate'],
   useMessageBox: ['useMessageBox']
+}
+
+/**
+ * Vue 模式没有 `icon:clientBundleIcons` 钩子，只能经 `ui.icon.clientBundle.icons` 下发；
+ * 该通道在图标集缺失时会让 build 抛错，故必须先按可解析性过滤。
+ */
+function resolveMovkClientBundleIcons(options: MovkUIOptions): string[] {
+  if (options.icon?.clientBundle === false) return []
+
+  const { icons, missing } = resolveMovkIcons(runtimeDir, {
+    theme: options.theme?.enabled !== false,
+    paths: [options.ui?.root || process.cwd()]
+  })
+
+  const { warn } = formatMissingCollections(missing)
+  if (warn) console.warn(`[movk] ${warn}`)
+
+  return icons
 }
 
 function createMovkComponentSource(cwd: string, prefix: string, ignore: string[] = []) {
@@ -58,11 +78,14 @@ export const MovkPlugin = createUnplugin<MovkUIOptions | undefined>((_options = 
   const componentIgnore = options.theme?.enabled === false ? ['theme-picker/**'] : []
   const movkComponents = createMovkComponentSource(join(runtimeDir, 'components'), options.prefix, componentIgnore)
 
-  // @nuxt/ui 的 unplugin 配置统一从 ui 透传口读取；movk 仅对 autoImport/components 注入自有贡献后整体下发
+  // @nuxt/ui 的 unplugin 配置统一从 ui 透传口读取；movk 仅对 autoImport/components/icon 注入自有贡献后整体下发
   const ui = options.ui || {}
+  const movkIcons = resolveMovkClientBundleIcons(options)
   const uiOptions = defu(
     {
       prefix: 'U', // movk 强制 U 前缀（U* shim 依赖），不可被 ui.prefix 覆盖
+      // movk 组件与内置图标集的图标进构建期图标包（ui.icon.clientBundle 为 false 时整体让位）
+      icon: movkIcons.length ? defu(ui.icon, { clientBundle: { icons: movkIcons } }) : ui.icon,
       // 把 movk 非服务端 composables 注入 @nuxt/ui 的 unplugin-auto-import 单实例（避免第二实例）
       autoImport: ui.autoImport === false
         ? false
@@ -89,6 +112,7 @@ export const MovkPlugin = createUnplugin<MovkUIOptions | undefined>((_options = 
     MovkAppConfigPlugin(options),
     ...(Array.isArray(uiPlugins) ? uiPlugins : [uiPlugins]),
     MovkTemplatePlugin(options),
+    MovkFontPlugin(options),
     MovkPluginsPlugin(options)
   ].flat(1) as UnpluginOptions[]
 })

@@ -1,4 +1,5 @@
 import type { MovkApiFullConfig } from './runtime/types/api/module'
+import type { MovkFontFamily, ThemeFontOption } from './runtime/domains/theme/theme-font'
 import type { ModuleOptions as UiModuleOptions } from '@nuxt/ui'
 import type { ModuleOptions as SiteConfigOptions } from 'nuxt-site-config'
 import type { SiteConfigInput } from 'nuxt-site-config/kit'
@@ -8,7 +9,8 @@ import {
   addImportsDir,
   addPlugin,
   createResolver,
-  defineNuxtModule
+  defineNuxtModule,
+  useLogger
 } from '@nuxt/kit'
 import { defu } from 'defu'
 import { name, version } from '../package.json'
@@ -16,7 +18,9 @@ import { addTemplates } from './templates'
 import { getPackageJsonMetadata } from './runtime/utils/meta'
 import { kebabCase } from 'scule'
 import { updateSiteConfig } from 'nuxt-site-config/kit'
+import { checkMovkCss } from './utils/css'
 import { defaultOptions, getDefaultApiConfig } from './utils/defaults'
+import { formatMissingCollections, resolveMovkIcons } from './utils/icons'
 import { addTheme } from './utils/theme'
 import { UI_COMPONENTS } from './utils/ui-components'
 
@@ -27,16 +31,6 @@ interface NuxtWithExtra {
     ui?: UiModuleOptions
     site?: SiteConfigOptions
   }
-}
-
-interface ThemeFontConfig {
-  /** 字体名称 */
-  name: string
-  /**
-   * 字体 CSS 文件的完整 URL；未提供时运行时回退到 Google Fonts URL
-   * @example 'https://cdn.mhaibaraai.cn/fonts/alibaba-puhuiti.css'
-   */
-  href?: string
 }
 
 type StrictUiTheme = {
@@ -51,6 +45,16 @@ export interface ModuleOptions {
   prefix?: string
   /** API 模块配置 */
   api?: MovkApiFullConfig
+  /** 图标模块配置 */
+  icon?: {
+    /**
+     * 是否把 movk 组件与内置图标集用到的图标注入 `@nuxt/icon` 的构建期图标包。
+     * 关闭后这些图标改为运行时按需请求
+     * @defaultValue true
+     * @see https://ui.nuxt.com/docs/getting-started/integrations/icons/nuxt
+     */
+    clientBundle?: boolean
+  }
   /** 主题模块配置 */
   theme?: {
     /**
@@ -78,13 +82,13 @@ export interface ModuleOptions {
      */
     prefix?: StrictUiTheme['prefix']
     /**
-     * 默认字体，取值需与 `fonts` 中某一项的 `name` 一致。
+     * 全局字体。内置字体给名字即可，模块在构建期注入样式表与带中文回退栈的 `--font-sans`；
+     * 自托管字体用 `{ name, href }` 形式补上入口 CSS 地址。
      * 缺省时不注入 `--font-sans`，字体由项目 CSS 的 `@theme` 决定
      * @example 'Alibaba PuHuiTi'
+     * @see https://github.com/mhaibaraai/movk-fonts
      */
-    font?: string
-    /** ThemePicker 字体可选项；提供时完整替换内置列表 */
-    fonts?: ThemeFontConfig[]
+    font?: MovkFontFamily | (string & {}) | ThemeFontOption
     /**
      * 默认圆角（单位 rem）。缺省时不注入 `--ui-radius`，
      * 沿用 `@nuxt/ui` 的默认值或项目 CSS 的声明
@@ -119,10 +123,6 @@ export default defineNuxtModule<ModuleOptions>({
     nuxt.options.movk = options
     nuxt.options.alias['#movk'] = resolve('./runtime')
 
-    // 置于项目 CSS 之前：模块样式作为基线，项目的 @theme 与 @layer 覆盖得以生效
-    nuxt.options.css = nuxt.options.css || []
-    nuxt.options.css.unshift(resolve('runtime/index.css'))
-
     // movk 组件层内部渲染、但消费方通常不会直接书写的 @nuxt/ui 组件,需向 componentDetection 声明,
     // 否则其主题类(如 Table 的 min-w-full)不会被 @source 扫描生成。复用组件层导入清单,去 U 前缀。
     const movkUiDeps = UI_COMPONENTS.map(name => name.slice(1))
@@ -149,6 +149,26 @@ export default defineNuxtModule<ModuleOptions>({
     })
 
     addImportsDir(resolve('runtime/composables'))
+
+    // 走 icon:clientBundleIcons 而非 icon.clientBundle.icons：前者归入 extraIcons，图标集缺失时
+    // 静默回退运行时加载；后者归入 userIcons，缺失会让消费方 build 直接失败
+    if (options.icon?.clientBundle !== false) {
+      nuxt.hook('icon:clientBundleIcons', (icons) => {
+        const { icons: bundled, missing } = resolveMovkIcons(resolve('runtime'), {
+          theme: options.theme?.enabled !== false,
+          paths: [nuxt.options.rootDir, nuxt.options.workspaceDir].filter(Boolean)
+        })
+
+        for (const icon of bundled) {
+          icons.add(icon)
+        }
+
+        const logger = useLogger('movk')
+        const { warn, debug } = formatMissingCollections(missing)
+        if (warn) logger.warn(warn)
+        if (debug) logger.debug(debug)
+      })
+    }
 
     const apiConfig = options.api ?? {}
     if (apiConfig.enabled !== false) {
@@ -182,6 +202,7 @@ export default defineNuxtModule<ModuleOptions>({
 
       addTheme(nuxt, resolve, options.theme)
       await addTemplates(options, nuxt)
+      await checkMovkCss(nuxt)
     })
 
     nuxt.hook('prepare:types', ({ references }) => {

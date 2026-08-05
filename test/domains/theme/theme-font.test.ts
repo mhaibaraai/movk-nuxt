@@ -1,106 +1,96 @@
 import { describe, expect, it } from 'vitest'
 
 import {
-  googleFontsHref,
-  resolveActiveFont,
-  resolveFontHref,
-  resolveFontHrefMap,
+  MOVK_FONTS,
+  resolveFontFamily,
   resolveFontId,
   resolveFontLinks,
-  resolveFontStyle
+  resolveFontSource
 } from '../../../src/runtime/domains/theme/theme-font'
 
-const fonts = [
-  { name: 'Alibaba PuHuiTi', href: 'https://cdn.example.com/fonts/alibaba-puhuiti.css' },
-  { name: 'Public Sans' }
-]
-
-describe('resolveFontHref', () => {
-  it('已登记且带 href 的字体使用自定义地址', () => {
-    expect(resolveFontHref('Alibaba PuHuiTi', fonts)).toBe(fonts[0]!.href)
+describe('MOVK_FONTS', () => {
+  // family 名写错不会报错，只会静默回退到系统字体（dashboard 曾把它写成 kebab-case），
+  // 故在此固定住与 movk-fonts 仓库 scripts/fonts.config.ts 的约定
+  it('key 与字体入口 CSS 的 font-family 逐字一致', () => {
+    expect(Object.keys(MOVK_FONTS)).toEqual(['Alibaba PuHuiTi', 'OPPO Sans'])
   })
 
-  it('已登记但缺省 href 的字体回退 Google Fonts', () => {
-    expect(resolveFontHref('Public Sans', fonts)).toBe(googleFontsHref('Public Sans'))
+  it('地址均指向自建 CDN', () => {
+    for (const href of Object.values(MOVK_FONTS)) {
+      expect(href).toMatch(/^https:\/\/cdn\.mhaibaraai\.cn\/fonts\/[a-z-]+\.css$/)
+    }
+  })
+})
+
+describe('resolveFontSource', () => {
+  it('内置字体名解析出 CDN 地址', () => {
+    expect(resolveFontSource('Alibaba PuHuiTi')).toEqual({
+      name: 'Alibaba PuHuiTi',
+      href: MOVK_FONTS['Alibaba PuHuiTi']
+    })
   })
 
-  it('未登记的字体不猜测来源', () => {
-    expect(resolveFontHref('OPPO Sans 4.0', fonts)).toBeUndefined()
+  it('未登记的字体名保留名字但不给地址', () => {
+    expect(resolveFontSource('Helvetica')).toEqual({ name: 'Helvetica' })
   })
 
-  it('可选项为空时不产生任何地址', () => {
-    expect(resolveFontHref('Alibaba PuHuiTi', [])).toBeUndefined()
+  it('对象形式用于自托管字体', () => {
+    expect(resolveFontSource({ name: 'My Font', href: '/fonts/my-font.css' })).toEqual({
+      name: 'My Font',
+      href: '/fonts/my-font.css'
+    })
+  })
+
+  it('内置名可被显式 href 覆盖', () => {
+    const source = resolveFontSource({ name: 'OPPO Sans', href: '/fonts/oppo-sans.css' })
+    expect(source?.href).toBe('/fonts/oppo-sans.css')
+  })
+
+  it('空值与缺名字的对象视为未配置', () => {
+    expect(resolveFontSource(undefined)).toBeUndefined()
+    expect(resolveFontSource('')).toBeUndefined()
+    expect(resolveFontSource({ name: '' })).toBeUndefined()
   })
 })
 
 describe('resolveFontLinks', () => {
-  it('未指定字体时不产生 link', () => {
-    expect(resolveFontLinks(undefined, fonts)).toEqual([])
-    expect(resolveFontLinks('', fonts)).toEqual([])
-  })
-
-  it('未登记的字体不产生 link，避免请求不可达的 Google Fonts', () => {
-    expect(resolveFontLinks('OPPO Sans 4.0', fonts)).toEqual([])
-  })
-
-  it('已登记的字体产生带稳定 id 的 stylesheet link', () => {
-    expect(resolveFontLinks('Alibaba PuHuiTi', fonts)).toEqual([
-      { rel: 'stylesheet', href: fonts[0]!.href, id: 'font-alibaba-puhuiti' }
+  it('跨域字体先预连接再加载样式表', () => {
+    expect(resolveFontLinks(resolveFontSource('Alibaba PuHuiTi'))).toEqual([
+      // crossorigin 不可省：woff2 经 CSS 加载是 anonymous CORS 请求
+      { rel: 'preconnect', href: 'https://cdn.mhaibaraai.cn', crossorigin: '' },
+      { rel: 'stylesheet', href: MOVK_FONTS['Alibaba PuHuiTi'], id: 'font-alibaba-puhuiti' }
     ])
+  })
+
+  it('同源的相对地址不产出 preconnect', () => {
+    expect(resolveFontLinks({ name: 'My Font', href: '/fonts/my-font.css' })).toEqual([
+      { rel: 'stylesheet', href: '/fonts/my-font.css', id: 'font-my-font' }
+    ])
+  })
+
+  it('未登记且无 href 的字体不发任何请求', () => {
+    expect(resolveFontLinks(resolveFontSource('Helvetica'))).toEqual([])
+    expect(resolveFontLinks(undefined)).toEqual([])
+  })
+})
+
+describe('resolveFontFamily', () => {
+  it('首选字体在前，系统中文字体兜底在后', () => {
+    const family = resolveFontFamily('Alibaba PuHuiTi')
+    expect(family.startsWith('"Alibaba PuHuiTi", ')).toBe(true)
+    expect(family).toContain('"PingFang SC"')
+    expect(family).toContain('"Microsoft YaHei"')
+    expect(family.endsWith('sans-serif')).toBe(true)
+  })
+
+  it('转义字体名中的引号，避免截断 CSS 声明', () => {
+    expect(resolveFontFamily('Ev"il').startsWith('"Ev\\"il", ')).toBe(true)
   })
 })
 
 describe('resolveFontId', () => {
   it('小写并以连字符替换空白', () => {
-    expect(resolveFontId('OPPO Sans 4.0')).toBe('font-oppo-sans-4.0')
-  })
-})
-
-describe('resolveFontStyle', () => {
-  it('未指定字体时输出空规则，把 --font-sans 留给使用者 CSS', () => {
-    expect(resolveFontStyle(undefined)).toBe(':root {}')
-    expect(resolveFontStyle('')).toBe(':root {}')
-  })
-
-  it('指定字体时输出 --font-sans 声明', () => {
-    expect(resolveFontStyle('OPPO Sans 4.0')).toBe(':root { --font-sans: "OPPO Sans 4.0", sans-serif; }')
-  })
-
-  it('字体名中的引号被转义，不产生越界的 CSS', () => {
-    expect(resolveFontStyle('Ev"il')).toBe(':root { --font-sans: "Ev\\"il", sans-serif; }')
-  })
-})
-
-describe('resolveActiveFont', () => {
-  it('用户选择优先于配置的默认字体', () => {
-    expect(resolveActiveFont('Public Sans', 'Alibaba PuHuiTi')).toBe('Public Sans')
-  })
-
-  it('未选择时使用配置的默认字体', () => {
-    expect(resolveActiveFont(undefined, 'Alibaba PuHuiTi')).toBe('Alibaba PuHuiTi')
-  })
-
-  // 项目此前未配置 theme.font 时 localStorage 会留下空串，
-  // 之后再配置默认字体不应被这份历史残留永久屏蔽
-  it('localStorage 残留空串时回退到配置的默认字体', () => {
-    expect(resolveActiveFont('', 'Alibaba PuHuiTi')).toBe('Alibaba PuHuiTi')
-  })
-
-  it('两者都为空时返回空串，交由项目 CSS 决定', () => {
-    expect(resolveActiveFont('', '')).toBe('')
-    expect(resolveActiveFont(undefined, undefined)).toBe('')
-  })
-})
-
-describe('resolveFontHrefMap', () => {
-  it('为每个可选项预解析地址，供预水合脚本查表', () => {
-    expect(resolveFontHrefMap(fonts)).toEqual({
-      'Alibaba PuHuiTi': fonts[0]!.href,
-      'Public Sans': googleFontsHref('Public Sans')
-    })
-  })
-
-  it('未登记的字体不在表内，脚本据此跳过', () => {
-    expect(resolveFontHrefMap(fonts)['OPPO Sans 4.0']).toBeUndefined()
+    expect(resolveFontId('OPPO Sans')).toBe('font-oppo-sans')
+    expect(resolveFontId('Alibaba PuHuiTi')).toBe('font-alibaba-puhuiti')
   })
 })

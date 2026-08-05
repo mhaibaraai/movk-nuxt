@@ -1,7 +1,6 @@
 import type { ToasterProps } from '@nuxt/ui'
 
 export default defineAppConfig({
-  movk: {},
   toaster: {
     position: 'top-center' as const,
     duration: 1500,

@@ -381,7 +381,7 @@ Standalone components like DatePicker, SearchForm, PillGroup, SlideVerify and Tr
   Runtime Theming
 
   #description
-  Colors, radius, fonts, icon sets and light/dark mode can be switched at runtime, with a companion ThemePicker.
+  Colors, radius, icon sets and light/dark mode can be switched at runtime, with a companion ThemePicker.
   :::
 
 #default
