@@ -1,5 +1,5 @@
 @import 'tailwindcss';
-@import '@nuxt/ui';
+@import '@movk/nuxt';
 
 @source '../../../..';
 
