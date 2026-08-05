@@ -11,6 +11,8 @@ const MOVK_CSS_IMPORT = /@import\s+["']@movk\/nuxt["']/
  * 漏写时样式整体失效，故在构建期显式告警而非静默。
  */
 export async function checkMovkCss(nuxt: Nuxt) {
+  if (nuxt.options._prepare) return
+
   for (const entry of nuxt.options.css || []) {
     if (entry === '@movk/nuxt') return
 

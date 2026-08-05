@@ -126,6 +126,7 @@ pnpm clean
 - **模块默认值不得覆盖 Nuxt UI 全局配置**：凡 `<UApp>` props 能配置的字段（如 `toaster.duration`），模块默认值保持空缺，仅注入模块语义专属值。
 - 对外触发 UI 组件的 payload 构造需过滤 `undefined` 键，避免显式传入 `undefined` 干扰 Nuxt UI 的全局回退。
 - 新增模块默认配置时，先核对 `<UApp>` props 是否已提供相同字段，命中即按本原则保留模块专属、删除可继承。
+- **`moduleDependencies` 的 `defaults` 左右不了被依赖模块自己的 `moduleDependencies`**：Nuxt 先遍历所有模块收集依赖表，之后才把 `defaults` 合并进 `nuxt.options[configKey]`；而 `@nuxt/ui` 这类模块在收集阶段就读 `nuxt.options.ui` 决定要不要登记 `@nuxt/fonts`。要影响这类判定，只能把 `moduleDependencies` 写成函数形式，在返回依赖表前用 `??=` 直接落到 `nuxt.options.<configKey>`（见 `src/module.ts` 的 `ui.fonts`），保留消费方显式配置优先。
 
 ## Playground 示例规范
 
