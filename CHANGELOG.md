@@ -1,5 +1,16 @@
 # 📋 Changelog
 
+## [1.7.1](https://github.com/mhaibaraai/movk-nuxt/compare/v1.7.0...v1.7.1) (2026-08-05)
+
+### 🐛 Bug Fixes
+
+* **css:** 样式引入检查跳过 prepare 实例 ([15751ac](https://github.com/mhaibaraai/movk-nuxt/commit/15751ac026bfcfd38cb325acd832c04392f417fe))
+* **module:** 让 ui.fonts 默认关闭真正生效 ([f54af29](https://github.com/mhaibaraai/movk-nuxt/commit/f54af29bf166830d9f11a4e43247a6391c2af96c))
+
+### 📝 Documentation
+
+* **agents:** 补充 moduleDependencies defaults 的作用边界 ([0b09d50](https://github.com/mhaibaraai/movk-nuxt/commit/0b09d502f7d1724fa072746dde3e5b67d00798be))
+
 ## [1.7.0](https://github.com/mhaibaraai/movk-nuxt/compare/v1.6.0...v1.7.0) (2026-08-05)
 
 ### ⚠ BREAKING CHANGES
