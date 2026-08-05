@@ -73,7 +73,7 @@ pnpm clean
 | `src/runtime/utils/` | 运行时工具：`meta`、`form-control`、`tv`、`extend-theme`、`theme-defaults`（主题默认 app.config，两模式共用）、`tree-expand` / `tree-selection`（树形展开/选中纯函数，Tree 与 DataTable 共用） |
 | `src/runtime/vue/` | 非 Nuxt 桩层：`stubs/`（`#imports` 桩，转发 `@nuxt/ui` 同模式桩 + `useSiteConfig`/`useOverlay`）、`composables/useSiteConfig`、`plugins/theme`（剥离 SSR 的 vue 主题插件） |
 | `src/theme/` | 主题配置，每组件/功能一个文件（约 18 个），`index.ts` 聚合 |
-| `src/utils/` | 模块构建期工具：`defaults`、`theme-variants`、`theme`、`css`（校验项目已 `@import "@movk/nuxt"`） |
+| `src/utils/` | 模块构建期工具：`defaults`、`theme-variants`、`theme`、`css`（校验项目已 `@import "@movk/nuxt"`）、`icons`（收集 movk 自有图标交给构建期图标包，两模式共用） |
 | `playgrounds/play/` | Nuxt playground，含 `app/pages/` 演示页与 `server/api/` mock |
 | `playgrounds/vue/` | 纯 Vite + Vue playground，验证非 Nuxt 模式（`vite.config.ts` 用 `@movk/nuxt/vite`，入口 `app.use(@movk/nuxt/vue-plugin)`） |
 | 根 `vue-plugin.d.ts` | `@movk/nuxt/vue-plugin` 类型声明 |
@@ -81,6 +81,8 @@ pnpm clean
 | `test/` | Vitest 用例：`composables/`、`domains/api/`、`domains/auto-form/`、`plugins/`、`utils/` |
 
 **核心约定**：业务逻辑落在 `runtime/domains/<域>`，对外组件保持薄壳；私有子组件放在对应域的 `components/` 下，不进入 `runtime/components/`。
+
+**图标注入约定**：`src/utils/icons.ts` 扫描 `runtime/**` 的 `i-lucide-*`/`i-ph-*`/`i-tabler-*` 字面量交给构建期图标包——消费方的扫描器只扫自己的 layer 且排除 `node_modules`，movk 组件与 `themeIcons` 的图标一个都到不了。Nuxt 侧必须走 `icon:clientBundleIcons` 钩子（归 extraIcons，图标集缺失只静默回退），**不得**写进 `icon.clientBundle.icons`（归 userIcons，缺失会让消费方 build 抛错）；Vue 侧只有 `ui.icon.clientBundle.icons` 这一条通道，故下发前必须用 `filterResolvableIcons` 过滤。`@iconify-json/*` 是 devDependency，pnpm 下对消费方不可见，可解析性只能按项目根判定。
 
 **样式入口约定**：`src/runtime/index.css` 是被引入的片段（不含 `@import "tailwindcss"`），对齐 `@nuxt/ui`；模块不往 `nuxt.options.css` 注册它，由项目 CSS 写 `@import "@movk/nuxt"`。全项目只能有一个 Tailwind 入口——第二个 `@import "tailwindcss"` 会形成独立上下文，其默认主题转储会覆盖模块注入的 `--font-sans` 等内置主题变量。漏引时 `src/utils/css.ts` 在构建期告警。
 
