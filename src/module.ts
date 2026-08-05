@@ -17,6 +17,7 @@ import { addTemplates } from './templates'
 import { getPackageJsonMetadata } from './runtime/utils/meta'
 import { kebabCase } from 'scule'
 import { updateSiteConfig } from 'nuxt-site-config/kit'
+import { checkMovkCss } from './utils/css'
 import { defaultOptions, getDefaultApiConfig } from './utils/defaults'
 import { addTheme } from './utils/theme'
 import { UI_COMPONENTS } from './utils/ui-components'
@@ -110,10 +111,6 @@ export default defineNuxtModule<ModuleOptions>({
     nuxt.options.movk = options
     nuxt.options.alias['#movk'] = resolve('./runtime')
 
-    // 置于项目 CSS 之前：模块样式作为基线，项目的 @theme 与 @layer 覆盖得以生效
-    nuxt.options.css = nuxt.options.css || []
-    nuxt.options.css.unshift(resolve('runtime/index.css'))
-
     // movk 组件层内部渲染、但消费方通常不会直接书写的 @nuxt/ui 组件,需向 componentDetection 声明,
     // 否则其主题类(如 Table 的 min-w-full)不会被 @source 扫描生成。复用组件层导入清单,去 U 前缀。
     const movkUiDeps = UI_COMPONENTS.map(name => name.slice(1))
@@ -173,6 +170,7 @@ export default defineNuxtModule<ModuleOptions>({
 
       addTheme(nuxt, resolve, options.theme)
       await addTemplates(options, nuxt)
+      await checkMovkCss(nuxt)
     })
 
     nuxt.hook('prepare:types', ({ references }) => {

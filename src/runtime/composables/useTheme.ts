@@ -120,7 +120,7 @@ export function useTheme() {
   function exportCSS(): string {
     const lines = [
       '@import "tailwindcss";',
-      '@import "@nuxt/ui";'
+      '@import "@movk/nuxt";'
     ]
 
     const rootLines: string[] = []
