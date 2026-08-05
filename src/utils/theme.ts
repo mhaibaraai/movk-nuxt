@@ -4,7 +4,7 @@ import type { ModuleOptions } from '../module'
 import { addPlugin, useLogger } from '@nuxt/kit'
 import defu from 'defu'
 import { getDefaultConfig } from '../runtime/utils/theme-defaults'
-import { resolveFontLinks, resolveFontSource } from '../runtime/domains/theme/theme-font'
+import { resolveFontLinks, resolveFontSource, resolveFontWarning } from '../runtime/domains/theme/theme-font'
 import type { Direction } from '@nuxt/ui'
 
 export function addTheme(nuxt: Nuxt, resolve: Resolver['resolve'], theme?: ModuleOptions['theme']) {
@@ -61,11 +61,7 @@ function addFontLinks(nuxt: Nuxt, font: NonNullable<ModuleOptions['theme']>['fon
   if (!links.length) {
     // 未登记的字体不猜测来源：在无法访问 Google Fonts 的网络环境下，
     // 猜测只会换来一个必然超时的请求
-    useLogger('movk').warn(
-      `Font "${source.name}" is not a built-in family and has no href, `
-      + 'so only --font-sans is injected and no stylesheet is loaded. '
-      + 'Use a built-in family name, or pass { name, href } with the stylesheet URL.'
-    )
+    useLogger('movk').warn(resolveFontWarning(source.name))
     return
   }
 

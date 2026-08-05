@@ -83,6 +83,16 @@ export function resolveFontLinks(source?: ThemeFontOption): ThemeFontLink[] {
   ]
 }
 
+/**
+ * 未登记且未给 `href` 的字体只注入 `--font-sans`、不发请求时的提示。
+ * 两种模式共用同一份文案；不含前缀，由调用方按各自的 logger 补。
+ */
+export function resolveFontWarning(name: string): string {
+  return `Font "${name}" is not a built-in family and has no href, `
+    + 'so only --font-sans is injected and no stylesheet is loaded. '
+    + 'Use a built-in family name, or pass { name, href } with the stylesheet URL.'
+}
+
 /** 拼接 `--font-sans` 的取值：首选字体在前，系统中文字体兜底在后 */
 export function resolveFontFamily(name: string): string {
   return [JSON.stringify(name), ...FALLBACK_STACK].join(', ')

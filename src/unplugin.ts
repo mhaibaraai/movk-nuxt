@@ -13,6 +13,7 @@ import MovkEnvironmentPlugin from './plugins/environment'
 import MovkTemplatePlugin from './plugins/templates'
 import MovkAppConfigPlugin from './plugins/app-config'
 import MovkPluginsPlugin from './plugins/plugins'
+import MovkFontPlugin from './plugins/font'
 
 export interface MovkUIOptions extends Pick<ModuleOptions, 'prefix' | 'theme'> {
   /** 站点信息，注入 app.config.movkSite；name 作为主题 localStorage key 前缀 */
@@ -89,6 +90,7 @@ export const MovkPlugin = createUnplugin<MovkUIOptions | undefined>((_options = 
     MovkAppConfigPlugin(options),
     ...(Array.isArray(uiPlugins) ? uiPlugins : [uiPlugins]),
     MovkTemplatePlugin(options),
+    MovkFontPlugin(options),
     MovkPluginsPlugin(options)
   ].flat(1) as UnpluginOptions[]
 })
