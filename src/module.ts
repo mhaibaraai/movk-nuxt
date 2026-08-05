@@ -3,7 +3,7 @@ import type { MovkFontFamily, ThemeFontOption } from './runtime/domains/theme/th
 import type { ModuleOptions as UiModuleOptions } from '@nuxt/ui'
 import type { ModuleOptions as SiteConfigOptions } from 'nuxt-site-config'
 import type { SiteConfigInput } from 'nuxt-site-config/kit'
-import type { Nuxt } from 'nuxt/schema'
+import type { ModuleDependencies, Nuxt, NuxtModule } from 'nuxt/schema'
 import {
   addComponentsDir,
   addImportsDir,
@@ -102,7 +102,26 @@ export interface ModuleOptions {
   }
 }
 
-export default defineNuxtModule<ModuleOptions>({
+/**
+ * `@nuxt/ui` 在自己的 `moduleDependencies` 里读 `nuxt.options.ui.fonts` 决定是否登记 `@nuxt/fonts`，
+ * 而依赖表的 `defaults` 要等依赖全部收集完才合并进 `nuxt.options`，届时已晚，只能在此直接置位。
+ */
+function resolveModuleDependencies(nuxt: Nuxt): ModuleDependencies {
+  const ui = ((nuxt as NuxtWithExtra).options.ui ??= {})
+  ui.fonts ??= false
+
+  return {
+    '@nuxt/image': { version: '>=2.0.0' },
+    '@nuxt/ui': { version: '>=4.6.0' },
+    '@vueuse/nuxt': { version: '>=14.2.1' },
+    'nuxt-auth-utils': { version: '>=0.5.29' },
+    'nuxt-site-config': { version: '>=4.0.8' }
+  }
+}
+
+// 显式标注类型：函数形态的 moduleDependencies 引入 Nuxt，而 nuxt.options 经模块增强反向引用本模块，
+// 交给推断会让默认导出成环（TS7022）
+const movkModule: NuxtModule<ModuleOptions> = defineNuxtModule<ModuleOptions>({
   meta: {
     name,
     version,
@@ -110,13 +129,7 @@ export default defineNuxtModule<ModuleOptions>({
     compatibility: { nuxt: '>=4.4.2' }
   },
   defaults: defaultOptions,
-  moduleDependencies: {
-    '@nuxt/image': { version: '>=2.0.0' },
-    '@nuxt/ui': { version: '>=4.6.0', defaults: { fonts: false } },
-    '@vueuse/nuxt': { version: '>=14.2.1' },
-    'nuxt-auth-utils': { version: '>=0.5.29' },
-    'nuxt-site-config': { version: '>=4.0.8' }
-  },
+  moduleDependencies: resolveModuleDependencies,
   async setup(options, nuxt) {
     const { resolve } = createResolver(import.meta.url)
 
@@ -210,3 +223,5 @@ export default defineNuxtModule<ModuleOptions>({
     })
   }
 })
+
+export default movkModule
