@@ -1,5 +1,63 @@
 # 📋 Changelog
 
+## [1.7.0](https://github.com/mhaibaraai/movk-nuxt/compare/v1.6.0...v1.7.0) (2026-08-05)
+
+### ⚠ BREAKING CHANGES
+
+* **theme:** useTheme() 不再返回 link、font、fonts。字体样式表已由
+  模块在构建期注入，移除 app.vue 中 useHead 的 link 即可。theme.fonts 选项
+  移除，theme.font 改为接受 string | { name, href }。
+* **css:** 项目需在 main.css 中写 @import "@movk/nuxt"（置于
+  @import "tailwindcss" 之后），并在 nuxt.config.ts 的 css 中注册该文件。
+  @movk/nuxt 内部已引入 @nuxt/ui，无需再单独 @import "@nuxt/ui"。
+  漏引时模块在构建期告警。
+
+### ✨ Features
+
+* **icon:** 构建期注入 movk 自有图标到 client bundle ([e9e5eba](https://github.com/mhaibaraai/movk-nuxt/commit/e9e5eba059fa6229dcb6fee27a51d43c10516025))
+* **theme:** Vue 模式构建期注入字体样式表 ([a5340f9](https://github.com/mhaibaraai/movk-nuxt/commit/a5340f9d3bb6137bc837d39a6292aff51d6e9ff4))
+
+### 🐛 Bug Fixes
+
+* **playground:** 补齐 .ts 中的图标扫描 ([675c631](https://github.com/mhaibaraai/movk-nuxt/commit/675c631357212586341972323eb8b23242edd7a5))
+
+### 📝 Documentation
+
+* **agents:** 新增「图标注入约定」并校正目录表 ([c7a65b3](https://github.com/mhaibaraai/movk-nuxt/commit/c7a65b385af3da2e2095ab1a6450253b5272f39c))
+* **agents:** 新增「样式入口约定」并校正目录表 ([39586a2](https://github.com/mhaibaraai/movk-nuxt/commit/39586a2f45a59f04d1de64d95a4668e44928d4a2))
+* **icon:** 补充图标集与图标包说明 ([c5432f4](https://github.com/mhaibaraai/movk-nuxt/commit/c5432f422b08361fe287a7a6d235bd83d12ca602))
+* **theme:** 补充 Vue 模式字体行为说明 ([e70f51f](https://github.com/mhaibaraai/movk-nuxt/commit/e70f51fe175b91d732de7c2ec69b682f0c2474dd))
+* **theme:** 重写字体章节 ([54f3036](https://github.com/mhaibaraai/movk-nuxt/commit/54f303655ab5fa7ba2e01be809515889e69479f9))
+* 修正样式引入写法 ([05ba3b6](https://github.com/mhaibaraai/movk-nuxt/commit/05ba3b6136d148a0b5871673a0fc821e0f18eca9))
+* 清理字体运行时切换的残留描述 ([345f260](https://github.com/mhaibaraai/movk-nuxt/commit/345f26017fea74baeecb7187a652250950d7557b))
+
+### ♻️ Code Refactoring
+
+* **css:** 模块样式改由项目 CSS 引入 ([4ee8904](https://github.com/mhaibaraai/movk-nuxt/commit/4ee8904a511d840e5e276fbab3d1438658bbdcdc))
+* **playground:** 样式入口适配单 Tailwind root ([96b34a9](https://github.com/mhaibaraai/movk-nuxt/commit/96b34a95469f794a35819cfefee18380050c2f62))
+* **playground:** 适配字体构建期注入 ([0e2f9b6](https://github.com/mhaibaraai/movk-nuxt/commit/0e2f9b6739b659b131da944590a4330b217727e6))
+* **theme:** 字体降为构建期配置 ([4811df5](https://github.com/mhaibaraai/movk-nuxt/commit/4811df565b2beeb93ee11c28f054544e7adfa00c))
+
+### ✅ Tests
+
+* **icon:** 覆盖图标扫描、可解析性过滤与缺失提示 ([69ba4df](https://github.com/mhaibaraai/movk-nuxt/commit/69ba4df6b71b3330ab7aa4fc03f2423771b83d16))
+* **theme:** 覆盖 Vue 模式字体样式表注入 ([bbe55aa](https://github.com/mhaibaraai/movk-nuxt/commit/bbe55aa5aa64340865d1d6ef5f6cab54efa50aee))
+* **theme:** 覆盖构建期字体注入与契约一致性 ([4708995](https://github.com/mhaibaraai/movk-nuxt/commit/4708995123c9ff75ad3667d2f8f6c02458218fac))
+
+### 📦 Build System
+
+* **deps:** 升级依赖版本 ([e1ab360](https://github.com/mhaibaraai/movk-nuxt/commit/e1ab3608bd4cbf4a31c6be83f6d96089d52bf473))
+* **deps:** 将 [@iconify-json](https://github.com/iconify-json) 图标集移到开发依赖 ([1b05055](https://github.com/mhaibaraai/movk-nuxt/commit/1b050554827c2596e2e30035e2c5da2123fdd3ff))
+* **deps:** 移除未使用的 unifont ([d4ddcea](https://github.com/mhaibaraai/movk-nuxt/commit/d4ddcead6c5bcde424b9b3a789de48db00596721))
+* **docs:** 文档站部署迁移至 Vercel，移除 Docker 部署配置 ([65993c3](https://github.com/mhaibaraai/movk-nuxt/commit/65993c3f50d8c41e7e71eaf52209c5b5cf55f2bf))
+
+### 🔧 Chores
+
+* **deps:** lock file maintenance ([9728db1](https://github.com/mhaibaraai/movk-nuxt/commit/9728db1fc5651cb9cdc424f93f8ce92124b1c07d))
+* **deps:** 升级依赖版本并锁定 typescript 范围 ([13b8c61](https://github.com/mhaibaraai/movk-nuxt/commit/13b8c618d4fea3b64d7af459e0d930989aa78e8b))
+* **docs:** 移除与模块默认值重复的 theme 配置 ([89542eb](https://github.com/mhaibaraai/movk-nuxt/commit/89542eb320ce8c90ffa2ec77f51f488319b8da57))
+* **playground:** 精简重复配置并固定 compatibilityDate ([353de15](https://github.com/mhaibaraai/movk-nuxt/commit/353de15bf640da746e0f50d08285b8e00a09a2d7))
+
 ## [1.6.0](https://github.com/mhaibaraai/movk-nuxt/compare/v1.5.1...v1.6.0) (2026-07-30)
 
 ### ⚠ BREAKING CHANGES
