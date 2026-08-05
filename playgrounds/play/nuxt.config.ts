@@ -11,7 +11,7 @@ export default defineNuxtConfig({
     }
   },
 
-  compatibilityDate: 'latest',
+  compatibilityDate: '2026-06-30',
 
   vite: {
     optimizeDeps: {
@@ -28,13 +28,17 @@ export default defineNuxtConfig({
     }
   },
 
+  icon: {
+    clientBundle: {
+      scan: true
+    }
+  },
+
   movk: {
     theme: {
       font: 'Alibaba PuHuiTi'
     },
     api: {
-      enabled: true,
-      toast: { success: { show: true } },
       endpoints: {
         default: { baseURL: '/api' },
         v2: { baseURL: '/api/demo/v2' }
