@@ -9,7 +9,8 @@ import {
   addImportsDir,
   addPlugin,
   createResolver,
-  defineNuxtModule
+  defineNuxtModule,
+  useLogger
 } from '@nuxt/kit'
 import { defu } from 'defu'
 import { name, version } from '../package.json'
@@ -19,6 +20,7 @@ import { kebabCase } from 'scule'
 import { updateSiteConfig } from 'nuxt-site-config/kit'
 import { checkMovkCss } from './utils/css'
 import { defaultOptions, getDefaultApiConfig } from './utils/defaults'
+import { formatMissingCollections, resolveMovkIcons } from './utils/icons'
 import { addTheme } from './utils/theme'
 import { UI_COMPONENTS } from './utils/ui-components'
 
@@ -43,6 +45,16 @@ export interface ModuleOptions {
   prefix?: string
   /** API 模块配置 */
   api?: MovkApiFullConfig
+  /** 图标模块配置 */
+  icon?: {
+    /**
+     * 是否把 movk 组件与内置图标集用到的图标注入 `@nuxt/icon` 的构建期图标包。
+     * 关闭后这些图标改为运行时按需请求
+     * @defaultValue true
+     * @see https://ui.nuxt.com/docs/getting-started/integrations/icons/nuxt
+     */
+    clientBundle?: boolean
+  }
   /** 主题模块配置 */
   theme?: {
     /**
@@ -137,6 +149,26 @@ export default defineNuxtModule<ModuleOptions>({
     })
 
     addImportsDir(resolve('runtime/composables'))
+
+    // 走 icon:clientBundleIcons 而非 icon.clientBundle.icons：前者归入 extraIcons，图标集缺失时
+    // 静默回退运行时加载；后者归入 userIcons，缺失会让消费方 build 直接失败
+    if (options.icon?.clientBundle !== false) {
+      nuxt.hook('icon:clientBundleIcons', (icons) => {
+        const { icons: bundled, missing } = resolveMovkIcons(resolve('runtime'), {
+          theme: options.theme?.enabled !== false,
+          paths: [nuxt.options.rootDir, nuxt.options.workspaceDir].filter(Boolean)
+        })
+
+        for (const icon of bundled) {
+          icons.add(icon)
+        }
+
+        const logger = useLogger('movk')
+        const { warn, debug } = formatMissingCollections(missing)
+        if (warn) logger.warn(warn)
+        if (debug) logger.debug(debug)
+      })
+    }
 
     const apiConfig = options.api ?? {}
     if (apiConfig.enabled !== false) {

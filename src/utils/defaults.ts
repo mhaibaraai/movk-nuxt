@@ -68,5 +68,8 @@ export const defaultOptions = {
   prefix: 'M',
   theme: {
     enabled: true
+  },
+  icon: {
+    clientBundle: true
   }
 }
