@@ -128,7 +128,7 @@
     "@movk/core": "^1.4.1",
     "@nuxt/image": "^2.1.0",
     "@nuxt/ui": "^4.10.0",
-    "@tanstack/vue-table": "^8.21.3",
+    "@tanstack/vue-table": "^9.1.2",
     "@vueuse/core": "^14.4.0",
     "@vueuse/nuxt": "^14.4.0",
     "colortranslator": "^6.1.1",
