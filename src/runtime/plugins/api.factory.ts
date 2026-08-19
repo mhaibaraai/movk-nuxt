@@ -1,11 +1,12 @@
 import type { $Fetch } from 'nitropack/types'
-import type { ApiInstance, MovkApiPublicConfig } from '../types/api'
+import type { ApiInstance, ApiStreamOptions, MovkApiPublicConfig } from '../types/api'
 import type { EndpointPrivateConfig, ResolvedEndpointConfig } from '../types/api/module'
 import { resolveEndpointConfig } from '../domains/api/endpoint-config'
 import { createOnRequest } from '../domains/api/interceptors/request'
 import { createOnResponse } from '../domains/api/interceptors/response'
 import { createOnResponseError } from '../domains/api/interceptors/error'
 import { attachInterceptors } from '../domains/api/interceptors/compose'
+import { openEventStream } from '../domains/api/stream'
 import { defineNuxtPlugin, useNuxtApp, useRuntimeConfig } from '#imports'
 
 type NuxtApp = ReturnType<typeof useNuxtApp>
@@ -65,7 +66,8 @@ export default defineNuxtPlugin(() => {
     const $fetchInstance = createEndpointFetch(resolved, publicConfig, nuxtApp)
 
     const apiInstance = Object.assign($fetchInstance, {
-      use: (endpoint: string) => getOrCreateEndpoint(endpoint)
+      use: (endpoint: string) => getOrCreateEndpoint(endpoint),
+      stream: <T>(url: string, options?: ApiStreamOptions<T>) => openEventStream<T>($fetchInstance, url, options)
     }) as ApiInstance
 
     endpointCache.set(endpointName, apiInstance)

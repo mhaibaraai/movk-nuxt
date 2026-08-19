@@ -194,6 +194,27 @@ async function onDownload() {
 
 If the server returns `application/json` (typically an error envelope), the JSON is routed through the normal error path instead of being written to disk.
 
+## SSE streaming
+
+```vue
+<script setup lang="ts">
+const { status, error, stream, abort } = useApiStream<{ content: string }>()
+
+for await (const chunk of stream('/chat', { method: 'POST', body: { message } })) {
+  text.value += chunk.content
+}
+</script>
+```
+
+Two header/parsing defaults were settled the hard way — do not "fix" them without checking the gateway:
+
+- **`Accept` defaults to the wildcard.** ofetch would otherwise add `Accept: application/json`, the wrong claim for a request read as a stream; sending `Accept: text/event-stream` instead gets the request rejected outright by DRF-style content negotiation. An explicit `headers.Accept` always wins.
+- **No forced `responseType: 'stream'`** — detection is left to the content type so a JSON error envelope still goes through business-code validation. Some gateways answer errors with HTTP 200 + `{ code: 500 }`.
+
+Deliberate aborts set `status` to `'aborted'` and leave `error` null; every other failure is stored, passed to `onError` and re-thrown.
+
+To feed `@nuxt/ui` chat components, use `createChatTransport` from `@movk/nuxt/ai` (optional peer `ai` + `@ai-sdk/vue`): it extends the AI SDK `HttpChatTransport`, so you only write a stateless `select(raw) => { id?, delta?, end?, data?, finished? }` mapping and hand the result to `useChat({ transport })`.
+
 ## Auth & multi-endpoint config
 
 Module-wide behavior lives in `nuxt.config.ts` under `movk.api.*`:

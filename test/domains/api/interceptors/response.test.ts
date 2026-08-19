@@ -81,6 +81,18 @@ describe('interceptors/response', () => {
     expect(ctx.response!._data).toBe(raw)
   })
 
+  it('响应体是流时整段短路：不解包、不弹 toast，仍派发 movk:api:response', async () => {
+    const onResponse = createOnResponse(baseResolved, basePublic, nuxtApp)
+    const body = new ReadableStream()
+    const ctx = makeContext(body)
+
+    await onResponse(ctx)
+
+    expect(ctx.response!._data).toBe(body)
+    expect(toastAdd).not.toHaveBeenCalled()
+    expect(callHook).toHaveBeenCalledWith('movk:api:response', ctx)
+  })
+
   it('业务失败时派发 movk:api:error 并抛 ApiError，message 取自响应', async () => {
     const onResponse = createOnResponse(baseResolved, basePublic, nuxtApp)
     const ctx = makeContext({ code: 40001, message: '业务异常' })

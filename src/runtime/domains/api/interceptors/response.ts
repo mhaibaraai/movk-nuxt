@@ -4,6 +4,7 @@ import type { ResolvedEndpointConfig } from '../../../types/api/module'
 import type { ApiFetchContext } from '../../../types/api/response'
 import type { useNuxtApp } from '#imports'
 import { extractData, extractMessage, isBusinessSuccess } from '../response'
+import { isReadableStream } from '../stream'
 import { createApiError } from '../errors'
 import { showToast } from '../toast'
 
@@ -22,6 +23,7 @@ function readApiContext(options: FetchContext['options']): ApiFetchContext {
  *
  * **契约**：拦截器输出 = 业务数据。`movk:api:response` hook 收到的 `context.response._data` 已解包；
  * 调用方设置 `skipUnwrap: true` 时不重写 `_data`，保留原始响应。
+ * 响应体是可读流时整段短路，`_data` 原样保留，调用方无需再传 `skipUnwrap` / `skipBusinessCheck`。
  */
 export function createOnResponse(
   resolvedConfig: ResolvedEndpointConfig,
@@ -33,6 +35,17 @@ export function createOnResponse(
   return async function onResponse(context: FetchContext): Promise<void> {
     const raw = context.response?._data as ApiResponse
     const { toast, skipBusinessCheck, skipUnwrap } = readApiContext(context.options)
+
+    // 流式响应（text/event-stream）没有 { code, data } 信封，解包与业务校验都无从谈起；
+    // 成功 toast 同样跳过——流刚开头，成败还没有结论
+    if (isReadableStream(raw)) {
+      if (publicConfig.debug) {
+        console.info('[@movk/nuxt] Response: <stream>')
+      }
+
+      await nuxtApp.callHook('movk:api:response', context)
+      return
+    }
 
     if (publicConfig.debug) {
       console.info('[@movk/nuxt] Response:', raw)
