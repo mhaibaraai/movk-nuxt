@@ -180,6 +180,36 @@ describe('domains/api/transfer', () => {
       expect(callHook).toHaveBeenCalledWith('movk:api:response', ctx)
     })
 
+    it('fetchContext.options.method 未命中全局 methods 白名单时不触发 toast.add', async () => {
+      const ctx = buildFetchContext('/x', { method: 'GET' }, { status: 200, headers: new Headers() })
+      await finalizeTransfer(nuxtApp, {
+        raw: { code: 0, data: 1 },
+        config: {
+          ...baseConfig,
+          toast: { ...baseConfig.toast, success: { ...baseConfig.toast.success, methods: ['POST'] } }
+        },
+        publicConfig: basePublic,
+        requestToast: undefined,
+        fetchContext: ctx
+      })
+      expect(toastAdd).not.toHaveBeenCalled()
+    })
+
+    it('fetchContext.options.method 命中全局 methods 白名单时触发 toast.add', async () => {
+      const ctx = buildFetchContext('/x', { method: 'POST' }, { status: 200, headers: new Headers() })
+      await finalizeTransfer(nuxtApp, {
+        raw: { code: 0, data: 1 },
+        config: {
+          ...baseConfig,
+          toast: { ...baseConfig.toast, success: { ...baseConfig.toast.success, methods: ['POST'] } }
+        },
+        publicConfig: basePublic,
+        requestToast: undefined,
+        fetchContext: ctx
+      })
+      expect(toastAdd).toHaveBeenCalledTimes(1)
+    })
+
     it('toast=false 时不触发 toast.add', async () => {
       const ctx = makeCtx()
       await finalizeTransfer(nuxtApp, {

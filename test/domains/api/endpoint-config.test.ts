@@ -12,7 +12,7 @@ const publicConfig: MovkApiPublicConfig = {
     }
   },
   auth: { enabled: false },
-  toast: { enabled: true },
+  toast: { enabled: true, success: { show: true, methods: ['POST'] } },
   response: { dataKey: 'data' }
 }
 
@@ -39,6 +39,28 @@ describe('domains/api/endpoint-config', () => {
     const resolved = resolveEndpointConfig(publicConfig, 'default')
 
     expect(resolved.headers).toBeUndefined()
+  })
+
+  it('端点级 toast.methods 整体覆盖全局而非拼接', () => {
+    const resolved = resolveEndpointConfig(
+      {
+        ...publicConfig,
+        endpoints: {
+          ...publicConfig.endpoints,
+          mutation: { baseURL: '/api', toast: { success: { methods: ['PUT', 'DELETE'] } } }
+        }
+      },
+      'mutation'
+    )
+
+    expect(resolved.toast.success?.methods).toEqual(['PUT', 'DELETE'])
+    expect(resolved.toast.success?.show).toBe(true)
+  })
+
+  it('端点未声明 toast.methods 时继承全局', () => {
+    const resolved = resolveEndpointConfig(publicConfig, 'external')
+
+    expect(resolved.toast.success?.methods).toEqual(['POST'])
   })
 
   it('端点不存在时回退到默认端点并告警', () => {
