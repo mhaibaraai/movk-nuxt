@@ -56,6 +56,10 @@
     "./vue-plugin": {
       "types": "./vue-plugin.d.ts"
     },
+    "./ai": {
+      "types": "./dist/runtime/domains/ai/index.d.ts",
+      "import": "./dist/runtime/domains/ai/index.js"
+    },
     "./runtime/*": "./dist/runtime/*",
     "./components/*": "./dist/runtime/components/*",
     "./composables": {
@@ -80,6 +84,9 @@
       "components/*": [
         "./dist/runtime/components/*"
       ],
+      "ai": [
+        "./dist/runtime/domains/ai/index.d.ts"
+      ],
       "composables": [
         "./dist/runtime/composables/index.d.ts"
       ],
@@ -103,7 +110,13 @@
   ],
   "peerDependencies": {
     "@nuxt/ui": ">=4.6.0",
+    "ai": "^6 || ^7",
     "zod": ">=4.3.6"
+  },
+  "peerDependenciesMeta": {
+    "ai": {
+      "optional": true
+    }
   },
   "scripts": {
     "prepack": "pnpm build",
@@ -157,6 +170,7 @@
     "@nuxt/module-builder": "^1.0.3",
     "@nuxt/schema": "^4.5.2",
     "@release-it/conventional-changelog": "^12.0.0",
+    "ai": "^7.0.68",
     "eslint": "^10.8.1",
     "happy-dom": "^20.11.2",
     "nuxt": "^4.5.2",
