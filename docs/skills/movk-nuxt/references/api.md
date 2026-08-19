@@ -98,8 +98,28 @@ toast: {
 }
 
 // Re-enable a toast the global config turned off
-// precedence: request-level show > global success/error.show > global enabled
+// precedence: request-level show > request-level successMessage/errorMessage
+//           > global success/error.show + methods > global enabled
 toast: { success: { show: true } }
+
+// Custom text is the same intent — it shows even when globally disabled
+toast: { successMessage: 'Saved' }
+```
+
+Notify only on mutating requests via the global or endpoint config (`methods` is
+case-insensitive, global-only — a request already has exactly one method, and an
+endpoint-level array replaces the global one instead of merging):
+
+```ts
+// nuxt.config.ts
+movk: {
+  api: {
+    toast: {
+      success: { methods: ['POST', 'PUT', 'PATCH', 'DELETE'] },
+      error: {} // no methods = notify on every method
+    }
+  }
+}
 ```
 
 ## Error handling
