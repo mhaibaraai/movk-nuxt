@@ -1,5 +1,16 @@
 # 📋 Changelog
 
+## [1.8.0](https://github.com/mhaibaraai/movk-nuxt/compare/v1.7.2...v1.8.0) (2026-08-19)
+
+### ✨ Features
+
+* **ai:** 新增 createChatTransport 桥接 AI SDK 传输层 ([d1ece7d](https://github.com/mhaibaraai/movk-nuxt/commit/d1ece7dcb8c8e5da85b899239f5a3d03069500bc))
+* **api:** $api.stream 与 useApiStream 接入 SSE 流式请求 ([afb808c](https://github.com/mhaibaraai/movk-nuxt/commit/afb808c479fcbff2b9b38004b96a3ebc1ee15a44))
+
+### ♻️ Code Refactoring
+
+* **api:** SSE 请求默认发通配 Accept ([557a142](https://github.com/mhaibaraai/movk-nuxt/commit/557a14206231570849afbc8519cee569c6cbf25b))
+
 ## [1.7.2](https://github.com/mhaibaraai/movk-nuxt/compare/v1.7.1...v1.7.2) (2026-08-19)
 
 ### ✨ Features
