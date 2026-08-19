@@ -41,7 +41,11 @@ export default defineNuxtConfig({
     api: {
       endpoints: {
         default: { baseURL: '/api' },
-        v2: { baseURL: '/api/demo/v2' }
+        v2: { baseURL: '/api/demo/v2' },
+        mutation: {
+          baseURL: '/api/demo',
+          toast: { success: { methods: ['POST', 'PUT', 'PATCH', 'DELETE'] } }
+        }
       },
       auth: {
         enabled: true,
