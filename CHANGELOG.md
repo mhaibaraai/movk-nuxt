@@ -1,5 +1,27 @@
 # 📋 Changelog
 
+## [1.7.2](https://github.com/mhaibaraai/movk-nuxt/compare/v1.7.1...v1.7.2) (2026-08-19)
+
+### ✨ Features
+
+* **api:** Toast 支持方法白名单与请求级文案隐式开启 ([be5c2cd](https://github.com/mhaibaraai/movk-nuxt/commit/be5c2cd40fdf5770edaec0bb83f91ce3f40158d5))
+
+### 📝 Documentation
+
+* **api:** 补充 Toast 方法白名单与开关优先级说明 ([f8bec13](https://github.com/mhaibaraai/movk-nuxt/commit/f8bec1308c206f8ed604bfeeee7540032c285cbc))
+
+### ✅ Tests
+
+* **api:** 覆盖 Toast 方法白名单与文案隐式开启 ([fbd2862](https://github.com/mhaibaraai/movk-nuxt/commit/fbd2862a5c20c85f5c772b496e60c1c5b11beed1))
+
+### 🔧 Chores
+
+* **deps:** lock file maintenance ([e1fe6ca](https://github.com/mhaibaraai/movk-nuxt/commit/e1fe6ca7bc00b71e988d965c185e568f6a8adb4c))
+* **deps:** update all non-major dependencies ([355502a](https://github.com/mhaibaraai/movk-nuxt/commit/355502aadb502b6680d20f55066c03685647076a))
+* **deps:** update nuxt framework to ^4.5.2 ([bc33244](https://github.com/mhaibaraai/movk-nuxt/commit/bc332447aa520f5acda5a25ab18227942e57f5cb))
+* **deps:** 锁定 reka-ui 至 2.10.1 ([d0b20db](https://github.com/mhaibaraai/movk-nuxt/commit/d0b20db4a9685491dd3633f2a2f59ae09f5c47d2))
+* **playground:** 新增 Toast 方法白名单演示 ([a0dd0dd](https://github.com/mhaibaraai/movk-nuxt/commit/a0dd0ddb871e3cc505dab77a6eac951f7fd7633c))
+
 ## [1.7.1](https://github.com/mhaibaraai/movk-nuxt/compare/v1.7.0...v1.7.1) (2026-08-05)
 
 ### 🐛 Bug Fixes
