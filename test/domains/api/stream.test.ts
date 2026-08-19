@@ -108,7 +108,30 @@ describe('openEventStream', () => {
 
     await openEventStream<Chunk>($fetch, '/chat', { method: 'POST', body: { a: 1 }, parse: () => undefined })
 
-    expect($fetch.raw).toHaveBeenCalledWith('/chat', { method: 'POST', body: { a: 1 } })
+    const [url, options] = vi.mocked($fetch.raw).mock.calls[0]!
+
+    expect(url).toBe('/chat')
+    expect(options).toMatchObject({ method: 'POST', body: { a: 1 } })
+  })
+
+  it('默认发通配 Accept，挡掉 ofetch 自动塞的 application/json', async () => {
+    const $fetch = fakeFetch(byteStream())
+
+    await openEventStream<Chunk>($fetch, '/chat', { method: 'POST', body: { a: 1 } })
+
+    const [, options] = vi.mocked($fetch.raw).mock.calls[0]!
+
+    expect((options!.headers as Headers).get('accept')).toBe('*/*')
+  })
+
+  it('调用方传了 Accept 就以调用方为准', async () => {
+    const $fetch = fakeFetch(byteStream())
+
+    await openEventStream<Chunk>($fetch, '/chat', { headers: { Accept: 'text/event-stream' } })
+
+    const [, options] = vi.mocked($fetch.raw).mock.calls[0]!
+
+    expect((options!.headers as Headers).get('accept')).toBe('text/event-stream')
   })
 })
 

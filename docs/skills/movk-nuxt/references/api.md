@@ -206,9 +206,9 @@ for await (const chunk of stream('/chat', { method: 'POST', body: { message } })
 </script>
 ```
 
-Two defaults are deliberately unset — do not "fix" them without checking the gateway:
+Two header/parsing defaults were settled the hard way — do not "fix" them without checking the gateway:
 
-- **No `Accept: text/event-stream`** — some backends (DRF) run content negotiation on it and reject the request outright.
+- **`Accept` defaults to the wildcard.** ofetch would otherwise add `Accept: application/json`, the wrong claim for a request read as a stream; sending `Accept: text/event-stream` instead gets the request rejected outright by DRF-style content negotiation. An explicit `headers.Accept` always wins.
 - **No forced `responseType: 'stream'`** — detection is left to the content type so a JSON error envelope still goes through business-code validation. Some gateways answer errors with HTTP 200 + `{ code: 500 }`.
 
 Deliberate aborts set `status` to `'aborted'` and leave `error` null; every other failure is stored, passed to `onError` and re-thrown.

@@ -106,6 +106,24 @@ export async function* iterateStream<T>(stream: ReadableStream<T>): AsyncGenerat
 }
 
 /**
+ * 补上 SSE 请求的 Accept
+ *
+ * @description ofetch 见到可 JSON 序列化的 body 就自动塞 `Accept: application/json`——
+ *  对一条要当流读的请求，这个声明本身就是错的，按 Accept 做内容协商的后端可能据此改走 JSON 渲染器。
+ *  但也不能反过来主动发 text/event-stream：实测 DRF 一类的内容协商会直接拒掉整个请求，
+ *  返回「无法满足 Accept HTTP 头的请求」。通配 Accept 两头都不踩，调用方传了就以调用方为准。
+ */
+export function withStreamAccept(headers?: HeadersInit): Headers {
+  const merged = new Headers(headers)
+
+  if (!merged.has('accept')) {
+    merged.set('accept', '*/*')
+  }
+
+  return merged
+}
+
+/**
  * 发起请求并取出 SSE 分片流
  *
  * @description 走 `$fetch.raw` 而非原生 fetch：端点 baseURL、鉴权头、业务码校验、toast 与
@@ -116,9 +134,12 @@ export async function openEventStream<T>(
   url: string,
   options: ApiStreamOptions<T> = {}
 ): Promise<AsyncGenerator<T>> {
-  const { parse, ...fetchOptions } = options
+  const { parse, headers, ...fetchOptions } = options
   // ofetch 的 FetchOptions 把 method 放宽成 string，nitro 侧要求字面量联合，此处只做类型收窄
-  const response = await $fetch.raw(url, fetchOptions as NitroFetchOptions<string>)
+  const response = await $fetch.raw(url, {
+    ...fetchOptions,
+    headers: withStreamAccept(headers)
+  } as NitroFetchOptions<string>)
   const body = response._data
 
   if (!isReadableStream(body)) {

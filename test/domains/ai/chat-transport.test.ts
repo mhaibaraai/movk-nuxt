@@ -86,8 +86,13 @@ describe('createChatTransport', () => {
 
     expect(url).toBe('/chat')
     expect(init.method).toBe('POST')
-    expect(init.headers).toEqual({ 'Content-Type': 'application/json' })
     expect(init.responseType).toBeUndefined()
+
+    const headers = init.headers as Headers
+
+    expect(headers.get('content-type')).toBe('application/json')
+    // ofetch 见到 JSON body 会自动塞 application/json，对要当流读的请求是错误声明
+    expect(headers.get('accept')).toBe('*/*')
   })
 
   it('prepareSendMessagesRequest 可异步改写 api 与 body', async () => {

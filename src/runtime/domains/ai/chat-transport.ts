@@ -4,7 +4,7 @@ import type { ApiInstance, EventStreamOptions, MovkApiEndpointName } from '../..
 import type { UIChunkSelector } from './types'
 import { HttpChatTransport } from 'ai'
 import { useNuxtApp } from '#app'
-import { toEventStream } from '../api/stream'
+import { toEventStream, withStreamAccept } from '../api/stream'
 import { createUIMessageLifecycle } from './ui-message-lifecycle'
 
 /**
@@ -46,8 +46,10 @@ class MovkChatTransport<Raw, UI_MESSAGE extends UIMessage> extends HttpChatTrans
  *  某些网关的错误响应是 HTTP 200 + `{ code: 500 }`，只看 `response.ok` 会放行后拿 JSON 当流读。
  */
 function createApiFetch(api: ApiInstance): HttpChatTransportInitOptions<UIMessage>['fetch'] {
-  return async (input, init) =>
-    await api.raw(String(input), init as FetchOptions) as unknown as Response
+  return async (input, init) => await api.raw(String(input), {
+    ...init,
+    headers: withStreamAccept(init?.headers)
+  } as FetchOptions) as unknown as Response
 }
 
 /**
