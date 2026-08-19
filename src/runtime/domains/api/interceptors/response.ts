@@ -44,12 +44,12 @@ export function createOnResponse(
       }
 
       await nuxtApp.callHook('movk:api:response', context)
-      showToast('success', raw, toast, toastConfig, responseConfig)
+      showToast('success', raw, toast, toastConfig, responseConfig, context.options.method)
       return
     }
 
     await nuxtApp.callHook('movk:api:error', context)
-    showToast('error', raw, toast, toastConfig, responseConfig)
+    showToast('error', raw, toast, toastConfig, responseConfig, context.options.method)
 
     throw createApiError(raw, extractMessage(raw, responseConfig))
   }

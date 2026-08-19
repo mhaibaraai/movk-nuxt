@@ -71,7 +71,7 @@ export function createOnResponseError(
 
     const data = response._data as ApiResponse | undefined
     const fallback = `请求失败 (${response.status})`
-    showToast('error', data ?? fallback, toast, toastConfig, responseConfig)
+    showToast('error', data ?? fallback, toast, toastConfig, responseConfig, context.options.method)
 
     if (publicConfig.debug) {
       console.error('[@movk/nuxt] Error:', response.status, response._data)

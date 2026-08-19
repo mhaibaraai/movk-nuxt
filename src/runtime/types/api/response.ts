@@ -34,9 +34,9 @@ export interface RequestToastOptions {
   success?: ApiToast | false
   /** 错误提示配置，设置为 false 禁用错误提示；`show: true` 可覆盖全局关闭 */
   error?: ApiToast | false
-  /** 自定义成功消息 */
+  /** 自定义成功消息；传入即视为本次开启成功提示，可覆盖全局关闭 */
   successMessage?: string
-  /** 自定义错误消息 */
+  /** 自定义错误消息；传入即视为本次开启错误提示，可覆盖全局关闭 */
   errorMessage?: string
 }
 

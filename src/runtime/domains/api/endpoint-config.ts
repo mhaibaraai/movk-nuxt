@@ -1,6 +1,18 @@
-import defu from 'defu'
+import defu, { createDefu } from 'defu'
 import type { ApiAuthConfig, ApiResponseConfig, ApiToastConfig, MovkApiPublicConfig } from '../../types/api'
 import type { EndpointPrivateConfig, ResolvedEndpointConfig } from '../../types/api/module'
+
+/**
+ * Toast 配置合并器
+ * @description methods 白名单按整体覆盖处理，避免 defu 默认的数组拼接把端点级白名单与全局级并集
+ */
+const mergeToastConfig = createDefu((obj, key, value) => {
+  if (key === 'methods' && Array.isArray(value)) {
+    (obj as Record<string, unknown>)[key as string] = value
+    return true
+  }
+  return false
+})
 
 /**
  * 合并全局与端点配置为运行时实际生效的 ResolvedEndpointConfig
@@ -33,7 +45,7 @@ export function resolveEndpointConfig(
     baseURL: endpointConfig.baseURL || '',
     headers: Object.keys(mergedHeaders).length > 0 ? mergedHeaders : undefined,
     auth: defu(endpointConfig.auth, publicConfig.auth) as ApiAuthConfig,
-    toast: defu(endpointConfig.toast, publicConfig.toast) as ApiToastConfig,
+    toast: mergeToastConfig(endpointConfig.toast ?? {}, publicConfig.toast ?? {}) as ApiToastConfig,
     response: defu(endpointConfig.response, publicConfig.response) as ApiResponseConfig
   }
 }

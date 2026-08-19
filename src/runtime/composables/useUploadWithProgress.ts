@@ -130,7 +130,7 @@ export function useUploadWithProgress<T = unknown>(): {
 
       const finishWith = async (raw: ReturnType<typeof tryParseJsonResponse>, fallback?: { isSuccess: boolean, message?: string }) => {
         const responseHeaders = parseXhrHeaders(xhr.getAllResponseHeaders())
-        const fetchContext = buildFetchContext(fullUrl, { context: { toast, skipBusinessCheck } }, {
+        const fetchContext = buildFetchContext(fullUrl, { method: 'POST', context: { toast, skipBusinessCheck } }, {
           status: xhr.status,
           headers: responseHeaders
         })
