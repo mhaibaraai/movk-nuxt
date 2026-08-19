@@ -1,6 +1,7 @@
 export * from './useApiFetch'
 export * from './useLazyApiFetch'
 export * from './useClientApiFetch'
+export * from './useApiStream'
 export * from './useDownloadWithProgress'
 export * from './useUploadWithProgress'
 export * from './useAutoForm'

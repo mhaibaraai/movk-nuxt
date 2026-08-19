@@ -74,6 +74,7 @@ const composablesNav: NavigationMenuItem = {
   children: [
     { label: 'Upload Progress', to: '/composables/use-upload-progress' },
     { label: 'Download Progress', to: '/composables/use-download-progress' },
+    { label: 'useApiStream', to: '/composables/use-api-stream' },
     { label: 'useDateFormatter', to: '/composables/use-date-formatter' },
     { label: 'useTheme', to: '/composables/use-theme' },
     { label: 'useMessageBox', to: '/composables/use-message-box' }

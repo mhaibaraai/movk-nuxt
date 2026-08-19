@@ -2,6 +2,7 @@ import type { $Fetch } from 'nitropack/types'
 import type { FetchError } from 'ofetch'
 import type { UseFetchOptions as NuxtUseFetchOptions, AsyncData } from 'nuxt/app'
 import type { RequestToastOptions, ApiError } from './response'
+import type { ApiStreamOptions } from './stream'
 
 /**
  * 端点名声明合并入口
@@ -23,6 +24,11 @@ export type MovkApiEndpointName = keyof MovkApiEndpoints & string
 export type ApiInstance = $Fetch & {
   /** 切换到指定端点，返回该端点的 $fetch 实例 */
   use: (endpoint: MovkApiEndpointName) => ApiInstance
+  /**
+   * 发起 SSE 流式请求，返回逐条产出分片的异步迭代器
+   * @description 复用当前端点的 baseURL、鉴权头、业务码校验与 hook
+   */
+  stream: <T = unknown>(url: string, options?: ApiStreamOptions<T>) => Promise<AsyncGenerator<T>>
 }
 
 /**

@@ -46,7 +46,7 @@ When you need to know **what a component accepts** or **how its API works**, use
 3. **Use `useApiFetch`, never raw `$fetch`** — fetch data with `useApiFetch` / `useLazyApiFetch` / `useClientApiFetch`; call imperatively via `const { $api } = useNuxtApp()` and `$api.use('endpoint')` to switch endpoints. The wrapper provides endpoint switching, auth-token injection, business-code checking, response unwrapping (`dataKey`), and toast — none of which `$fetch` provides.
 4. **Build forms from a Zod schema with `afz`** — get the factory via `const { afz } = useAutoForm()`, declare fields with `afz.string() / number() / boolean() / calendarDate() / enum() / array() / object() / file()`, attach UI via `.meta({ label, placeholder, description, controlProps })`, render with `<MAutoForm :schema :state @submit>`, and type state as `z.output<typeof schema>`. Never declare a parallel `interface` next to the schema.
 5. **Derive column / event types from official exports** — for `DataTable`, type column callbacks via index access (`DataTableDataColumn<T>['cell' | 'truncate' | 'tooltip']`, `DataTableProps<T>['sortable' | 'pinable' | 'resizable']`) and use the exported handler types (`DataTableSelectHandler`, `DataTableHoverHandler`, `DataTableContextmenuHandler`). Don't hand-write callback signatures.
-6. **Dual-mode (Nuxt / Vue + Vite)** — `@movk/nuxt` is a Nuxt module **and** a Vite plugin. In plain Vue + Vite (`@movk/nuxt/vite` + `@movk/nuxt/vue-plugin`) the standalone components, theming, AutoForm, DataTable and non-server composables (`useAutoForm` / `useTheme` / `useDateFormatter` / `useMessageBox`) all work. The **API domain is Nuxt-only**: `useApiFetch` / `useLazyApiFetch` / `useClientApiFetch`, `useUploadWithProgress` / `useDownloadWithProgress`, the `$api` plugin, auth and toast require the Nuxt server runtime — do not use them in Vue mode.
+6. **Dual-mode (Nuxt / Vue + Vite)** — `@movk/nuxt` is a Nuxt module **and** a Vite plugin. In plain Vue + Vite (`@movk/nuxt/vite` + `@movk/nuxt/vue-plugin`) the standalone components, theming, AutoForm, DataTable and non-server composables (`useAutoForm` / `useTheme` / `useDateFormatter` / `useMessageBox`) all work. The **API domain is Nuxt-only**: `useApiFetch` / `useLazyApiFetch` / `useClientApiFetch`, `useUploadWithProgress` / `useDownloadWithProgress` / `useApiStream`, the `$api` plugin, auth and toast require the Nuxt server runtime — do not use them in Vue mode.
 
 ## How to use this skill
 
@@ -54,7 +54,7 @@ Based on the task, load the relevant reference files **before writing any code**
 
 ### Reference files
 
-- [api](references/api.md) — `useApiFetch` / `$api`, endpoints, auth, business codes, toast, upload/download progress
+- [api](references/api.md) — `useApiFetch` / `$api`, endpoints, auth, business codes, toast, upload/download progress, SSE streaming
 - [auto-form](references/auto-form.md) — `AutoForm`, the `afz` schema factory, field types, controls, layout, submit
 - [components](references/components.md) — categorized component index for finding the right component name
 - [composables](references/composables.md) — `useDateFormatter`, `useTheme`, `useMessageBox`, `useAutoForm`
@@ -68,6 +68,7 @@ Based on the task, load the relevant reference files **before writing any code**
 | Customize AutoForm controls, layout, or define a new control | auto-form, components |
 | Fetch data in setup / switch endpoints / handle business errors | api |
 | Upload or download a file with progress | api, composables |
+| Consume an SSE stream or wire an LLM gateway into chat UI | api |
 | Render a data table with pagination, selection, or sorting | data-table |
 | Render tree-structured rows or grouped columns | data-table |
 | Display hierarchical data with search, lazy load, or cascading checkboxes (`MTree`) | components |
