@@ -91,6 +91,18 @@ export interface ApiToast extends Partial<Toast> {
 }
 
 /**
+ * 全局 / 端点级的单类型 Toast 配置
+ * @description 在 ApiToast 基础上增加方法白名单，请求级配置不含 methods
+ */
+export interface ApiToastTypeConfig extends ApiToast {
+  /**
+   * 仅在这些 HTTP 方法上显示（大小写不敏感），未声明表示不限制
+   * @example `['POST', 'PUT', 'PATCH', 'DELETE']`
+   */
+  methods?: Suggest<'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'HEAD' | 'OPTIONS'>[]
+}
+
+/**
  * Toast 提示配置
  * @description 定义成功和错误提示的全局样式和行为
  */
@@ -103,11 +115,11 @@ export interface ApiToastConfig {
   /**
    * 成功提示配置
    */
-  success?: ApiToast
+  success?: ApiToastTypeConfig
   /**
    * 错误提示配置
    */
-  error?: ApiToast
+  error?: ApiToastTypeConfig
 }
 
 /**

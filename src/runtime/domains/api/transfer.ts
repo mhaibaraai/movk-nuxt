@@ -127,6 +127,7 @@ export async function finalizeTransfer<T>(
 ): Promise<TransferResult<T>> {
   const { raw, fallback, config, publicConfig, requestToast, skipBusinessCheck, fetchContext } = ctx
   const { response: responseConfig, toast: toastConfig } = config
+  const method = fetchContext.options?.method
 
   if (publicConfig.debug) {
     console.info('[@movk/nuxt] Transfer response:', raw ?? fallback)
@@ -149,7 +150,7 @@ export async function finalizeTransfer<T>(
     }
 
     await nuxtApp.callHook('movk:api:response', fetchContext)
-    showToast('success', raw ?? fallback?.message, requestToast, toastConfig, responseConfig)
+    showToast('success', raw ?? fallback?.message, requestToast, toastConfig, responseConfig, method)
 
     return { data, error: null, aborted: false }
   }
@@ -168,7 +169,7 @@ export async function finalizeTransfer<T>(
   fetchContext.error = apiError
 
   await nuxtApp.callHook('movk:api:error', fetchContext)
-  showToast('error', raw ?? message, requestToast, toastConfig, responseConfig)
+  showToast('error', raw ?? message, requestToast, toastConfig, responseConfig, method)
 
   return { data: null, error: apiError, aborted: false }
 }

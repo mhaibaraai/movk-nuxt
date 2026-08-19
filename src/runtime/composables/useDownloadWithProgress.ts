@@ -138,7 +138,7 @@ export function useDownloadWithProgress<T = Blob>(): {
 
     try {
       const response = await fetch(fullUrl, fetchInit)
-      const fetchContext = buildFetchContext(fullUrl, { context: { toast, skipBusinessCheck } }, {
+      const fetchContext = buildFetchContext(fullUrl, { method, context: { toast, skipBusinessCheck } }, {
         status: response.status,
         headers: response.headers
       })

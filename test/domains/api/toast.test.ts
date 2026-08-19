@@ -112,4 +112,110 @@ describe('domains/api/toast.showToast', () => {
     const payload = toastAdd.mock.calls[0][0] as Record<string, unknown>
     expect('show' in payload).toBe(false)
   })
+
+  describe('methods 方法白名单', () => {
+    const mutationOnly = {
+      ...baseGlobal,
+      success: { ...baseGlobal.success, methods: ['POST', 'PUT', 'PATCH', 'DELETE'] }
+    }
+
+    it('命中白名单时弹出', () => {
+      showToast('success', 'x', undefined, mutationOnly, undefined, 'POST')
+      expect(toastAdd).toHaveBeenCalledTimes(1)
+    })
+
+    it('未命中白名单时短路', () => {
+      showToast('success', 'x', undefined, mutationOnly, undefined, 'GET')
+      expect(toastAdd).not.toHaveBeenCalled()
+    })
+
+    it('method 缺省按 GET 处理', () => {
+      showToast('success', 'x', undefined, mutationOnly)
+      expect(toastAdd).not.toHaveBeenCalled()
+    })
+
+    it('方法比较大小写不敏感', () => {
+      showToast('success', 'x', undefined, mutationOnly, undefined, 'post')
+      expect(toastAdd).toHaveBeenCalledTimes(1)
+    })
+
+    it('methods 为空数组时任何方法都不命中', () => {
+      showToast('success', 'x', undefined, { ...baseGlobal, success: { ...baseGlobal.success, methods: [] } }, undefined, 'POST')
+      expect(toastAdd).not.toHaveBeenCalled()
+    })
+
+    it('methods 仅约束对应类型，另一类型不受影响', () => {
+      showToast('error', 'x', undefined, mutationOnly, undefined, 'GET')
+      expect(toastAdd).toHaveBeenCalledTimes(1)
+    })
+
+    it('未命中时请求级 show=true 仍弹出', () => {
+      showToast('success', 'x', { success: { show: true } }, mutationOnly, undefined, 'GET')
+      expect(toastAdd).toHaveBeenCalledTimes(1)
+    })
+
+    it('命中时请求级 show=false 仍短路', () => {
+      showToast('success', 'x', { success: { show: false } }, mutationOnly, undefined, 'POST')
+      expect(toastAdd).not.toHaveBeenCalled()
+    })
+
+    it('methods 不进入 payload', () => {
+      showToast('success', 'x', undefined, mutationOnly, undefined, 'POST')
+      const payload = toastAdd.mock.calls[0][0] as Record<string, unknown>
+      expect('methods' in payload).toBe(false)
+    })
+  })
+
+  describe('请求级文案隐式开启', () => {
+    const successOff = { ...baseGlobal, success: { ...baseGlobal.success, show: false } }
+
+    it('全局 typeConfig.show=false 时 successMessage 单次开启并作为文案', () => {
+      showToast('success', '响应文案', { successMessage: '文件下载成功' }, successOff)
+      expect(toastAdd).toHaveBeenCalledTimes(1)
+      const payload = toastAdd.mock.calls[0][0] as Record<string, unknown>
+      expect(payload.title).toBe('文件下载成功')
+    })
+
+    it('全局 enabled=false 时 errorMessage 单次开启', () => {
+      showToast('error', 'x', { errorMessage: '下载失败' }, { ...baseGlobal, enabled: false })
+      expect(toastAdd).toHaveBeenCalledTimes(1)
+    })
+
+    it('方法白名单未命中时 successMessage 仍开启', () => {
+      showToast(
+        'success',
+        'x',
+        { successMessage: '保存成功' },
+        { ...baseGlobal, success: { ...baseGlobal.success, methods: ['POST'] } },
+        undefined,
+        'GET'
+      )
+      expect(toastAdd).toHaveBeenCalledTimes(1)
+    })
+
+    it('请求级 show=false 优先于 successMessage', () => {
+      showToast('success', 'x', { success: { show: false }, successMessage: '不该出现' }, successOff)
+      expect(toastAdd).not.toHaveBeenCalled()
+    })
+
+    it('请求级 success=false 优先于 successMessage', () => {
+      showToast('success', 'x', { success: false, successMessage: '不该出现' }, successOff)
+      expect(toastAdd).not.toHaveBeenCalled()
+    })
+
+    it('纯样式覆盖不隐式开启', () => {
+      showToast('success', 'x', { success: { duration: 5000 } }, successOff)
+      expect(toastAdd).not.toHaveBeenCalled()
+    })
+
+    it('空字符串文案不隐式开启', () => {
+      showToast('success', 'x', { successMessage: '' }, successOff)
+      expect(toastAdd).not.toHaveBeenCalled()
+    })
+
+    it('errorMessage 不会开启已关闭的成功提示', () => {
+      showToast('success', 'x', { errorMessage: '失败文案' }, successOff)
+      expect(toastAdd).not.toHaveBeenCalled()
+    })
+  })
 })

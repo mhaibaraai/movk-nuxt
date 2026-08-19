@@ -30,12 +30,36 @@ const customStyle = build({
   }
 })
 
+// 6. 端点 mutation 配置 success.methods = ['POST','PUT','PATCH','DELETE']，GET 不弹成功提示
+const methodGet = useApiFetch('/echo', { immediate: false, endpoint: 'mutation' })
+
+// 7. 同端点 POST 命中白名单，正常弹出
+const methodPost = useApiFetch('/echo', { immediate: false, endpoint: 'mutation', method: 'POST' })
+
+// 8. GET 未命中白名单，请求级 show: true 单次开启
+const methodGetForce = useApiFetch('/echo', {
+  immediate: false,
+  endpoint: 'mutation',
+  toast: { success: { show: true } }
+})
+
+// 9. GET 未命中白名单，请求级 successMessage 同样单次开启
+const methodGetMessage = useApiFetch('/echo', {
+  immediate: false,
+  endpoint: 'mutation',
+  toast: { successMessage: '数据已刷新' }
+})
+
 const cases = [
   { name: '默认', state: def, desc: '继承全局 toast 配置，成功/错误均按默认样式弹出' },
   { name: '完全静音', state: silent, desc: 'toast: false 关闭所有单次提示' },
   { name: '覆盖文案', state: overrideMessage, desc: 'successMessage / errorMessage 替换默认文案' },
   { name: '仅静默成功', state: errorOnly, desc: '{ success: false } 关闭成功提示但保留错误提示' },
-  { name: '自定义样式', state: customStyle, desc: '成功 / 错误分别覆盖 color、icon 等 ToastProps' }
+  { name: '自定义样式', state: customStyle, desc: '成功 / 错误分别覆盖 color、icon 等 ToastProps' },
+  { name: '方法白名单静默', state: methodGet, desc: '端点配置 success.methods 后，GET 未命中白名单不弹成功提示' },
+  { name: '方法白名单命中', state: methodPost, desc: '同端点 POST 命中 success.methods，成功提示照常弹出' },
+  { name: '单次强制开启', state: methodGetForce, desc: '请求级 success.show: true 越过方法白名单单次开启' },
+  { name: '文案单次开启', state: methodGetMessage, desc: '请求级 successMessage 视为开启意图，越过方法白名单并替换文案' }
 ]
 
 function triggerAll() {
