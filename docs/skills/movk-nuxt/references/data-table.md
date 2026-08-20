@@ -68,6 +68,31 @@ const columns: DataTableDataColumn<User>[] = [
 </template>
 ```
 
+## Header & cell slots
+
+Slots named after a column id override that column's rendering. Data column id = `accessorKey`; special columns = `__selection`, `__index`, `__expand`, `__row_pinning`, `__actions`.
+
+```vue
+<template>
+  <MDataTable :columns="columns" :data="data" row-key="id" sortable>
+    <!-- replaces the header label only; sort / pin buttons and the resize handle stay -->
+    <template #name-header>
+      <span class="inline-flex items-center gap-1 truncate">
+        <UIcon name="i-lucide-user-round" class="size-4 text-primary" />
+        Name
+      </span>
+    </template>
+
+    <!-- replaces the whole cell: truncate / tooltip / emptyCell no longer apply -->
+    <template #role-cell="{ row }">
+      <UBadge color="neutral" variant="subtle" size="sm">{{ row.original.role }}</UBadge>
+    </template>
+  </MDataTable>
+</template>
+```
+
+`#<column>-footer` works the same way. Grouped headers (`children`) cannot be targeted — their id is assembled by TanStack; use the `header` option instead.
+
 ## Special columns
 
 Set `type` to add a column without an `accessorKey`. Supported: `selection`, `index`, `expand`, `row-pinning`, `actions`.

@@ -80,6 +80,15 @@ const resizableFn: DataTableProps<Person>['resizable'] = col => col.accessorKey 
 const truncateFn: DataTableDataColumn<Person>['truncate'] = ctx =>
   ctx.column.id === 'bio' ? (ctx.row.original.bio.length > 45 ? 3 : 2) : true
 const tooltipFn: DataTableDataColumn<Person>['tooltip'] = ctx => ctx.column.id === 'address'
+// 8. 表头与单元格插槽
+const slotColumns: DataTableColumn<Person>[] = [
+  { accessorKey: 'id', header: '工号', size: 100 },
+  { accessorKey: 'name', header: '姓名', size: 140, sortable: true, resizable: true },
+  { accessorKey: 'department', header: '部门', size: 120 },
+  { accessorKey: 'level', header: '职级', size: 120 },
+  { accessorKey: 'salary', header: '薪资', align: 'right', size: 140, sortable: true, cell: moneyCell }
+]
+
 const functionalSource = `sortable:  (col) => col.accessorKey !== 'id'
 pinable:   (col) => !['bio','address'].includes(col.accessorKey)
 resizable: (col) => col.accessorKey !== 'salary'
@@ -208,6 +217,37 @@ tooltip:   (ctx) => ctx.column.id === 'address'`
         :truncate="truncateFn"
         :tooltip="tooltipFn"
       />
+    </Showcase>
+
+    <Showcase
+      title="表头与单元格插槽"
+      description="按列 id 使用 #<column>-header 覆写表头标签、#<column>-cell 覆写单元格内容；表头插槽仍保留排序按钮与列宽拖拽手柄"
+    >
+      <MDataTable
+        :columns="slotColumns"
+        :data="data"
+        bordered
+      >
+        <template #name-header>
+          <span class="inline-flex items-center gap-1 truncate">
+            <UIcon name="i-lucide-user-round" class="size-4 text-primary" />
+            姓名
+          </span>
+        </template>
+
+        <template #department-cell="{ row }">
+          <UBadge color="neutral" variant="subtle" size="sm">
+            {{ row.original.department }}
+          </UBadge>
+        </template>
+
+        <template #level-cell="{ getValue }">
+          <UBadge v-if="getValue()" color="primary" variant="soft" size="sm">
+            {{ getValue() }}
+          </UBadge>
+          <span v-else class="text-muted">未定级</span>
+        </template>
+      </MDataTable>
     </Showcase>
   </div>
 </template>
