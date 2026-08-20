@@ -4,6 +4,7 @@ import type {
   ColumnPinningState,
   ColumnSizingState,
   ExpandedState,
+  HeaderContext,
   PaginationState,
   Row,
   RowPinningState,
@@ -16,11 +17,12 @@ import type {
 import type { TableData, TableProps, ComponentConfig } from '@nuxt/ui'
 import { UTable } from '#components'
 import { useAppConfig } from '#imports'
-import type { Ref, WritableComputedRef } from 'vue'
+import type { Ref, VNode, WritableComputedRef } from 'vue'
 import { computed, onMounted, ref, useAttrs, useTemplateRef, watch } from 'vue'
 import { useResizeObserver, useScroll } from '@vueuse/core'
 import { useExtendedTv } from '../utils/extend-theme'
 import { resolveColumns } from '../domains/data-table/columns/resolve-columns'
+import type { HeaderSlotMap } from '../domains/data-table/columns/constants'
 import { resolveCallbackValue } from '../domains/data-table/columns/utils'
 import { computeTreeSelection } from '../utils/tree-selection'
 import { resolveDefaultExpandedKeys } from '../utils/tree-expand'
@@ -37,6 +39,9 @@ import type { DataTablePaginationUi } from '../types/data-table/pagination'
 
 type DataTable = ComponentConfig<(typeof theme & typeof tableTheme), AppConfig, 'dataTable'>
 type Pagination = ComponentConfig<typeof paginationTheme, AppConfig, 'dataTablePagination'>
+
+const HEADER_SLOT_SUFFIX = '-header'
+const PAGINATION_SLOTS = ['pagination', 'pagination-summary', 'pagination-actions']
 
 const props = withDefaults(defineProps<DataTableProps<T> & {
   ui?: DataTable['slots']
@@ -64,9 +69,25 @@ const columnVisibilityExcludeKeysState = defineModel<string[]>('columnVisibility
 const rowSelectionKeysState = defineModel<string[]>('rowSelectionKeys')
 const expandedKeysState = defineModel<string[]>('expandedKeys')
 
-defineSlots<DataTableSlots<T>>()
+const slots = defineSlots<DataTableSlots<T>>()
 
-const resolved = computed(() => resolveColumns<T>(props.columns || [], props))
+// 表头插槽交由列解析注入标签位，其余插槽原样转发给 UTable
+const slotRecord = slots as unknown as Record<string, ((ctx: unknown) => VNode[]) | undefined>
+const headerSlots = Object.fromEntries(
+  Object.keys(slots)
+    .filter(name => name.endsWith(HEADER_SLOT_SUFFIX))
+    // 包一层而非直接引用，父组件重渲染后仍取到最新的插槽函数
+    .map(name => [name, (ctx: HeaderContext<T, unknown>) => slotRecord[name]?.(ctx) ?? []])
+) as HeaderSlotMap<T>
+
+const resolved = computed(() => resolveColumns<T>(props.columns || [], props, headerSlots))
+
+const forwardSlots = computed(() => Object.keys(slots).filter((name) => {
+  if (PAGINATION_SLOTS.includes(name)) return false
+  // 已被列解析消费的表头插槽不能再转发：UTable 的同名插槽会赢过 columnDef.header，包裹层会丢失
+  if (!name.endsWith(HEADER_SLOT_SUFFIX)) return true
+  return !resolved.value.allColumnIds.includes(name.slice(0, -HEADER_SLOT_SUFFIX.length))
+}) as (keyof DataTableSlots<T>)[])
 
 function hasEntries(v: unknown): boolean {
   return typeof v === 'object' && v !== null && Object.keys(v).length > 0
@@ -643,28 +664,9 @@ defineExpose<DataTableExposed<T>>({
       :style="borderedStyle"
       v-bind="uTableProps"
     >
-      <template v-if="$slots.expanded" #expanded="{ row }">
-        <slot name="expanded" :row="row" />
-      </template>
-
-      <template v-if="$slots.empty" #empty>
-        <slot name="empty" />
-      </template>
-
-      <template v-if="$slots.loading" #loading>
-        <slot name="loading" />
-      </template>
-
-      <template v-if="$slots.caption" #caption>
-        <slot name="caption" />
-      </template>
-
-      <template v-if="$slots['body-top']" #body-top>
-        <slot name="body-top" />
-      </template>
-
-      <template v-if="$slots['body-bottom']" #body-bottom>
-        <slot name="body-bottom" />
+      <!-- 插槽名是联合类型，vue-tsc 会把作用域参数收敛成全部插槽 props 的交叉类型，转发时只能绕过 -->
+      <template v-for="name in forwardSlots" #[name]="slotProps" :key="name">
+        <slot :name="name" v-bind="(slotProps ?? {}) as any" />
       </template>
     </UTable>
 

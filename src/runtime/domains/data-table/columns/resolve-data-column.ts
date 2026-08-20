@@ -6,7 +6,7 @@ import type {
   DataTableSortButtonContext
 } from '../../../types/data-table'
 import type { ResolveContext } from './constants'
-import { h, isVNode } from 'vue'
+import { Fragment, h, isVNode } from 'vue'
 import { resolveCallbackValue, resolveColumnFlag, resolveTemplate } from './utils'
 import DataTableCellTooltip from '../components/CellTooltip.vue'
 import { UButton } from '#components'
@@ -166,9 +166,11 @@ export function renderHeaderActions<T>(
 
   const resizeHandle = resizable ? buildResizeHandle(ctx, options) : null
 
-  const labelNode = isVNode(label)
-    ? label
-    : h('span', { class: 'truncate' }, String(label ?? ''))
+  const labelNode = Array.isArray(label)
+    ? h(Fragment, label)
+    : isVNode(label)
+      ? label
+      : h('span', { class: 'truncate' }, String(label ?? ''))
 
   return h('div', { class: 'flex items-center gap-1 group' }, [
     ...leading,
@@ -199,12 +201,15 @@ export function resolveDataColumn<T>(
   ctx.allColumnIds.push(id)
 
   const cellRenderer = buildDataCellRenderer(col, options)
+  const headerSlot = ctx.headerSlots?.[`${id}-header`]
 
   const def: ColumnDef<T, unknown> = {
     accessorKey: id,
     header: (effectiveSortable || effectivePinable || effectiveResizable)
-      ? (hctx: HeaderContext<T, unknown>) => renderHeaderActions(hctx, col, options, col.header ?? id, effectiveSortable, effectivePinable, effectiveResizable)
-      : (col.header ?? id),
+      ? (hctx: HeaderContext<T, unknown>) => renderHeaderActions(hctx, col, options, headerSlot ? headerSlot(hctx) : (col.header ?? id), effectiveSortable, effectivePinable, effectiveResizable)
+      : headerSlot
+        ? (hctx: HeaderContext<T, unknown>) => headerSlot(hctx)
+        : (col.header ?? id),
     ...(col.minSize != null && { minSize: col.minSize }),
     ...(col.maxSize != null && { maxSize: col.maxSize }),
     ...(resolvedSize != null && { size: resolvedSize }),

@@ -79,12 +79,18 @@ function buildSpecialColumnDef<T>(
   const effectiveAlign = col.align ?? defaults.align
   const alignClass = resolveAlignClass(effectiveAlign)
 
+  const headerSlot = ctx.headerSlots?.[`${id}-header`]
+
   const resolvedHeader = (effectivePinable || effectiveResizable)
     ? (hctx: HeaderContext<T, unknown>) => {
-        const label = isFunction(render.header) ? render.header(hctx) : (render.header ?? '')
+        const label = headerSlot
+          ? headerSlot(hctx)
+          : isFunction(render.header) ? render.header(hctx) : (render.header ?? '')
         return renderHeaderActions(hctx, col, options, label, false, effectivePinable, effectiveResizable)
       }
-    : render.header
+    : headerSlot
+      ? (hctx: HeaderContext<T, unknown>) => headerSlot(hctx)
+      : render.header
 
   const classMeta = buildClassMeta(density, alignClass, effectiveResizable, defaults.tdClass)
   // 选择列复选框命中 Nuxt UI 的 [&:has([role=checkbox])]:pe-0，右 padding 被清零，

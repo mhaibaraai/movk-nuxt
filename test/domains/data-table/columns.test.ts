@@ -1,8 +1,12 @@
 import { describe, expect, it, vi } from 'vitest'
+import { Fragment, h } from 'vue'
+import type { VNode } from 'vue'
+import type { HeaderContext } from '@tanstack/vue-table'
 import { resolveColumns } from '../../../src/runtime/domains/data-table/columns/resolve-columns'
 import { clampSize, resolveColumnSize } from '../../../src/runtime/domains/data-table/columns/style'
 import type { DataTableColumn } from '../../../src/runtime/types/data-table'
 import type { DataTableProps } from '../../../src/runtime/types/data-table/component'
+import type { HeaderSlotMap } from '../../../src/runtime/domains/data-table/columns/constants'
 
 vi.mock('#components', () => ({ UButton: 'UButton', UCheckbox: 'UCheckbox', UDropdownMenu: 'UDropdownMenu' }))
 vi.mock('../../../src/runtime/domains/data-table/components/CellTooltip.vue', () => ({ default: 'CellTooltip' }))
@@ -166,5 +170,67 @@ describe('clampSize 拖拽目标宽度', () => {
 
   it('低于 minSize 夹到下限', () => {
     expect(clampSize(40, 60, 320)).toBe(60)
+  })
+})
+
+describe('resolveColumns 表头插槽', () => {
+  function makeHeaderCtx() {
+    return {
+      column: {
+        id: 'name',
+        getIsSorted: () => false,
+        getToggleSortingHandler: () => () => {},
+        getIsPinned: () => false,
+        pin: () => {}
+      },
+      table: {},
+      header: {}
+    } as unknown as HeaderContext<Row, unknown>
+  }
+
+  function resolveWithSlots(columns: DataTableColumn<Row>[], slots: HeaderSlotMap<Row>, options: DataTableProps<Row> = {} as DataTableProps<Row>) {
+    return resolveColumns<Row>(columns, options, slots)
+  }
+
+  it('未提供插槽时表头保持原有形态', () => {
+    const def = findDef([{ accessorKey: 'name', header: '姓名' }], 'name')!
+    expect(def.header).toBe('姓名')
+  })
+
+  it('提供插槽时表头变为渲染函数并输出插槽节点', () => {
+    const { columnDefs } = resolveWithSlots(
+      [{ accessorKey: 'name', header: '姓名' }],
+      { 'name-header': () => [h('em', 'slot-label')] }
+    )
+    const header = columnDefs[0]!.header as (ctx: HeaderContext<Row, unknown>) => VNode[]
+    expect(typeof header).toBe('function')
+    const rendered = header(makeHeaderCtx())
+    expect(Array.isArray(rendered)).toBe(true)
+    expect(rendered[0]!.type).toBe('em')
+  })
+
+  it('排序列的插槽内容被包进表头容器且保留排序按钮', () => {
+    const { columnDefs } = resolveWithSlots(
+      [{ accessorKey: 'name', sortable: true }],
+      { 'name-header': () => [h('em', 'slot-label')] }
+    )
+    const header = columnDefs[0]!.header as (ctx: HeaderContext<Row, unknown>) => VNode
+    const rendered = header(makeHeaderCtx())
+    expect(rendered.type).toBe('div')
+    const children = rendered.children as VNode[]
+    expect(children.some(child => child?.type === 'UButton')).toBe(true)
+    const label = children.find(child => child?.type === Fragment)
+    expect(label).toBeDefined()
+    expect((label!.children as VNode[])[0]!.type).toBe('em')
+  })
+
+  it('特殊列表头可被同名插槽覆盖', () => {
+    const { columnDefs } = resolveWithSlots(
+      [{ type: 'actions', actions: [] }],
+      { '__actions-header': () => [h('em', 'slot-actions')] }
+    )
+    const header = columnDefs[0]!.header as (ctx: HeaderContext<Row, unknown>) => VNode[]
+    expect(typeof header).toBe('function')
+    expect(header(makeHeaderCtx())[0]!.type).toBe('em')
   })
 })

@@ -2,6 +2,7 @@ import type {
   CellContext,
   ColumnDefTemplate,
   ColumnMeta,
+  HeaderContext,
   PaginationState,
   Row,
   Table,
@@ -221,7 +222,7 @@ export interface DataTablePaginationSlotProps<T extends TableData> {
   setPageSize: (pageSize: unknown) => void
 }
 
-export interface DataTableSlots<T extends TableData> {
+interface DataTableNamedSlots<T extends TableData> {
   'expanded'(props: { row: Row<T> }): VNode[]
   'empty'(): VNode[]
   'loading'(): VNode[]
@@ -232,3 +233,14 @@ export interface DataTableSlots<T extends TableData> {
   'pagination-summary'(props: FirstParameter<DataTablePaginationSlots<T>['summary']>): VNode[]
   'pagination-actions'(props: FirstParameter<DataTablePaginationSlots<T>['actions']>): VNode[]
 }
+
+/**
+ * 按列 id 命名的动态插槽，转发至 UTable：
+ * `<id>-header` 由 MDataTable 注入列表头标签位（排序/固定按钮与 resize 手柄保留），
+ * `<id>-cell` / `<id>-footer` 整体替换单元格与表尾内容
+ */
+type DataTableColumnSlots<T extends TableData>
+  = Record<`${string}-header` | `${string}-footer`, (props: HeaderContext<T, unknown>) => VNode[]>
+    & Record<`${string}-cell`, (props: CellContext<T, unknown>) => VNode[]>
+
+export type DataTableSlots<T extends TableData> = DataTableNamedSlots<T> & Partial<DataTableColumnSlots<T>>

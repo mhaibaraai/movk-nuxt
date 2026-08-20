@@ -7,7 +7,7 @@ import type {
   DataTableRowPinningColumn,
   DataTableSelectionColumn
 } from '../../../types/data-table'
-import type { ResolveContext, ResolvedColumnState } from './constants'
+import type { HeaderSlotMap, ResolveContext, ResolvedColumnState } from './constants'
 import { isDataColumn, isGroupColumn } from '../../../types/data-table'
 import type { DataTableProps } from '../../../types/data-table/component'
 import { isString } from '@movk/core'
@@ -45,11 +45,13 @@ function resolveColumn<T>(
 
 export function resolveColumns<T>(
   columns: DataTableColumn<T>[],
-  options: DataTableProps<T>
+  options: DataTableProps<T>,
+  headerSlots?: HeaderSlotMap<T>
 ): ResolvedColumnState<T> {
   let groupCounter = 0
   const ctx: ResolveContext<T> = {
     options,
+    headerSlots,
     density: options.density
       ? (isString(options.density) ? DENSITY_PRESETS[options.density] : options.density)
       : null,
