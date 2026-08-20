@@ -1,4 +1,5 @@
-import type { ColumnDef, ColumnMeta, ColumnPinningState, ColumnSizingState, VisibilityState } from '@tanstack/vue-table'
+import type { ColumnDef, ColumnMeta, ColumnPinningState, ColumnSizingState, HeaderContext, VisibilityState } from '@tanstack/vue-table'
+import type { VNode } from 'vue'
 import type {
   DataTableDensityPreset,
   DataTableSizePreset,
@@ -54,8 +55,13 @@ export interface ResolvedColumnState<T> {
   allColumnIds: string[]
 }
 
+/** 列表头插槽渲染器，键为 `<columnId>-header` */
+export type HeaderSlotMap<T> = Record<string, ((ctx: HeaderContext<T, unknown>) => VNode[]) | undefined>
+
 export interface ResolveContext<T> {
   options: DataTableProps<T>
+  /** 用户提供的表头插槽，命中列 id 时取代该列 header 标签 */
+  headerSlots?: HeaderSlotMap<T>
   density: ColumnMeta<T, unknown>['class'] | null
   pinning: ColumnPinningState
   visibility: VisibilityState
