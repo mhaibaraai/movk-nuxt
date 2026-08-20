@@ -1,5 +1,19 @@
 # 📋 Changelog
 
+## [1.8.1](https://github.com/mhaibaraai/movk-nuxt/compare/v1.8.0...v1.8.1) (2026-08-20)
+
+### ✨ Features
+
+* **data-table:** 支持按列 id 的表头与单元格插槽 ([4b6a059](https://github.com/mhaibaraai/movk-nuxt/commit/4b6a059284db5e2e59c776da00f58d4715c0c820))
+
+### 📝 Documentation
+
+* **data-table:** 补充表头与单元格插槽章节 ([39ce3ce](https://github.com/mhaibaraai/movk-nuxt/commit/39ce3cebaa1a067726c761a701c09f309ed288b7))
+
+### ✅ Tests
+
+* **data-table:** 补充表头插槽解析用例 ([f350b90](https://github.com/mhaibaraai/movk-nuxt/commit/f350b904ee7648e7155995b517a538d04897effd))
+
 ## [1.8.0](https://github.com/mhaibaraai/movk-nuxt/compare/v1.7.2...v1.8.0) (2026-08-19)
 
 ### ✨ Features
