@@ -18,7 +18,7 @@
     "@vercel/speed-insights": "^2.0.0",
     "json5": "^2.2.3",
     "motion-v": "^2.4.4",
-    "nuxt": "^4.5.2",
+    "nuxt": "^4.6.0",
     "ohash": "^2.0.12",
     "tailwindcss": "^4.3.3",
     "zod": "^4.6.5"
