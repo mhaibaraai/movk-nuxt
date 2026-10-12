@@ -95,6 +95,7 @@ pnpm clean
 - **共享逻辑**：主题模板 `getTemplates`（`src/templates.ts`）、`getDefaultConfig`（`src/runtime/utils/theme-defaults.ts`）由两模式共用，**改动须同步两模式**。
 - **同步面**：修改主题模板、`MOVK_COMPOSABLES` 映射、`UI_COMPONENTS` shim 名单或组件结构后，须同时验证 Nuxt（`pnpm dev:prepare`）与 Vue（`pnpm dev:vue:build`）两条链路。
 - **已知约束**：`DatePicker` 等透传 `@nuxt/ui` `CalendarProps` 的组件，声明发射期会产生 reka-ui 类型不可移植告警（TS2883，reka-ui 未从公共入口导出 `Matcher`/`WeekDayFormat`/`WeekStartsOn`）；非致命、不影响 `pnpm typecheck`（`--noEmit`），属上游限制。
+- **reka-ui 版本锁定**：直接依赖 `reka-ui` 必须与 `@nuxt/ui` 内部锁定的版本完全一致（renovate 已禁用其单独升级），升级 `@nuxt/ui` 时同步修改。版本不一致会产生两份 reka-ui，`@nuxt/ui` 类型引用的副本无法经 `reka-ui` 说明符命名，`pnpm build` 声明发射会直接报 TS2883 而失败。
 
 ### 新增 src 内容时：是否需要双模式 & 如何处理
 
