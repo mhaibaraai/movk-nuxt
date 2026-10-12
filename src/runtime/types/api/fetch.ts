@@ -1,4 +1,5 @@
-import type { $Fetch } from 'nitropack/types'
+import type { $Fetch, AvailableRouterMethod } from 'nitropack/types'
+import type { MaybeRefOrGetter } from 'vue'
 import type { FetchError } from 'ofetch'
 import type { UseFetchOptions as NuxtUseFetchOptions, AsyncData } from 'nuxt/app'
 import type { RequestToastOptions, ApiError } from './response'
@@ -37,7 +38,9 @@ export type ApiInstance = $Fetch & {
  * @template DataT - transform 转换后的类型（默认等于 T）
  */
 export type UseApiFetchOptions<T = unknown, DataT = T>
-  = Omit<NuxtUseFetchOptions<T, DataT>, '$fetch' | 'context'> & {
+  = Omit<NuxtUseFetchOptions<T, DataT>, '$fetch' | 'context' | 'method'> & {
+    /** 请求方法；请求经端点 baseURL 发往外部服务，不按本地 Nitro 路由收窄 */
+    method?: MaybeRefOrGetter<AvailableRouterMethod<string> | Uppercase<AvailableRouterMethod<string>>>
     /** 使用的端点名称（默认使用 defaultEndpoint） */
     endpoint?: MovkApiEndpointName
     /** Toast 提示配置，设置为 false 禁用提示 */
