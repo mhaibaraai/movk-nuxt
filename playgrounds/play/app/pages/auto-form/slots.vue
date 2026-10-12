@@ -254,7 +254,7 @@ function createTodo() {
               <UInput
                 :model-value="value?.website"
                 icon="i-lucide-link"
-                placeholder="https://movk.dev"
+                placeholder="个人网站"
                 @update:model-value="setValue('website', $event)"
               />
             </UFormField>

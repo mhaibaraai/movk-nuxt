@@ -176,14 +176,6 @@ declare module 'nuxt/schema' {
     ['movk']: ModuleOptions
   }
 
-  interface AppConfig {
-    /**
-     * Movk UI theme configuration
-     * @see https://nuxt.mhaibaraai.cn/docs/getting-started/theme
-     */
-    movk?: AppConfigUI
-  }
-
   interface PublicRuntimeConfig {
     movkApi: MovkApiPublicConfig
   }
@@ -203,6 +195,10 @@ declare module '@nuxt/schema' {
      * Movk UI theme configuration
      * @see https://nuxt.mhaibaraai.cn/docs/getting-started/theme
      */
+    movk?: AppConfigUI
+  }
+
+  interface CustomAppConfig {
     movk?: AppConfigUI
   }
 }
