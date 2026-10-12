@@ -13,6 +13,11 @@
       "matchPackageNames": ["h3"],
       "matchUpdateTypes": ["major"],
       "enabled": false
+    },
+    {
+      "description": "reka-ui 须与 @nuxt/ui 锁定版本一致，随 @nuxt/ui 手动对齐",
+      "matchPackageNames": ["reka-ui"],
+      "enabled": false
     }
   ]
 }

@@ -14,6 +14,7 @@ import MovkTemplatePlugin from './plugins/templates'
 import MovkAppConfigPlugin from './plugins/app-config'
 import MovkPluginsPlugin from './plugins/plugins'
 import MovkFontPlugin from './plugins/font'
+import MovkCompatPlugin from './plugins/compat'
 import { formatMissingCollections, resolveMovkIcons } from './utils/icons'
 
 export interface MovkUIOptions extends Pick<ModuleOptions, 'prefix' | 'theme' | 'icon'> {
@@ -113,6 +114,7 @@ export const MovkPlugin = createUnplugin<MovkUIOptions | undefined>((_options = 
     ...(Array.isArray(uiPlugins) ? uiPlugins : [uiPlugins]),
     MovkTemplatePlugin(options),
     MovkFontPlugin(options),
-    MovkPluginsPlugin(options)
+    MovkPluginsPlugin(options),
+    MovkCompatPlugin()
   ].flat(1) as UnpluginOptions[]
 })
