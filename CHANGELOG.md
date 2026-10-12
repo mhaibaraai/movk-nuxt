@@ -1,5 +1,40 @@
 # 📋 Changelog
 
+## [1.8.2](https://github.com/mhaibaraai/movk-nuxt/compare/v1.8.1...v1.8.2) (2026-10-12)
+
+### ✨ Features
+
+* **vite:** dev 模式检测 UnoCSS 未分层 reset 并给出警告 ([3898107](https://github.com/mhaibaraai/movk-nuxt/commit/3898107c7be6d8970d4d610538d5763f12e9a3b0))
+
+### 🐛 Bug Fixes
+
+* **api:** useApiFetch 的 method 不再受本地 Nitro 路由类型收窄 ([72fabeb](https://github.com/mhaibaraai/movk-nuxt/commit/72fabeb3e2a445da68a3116a15aa3733049b8d02))
+* **deps:** 将 reka-ui 对齐 @nuxt/ui 锁定版本 2.10.5 ([bc6b165](https://github.com/mhaibaraai/movk-nuxt/commit/bc6b165618a683a6e2930f92b26d3ba9291853b3))
+* **playground:** 规避 vue-tsc 3.3.12 模板内联 URL 导致插槽作用域丢失 ([69dbdcd](https://github.com/mhaibaraai/movk-nuxt/commit/69dbdcdcb93969226b5c5ec6c918b06e0710ba37))
+* **theme:** 适配 Nuxt 4.6 app.config 类型合并机制 ([8a3e7ad](https://github.com/mhaibaraai/movk-nuxt/commit/8a3e7ad789a9e63c27f0714176ecee9507e0686c))
+* **vite:** app-config 注入改用包内 defu 绝对路径 ([6e37c2c](https://github.com/mhaibaraai/movk-nuxt/commit/6e37c2cffdfc945041f24199ace721c37fb2fbe7))
+
+### 📝 Documentation
+
+* **releases:** 按 @movk/nuxt-docs 2.4 精简版本发布页配置 ([1b85b83](https://github.com/mhaibaraai/movk-nuxt/commit/1b85b83b085f2a6bc28a93f761cdd53c4b09c385))
+* **vue:** 新增与 UnoCSS 及已有全局样式共存说明 ([25603c0](https://github.com/mhaibaraai/movk-nuxt/commit/25603c07622bd5146ccb498bf0c95f58bf078df2))
+
+### 👷 CI
+
+* **release:** 新增基于 tag 的 npm 发布工作流 ([4cd36c2](https://github.com/mhaibaraai/movk-nuxt/commit/4cd36c2da963798aff75c09a141547a8dd0a5dcb))
+
+### 🔧 Chores
+
+* **deps:** update all non-major dependencies ([237c769](https://github.com/mhaibaraai/movk-nuxt/commit/237c769ea159bd0291e216ad1812b527dab5a7ec))
+* **deps:** update all non-major dependencies ([6ed4b2c](https://github.com/mhaibaraai/movk-nuxt/commit/6ed4b2cd70d4552b1fde9b6f58b36be65e21f2f2))
+* **deps:** update devdependency vitest to v5 ([6242789](https://github.com/mhaibaraai/movk-nuxt/commit/62427895d14b7e45b658193ca185035d90bc1457))
+* **deps:** update pnpm to v12 ([ee21ba7](https://github.com/mhaibaraai/movk-nuxt/commit/ee21ba77a4fa81f102cd0cb7cca9ee7312934eda))
+* **deps:** update vueuse monorepo to v15 ([366a38a](https://github.com/mhaibaraai/movk-nuxt/commit/366a38adb3b9332393ef7a8b7980df96a03555a9))
+* **deps:** 升级 nuxt 至 ^4.6.1 ([d92ab91](https://github.com/mhaibaraai/movk-nuxt/commit/d92ab91a2044083cf749429a838b6df5eb64bb43))
+* **deps:** 更新依赖并适配 @movk/nuxt-docs 2.4 ([bb6b9c8](https://github.com/mhaibaraai/movk-nuxt/commit/bb6b9c87401faf315d2f20d26bb775b249fff731))
+* **deps:** 更新非主要版本依赖并调整文档站 AI 模型 ([582d28f](https://github.com/mhaibaraai/movk-nuxt/commit/582d28f47f784b4ee8c70a7f431c8c842fb670ab))
+* **renovate:** 禁用 h3 major 升级 ([015588a](https://github.com/mhaibaraai/movk-nuxt/commit/015588aaaf019f8c605acf6b78804a1b627060a6))
+
 ## [1.8.1](https://github.com/mhaibaraai/movk-nuxt/compare/v1.8.0...v1.8.1) (2026-08-20)
 
 ### ✨ Features
