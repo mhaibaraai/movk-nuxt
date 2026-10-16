@@ -20,7 +20,7 @@ The raw response `{ code: 200, message: 'OK', data: { id: 1, name: 'Alice' } }` 
 - **Never call `$fetch` directly** — use `useApiFetch` / `useLazyApiFetch` / `useClientApiFetch` for composable fetches, and `const { $api } = useNuxtApp()` for imperative calls. Bare `$fetch` skips the interceptor chain.
 - **Generic `T` is the unwrapped business type**, not the full envelope. If you need the raw envelope, pass `{ skipUnwrap: true }` (or set `<T, DataT>` with a `transform`).
 - **Two error types**: `ApiError` for business-code failures (`isBusinessError === true`, HTTP 200 but `code` not in `successCodes`); everything else is an ofetch `FetchError`. Branch on `isBusinessError` and `statusCode`.
-- **HTTP 401** by default clears the session and redirects to login. Customize via the `movk:api:unauthorized` hook (e.g., to refresh a token).
+- **HTTP 401 or business code 401** (also for upload / download progress requests) by default clears the session and redirects to login. Customize via the `movk:api:unauthorized` hook (e.g., to refresh a token).
 
 ## Fetch mode selection
 
