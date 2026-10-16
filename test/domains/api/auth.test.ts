@@ -1,9 +1,18 @@
 import { describe, expect, it, vi } from 'vitest'
 import type { ApiAuthConfig } from '../../../src/runtime/types/api'
 
+const sessionState = vi.hoisted(() => ({
+  useUserSession: (() => ({ session: { value: { token: 'SESSION-TOKEN' } } })) as (() => unknown) | undefined
+}))
+
+vi.mock('#build/movk-session', () => ({
+  get useUserSession() {
+    return sessionState.useUserSession
+  }
+}))
+
 vi.mock('#imports', () => ({
   useNuxtApp: () => ({ vueApp: { runWithContext: (fn: () => unknown) => fn() } }),
-  useUserSession: () => ({ session: { value: { token: 'SESSION-TOKEN' } } }),
   useRuntimeConfig: () => ({
     public: {
       llmApiKey: 'PUBLIC-KEY',
@@ -27,6 +36,17 @@ describe('domains/api/auth', () => {
 
   it('默认从 session 取 token', () => {
     expect(getAuthHeaders(baseAuth)).toEqual({ Authorization: 'Bearer SESSION-TOKEN' })
+  })
+
+  it('未安装 nuxt-auth-utils 时 session 模式不注入请求头', () => {
+    const original = sessionState.useUserSession
+    sessionState.useUserSession = undefined
+    try {
+      expect(getAuthHeaders(baseAuth)).toEqual({})
+    }
+    finally {
+      sessionState.useUserSession = original
+    }
   })
 
   it('tokenSource 为 public-runtime-config 时从 runtimeConfig.public 取 token', () => {

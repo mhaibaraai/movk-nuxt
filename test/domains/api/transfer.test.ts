@@ -11,7 +11,10 @@ vi.mock('#imports', () => ({
     vueApp: { runWithContext: (fn: () => unknown) => fn() },
     callHook
   }),
-  useToast: () => ({ add: toastAdd }),
+  useToast: () => ({ add: toastAdd })
+}))
+
+vi.mock('#build/movk-session', () => ({
   useUserSession: () => ({ session: { value: null } })
 }))
 

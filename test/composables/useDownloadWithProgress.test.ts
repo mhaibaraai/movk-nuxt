@@ -27,10 +27,13 @@ vi.mock('#imports', async () => {
     }),
     useToast: () => ({ add: toastAdd }),
     useRuntimeConfig: () => ({ public: { movkApi: basePublic } }),
-    useUserSession: () => ({ session: { value: null } }),
     ref
   }
 })
+
+vi.mock('#build/movk-session', () => ({
+  useUserSession: () => ({ session: { value: null } })
+}))
 
 vi.mock('@movk/core', async () => {
   const actual = await vi.importActual<typeof import('@movk/core')>('@movk/core')

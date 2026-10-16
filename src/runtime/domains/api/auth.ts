@@ -1,23 +1,19 @@
 import type { ApiAuthConfig } from '../../types/api'
 import { getPath } from '@movk/core'
-import { useNuxtApp, useRuntimeConfig, useUserSession } from '#imports'
+import { useNuxtApp, useRuntimeConfig } from '#imports'
+import { getUserSession } from './session'
 
-function getUserSession(): ReturnType<typeof useUserSession> | null {
+function getTokenFromSession(tokenPath: string): string | null {
+  let sessionData: unknown
   try {
-    const nuxtApp = useNuxtApp()
-    return nuxtApp.vueApp.runWithContext(() => useUserSession())
+    sessionData = getUserSession(useNuxtApp())?.session?.value
   }
   catch {
     return null
   }
-}
+  if (!sessionData) return null
 
-function getTokenFromSession(tokenPath: string): string | null {
-  const userSession = getUserSession()
-  if (!userSession?.session?.value) return null
-
-  const sessionData = userSession.session.value
-  return (getPath(sessionData, tokenPath) as string) || null
+  return (getPath(sessionData as Record<string, unknown>, tokenPath) as string) || null
 }
 
 function getTokenFromPublicRuntimeConfig(tokenPath: string): string | null {

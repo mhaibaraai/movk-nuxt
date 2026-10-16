@@ -26,10 +26,13 @@ vi.mock('#imports', async () => {
     }),
     useToast: () => ({ add: toastAdd }),
     useRuntimeConfig: () => ({ public: { movkApi: basePublic } }),
-    useUserSession: () => ({ session: { value: null } }),
     ref
   }
 })
+
+vi.mock('#build/movk-session', () => ({
+  useUserSession: () => ({ session: { value: null } })
+}))
 
 const { useUploadWithProgress } = await import('../../src/runtime/composables/useUploadWithProgress')
 
