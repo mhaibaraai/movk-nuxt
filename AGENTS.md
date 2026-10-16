@@ -17,7 +17,7 @@ This file provides guidance for AI coding agents working on this repository.
 | `@vueuse/nuxt` | >=14.2.1 |
 | `@nuxt/image` | >=2.0.0 |
 | `@nuxt/ui` | >=4.6.0 |
-| `nuxt-auth-utils` | >=0.5.29 |
+| `nuxt-auth-utils` | >=0.5.29（仅 `api.auth.enabled` 且 `tokenSource` 为 `'session'` 时登记；runtime 经 `#build/movk-session` 取 `useUserSession`） |
 | `nuxt-site-config` | >=4.0.8 |
 
 ## 常用命令
