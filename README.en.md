@@ -36,7 +36,7 @@ Movk Nuxt is a UI engineering toolkit built on top of Nuxt UI, offering two ways
 npm create nuxt@latest -- -t gh:mhaibaraai/movk-nuxt-starter
 ```
 
-Or create a repository from the [Movk Nuxt Starter](https://github.com/mhaibaraai/movk-nuxt-starter) template on GitHub.
+Or create a repository from the [Movk Nuxt Starter](https://github.com/mhaibaraai/movk-nuxt-starter) template on GitHub ([live demo](https://movk-nuxt-starter.vercel.app)).
 
 ### Installation
 

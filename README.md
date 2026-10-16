@@ -36,7 +36,7 @@ Movk Nuxt 是构建在 Nuxt UI 之上的 UI 工程套件，提供两种使用方
 npm create nuxt@latest -- -t gh:mhaibaraai/movk-nuxt-starter
 ```
 
-或在 GitHub 上使用 [Movk Nuxt Starter](https://github.com/mhaibaraai/movk-nuxt-starter) 模版创建仓库。
+或在 GitHub 上使用 [Movk Nuxt Starter](https://github.com/mhaibaraai/movk-nuxt-starter) 模版创建仓库，[在线预览](https://movk-nuxt-starter.vercel.app)。
 
 ### 安装
 
