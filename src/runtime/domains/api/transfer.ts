@@ -15,6 +15,7 @@ import { resolveEndpointConfig } from './endpoint-config'
 import { createApiError } from './errors'
 import { extractData, extractMessage, isBusinessSuccess } from './response'
 import { showToast } from './toast'
+import { dispatchUnauthorized, isUnauthorized } from './interceptors/unauthorized'
 
 type NuxtApp = ReturnType<typeof useNuxtApp>
 
@@ -126,7 +127,8 @@ export async function finalizeTransfer<T>(
   ctx: FinalizeTransferContext<T>
 ): Promise<TransferResult<T>> {
   const { raw, fallback, config, publicConfig, requestToast, skipBusinessCheck, fetchContext } = ctx
-  const { response: responseConfig, toast: toastConfig } = config
+  const { auth: authConfig, response: responseConfig, toast: toastConfig } = config
+  const status = fetchContext.response?.status
   const method = fetchContext.options?.method
 
   if (publicConfig.debug) {
@@ -135,9 +137,10 @@ export async function finalizeTransfer<T>(
 
   const hasRaw = raw !== null
 
-  const isSuccess = hasRaw
+  // HTTP 失败状态优先：错误响应体里的业务码不能把失败翻成成功
+  const isSuccess = !(status !== undefined && status >= 400) && (hasRaw
     ? (skipBusinessCheck || isBusinessSuccess(raw, responseConfig))
-    : (fallback?.isSuccess ?? false)
+    : (fallback?.isSuccess ?? false))
 
   if (isSuccess) {
     const data: T | null = hasRaw
@@ -168,7 +171,12 @@ export async function finalizeTransfer<T>(
   }
   fetchContext.error = apiError
 
-  await nuxtApp.callHook('movk:api:error', fetchContext)
+  const unauthorizedHandled = isUnauthorized(status, raw, responseConfig)
+    && await dispatchUnauthorized(fetchContext, authConfig, nuxtApp)
+
+  if (!unauthorizedHandled) {
+    await nuxtApp.callHook('movk:api:error', fetchContext)
+  }
   showToast('error', raw ?? message, requestToast, toastConfig, responseConfig, method)
 
   return { data: null, error: apiError, aborted: false }
