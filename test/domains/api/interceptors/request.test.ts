@@ -9,7 +9,10 @@ vi.mock('#imports', () => ({
   useNuxtApp: () => ({
     vueApp: { runWithContext: (fn: () => unknown) => fn() },
     callHook
-  }),
+  })
+}))
+
+vi.mock('#build/movk-session', () => ({
   useUserSession: () => ({ session: { value: { token: 'JWT-TEST' } } })
 }))
 

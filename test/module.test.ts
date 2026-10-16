@@ -9,8 +9,8 @@ const getModuleDependencies = (movkModule as unknown as {
   getModuleDependencies: (nuxt: Nuxt) => ModuleDependencies | Promise<ModuleDependencies>
 }).getModuleDependencies
 
-function createNuxt(ui?: Record<string, unknown>) {
-  return { options: { ui } } as unknown as Nuxt & { options: { ui?: { fonts?: boolean } } }
+function createNuxt(ui?: Record<string, unknown>, movk?: Record<string, unknown>) {
+  return { options: { ui, movk } } as unknown as Nuxt & { options: { ui?: { fonts?: boolean } } }
 }
 
 describe('module 的 moduleDependencies', () => {
@@ -43,8 +43,35 @@ describe('module 的 moduleDependencies', () => {
       '@nuxt/image',
       '@nuxt/ui',
       '@vueuse/nuxt',
-      'nuxt-auth-utils',
       'nuxt-site-config'
     ])
+  })
+})
+
+describe('module 按需登记 nuxt-auth-utils', () => {
+  const hasAuthUtils = async (movk?: Record<string, unknown>) =>
+    'nuxt-auth-utils' in await getModuleDependencies(createNuxt({}, movk))
+
+  it('默认未开启认证时不登记', async () => {
+    expect(await hasAuthUtils()).toBe(false)
+    expect(await hasAuthUtils({ api: {} })).toBe(false)
+  })
+
+  it('开启认证且 token 来自 session 时登记', async () => {
+    expect(await hasAuthUtils({ api: { auth: { enabled: true } } })).toBe(true)
+    expect(await hasAuthUtils({ api: { auth: { enabled: true, tokenSource: 'session' } } })).toBe(true)
+  })
+
+  it('token 来自 public-runtime-config 时不登记', async () => {
+    expect(await hasAuthUtils({ api: { auth: { enabled: true, tokenSource: 'public-runtime-config' } } })).toBe(false)
+  })
+
+  it('关闭 API 模块时不登记', async () => {
+    expect(await hasAuthUtils({ api: { enabled: false, auth: { enabled: true } } })).toBe(false)
+  })
+
+  it('登记时附带版本约束', async () => {
+    const deps = await getModuleDependencies(createNuxt({}, { api: { auth: { enabled: true } } }))
+    expect(deps['nuxt-auth-utils']).toEqual({ version: '>=0.5.29' })
   })
 })

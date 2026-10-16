@@ -30,6 +30,7 @@ interface NuxtWithExtra {
   options: Nuxt['options'] & {
     ui?: UiModuleOptions
     site?: SiteConfigOptions
+    movk?: ModuleOptions
   }
 }
 
@@ -107,16 +108,27 @@ export interface ModuleOptions {
  * 而依赖表的 `defaults` 要等依赖全部收集完才合并进 `nuxt.options`，届时已晚，只能在此直接置位。
  */
 function resolveModuleDependencies(nuxt: Nuxt): ModuleDependencies {
-  const ui = ((nuxt as NuxtWithExtra).options.ui ??= {})
+  const { options } = nuxt as NuxtWithExtra
+  const ui = (options.ui ??= {})
   ui.fonts ??= false
 
   return {
     '@nuxt/image': { version: '>=2.0.0' },
     '@nuxt/ui': { version: '>=4.6.0' },
     '@vueuse/nuxt': { version: '>=14.2.1' },
-    'nuxt-auth-utils': { version: '>=0.5.29' },
+    ...(usesSessionAuth(options.movk?.api) && { 'nuxt-auth-utils': { version: '>=0.5.29' } }),
     'nuxt-site-config': { version: '>=4.0.8' }
   }
+}
+
+/**
+ * 仅当 token 取自 nuxt-auth-utils 会话时才登记该模块：它的插件会在 SSR 时读取会话，
+ * 生产环境缺少 NUXT_SESSION_PASSWORD 即报错，未启用会话认证的项目不应承担这一要求
+ */
+function usesSessionAuth(api?: MovkApiFullConfig): boolean {
+  return api?.enabled !== false
+    && api?.auth?.enabled === true
+    && (api.auth.tokenSource ?? 'session') === 'session'
 }
 
 // 显式标注类型：函数形态的 moduleDependencies 引入 Nuxt，而 nuxt.options 经模块增强反向引用本模块，

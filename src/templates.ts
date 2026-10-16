@@ -1,7 +1,7 @@
 import type { NuxtTemplate, NuxtTypeTemplate } from '@nuxt/schema'
 import { fileURLToPath } from 'node:url'
 import { kebabCase } from 'scule'
-import { addTemplate, addTypeTemplate, getLayerDirectories } from '@nuxt/kit'
+import { addTemplate, addTypeTemplate, getLayerDirectories, hasNuxtModule } from '@nuxt/kit'
 import * as theme from './theme'
 import type { ModuleOptions } from './module'
 import type { Nuxt } from 'nuxt/schema'
@@ -206,6 +206,20 @@ declare module '@nuxt/schema' {
 export {}
 `
     }
+  })
+
+  // nuxt-auth-utils 按需登记，未安装时 `#imports` 中没有 useUserSession，经此模板统一出口
+  templates.push({
+    filename: 'movk-session.ts',
+    write: true,
+    // meta.name 为 'auth-utils'；经 modules 数组手动注册时按包名匹配
+    getContents: () => nuxt && (hasNuxtModule('auth-utils', nuxt) || hasNuxtModule('nuxt-auth-utils', nuxt))
+      ? `import { useUserSession as _useUserSession } from '#imports'
+
+export const useUserSession: (() => unknown) | undefined = _useUserSession
+`
+      : `export const useUserSession: (() => unknown) | undefined = undefined
+`
   })
 
   templates.push({

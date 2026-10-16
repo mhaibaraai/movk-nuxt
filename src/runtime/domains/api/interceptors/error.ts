@@ -3,7 +3,8 @@ import type { ApiAuthConfig, ApiResponse, MovkApiPublicConfig } from '../../../t
 import type { ResolvedEndpointConfig } from '../../../types/api/module'
 import type { ApiFetchContext } from '../../../types/api/response'
 import type { useNuxtApp } from '#imports'
-import { navigateTo, useUserSession } from '#imports'
+import { navigateTo } from '#imports'
+import { getUserSession } from '../session'
 import { showToast } from '../toast'
 
 type NuxtApp = ReturnType<typeof useNuxtApp>
@@ -20,14 +21,14 @@ async function handleUnauthorized(
   if (!unauthorizedConfig) return
 
   if (unauthorizedConfig.clearSession) {
-    try {
-      const userSession = nuxtApp.vueApp.runWithContext(() => useUserSession())
-      if (userSession?.clear) {
+    const userSession = getUserSession(nuxtApp)
+    if (userSession?.clear) {
+      try {
         await userSession.clear()
-        await userSession.fetch()
+        await userSession.fetch?.()
       }
+      catch { /* session not available */ }
     }
-    catch { /* session not available */ }
   }
 
   if (unauthorizedConfig.redirect) {

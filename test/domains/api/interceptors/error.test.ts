@@ -13,6 +13,18 @@ const callHook = vi.fn(async (name: string, ...args: unknown[]) => {
   hookCalls.push([name, args])
 })
 
+const sessionState = vi.hoisted(() => ({
+  available: true
+}))
+
+vi.mock('#build/movk-session', () => ({
+  get useUserSession() {
+    return sessionState.available
+      ? () => ({ clear: userSessionClear, fetch: userSessionFetch })
+      : undefined
+  }
+}))
+
 vi.mock('#imports', () => ({
   useNuxtApp: () => ({
     vueApp: { runWithContext: (fn: () => unknown) => fn() },
@@ -20,7 +32,6 @@ vi.mock('#imports', () => ({
     callHook
   }),
   useToast: () => ({ add: toastAdd }),
-  useUserSession: () => ({ clear: userSessionClear, fetch: userSessionFetch }),
   navigateTo: navigateToMock
 }))
 
@@ -103,6 +114,22 @@ describe('interceptors/error', () => {
     const hookNames = hookCalls.map(([n]) => n)
     expect(hookNames).toContain('movk:api:unauthorized')
     expect(hookNames).toContain('movk:api:error')
+  })
+
+  it('401 且未安装 nuxt-auth-utils 时：跳过 clearSession，仍按配置重定向', async () => {
+    const { ctx } = make401Context(false)
+    const onError = createOnResponseError(baseResolved, basePublic, nuxtApp)
+
+    sessionState.available = false
+    try {
+      await onError(ctx)
+    }
+    finally {
+      sessionState.available = true
+    }
+
+    expect(userSessionClear).not.toHaveBeenCalled()
+    expect(navigateToMock).toHaveBeenCalledWith('/login')
   })
 
   it('401 已被业务处理时（result.handled=true）：跳过默认 clearSession/重定向，不重复派发 movk:api:error', async () => {
