@@ -1,5 +1,21 @@
 # 📋 Changelog
 
+## [1.8.3](https://github.com/mhaibaraai/movk-nuxt/compare/v1.8.2...v1.8.3) (2026-10-16)
+
+### ✨ Features
+
+* **api:** 仅在启用会话认证时注册 nuxt-auth-utils ([4304cba](https://github.com/mhaibaraai/movk-nuxt/commit/4304cbaded0f9f09e10cfc1648e5122c4484e960))
+
+### 🐛 Bug Fixes
+
+* **api:** 上传下载请求支持 401 未授权处理 ([2fb595e](https://github.com/mhaibaraai/movk-nuxt/commit/2fb595e3d293714e11f5127cce731869e7a6057f))
+* **api:** 修复 401 未进入未授权处理 ([72c5b7c](https://github.com/mhaibaraai/movk-nuxt/commit/72c5b7c2b98c1fa55a9cda64578d35ee2bec0731))
+
+### 📝 Documentation
+
+* **api:** 补充业务码 401 与上传下载的未授权处理说明 ([ee70faa](https://github.com/mhaibaraai/movk-nuxt/commit/ee70faae0e0ca1e9d67655e25cdb4900f86590c0))
+* **api:** 说明 nuxt-auth-utils 按需注册与 NUXT_SESSION_PASSWORD 要求 ([9ee8067](https://github.com/mhaibaraai/movk-nuxt/commit/9ee806798a7d0fb9a9b688499e743daaeb253aed))
+
 ## [1.8.2](https://github.com/mhaibaraai/movk-nuxt/compare/v1.8.1...v1.8.2) (2026-10-12)
 
 ### ✨ Features
