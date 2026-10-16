@@ -4,18 +4,21 @@ import type { MovkApiPublicConfig } from '../../../src/runtime/types/api'
 import type { ResolvedEndpointConfig } from '../../../src/runtime/types/api/module'
 
 const toastAdd = vi.fn()
-const callHook = vi.fn(async () => {})
+const navigateToMock = vi.fn(async () => {})
+const userSessionClear = vi.fn(async () => {})
+const callHook = vi.fn(async (..._args: unknown[]) => {})
 
 vi.mock('#imports', () => ({
   useNuxtApp: () => ({
     vueApp: { runWithContext: (fn: () => unknown) => fn() },
     callHook
   }),
-  useToast: () => ({ add: toastAdd })
+  useToast: () => ({ add: toastAdd }),
+  navigateTo: navigateToMock
 }))
 
 vi.mock('#build/movk-session', () => ({
-  useUserSession: () => ({ session: { value: null } })
+  useUserSession: () => ({ session: { value: null }, clear: userSessionClear })
 }))
 
 const {
@@ -49,17 +52,20 @@ const basePublic: MovkApiPublicConfig = {
 
 const nuxtApp = {
   callHook,
-  vueApp: { runWithContext: (fn: () => unknown) => fn() }
+  vueApp: { runWithContext: (fn: () => unknown) => fn() },
+  runWithContext: (fn: () => unknown) => fn()
 } as unknown as Parameters<typeof finalizeTransfer>[0]
 
-function makeCtx(): FetchContext {
-  return buildFetchContext('/x', {}, { status: 200, headers: new Headers(), _data: undefined })
+function makeCtx(status = 200): FetchContext {
+  return buildFetchContext('/x', {}, { status, headers: new Headers(), _data: undefined })
 }
 
 describe('domains/api/transfer', () => {
   beforeEach(() => {
     toastAdd.mockClear()
-    callHook.mockClear()
+    navigateToMock.mockClear()
+    userSessionClear.mockClear()
+    callHook.mockReset()
   })
 
   describe('prepareTransfer', () => {
@@ -223,6 +229,72 @@ describe('domains/api/transfer', () => {
         fetchContext: ctx
       })
       expect(toastAdd).not.toHaveBeenCalled()
+    })
+
+    describe('未授权', () => {
+      const authConfig: ResolvedEndpointConfig = {
+        ...baseConfig,
+        auth: { enabled: true, unauthorized: { redirect: true, loginPath: '/login', clearSession: true } }
+      }
+      const hookNames = () => callHook.mock.calls.map(([name]) => name)
+
+      it('HTTP 401：派发 unauthorized、清理会话、重定向，并派发 movk:api:error', async () => {
+        const result = await finalizeTransfer(nuxtApp, {
+          raw: { statusCode: 401, message: '未登录' },
+          fallback: { isSuccess: false, data: null, message: 'HTTP 401' },
+          config: authConfig,
+          publicConfig: basePublic,
+          requestToast: undefined,
+          fetchContext: makeCtx(401)
+        })
+
+        expect(result.error).toBeTruthy()
+        expect(hookNames()).toEqual(['movk:api:unauthorized', 'movk:api:error'])
+        expect(userSessionClear).toHaveBeenCalled()
+        expect(navigateToMock).toHaveBeenCalledWith('/login')
+      })
+
+      it('业务码 401 同样触发未授权处理', async () => {
+        await finalizeTransfer(nuxtApp, {
+          raw: { code: 401, message: '登录已过期' },
+          config: authConfig,
+          publicConfig: basePublic,
+          requestToast: undefined,
+          fetchContext: makeCtx()
+        })
+
+        expect(hookNames()).toEqual(['movk:api:unauthorized', 'movk:api:error'])
+      })
+
+      it('业务侧接管时跳过默认处理与 movk:api:error', async () => {
+        callHook.mockImplementation(async (name: unknown, _ctx: unknown, result?: unknown) => {
+          if (name === 'movk:api:unauthorized') (result as { handled: boolean }).handled = true
+        })
+        await finalizeTransfer(nuxtApp, {
+          raw: null,
+          fallback: { isSuccess: false, data: null, message: 'HTTP 401' },
+          config: authConfig,
+          publicConfig: basePublic,
+          requestToast: undefined,
+          fetchContext: makeCtx(401)
+        })
+
+        expect(hookNames()).toEqual(['movk:api:unauthorized'])
+        expect(userSessionClear).not.toHaveBeenCalled()
+      })
+    })
+
+    it('HTTP 失败状态优先于响应体业务码', async () => {
+      const result = await finalizeTransfer(nuxtApp, {
+        raw: { code: 0, data: 1 },
+        config: baseConfig,
+        publicConfig: basePublic,
+        requestToast: undefined,
+        fetchContext: makeCtx(500)
+      })
+
+      expect(result.error).toBeTruthy()
+      expect(callHook.mock.calls.map(([name]) => name)).toEqual(['movk:api:error'])
     })
   })
 })
