@@ -1,40 +1,15 @@
 import type { FetchContext } from 'ofetch'
-import type { ApiAuthConfig, ApiResponse, MovkApiPublicConfig } from '../../../types/api'
+import type { ApiResponse, MovkApiPublicConfig } from '../../../types/api'
 import type { ResolvedEndpointConfig } from '../../../types/api/module'
 import type { ApiFetchContext } from '../../../types/api/response'
 import type { useNuxtApp } from '#imports'
-import { navigateTo } from '#imports'
-import { getUserSession } from '../session'
 import { showToast } from '../toast'
+import { dispatchUnauthorized } from './unauthorized'
 
 type NuxtApp = ReturnType<typeof useNuxtApp>
 
 function readApiContext(options: FetchContext['options']): ApiFetchContext {
   return options.context || {}
-}
-
-async function handleUnauthorized(
-  authConfig: ApiAuthConfig,
-  nuxtApp: NuxtApp
-): Promise<void> {
-  const unauthorizedConfig = authConfig.unauthorized
-  if (!unauthorizedConfig) return
-
-  if (unauthorizedConfig.clearSession) {
-    const userSession = getUserSession(nuxtApp)
-    if (userSession?.clear) {
-      try {
-        await userSession.clear()
-        await userSession.fetch?.()
-      }
-      catch { /* session not available */ }
-    }
-  }
-
-  if (unauthorizedConfig.redirect) {
-    const loginPath = unauthorizedConfig.loginPath || '/login'
-    await nuxtApp.runWithContext(() => navigateTo(loginPath))
-  }
 }
 
 /**
@@ -58,12 +33,7 @@ export function createOnResponseError(
 
     let unauthorizedHandled = false
     if (response.status === 401) {
-      const result = { handled: false }
-      await nuxtApp.callHook('movk:api:unauthorized', context, result)
-      unauthorizedHandled = result.handled
-      if (!unauthorizedHandled) {
-        await handleUnauthorized(authConfig, nuxtApp)
-      }
+      unauthorizedHandled = await dispatchUnauthorized(context, authConfig, nuxtApp)
     }
 
     if (!unauthorizedHandled) {
