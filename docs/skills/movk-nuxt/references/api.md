@@ -1,6 +1,6 @@
 # API System
 
-Multi-endpoint fetch built on Nuxt `useFetch` and a `$fetch.create()` `$api` instance. Adds endpoint switching, auth-token injection, business-code checking, response unwrapping (`dataKey`), toast, and 401 handling on top of Nuxt's native fetch.
+Multi-endpoint fetch built on Nuxt `useFetch` and a per-endpoint `$api` client wrapping ofetch. Adds endpoint switching, auth-token injection, business-code checking, response unwrapping (`dataKey`), error normalization, toast, and 401 handling on top of Nuxt's native fetch. Upload, download and SSE go through the same pipeline.
 
 ## Basic pattern
 
@@ -18,8 +18,10 @@ The raw response `{ code: 200, message: 'OK', data: { id: 1, name: 'Alice' } }` 
 ## Key rules
 
 - **Never call `$fetch` directly** — use `useApiFetch` / `useLazyApiFetch` / `useClientApiFetch` for composable fetches, and `const { $api } = useNuxtApp()` for imperative calls. Bare `$fetch` skips the interceptor chain.
-- **Generic `T` is the unwrapped business type**, not the full envelope. If you need the raw envelope, pass `{ skipUnwrap: true }` (or set `<T, DataT>` with a `transform`).
-- **Two error types**: `ApiError` for business-code failures (`isBusinessError === true`, HTTP 200 but `code` not in `successCodes`); everything else is an ofetch `FetchError`. Branch on `isBusinessError` and `statusCode`.
+- **Generic `T` is the unwrapped business type**, not the full envelope. If you need the raw envelope, pass `{ unwrap: false }` (or set `<T, DataT>` with a `transform`).
+- **Bare-resource endpoints are declared on the endpoint**, not per call: `endpoints.x.response = { businessCheck: false, unwrap: false }` for APIs that return arrays / objects without a `{ code, data }` envelope. Explicit per-call `businessCheck` / `unwrap` still win.
+- **One error type**: every failure is an `ApiError` (`NuxtError<ApiErrorData>`). Branch on `error.data.kind` (`business` / `http` / `network` / `timeout` / `aborted`); `error.data.code` holds the business code or HTTP status, `error.data.response` the raw body.
+- **Errors are reported once**: the error toast and `movk:api:error` (signature `(context, error)`) fire after ofetch retries finish; aborts are never reported. User `onRequest` / `onResponse` hooks compose with — never replace — the built-in ones.
 - **HTTP 401 or business code 401** (also for upload / download progress requests) by default clears the session and redirects to login. Customize via the `movk:api:unauthorized` hook (e.g., to refresh a token).
 
 ## Fetch mode selection
@@ -70,8 +72,8 @@ const v2Users = await $api.use('v2')<User[]>('/users')
 const { data } = await useApiFetch<User[]>('/users', {
   endpoint: 'v2',           // pick a different endpoint
   toast: false,             // disable toast for this call
-  skipUnwrap: true,         // keep the full envelope { code, message, data }
-  skipBusinessCheck: true,  // don't throw on non-success business codes
+  unwrap: false,            // keep the full envelope { code, message, data }
+  businessCheck: false,     // don't throw on non-success business codes
   transform: res => res.items.map(u => ({ label: u.name, value: u.id })),
   immediate: false,         // pair with lazy: true for trigger-on-demand
   lazy: true,
@@ -126,24 +128,23 @@ movk: {
 
 ```ts
 import type { ApiError } from '@movk/nuxt'
-import type { FetchError } from 'ofetch'
 
 try {
   const user = await $api<User>('/users', { method: 'POST', body })
 }
 catch (err) {
-  if ((err as ApiError).isBusinessError) {
-    // HTTP 200 but business code not in successCodes
-    // err.statusCode is the business code; err.response is the full envelope
+  const { kind, code, response } = (err as ApiError).data ?? {}
+  if (kind === 'business') {
+    // HTTP 200 but business code not in successCodes; code is the business code
   }
-  else if ((err as FetchError).statusCode === 422) {
-    // server-side field validation; err.data.fields carries per-field errors
+  else if (kind === 'http' && code === 422) {
+    // server-side field validation; response carries per-field errors
   }
-  else if ((err as FetchError).statusCode) {
+  else if (kind === 'http') {
     // HTTP 4xx / 5xx
   }
   else {
-    // network failure — no statusCode
+    // 'network' | 'timeout' | 'aborted'
   }
 }
 ```
@@ -209,7 +210,7 @@ for await (const chunk of stream('/chat', { method: 'POST', body: { message } })
 Two header/parsing defaults were settled the hard way — do not "fix" them without checking the gateway:
 
 - **`Accept` defaults to the wildcard.** ofetch would otherwise add `Accept: application/json`, the wrong claim for a request read as a stream; sending `Accept: text/event-stream` instead gets the request rejected outright by DRF-style content negotiation. An explicit `headers.Accept` always wins.
-- **No forced `responseType: 'stream'`** — detection is left to the content type so a JSON error envelope still goes through business-code validation. Some gateways answer errors with HTTP 200 + `{ code: 500 }`.
+- **`responseType: 'stream'` by default** — a mislabeled event stream is still read as a stream, while an `application/json` response (e.g. HTTP 200 + `{ code: 500 }` error envelopes) is restored to an object by the interceptor and goes through business-code validation.
 
 Deliberate aborts set `status` to `'aborted'` and leave `error` null; every other failure is stored, passed to `onError` and re-thrown.
 
@@ -228,11 +229,11 @@ export default defineNuxtConfig({
       endpoints: {
         default: { baseURL: '/api' },
         v2:      { baseURL: '/api/v2' },
-        admin:   { baseURL: '/admin/api', auth: { tokenType: 'Bearer' } }
+        admin:   { baseURL: '/admin/api', auth: { tokenType: 'Bearer' } },
+        sensor:  { baseURL: 'https://sensor.example.com', response: { businessCheck: false, unwrap: false } }
       },
-      successCodes: [200, 0],
-      dataKey: 'data',
-      sessionTokenPath: 'user.accessToken'
+      response: { successCodes: [200, 0], dataKey: 'data' },
+      auth: { enabled: true, sessionTokenPath: 'user.accessToken' }
     }
   }
 })

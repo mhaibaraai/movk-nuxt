@@ -67,7 +67,7 @@ pnpm clean
 | `src/vite.ts` | Vite 插件入口（`export default MovkPlugin.vite`） |
 | `src/plugins/` | Vue 模式 unplugin 子插件：`environment`（`#imports`/`#components`/Icon 覆盖）、`templates`（`#build/movk-ui` 写盘 + alias）、`app-config`（注入 movk 键）、`font`（字体样式表 `<link>` 注入 `index.html`）、`plugins`（`@movk/nuxt/vue-plugin` 虚拟） |
 | `src/runtime/components/` | 对外组件：10 个主组件（AutoForm、DataTable、SearchForm、DatePicker、ColorChooser、MessageBox、PillGroup、Popconfirm、SlideVerify、Tree）+ `input/` 6 个输入增强 + `theme-picker/` |
-| `src/runtime/domains/` | 业务逻辑层 + 私有子组件，按域划分：`api/`（拦截器、端点、错误、传输）、`auto-form/`（字段、控件、Schema 解析）、`data-table/`（列解析、特殊列）、`tree/`（树归一化、搜索、懒加载、工具栏子组件）、`theme/` |
+| `src/runtime/domains/` | 业务逻辑层 + 私有子组件，按域划分：`api/`（端点客户端、拦截器、响应判定、错误归一与上报、XHR 适配器、下载流）、`auto-form/`（字段、控件、Schema 解析）、`data-table/`（列解析、特殊列）、`tree/`（树归一化、搜索、懒加载、工具栏子组件）、`theme/` |
 | `src/runtime/composables/` | 9 个：`useApiFetch` / `useLazyApiFetch` / `useClientApiFetch`、`useAutoForm`、`useTheme`、`useDateFormatter`、`useMessageBox`、`useUploadWithProgress` / `useDownloadWithProgress` |
 | `src/runtime/types/` | 类型来源，按域聚合：`api/`、`auto-form/`、`components/`、`data-table/`、`shared`，每域 `index.ts` 统一 re-export |
 | `src/runtime/utils/` | 运行时工具：`meta`、`form-control`、`tv`、`extend-theme`、`theme-defaults`（主题默认 app.config，两模式共用）、`tree-expand` / `tree-selection`（树形展开/选中纯函数，Tree 与 DataTable 共用） |
@@ -78,7 +78,7 @@ pnpm clean
 | `playgrounds/vue/` | 纯 Vite + Vue playground，验证非 Nuxt 模式（`vite.config.ts` 用 `@movk/nuxt/vite`，入口 `app.use(@movk/nuxt/vue-plugin)`） |
 | 根 `vue-plugin.d.ts` | `@movk/nuxt/vue-plugin` 类型声明 |
 | `docs/` | 文档站：`content/` 文档、`app/components/content/examples/` 示例组件、`server/mcp/` MCP Server、`skills/` |
-| `test/` | Vitest 用例：`composables/`、`domains/api/`、`domains/auto-form/`、`plugins/`、`utils/` |
+| `test/` | Vitest 用例：`composables/`、`domains/api/`、`domains/auto-form/`、`plugins/`、`utils/`；`helpers/` 放 Nuxt 错误、XHR 等测试替身 |
 
 **核心约定**：业务逻辑落在 `runtime/domains/<域>`，对外组件保持薄壳；私有子组件放在对应域的 `components/` 下，不进入 `runtime/components/`。
 

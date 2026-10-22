@@ -20,7 +20,7 @@ const timeout = useUploadWithProgress()
         :loading="timeout.status.value === 'pending'"
         :disabled="!selected?.length"
         icon="i-lucide-timer"
-        @click="timeout.upload('/upload?slow=2000', selected!, { timeoutMs: 500 })"
+        @click="timeout.upload('/upload?slow=2000', selected!, { timeout: 500 })"
       >
         模拟超时
       </UButton>
