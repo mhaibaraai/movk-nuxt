@@ -1,38 +1,86 @@
-import { describe, expect, it } from 'vitest'
-import { createApiError } from '../../../src/runtime/domains/api/errors'
+import { describe, expect, it, vi } from 'vitest'
+import { FetchError } from 'ofetch'
+
+vi.mock('#imports', async () => await import('../../helpers/nuxt-error'))
+
+const { createApiError, getErrorContext, bindErrorContext, isApiError, toApiError } = await import('../../../src/runtime/domains/api/errors')
+
+function fetchError(options: { status?: number, data?: unknown, cause?: { name: string } }) {
+  const error = new FetchError('failed', options.cause ? { cause: options.cause } : undefined)
+  if (options.status !== undefined) {
+    Object.assign(error, { response: { status: options.status, _data: options.data }, data: options.data })
+  }
+  return error
+}
 
 describe('domains/api/errors', () => {
-  it('数字业务码作为 statusCode 保留；message 取自显式参数', () => {
-    const err = createApiError({ code: 40001, message: 'bad' }, 'bad')
-    expect(err.statusCode).toBe(40001)
-    expect(err.message).toBe('bad')
-    expect(err.isBusinessError).toBe(true)
+  describe('createApiError', () => {
+    it('HTTP 语义范围内的业务码作为 statusCode，原值保留在 data.code', () => {
+      const err = createApiError({ kind: 'business', endpoint: 'default', code: 401, message: 'no' })
+      expect(err.statusCode).toBe(401)
+      expect(err.data).toEqual({ kind: 'business', endpoint: 'default', code: 401, response: undefined })
+      expect(err.message).toBe('no')
+    })
+
+    it('超出 HTTP 范围或无法解析的业务码 statusCode 回退 500', () => {
+      expect(createApiError({ kind: 'business', endpoint: 'e', code: 40001 }).statusCode).toBe(500)
+      expect(createApiError({ kind: 'business', endpoint: 'e', code: 'A0001' }).statusCode).toBe(500)
+      expect(createApiError({ kind: 'business', endpoint: 'e', code: '404' }).statusCode).toBe(404)
+    })
+
+    it('message 缺省时按分类取默认文案', () => {
+      expect(createApiError({ kind: 'network', endpoint: 'e' }).message).toBe('网络错误')
+      expect(createApiError({ kind: 'timeout', endpoint: 'e' }).message).toBe('请求超时')
+    })
+
+    it('产物满足 isApiError（NuxtError + data.kind）', () => {
+      expect(isApiError(createApiError({ kind: 'http', endpoint: 'e' }))).toBe(true)
+      expect(isApiError(new Error('x'))).toBe(false)
+    })
   })
 
-  it('字符串业务码不再产生 NaN，可解析数字时正常转换', () => {
-    const numericString = createApiError({ code: '500' }, 'srv')
-    expect(numericString.statusCode).toBe(500)
+  describe('toApiError', () => {
+    it('已是 ApiError 时原样返回', () => {
+      const err = createApiError({ kind: 'business', endpoint: 'e' })
+      expect(toApiError(err, 'e')).toBe(err)
+    })
+
+    it('带响应的 FetchError 归为 http，message 取自响应体', () => {
+      const err = toApiError(fetchError({ status: 422, data: { message: '参数错误' } }), 'v2')
+      expect(err?.data).toMatchObject({ kind: 'http', endpoint: 'v2', code: 422, response: { message: '参数错误' } })
+      expect(err?.statusCode).toBe(422)
+      expect(err?.message).toBe('参数错误')
+    })
+
+    it('响应体无消息时回退「请求失败 (状态码)」', () => {
+      expect(toApiError(fetchError({ status: 500, data: '<html>' }), 'e')?.message).toBe('请求失败 (500)')
+    })
+
+    it('无响应的 FetchError 归为 network', () => {
+      expect(toApiError(fetchError({}), 'e')?.data?.kind).toBe('network')
+    })
+
+    it('cause 为 AbortError / TimeoutError 时分别归为 aborted / timeout', () => {
+      expect(toApiError(fetchError({ cause: { name: 'AbortError' } }), 'e')?.data?.kind).toBe('aborted')
+      expect(toApiError(fetchError({ cause: { name: 'TimeoutError' } }), 'e')?.data?.kind).toBe('timeout')
+    })
+
+    it('无法识别的错误返回 null', () => {
+      expect(toApiError(new TypeError('boom'), 'e')).toBeNull()
+    })
   })
 
-  it('完全无法解析为数字的字符串码回退到 500', () => {
-    const err = createApiError({ code: 'A0001' }, 'biz')
-    expect(err.statusCode).toBe(500)
-    expect(Number.isNaN(err.statusCode)).toBe(false)
-  })
+  describe('错误上下文', () => {
+    it('业务错误经 bindErrorContext 携带上下文', () => {
+      const context = { request: '/x', options: {} }
+      const err = bindErrorContext(createApiError({ kind: 'business', endpoint: 'e' }), context as never)
+      expect(getErrorContext(err)).toBe(context)
+    })
 
-  it('code 缺失时回退到 status，再缺失回退 500', () => {
-    expect(createApiError({ status: 404 }).statusCode).toBe(404)
-    expect(createApiError({}).statusCode).toBe(500)
-  })
-
-  it('cause 指向原始响应；response 字段同样持有', () => {
-    const response = { code: 1, message: 'm' }
-    const err = createApiError(response)
-    expect(err.response).toBe(response)
-    expect((err as Error & { cause?: unknown }).cause).toBe(response)
-  })
-
-  it('默认 message 为「请求失败」', () => {
-    expect(createApiError({}).message).toBe('请求失败')
+    it('FetchError 从自身字段还原上下文', () => {
+      const err = fetchError({ status: 500 })
+      Object.assign(err, { request: '/y', options: { method: 'GET' } })
+      expect(getErrorContext(err)).toMatchObject({ request: '/y', options: { method: 'GET' }, error: err })
+    })
   })
 })

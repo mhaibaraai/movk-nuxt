@@ -42,12 +42,13 @@ class MovkChatTransport<Raw, UI_MESSAGE extends UIMessage> extends HttpChatTrans
  * 以 `$api` 为底的 fetch
  *
  * @description 端点 baseURL、鉴权头、业务码校验、错误 toast 与 `movk:api:*` hook 全部复用。
- *  不强制 `responseType`：真流走流（拦截器识流后短路），JSON 错误信封仍按业务码校验抛出——
+ *  固定按流读取：真流短路，JSON 错误信封由拦截器还原后按业务码校验抛出——
  *  某些网关的错误响应是 HTTP 200 + `{ code: 500 }`，只看 `response.ok` 会放行后拿 JSON 当流读。
  */
 function createApiFetch(api: ApiInstance): HttpChatTransportInitOptions<UIMessage>['fetch'] {
   return async (input, init) => await api.raw(String(input), {
     ...init,
+    responseType: 'stream',
     headers: withStreamAccept(init?.headers)
   } as FetchOptions) as unknown as Response
 }

@@ -1,5 +1,5 @@
 import type { ToastProps } from '@nuxt/ui'
-import type { ApiResponse, ApiResponseConfig, ApiToastConfig, RequestToastOptions } from '../../types/api'
+import type { ApiResponseConfig, ApiToastConfig, RequestToastOptions } from '../../types/api'
 import type { ApiToast, ApiToastTypeConfig } from '../../types/api/config'
 import { extractMessage } from './response'
 import { useNuxtApp, useToast } from '#imports'
@@ -18,7 +18,7 @@ function getToast(): ReturnType<typeof useToast> | null {
 
 function pickMessage(
   type: ToastType,
-  source: ApiResponse | string | undefined,
+  source: unknown,
   requestOptions: RequestToastOptions | false | undefined,
   responseConfig?: Partial<ApiResponseConfig>
 ): string {
@@ -27,7 +27,7 @@ function pickMessage(
     if (custom) return custom
   }
   if (typeof source === 'string') return source
-  if (source && responseConfig) {
+  if (responseConfig) {
     const extracted = extractMessage(source, responseConfig)
     if (extracted) return extracted
   }
@@ -58,7 +58,7 @@ function compact<T extends Record<string, unknown>>(obj: T): Partial<T> {
  * @description 决策收敛在本函数内：是否启用 / 类型是否启用 / 提示文案选择 / payload 构造。
  *
  * @param type 提示类型
- * @param source 字符串作为 fallback 文案；ApiResponse 时按 responseConfig 抽取 message；undefined 走类型默认文案
+ * @param source 字符串作为文案；对象按 responseConfig 抽取 message；其余走类型默认文案
  * @param requestOptions 单次请求覆盖配置；为 false 时整体禁用
  * @param globalConfig 全局 Toast 配置（已合并端点级覆盖）
  * @param responseConfig 用于从 ApiResponse 抽取 message 的字段映射；source 为字符串时可省略
@@ -69,7 +69,7 @@ function compact<T extends Record<string, unknown>>(obj: T): Partial<T> {
  */
 export function showToast(
   type: ToastType,
-  source: ApiResponse | string | undefined,
+  source: unknown,
   requestOptions: RequestToastOptions | false | undefined,
   globalConfig: Partial<ApiToastConfig>,
   responseConfig?: Partial<ApiResponseConfig>,

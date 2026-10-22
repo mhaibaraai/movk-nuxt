@@ -1,10 +1,6 @@
 import type { FetchContext } from 'ofetch'
-import type { MovkApiPublicConfig } from '../../../types/api'
-import type { ResolvedEndpointConfig } from '../../../types/api/module'
-import type { useNuxtApp } from '#imports'
+import type { ApiClientDeps } from '../report'
 import { getAuthHeaders } from '../auth'
-
-type NuxtApp = ReturnType<typeof useNuxtApp>
 
 function toHeaderRecord(headers: unknown): Record<string, string> {
   const out: Record<string, string> = {}
@@ -30,11 +26,8 @@ function toHeaderRecord(headers: unknown): Record<string, string> {
  *
  * @description Headers 重建前会过滤 undefined 值，规避 ofetch 某些版本 `Record<string, string | undefined>` 导致的 TypeError
  */
-export function createOnRequest(
-  resolvedConfig: ResolvedEndpointConfig,
-  publicConfig: MovkApiPublicConfig,
-  nuxtApp: NuxtApp
-) {
+export function createOnRequest(deps: ApiClientDeps) {
+  const { config: resolvedConfig, publicConfig, nuxtApp } = deps
   const { auth: authConfig } = resolvedConfig
 
   return async function onRequest(context: FetchContext): Promise<void> {

@@ -3,8 +3,8 @@ import { simpleHash } from '@movk/core'
 
 interface ApiFetchKeyInput {
   endpoint?: string
-  skipUnwrap?: boolean
-  skipBusinessCheck?: boolean
+  businessCheck?: boolean
+  unwrap?: boolean
   toast?: RequestToastOptions | false
   method?: string
   url: unknown
@@ -20,11 +20,12 @@ interface ApiFetchKeyInput {
  * 入参须为已 resolve 的值（调用方负责 toValue）。
  */
 export function buildApiFetchKey(input: ApiFetchKeyInput): string {
-  const { endpoint, skipUnwrap, skipBusinessCheck, toast, method, url, query, body } = input
+  const { endpoint, businessCheck, unwrap, toast, method, url, query, body } = input
+  // 三态保留：显式 false 与未传（继承端点配置）的处理逻辑不同，不能折叠成同一 key
   const payload = {
     e: endpoint ?? null,
-    su: skipUnwrap === true,
-    sbc: skipBusinessCheck === true,
+    bc: businessCheck ?? null,
+    uw: unwrap ?? null,
     t: toast ?? null,
     m: method ?? 'GET',
     u: url,
@@ -39,7 +40,7 @@ export function buildApiFetchKey(input: ApiFetchKeyInput): string {
     // body/query 含循环引用 / FormData / File 等不可序列化数据时退化：用户应自传 key
     const toastTag = toast === false ? 'off' : toast ? 'obj' : ''
     const urlTag = typeof url === 'string' ? url : '<req>'
-    raw = `${endpoint ?? ''}|${skipUnwrap}|${skipBusinessCheck}|${toastTag}|${payload.m}|${urlTag}|<body>`
+    raw = `${endpoint ?? ''}|${businessCheck}|${unwrap}|${toastTag}|${payload.m}|${urlTag}|<body>`
   }
   return `mvk-api:${simpleHash(raw)}`
 }

@@ -1,5 +1,14 @@
 import { describe, expect, it } from 'vitest'
-import { extractData, extractMessage, isBusinessSuccess } from '../../../src/runtime/domains/api/response'
+import {
+  extractCode,
+  extractData,
+  extractMessage,
+  interpretResponse,
+  isBusinessSuccess,
+  resolvePolicy
+} from '../../../src/runtime/domains/api/response'
+
+const NON_OBJECTS: unknown[] = [null, undefined, 'text', 42, true, [1, 2]]
 
 describe('domains/api/response', () => {
   describe('isBusinessSuccess', () => {
@@ -47,6 +56,65 @@ describe('domains/api/response', () => {
     it('自定义 dataKey 生效', () => {
       const response = { code: 200, payload: { id: 1 } }
       expect(extractData(response, { dataKey: 'payload' })).toEqual({ id: 1 })
+    })
+  })
+
+  describe('非对象响应守卫', () => {
+    it.each(NON_OBJECTS)('%o 不抛错：判负、无消息、无数据、无业务码', (raw) => {
+      expect(isBusinessSuccess(raw)).toBe(false)
+      expect(extractMessage(raw)).toBeUndefined()
+      expect(extractData(raw)).toBeUndefined()
+      expect(extractCode(raw)).toBeUndefined()
+    })
+  })
+
+  describe('resolvePolicy', () => {
+    it('全部缺省时校验与解包均开启', () => {
+      expect(resolvePolicy({})).toEqual({ check: true, unwrap: true })
+    })
+
+    it('端点 / 全局配置关闭时生效', () => {
+      expect(resolvePolicy({ businessCheck: false, unwrap: false })).toEqual({ check: false, unwrap: false })
+    })
+
+    it('请求显式值优先：可重新开启端点关闭的能力', () => {
+      expect(resolvePolicy({ businessCheck: false, unwrap: false }, { businessCheck: true, unwrap: true }))
+        .toEqual({ check: true, unwrap: true })
+    })
+
+    it('请求显式 false 覆盖端点开启', () => {
+      expect(resolvePolicy({ businessCheck: true }, { businessCheck: false })).toEqual({ check: false, unwrap: true })
+    })
+
+    it('请求未传时继承端点配置', () => {
+      expect(resolvePolicy({ unwrap: false }, { toast: false })).toEqual({ check: true, unwrap: false })
+    })
+  })
+
+  describe('interpretResponse', () => {
+    const config = { successCodes: [0], codeKey: 'code', messageKey: 'message', dataKey: 'data' }
+
+    it('校验通过并解包', () => {
+      expect(interpretResponse({ code: 0, data: { id: 1 } }, { check: true, unwrap: true }, config))
+        .toEqual({ ok: true, data: { id: 1 } })
+    })
+
+    it('校验失败返回业务码与消息', () => {
+      expect(interpretResponse({ code: 40001, message: 'bad' }, { check: true, unwrap: true }, config))
+        .toEqual({ ok: false, code: 40001, message: 'bad' })
+    })
+
+    it('裸数组在校验与解包均关闭时原样返回', () => {
+      const raw = [{ id: 1 }]
+      expect(interpretResponse(raw, { check: false, unwrap: false }, config)).toEqual({ ok: true, data: raw })
+    })
+
+    it('开启校验时非对象响应判为失败而非抛错', () => {
+      expect(interpretResponse(null, { check: true, unwrap: true }, config)).toEqual({ ok: false, code: undefined, message: undefined })
+    })
+
+    it('关闭校验仍解包：取 dataKey 字段', () => {
+      expect(interpretResponse({ data: 'x' }, { check: false, unwrap: true }, config)).toEqual({ ok: true, data: 'x' })
     })
   })
 })

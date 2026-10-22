@@ -1,30 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { FetchHook } from 'ofetch'
-import { attachInterceptors } from '../../src/runtime/domains/api/interceptors/compose'
 
 const useFetchMock = vi.fn(() => ({}))
 
-function makeMovk() {
-  return {
-    onRequest: (() => {}) as FetchHook,
-    onResponse: (() => {}) as FetchHook,
-    onResponseError: (() => {}) as FetchHook
-  }
-}
-
-const defaultMovk = makeMovk()
-const v2Movk = makeMovk()
-
-function makeInstance(interceptors: ReturnType<typeof makeMovk>) {
-  const instance = Object.assign(() => {}, {
-    use: (endpoint: string) => (endpoint === 'v2' ? v2Instance : instance)
-  })
-  attachInterceptors(instance as never, interceptors)
-  return instance
-}
-
-const v2Instance = makeInstance(v2Movk)
-const defaultInstance = makeInstance(defaultMovk)
+const v2Instance = Object.assign(() => {}, { use: () => v2Instance })
+const defaultInstance = Object.assign(() => {}, {
+  use: (endpoint: string) => (endpoint === 'v2' ? v2Instance : defaultInstance)
+})
 
 vi.mock('#app', () => ({
   useNuxtApp: () => ({ $api: defaultInstance }),
@@ -34,45 +16,46 @@ vi.mock('#app', () => ({
 const { useApiFetch } = await import('../../src/runtime/composables/useApiFetch')
 
 function lastOptions() {
-  return useFetchMock.mock.calls.at(-1)?.[1] as Record<string, unknown>
+  return useFetchMock.mock.calls.at(-1)?.[1] as unknown as Record<string, unknown>
 }
 
-describe('useApiFetch 钩子组合', () => {
+describe('useApiFetch', () => {
   beforeEach(() => {
     useFetchMock.mockClear()
   })
 
-  it('用户传 onResponse 时组合为 [movk, user]，movk 在前', () => {
-    const userOnResponse: FetchHook = () => {}
-    useApiFetch('/users', { onResponse: userOnResponse })
-
-    const onResponse = lastOptions().onResponse as FetchHook[]
-    expect(onResponse).toEqual([defaultMovk.onResponse, userOnResponse])
-    expect(onResponse[0]).toBe(defaultMovk.onResponse)
-  })
-
-  it('用户未传钩子时 options 不含 onResponse 键（保持实例 default）', () => {
+  it('默认使用 $api 实例，未声明 endpoint 键', () => {
     useApiFetch('/users')
 
-    expect('onResponse' in lastOptions()).toBe(false)
-    expect('onRequest' in lastOptions()).toBe(false)
-    expect('onResponseError' in lastOptions()).toBe(false)
+    expect(lastOptions().$fetch).toBe(defaultInstance)
+    expect('endpoint' in lastOptions()).toBe(false)
   })
 
-  it('指定 endpoint 时组合该端点实例的拦截器', () => {
-    const userOnResponse: FetchHook = () => {}
-    useApiFetch('/users', { endpoint: 'v2', onResponse: userOnResponse })
+  it('指定 endpoint 时切换到对应端点实例', () => {
+    useApiFetch('/users', { endpoint: 'v2' as never })
 
-    const onResponse = lastOptions().onResponse as FetchHook[]
-    expect(onResponse[0]).toBe(v2Movk.onResponse)
-    expect(onResponse[0]).not.toBe(defaultMovk.onResponse)
+    expect(lastOptions().$fetch).toBe(v2Instance)
   })
 
-  it('用户数组钩子与 onRequest 一并组合', () => {
-    const a: FetchHook = () => {}
-    const b: FetchHook = () => {}
-    useApiFetch('/users', { onRequest: [a, b] })
+  it('请求级选项与用户钩子原样透传给 $api 客户端', () => {
+    const onResponse: FetchHook = () => {}
+    useApiFetch('/users', { toast: false, businessCheck: false, unwrap: false, onResponse })
 
-    expect(lastOptions().onRequest).toEqual([defaultMovk.onRequest, a, b])
+    expect(lastOptions()).toMatchObject({ toast: false, businessCheck: false, unwrap: false, onResponse })
+  })
+
+  it('请求级选项参与去重 key', () => {
+    useApiFetch('/users')
+    const plain = (lastOptions().key as { value: string }).value
+    useApiFetch('/users', { unwrap: false })
+    const raw = (lastOptions().key as { value: string }).value
+
+    expect(plain).not.toBe(raw)
+  })
+
+  it('用户传入 key 时优先使用', () => {
+    useApiFetch('/users', { key: 'custom' })
+
+    expect((lastOptions().key as { value: string }).value).toBe('custom')
   })
 })

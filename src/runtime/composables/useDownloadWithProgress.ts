@@ -2,6 +2,7 @@ import type { Ref } from 'vue'
 import type { NitroFetchRequest } from 'nitropack/types'
 import type {
   ApiError,
+  MovkApiEndpointName,
   MovkApiPublicConfig,
   TransferRequestOptions,
   TransferResult,
@@ -10,35 +11,36 @@ import type {
 import { ref, shallowRef } from 'vue'
 import { useNuxtApp, useRuntimeConfig } from '#imports'
 import { triggerDownload } from '@movk/core'
-import {
-  buildFetchContext,
-  finalizeTransfer,
-  prepareTransfer,
-  resolveFilename,
-  tryParseJsonResponse
-} from '../domains/api/transfer'
+import { resolveEndpointConfig } from '../domains/api/endpoint-config'
+import { createApiError, isApiError } from '../domains/api/errors'
+import { isAbortError, isReadableStream } from '../domains/api/stream'
+import { readWithProgress, resolveFilename } from '../domains/api/download'
+import { showToast } from '../domains/api/toast'
 
 /**
  * 下载选项（带进度监控）
  */
 export interface DownloadWithProgressOptions extends TransferRequestOptions {
-  /** HTTP 方法 @defaultValue 'GET' */
-  method?: RequestInit['method']
-  /** 请求体，非 GET 时若非 string 自动序列化为 JSON */
+  /**
+   * HTTP 方法
+   * @defaultValue 'GET'
+   */
+  method?: string
+  /** 请求体，对象按 JSON 序列化 */
   body?: RequestInit['body'] | Record<string, unknown>
   /** 自定义文件名，不提供时从响应头或 URL 提取 */
   filename?: string
   /** 下载成功回调（文件名） */
   onSuccess?: (filename: string) => void
   /** 下载失败回调；中止时不触发 */
-  onError?: (error: ApiError | Error) => void
+  onError?: (error: ApiError) => void
 }
 
 /**
  * 带进度监控的文件下载 composable（仅客户端）
  *
- * @description 基于原生 fetch + ReadableStream 实现，复用 `@movk/nuxt` 的端点/认证/业务校验/toast/hook 体系。
- *  - 后端返回 JSON 时按业务码校验，错误不会触发文件下载
+ * @description 以 `$api.raw` + 流式响应实现，端点 / 认证 / 业务校验 / toast / hook / 错误归一全部复用：
+ *  - 后端返回 JSON 时按端点策略判定，错误不会触发文件下载
  *  - 后端无 content-length 时 progress 为 null，UI 据此切 indeterminate
  *
  * @example
@@ -55,27 +57,28 @@ export function useDownloadWithProgress<T = Blob>(): {
   progress: Ref<number | null>
   /** 传输状态 */
   status: Ref<TransferStatus>
-  /** 业务数据（默认 Blob；JSON 响应时为解包后的业务数据） */
+  /** 业务数据（默认 Blob；JSON 响应时为按策略处理后的业务数据） */
   data: Ref<T | null>
   /** 错误信息 */
-  error: Ref<ApiError | Error | null>
+  error: Ref<ApiError | null>
   /** 执行下载 */
   download: (url: NitroFetchRequest, options?: DownloadWithProgressOptions) => Promise<TransferResult<T>>
   /** 中止下载 */
   abort: () => void
 } {
   const publicConfig = useRuntimeConfig().public.movkApi as MovkApiPublicConfig
-  const nuxtApp = useNuxtApp()
+  const { $api } = useNuxtApp()
 
   const progress = ref<number | null>(0)
   const status = ref<TransferStatus>('idle')
   const data = shallowRef<T | null>(null)
-  const error = ref<ApiError | Error | null>(null)
+  const error = ref<ApiError | null>(null)
 
   let controller: AbortController | null = null
 
   const abort = (): void => {
-    controller?.abort()
+    if (!controller) return
+    controller.abort()
     controller = null
     status.value = 'aborted'
     progress.value = 0
@@ -87,179 +90,83 @@ export function useDownloadWithProgress<T = Blob>(): {
   ): Promise<TransferResult<T>> => {
     const {
       method = 'GET',
-      body,
       filename,
-      headers: userHeaders,
-      toast,
-      endpoint,
-      skipBusinessCheck,
+      endpoint: endpointName,
       onSuccess,
-      onError
+      onError,
+      ...requestOptions
     } = options
 
+    const endpoint = endpointName || publicConfig.defaultEndpoint || 'default'
+    const client = $api.use(endpoint as MovkApiEndpointName)
     const urlStr = typeof url === 'string' ? url : url.url
-    const { fullUrl, headers, config } = prepareTransfer(publicConfig, urlStr, {
-      endpoint,
-      headers: userHeaders,
-      toast,
-      skipBusinessCheck
-    })
+
+    abort()
+    const current = new AbortController()
+    controller = current
+    // 中止（含新一次下载替代上一次）后，旧请求不再回写状态
+    const isCurrent = (): boolean => controller === current
 
     progress.value = 0
     status.value = 'pending'
     data.value = null
     error.value = null
-    controller = new AbortController()
 
-    const fetchInit: RequestInit = {
-      method,
-      headers,
-      signal: controller.signal
-    }
-    if (method && method !== 'GET' && body !== undefined && body !== null) {
-      const isBodyInit
-        = typeof body === 'string'
-          || body instanceof Blob
-          || body instanceof FormData
-          || body instanceof URLSearchParams
-          || body instanceof ArrayBuffer
-          || body instanceof ReadableStream
-          || ArrayBuffer.isView(body)
-      if (isBodyInit) {
-        fetchInit.body = body as BodyInit
-      }
-      else {
-        fetchInit.body = JSON.stringify(body)
-        if (!('content-type' in headers) && !('Content-Type' in headers)) {
-          (fetchInit.headers as Record<string, string>)['Content-Type'] = 'application/json'
-        }
-      }
+    const fail = (cause: ApiError): TransferResult<T> => {
+      status.value = 'error'
+      error.value = cause
+      onError?.(cause)
+      return { data: null, error: cause, aborted: false }
     }
 
     try {
-      const response = await fetch(fullUrl, fetchInit)
-      const fetchContext = buildFetchContext(fullUrl, { method, context: { toast, skipBusinessCheck } }, {
-        status: response.status,
-        headers: response.headers
-      })
+      const response = await client.raw(url, {
+        ...requestOptions,
+        method,
+        responseType: 'stream',
+        retry: false,
+        signal: current.signal
+      } as Parameters<typeof client.raw>[1])
 
-      const contentType = response.headers.get('content-type') || ''
-      const isJson = contentType.toLowerCase().includes('application/json')
+      if (!isCurrent()) return { data: null, error: null, aborted: true }
 
-      // HTTP 错误：尝试读 JSON 体走业务通道，否则带 status 失败
-      if (!response.ok) {
-        if (isJson) {
-          const text = await response.text()
-          const raw = tryParseJsonResponse(response.headers, text)
-          const result = await finalizeTransfer<T>(nuxtApp, {
-            raw,
-            fallback: { isSuccess: false, data: null, message: `HTTP ${response.status}` },
-            config,
-            publicConfig,
-            requestToast: toast,
-            skipBusinessCheck,
-            fetchContext
-          })
-          status.value = 'error'
-          error.value = result.error
-          onError?.(result.error!)
-          return result
-        }
-
-        const result = await finalizeTransfer<T>(nuxtApp, {
-          raw: null,
-          fallback: { isSuccess: false, data: null, message: `HTTP ${response.status} ${response.statusText}` },
-          config,
-          publicConfig,
-          requestToast: toast,
-          fetchContext
-        })
-        status.value = 'error'
-        error.value = result.error
-        onError?.(result.error!)
-        return result
+      // JSON 响应已由拦截器按策略判定并处理，不当文件下载
+      if (!isReadableStream(response._data)) {
+        status.value = 'success'
+        data.value = response._data as T
+        progress.value = 100
+        return { data: data.value, error: null, aborted: false }
       }
 
-      // JSON 响应：走业务校验，不当文件下载
-      if (isJson) {
-        const text = await response.text()
-        const raw = tryParseJsonResponse(response.headers, text)
-        const result = await finalizeTransfer<T>(nuxtApp, {
-          raw,
-          fallback: { isSuccess: false, data: null, message: '响应解析失败' },
-          config,
-          publicConfig,
-          requestToast: toast,
-          skipBusinessCheck,
-          fetchContext
-        })
-        if (result.error) {
-          status.value = 'error'
-          error.value = result.error
-          onError?.(result.error)
-        }
-        else {
-          status.value = 'success'
-          data.value = result.data
-          progress.value = 100
-        }
-        controller = null
-        return result
-      }
+      const total = Number.parseInt(response.headers.get('content-length') || '', 10) || 0
+      const blob = await readWithProgress(response._data, total, (percent) => {
+        if (isCurrent()) progress.value = percent
+      }, response.headers.get('content-type') || undefined)
 
-      // 二进制路径
-      const contentLength = response.headers.get('content-length')
-      const total = contentLength ? Number.parseInt(contentLength, 10) : 0
+      if (!isCurrent()) return { data: null, error: null, aborted: true }
+
       const finalFilename = resolveFilename(response.headers, urlStr, filename)
-
-      const reader = response.body?.getReader()
-      if (!reader) throw new Error('无法读取响应流')
-
-      if (total <= 0) progress.value = null
-
-      const chunks: Uint8Array[] = []
-      let received = 0
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-        chunks.push(value)
-        received += value.length
-        if (total > 0) progress.value = Math.round((received / total) * 100)
-      }
-
-      const blob = new Blob(chunks as BlobPart[])
       triggerDownload(blob, finalFilename)
 
-      const result = await finalizeTransfer<T>(nuxtApp, {
-        raw: null,
-        fallback: { isSuccess: true, data: blob as unknown as T, message: `下载成功: ${finalFilename}` },
-        config,
-        publicConfig,
-        requestToast: toast,
-        fetchContext
-      })
+      const config = resolveEndpointConfig(publicConfig, endpoint)
+      showToast('success', `下载成功: ${finalFilename}`, requestOptions.toast, config.toast, config.response, method)
 
       status.value = 'success'
-      data.value = result.data
+      data.value = blob as T
       progress.value = 100
-      controller = null
       onSuccess?.(finalFilename)
-      return result
+      return { data: data.value, error: null, aborted: false }
     }
-    catch (err) {
-      controller = null
-
-      const isAborted = err instanceof DOMException && err.name === 'AbortError'
-      if (isAborted) {
-        status.value = 'aborted'
+    catch (cause: unknown) {
+      if (!isCurrent() || isAbortError(cause) || (isApiError(cause) && cause.data?.kind === 'aborted')) {
         return { data: null, error: null, aborted: true }
       }
-
-      const downloadError = err instanceof Error ? err : new Error('下载失败')
-      status.value = 'error'
-      error.value = downloadError
-      onError?.(downloadError)
-      return { data: null, error: downloadError, aborted: false }
+      if (isApiError(cause)) return fail(cause)
+      // 读取响应流途中断开：请求已成功，不再经客户端出口
+      return fail(createApiError({ kind: 'network', endpoint, message: '下载中断' }))
+    }
+    finally {
+      if (isCurrent()) controller = null
     }
   }
 

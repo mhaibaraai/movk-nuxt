@@ -34,7 +34,7 @@ const basePublic: MovkApiPublicConfig = {
 const nuxtApp = {
   vueApp: { runWithContext: (fn: () => unknown) => fn() },
   callHook
-} as unknown as Parameters<typeof createOnRequest>[2]
+} as unknown as Parameters<typeof createOnRequest>[0]['nuxtApp']
 
 function makeContext(initialHeaders?: HeadersInit | Record<string, string | undefined>): FetchContext {
   return {
@@ -49,7 +49,7 @@ describe('interceptors/request', () => {
   })
 
   it('认证启用时注入 Authorization', async () => {
-    const onRequest = createOnRequest(baseResolved, basePublic, nuxtApp)
+    const onRequest = createOnRequest({ endpoint: 'default', config: baseResolved, publicConfig: basePublic, nuxtApp })
     const ctx = makeContext()
 
     await onRequest(ctx)
@@ -60,7 +60,7 @@ describe('interceptors/request', () => {
   })
 
   it('Headers 重建时过滤 undefined 值，不抛 TypeError', async () => {
-    const onRequest = createOnRequest(baseResolved, basePublic, nuxtApp)
+    const onRequest = createOnRequest({ endpoint: 'default', config: baseResolved, publicConfig: basePublic, nuxtApp })
     const ctx = makeContext({ 'X-Custom': 'v', 'X-Skip': undefined } as Record<string, string | undefined>)
 
     await expect(onRequest(ctx)).resolves.not.toThrow()
@@ -72,7 +72,7 @@ describe('interceptors/request', () => {
   })
 
   it('支持数组形态 HeadersInit', async () => {
-    const onRequest = createOnRequest(baseResolved, basePublic, nuxtApp)
+    const onRequest = createOnRequest({ endpoint: 'default', config: baseResolved, publicConfig: basePublic, nuxtApp })
     const ctx = makeContext([['X-A', '1'], ['X-B', '2']])
 
     await onRequest(ctx)
@@ -82,7 +82,7 @@ describe('interceptors/request', () => {
   })
 
   it('支持 Headers 实例形态', async () => {
-    const onRequest = createOnRequest(baseResolved, basePublic, nuxtApp)
+    const onRequest = createOnRequest({ endpoint: 'default', config: baseResolved, publicConfig: basePublic, nuxtApp })
     const existing = new Headers({ 'X-Existing': 'yes' })
     const ctx = makeContext(existing)
 
@@ -93,7 +93,7 @@ describe('interceptors/request', () => {
   })
 
   it('认证未启用时不注入 Authorization', async () => {
-    const onRequest = createOnRequest({ ...baseResolved, auth: { enabled: false } }, basePublic, nuxtApp)
+    const onRequest = createOnRequest({ endpoint: 'default', config: { ...baseResolved, auth: { enabled: false } }, publicConfig: basePublic, nuxtApp })
     const ctx = makeContext()
 
     await onRequest(ctx)

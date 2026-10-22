@@ -1,13 +1,18 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { createFetch } from 'ofetch'
 import type { MovkApiPublicConfig } from '../../src/runtime/types/api'
+import { MockXHR, nextXhr } from '../helpers/mock-xhr'
 
 const toastAdd = vi.fn()
-const callHook = vi.fn(async () => {})
+const callHook = vi.fn(async (..._args: unknown[]) => {})
 
 const basePublic: MovkApiPublicConfig = {
   defaultEndpoint: 'default',
   debug: false,
-  endpoints: { default: { baseURL: '/api' } },
+  endpoints: {
+    default: { baseURL: '/api' },
+    tenant: { baseURL: '/tenant', publicHeaders: { 'X-Tenant': 't1' } }
+  },
   auth: { enabled: false },
   toast: {
     enabled: true,
@@ -17,75 +22,24 @@ const basePublic: MovkApiPublicConfig = {
   response: { successCodes: [0, 200], codeKey: 'code', messageKey: 'message', dataKey: 'data' }
 }
 
-vi.mock('#imports', async () => {
-  const { ref } = await import('vue')
-  return {
-    useNuxtApp: () => ({
-      vueApp: { runWithContext: (fn: () => unknown) => fn() },
-      callHook
-    }),
-    useToast: () => ({ add: toastAdd }),
-    useRuntimeConfig: () => ({ public: { movkApi: basePublic } }),
-    ref
-  }
-})
-
-vi.mock('#build/movk-session', () => ({
-  useUserSession: () => ({ session: { value: null } })
+vi.mock('#imports', async () => ({
+  ...await import('../helpers/nuxt-error'),
+  useNuxtApp: () => ({
+    vueApp: { runWithContext: (fn: () => unknown) => fn() },
+    runWithContext: (fn: () => unknown) => fn(),
+    callHook
+  }),
+  useToast: () => ({ add: toastAdd }),
+  useRuntimeConfig: () => ({ public: { movkApi: basePublic } }),
+  navigateTo: vi.fn()
 }))
+
+vi.mock('#build/movk-session', () => ({ useUserSession: undefined }))
 
 const { useUploadWithProgress } = await import('../../src/runtime/composables/useUploadWithProgress')
 
-class MockUpload {
-  listeners: Array<(e: { lengthComputable: boolean, loaded: number, total: number }) => void> = []
-  addEventListener(_type: string, l: (e: { lengthComputable: boolean, loaded: number, total: number }) => void) {
-    this.listeners.push(l)
-  }
-}
-
-class MockXHR {
-  static instances: MockXHR[] = []
-  upload = new MockUpload()
-  status = 200
-  statusText = 'OK'
-  responseText = ''
-  timeout = 0
-  withCredentials = false
-  requestHeaders: Record<string, string> = {}
-  responseHeaders: Record<string, string> = { 'content-type': 'application/json' }
-  private listeners: Record<string, Array<(e: Event) => void>> = {}
-
-  constructor() {
-    MockXHR.instances.push(this)
-  }
-
-  open(_method: string, _url: string) {}
-
-  setRequestHeader(name: string, value: string) {
-    this.requestHeaders[name] = value
-  }
-
-  send(_body: unknown) {}
-
-  abort() {
-    this.dispatch('abort')
-  }
-
-  addEventListener(type: string, listener: (e: Event) => void) {
-    (this.listeners[type] ||= []).push(listener)
-  }
-
-  getAllResponseHeaders(): string {
-    return Object.entries(this.responseHeaders).map(([k, v]) => `${k}: ${v}`).join('\r\n')
-  }
-
-  dispatch(type: string) {
-    for (const l of this.listeners[type] || []) l(new Event(type))
-  }
-
-  triggerUploadProgress(loaded: number, total: number) {
-    for (const l of this.upload.listeners) l({ lengthComputable: true, loaded, total })
-  }
+function hookNames(): unknown[] {
+  return callHook.mock.calls.map(([name]) => name)
 }
 
 describe('useUploadWithProgress', () => {
@@ -93,136 +47,152 @@ describe('useUploadWithProgress', () => {
     toastAdd.mockClear()
     callHook.mockClear()
     MockXHR.instances = []
+    vi.stubGlobal('$fetch', createFetch())
     vi.stubGlobal('XMLHttpRequest', MockXHR as unknown as typeof XMLHttpRequest)
   })
 
-  it('上传成功：解包业务数据、status=success、派发 movk:api:response', async () => {
-    const { upload, data, status } = useUploadWithProgress<{ id: number }>()
-    const file = new File(['x'], 'a.txt')
+  afterEach(() => {
+    vi.useRealTimers()
+    vi.unstubAllGlobals()
+  })
 
-    const promise = upload('/upload', file)
-    const xhr = MockXHR.instances[0]!
-    xhr.responseText = JSON.stringify({ code: 0, data: { id: 9 } })
-    xhr.dispatch('load')
+  it('上传成功：按 dataKey 解包、status=success、派发 movk:api:response', async () => {
+    const onSuccess = vi.fn()
+    const { upload, data, status } = useUploadWithProgress<{ id: number }>()
+
+    const promise = upload('/upload', new File(['x'], 'a.txt'), { onSuccess })
+    const xhr = await nextXhr()
+    expect(xhr.method).toBe('POST')
+    expect(xhr.url).toBe('/api/upload')
+    expect(xhr.body).toBeInstanceOf(FormData)
+    xhr.respond({ code: 0, data: { id: 9 } })
     const result = await promise
 
-    expect(result.data).toEqual({ id: 9 })
-    expect(result.error).toBeNull()
+    expect(result).toEqual({ data: { id: 9 }, error: null, aborted: false })
     expect(data.value).toEqual({ id: 9 })
     expect(status.value).toBe('success')
-    expect(callHook).toHaveBeenCalledWith('movk:api:response', expect.anything())
+    expect(onSuccess).toHaveBeenCalledWith({ id: 9 })
+    expect(hookNames()).toEqual(['movk:api:request', 'movk:api:response'])
   })
 
   it('进度事件更新 progress', async () => {
     const { upload, progress } = useUploadWithProgress()
-    const file = new File(['x'], 'a.txt')
 
-    const promise = upload('/upload', file)
-    const xhr = MockXHR.instances[0]!
+    const promise = upload('/upload', new File(['x'], 'a.txt'))
+    const xhr = await nextXhr()
     xhr.triggerUploadProgress(50, 100)
     expect(progress.value).toBe(50)
-    xhr.responseText = JSON.stringify({ code: 0, data: 1 })
-    xhr.dispatch('load')
+    xhr.respond({ code: 0, data: 1 })
     await promise
+
     expect(progress.value).toBe(100)
   })
 
-  it('业务失败：返回 ApiError、派发 movk:api:error', async () => {
-    const { upload } = useUploadWithProgress()
-    const file = new File(['x'], 'a.txt')
+  it('业务失败：返回 business ApiError、派发 movk:api:error', async () => {
+    const onError = vi.fn()
+    const { upload, status, error } = useUploadWithProgress()
 
-    const promise = upload('/upload', file)
-    const xhr = MockXHR.instances[0]!
-    xhr.responseText = JSON.stringify({ code: 40001, message: '文件类型不允许' })
-    xhr.dispatch('load')
+    const promise = upload('/upload', new File(['x'], 'a.txt'), { onError })
+    ;(await nextXhr()).respond({ code: 40001, message: '文件过大' })
     const result = await promise
 
-    expect(result.error).toMatchObject({ message: '文件类型不允许', isBusinessError: true })
-    expect(callHook).toHaveBeenCalledWith('movk:api:error', expect.anything())
+    expect(result.error).toMatchObject({ message: '文件过大', data: { kind: 'business', code: 40001 } })
+    expect(error.value).toBe(result.error)
+    expect(status.value).toBe('error')
+    expect(onError).toHaveBeenCalledWith(result.error)
+    expect(hookNames()).toContain('movk:api:error')
   })
 
-  it('HTTP 错误：error 包含 status', async () => {
+  it('HTTP 错误：http ApiError 携带状态码，不重试', async () => {
     const { upload } = useUploadWithProgress()
-    const file = new File(['x'], 'a.txt')
 
-    const promise = upload('/upload', file)
-    const xhr = MockXHR.instances[0]!
-    xhr.status = 500
-    xhr.statusText = 'Internal Server Error'
-    xhr.responseText = ''
-    xhr.responseHeaders = { 'content-type': 'text/plain' }
-    xhr.dispatch('load')
+    const promise = upload('/upload', new File(['x'], 'a.txt'))
+    ;(await nextXhr()).respond({ message: '服务异常' }, 500)
     const result = await promise
 
-    expect(result.error).toBeTruthy()
-    expect(result.error!.message).toContain('500')
+    expect(result.error).toMatchObject({ statusCode: 500, data: { kind: 'http', code: 500 } })
+    expect(MockXHR.instances).toHaveLength(1)
   })
 
-  it('网络错误：触发 onError', async () => {
+  it('网络错误：network ApiError 并触发 onError', async () => {
     const onError = vi.fn()
     const { upload } = useUploadWithProgress()
-    const file = new File(['x'], 'a.txt')
 
-    const promise = upload('/upload', file, { onError })
-    const xhr = MockXHR.instances[0]!
-    xhr.dispatch('error')
+    const promise = upload('/upload', new File(['x'], 'a.txt'), { onError })
+    ;(await nextXhr()).dispatch('error')
     const result = await promise
 
-    expect(result.error?.message).toContain('网络错误')
+    expect(result.error?.data?.kind).toBe('network')
     expect(onError).toHaveBeenCalled()
   })
 
-  it('abort：aborted=true、status=aborted、不触发 onError', async () => {
+  it('abort：aborted=true、status=aborted、不触发 onError 与上报', async () => {
     const onError = vi.fn()
     const { upload, abort, status } = useUploadWithProgress()
-    const file = new File(['x'], 'a.txt')
 
-    const promise = upload('/upload', file, { onError })
+    const promise = upload('/upload', new File(['x'], 'a.txt'), { onError })
+    await nextXhr()
     abort()
     const result = await promise
 
-    expect(result.aborted).toBe(true)
-    expect(result.error).toBeNull()
+    expect(result).toEqual({ data: null, error: null, aborted: true })
     expect(status.value).toBe('aborted')
     expect(onError).not.toHaveBeenCalled()
+    expect(hookNames()).not.toContain('movk:api:error')
   })
 
-  it('timeout：返回超时错误', async () => {
-    const { upload } = useUploadWithProgress()
-    const file = new File(['x'], 'a.txt')
+  it('timeout：返回 timeout ApiError 并上报', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
+    const { upload, status } = useUploadWithProgress()
 
-    const promise = upload('/upload', file, { timeoutMs: 1000 })
-    const xhr = MockXHR.instances[0]!
-    expect(xhr.timeout).toBe(1000)
-    xhr.dispatch('timeout')
+    const promise = upload('/upload', new File(['x'], 'a.txt'), { timeout: 1000 })
+    await vi.advanceTimersByTimeAsync(1000)
     const result = await promise
 
-    expect(result.error?.message).toContain('超时')
+    expect(result.error?.data?.kind).toBe('timeout')
+    expect(status.value).toBe('error')
+    expect(hookNames()).toContain('movk:api:error')
   })
 
-  it('多文件用同一 fieldName 追加', async () => {
+  it('多文件用同一 fieldName 追加，fields 一并提交', async () => {
     const { upload } = useUploadWithProgress()
     const files = [new File(['a'], 'a.txt'), new File(['b'], 'b.txt')]
 
-    const promise = upload('/upload', files, { fieldName: 'files' })
-    const xhr = MockXHR.instances[0]!
-    xhr.responseText = JSON.stringify({ code: 0, data: { count: 2 } })
-    xhr.dispatch('load')
-    const result = await promise
-
-    expect(result.error).toBeNull()
-  })
-
-  it('用户 headers 覆盖 auth 同名 header', async () => {
-    const { upload } = useUploadWithProgress()
-    const file = new File(['x'], 'a.txt')
-
-    const promise = upload('/upload', file, { headers: { Authorization: 'Bearer override' } })
-    const xhr = MockXHR.instances[0]!
-    xhr.responseText = JSON.stringify({ code: 0 })
-    xhr.dispatch('load')
+    const promise = upload('/upload', files, { fieldName: 'files', fields: { folder: 'docs' } })
+    const xhr = await nextXhr()
+    xhr.respond({ code: 0 })
     await promise
 
-    expect(xhr.requestHeaders.Authorization).toBe('Bearer override')
+    const body = xhr.body as FormData
+    expect(body.getAll('files')).toHaveLength(2)
+    expect(body.get('folder')).toBe('docs')
+  })
+
+  it('注入端点 publicHeaders 与用户 headers，withCredentials 映射为携带凭证', async () => {
+    const { upload } = useUploadWithProgress()
+
+    const promise = upload('/upload', new File(['x'], 'a.txt'), {
+      endpoint: 'tenant' as never,
+      headers: { 'X-Trace': 'abc' },
+      withCredentials: true
+    })
+    const xhr = await nextXhr()
+    xhr.respond({ code: 0 })
+    await promise
+
+    expect(xhr.url).toBe('/tenant/upload')
+    expect(xhr.requestHeaders['x-tenant']).toBe('t1')
+    expect(xhr.requestHeaders['x-trace']).toBe('abc')
+    expect(xhr.withCredentials).toBe(true)
+  })
+
+  it('businessCheck=false 时仍按 dataKey 解包', async () => {
+    const { upload } = useUploadWithProgress()
+
+    const promise = upload('/upload', new File(['x'], 'a.txt'), { businessCheck: false })
+    ;(await nextXhr()).respond({ data: { url: '/f/1' } })
+    const result = await promise
+
+    expect(result.data).toEqual({ url: '/f/1' })
   })
 })

@@ -138,7 +138,7 @@ export function getTemplates(options: ModuleOptions, nuxt?: Nuxt) {
       return `import * as movkUi from '#build/movk-ui'
 import type { TVConfig, Direction } from '@nuxt/ui'
 import type { defaultConfig } from 'tailwind-variants'
-import type { MovkApiPublicConfig, ApiInstance, ModuleOptions } from '@movk/nuxt'
+import type { MovkApiPublicConfig, ApiError, ApiInstance, ModuleOptions } from '@movk/nuxt'
 import type { HookResult } from '@nuxt/schema'
 import type { FetchContext } from 'ofetch'
 
@@ -166,7 +166,7 @@ declare module 'nuxt/app' {
   interface RuntimeNuxtHooks {
     'movk:api:request': (context: FetchContext) => HookResult
     'movk:api:response': (context: FetchContext) => HookResult
-    'movk:api:error': (context: FetchContext) => HookResult
+    'movk:api:error': (context: FetchContext, error: ApiError) => HookResult
     'movk:api:unauthorized': (context: FetchContext, result: { handled: boolean }) => HookResult
   }
 }

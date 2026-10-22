@@ -1,28 +1,31 @@
+import type { NuxtError } from 'nuxt/app'
 import type { ApiToast } from './config'
 
 declare module 'ofetch' {
   interface FetchOptions {
-    context?: ApiFetchContext
+    toast?: ApiRequestOptions['toast']
+    businessCheck?: ApiRequestOptions['businessCheck']
+    unwrap?: ApiRequestOptions['unwrap']
   }
 }
 
 /**
- * API 请求扩展上下文
- * @description 通过 fetch options 的 context 字段传递的额外配置
+ * 请求级选项
+ * @description `$api`、`useApiFetch`、上传下载与流式请求共用；未传的字段继承端点 / 全局 `response` 配置
  */
-export interface ApiFetchContext {
+export interface ApiRequestOptions {
   /** Toast 提示配置，设置为 false 禁用提示 */
   toast?: RequestToastOptions | false
   /**
-   * 是否跳过业务状态码检查
-   * @description 仅跳过 code 校验，**仍按 dataKey 解包**业务数据。与 skipUnwrap 正交。
+   * 是否按 successCodes 校验业务状态码
+   * @description 未传时继承端点 / 全局 `response.businessCheck`；显式值可覆盖端点配置
    */
-  skipBusinessCheck?: boolean
+  businessCheck?: boolean
   /**
-   * 是否跳过数据解包
-   * @description 为 true 时拦截器不重写 response._data，调用方拿到原始响应。与 skipBusinessCheck 正交。
+   * 是否按 dataKey 解包业务数据
+   * @description 未传时继承端点 / 全局 `response.unwrap`；为 false 时拿到原始响应体
    */
-  skipUnwrap?: boolean
+  unwrap?: boolean
 }
 
 /**
@@ -54,14 +57,27 @@ export interface ApiResponse {
 }
 
 /**
- * API 错误对象
- * @description 扩展标准 Error，包含业务响应和状态码信息
+ * 错误分类
+ * @description business：业务码校验失败；http：HTTP 4xx/5xx；network：请求未拿到响应；timeout：超时；aborted：主动中止
  */
-export interface ApiError extends Error {
-  /** HTTP 或业务状态码 */
-  statusCode?: number
-  /** 原始 API 响应数据 */
-  response?: ApiResponse
-  /** 是否为业务逻辑错误（非 HTTP 错误） */
-  isBusinessError: boolean
+export type ApiErrorKind = 'business' | 'http' | 'network' | 'timeout' | 'aborted'
+
+/**
+ * API 错误附带数据，挂在 `error.data` 上
+ */
+export interface ApiErrorData {
+  /** 错误分类 */
+  kind: ApiErrorKind
+  /** 发起请求的端点名称 */
+  endpoint: string
+  /** 业务码（business）或 HTTP 状态码（http） */
+  code?: number | string
+  /** 原始响应体 */
+  response?: unknown
 }
+
+/**
+ * API 错误
+ * @description 所有失败统一为 NuxtError，经 useAsyncData 时原样保留；按 `error.data.kind` 区分场景
+ */
+export type ApiError = NuxtError<ApiErrorData>

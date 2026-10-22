@@ -76,7 +76,7 @@ describe('createChatTransport', () => {
     ])
   })
 
-  it('默认经 $api 发请求，不预设 Accept 与 responseType', async () => {
+  it('默认经 $api 按流发请求，Accept 通配', async () => {
     rawMock.mockResolvedValue(sseResponse())
 
     const transport = createChatTransport<Raw>({ api: '/chat', select: () => undefined })
@@ -86,7 +86,7 @@ describe('createChatTransport', () => {
 
     expect(url).toBe('/chat')
     expect(init.method).toBe('POST')
-    expect(init.responseType).toBeUndefined()
+    expect(init.responseType).toBe('stream')
 
     const headers = init.headers as Headers
 
