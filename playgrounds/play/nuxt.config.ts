@@ -45,6 +45,10 @@ export default defineNuxtConfig({
         mutation: {
           baseURL: '/api/demo',
           toast: { success: { methods: ['POST', 'PUT', 'PATCH', 'DELETE'] } }
+        },
+        raw: {
+          baseURL: '/api/demo/raw',
+          response: { businessCheck: false, unwrap: false }
         }
       },
       auth: {
