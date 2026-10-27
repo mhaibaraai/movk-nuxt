@@ -13,6 +13,6 @@
   },
   "devDependencies": {
     "nuxt": "^4.6.2",
-    "sass-embedded": "^1.105.1"
+    "sass-embedded": "^1.106.1"
   }
 }
