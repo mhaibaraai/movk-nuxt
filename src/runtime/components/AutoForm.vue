@@ -1,5 +1,5 @@
 <script lang="ts" setup generic="S extends z.ZodObject, T extends boolean = true, N extends boolean = false">
-import type { ComponentConfig, InferInput } from '@nuxt/ui'
+import type { ComponentConfig, FormState, InferInput } from '@nuxt/ui'
 import type { z } from 'zod'
 import type { Ref } from 'vue'
 import { UForm } from '#components'
@@ -126,7 +126,7 @@ defineExpose({
       <UForm
         v-if="renderData"
         ref="formRef"
-        :state="stateModel"
+        :state="stateModel as FormState<S>"
         :schema="pureSchema"
         :loading-auto="props.loadingAuto"
         :validate-on="props.validateOn"
