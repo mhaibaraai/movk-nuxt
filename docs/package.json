@@ -7,21 +7,30 @@
     "dev": "nuxt dev"
   },
   "dependencies": {
+    "@ai-sdk/openai": "^4.0.103",
+    "@ai-sdk/vue": "^4.0.154",
+    "@comark/vue": "^0.7.0",
     "@iconify-json/vscode-icons": "^1.2.93",
     "@internationalized/date": "^3.12.4",
     "@movk/nuxt": "workspace:*",
-    "@movk/nuxt-docs": "^2.4.4",
+    "@movk/nuxt-docs": "^3.0.0",
     "@nuxt/content": "^3.16.2",
     "@nuxt/ui": "^4.12.0",
     "@nuxtjs/i18n": "^10.6.0",
-    "@tanstack/charts": "^1.1.0",
+    "@shikijs/engine-javascript": "^4.5.0",
+    "@shikijs/langs": "^4.5.0",
+    "@shikijs/themes": "^4.5.0",
     "@vercel/analytics": "^2.0.1",
     "@vercel/speed-insights": "^2.0.0",
+    "ai": "^7.0.154",
     "json5": "^2.2.3",
     "motion-v": "^2.8.0",
     "nuxt": "^4.6.2",
+    "nuxt-component-meta": "^0.18.0",
     "ohash": "^2.0.12",
+    "prettier": "^3.9.10",
     "tailwindcss": "^4.3.3",
+    "vue-component-meta": "^3.3.13",
     "zod": "^4.6.7"
   }
 }
