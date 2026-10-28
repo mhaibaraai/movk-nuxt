@@ -4,6 +4,7 @@
   ],
   "timezone": "Asia/Shanghai",
   "schedule": ["* 6-9 * * 1"],
+  "minimumReleaseAge": "1 day",
   "packageRules": [
     {
       "matchDepTypes": ["peerDependencies", "resolutions"],
@@ -18,6 +19,26 @@
       "description": "reka-ui 须与 @nuxt/ui 锁定版本一致，随 @nuxt/ui 手动对齐",
       "matchPackageNames": ["reka-ui"],
       "enabled": false
+    },
+    {
+      "groupName": "nuxt",
+      "matchPackageNames": ["nuxt", "@nuxt/**", "@nuxtjs/**", "nuxt-*"]
+    },
+    {
+      "groupName": "ai sdk",
+      "matchPackageNames": ["ai", "@ai-sdk/**"]
+    },
+    {
+      "groupName": "test",
+      "matchPackageNames": ["vitest", "@vitest/**", "happy-dom"]
+    },
+    {
+      "groupName": "lint",
+      "matchPackageNames": ["eslint", "eslint-*", "@nuxt/eslint", "@nuxt/eslint-config"]
+    },
+    {
+      "groupName": "release-it",
+      "matchPackageNames": ["release-it", "@release-it/**"]
     }
   ]
 }
