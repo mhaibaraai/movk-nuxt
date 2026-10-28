@@ -4,6 +4,7 @@ export * from './components'
 export * from './data-table'
 export * from './shared'
 export type * from './locale'
+export type * from './zod-config'
 
 export type {
   AnyCalendarDate,

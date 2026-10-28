@@ -1,4 +1,5 @@
 import type { MovkApiFullConfig } from './runtime/types/api/module'
+import type { MovkZodOptions } from './runtime/types/zod-config'
 import type { MovkFontFamily, ThemeFontOption } from './runtime/domains/theme/theme-font'
 import type { ModuleOptions as UiModuleOptions } from '@nuxt/ui'
 import type { ModuleOptions as SiteConfigOptions } from 'nuxt-site-config'
@@ -46,6 +47,11 @@ export interface ModuleOptions {
   prefix?: string
   /** API 模块配置 */
   api?: MovkApiFullConfig
+  /**
+   * zod 校验文案本地化。`z.config` 是全局单例，开启后应用内所有 zod 校验（含服务端）都会使用该配置
+   * @defaultValue false
+   */
+  zod?: MovkZodOptions | false
   /** 图标模块配置 */
   icon?: {
     /**
@@ -203,6 +209,10 @@ const movkModule: NuxtModule<ModuleOptions> = defineNuxtModule<ModuleOptions>({
       nuxt.options.runtimeConfig.public.movkApi = publicConfig as typeof nuxt.options.runtimeConfig.public.movkApi
 
       addPlugin({ src: resolve('runtime/plugins/api.factory'), mode: 'all' })
+    }
+
+    if (options.zod) {
+      addPlugin({ src: resolve('runtime/plugins/zod'), mode: 'all' })
     }
 
     const meta = await getPackageJsonMetadata(nuxt.options.rootDir)

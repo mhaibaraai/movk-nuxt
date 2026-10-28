@@ -12,6 +12,7 @@ import { applyFieldDefaults } from '../domains/auto-form/fields'
 import { DEFAULT_CONTROLS } from '../domains/auto-form/controls'
 import { createDefaultSearchActions } from '../domains/auto-form/actions'
 import { useMovkLocale } from '../composables/useMovkLocale'
+import { useZodLocaleSync } from '../domains/zod/sync'
 import AutoFormRendererField from '../domains/auto-form/components/Field.vue'
 import { useAppConfig } from '#imports'
 import theme from '#build/movk-ui/search-form'
@@ -43,6 +44,7 @@ defineOptions({ inheritAttrs: false })
 
 const attrs = useAttrs()
 const { t } = useMovkLocale()
+useZodLocaleSync()
 const actionList = computed(() => props.actions ?? createDefaultSearchActions(t))
 
 let baseline = deepClone(toRaw(modelValue.value)) as Partial<InferInput<S>>

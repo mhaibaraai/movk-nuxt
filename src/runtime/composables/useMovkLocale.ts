@@ -3,13 +3,13 @@ import type { Locale, Messages } from '@nuxt/ui'
 import { computed } from 'vue'
 import { defu } from 'defu'
 import { useLocale } from '@nuxt/ui/composables/useLocale'
-import type { MovkLocaleMessages, MovkMessageKey, MovkMessages } from '../types/locale'
-import { en, movkLocales } from '../locale'
-import { interpolate } from '../utils/interpolate'
+import type { MovkLocaleMessages, MovkMessages } from '../types/locale'
+import { createTranslator, en, movkLocales } from '../locale'
+import type { MovkTranslator } from '../locale'
 
 type MessagesWithMovk = Messages & { movk?: MovkLocaleMessages }
 
-export type MovkTranslator = (key: MovkMessageKey, vars?: Record<string, string | number>) => string
+export type { MovkTranslator }
 
 export interface MovkLocaleContext {
   code: ComputedRef<string>
@@ -29,13 +29,7 @@ export function useMovkLocale(localeOverride?: Ref<Locale<Messages> | undefined>
     movkLocales[code.value] ?? en
   ) as MovkMessages)
 
-  const t: MovkTranslator = (key, vars) => {
-    const [group, name] = key.split('.') as [keyof MovkMessages, string]
-    const message = (messages.value[group] as Record<string, unknown> | undefined)?.[name]
-    return typeof message === 'string' ? interpolate(message, vars) : key
-  }
-
-  return { code, t }
+  return { code, t: createTranslator(() => messages.value) }
 }
 
 /** 在 Nuxt UI locale 上覆盖 `@movk/nuxt` 文案，返回可直接传给 `<UApp :locale>` 的 locale */

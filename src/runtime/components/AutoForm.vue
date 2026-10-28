@@ -14,6 +14,7 @@ import AutoFormRendererField from '../domains/auto-form/components/Field.vue'
 import type { AutoFormProps, AutoFormEmits, AutoFormSlots } from '../types/auto-form/component'
 import { useExtendedTv } from '../utils/extend-theme'
 import { useMovkLocale } from '../composables/useMovkLocale'
+import { useZodLocaleSync } from '../domains/zod/sync'
 import theme from '#build/movk-ui/auto-form'
 import type { AppConfig } from 'nuxt/schema'
 import { useAppConfig } from '#imports'
@@ -34,6 +35,7 @@ defineOptions({ inheritAttrs: false })
 
 const attrs = useAttrs()
 const { t } = useMovkLocale()
+useZodLocaleSync()
 
 const appConfig = useAppConfig() as { movk?: { autoForm?: unknown } }
 

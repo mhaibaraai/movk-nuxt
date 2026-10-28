@@ -17,7 +17,7 @@ import MovkFontPlugin from './plugins/font'
 import MovkCompatPlugin from './plugins/compat'
 import { formatMissingCollections, resolveMovkIcons } from './utils/icons'
 
-export interface MovkUIOptions extends Pick<ModuleOptions, 'prefix' | 'theme' | 'icon'> {
+export interface MovkUIOptions extends Pick<ModuleOptions, 'prefix' | 'theme' | 'icon' | 'zod'> {
   /** 站点信息，注入 app.config.movkSite；name 作为主题 localStorage key 前缀 */
   site?: { url?: string, name?: string, description?: string }
   /**
