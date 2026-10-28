@@ -44,9 +44,10 @@ export function useSyncKeys<R>(
     updating = false
   }, { deep: true })
 
+  // 只回写已绑定的 key 模型，否则未使用 key 形式的表格会凭空多出一份白名单
   watch(record, (next) => {
     if (updating) return
-    if (next === undefined) return
+    if (next === undefined || keys.value === undefined) return
     const derived = toKeys(next)
     if (areSameKeys(derived, keys.value ?? [])) return
     updating = true

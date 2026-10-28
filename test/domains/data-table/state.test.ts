@@ -53,4 +53,14 @@ describe('useSyncKeys', () => {
     await nextTick()
     expect(keys.value).toEqual(['3'])
   })
+
+  it('key 模型未绑定时不从记录回写', async () => {
+    const keys = ref<string[] | undefined>()
+    const record = ref<RowSelectionState | undefined>()
+    effectScope().run(() => useSyncKeys(keys, record, keysToRowSelection, rowSelectionToKeys))
+
+    record.value = { 1: true }
+    await nextTick()
+    expect(keys.value).toBeUndefined()
+  })
 })
