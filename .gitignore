@@ -75,3 +75,6 @@ playgrounds/repl/dist/
 
 # VSC
 .history
+
+# Test utils setup marker
+playgrounds/play/.nuxtrc

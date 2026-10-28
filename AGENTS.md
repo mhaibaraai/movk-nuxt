@@ -19,7 +19,8 @@ pnpm dev:vue:build
 pnpm build
 pnpm typecheck        # src + playgrounds/play + docs + playgrounds/vue
 pnpm lint / pnpm lint:fix
-pnpm test             # Vitest；单文件：pnpm test -- useDateFormatter
+pnpm test             # Vitest（unit + nuxt 两个 project）；单文件：pnpm test -- useDateFormatter
+pnpm test:coverage    # v8 覆盖率，范围 src/runtime
 pnpm docs / pnpm docs:build   # docs:build 在 CI 拦截预渲染死链 [request error]
 pnpm clean
 ```
@@ -44,13 +45,13 @@ pnpm clean
 | `src/utils/` | 构建期工具：`defaults`、`theme-variants`、`theme`、`css`、`icons` |
 | `playgrounds/play/` · `playgrounds/vue/` | Nuxt playground（含 `server/api/` mock）· 纯 Vue playground |
 | `docs/` | 文档站（`@movk/nuxt-docs` v3 Layer） |
-| `test/` | Vitest：`composables/`、`domains/`、`plugins/`、`utils/`；`helpers/` 放测试替身 |
+| `test/` | Vitest：`composables/`、`domains/`、`plugins/`、`utils/`（`unit` 项目）；`nuxt/` 组件测试（`nuxt` 项目）；`helpers/` 放测试替身 |
 
 ## 核心约定
 
 - **分层**：业务逻辑落在 `runtime/domains/<域>`，对外组件保持薄壳；私有子组件放域内 `components/`。
 - **runtime 不得 import 构建期 `src/utils/`**（不进 dist）；两模式共用纯函数放 `src/runtime/utils/`。
-- **测试**：新增或修改 `runtime/domains`、`runtime/composables`、`runtime/utils` 逻辑须在 `test/` 补用例。
+- **测试**：新增或修改 `runtime/domains`、`runtime/composables`、`runtime/utils` 逻辑须在 `test/` 补用例；组件行为测试放 `test/nuxt/`，用 `mountSuspended`（以 `playgrounds/play` 为根，需先 `pnpm dev:prepare`）。
 - **图标注入**：消费方扫描器扫不到 `node_modules`，故 `src/utils/icons.ts` 收集 `runtime/**` 的 `i-lucide-*`/`i-ph-*`/`i-tabler-*` 字面量。Nuxt 侧只走 `icon:clientBundleIcons` 钩子，**不得**写 `icon.clientBundle.icons`（缺失图标集会让消费方 build 报错）；Vue 侧只能用 `ui.icon.clientBundle.icons`，须先经 `filterResolvableIcons` 按项目根过滤。
 - **样式入口**：`src/runtime/index.css` 是片段（不含 `@import "tailwindcss"`），由项目 CSS `@import "@movk/nuxt"`，模块不注册到 `nuxt.options.css`。全项目只能有一个 Tailwind 入口，否则会覆盖 `--font-sans` 等主题变量；漏引时 `src/utils/css.ts` 构建期告警。
 
