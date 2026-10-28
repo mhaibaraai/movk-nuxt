@@ -369,3 +369,16 @@ export function omitPaths<T extends z.ZodType>(schema: T, paths: string[]): T {
   if (!paths.length) return schema
   return omitByTree(schema, buildPathTree(paths)) as T
 }
+
+type LengthCheckDef = { check?: string, minimum?: number, maximum?: number, length?: number }
+
+/** 读取数组 schema 上的 `.min()` / `.max()` / `.length()` 约束 */
+export function getArrayLengthBounds(schema: z.ZodType): { min: number, max: number } {
+  const checks = (defOf(schema) as { checks?: Array<{ _zod: { def: LengthCheckDef } }> }).checks ?? []
+  return checks.reduce((bounds, { _zod: { def } }) => {
+    if (def.check === 'min_length') return { ...bounds, min: def.minimum ?? bounds.min }
+    if (def.check === 'max_length') return { ...bounds, max: def.maximum ?? bounds.max }
+    if (def.check === 'length_equals') return { min: def.length ?? bounds.min, max: def.length ?? bounds.max }
+    return bounds
+  }, { min: 0, max: Infinity })
+}

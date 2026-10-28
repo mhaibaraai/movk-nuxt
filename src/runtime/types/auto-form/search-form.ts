@@ -10,6 +10,7 @@ import type { Suggest } from '@movk/core'
 import type { BaseAutoFormProps } from './base'
 import type { DynamicFormSlots } from './slots'
 import type { VNode } from 'vue'
+import type { SearchQuery } from '../../domains/auto-form/search-query'
 
 export interface SearchFormSlotProps<S extends z.ZodObject> {
   expanded: boolean
@@ -29,7 +30,29 @@ export interface SearchFormAction extends /** @vue-ignore */ Omit<ButtonProps, '
   onClick?: (ctx: SearchFormSlotProps<z.ZodObject>) => void
 }
 
+export interface SearchFormQuerySync<S extends z.ZodObject = z.ZodObject> {
+  /**
+   * 写入 URL 时使用 `router.replace`，为 `false` 时使用 `router.push`
+   * @defaultValue true
+   */
+  replace?: boolean
+  /** 自定义从 URL query 还原搜索状态，缺省时按 schema 字段类型解析 */
+  parse?: (query: SearchQuery) => Partial<InferInput<S>>
+  /** 自定义把搜索状态写成 URL query，缺省时数组为多值、对象为 JSON */
+  serialize?: (state: Partial<InferInput<S>>) => SearchQuery
+}
+
 export interface SearchFormProps<S extends z.ZodObject> extends BaseAutoFormProps<S> {
+  /**
+   * 将搜索条件同步到 URL query：挂载时读取，提交、重置、清空时写入；仅写入 schema 顶层字段，保留其他 query
+   * @defaultValue false
+   */
+  syncQuery?: boolean | SearchFormQuerySync<S>
+  /**
+   * 提交前清洗载荷：`true` 时去除字符串首尾空白并剔除空值，传函数可自定义；`false` 时原样提交
+   * @defaultValue true
+   */
+  transformPayload?: boolean | ((data: Partial<InferInput<S>>) => Partial<InferInput<S>>)
   /**
    * 网格列数
    * @defaultValue 3

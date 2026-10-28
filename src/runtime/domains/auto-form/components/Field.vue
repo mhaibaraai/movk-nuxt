@@ -3,6 +3,7 @@ import { UFormField } from '#components'
 import { computed } from 'vue'
 import { useAutoFormInjector } from '../provider'
 import { VNodeRender } from '../reactive'
+import { useAsyncItems } from '../async-items'
 import type { AnyObject } from '@movk/core'
 import type { AutoFormField } from '../../../types'
 
@@ -16,10 +17,16 @@ const props = defineProps<AutoFormFieldProps>()
 const {
   resolveFieldProp,
   renderControl,
+  createFieldContext,
   createSlotResolver,
   createFormFieldSlots,
   createSlotProps
 } = useAutoFormInjector()
+
+const asyncConfig = props.field.meta?.asyncItems
+const asyncItems = asyncConfig
+  ? useAsyncItems(() => props.field.meta.asyncItems ?? asyncConfig, () => createFieldContext(props.field).state)
+  : undefined
 
 const slotResolver = computed(() => createSlotResolver(props.field, props.extraProps))
 
@@ -43,7 +50,11 @@ const fieldProps = computed(() => ({
 }))
 
 const formFieldSlots = computed(() => createFormFieldSlots(props.field, slotResolver.value, props.extraProps))
-const renderedControl = computed(() => renderControl(props.field, props.extraProps))
+const renderedControl = computed(() => renderControl(
+  props.field,
+  props.extraProps,
+  asyncItems && { items: asyncItems.items.value ?? [], loading: asyncItems.loading.value }
+))
 const defaultSlotProps = computed(() => createSlotProps(props.field, props.extraProps))
 </script>
 

@@ -3,8 +3,11 @@ import { UButton, UCollapsible } from '#components'
 import { computed, ref, watch } from 'vue'
 import { useAutoFormInjector } from '../provider'
 import { useMovkLocale } from '../../../composables/useMovkLocale'
-import { joinPath } from '@movk/core'
+import { deepClone, joinPath } from '@movk/core'
 import { collectFieldDefaults, createHintSlotFactory, remapFieldPath } from '../fields'
+import type { ArrayItemActions } from '../fields'
+import { getArrayLengthBounds } from '../schema'
+import { insertAfter, swapAt, withoutAt } from '../array-ops'
 import { VNodeRender } from '../reactive'
 import AutoFormRendererField from './Field.vue'
 import AutoFormRendererNested from './Nested.vue'
@@ -66,11 +69,54 @@ function withHintSlots(field: AutoFormField, isItemRoot: boolean, hintSlotFactor
   } as AutoFormField
 }
 
+const bounds = computed(() => getArrayLengthBounds(props.field.schema))
+const canAdd = computed(() => arrayValue.value.length < bounds.value.max)
+const canRemove = computed(() => arrayValue.value.length > bounds.value.min)
+
+function setItems(next: unknown[], ids: string[]) {
+  itemIds.value = ids
+  context.value.setValue(next)
+}
+
+function removeItem(index: number) {
+  if (!canRemove.value) return
+  setItems(withoutAt(arrayValue.value, index), withoutAt(itemIds.value, index))
+}
+
+function moveItem(index: number, offset: -1 | 1) {
+  const target = index + offset
+  if (target < 0 || target >= arrayValue.value.length) return
+  setItems(swapAt(arrayValue.value, index, target), swapAt(itemIds.value, index, target))
+}
+
+function duplicateItem(index: number) {
+  if (!canAdd.value) return
+  setItems(
+    insertAfter(arrayValue.value, index, deepClone(arrayValue.value[index])),
+    insertAfter(itemIds.value, index, `${props.field.path}-${idCounter++}`)
+  )
+}
+
+const itemActions = computed<ArrayItemActions>(() => ({
+  remove: removeItem,
+  move: props.field.meta.sortable ? moveItem : undefined,
+  duplicate: props.field.meta.duplicable ? duplicateItem : undefined,
+  canRemove: () => canRemove.value,
+  canAdd: () => canAdd.value,
+  length: () => arrayValue.value.length,
+  labels: {
+    moveUp: t('autoForm.moveUp'),
+    moveDown: t('autoForm.moveDown'),
+    duplicate: t('autoForm.duplicate'),
+    remove: t('autoForm.remove')
+  }
+}))
+
 const arrayItemFields = computed(() => {
   const template = elementTemplate.value
   if (!template) return []
 
-  const factory = createHintSlotFactory(removeItem)
+  const factory = createHintSlotFactory(itemActions.value)
 
   return arrayValue.value.map((_, index) => {
     const item = remapFieldPath(template, template.path, joinPath([props.field.path, index]))
@@ -84,23 +130,8 @@ function createDefaultValue() {
 }
 
 function addItem() {
-  if (!elementTemplate.value)
-    return
-
-  const newArray = [...arrayValue.value, createDefaultValue()]
-  context.value.setValue(newArray)
-}
-
-function removeItem(count?: number) {
-  if (count === undefined)
-    return
-
-  const arr = arrayValue.value
-  const newArray = [...arr.slice(0, count), ...arr.slice(count + 1)]
-
-  itemIds.value = [...itemIds.value.slice(0, count), ...itemIds.value.slice(count + 1)]
-
-  context.value.setValue(newArray)
+  if (!elementTemplate.value || !canAdd.value) return
+  context.value.setValue([...arrayValue.value, createDefaultValue()])
 }
 
 const { collapsibleConfig, shouldShowCollapsible, isHidden, enhancedField } = createCollapsibleEnhancer(() => props.field, () => props.extraProps)
@@ -115,6 +146,7 @@ const DEFAULT_ADD_BUTTON_PROPS = {
 const addButtonProps = computed(() => ({
   ...DEFAULT_ADD_BUTTON_PROPS,
   size: resolveFieldProp(props.field, 'size', 'sm', props.extraProps),
+  disabled: !canAdd.value,
   ...formAddButtonProps.value
 }))
 </script>

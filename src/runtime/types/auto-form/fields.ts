@@ -70,3 +70,15 @@ export interface AutoFormNestedCollapsible extends Pick<CollapsibleRootProps, 'd
     content?: ClassNameValue
   }
 }
+
+export interface AutoFormAsyncItems<T = unknown> {
+  /** 加载选项；新请求发起时上一个请求的 `signal` 会被 abort，其结果被丢弃 */
+  load: (ctx: { state: Record<string, any>, signal: AbortSignal }) => Promise<T[]>
+  /** 返回值变化时重新加载；缺省时只在挂载时加载一次 */
+  deps?: (state: Record<string, any>) => unknown
+  /**
+   * 重新加载的防抖时长（ms）
+   * @defaultValue 0
+   */
+  debounce?: number
+}

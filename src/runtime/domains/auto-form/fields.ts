@@ -131,8 +131,35 @@ export function extractEnumValuesFromItems(items: any, valueKey?: string): strin
     .filter((value: any) => value !== undefined && value !== null) as string[]
 }
 
-/** 创建数组项的 hint 插槽渲染函数：项根节点渲染删除按钮（对象项另加折叠图标），嵌套对象只渲染折叠图标 */
-export function createHintSlotFactory(removeCallback: (count?: number) => void) {
+export interface ArrayItemActions {
+  remove: (index: number) => void
+  /** 提供时渲染上移 / 下移按钮 */
+  move?: (index: number, offset: -1 | 1) => void
+  /** 提供时渲染复制按钮 */
+  duplicate?: (index: number) => void
+  canRemove: () => boolean
+  canAdd: () => boolean
+  length: () => number
+  labels: { moveUp: string, moveDown: string, duplicate: string, remove: string }
+}
+
+function itemButton(icon: string, label: string, onClick: () => void, options: { color?: 'error' | 'neutral', disabled?: boolean } = {}) {
+  return h(UButton, {
+    'icon': icon,
+    'color': options.color ?? 'neutral',
+    'variant': 'ghost',
+    'size': 'xs',
+    'aria-label': label,
+    'disabled': options.disabled,
+    'onClick': (event: Event) => {
+      event?.stopPropagation()
+      onClick()
+    }
+  })
+}
+
+/** 创建数组项的 hint 插槽渲染函数：项根节点渲染操作按钮（对象项另加折叠图标），嵌套对象只渲染折叠图标 */
+export function createHintSlotFactory(actions: ArrayItemActions) {
   return (field: AutoFormField, isItemRoot: boolean, open?: boolean, count?: number): VNode | undefined => {
     const isObject = field.meta?.type === 'object'
 
@@ -145,28 +172,18 @@ export function createHintSlotFactory(removeCallback: (count?: number) => void) 
       class: 'shrink-0 size-5 transition-transform duration-200'
     })
 
-    if (!isItemRoot) {
+    if (!isItemRoot || count === undefined) {
       return chevronIcon
     }
 
-    const deleteButton = h(UButton, {
-      icon: 'i-lucide-trash-2',
-      color: 'error',
-      variant: 'ghost',
-      size: 'xs',
-      onClick: (event: Event) => {
-        event?.stopPropagation()
-        removeCallback(count)
-      }
-    })
+    const { labels, move, duplicate } = actions
+    const buttons = [
+      move && itemButton('i-lucide-arrow-up', labels.moveUp, () => move(count, -1), { disabled: count === 0 }),
+      move && itemButton('i-lucide-arrow-down', labels.moveDown, () => move(count, 1), { disabled: count >= actions.length() - 1 }),
+      duplicate && itemButton('i-lucide-copy', labels.duplicate, () => duplicate(count), { disabled: !actions.canAdd() }),
+      itemButton('i-lucide-trash-2', labels.remove, () => actions.remove(count), { color: 'error', disabled: !actions.canRemove() })
+    ].filter((node): node is VNode => !!node)
 
-    if (!isObject) {
-      return deleteButton
-    }
-
-    return h('div', { class: 'flex items-center gap-1.5' }, [
-      deleteButton,
-      chevronIcon
-    ])
+    return h('div', { class: 'flex items-center gap-0.5' }, isObject ? [...buttons, chevronIcon] : buttons)
   }
 }

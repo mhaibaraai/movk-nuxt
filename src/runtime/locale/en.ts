@@ -3,7 +3,11 @@ import type { MovkMessages } from '../types/locale'
 export default {
   autoForm: {
     submit: 'Submit',
-    add: 'Add'
+    add: 'Add',
+    moveUp: 'Move up',
+    moveDown: 'Move down',
+    duplicate: 'Duplicate',
+    remove: 'Remove'
   },
   searchForm: {
     search: 'Search',

@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { nextTick } from 'vue'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
+import { useRouter } from '#imports'
 import SearchForm from '../../src/runtime/components/SearchForm.vue'
 import { useAutoForm } from '../../src/runtime/composables/useAutoForm'
 
@@ -8,8 +9,8 @@ const { afz } = useAutoForm()
 
 const mounted: Array<{ unmount: () => void }> = []
 
-async function mountForm(props: Record<string, unknown>) {
-  const wrapper = await mountSuspended(SearchForm, { props: props as never, attachTo: document.body })
+async function mountForm(props: Record<string, unknown>, route?: string) {
+  const wrapper = await mountSuspended(SearchForm, { props: props as never, attachTo: document.body, route })
   mounted.push(wrapper)
   return wrapper
 }
@@ -88,5 +89,30 @@ describe('SearchForm', () => {
 
     expect(wrapper.emitted('update:expanded')).toEqual([[true]])
     expect(wrapper.emitted('expand')).toEqual([[true]])
+  })
+
+  it('transformPayload 默认清洗提交数据', async () => {
+    const onSubmit = vi.fn()
+    const schema = afz.object({ keyword: afz.string().optional(), status: afz.string().optional() })
+    const wrapper = await mountForm({ schema, modelValue: { keyword: '  a ', status: '' }, onSubmit })
+    const vm = wrapper.vm as unknown as { submit: () => Promise<void> }
+
+    await vm.submit()
+
+    expect(onSubmit.mock.calls[0]?.[0].data).toEqual({ keyword: 'a' })
+  })
+
+  it('syncQuery 挂载时读取 URL query，提交时写回并保留其他 query', async () => {
+    const schema = afz.object({ keyword: afz.string().optional(), page: afz.number().optional() })
+    const model: Record<string, unknown> = {}
+    const wrapper = await mountForm({ schema, modelValue: model, syncQuery: true, onSubmit: () => {} }, '/?keyword=abc&page=2&tab=x')
+    await nextTick()
+
+    expect(model).toEqual({ keyword: 'abc', page: 2 })
+
+    const vm = wrapper.vm as unknown as { submit: () => Promise<void>, setFieldValue: (p: string, v: unknown) => void }
+    vm.setFieldValue('keyword', 'next')
+    await vm.submit()
+    await vi.waitFor(() => expect(useRouter().currentRoute.value.query).toEqual({ tab: 'x', keyword: 'next', page: '2' }))
   })
 })

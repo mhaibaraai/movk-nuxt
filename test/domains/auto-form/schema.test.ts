@@ -3,7 +3,7 @@ import { z } from 'zod'
 
 import { AUTOFORM_META } from '../../../src/runtime/domains/auto-form/constants'
 import { applyMeta } from '../../../src/runtime/domains/auto-form/metadata'
-import { extractPureSchema, introspectSchema, omitPaths } from '../../../src/runtime/domains/auto-form/schema'
+import { extractPureSchema, getArrayLengthBounds, introspectSchema, omitPaths } from '../../../src/runtime/domains/auto-form/schema'
 import { useAutoForm } from '../../../src/runtime/composables/useAutoForm'
 
 // controls 顶层 import 了多个 .vue 文件，vitest 默认无 @vitejs/plugin-vue 会解析失败；按 useAutoForm.test.ts 的方式打桩
@@ -154,5 +154,13 @@ describe('introspectSchema 递归保护', () => {
     }
     expect(depth).toBeGreaterThan(5)
     expect(depth).toBeLessThanOrEqual(21)
+  })
+})
+
+describe('getArrayLengthBounds', () => {
+  it('读取 min / max / length 约束', () => {
+    expect(getArrayLengthBounds(z.array(z.string()).min(1).max(3))).toEqual({ min: 1, max: 3 })
+    expect(getArrayLengthBounds(z.array(z.string()).length(2))).toEqual({ min: 2, max: 2 })
+    expect(getArrayLengthBounds(z.array(z.string()))).toEqual({ min: 0, max: Infinity })
   })
 })

@@ -3,7 +3,11 @@ import type { MovkMessages } from '../types/locale'
 export default {
   autoForm: {
     submit: '提交',
-    add: '添加'
+    add: '添加',
+    moveUp: '上移',
+    moveDown: '下移',
+    duplicate: '复制',
+    remove: '删除'
   },
   searchForm: {
     search: '搜索',

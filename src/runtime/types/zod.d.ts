@@ -1,4 +1,4 @@
-import type { AutoFormFieldContext, AutoFormFieldSlots, AutoFormNestedCollapsible } from './auto-form/fields'
+import type { AutoFormAsyncItems, AutoFormFieldContext, AutoFormFieldSlots, AutoFormNestedCollapsible } from './auto-form/fields'
 import type { ClassNameValue } from './shared'
 import type { ReactiveValue } from '@movk/core'
 
@@ -51,6 +51,12 @@ export interface ZodAutoFormFieldMeta {
   if?: ZodValue<boolean>
   /** 被 `if` 隐藏时的取值策略，优先于表单的 `hiddenValue` */
   hiddenValue?: 'keep' | 'clear'
+  /** 数组字段：是否显示上移 / 下移按钮 */
+  sortable?: boolean
+  /** 数组字段：是否显示复制按钮 */
+  duplicable?: boolean
+  /** 异步加载控件选项，结果以 `items` 与 `loading` 注入控件，优先于 `controlProps.items` */
+  asyncItems?: AutoFormAsyncItems
   /** 是否隐藏 */
   hidden?: ZodValue<boolean>
   /** 对象字段折叠配置。 */

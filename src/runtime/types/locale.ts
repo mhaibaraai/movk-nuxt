@@ -2,6 +2,10 @@ export interface MovkMessages {
   autoForm: {
     submit: string
     add: string
+    moveUp: string
+    moveDown: string
+    duplicate: string
+    remove: string
   }
   searchForm: {
     search: string

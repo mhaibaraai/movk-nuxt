@@ -152,4 +152,42 @@ describe('AutoForm', () => {
     vm.clear()
     expect(state).toEqual({})
   })
+
+  it('数组 sortable / duplicable 渲染操作按钮，min 限制删除、max 限制添加', async () => {
+    const schema = afz.object({
+      tags: afz.array(afz.string()).min(1).max(3).meta({ sortable: true, duplicable: true })
+    })
+    const state = reactive({ tags: ['a', 'b'] })
+    const wrapper = await mountForm({ schema, modelValue: state, globalMeta: flat })
+    const byLabel = (label: string) => wrapper.findAll(`button[aria-label="${label}"]`)
+
+    await byLabel('Move down')[0]!.trigger('click')
+    expect(state.tags).toEqual(['b', 'a'])
+
+    await byLabel('Duplicate')[0]!.trigger('click')
+    expect(state.tags).toEqual(['b', 'b', 'a'])
+    await nextTick()
+    expect(addButtons(wrapper.element)[0]!.hasAttribute('disabled')).toBe(true)
+
+    await byLabel('Remove')[0]!.trigger('click')
+    await byLabel('Remove')[0]!.trigger('click')
+    expect(state.tags).toEqual(['a'])
+    await nextTick()
+    expect(byLabel('Remove')[0]!.attributes('disabled')).toBeDefined()
+  })
+
+  it('asyncItems 加载结果注入控件 items', async () => {
+    const schema = afz.object({
+      city: afz.string().meta({
+        type: 'selectMenu',
+        asyncItems: { load: async () => ['Beijing', 'Shanghai'] }
+      }).optional()
+    })
+    const wrapper = await mountForm({ schema, modelValue: {} })
+    await new Promise(resolve => setTimeout(resolve, 0))
+    await nextTick()
+
+    const control = wrapper.findAllComponents({ name: 'USelectMenu' })[0] ?? wrapper.findAllComponents({ name: 'SelectMenu' })[0]
+    expect(control?.props('items')).toEqual(['Beijing', 'Shanghai'])
+  })
 })

@@ -119,7 +119,7 @@ export function useAutoFormProvider(
   }
 
   /** 渲染字段对应的输入控件，合并 controlProps/controlSlots 并绑定双向绑定逻辑 */
-  function renderControl(field: AutoFormField, extraProps?: Record<string, any>) {
+  function renderControl(field: AutoFormField, extraProps?: Record<string, any>, overrides?: Record<string, unknown>) {
     const controlMeta = field?.meta
     const comp = controlMeta?.component as any
 
@@ -141,6 +141,7 @@ export function useAutoFormProvider(
     const resolvedSize = resolveFieldProp(field, 'size', undefined, extraProps)
 
     const finalProps = defu(
+      overrides ?? {},
       resolvedControlProps,
       isReadonly ? { disabled: true } : {},
       controlMeta?.mapped?.controlProps || {},
