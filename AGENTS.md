@@ -4,192 +4,113 @@ This file provides guidance for AI coding agents working on this repository.
 
 ## 项目概述
 
-`@movk/nuxt` 是一个 Nuxt 4 模块，提供 Schema 驱动的 AutoForm（基于 Zod v4）、API 集成系统（useApiFetch + 进度监控）、独立 UI 组件和通用 Composables。四大能力域：AutoForm（表单）、DataTable（表格）、API 集成、独立组件 + Composables。
+`@movk/nuxt` 是 Nuxt 4 模块，四大能力域：AutoForm（Zod v4 Schema 驱动表单）、DataTable、API 集成（`useApiFetch` + 进度监控）、独立组件 + Composables。另提供 Vite/Vue 兼容层（`@movk/nuxt/vite` + `@movk/nuxt/vue-plugin`），**不含 API 域**。
 
-此外提供 **Vite/Vue 兼容层**（`@movk/nuxt/vite` + `@movk/nuxt/vue-plugin`），让独立 UI 组件、主题与非服务端 Composables 在纯 Vue + Vite 项目中可用（**不含 API 域**——其依赖 Nuxt 服务端运行时）。详见下文「Vite/Vue 双模式」。
-
-**peerDependencies**：`@nuxt/ui >=4.6.0`、`zod >=4.3.6`
-
-**moduleDependencies**（模块会自动校验版本）：
-
-| 模块 | 最低版本 |
-| --- | --- |
-| `@vueuse/nuxt` | >=14.2.1 |
-| `@nuxt/image` | >=2.0.0 |
-| `@nuxt/ui` | >=4.6.0 |
-| `nuxt-auth-utils` | >=0.5.29（仅 `api.auth.enabled` 且 `tokenSource` 为 `'session'` 时登记；runtime 经 `#build/movk-session` 取 `useUserSession`） |
-| `nuxt-site-config` | >=4.0.8 |
+- **peerDependencies**：`@nuxt/ui >=4.6.0`、`zod >=4.3.6`
+- **moduleDependencies**（自动校验版本）：`@vueuse/nuxt >=14.2.1`、`@nuxt/image >=2.0.0`、`@nuxt/ui >=4.6.0`、`nuxt-site-config >=4.0.8`、`nuxt-auth-utils >=0.5.29`（仅 `api.auth.enabled` 且 `tokenSource: 'session'` 时登记，runtime 经 `#build/movk-session` 取 `useUserSession`）
 
 ## 常用命令
 
 ```bash
-# 开发前必须先执行（生成 stub 和类型）
-pnpm dev:prepare
-
-# 启动默认 playground（playgrounds/play）
-pnpm dev
-
-# 启动纯 Vite + Vue playground（playgrounds/vue，验证非 Nuxt 模式）
-pnpm dev:vue
-# 构建该 playground（CI 与 dev:prepare 均会执行）
+pnpm dev:prepare      # 开发前必须执行（stub + 类型 + vue playground 构建）
+pnpm dev              # Nuxt playground（playgrounds/play）
+pnpm dev:vue          # 纯 Vite + Vue playground（playgrounds/vue）
 pnpm dev:vue:build
-
-# 构建模块
 pnpm build
-
-# 类型检查（覆盖 src + playgrounds/play + docs + playgrounds/vue）
-pnpm typecheck
-
-# Lint
-pnpm lint
-pnpm lint:fix
-
-# 单元测试（Vitest）
-pnpm test
-
-# 运行单个测试文件
-pnpm test -- useDateFormatter
-
-# 启动文档站
-pnpm docs
-
-# 构建文档站（CI 会拦截预渲染死链 [request error]）
-pnpm docs:build
-
-# 清理构建产物
+pnpm typecheck        # src + playgrounds/play + docs + playgrounds/vue
+pnpm lint / pnpm lint:fix
+pnpm test             # Vitest；单文件：pnpm test -- useDateFormatter
+pnpm docs / pnpm docs:build   # docs:build 在 CI 拦截预渲染死链 [request error]
 pnpm clean
 ```
 
-## 目录结构与架构
+修改 `src/` 后 playground 未热更新时，重跑 `pnpm dev:prepare`。
+
+## 目录结构
 
 | 路径 | 职责 |
 | --- | --- |
-| `src/module.ts` | 模块入口：moduleDependencies 版本校验、API/主题初始化、注册组件与 composables、校验项目已引入模块样式 |
-| `src/templates.ts` | 虚拟模板生成；`getTemplates` 由 Nuxt 模块与 Vue unplugin 共享 |
-| `src/unplugin.ts` | Vue 模式 unplugin 工厂：链入 `@nuxt/ui` unplugin 后叠加 movk 子插件 |
-| `src/vite.ts` | Vite 插件入口（`export default MovkPlugin.vite`） |
-| `src/plugins/` | Vue 模式 unplugin 子插件：`environment`（`#imports`/`#components`/Icon 覆盖）、`templates`（`#build/movk-ui` 写盘 + alias）、`app-config`（注入 movk 键）、`font`（字体样式表 `<link>` 注入 `index.html`）、`plugins`（`@movk/nuxt/vue-plugin` 虚拟） |
-| `src/runtime/components/` | 对外组件：10 个主组件（AutoForm、DataTable、SearchForm、DatePicker、ColorChooser、MessageBox、PillGroup、Popconfirm、SlideVerify、Tree）+ `input/` 6 个输入增强 + `theme-picker/` |
-| `src/runtime/domains/` | 业务逻辑层 + 私有子组件，按域划分：`api/`（端点客户端、拦截器、响应判定、错误归一与上报、XHR 适配器、下载流）、`auto-form/`（字段、控件、Schema 解析）、`data-table/`（列解析、特殊列）、`tree/`（树归一化、搜索、懒加载、工具栏子组件）、`theme/` |
-| `src/runtime/composables/` | 9 个：`useApiFetch` / `useLazyApiFetch` / `useClientApiFetch`、`useAutoForm`、`useTheme`、`useDateFormatter`、`useMessageBox`、`useUploadWithProgress` / `useDownloadWithProgress` |
-| `src/runtime/types/` | 类型来源，按域聚合：`api/`、`auto-form/`、`components/`、`data-table/`、`shared`，每域 `index.ts` 统一 re-export |
-| `src/runtime/utils/` | 运行时工具：`meta`、`form-control`、`tv`、`extend-theme`、`theme-defaults`（主题默认 app.config，两模式共用）、`tree-expand` / `tree-selection`（树形展开/选中纯函数，Tree 与 DataTable 共用） |
-| `src/runtime/vue/` | 非 Nuxt 桩层：`stubs/`（`#imports` 桩，转发 `@nuxt/ui` 同模式桩 + `useSiteConfig`/`useOverlay`）、`composables/useSiteConfig`、`plugins/theme`（剥离 SSR 的 vue 主题插件） |
-| `src/theme/` | 主题配置，每组件/功能一个文件（约 18 个），`index.ts` 聚合 |
-| `src/utils/` | 模块构建期工具：`defaults`、`theme-variants`、`theme`、`css`（校验项目已 `@import "@movk/nuxt"`）、`icons`（收集 movk 自有图标交给构建期图标包，两模式共用） |
-| `playgrounds/play/` | Nuxt playground，含 `app/pages/` 演示页与 `server/api/` mock |
-| `playgrounds/vue/` | 纯 Vite + Vue playground，验证非 Nuxt 模式（`vite.config.ts` 用 `@movk/nuxt/vite`，入口 `app.use(@movk/nuxt/vue-plugin)`） |
-| 根 `vue-plugin.d.ts` | `@movk/nuxt/vue-plugin` 类型声明 |
-| `docs/` | 文档站（`@movk/nuxt-docs` v3 Layer）：`content/docs` 文档、`app/components/content/examples/` 示例组件、`server/mcp/` MCP Server、`skills/`，详见下文「文档站」 |
-| `test/` | Vitest 用例：`composables/`、`domains/api/`、`domains/auto-form/`、`plugins/`、`utils/`；`helpers/` 放 Nuxt 错误、XHR 等测试替身 |
+| `src/module.ts` | 模块入口：依赖校验、API/主题初始化、注册组件与 composables、校验样式引入 |
+| `src/templates.ts` | 虚拟模板 `getTemplates`，Nuxt 与 Vue 两模式共享 |
+| `src/unplugin.ts` / `src/vite.ts` | Vue 模式 unplugin 工厂（链入 `@nuxt/ui` unplugin）/ Vite 入口 |
+| `src/plugins/` | Vue 模式子插件：`environment`、`templates`、`app-config`、`font`、`plugins` |
+| `src/runtime/components/` | 10 个主组件（AutoForm、DataTable、SearchForm、DatePicker、ColorChooser、MessageBox、PillGroup、Popconfirm、SlideVerify、Tree）+ `input/` 6 个 + `theme-picker/` |
+| `src/runtime/domains/` | 业务逻辑 + 私有子组件：`api/`、`auto-form/`、`data-table/`、`tree/`、`theme/` |
+| `src/runtime/composables/` | `useApiFetch`/`useLazyApiFetch`/`useClientApiFetch`、`useAutoForm`、`useTheme`、`useDateFormatter`、`useMessageBox`、`useUploadWithProgress`/`useDownloadWithProgress` |
+| `src/runtime/types/` | 按域聚合（`api/`、`auto-form/`、`components/`、`data-table/`、`shared`），各域 `index.ts` re-export |
+| `src/runtime/utils/` | 运行时工具，含两模式共用的 `theme-defaults`、`tree-expand`/`tree-selection` |
+| `src/runtime/vue/` | 非 Nuxt 桩层：`stubs/`（`#imports` 桩）、`composables/useSiteConfig`、`plugins/theme` |
+| `src/theme/` | 主题配置，每组件一个文件，`index.ts` 聚合 |
+| `src/utils/` | 构建期工具：`defaults`、`theme-variants`、`theme`、`css`、`icons` |
+| `playgrounds/play/` · `playgrounds/vue/` | Nuxt playground（含 `server/api/` mock）· 纯 Vue playground |
+| `docs/` | 文档站（`@movk/nuxt-docs` v3 Layer） |
+| `test/` | Vitest：`composables/`、`domains/`、`plugins/`、`utils/`；`helpers/` 放测试替身 |
 
-**核心约定**：业务逻辑落在 `runtime/domains/<域>`，对外组件保持薄壳；私有子组件放在对应域的 `components/` 下，不进入 `runtime/components/`。
+## 核心约定
 
-**图标注入约定**：`src/utils/icons.ts` 扫描 `runtime/**` 的 `i-lucide-*`/`i-ph-*`/`i-tabler-*` 字面量交给构建期图标包——消费方的扫描器只扫自己的 layer 且排除 `node_modules`，movk 组件与 `themeIcons` 的图标一个都到不了。Nuxt 侧必须走 `icon:clientBundleIcons` 钩子（归 extraIcons，图标集缺失只静默回退），**不得**写进 `icon.clientBundle.icons`（归 userIcons，缺失会让消费方 build 抛错）；Vue 侧只有 `ui.icon.clientBundle.icons` 这一条通道，故下发前必须用 `filterResolvableIcons` 过滤。`@iconify-json/*` 是 devDependency，pnpm 下对消费方不可见，可解析性只能按项目根判定。
-
-**样式入口约定**：`src/runtime/index.css` 是被引入的片段（不含 `@import "tailwindcss"`），对齐 `@nuxt/ui`；模块不往 `nuxt.options.css` 注册它，由项目 CSS 写 `@import "@movk/nuxt"`。全项目只能有一个 Tailwind 入口——第二个 `@import "tailwindcss"` 会形成独立上下文，其默认主题转储会覆盖模块注入的 `--font-sans` 等内置主题变量。漏引时 `src/utils/css.ts` 在构建期告警。
+- **分层**：业务逻辑落在 `runtime/domains/<域>`，对外组件保持薄壳；私有子组件放域内 `components/`。
+- **runtime 不得 import 构建期 `src/utils/`**（不进 dist）；两模式共用纯函数放 `src/runtime/utils/`。
+- **测试**：新增或修改 `runtime/domains`、`runtime/composables`、`runtime/utils` 逻辑须在 `test/` 补用例。
+- **图标注入**：消费方扫描器扫不到 `node_modules`，故 `src/utils/icons.ts` 收集 `runtime/**` 的 `i-lucide-*`/`i-ph-*`/`i-tabler-*` 字面量。Nuxt 侧只走 `icon:clientBundleIcons` 钩子，**不得**写 `icon.clientBundle.icons`（缺失图标集会让消费方 build 报错）；Vue 侧只能用 `ui.icon.clientBundle.icons`，须先经 `filterResolvableIcons` 按项目根过滤。
+- **样式入口**：`src/runtime/index.css` 是片段（不含 `@import "tailwindcss"`），由项目 CSS `@import "@movk/nuxt"`，模块不注册到 `nuxt.options.css`。全项目只能有一个 Tailwind 入口，否则会覆盖 `--font-sans` 等主题变量；漏引时 `src/utils/css.ts` 构建期告警。
 
 ## Vite/Vue 双模式
 
-`@movk/nuxt` 既是 Nuxt 模块，也通过 unplugin 在纯 Vue + Vite 下工作（对齐 `@nuxt/ui`）。
+- **解析覆盖**：`MovkPlugin` 链入 `NuxtUIPlugin.raw()` 后先注册 movk 子插件，接管 `#imports`、`#components`（`U*` shim、`UIcon`/`Link` 用 `@nuxt/ui/runtime/vue/` 版）、`#build/app.config`（注入 `movk` 键）、`#build/movk-ui/*`（写盘供 Tailwind `@source` 扫描）。
+- **判定归属**：依赖 Nuxt 服务端运行时（nitro、`useApiFetch*`、上传下载、`nuxt-auth-utils`）→ 仅 Nuxt，归 `domains/api/*`，**不得**纳入 `MOVK_COMPOSABLES` 与组件 glob；其余需双模式可用。
+- **新增组件**：组件 glob 自动纳入。从 `#components` 引入新 `U*` → 补 `src/unplugin.ts` 的 `UI_COMPONENTS`；用到桩未导出的 `#imports` 符号 → 补 `src/runtime/vue/stubs/movk-extra.ts`。
+- **新增 composable 或新增导出**：须在 `MOVK_COMPOSABLES` 显式登记文件及**全部公开导出**（含 re-export，如 `defineControl`/`CalendarDate`），Nuxt 侧自动可用，易漏 Vue 侧。
+- **模板自动导入**：`autoImport.vueTemplate: true` 已开启，`<template>` 可直接用。
+- **必验**：改动主题模板、`getDefaultConfig`、`MOVK_COMPOSABLES`、`UI_COMPONENTS`、stub 或组件结构后，同跑 `pnpm dev:prepare` 与 `pnpm dev:vue:build`。
+- **reka-ui 版本锁定**：直接依赖须与 `@nuxt/ui` 内部版本完全一致，升级 `@nuxt/ui` 时同步；不一致会让 `pnpm build` 报 TS2883。
+- **已知告警**：`DatePicker` 等透传 `CalendarProps` 的组件声明发射时有 TS2883 告警（reka-ui 未导出 `Matcher` 等），非致命，属上游限制。
 
-- **解析覆盖**：`MovkPlugin` 链入 `NuxtUIPlugin.raw()` 后，把 movk 子插件**先注册**以赢得 `#imports`（→ `runtime/vue/stubs/<router>`）、`#components`（→ `U*` shim 到 `@nuxt/ui/components/*`、`UIcon`/`Link` 用 `@nuxt/ui/runtime/vue/` 覆盖版）、`#build/app.config`（注入 `movk` 键）、`#build/movk-ui/*`（写盘 + alias，供 Tailwind `@source` 扫描）的解析。
-- **API 域隔离**：vue 模式 auto-import 映射（`MOVK_COMPOSABLES`，模块→公开导出名）与组件 glob **不得**纳入 `domains/api/*` 与 `useApiFetch*`/上传下载；它们仅 Nuxt 模式可用。
-- **共享逻辑**：主题模板 `getTemplates`（`src/templates.ts`）、`getDefaultConfig`（`src/runtime/utils/theme-defaults.ts`）由两模式共用，**改动须同步两模式**。
-- **同步面**：修改主题模板、`MOVK_COMPOSABLES` 映射、`UI_COMPONENTS` shim 名单或组件结构后，须同时验证 Nuxt（`pnpm dev:prepare`）与 Vue（`pnpm dev:vue:build`）两条链路。
-- **已知约束**：`DatePicker` 等透传 `@nuxt/ui` `CalendarProps` 的组件，声明发射期会产生 reka-ui 类型不可移植告警（TS2883，reka-ui 未从公共入口导出 `Matcher`/`WeekDayFormat`/`WeekStartsOn`）；非致命、不影响 `pnpm typecheck`（`--noEmit`），属上游限制。
-- **reka-ui 版本锁定**：直接依赖 `reka-ui` 必须与 `@nuxt/ui` 内部锁定的版本完全一致（renovate 已禁用其单独升级），升级 `@nuxt/ui` 时同步修改。版本不一致会产生两份 reka-ui，`@nuxt/ui` 类型引用的副本无法经 `reka-ui` 说明符命名，`pnpm build` 声明发射会直接报 TS2883 而失败。
+## 类型与导入
 
-### 新增 src 内容时：是否需要双模式 & 如何处理
+- 优先使用官方类型替换自定义类型。
+- prop 回调用索引访问派生，靠 contextual typing 推断参数：`const fn: DataTableDataColumn<T>['cell'] = ctx => ...`；事件处理用 `DataTableSelectHandler` / `DataTableHoverHandler` / `DataTableContextmenuHandler`。
+- 无法派生的工具函数从 `@movk/nuxt` re-export。
+- **类型导出最小必要**：内部合并产物（`ResolvedEndpointConfig`）、初始化校验类型（`MovkApiFullConfig`）、内部传值通道（`ApiFetchContext`）不得对外暴露；domain 纯函数默认不 re-export。
 
-- **判定**：看是否依赖 Nuxt 服务端运行时（nitro / `server/` / `useApiFetch*` / 上传下载 / `nuxt-auth-utils` 等）。依赖 → 仅 Nuxt（归 `domains/api/*`，不纳入 vue 模式）；纯 UI / 主题 / 非服务端 composable → 需双模式可用。
-- **新增组件（`runtime/components/**/*.vue`）**：由组件 glob（`createMovkComponentSource`）自动纳入 vue 模式，通常零配置。仅当 ① 从 `#components` 具名引入新的 `U*` → 补 `src/unplugin.ts` 的 `UI_COMPONENTS`；② 从 `#imports` 用到桩未导出的符号 → 补 `src/runtime/vue/stubs/movk-extra.ts`。
-- **新增 composable（`runtime/composables/*.ts`）**：vue 模式按 `MOVK_COMPOSABLES`（`src/unplugin.ts`）**显式登记**，非自动。非 API 的须把文件名及其**全部公开导出**（含 re-export，如 `defineControl`/`CalendarDate`）列入；API 域不得登记。
-- **给已有 composable 文件加 re-export/具名导出**：同步补进该模块在 `MOVK_COMPOSABLES` 的数组——Nuxt 侧靠 `addImportsDir` 自动可用，易漏掉 vue 侧。
-- **模板内自动导入**：`autoImport.vueTemplate: true` 已开启，自动导入可直接用于 `<template>`（对齐 Nuxt），无需改写为脚本常量。
-- **两模式共享纯函数**放 `src/runtime/utils/`；`runtime/**` 不得反向 import 构建期 `src/utils/`。
-- **改动后必验**：动了 `MOVK_COMPOSABLES` / `UI_COMPONENTS` / stub / 主题模板 / 组件结构，须同跑 `pnpm dev:prepare`（Nuxt）与 `pnpm dev:vue:build`（Vue）。
+## 模块默认值
+
+- `<UApp>` props 能配置的字段（如 `toaster.duration`）模块默认值保持空缺，仅注入模块专属值；构造 UI payload 时过滤 `undefined` 键。
+- `moduleDependencies` 的 `defaults` 影响不到被依赖模块的依赖收集（如 `@nuxt/ui` 据 `nuxt.options.ui` 决定是否登记 `@nuxt/fonts`）。需要时写成函数形式，在返回前用 `??=` 直接写入 `nuxt.options.<key>`（见 `src/module.ts` 的 `ui.fonts`）。
 
 ## 文档站
 
-`docs/` 继承 `@movk/nuxt-docs` v3，以 `../src/module` 直接加载本地模块源码。
+`docs/` 继承 `@movk/nuxt-docs` v3，以 `../src/module` 加载本地源码。
 
-- **内容路径**：中文在 `content/docs`，英文在 `content/en/docs`，路由前缀固定为 `/docs`；`content/index.md`、`releases.yml` 保持在 `content/` 根目录
-- **功能开关**：`movkNuxtDocs.componentDocs: true`（`ComponentProps` / `ComponentExample` 等依赖 `nuxt-component-meta`、`vue-component-meta`、`prettier`）；Mermaid、`a11y` 未开启，开启前需安装对应依赖
-- **导航与分类**：在 `app/app.config.ts` 的 `header.nav` / `header.mobileNav` / `docs.categories` 声明，文案按语言写成 `{ 'zh-CN': ..., 'en': ... }`，不要再覆盖 `useHeader` / `useCategory`
-- **国际化**：`i18n.locales` 不声明 `file`，翻译由 Layer 注册；站点翻译放 `i18n/locales/{code}.json`
-- **组件覆盖**：只覆盖 Layer「自定义」页覆盖契约中列出的组件（当前为 `HeaderLogo`、`ComponentExampleExtras`）
-- **环境变量**：`NUXT_GITHUB_TOKEN`（Releases 与提交历史）、`AI_API_KEY`（AI Chat 开关）、`AI_BASE_URL`（OpenAI 兼容端点，留空走 AI Gateway）、`NUXT_SESSION_PASSWORD`（API 演示的会话认证），模板见 `docs/.env.example`
+- 中文 `content/docs`、英文 `content/en/docs`，路由前缀 `/docs`；`content/index.md`、`releases.yml` 在 `content/` 根。
+- 导航与分类在 `app/app.config.ts` 声明，文案写成 `{ 'zh-CN': ..., 'en': ... }`，不覆盖 `useHeader`/`useCategory`。
+- `i18n.locales` 不声明 `file`，站点翻译放 `i18n/locales/{code}.json`。
+- 只覆盖 Layer 覆盖契约中的组件（`HeaderLogo`、`ComponentExampleExtras`）。
+- `componentDocs: true` 已开启；Mermaid、`a11y` 未开启。环境变量模板见 `docs/.env.example`。
 
-## 开发工作流
+### 写作规范
 
-- 修改 `src/` 后，如果 playground 未热更新，需重新执行 `pnpm dev:prepare`。
-- `pnpm typecheck` 实际执行 `vue-tsc --noEmit && nuxt typecheck playgrounds/play && nuxt typecheck docs`，覆盖 src + 一个 playground + docs。
-- 测试用 Vitest，`pnpm test -- <file>` 跑单文件；新增或修改 `runtime/domains`、`runtime/composables`、`runtime/utils` 逻辑须在 `test/` 下补对应用例。
+- **frontmatter**：中文 `title`/`description`（简洁）+ 英文 `seo.title`/`seo.description`；组件页另加 `category`。
+- **标题**：`## 用法`、`## 示例` 为 H2，条目为 H3。用法按 prop：`### \`size\` 尺寸`，首句「`prop` 作用：行为」；示例用场景名：`### 异步提交与校验`。
+- **`::component-code`**：仅用于全部 props 可 YAML 内联的简单组件；标量不加引号（`size: md`），但 `options:`/`items:` 中的字符串离散值保留引号。多层级 props 加 `prettier: true`。
+- **`::component-example`**：需脚本或 schema 驱动的组件（AutoForm 全家、`MSearchForm`）。示例放 `docs/app/components/content/examples/<scope>/`，命名 `<Scope><Component><Topic>Example.vue`；`options:`/`props:` 经 `defineProps` 注入，离散值用 `options:`（每项带 `items`，string items + `Number()`），schema/数组/自由文案保持静态。
+- **转发事件**（如 `MSearchForm` 的 `@submit`）不进 `:component-emits` 自动表，须在 Emits 段手动补充。
 
-## 类型与导入约定
+## Playground 示例
 
-- 类型来源，优先使用官方类型替换自定义类型
-- prop 回调用索引访问派生，参数靠 contextual typing 推断：`const fn: DataTableDataColumn<T>['cell' | 'truncate' | 'tooltip'] = ctx => ...`、`DataTableProps<T>['sortable' | 'pinable' | 'resizable']` 同理
-- 事件处理用 `DataTableSelectHandler` / `DataTableHoverHandler` / `DataTableContextmenuHandler`
-- 独立工具函数等无法派生的场景，从 `@movk/nuxt` re-export
-- **类型导出最小必要**：内部合并产物（如 `ResolvedEndpointConfig`）、初始化校验类型（如 `MovkApiFullConfig`）、拦截器/插件内部传值通道（如 `ApiFetchContext`）不得经 `runtime/types/*/index.ts` 暴露到 `@movk/nuxt`；仅导出消费者真实需要的配置、入参、返回值、错误类型。domain 纯函数默认不 re-export。
-- **runtime 不得反向依赖构建期 `src/utils/`**：`src/runtime/**` 只能 import `src/runtime/**`（构建期 `src/utils` 不进 dist，会导致 dist 运行时解析失败）。两模式共用的纯函数放 `src/runtime/utils/`（如 `theme-defaults`）。
+`playgrounds/play/app/pages/**` 兼作 docs 素材，标杆：`data-table/columns.vue`、`data-table/tree.vue`。
 
-## 模块默认值与全局配置同步
-
-- **模块默认值不得覆盖 Nuxt UI 全局配置**：凡 `<UApp>` props 能配置的字段（如 `toaster.duration`），模块默认值保持空缺，仅注入模块语义专属值。
-- 对外触发 UI 组件的 payload 构造需过滤 `undefined` 键，避免显式传入 `undefined` 干扰 Nuxt UI 的全局回退。
-- 新增模块默认配置时，先核对 `<UApp>` props 是否已提供相同字段，命中即按本原则保留模块专属、删除可继承。
-- **`moduleDependencies` 的 `defaults` 左右不了被依赖模块自己的 `moduleDependencies`**：Nuxt 先遍历所有模块收集依赖表，之后才把 `defaults` 合并进 `nuxt.options[configKey]`；而 `@nuxt/ui` 这类模块在收集阶段就读 `nuxt.options.ui` 决定要不要登记 `@nuxt/fonts`。要影响这类判定，只能把 `moduleDependencies` 写成函数形式，在返回依赖表前用 `??=` 直接落到 `nuxt.options.<configKey>`（见 `src/module.ts` 的 `ui.fonts`），保留消费方显式配置优先。
-
-## Playground 示例规范
-
-`playgrounds/play/app/pages/**/*.vue` 同时承担「人工演示 + docs 素材」双重职责，标杆：`data-table/columns.vue`、`data-table/tree.vue`。
-
-- **title**：4–10 字中文名词/动宾短语，无英文括号注解、无 prop 字面值；与未来 docs H2 段同形对应（如 `基础用法`、`函数式列配置`，而非 `列排序 (sortable)`）
-- **description**：一句话「通过哪些 prop/方法 → 预期行为」，中文句号收尾；prop/事件/方法名半角且不加引号；并列用顿号；不写 `X: true 开启、false 关闭` 这类教程腔
-- **一个 Showcase 只演示一项能力**，宁可多段也不漏；同主题页须穷举该主题下所有公开 props/事件/方法/槽位
-- 互斥关系、默认值、边界值要显式演示；列级 vs 全局同名 prop 用「全开 + 个别关」或反向对照，不要同向重复
-- 同时支持布尔/函数形态的 prop（`sortable` / `pinable` / `truncate` 等）两种形态都要有 Showcase
-- 抽离到 docs 的示例组件放 `docs/app/components/content/examples/<scope>/`，命名 `<Scope><Component><Topic>Example.vue`；新增 playground 段前先想「docs 这节叫什么」反推 title
+- **title**：4–10 字中文名词/动宾短语，与 docs 段同名，不带英文注解或 prop 字面值（`函数式列配置`，非 `列排序 (sortable)`）。
+- **description**：一句「通过哪些 prop/方法 → 预期行为」，句号收尾，并列用顿号，不写教程腔。
+- 一个 Showcase 只演示一项能力，同主题页穷举所有公开 props/事件/方法/槽位；显式演示互斥、默认值、边界值；布尔/函数双形态 prop 两种都要演示；列级 vs 全局同名 prop 做反向对照。
 
 ## 文档同步面
 
-新增 / 修改公开组件或功能（含新增 props、事件、方法、槽位）后，须同步下列文档面，保持各处组件清单与措辞一致；按就近原则增改，不要遗漏发现性入口。
+新增 / 修改公开组件或功能后，同步以下各处，保持组件清单与措辞一致：
 
-1. **组件文档** `docs/content/docs/2.components/<slug>.md`：用法（逐 prop，H3）、示例（场景，H3）、API（Props/Emits/Slots/Expose）、必要 `::note` / `::callout` 提示易踩点
-2. **示例组件** `docs/app/components/content/examples/<scope>/`：与文档 `::component-example` 一一对应，命名 `<Scope><Component><Topic>Example.vue`
-3. **Playground** `playgrounds/play/app/pages/**`：穷举公开 props/事件/方法/槽位，与文档同形对应
-4. **站点介绍与 keywords**：根 `package.json` 的 `keywords`、`docs/nuxt.config.ts` 的 `site.description` / `llms.*.description` / `llms.notes`、`README.md` 的独立组件列举、`docs/content/index.md` 的组件短语
-5. **首页展示** `docs/app/components/Home.vue`：必要时新增组件卡片
-6. **skills 参考** `docs/skills/movk-nuxt/references/*.md`（按域归类）、必要时 `SKILL.md` 选型指引
-7. **本指南目录表**：目录/计数漂移时同步校正
-
-> 站点描述、README、skills 三处的组件列举须指向同一组件集合、同一风格，避免清单各处不一致。
-
-## 写作规范
-
-- **每篇 md 的 frontmatter 统一格式**：简洁中文 `title`/`description` + 英文 `seo:` 块（`seo.title`、`seo.description` 用英文，供 SEO/多语言索引）。示例：
-  ```yaml
-  ---
-  title: 安装
-  description: 通过官方项目模板一键创建完整文档站点。
-  seo:
-    title: Installation
-    description: Create a Movk Nuxt Docs site with the official templates or integrate the Nuxt layer into an existing project using npm, pnpm, yarn, or bun.
-  ---
-  ```
-  中文 title/description 保持简洁（title 名词/动宾短语，description 一句话）；组件页另加 `category` 字段。此约定适用于所有内容阶段。
-
-- **`::component-code` 与 `::component-example` 的取舍**：按「示例能否用内联 props 表达」选择，而非按用法 / 示例区段。
-  - `::component-code`：由 `props`/`model`/`external` 内联合成代码，仅适用于全部 props 可用 YAML 内联表达的简单组件（如 `MSlideVerify`）。
-  - `::component-example`：加载并展示外部 `.vue` 源码，适用于需脚本构建或 schema 驱动的组件（如 AutoForm 全家、`MSearchForm`，Zod schema 无法内联）；外部文件置于 `docs/app/components/content/examples/<scope>/`，命名 `<Scope><Component><Topic>Example.vue`。
-  - 两类块在「用法」「示例」区段均可出现；schema 驱动组件全程使用 `::component-example`。
-- **标题层级**：`## 用法` 与 `## 示例` 均为 H2，其下条目统一用 H3。
-  - 用法条目按 prop 命名，格式 `### \`prop\` 中文名`（如 `### \`size\` 尺寸`），逐项列举公开 props，首段一句「`prop` 作用：行为」。
-  - 示例条目用描述性短语，格式 `### 场景名`（如 `### 异步提交与校验`）。
-- **交互演示（`options:`）**：`::component-example` 的 `options:`/`props:` 会作为 props 注入外部示例组件，示例 `.vue` 用 `defineProps` 接收并绑定到目标组件。离散值 prop 优先用 `options:`（每项须带 `items`）做实时下拉，沿用「string items + `Number()`」模式；schema、数组、断点对象、自由文案保持静态。
-- **转发事件**：底层组件转发的事件（如 `MSearchForm` 转发 `UForm` 的 `@submit`）不会进入 `:component-emits` 自动表，需在 Emits 段手动补说明。
-- **`prettier: true`**：props 含多层级结构时添加。
-- **内联标量不加引号**：`::component-code` 的 `props:` 标量值直接写（`size: md`，而非 `size: 'md'`）；但 `options:`/`items:` 中须保持字符串类型的离散值（如 cols `'1'`–`'4'`）仍加引号。
+1. 组件文档 `docs/content/docs/2.components/<slug>.md`（用法、示例、API、必要 `::note`）
+2. 示例组件 `docs/app/components/content/examples/<scope>/`
+3. Playground `playgrounds/play/app/pages/**`
+4. 站点介绍：根 `package.json` `keywords`、`docs/nuxt.config.ts` 的 `site.description`/`llms.*`、`README.md`、`docs/content/index.md`
+5. 首页 `docs/app/components/Home.vue`（必要时）
+6. skills `docs/skills/movk-nuxt/references/*.md`、必要时 `SKILL.md`
+7. 本文件目录表（计数漂移时）
