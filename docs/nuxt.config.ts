@@ -24,16 +24,6 @@ export default defineNuxtConfig({
 
   devtools: { enabled: true },
 
-  app: {
-    head: {
-      // 中文字体经 unicode-range 分包托管在 CDN，按需加载；crossorigin 需与 woff2 的 CORS 请求一致才能复用预热连接
-      link: [
-        { rel: 'preconnect', href: 'https://cdn.mhaibaraai.cn', crossorigin: '' },
-        { rel: 'stylesheet', href: 'https://cdn.mhaibaraai.cn/fonts/alibaba-puhuiti.css' }
-      ]
-    }
-  },
-
   css: ['~/assets/css/main.css'],
 
   site: {
