@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { UButton, UCheckbox, UInput, UTooltip } from '#components'
 import type { TreeProps, TreeSelectionSummary } from '../../../types/components/tree'
+import { useMovkLocale } from '../../../composables/useMovkLocale'
 
 const props = defineProps<{
   /** 是否渲染展开/折叠切换与全选控件 */
@@ -26,12 +27,14 @@ const emit = defineEmits<{
   'clear': []
 }>()
 
+const { t } = useMovkLocale()
+
 const checkboxLabel = computed(() => {
   const count = props.selectionSummary?.checkedCount ?? 0
-  return count > 0 ? `已选 ${count}` : '全选'
+  return count > 0 ? t('tree.selected', { count }) : t('tree.selectAll')
 })
 
-const expandTooltip = computed(() => props.expanded ? '折叠全部' : '展开全部')
+const expandTooltip = computed(() => props.expanded ? t('tree.collapseAll') : t('tree.expandAll'))
 
 function onToggleAll(checked: boolean) {
   if (checked) emit('select-all')
@@ -47,7 +50,7 @@ function onToggleAll(checked: boolean) {
       v-if="searchable"
       :model-value="search"
       icon="i-lucide-search"
-      placeholder="搜索节点"
+      :placeholder="t('tree.search')"
       :size="size"
       :disabled="disabled"
       :class="ui.search"
@@ -60,7 +63,7 @@ function onToggleAll(checked: boolean) {
           variant="link"
           :size="size"
           :disabled="disabled"
-          aria-label="清除搜索"
+          :aria-label="t('tree.clearSearch')"
           @click="emit('update:search', '')"
         />
       </template>

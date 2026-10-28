@@ -177,7 +177,7 @@ const fullQuery = fetchPeople(() => ({
         :pagination-ui="{
           showSelectedCount: true,
           showRowRange: true,
-          text: { total: '总计', item: '人', range: '当前', selected: '勾选' }
+          text: { total: '总计 {total} 人', range: '当前 {from}-{to}，总计 {total} 人', selected: '勾选 {count} 人' }
         }"
         :ui="{ root: 'max-h-[60vh]' }"
       />

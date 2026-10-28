@@ -86,7 +86,11 @@ function buildSpecialColumnDef<T>(
         const label = headerSlot
           ? headerSlot(hctx)
           : isFunction(render.header) ? render.header(hctx) : (render.header ?? '')
-        return renderHeaderActions(hctx, col, options, label, false, effectivePinable, effectiveResizable)
+        return renderHeaderActions(hctx, col, ctx, label, {
+          sortable: false,
+          pinable: effectivePinable,
+          resizable: effectiveResizable
+        })
       }
     : headerSlot
       ? (hctx: HeaderContext<T, unknown>) => headerSlot(hctx)
@@ -147,7 +151,7 @@ export function resolveSelectionColumn<T>(
             isIndeterminate
           }
           return h(UCheckbox, {
-            'aria-label': 'Select all rows',
+            'aria-label': ctx.t('dataTable.selectAll'),
             'class': 'inline-flex',
             'modelValue': isIndeterminate ? 'indeterminate' : isAllSelected,
             'onUpdate:modelValue': (value: unknown) => hctx.table.toggleAllPageRowsSelected(!!(value as boolean | 'indeterminate')),
@@ -166,7 +170,7 @@ export function resolveSelectionColumn<T>(
           isLeafAggregate: true
         }
         return h(UCheckbox, {
-          'aria-label': 'Select parent row',
+          'aria-label': ctx.t('dataTable.selectParentRow'),
           'class': 'inline-flex',
           'disabled': true,
           'modelValue': all ? true : some ? 'indeterminate' : false,
@@ -188,7 +192,7 @@ export function resolveSelectionColumn<T>(
         isLeafAggregate: false
       }
       return h(UCheckbox, {
-        'aria-label': 'Select row',
+        'aria-label': ctx.t('dataTable.selectRow'),
         'class': 'inline-flex',
         'modelValue': isSelected ? true : isIndeterminate ? 'indeterminate' : false,
         'onUpdate:modelValue': (value: unknown) => cellCtx.row.toggleSelected(!!(value as boolean | 'indeterminate')),
@@ -229,7 +233,7 @@ export function resolveExpandColumn<T>(
             'variant': 'outline',
             'size': 'xs',
             'color': 'neutral',
-            'aria-label': isAllExpanded ? 'Collapse all rows' : 'Expand all rows',
+            'aria-label': isAllExpanded ? ctx.t('dataTable.collapseAll') : ctx.t('dataTable.expandAll'),
             'icon': isAllExpanded ? 'i-lucide-minus' : 'i-lucide-plus',
             'ui': {
               base: 'p-0.5 rounded-sm',
@@ -300,7 +304,7 @@ export function resolveRowPinningColumn<T>(
         'size': 'xs',
         'color': pinned ? 'primary' : 'neutral',
         'icon': 'i-lucide-star',
-        'aria-label': pinned ? 'Cancel row pin' : 'Pin row',
+        'aria-label': pinned ? ctx.t('dataTable.unpinRow') : ctx.t('dataTable.pinRow'),
         'onClick': (event: Event) => {
           event.stopPropagation()
           if (pinned) {
@@ -320,7 +324,7 @@ export function resolveActionsColumn<T>(
   ctx: ResolveContext<T>
 ): ColumnDef<T, unknown> {
   return buildSpecialColumnDef(col, 'actions', ctx, {
-    header: col.header ?? SPECIAL_COLUMN_DEFAULTS.actions.header!,
+    header: col.header ?? ctx.t('dataTable.actions'),
     cell: (cellCtx: CellContext<T, unknown>) =>
       h(DataTableActionsCell, { col, cellCtx, options: ctx.options } as any)
   })

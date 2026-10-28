@@ -106,7 +106,7 @@ export function useAutoFormProvider(
       return null
 
     if (!comp) {
-      return h('div', { class: 'text-red-500' }, `[AutoForm] 控件未映射: ${field?.path ?? ''} - 类型: ${field?.meta?.type ?? 'unknown'}`)
+      return h('div', { class: 'text-red-500' }, `[AutoForm] No control mapped for "${field?.path ?? ''}" (type: ${field?.meta?.type ?? 'unknown'})`)
     }
 
     if (isVNode(comp))

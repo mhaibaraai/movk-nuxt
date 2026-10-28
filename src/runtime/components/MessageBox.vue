@@ -4,6 +4,7 @@ import { computed, ref, useAttrs } from 'vue'
 import { UModal, UButton, UIcon } from '#components'
 import { useAppConfig } from '#imports'
 import { useExtendedTv } from '../utils/extend-theme'
+import { useMovkLocale } from '../composables/useMovkLocale'
 import theme from '#build/movk-ui/message-box'
 import modalTheme from '#build/ui/modal'
 import type { AppConfig } from 'nuxt/schema'
@@ -14,12 +15,8 @@ const props = withDefaults(defineProps<MessageBoxProps & {
   type?: ComponentConfig<typeof modalTheme & typeof theme, AppConfig, 'messageBox'>['variants']['type']
   ui?: ComponentConfig<typeof modalTheme & typeof theme, AppConfig, 'messageBox'>['slots']
 }>(), {
-  title: '提示',
   type: 'primary',
-  mode: 'alert',
-  alertConfirmLabel: '知道了',
-  confirmLabel: '确认',
-  cancelLabel: '取消'
+  mode: 'alert'
 })
 const open = defineModel<boolean>('open')
 const emits = defineEmits<MessageBoxEmits>()
@@ -29,6 +26,7 @@ defineOptions({ inheritAttrs: false })
 
 const attrs = useAttrs()
 const appConfig = useAppConfig() as { movk?: { messageBox?: unknown } }
+const { t } = useMovkLocale()
 
 const iconMap = {
   primary: 'i-lucide-bell',
@@ -44,13 +42,15 @@ const resolvedIcon = computed(() => props.icon ?? iconMap[props.type])
 const cancelButtonAttrs = computed<ButtonProps>(() => ({
   color: 'neutral' as const,
   variant: 'outline' as const,
-  label: props.cancelLabel,
+  label: props.cancelLabel ?? t('messageBox.cancel'),
   ...(props.cancelButton ?? {})
 }))
 
 const confirmButtonAttrs = computed<ButtonProps>(() => ({
   color: props.type,
-  label: props.mode === 'alert' ? props.alertConfirmLabel : props.confirmLabel,
+  label: props.mode === 'alert'
+    ? props.alertConfirmLabel ?? t('messageBox.acknowledge')
+    : props.confirmLabel ?? t('messageBox.confirm'),
   ...(props.confirmButton ?? {})
 }))
 
@@ -96,7 +96,7 @@ const { baseUi, extraUi } = useExtendedTv(
     <template #title="slotProps">
       <slot name="title" v-bind="slotProps">
         <UIcon :name="resolvedIcon" :class="extraUi.icon" />
-        <span>{{ props.title }}</span>
+        <span>{{ props.title ?? t('messageBox.title') }}</span>
       </slot>
     </template>
 

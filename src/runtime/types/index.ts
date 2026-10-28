@@ -3,6 +3,7 @@ export * from './auto-form'
 export * from './components'
 export * from './data-table'
 export * from './shared'
+export type * from './locale'
 
 export type {
   AnyCalendarDate,

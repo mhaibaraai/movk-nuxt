@@ -1,3 +1,4 @@
+import type { MovkTranslator } from '../../../composables/useMovkLocale'
 import type { ColumnDef } from '@tanstack/vue-table'
 import type {
   DataTableActionsColumn,
@@ -46,6 +47,7 @@ function resolveColumn<T>(
 export function resolveColumns<T>(
   columns: DataTableColumn<T>[],
   options: DataTableProps<T>,
+  t: MovkTranslator,
   headerSlots?: HeaderSlotMap<T>
 ): ResolvedColumnState<T> {
   let groupCounter = 0
@@ -60,7 +62,8 @@ export function resolveColumns<T>(
     sizing: {},
     flags: { hasPinning: false, hasResizing: false, hasSort: false, hasExpand: false },
     nextGroupId: () => groupCounter++,
-    allColumnIds: []
+    allColumnIds: [],
+    t
   }
 
   const columnDefs = columns.map(col => resolveColumn(col, ctx))

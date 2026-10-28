@@ -36,7 +36,8 @@ const MOVK_COMPOSABLES: Record<string, readonly string[]> = {
   useAutoForm: ['useAutoForm', 'defineControl', 'DEFAULT_CONTROLS', 'getAutoFormMetadata'],
   useTheme: ['useTheme'],
   useDateFormatter: ['useDateFormatter', 'CalendarDate'],
-  useMessageBox: ['useMessageBox']
+  useMessageBox: ['useMessageBox'],
+  useMovkLocale: ['useMovkLocale', 'extendMovkLocale']
 }
 
 /**

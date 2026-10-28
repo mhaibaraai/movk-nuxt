@@ -2,6 +2,7 @@
 import { UButton, UCollapsible } from '#components'
 import { computed, ref } from 'vue'
 import { useAutoFormInjector } from '../provider'
+import { useMovkLocale } from '../../../composables/useMovkLocale'
 import { joinPath } from '@movk/core'
 import { collectFieldDefaults, createHintSlotFactory } from '../fields'
 import { VNodeRender } from '../reactive'
@@ -20,6 +21,7 @@ interface AutoFormRendererArrayProps {
 }
 
 const props = defineProps<AutoFormRendererArrayProps>()
+const { t } = useMovkLocale()
 
 const { createCollapsibleEnhancer, createFieldContext, createSlotResolver, createSlotProps, resolveFieldProp } = useAutoFormInjector()
 const context = createFieldContext(props.field)
@@ -157,9 +159,7 @@ const addButtonProps = computed(() => ({
           />
         </template>
       </template>
-      <UButton v-bind="addButtonProps" @click="addItem">
-        添加
-      </UButton>
+      <UButton :label="t('autoForm.add')" v-bind="addButtonProps" @click="addItem" />
       <VNodeRender v-if="slotResolver.hasSlot('after')" :node="slotResolver.renderSlot('after', slotProps)" />
     </template>
   </UCollapsible>
@@ -173,8 +173,6 @@ const addButtonProps = computed(() => ({
         :extra-props="{ ...props.extraProps, count }"
       />
     </template>
-    <UButton v-bind="addButtonProps" @click="addItem">
-      添加
-    </UButton>
+    <UButton :label="t('autoForm.add')" v-bind="addButtonProps" @click="addItem" />
   </template>
 </template>

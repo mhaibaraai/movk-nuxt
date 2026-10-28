@@ -21,6 +21,7 @@ import type { Ref, VNode, WritableComputedRef } from 'vue'
 import { computed, onMounted, ref, useAttrs, useTemplateRef, watch } from 'vue'
 import { useResizeObserver, useScroll } from '@vueuse/core'
 import { useExtendedTv } from '../utils/extend-theme'
+import { useMovkLocale } from '../composables/useMovkLocale'
 import { resolveColumns } from '../domains/data-table/columns/resolve-columns'
 import type { HeaderSlotMap } from '../domains/data-table/columns/constants'
 import { resolveCallbackValue } from '../domains/data-table/columns/utils'
@@ -80,7 +81,8 @@ const headerSlots = Object.fromEntries(
     .map(name => [name, (ctx: HeaderContext<T, unknown>) => slotRecord[name]?.(ctx) ?? []])
 ) as HeaderSlotMap<T>
 
-const resolved = computed(() => resolveColumns<T>(props.columns || [], props, headerSlots))
+const { t } = useMovkLocale()
+const resolved = computed(() => resolveColumns<T>(props.columns || [], props, t, headerSlots))
 
 const forwardSlots = computed(() => Object.keys(slots).filter((name) => {
   if (PAGINATION_SLOTS.includes(name)) return false

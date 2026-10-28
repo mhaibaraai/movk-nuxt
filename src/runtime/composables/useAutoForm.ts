@@ -61,7 +61,7 @@ function createCalendarDateFactory(type: 'calendarDate' | 'inputDate' = 'calenda
         }
         return false
       },
-      { message: error || '无效的日期格式' }
+      error ? { message: error } : undefined
     )
 
     const finalType = meta?.type || type
@@ -85,7 +85,7 @@ function inputTimeFactory(controlMeta?: any): z.ZodType<Time> {
         && typeof (val as any).minute === 'number'
       )
     },
-    { message: error || '无效的时间格式' }
+    error ? { message: error } : undefined
   )
 
   return applyMeta(schema, { ...(meta || {}), type: 'inputTime' })

@@ -10,7 +10,8 @@ import { useAutoFormProvider } from '../domains/auto-form/provider'
 import { extractPureSchema, introspectSchema } from '../domains/auto-form/schema'
 import { applyFieldDefaults } from '../domains/auto-form/fields'
 import { DEFAULT_CONTROLS } from '../domains/auto-form/controls'
-import { DEFAULT_SEARCH_ACTIONS } from '../domains/auto-form/actions'
+import { createDefaultSearchActions } from '../domains/auto-form/actions'
+import { useMovkLocale } from '../composables/useMovkLocale'
 import AutoFormRendererField from '../domains/auto-form/components/Field.vue'
 import { useAppConfig } from '#imports'
 import theme from '#build/movk-ui/search-form'
@@ -29,8 +30,6 @@ const props = withDefaults(defineProps<SearchFormProps<S> & {
   cols: 3,
   visibleRows: 1,
   icon: 'i-lucide-chevron-down',
-  expandText: '展开',
-  collapseText: '收起',
   defaultExpanded: false,
   loadingAuto: true,
   validateOn: () => []
@@ -43,6 +42,8 @@ const slots = defineSlots<SearchFormSlots<S>>()
 defineOptions({ inheritAttrs: false })
 
 const attrs = useAttrs()
+const { t } = useMovkLocale()
+const actionList = computed(() => props.actions ?? createDefaultSearchActions(t))
 
 let baseline = deepClone(toRaw(modelValue.value)) as Partial<InferInput<S>>
 
@@ -124,8 +125,7 @@ function buildSlotProps(errors: FormError[], loading: boolean): SearchFormSlotPr
 }
 
 function resolveActions(slotCtx: SearchFormSlotProps<S>): SearchFormAction[] {
-  const list = props.actions ?? DEFAULT_SEARCH_ACTIONS
-  return list.filter((action) => {
+  return actionList.value.filter((action) => {
     if (action.visible === undefined) return true
     if (typeof action.visible === 'function') {
       return action.visible(slotCtx as SearchFormSlotProps<z.ZodObject>)
@@ -135,8 +135,7 @@ function resolveActions(slotCtx: SearchFormSlotProps<S>): SearchFormAction[] {
 }
 
 const showActionsCell = computed(() => {
-  const list = props.actions ?? DEFAULT_SEARCH_ACTIONS
-  return list.length > 0 || !!slots.actions || !!slots.extraActions
+  return actionList.value.length > 0 || !!slots.actions || !!slots.extraActions
 })
 
 const visibleCount = computed(() => {
@@ -305,7 +304,7 @@ defineExpose({
             :size="resolvedButtonSize"
             variant="ghost"
             :data-state="expanded ? 'open' : 'closed'"
-            :label="expanded ? collapseText : expandText"
+            :label="expanded ? (collapseText ?? t('searchForm.collapse')) : (expandText ?? t('searchForm.expand'))"
             tabindex="-1"
             :class="extraUi.toggle"
             v-bind="collapseButtonProps"

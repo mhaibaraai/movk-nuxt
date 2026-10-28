@@ -45,7 +45,7 @@ export interface DatePickerProps<
   /** @vue-ignore */ OmitByKey<CalendarProps<R, M>, 'modelValue' | 'placeholder' | 'ui'> {
   id?: string
   name?: string
-  /** @defaultValue '选择日期' */
+  /** 未选择时的按钮文本，缺省时依次取 `buttonProps.label`、locale 的 `datePicker.placeholder` */
   placeholder?: string
   buttonProps?: ButtonProps
   popoverProps?: PopoverProps<P>

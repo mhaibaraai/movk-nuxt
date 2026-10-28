@@ -60,15 +60,9 @@ export interface SearchFormProps<S extends z.ZodObject> extends BaseAutoFormProp
    * @defaultValue 'i-lucide-chevron-down'
    */
   icon?: IconProps['name']
-  /**
-   * 展开按钮文本
-   * @defaultValue '展开'
-   */
+  /** 展开按钮文本，缺省时取 locale 的 `searchForm.expand` */
   expandText?: string
-  /**
-   * 收起按钮文本
-   * @defaultValue '收起'
-   */
+  /** 收起按钮文本，缺省时取 locale 的 `searchForm.collapse` */
   collapseText?: string
   /** 受控展开状态；优先级高于 defaultExpanded */
   expanded?: boolean

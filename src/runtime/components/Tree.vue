@@ -10,6 +10,7 @@ import { Tree, omitUndefined, splitHighlight, getPath } from '@movk/core'
 import { UCheckbox, UIcon, UTree } from '#components'
 import { useAppConfig } from '#imports'
 import { useExtendedTv } from '../utils/extend-theme'
+import { useMovkLocale } from '../composables/useMovkLocale'
 import treeTheme from '#build/ui/tree'
 import theme from '#build/movk-ui/tree'
 import { createGetKey, normalizeChildren } from '../domains/tree/resolve-tree'
@@ -44,6 +45,7 @@ const expanded = defineModel<string[]>('expanded', { default: () => [] })
 
 const slots = useSlots()
 const appConfig = useAppConfig() as { movk?: { tree?: unknown }, ui?: { icons?: Record<string, string> } }
+const { t } = useMovkLocale()
 const labelKey = computed(() => props.labelKey ?? 'label')
 
 // 父节点 leading 图标：prop 优先，回退 app.config，最终回退 lucide 默认（与 UTree 一致）
@@ -355,7 +357,7 @@ defineExpose<TreeExposed<T>>({
 
     <div v-if="isEmpty" :class="extraUi.empty" data-slot="empty">
       <slot name="empty">
-        无匹配结果
+        {{ t('tree.empty') }}
       </slot>
     </div>
 
@@ -395,7 +397,7 @@ defineExpose<TreeExposed<T>>({
       <template v-if="!slots['item-label'] && (props.lazy || (searching && props.highlight))" #item-label="{ item }">
         <slot v-if="isPlaceholder(item)" name="loading" :node="item">
           <span :class="extraUi.loading">
-            <UIcon name="i-lucide-loader-circle" :class="extraUi.loadingIcon" />加载中
+            <UIcon name="i-lucide-loader-circle" :class="extraUi.loadingIcon" />{{ t('tree.loading') }}
           </span>
         </slot>
         <template v-else-if="searching && props.highlight">

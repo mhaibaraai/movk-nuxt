@@ -10,6 +10,7 @@ import { useAppConfig } from '#imports'
 import { useDateFormatter } from '../composables/useDateFormatter'
 import type { ValueFormat } from '../composables/useDateFormatter'
 import { useExtendedTv } from '../utils/extend-theme'
+import { useMovkLocale } from '../composables/useMovkLocale'
 import { useFieldControl } from '../utils/form-control'
 import theme from '#build/movk-ui/date-picker'
 import popoverTheme from '#build/ui/popover'
@@ -25,7 +26,6 @@ import type {
 const props = withDefaults(defineProps<DatePickerProps<R, M, P, V> & {
   ui?: ComponentConfig<typeof popoverTheme & typeof theme, AppConfig, 'datePicker'>['slots']
 }>(), {
-  placeholder: '选择日期',
   labelFormat: 'formatted'
 })
 
@@ -37,6 +37,7 @@ defineOptions({ inheritAttrs: false })
 const attrs = useAttrs()
 const modelValue = defineModel<FormattedValue<R, M, V>>()
 const appConfig = useAppConfig() as { movk?: { datePicker?: unknown } }
+const { t } = useMovkLocale()
 const {
   id,
   name,
@@ -73,7 +74,7 @@ const calendarValue = computed<CalendarModel>({
   }
 })
 
-const emptyLabel = computed(() => props.placeholder || props.buttonProps?.label || '')
+const emptyLabel = computed(() => props.placeholder ?? props.buttonProps?.label ?? t('datePicker.placeholder'))
 
 const fromNumber = (n: number | null): string => n === null ? '' : String(n)
 
@@ -133,19 +134,19 @@ function buildDefaultPresets(): DatePickerPreset<R, M>[] {
   const range = (start: DateValue, end: DateValue) => asModel({ start, end })
 
   if (isRange.value) return [
-    { label: '今天', value: () => range(today, today) },
-    { label: '本周', value: f => range(f.getStartOfWeek(today), f.getEndOfWeek(today)) },
-    { label: '本月', value: f => range(f.getStartOfMonth(today), f.getEndOfMonth(today)) },
-    { label: '最近 7 天', value: () => range(today.subtract({ days: 6 }), today) },
-    { label: '最近 30 天', value: () => range(today.subtract({ days: 29 }), today) }
+    { label: t('datePicker.today'), value: () => range(today, today) },
+    { label: t('datePicker.thisWeek'), value: f => range(f.getStartOfWeek(today), f.getEndOfWeek(today)) },
+    { label: t('datePicker.thisMonth'), value: f => range(f.getStartOfMonth(today), f.getEndOfMonth(today)) },
+    { label: t('datePicker.last7Days'), value: () => range(today.subtract({ days: 6 }), today) },
+    { label: t('datePicker.last30Days'), value: () => range(today.subtract({ days: 29 }), today) }
   ]
 
   if (isMultiple.value) return []
 
   return [
-    { label: '今天', value: () => asModel(today) },
-    { label: '昨天', value: () => asModel(today.subtract({ days: 1 })) },
-    { label: '明天', value: () => asModel(today.add({ days: 1 })) }
+    { label: t('datePicker.today'), value: () => asModel(today) },
+    { label: t('datePicker.yesterday'), value: () => asModel(today.subtract({ days: 1 })) },
+    { label: t('datePicker.tomorrow'), value: () => asModel(today.add({ days: 1 })) }
   ]
 }
 

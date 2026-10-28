@@ -13,6 +13,7 @@ import AutoFormRendererChildren from '../domains/auto-form/components/Children.v
 import AutoFormRendererField from '../domains/auto-form/components/Field.vue'
 import type { AutoFormProps, AutoFormEmits, AutoFormSlots } from '../types/auto-form/component'
 import { useExtendedTv } from '../utils/extend-theme'
+import { useMovkLocale } from '../composables/useMovkLocale'
 import theme from '#build/movk-ui/auto-form'
 import type { AppConfig } from 'nuxt/schema'
 import { useAppConfig } from '#imports'
@@ -32,6 +33,7 @@ const slots = defineSlots<AutoFormSlots<AutoFormStateType>>()
 defineOptions({ inheritAttrs: false })
 
 const attrs = useAttrs()
+const { t } = useMovkLocale()
 
 const appConfig = useAppConfig() as { movk?: { autoForm?: unknown } }
 
@@ -168,7 +170,7 @@ defineExpose({
             <slot name="submit" v-bind="{ errors, loading, fields: visibleFields, state: stateModel }">
               <UButton
                 type="submit"
-                label="提交"
+                :label="t('autoForm.submit')"
                 block
                 :loading="loading"
                 :loading-auto="props.loadingAuto"

@@ -3,10 +3,7 @@ import type { OmitByKey } from '@movk/core'
 import type { SemanticColor } from '../shared'
 
 export interface MessageBoxProps extends /** @vue-ignore */ OmitByKey<ModalProps, 'title' | 'open' | 'defaultOpen' | 'dismissible' | 'ui'> {
-  /**
-   * 模态框标题文本。
-   * @defaultValue '提示'
-   */
+  /** 模态框标题文本，缺省时取 locale 的 `messageBox.title`。 */
   title?: string
   /**
    * 控制消息框的语义类型。
@@ -15,9 +12,8 @@ export interface MessageBoxProps extends /** @vue-ignore */ OmitByKey<ModalProps
    */
   type?: SemanticColor
   /**
-   * 标题前展示的图标名称。
+   * 标题前展示的图标名称，缺省时按 `type` 取对应图标。
    * @IconifyIcon
-   * @defaultValue 'i-lucide-circle-question-mark'
    */
   icon?: IconProps['name']
   /**
@@ -31,20 +27,11 @@ export interface MessageBoxProps extends /** @vue-ignore */ OmitByKey<ModalProps
    * @defaultValue false
    */
   dismissible?: boolean
-  /**
-   * alert 模式下的确认按钮文本。
-   * @defaultValue '知道了'
-   */
+  /** alert 模式下的确认按钮文本，缺省时取 locale 的 `messageBox.acknowledge`。 */
   alertConfirmLabel?: string
-  /**
-   * 确认按钮文本。
-   * @defaultValue '确认'
-   */
+  /** 确认按钮文本，缺省时取 locale 的 `messageBox.confirm`。 */
   confirmLabel?: string
-  /**
-   * 取消按钮文本。
-   * @defaultValue '取消'
-   */
+  /** 取消按钮文本，缺省时取 locale 的 `messageBox.cancel`。 */
   cancelLabel?: string
   /**
    * 透传给确认按钮的属性。
