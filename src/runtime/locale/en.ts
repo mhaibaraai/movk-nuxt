@@ -25,7 +25,9 @@ export default {
     pinRow: 'Pin row',
     unpinRow: 'Unpin row',
     pinColumn: 'Pin column',
-    unpinColumn: 'Unpin column'
+    unpinColumn: 'Unpin column',
+    columnSettings: 'Columns',
+    resetColumns: 'Reset columns'
   },
   pagination: {
     empty: 'Showing 0',

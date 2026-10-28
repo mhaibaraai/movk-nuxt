@@ -1,6 +1,7 @@
 <script lang="ts" setup generic="T extends TableData">
 import { getPaginationRowModel } from '@tanstack/vue-table'
 import type {
+  ColumnOrderState,
   ColumnPinningState,
   ColumnSizingState,
   ExpandedState,
@@ -15,7 +16,7 @@ import type {
   VisibilityState
 } from '@tanstack/vue-table'
 import type { TableData, TableProps, ComponentConfig } from '@nuxt/ui'
-import { UTable } from '#components'
+import { USkeleton, UTable } from '#components'
 import { useAppConfig } from '#imports'
 import type { VNode } from 'vue'
 import { computed, ref, toRaw, useAttrs, useTemplateRef, watch } from 'vue'
@@ -39,6 +40,11 @@ import { useEffectiveModel, useSyncKeys } from '../domains/data-table/state/mode
 import { buildPaginationView } from '../domains/data-table/pagination'
 import { useExpandColumnAutoSize } from '../domains/data-table/tree-layout'
 import { runLoadMore } from '../domains/data-table/load-more'
+import { useTablePersistence } from '../domains/data-table/persist'
+import { downloadCsv } from '../domains/data-table/export'
+import type { DataTableExportOptions } from '../domains/data-table/export'
+import ColumnSettings from '../domains/data-table/components/ColumnSettings.vue'
+import type { ColumnSettingsItem } from '../domains/data-table/components/ColumnSettings.vue'
 import type { HeaderSlotMap } from '../domains/data-table/columns/constants'
 import { resolveCallbackValue } from '../domains/data-table/columns/utils'
 import { computeTreeSelection } from '../utils/tree-selection'
@@ -57,7 +63,7 @@ type DataTable = ComponentConfig<(typeof theme & typeof tableTheme), AppConfig, 
 type Pagination = ComponentConfig<typeof paginationTheme, AppConfig, 'dataTablePagination'>
 
 const HEADER_SLOT_SUFFIX = '-header'
-const PAGINATION_SLOTS = ['pagination', 'pagination-summary', 'pagination-actions']
+const PAGINATION_SLOTS = ['pagination', 'pagination-summary', 'pagination-actions', 'toolbar']
 
 const props = withDefaults(defineProps<DataTableProps<T> & {
   ui?: DataTable['slots']
@@ -69,6 +75,7 @@ const props = withDefaults(defineProps<DataTableProps<T> & {
   indentSize: '1rem',
   canLoadMore: true,
   loadMoreDistance: 100,
+  skeletonRows: 5,
   truncate: true,
   sticky: true,
   columnResizeMode: 'onChange'
@@ -81,6 +88,7 @@ const columnSizingState = defineModel<ColumnSizingState>('columnSizing')
 const rowSelectionState = defineModel<RowSelectionState>('rowSelection')
 const rowPinningState = defineModel<RowPinningState>('rowPinning', { default: () => ({ top: [], bottom: [] }) })
 const sortingState = defineModel<SortingState>('sorting', { default: () => [] })
+const columnOrderState = defineModel<ColumnOrderState>('columnOrder')
 const expandedState = defineModel<ExpandedState>('expanded')
 const columnVisibilityKeysState = defineModel<string[]>('columnVisibilityKeys')
 const columnVisibilityExcludeKeysState = defineModel<string[]>('columnVisibilityExcludeKeys')
@@ -136,6 +144,8 @@ const effectiveSizing = useEffectiveModel(
   () => ({ ...resolved.value.initialSizing }),
   hasEntries
 )
+
+const effectiveColumnOrder = useEffectiveModel<ColumnOrderState>(columnOrderState, () => [])
 
 const effectiveRowSelection = useEffectiveModel(
   rowSelectionState,
@@ -462,6 +472,81 @@ function collapseAll() {
   effectiveExpanded.value = {}
 }
 
+function expandAll() {
+  effectiveExpanded.value = true
+}
+
+function selectAll() {
+  tableApi.value?.toggleAllRowsSelected(true)
+}
+
+function getSelectedRows(): T[] {
+  return tableApi.value?.getSelectedRowModel().flatRows.map(row => row.original) ?? []
+}
+
+const pageSize = computed<number | undefined>({
+  get: () => paginationState.value?.pageSize,
+  set: (size) => {
+    if (size) paginationState.value = { pageIndex: 0, pageSize: size }
+  }
+})
+
+const persistence = useTablePersistence(() => props.persistKey, {
+  columnVisibility: effectiveVisibility,
+  columnOrder: effectiveColumnOrder,
+  columnSizing: effectiveSizing,
+  columnPinning: effectivePinning,
+  pageSize
+})
+
+function resetColumns() {
+  const { initialVisibility, initialPinning, initialSizing, allColumnIds } = resolved.value
+  effectiveVisibility.value = columnVisibilityKeysState.value !== undefined
+    ? keysToVisibility(columnVisibilityKeysState.value, allColumnIds)
+    : { ...initialVisibility }
+  effectiveColumnOrder.value = []
+  effectiveSizing.value = { ...initialSizing }
+  effectivePinning.value = { left: [...(initialPinning.left ?? [])], right: [...(initialPinning.right ?? [])] }
+  persistence.clear()
+}
+
+function exportCsv(options?: DataTableExportOptions) {
+  if (tableApi.value) downloadCsv(tableApi.value, options)
+}
+
+const settingsItems = computed<ColumnSettingsItem[]>(() => {
+  const api = tableApi.value
+  if (!api) return []
+  // 读取 effective 状态建立依赖，tableApi 本身不随列状态变化重算
+  void effectiveVisibility.value
+  void effectiveColumnOrder.value
+  return api.getAllLeafColumns()
+    .filter(column => !column.id.startsWith('__'))
+    .map(column => ({
+      id: column.id,
+      label: typeof column.columnDef.header === 'string' ? column.columnDef.header : column.id,
+      visible: column.getIsVisible(),
+      hideable: column.getCanHide()
+    }))
+})
+
+function toggleColumn(id: string, visible: boolean) {
+  effectiveVisibility.value = { ...effectiveVisibility.value, [id]: visible }
+}
+
+function moveColumn(from: number, to: number) {
+  const ids = settingsItems.value.map(item => item.id)
+  const [moved] = ids.splice(from, 1)
+  if (moved === undefined) return
+  ids.splice(to, 0, moved)
+  // 内置列保持原位：左侧内置列在前，其余内置列（如操作列）在后
+  const special = resolved.value.allColumnIds.filter(id => id.startsWith('__'))
+  const leading = special.filter(id => id !== '__actions')
+  effectiveColumnOrder.value = [...leading, ...ids, ...special.filter(id => id === '__actions')]
+}
+
+const showToolbar = computed(() => props.columnSettings || !!slots.toolbar)
+
 const tableResetKey = computed(() => {
   const flags = [
     !!props.resizable,
@@ -486,6 +571,11 @@ defineExpose<DataTableExposed<T>>({
   clearSelection,
   expandToDepth,
   collapseAll,
+  expandAll,
+  selectAll,
+  getSelectedRows,
+  resetColumns,
+  exportCsv,
   get treeSelection() { return treeSelection.value }
 })
 </script>
@@ -497,6 +587,18 @@ defineExpose<DataTableExposed<T>>({
     :data-pin-start="pinStart || undefined"
     :data-pin-end="pinEnd || undefined"
   >
+    <div v-if="showToolbar" :class="extraUi.toolbar" data-slot="toolbar">
+      <slot name="toolbar" :table-api="tableApi" :reset-columns="resetColumns">
+        <ColumnSettings
+          v-if="props.columnSettings"
+          :items="settingsItems"
+          @toggle="toggleColumn"
+          @move="moveColumn"
+          @reset="resetColumns"
+        />
+      </slot>
+    </div>
+
     <UTable
       :key="tableResetKey"
       ref="tableRef"
@@ -508,6 +610,7 @@ defineExpose<DataTableExposed<T>>({
       v-model:row-pinning="rowPinningState"
       v-model:sorting="sortingState"
       v-model:expanded="effectiveExpanded"
+      v-model:column-order="effectiveColumnOrder"
       data-slot="table"
       :style="borderedStyle"
       v-bind="uTableProps"
@@ -515,6 +618,12 @@ defineExpose<DataTableExposed<T>>({
       <!-- 插槽名是联合类型，vue-tsc 会把作用域参数收敛成全部插槽 props 的交叉类型，转发时只能绕过 -->
       <template v-for="name in forwardSlots" #[name]="slotProps" :key="name">
         <slot :name="name" v-bind="(slotProps ?? {}) as any" />
+      </template>
+
+      <template v-if="!$slots.loading && props.skeletonRows > 0" #loading>
+        <div :class="extraUi.skeleton" data-slot="skeleton">
+          <USkeleton v-for="index in props.skeletonRows" :key="index" :class="extraUi.skeletonRow" />
+        </div>
       </template>
     </UTable>
 

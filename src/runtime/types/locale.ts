@@ -24,6 +24,8 @@ export interface MovkMessages {
     unpinRow: string
     pinColumn: string
     unpinColumn: string
+    columnSettings: string
+    resetColumns: string
   }
   pagination: {
     empty: string

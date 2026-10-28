@@ -25,7 +25,9 @@ export default {
     pinRow: '固定行',
     unpinRow: '取消固定行',
     pinColumn: '固定列',
-    unpinColumn: '取消固定列'
+    unpinColumn: '取消固定列',
+    columnSettings: '列设置',
+    resetColumns: '重置列'
   },
   pagination: {
     empty: '显示 0',
