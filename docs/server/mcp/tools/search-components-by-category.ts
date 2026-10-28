@@ -10,7 +10,7 @@ export default defineMcpTool({
     openWorldHint: false
   },
   inputSchema: {
-    category: z.string().optional().describe('Filter components by category (input / feedback / form / advanced)'),
+    category: z.string().optional().describe('Filter components by category (feedback / advanced)'),
     search: z.string().optional().describe('Search term to filter components by name or description')
   },
   inputExamples: [

@@ -100,7 +100,7 @@ transition: { duration: 0.6, delay: 0.5 }
   组件与 Composables
 
   #description
-  DatePicker、PillGroup、SearchForm、Tree 等独立组件，搭配 useTheme、useMessageBox 等工具。
+  DatePicker、SearchForm、Tree、MessageBox 等独立组件，搭配 useTheme、useMessageBox 等工具。
   :::
 
   :::u-page-feature{icon="i-lucide-shield-check"}
@@ -347,8 +347,8 @@ links:
     color: neutral
     variant: outline
     trailingIcon: i-lucide-arrow-right
-  - label: 浏览 Composables
-    to: /docs/composables
+  - label: 浏览 API
+    to: /docs/api
     color: neutral
     variant: ghost
     trailingIcon: i-lucide-arrow-right
@@ -357,7 +357,7 @@ links:
 组件与 Composables
 
 #description
-DatePicker、SearchForm、PillGroup、SlideVerify、Tree 等独立组件即取即用，搭配 useTheme、useMessageBox、useDateFormatter 等命令式工具覆盖常见交互场景。
+DatePicker、SearchForm、Tree、MessageBox 等独立组件即取即用，搭配 useTheme、useMessageBox、useDateFormatter 等命令式工具覆盖常见交互场景。
 
 #features
   :::u-page-feature{icon="i-lucide-blocks"}
@@ -365,7 +365,7 @@ DatePicker、SearchForm、PillGroup、SlideVerify、Tree 等独立组件即取�
   独立组件
 
   #description
-  日期选择、颜色选择、滑动验证、树形结构与输入增强，无需额外封装。
+  日期范围与快捷预设、可勾选可懒加载的树形结构，无需额外封装。
   :::
 
   :::u-page-feature{icon="i-lucide-square-function"}
@@ -388,9 +388,8 @@ DatePicker、SearchForm、PillGroup、SlideVerify、Tree 等独立组件即取�
   :::code-group
   ```vue [Components.vue]
   <template>
-    <MDatePicker v-model="date" />
-    <MColorChooser v-model="color" />
-    <MSlideVerify v-model="verified" />
+    <MDatePicker v-model="date" range presets="default" />
+    <MTree :items="items" checkable searchable />
   </template>
   ```
 
@@ -409,12 +408,12 @@ DatePicker、SearchForm、PillGroup、SlideVerify、Tree 等独立组件即取�
 ---
 links:
   - label: 配置 MCP Server
-    to: /docs/getting-started/ai/mcp
+    to: /docs/getting-started/ai
     color: neutral
     variant: outline
     trailingIcon: i-lucide-arrow-right
   - label: 了解 llms.txt
-    to: /docs/getting-started/ai/llms-txt
+    to: /docs/getting-started/ai
     color: neutral
     variant: ghost
     trailingIcon: i-lucide-arrow-right

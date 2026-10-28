@@ -6,30 +6,19 @@ export default defineAppConfig({
     ],
     mobileNav: [
       { label: { 'zh-CN': '快速开始', 'en': 'Quick Start' }, icon: 'i-lucide-rocket', to: '/docs/getting-started' },
-      { label: 'Components', icon: 'i-lucide-box', to: '/docs/components' },
-      { label: 'AutoForm', icon: 'i-lucide-square-pen', to: '/docs/auto-form' },
+      { label: { 'zh-CN': '表单', 'en': 'Forms' }, icon: 'i-lucide-square-pen', to: '/docs/auto-form' },
       { label: 'DataTable', icon: 'i-lucide-table', to: '/docs/data-table' },
       { label: 'API', icon: 'i-lucide-cloud', to: '/docs/api' },
-      { label: 'Composables', icon: 'i-lucide-square-function', to: '/docs/composables' },
+      { label: 'Components', icon: 'i-lucide-box', to: '/docs/components' },
       { label: { 'zh-CN': '版本发布', 'en': 'Releases' }, icon: 'i-lucide-newspaper', to: '/releases' },
       { label: 'GitHub', icon: 'i-simple-icons-github', to: 'https://github.com/mhaibaraai/movk-nuxt', target: '_blank' as const }
     ]
   },
   docs: {
     categories: {
-      'getting-started': [
-        { id: 'ai', title: { 'zh-CN': 'AI 集成', 'en': 'AI Integration' }, icon: 'i-lucide-bot' }
-      ],
-      'components': [
-        { id: 'input', title: { 'zh-CN': '输入框', 'en': 'Input' }, icon: 'i-lucide-pencil-line' },
+      components: [
         { id: 'feedback', title: { 'zh-CN': '反馈组件', 'en': 'Feedback' }, icon: 'i-lucide-message-square-dot' },
-        { id: 'advanced', title: { 'zh-CN': '进阶组件', 'en': 'Advanced' }, icon: 'i-lucide-blocks' },
-        { id: 'form', title: { 'zh-CN': '表单组件', 'en': 'Form' }, icon: 'i-lucide-clipboard-list' }
-      ],
-      'auto-form': [
-        { id: 'field-types', title: { 'zh-CN': '字段类型', 'en': 'Field Types' }, icon: 'i-lucide-shapes' },
-        { id: 'config', title: { 'zh-CN': '配置', 'en': 'Config' }, icon: 'i-lucide-settings-2' },
-        { id: 'advanced', title: { 'zh-CN': '进阶', 'en': 'Advanced' }, icon: 'i-lucide-blocks' }
+        { id: 'advanced', title: { 'zh-CN': '进阶组件', 'en': 'Advanced' }, icon: 'i-lucide-blocks' }
       ]
     }
   },
@@ -85,9 +74,8 @@ export default defineAppConfig({
           category: '组件',
           items: [
             'SearchForm 如何按行数自动折叠？',
-            'PillGroup 如何做多选与字段映射？',
             'DatePicker 输出格式与预设如何配置？',
-            'With* 输入增强（清除/复制/字数/密码）怎么用？',
+            'useMessageBox 如何发起命令式确认？',
             'Tree 复选框级联、父子策略与异步懒加载如何配置？'
           ]
         },
@@ -142,9 +130,8 @@ export default defineAppConfig({
           category: 'Components',
           items: [
             'How does SearchForm auto-collapse based on row count?',
-            'How do I configure PillGroup for multi-select and field mapping?',
             'How do I configure DatePicker output format and presets?',
-            'How do I use With* input enhancements (clear / copy / counter / password)?',
+            'How do I trigger an imperative confirm with useMessageBox?',
             'How do I configure Tree checkbox cascading, parent-child strategy, and async lazy loading?'
           ]
         },

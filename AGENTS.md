@@ -63,7 +63,7 @@ pnpm clean
 - **模板自动导入**：`autoImport.vueTemplate: true` 已开启，`<template>` 可直接用。
 - **必验**：改动主题模板、`getDefaultConfig`、`MOVK_COMPOSABLES`、`UI_COMPONENTS`、stub 或组件结构后，同跑 `pnpm dev:prepare` 与 `pnpm dev:vue:build`。
 - **reka-ui 版本锁定**：直接依赖须与 `@nuxt/ui` 内部版本完全一致，升级 `@nuxt/ui` 时同步；不一致会让 `pnpm build` 报 TS2883。
-- **已知告警**：`DatePicker` 等透传 `CalendarProps` 的组件声明发射时有 TS2883 告警（reka-ui 未导出 `Matcher` 等），非致命，属上游限制。
+- **Calendar 类型收窄**：reka-ui 未从公共入口导出 `Matcher` / `WeekStartsOn` 等类型，`types/components/date-picker.ts` 与 `controls.ts` 的收窄写法须保留，否则声明发射报 TS2883。
 
 ## 类型与导入
 
@@ -107,7 +107,7 @@ pnpm clean
 
 新增 / 修改公开组件或功能后，同步以下各处，保持组件清单与措辞一致：
 
-1. 组件文档 `docs/content/docs/2.components/<slug>.md`（用法、示例、API、必要 `::note`）
+1. 组件文档 `docs/content/docs/5.components/<slug>.md`（用法、示例、API、必要 `::note`）
 2. 示例组件 `docs/app/components/content/examples/<scope>/`
 3. Playground `playgrounds/play/app/pages/**`
 4. 站点介绍：根 `package.json` `keywords`、`docs/nuxt.config.ts` 的 `site.description`/`llms.*`、`README.md`、`docs/content/index.md`
