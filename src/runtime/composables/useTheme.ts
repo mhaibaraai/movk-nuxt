@@ -1,4 +1,5 @@
 import { useAppConfig, useColorMode, useSiteConfig } from '#imports'
+import { resolveThemeColor } from '../domains/theme/theme-color'
 import { resolveThemeIcons, themeIcons } from '../domains/theme/theme-icons'
 import { resolveActiveRadius, resolveRadiusStyle } from '../domains/theme/theme-radius'
 import { omit, kebabCase } from '@movk/core'
@@ -17,7 +18,7 @@ export function useTheme() {
   const colorMode = useColorMode()
   const name = kebabCase(useSiteConfig().name)
 
-  const color = computed<string>(() => colorMode.value === 'dark' ? (colors as any)[ui.colors.neutral][900] : 'white')
+  const color = computed<string>(() => resolveThemeColor(ui.colors.neutral, colorMode.value))
 
   const defaultConfig = getDefaultConfig()
 
