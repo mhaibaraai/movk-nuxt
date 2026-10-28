@@ -14,13 +14,6 @@ const schema = afz.object({
   inputDate: afz.inputDate(),
   inputTime: afz.inputTime(),
 
-  withClear: afz.string({ type: 'withClear' }).meta({ label: 'WithClear' }).default('movk'),
-  withCopy: afz.string({ type: 'withCopy' }).default('https://movk.dev').meta({ label: 'WithCopy' }),
-  withPassword: afz.string({ type: 'withPasswordToggle' }).default('s3cret').meta({ label: 'WithPasswordToggle' }),
-  withChars: afz.string({ type: 'withCharacterLimit', controlProps: { maxlength: 30 } }).meta({ label: 'WithCharacterLimit' }),
-  withFloating: afz.string({ type: 'withFloatingLabel', controlProps: { label: 'WithFloatingLabel' } }).meta({ label: '' }),
-  asPhone: afz.string({ type: 'asPhoneNumberInput' }).default('13800138000').meta({ label: 'AsPhone' }),
-
   textarea: afz.string({ type: 'textarea', controlProps: { rows: 3 } }).meta({ label: 'textarea' }),
   switch: afz.boolean({ type: 'switch' }).meta({ label: 'switch' }),
   slider: afz.number({ type: 'slider', controlProps: { min: 0, max: 100, step: 5 } }).default(40).meta({ label: 'slider' }),
@@ -36,15 +29,7 @@ const schema = afz.object({
     .meta({ label: 'listboxStrings' }),
   listboxObject: afz.object({ name: afz.string(), age: afz.number() }, { type: 'listbox', controlProps: { labelKey: 'name', items: [{ name: 'vue', age: 3 }, { name: 'react', age: 2 }, { name: 'svelte', age: 1 }, { name: 'solid', age: 4 }] } })
     .default({ name: 'svelte', age: 1 })
-    .meta({ label: 'listboxObject' }),
-
-  colorChooser: afz.string({ type: 'colorChooser', controlProps: { formats: ['hex', 'rgb'] } }).default('#0ea5e9').meta({ label: 'colorChooser' }),
-  slideVerify: afz.boolean({ type: 'slideVerify', controlProps: { size: 'sm' } }).meta({ label: 'slideVerify' }),
-  pillGroupString: afz.string({ type: 'pillGroup', controlProps: { items: ['vue', 'react', 'svelte', 'solid'] } }).default('react').meta({ label: 'pillGroupString' }),
-  pillGroupStrings: afz.array(afz.string(), { type: 'pillGroup', controlProps: { multiple: true, valueKey: 'value', items: [{ label: 'Vue', value: 'vue' }, { label: 'React', value: 'react' }, { label: 'Svelte', value: 'svelte' }, { label: 'Solid', value: 'solid' }] } }).default(['vue', 'react']).meta({ label: 'pillGroupStrings' }),
-  pillGroupObject: afz.object({ name: afz.string(), age: afz.number() }, { type: 'pillGroup', controlProps: { labelKey: 'name', items: [{ name: 'vue', age: 3 }, { name: 'react', age: 2 }, { name: 'svelte', age: 1 }, { name: 'solid', age: 4 }] } })
-    .default({ name: 'react', age: 2 })
-    .meta({ label: 'pillGroupObject' })
+    .meta({ label: 'listboxObject' })
 })
 
 const state = reactive<Partial<z.output<typeof schema>>>({})
@@ -56,7 +41,7 @@ const state = reactive<Partial<z.output<typeof schema>>>({})
   <div class="p-4 grid grid-cols-1 xl:grid-cols-[1fr_360px] gap-4">
     <Showcase
       title="内置控件类型"
-      description="按 type 分发到 Nuxt UI 控件、输入增强包装器与组合型控件"
+      description="按 type 分发到 Nuxt UI 控件与 DatePicker。"
     >
       <template #toolbar>
         <UButton size="sm" label="重置" @click="autoForm?.reset()" />

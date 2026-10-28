@@ -5,7 +5,7 @@ const { afz } = useAutoForm()
 
 const schema = afz.object({
   email: afz.email().meta({ label: '邮箱' }),
-  password: afz.string({ type: 'withPasswordToggle' }).min(6).meta({ label: '密码' }),
+  password: afz.string({ controlProps: { type: 'password' } }).min(6).meta({ label: '密码' }),
   remember: afz.boolean({ type: 'switch', controlProps: { label: '记住登录状态' } }).default(true).meta({ label: '记住我' })
 })
 

@@ -2,7 +2,7 @@
 export const UI_COMPONENTS = [
   'UAccordion',
   'UButton', 'UBadge', 'UCheckbox', 'UCollapsible', 'UForm', 'UDropdownMenu', 'UIcon', 'UInput',
-  'UModal', 'UPagination', 'USelect', 'UPopover', 'UCalendar', 'UColorPicker', 'UTable', 'UFormField',
+  'UModal', 'UPagination', 'USelect', 'UPopover', 'UCalendar', 'UTable', 'UFormField',
   'UTooltip', 'UInputNumber', 'USwitch', 'UTextarea', 'USlider', 'UPinInput', 'UInputTags',
   'UFileUpload', 'USelectMenu', 'UInputMenu', 'UCheckboxGroup', 'URadioGroup', 'UInputDate',
   'UInputTime', 'UListbox', 'UTree'

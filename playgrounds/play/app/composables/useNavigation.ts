@@ -53,16 +53,10 @@ const componentsNav: NavigationMenuItem = {
   icon: 'i-lucide-box',
   defaultOpen: true,
   children: [
-    { label: 'SlideVerify', to: '/components/slide-verify' },
-    { label: 'Popconfirm', to: '/components/popconfirm' },
     { label: 'MessageBox', to: '/components/message-box' },
-    { label: 'ColorChooser', to: '/components/color-chooser' },
-    { label: 'PillGroup', to: '/components/pill-group' },
     { label: 'DatePicker', to: '/components/date-picker' },
     { label: 'SearchForm', to: '/components/search-form' },
     { label: 'ThemePicker', to: '/components/theme-picker' },
-    { label: 'Inputs · With*', to: '/components/inputs-with' },
-    { label: 'AsPhoneNumberInput', to: '/components/as-phone-number-input' },
     { label: 'Tree', to: '/components/tree' }
   ]
 }

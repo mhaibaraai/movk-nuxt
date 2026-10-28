@@ -5,7 +5,7 @@ const { afz } = useAutoForm()
 
 const formSlotSchema = afz.object({
   email: afz.email().meta({ label: '邮箱' }),
-  password: afz.string({ type: 'withPasswordToggle' }).min(6).meta({ label: '密码' }),
+  password: afz.string({ controlProps: { type: 'password' } }).min(6).meta({ label: '密码' }),
   remember: afz.boolean({ type: 'switch', controlProps: { label: '记住登录状态' } }).default(true).meta({ label: '记住我' })
 })
 const formSlotState = reactive<Partial<z.output<typeof formSlotSchema>>>({})
@@ -24,7 +24,7 @@ const genericSlotState = reactive<Partial<z.output<typeof genericSlotSchema>>>({
 
 const fieldSlotSchema = afz.object({
   username: afz.string().min(2).meta({ label: '用户名' }),
-  password: afz.string({ type: 'withPasswordToggle' }).min(8).meta({ label: '密码' }),
+  password: afz.string({ controlProps: { type: 'password' } }).min(8).meta({ label: '密码' }),
   bio: afz.string({ type: 'textarea' }).default('一个简单的自我介绍').meta({ label: '简介' })
 })
 const fieldSlotState = reactive<Partial<z.output<typeof fieldSlotSchema>>>({})

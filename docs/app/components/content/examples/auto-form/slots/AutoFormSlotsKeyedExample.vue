@@ -5,7 +5,7 @@ const { afz } = useAutoForm()
 
 const schema = afz.object({
   username: afz.string().min(2).meta({ label: '用户名' }),
-  password: afz.string({ type: 'withPasswordToggle' }).min(8).meta({ label: '密码' }),
+  password: afz.string({ controlProps: { type: 'password' } }).min(8).meta({ label: '密码' }),
   bio: afz.string({ type: 'textarea' }).default('一个简单的自我介绍').meta({ label: '简介' })
 })
 

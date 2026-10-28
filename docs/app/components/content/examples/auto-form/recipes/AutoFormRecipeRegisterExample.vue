@@ -7,12 +7,12 @@ const toast = useToast()
 const schema = afz.object({
   account: afz.object({
     username: afz.string().min(3).meta({ label: '用户名' }),
-    password: afz.string({ type: 'withPasswordToggle' }).min(8).meta({ label: '密码' }),
-    confirm: afz.string({ type: 'withPasswordToggle' }).min(8).meta({ label: '确认密码' })
+    password: afz.string({ controlProps: { type: 'password' } }).min(8).meta({ label: '密码' }),
+    confirm: afz.string({ controlProps: { type: 'password' } }).min(8).meta({ label: '确认密码' })
   }).meta({ label: '账号信息' }),
   profile: afz.object({
     name: afz.string().meta({ label: '昵称' }),
-    phone: afz.string({ type: 'asPhoneNumberInput' }).meta({ label: '手机' }),
+    phone: afz.string({ controlProps: { type: 'tel', placeholder: '138 0013 8000' } }).meta({ label: '手机' }),
     interests: afz.array(afz.string(), { type: 'inputTags' }).default([]).meta({ label: '兴趣标签' })
   }).meta({ label: '个人资料' }),
   agreement: afz.boolean().refine(v => v === true, { message: '必须同意条款' }).meta({ label: '同意条款' })

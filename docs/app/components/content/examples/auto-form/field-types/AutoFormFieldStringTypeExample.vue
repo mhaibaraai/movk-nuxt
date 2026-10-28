@@ -3,7 +3,7 @@ import type { FormSubmitEvent } from '@nuxt/ui'
 import type z from 'zod'
 
 const props = defineProps<{
-  type: 'string' | 'textarea' | 'withPasswordToggle' | 'withClear' | 'withCopy' | 'withCharacterLimit' | 'asPhoneNumberInput' | 'withFloatingLabel'
+  type: 'string' | 'textarea'
   size: 'sm' | 'xs' | 'md' | 'lg' | 'xl'
   color: 'error' | 'primary' | 'secondary' | 'success' | 'info' | 'warning' | 'neutral'
   rows?: number
@@ -14,13 +14,10 @@ const { afz } = useAutoForm()
 const toast = useToast()
 
 const resolvedControlProps = computed(() => ({
-  leadingIcon: props.type === 'withFloatingLabel' ? undefined : 'i-lucide-type',
+  leadingIcon: 'i-lucide-type',
   color: props.color,
   rows: props.rows,
-  maxLength: props.maxLength,
-  label: props.type === 'withFloatingLabel' ? '浮动标签' : undefined,
-  dialCode: props.type === 'asPhoneNumberInput' ? '+86' : undefined,
-  mask: props.type === 'asPhoneNumberInput' ? '### #### ####' : undefined
+  maxlength: props.maxLength
 }))
 
 const schema = computed(() => (afz.object({
@@ -28,8 +25,7 @@ const schema = computed(() => (afz.object({
     type: props.type,
     controlProps: resolvedControlProps.value
   }).meta({
-    size: props.size,
-    label: props.type === 'withFloatingLabel' ? '' : undefined
+    size: props.size
   }).optional()
 })))
 

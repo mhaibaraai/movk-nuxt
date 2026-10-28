@@ -14,12 +14,12 @@ const schema = afz.object({
     },
     error: '请输入有效的邮箱地址'
   }).meta({ hint: '邮箱' }),
-  password: afz.string({ type: 'withPasswordToggle' })
+  password: afz.string({ controlProps: { type: 'password' } })
     .min(8)
     .regex(/[A-Z]/)
     .regex(/[a-z]/)
     .regex(/\d/),
-  confirmPassword: afz.string({ type: 'withPasswordToggle' }),
+  confirmPassword: afz.string({ controlProps: { type: 'password' } }),
   acceptTerms: afz.boolean({
     controlProps: { label: '我同意服务条款和隐私政策', required: true }
   })

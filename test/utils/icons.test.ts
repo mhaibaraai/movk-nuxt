@@ -11,7 +11,7 @@ function createRuntime() {
   mkdirSync(join(dir, 'components/theme-picker'), { recursive: true })
   mkdirSync(join(dir, 'domains/theme'), { recursive: true })
 
-  writeFileSync(join(dir, 'components/SlideVerify.vue'), '<template><UIcon name="i-lucide-chevrons-right" /></template>')
+  writeFileSync(join(dir, 'components/DatePicker.vue'), '<template><UIcon name="i-lucide-chevrons-right" /></template>')
   writeFileSync(join(dir, 'components/theme-picker/ThemePicker.vue'), 'icon="i-lucide-swatch-book"')
   writeFileSync(join(dir, 'domains/theme/theme-icons.ts'), `export const themeIcons = {
     lucide: { check: 'i-lucide-check' },

@@ -37,24 +37,24 @@ const fileTree: TreeItem[] = [
   { label: 'nuxt.config.ts', icon: 'i-vscode-icons-file-type-nuxt' }
 ]
 
-const basicValue = ref<TreeItem>()
-const multipleValue = ref<TreeItem[]>([])
-const checkedValue = ref<TreeItem[]>([])
-const toolbarChecked = ref<TreeItem[]>([])
-const slotChecked = ref<TreeItem[]>([])
+const basicValue = shallowRef<TreeItem>()
+const multipleValue = shallowRef<TreeItem[]>([])
+const checkedValue = shallowRef<TreeItem[]>([])
+const toolbarChecked = shallowRef<TreeItem[]>([])
+const slotChecked = shallowRef<TreeItem[]>([])
 const changeKeys = ref<string[]>([])
-const cascadeChecked = ref<TreeItem[]>([])
-const isolatedChecked = ref<TreeItem[]>([])
+const cascadeChecked = shallowRef<TreeItem[]>([])
+const isolatedChecked = shallowRef<TreeItem[]>([])
 const keysSelected = ref<string[]>(['useAuth.ts'])
 
 const selData = useTemplateRef<TreeExposed>('selData')
 const selectionLeaves = computed(() => (selData.value?.treeSelection.leaves ?? []).map(n => String(n.label)))
 const selectionParents = computed(() => (selData.value?.treeSelection.parents ?? []).map(n => String(n.label)))
 const selectionHalf = computed(() => (selData.value?.treeSelection.halfSelected ?? []).map(n => String(n.label)))
-const selectionChecked = ref<TreeItem[]>([])
+const selectionChecked = shallowRef<TreeItem[]>([])
 
 const apiTree = useTemplateRef<TreeExposed>('apiTree')
-const apiChecked = ref<TreeItem[]>([])
+const apiChecked = shallowRef<TreeItem[]>([])
 
 const deptTree = [
   {
@@ -102,8 +102,8 @@ const bigTree: TreeItem[] = Array.from({ length: 60 }, (_, group) => ({
   children: Array.from({ length: 30 }, (_, leaf) => ({ label: `节点 ${group + 1}-${leaf + 1}` }))
 }))
 
-const matrixValue = ref<TreeItem>({ label: 'app.vue' })
-const colorSelected = ref<TreeItem>({ label: 'app.vue' })
+const matrixValue = shallowRef<TreeItem>({ label: 'app.vue' })
+const colorSelected = shallowRef<TreeItem>({ label: 'app.vue' })
 
 // 文件夹不设 item.icon，方可观察 expandedIcon / collapsedIcon
 const noIconTree: TreeItem[] = [
@@ -117,7 +117,7 @@ const noIconTree: TreeItem[] = [
   },
   { label: 'composables', children: [{ label: 'useAuth.ts', icon: 'i-vscode-icons-file-type-typescript' }] }
 ]
-const disabledChecked = ref<TreeItem[]>([{ label: 'useAuth.ts' }])
+const disabledChecked = shallowRef<TreeItem[]>([{ label: 'useAuth.ts' }])
 
 const nodeDisabledTree: TreeItem[] = [
   {
@@ -131,7 +131,7 @@ const nodeDisabledTree: TreeItem[] = [
   },
   { label: 'composables', icon: 'i-lucide-folder', disabled: true, defaultExpanded: true, children: [{ label: 'useAuth.ts', icon: 'i-vscode-icons-file-type-typescript' }] }
 ]
-const nodeDisabledChecked = ref<TreeItem[]>([])
+const nodeDisabledChecked = shallowRef<TreeItem[]>([])
 </script>
 
 <template>

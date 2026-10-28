@@ -34,7 +34,7 @@ pnpm clean
 | `src/templates.ts` | 虚拟模板 `getTemplates`，Nuxt 与 Vue 两模式共享 |
 | `src/unplugin.ts` / `src/vite.ts` | Vue 模式 unplugin 工厂（链入 `@nuxt/ui` unplugin）/ Vite 入口 |
 | `src/plugins/` | Vue 模式子插件：`environment`、`templates`、`app-config`、`font`、`plugins` |
-| `src/runtime/components/` | 10 个主组件（AutoForm、DataTable、SearchForm、DatePicker、ColorChooser、MessageBox、PillGroup、Popconfirm、SlideVerify、Tree）+ `input/` 6 个 + `theme-picker/` |
+| `src/runtime/components/` | 6 个主组件（AutoForm、DataTable、SearchForm、DatePicker、MessageBox、Tree）+ `theme-picker/` |
 | `src/runtime/domains/` | 业务逻辑 + 私有子组件：`api/`、`auto-form/`、`data-table/`、`tree/`、`theme/` |
 | `src/runtime/composables/` | `useApiFetch`/`useLazyApiFetch`/`useClientApiFetch`、`useAutoForm`、`useTheme`、`useDateFormatter`、`useMessageBox`、`useUploadWithProgress`/`useDownloadWithProgress` |
 | `src/runtime/types/` | 按域聚合（`api/`、`auto-form/`、`components/`、`data-table/`、`shared`），各域 `index.ts` re-export |

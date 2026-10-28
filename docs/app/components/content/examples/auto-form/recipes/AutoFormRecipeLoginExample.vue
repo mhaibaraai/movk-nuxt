@@ -6,7 +6,7 @@ const toast = useToast()
 
 const schema = afz.object({
   email: afz.email({ controlProps: { placeholder: 'demo@movk.dev' } }).meta({ label: '邮箱' }),
-  password: afz.string({ type: 'withPasswordToggle' }).min(6).meta({ label: '密码' }),
+  password: afz.string({ controlProps: { type: 'password' } }).min(6).meta({ label: '密码' }),
   remember: afz.boolean({ type: 'switch' }).default(false).meta({ label: '记住我' })
 })
 const state = reactive<Partial<z.input<typeof schema>>>({})

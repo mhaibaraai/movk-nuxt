@@ -20,16 +20,7 @@ import type {
   TextareaProps, TextareaSlots
 } from '@nuxt/ui'
 import type { CalendarDateControlProps } from '../../types/components/date-picker'
-import WithClear from '../../components/input/WithClear.vue'
-import WithPasswordToggle from '../../components/input/WithPasswordToggle.vue'
-import WithCopy from '../../components/input/WithCopy.vue'
-import WithCharacterLimit from '../../components/input/WithCharacterLimit.vue'
-import AsPhoneNumberInput from '../../components/input/AsPhoneNumberInput.vue'
-import WithFloatingLabel from '../../components/input/WithFloatingLabel.vue'
 import DatePicker from '../../components/DatePicker.vue'
-import ColorChooser from '../../components/ColorChooser.vue'
-import SlideVerify from '../../components/SlideVerify.vue'
-import PillGroup from '../../components/PillGroup.vue'
 import {
   UInput,
   UInputNumber,
@@ -81,13 +72,6 @@ const DEFAULT_CONTROL_COMPONENTS = {
   inputDate: UInputDate,
   inputTime: UInputTime,
 
-  withClear: WithClear,
-  withPasswordToggle: WithPasswordToggle,
-  withCopy: WithCopy,
-  withCharacterLimit: WithCharacterLimit,
-  withFloatingLabel: WithFloatingLabel,
-  asPhoneNumberInput: AsPhoneNumberInput,
-
   textarea: UTextarea,
   switch: USwitch,
   slider: USlider,
@@ -98,21 +82,13 @@ const DEFAULT_CONTROL_COMPONENTS = {
   radioGroup: URadioGroup,
   inputTags: UInputTags,
   pinInput: UPinInput,
-  listbox: UListbox,
-
-  colorChooser: ColorChooser,
-  slideVerify: SlideVerify,
-  pillGroup: PillGroup
+  listbox: UListbox
 } as const
 
 type DefaultControlComponents = typeof DEFAULT_CONTROL_COMPONENTS
 
 /** 本地 .vue 控件：组件类型在声明发射期可解析，controlProps 由组件推导 */
-type LocalControlKey
-  = 'calendarDate'
-    | 'withClear' | 'withPasswordToggle' | 'withCopy'
-    | 'withCharacterLimit' | 'withFloatingLabel' | 'asPhoneNumberInput'
-    | 'colorChooser' | 'slideVerify' | 'pillGroup'
+type LocalControlKey = 'calendarDate'
 
 /**
  * Nuxt UI 控件的 `[props, slots]` 类型登记表。

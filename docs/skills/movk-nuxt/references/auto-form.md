@@ -53,9 +53,9 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 
 The table lists the common methods; the factory also exposes `afz.email() / url() / uuid() / isoDatetime() / inputDate() / inputTime() / tuple()` and the strict/loose object variants. Full list: MCP `get-component-metadata` on `MAutoForm`.
 
-For `afz.string()`, switch the rendered control via `meta({ type })`: `'textarea'`, `'withClear'`, `'withPasswordToggle'`, `'withCopy'`, `'withCharacterLimit'`, `'withFloatingLabel'`, `'asPhoneNumberInput'` — each maps to the corresponding `M`-component wrapper.
+For `afz.string()`, switch the rendered control via `meta({ type })`, e.g. `'textarea'`. Input decorations (password type, placeholder, icons) go through `controlProps` on the default `UInput`; for a reusable decorated input, register it with `defineControl`.
 
-`meta({ type })` also targets any other registered control regardless of field type — Nuxt UI controls (`'switch'`, `'slider'`, `'selectMenu'`, `'inputMenu'`, `'checkboxGroup'`, `'radioGroup'`, `'inputTags'`, `'pinInput'`, `'listbox'`) and Movk widgets (`'colorChooser'`, `'slideVerify'`, `'pillGroup'`), plus custom controls from `defineControl` or a component instance passed directly via `component` (e.g. `UInputRating`, requires `@nuxt/ui >=4.10.0`). This list is non-exhaustive; see the control registry or the docs for the full set.
+`meta({ type })` also targets any other registered control regardless of field type — Nuxt UI controls (`'switch'`, `'slider'`, `'selectMenu'`, `'inputMenu'`, `'checkboxGroup'`, `'radioGroup'`, `'inputTags'`, `'pinInput'`, `'listbox'`) and the Movk `'calendarDate'` (DatePicker), plus custom controls from `defineControl` or a component instance passed directly via `component` (e.g. `UInputRating`, requires `@nuxt/ui >=4.10.0`). This list is non-exhaustive; see the control registry or the docs for the full set.
 
 ## Field metadata
 
@@ -119,7 +119,7 @@ const schema = afz.object({
     fields: {
       name: afz.string().meta({ label: 'Name' }),
       email: afz.email().meta({ label: 'Email' }),
-      password: afz.string().min(8).meta({ label: 'Password', type: 'withPasswordToggle' })
+      password: afz.string().min(8).meta({ label: 'Password', controlProps: { type: 'password' } })
     }
   })
 })

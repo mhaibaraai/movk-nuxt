@@ -1,6 +1,0 @@
-export type { AsPhoneNumberInputProps } from './as-phone-number-input'
-export type { WithCharacterLimitProps } from './with-character-limit'
-export type { WithClearEmits, WithClearProps } from './with-clear'
-export type { WithCopyEmits, WithCopyProps } from './with-copy'
-export type { WithFloatingLabelEmits, WithFloatingLabelProps } from './with-floating-label'
-export type { WithPasswordToggleProps } from './with-password-toggle'
