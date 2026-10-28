@@ -3,12 +3,10 @@ import { UFormField } from '#components'
 import { computed } from 'vue'
 import { useAutoFormInjector } from '../provider'
 import { VNodeRender } from '../reactive'
-import type { z } from 'zod'
 import type { AnyObject } from '@movk/core'
 import type { AutoFormField } from '../../../types'
 
 interface AutoFormFieldProps {
-  schema: z.ZodObject
   field: AutoFormField
   extraProps?: AnyObject
 }

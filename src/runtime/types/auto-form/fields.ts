@@ -44,7 +44,7 @@ export interface ResolvedAutoFormFieldContext {
   readonly state: Record<string, any>
   readonly path: string
   readonly value: any
-  setValue: (valueOrPathOrUpdater: any, value?: any) => void
+  setValue: (...args: [valueOrUpdater: any] | [path: string, value: any]) => void
   readonly errors: unknown[]
   readonly loading: boolean
   readonly open?: boolean

@@ -1,30 +1,27 @@
 <script lang="ts" setup>
 import { UButton, UCollapsible } from '#components'
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useAutoFormInjector } from '../provider'
 import { useMovkLocale } from '../../../composables/useMovkLocale'
 import { joinPath } from '@movk/core'
-import { collectFieldDefaults, createHintSlotFactory } from '../fields'
+import { collectFieldDefaults, createHintSlotFactory, remapFieldPath } from '../fields'
 import { VNodeRender } from '../reactive'
 import AutoFormRendererField from './Field.vue'
 import AutoFormRendererNested from './Nested.vue'
-import type { z } from 'zod'
 import type { ButtonProps } from '@nuxt/ui'
 import type { AutoFormField } from '../../../types/auto-form'
 import type { AnyObject } from '@movk/core'
 
 interface AutoFormRendererArrayProps {
-  schema: z.ZodObject
   field: AutoFormField
   extraProps?: AnyObject
-  addButtonProps?: Partial<ButtonProps>
 }
 
 const props = defineProps<AutoFormRendererArrayProps>()
 const { t } = useMovkLocale()
 
-const { createCollapsibleEnhancer, createFieldContext, createSlotResolver, createSlotProps, resolveFieldProp } = useAutoFormInjector()
-const context = createFieldContext(props.field)
+const { addButtonProps: formAddButtonProps, createCollapsibleEnhancer, createFieldContext, createSlotResolver, createSlotProps, resolveFieldProp } = useAutoFormInjector()
+const context = computed(() => createFieldContext(props.field))
 
 const slotResolver = computed(() => createSlotResolver(props.field, props.extraProps))
 const slotProps = computed(() => createSlotProps(props.field, props.extraProps))
@@ -34,68 +31,50 @@ const elementTemplate = computed(() => props.field.arrayElement)
 const isObjectElement = computed(() => elementTemplate.value?.meta.type === 'object')
 
 const arrayValue = computed<unknown[]>(() => {
-  const value = context.value
+  const value = context.value.value
   return Array.isArray(value) ? value : []
 })
 
+// 稳定的项 key：删除时同步剔除对应 id，外部替换数组时按长度收缩或补齐
+let idCounter = 0
 const itemIds = ref<string[]>([])
-const idCounter = ref(0)
 
-function ensureItemIds() {
-  const arr = arrayValue.value
-  while (itemIds.value.length < arr.length) {
-    itemIds.value.push(`${props.field.path}-${idCounter.value++}`)
-  }
-}
+watch(() => arrayValue.value.length, (length) => {
+  const current = itemIds.value
+  if (length === current.length) return
+  itemIds.value = length < current.length
+    ? current.slice(0, length)
+    : [...current, ...Array.from({ length: length - current.length }, () => `${props.field.path}-${idCounter++}`)]
+}, { immediate: true })
 
-function getItemId(_item: any, index: number): string {
-  ensureItemIds()
-  return itemIds.value[index]!
-}
+function withHintSlots(field: AutoFormField, isItemRoot: boolean, hintSlotFactory: ReturnType<typeof createHintSlotFactory>): AutoFormField {
+  const isObject = field.meta?.type === 'object'
+  const needsHint = isItemRoot || isObject
 
-function updateFieldPaths(template: AutoFormField, oldBasePath: string, newBasePath: string, hintSlotFactory: ReturnType<typeof createHintSlotFactory>): AutoFormField {
-  const path = template.path.replace(oldBasePath, newBasePath)
-
-  const isNested = path.includes('.')
-  const isObject = template.meta?.type === 'object'
-
-  const updatedField = {
-    ...template,
-    path,
-    meta: {
-      ...template.meta,
-      fieldSlots: (isNested && !isObject)
-        ? {
-            ...template.meta?.fieldSlots
+  return {
+    ...field,
+    meta: needsHint
+      ? {
+          ...field.meta,
+          fieldSlots: {
+            hint: (slotProps: { open?: boolean, count?: number }) => hintSlotFactory(field, isItemRoot, slotProps.open, slotProps.count),
+            ...field.meta?.fieldSlots
           }
-        : {
-            hint: (props: { open?: boolean, path: string, count?: number }) => hintSlotFactory(template, props.path, props.open, props.count),
-            ...template.meta?.fieldSlots
-          }
-    }
+        }
+      : field.meta,
+    ...(field.children && { children: field.children.map(child => withHintSlots(child, false, hintSlotFactory)) })
   } as AutoFormField
-
-  if (template.children) {
-    updatedField.children = template.children.map(child =>
-      updateFieldPaths(child, oldBasePath, newBasePath, hintSlotFactory)
-    )
-  }
-
-  return updatedField
 }
 
 const arrayItemFields = computed(() => {
   const template = elementTemplate.value
-  const arr = arrayValue.value
-
-  if (!template || !arr.length)
-    return []
+  if (!template) return []
 
   const factory = createHintSlotFactory(removeItem)
 
-  return arr.map((_, index) => {
-    const newBasePath = joinPath([props.field.path, index])
-    return updateFieldPaths(template, props.field.path, newBasePath, factory)
+  return arrayValue.value.map((_, index) => {
+    const item = remapFieldPath(template, template.path, joinPath([props.field.path, index]))
+    return withHintSlots(item, true, factory)
   })
 })
 
@@ -109,7 +88,7 @@ function addItem() {
     return
 
   const newArray = [...arrayValue.value, createDefaultValue()]
-  context.setValue(newArray)
+  context.value.setValue(newArray)
 }
 
 function removeItem(count?: number) {
@@ -121,10 +100,10 @@ function removeItem(count?: number) {
 
   itemIds.value = [...itemIds.value.slice(0, count), ...itemIds.value.slice(count + 1)]
 
-  context.setValue(newArray)
+  context.value.setValue(newArray)
 }
 
-const { collapsibleConfig, shouldShowCollapsible, isHidden, enhancedField } = createCollapsibleEnhancer(props.field, props.extraProps)
+const { collapsibleConfig, shouldShowCollapsible, isHidden, enhancedField } = createCollapsibleEnhancer(() => props.field, () => props.extraProps)
 
 const DEFAULT_ADD_BUTTON_PROPS = {
   icon: 'i-lucide-plus',
@@ -136,25 +115,24 @@ const DEFAULT_ADD_BUTTON_PROPS = {
 const addButtonProps = computed(() => ({
   ...DEFAULT_ADD_BUTTON_PROPS,
   size: resolveFieldProp(props.field, 'size', 'sm', props.extraProps),
-  ...props.addButtonProps
+  ...formAddButtonProps.value
 }))
 </script>
 
 <template>
   <UCollapsible v-if="shouldShowCollapsible" v-show="!isHidden" v-bind="collapsibleConfig || {}">
     <template #default="{ open }">
-      <AutoFormRendererField :field="enhancedField" :schema="props.schema" :extra-props="{ ...props.extraProps, open }" />
+      <AutoFormRendererField :field="enhancedField" :extra-props="{ ...props.extraProps, open }" />
     </template>
 
     <template v-if="elementTemplate" #content>
       <VNodeRender v-if="slotResolver.hasSlot('before')" :node="slotResolver.renderSlot('before', slotProps)" />
       <VNodeRender v-if="slotResolver.hasSlot('content')" :node="slotResolver.renderSlot('content', slotProps)" />
       <template v-else>
-        <template v-for="(itemField, count) in arrayItemFields" :key="getItemId(arrayValue[count], count)">
+        <template v-for="(itemField, count) in arrayItemFields" :key="itemIds[count] ?? count">
           <component
             :is="isObjectElement ? AutoFormRendererNested : AutoFormRendererField"
             :field="itemField"
-            :schema="props.schema"
             :extra-props="{ ...props.extraProps, count }"
           />
         </template>
@@ -165,11 +143,10 @@ const addButtonProps = computed(() => ({
   </UCollapsible>
 
   <template v-else-if="elementTemplate">
-    <template v-for="(itemField, count) in arrayItemFields" :key="getItemId(arrayValue[count], count)">
+    <template v-for="(itemField, count) in arrayItemFields" :key="itemIds[count] ?? count">
       <component
         :is="isObjectElement ? AutoFormRendererNested : AutoFormRendererField"
         :field="itemField"
-        :schema="props.schema"
         :extra-props="{ ...props.extraProps, count }"
       />
     </template>

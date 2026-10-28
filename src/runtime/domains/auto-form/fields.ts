@@ -2,7 +2,7 @@ import type { VNode } from 'vue'
 import type { AutoFormField } from '../../types/auto-form'
 import { UButton, UIcon } from '#components'
 import { h } from 'vue'
-import { getPath, setPath } from '@movk/core'
+import { getPath, joinPath, setPath, toPath } from '@movk/core'
 import { AUTOFORM_META } from './constants'
 
 /** 沿字段树回填带 defaultValue 的叶子节点，已存在值的路径不覆盖 */
@@ -59,34 +59,43 @@ export function isLeafField(field: AutoFormField): boolean {
   return field.meta.type !== 'object' && field.meta.type !== 'array'
 }
 
-export function getFieldType(field: AutoFormField): 'leaf' | 'nested' {
-  return isLeafField(field) ? 'leaf' : 'nested'
+/** 把 `path` 中属于 `base` 的前缀段剥离，返回相对路径段；不以 `base` 开头时返回 undefined */
+function relativeSegments(path: string, base: string): Array<string | number> | undefined {
+  const segments = toPath(path)
+  const baseSegments = toPath(base)
+  const matches = baseSegments.every((segment, index) => String(segments[index]) === String(segment))
+  return matches ? segments.slice(baseSegments.length) : undefined
+}
+
+/** 按路径段把字段树中以 `from` 开头的路径替换为 `to`，递归处理 children 与 arrayElement，不修改原字段 */
+export function remapFieldPath(field: AutoFormField, from: string, to: string): AutoFormField {
+  const rest = relativeSegments(field.path, from)
+  const path = rest ? joinPath([...toPath(to), ...rest]) : field.path
+
+  return {
+    ...field,
+    path,
+    ...(field.children && { children: field.children.map(child => remapFieldPath(child, from, to)) }),
+    ...(field.arrayElement && { arrayElement: remapFieldPath(field.arrayElement, from, to) })
+  }
 }
 
 /** 递归收集字段的默认值，object 类型返回嵌套结构，叶子类型直接返回值 */
 export function collectFieldDefaults(field: AutoFormField) {
-  if (field.meta?.type === 'object') {
-    const result: Record<string, any> = {}
-    const basePath = field.path
+  if (field.meta?.type !== 'object') return field.decorators?.defaultValue
 
-    function collect(currentField: AutoFormField) {
-      if (currentField.decorators?.defaultValue !== undefined) {
-        const relativePath = currentField.path.replace(`${basePath}.`, '')
-        setPath(result, relativePath, currentField.decorators.defaultValue)
-      }
+  const result: Record<string, any> = {}
 
-      if (currentField.children?.length) {
-        currentField.children.forEach(collect)
-      }
+  function collect(currentField: AutoFormField) {
+    const rest = relativeSegments(currentField.path, field.path)
+    if (currentField.decorators?.defaultValue !== undefined && rest?.length) {
+      setPath(result, joinPath(rest), currentField.decorators.defaultValue)
     }
-
-    collect(field)
-    return result
+    currentField.children?.forEach(collect)
   }
 
-  return field.decorators?.defaultValue !== undefined
-    ? field.decorators.defaultValue
-    : undefined
+  collect(field)
+  return result
 }
 
 /** 从 items 选项中提取枚举值，支持对象格式（取 valueKey/value/label）和原始值 */
@@ -122,13 +131,12 @@ export function extractEnumValuesFromItems(items: any, valueKey?: string): strin
     .filter((value: any) => value !== undefined && value !== null) as string[]
 }
 
-/** 创建数组项的 hint 插槽渲染函数，根据层级和字段类型组合删除按钮与折叠图标 */
+/** 创建数组项的 hint 插槽渲染函数：项根节点渲染删除按钮（对象项另加折叠图标），嵌套对象只渲染折叠图标 */
 export function createHintSlotFactory(removeCallback: (count?: number) => void) {
-  return (field: AutoFormField, path: string, open?: boolean, count?: number): VNode | undefined => {
-    const isNested = path.includes('.')
+  return (field: AutoFormField, isItemRoot: boolean, open?: boolean, count?: number): VNode | undefined => {
     const isObject = field.meta?.type === 'object'
 
-    if (isNested && !isObject) {
+    if (!isItemRoot && !isObject) {
       return undefined
     }
 
@@ -137,7 +145,7 @@ export function createHintSlotFactory(removeCallback: (count?: number) => void) 
       class: 'shrink-0 size-5 transition-transform duration-200'
     })
 
-    if (isNested) {
+    if (!isItemRoot) {
       return chevronIcon
     }
 
