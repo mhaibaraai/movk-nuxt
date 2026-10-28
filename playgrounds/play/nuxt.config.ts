@@ -36,6 +36,10 @@ export default defineNuxtConfig({
     theme: {
       font: 'Alibaba PuHuiTi'
     },
+    zod: {
+      locale: 'auto',
+      locales: ['zh-CN']
+    },
     api: {
       endpoints: {
         default: { baseURL: '/api' },
