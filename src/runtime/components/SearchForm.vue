@@ -1,5 +1,5 @@
 <script lang="ts" setup generic="S extends z.ZodObject">
-import type { ComponentConfig, FormError, InferInput } from '@nuxt/ui'
+import type { ComponentConfig, FormError, FormState, InferInput } from '@nuxt/ui'
 import type { z } from 'zod'
 import type { CSSProperties, Ref } from 'vue'
 import type { AppConfig } from 'nuxt/schema'
@@ -235,7 +235,7 @@ defineExpose({
   <div :class="extraUi.root" data-slot="root">
     <UForm
       ref="formRef"
-      :state="modelValue"
+      :state="modelValue as FormState<S>"
       :schema="pureSchema"
       :loading-auto="props.loadingAuto"
       :validate-on="props.validateOn"
