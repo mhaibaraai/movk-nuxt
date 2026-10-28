@@ -1,7 +1,7 @@
-import type { ButtonProps, CheckboxProps, DropdownMenuProps, IconProps, ModalProps, TableColumn, TooltipProps } from '@nuxt/ui'
+import type { ButtonProps, CheckboxProps, DropdownMenuProps, TableColumn, TooltipProps } from '@nuxt/ui'
 import type { OmitByKey } from '@movk/core'
 import type { CellContext, ColumnDef, ColumnDefTemplate } from '@tanstack/vue-table'
-import type { SemanticColor } from '../shared'
+import type { MessageBoxProps } from '../components/message-box'
 import type {
   DataTableCheckboxContext,
   DataTableExpandButtonContext,
@@ -183,17 +183,8 @@ export interface DataTableActionButtonContext<T> {
   action: DataTableAction<T>
 }
 
-interface DataTableActionConfirmProps extends OmitByKey<ModalProps, 'title' | 'open' | 'defaultOpen' | 'dismissible'> {
-  title?: string
-  type?: SemanticColor
-  icon?: IconProps['name']
-  dismissible?: boolean
-  description?: string
-  confirmText?: string
-  cancelText?: string
-  confirmButtonProps?: ButtonProps
-  cancelButtonProps?: ButtonProps
-}
+/** 操作确认弹窗属性，与 `useMessageBox().confirm` 的选项一致 */
+type DataTableActionConfirmProps = OmitByKey<MessageBoxProps, 'mode'>
 
 export interface DataTableAction<T> {
   /** 唯一 key，用于渲染稳定性与溢出菜单定位；未提供时回退到数组下标 */

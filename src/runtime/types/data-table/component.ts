@@ -192,6 +192,8 @@ export interface DataTableProps<T extends TableData> extends /* @vue-ignore */ O
    * 触底加载回调，传入即启用无限滚动模式（自动隐藏内置分页、async 期间派生 loading）
    */
   loadMore?: () => void | Promise<void>
+  /** `loadMore` 返回的 Promise 被拒绝时调用；缺省时输出到控制台 */
+  onLoadMoreError?: (error: unknown) => void
   /**
    * 是否还能加载更多
    * @defaultValue true
