@@ -13,7 +13,7 @@
     "@iconify-json/vscode-icons": "^1.2.93",
     "@internationalized/date": "^3.12.4",
     "@movk/nuxt": "workspace:*",
-    "@movk/nuxt-docs": "^3.0.1",
+    "@movk/nuxt-docs": "^3.0.2",
     "@nuxt/content": "^3.16.2",
     "@nuxt/ui": "^4.12.0",
     "@nuxtjs/i18n": "^10.6.0",
