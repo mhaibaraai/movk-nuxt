@@ -7,7 +7,7 @@ const callHook = vi.fn(async () => {})
 
 vi.mock('#imports', () => ({
   useNuxtApp: () => ({
-    vueApp: { runWithContext: (fn: () => unknown) => fn() },
+    runWithContext: (fn: () => unknown) => fn(),
     callHook
   })
 }))
@@ -32,7 +32,7 @@ const basePublic: MovkApiPublicConfig = {
 }
 
 const nuxtApp = {
-  vueApp: { runWithContext: (fn: () => unknown) => fn() },
+  runWithContext: (fn: () => unknown) => fn(),
   callHook
 } as unknown as Parameters<typeof createOnRequest>[0]['nuxtApp']
 

@@ -65,7 +65,7 @@ async function dispatchUnauthorized(context: FetchContext, deps: ApiClientDeps):
 export async function reportSuccess(context: FetchContext, message: unknown, deps: ApiClientDeps): Promise<void> {
   const { config, nuxtApp } = deps
   await nuxtApp.callHook('movk:api:response', context)
-  showToast('success', message, context.options.toast, config.toast, config.response, context.options.method)
+  showToast('success', message, context.options.toast, config.toast, config.response, context.options.method, nuxtApp)
 }
 
 /**
@@ -86,5 +86,5 @@ export async function reportFailure(context: FetchContext | undefined, error: Ap
   if (!handled) {
     await nuxtApp.callHook('movk:api:error', fetchContext, error)
   }
-  showToast('error', error.message, fetchContext.options.toast, config.toast, config.response, fetchContext.options.method)
+  showToast('error', error.message, fetchContext.options.toast, config.toast, config.response, fetchContext.options.method, nuxtApp)
 }

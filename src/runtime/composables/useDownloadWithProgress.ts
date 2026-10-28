@@ -67,7 +67,8 @@ export function useDownloadWithProgress<T = Blob>(): {
   abort: () => void
 } {
   const publicConfig = useRuntimeConfig().public.movkApi as MovkApiPublicConfig
-  const { $api } = useNuxtApp()
+  const nuxtApp = useNuxtApp()
+  const { $api } = nuxtApp
 
   const progress = ref<number | null>(0)
   const status = ref<TransferStatus>('idle')
@@ -149,7 +150,7 @@ export function useDownloadWithProgress<T = Blob>(): {
       triggerDownload(blob, finalFilename)
 
       const config = resolveEndpointConfig(publicConfig, endpoint)
-      showToast('success', `下载成功: ${finalFilename}`, requestOptions.toast, config.toast, config.response, method)
+      showToast('success', `下载成功: ${finalFilename}`, requestOptions.toast, config.toast, config.response, method, nuxtApp)
 
       status.value = 'success'
       data.value = blob as T

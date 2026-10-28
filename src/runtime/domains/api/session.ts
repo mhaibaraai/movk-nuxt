@@ -8,12 +8,12 @@ interface UserSessionLike {
   fetch?: () => Promise<void>
 }
 
-/** 未安装 nuxt-auth-utils 或不在可用上下文中时返回 null */
+/** 未安装 nuxt-auth-utils 或不在可用上下文中时返回 null；useUserSession 依赖 useState，须用 nuxtApp.runWithContext 恢复 Nuxt 上下文 */
 export function getUserSession(nuxtApp: ReturnType<typeof useNuxtApp>): UserSessionLike | null {
   if (!useUserSession) return null
 
   try {
-    return nuxtApp.vueApp.runWithContext(useUserSession) as UserSessionLike
+    return nuxtApp.runWithContext(useUserSession) as UserSessionLike
   }
   catch {
     return null

@@ -25,7 +25,7 @@ const basePublic: MovkApiPublicConfig = {
 vi.mock('#imports', async () => ({
   ...await import('../helpers/nuxt-error'),
   useNuxtApp: () => ({
-    vueApp: { runWithContext: (fn: () => unknown) => fn() },
+    runWithContext: (fn: () => unknown) => fn(),
     runWithContext: (fn: () => unknown) => fn(),
     callHook
   }),

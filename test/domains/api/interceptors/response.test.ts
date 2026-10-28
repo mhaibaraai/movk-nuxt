@@ -9,7 +9,7 @@ const callHook = vi.fn(async (..._args: unknown[]) => {})
 vi.mock('#imports', async () => ({
   ...await import('../../../helpers/nuxt-error'),
   useNuxtApp: () => ({
-    vueApp: { runWithContext: (fn: () => unknown) => fn() },
+    runWithContext: (fn: () => unknown) => fn(),
     callHook
   }),
   useToast: () => ({ add: toastAdd }),
@@ -39,7 +39,7 @@ const basePublic: MovkApiPublicConfig = {
 }
 
 const nuxtApp = {
-  vueApp: { runWithContext: (fn: () => unknown) => fn() },
+  runWithContext: (fn: () => unknown) => fn(),
   runWithContext: (fn: () => unknown) => fn(),
   callHook
 } as unknown as Parameters<typeof createOnResponse>[0]['nuxtApp']

@@ -1,11 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const toastAdd = vi.fn()
+const fakeNuxtApp = vi.hoisted(() => ({
+  runWithContext: (fn: () => unknown) => fn()
+}))
+const context = vi.hoisted(() => ({ available: true }))
 
 vi.mock('#imports', () => ({
-  useNuxtApp: () => ({
-    vueApp: { runWithContext: (fn: () => unknown) => fn() }
-  }),
+  useNuxtApp: () => {
+    throw new Error('[nuxt] instance unavailable')
+  },
+  tryUseNuxtApp: () => (context.available ? fakeNuxtApp : null),
   useToast: () => ({ add: toastAdd })
 }))
 
@@ -20,6 +25,19 @@ const baseGlobal = {
 describe('domains/api/toast.showToast', () => {
   beforeEach(() => {
     toastAdd.mockClear()
+    context.available = true
+  })
+
+  it('无 Nuxt 上下文时使用显式传入的 nuxtApp', () => {
+    context.available = false
+    showToast('success', 'x', undefined, baseGlobal, undefined, undefined, fakeNuxtApp as never)
+    expect(toastAdd).toHaveBeenCalledTimes(1)
+  })
+
+  it('无 Nuxt 上下文且未传 nuxtApp 时静默跳过', () => {
+    context.available = false
+    expect(() => showToast('success', 'x', undefined, baseGlobal)).not.toThrow()
+    expect(toastAdd).not.toHaveBeenCalled()
   })
 
   it('未配置 duration 时 payload 不含 duration 键（让 Nuxt UI 全局 toaster 接管）', () => {

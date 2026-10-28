@@ -32,7 +32,7 @@ export function createOnRequest(deps: ApiClientDeps) {
 
   return async function onRequest(context: FetchContext): Promise<void> {
     if (authConfig.enabled) {
-      const authHeaders = getAuthHeaders(authConfig)
+      const authHeaders = getAuthHeaders(authConfig, nuxtApp)
       const normalized = toHeaderRecord(context.options.headers)
       const headers = new Headers(normalized)
       for (const [key, value] of Object.entries(authHeaders)) {

@@ -21,7 +21,7 @@ const basePublic: MovkApiPublicConfig = {
 }
 
 const nuxtApp: Record<string, unknown> = {
-  vueApp: { runWithContext: (fn: () => unknown) => fn() },
+  runWithContext: (fn: () => unknown) => fn(),
   runWithContext: (fn: () => unknown) => fn(),
   callHook
 }
