@@ -1,5 +1,5 @@
 {
-  "name": "@movk/nuxt-docs",
+  "name": "@movk/nuxt-docs-site",
   "type": "module",
   "private": true,
   "scripts": {
