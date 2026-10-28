@@ -53,6 +53,9 @@ pnpm test -- useDateFormatter
 # 启动文档站
 pnpm docs
 
+# 构建文档站（CI 会拦截预渲染死链 [request error]）
+pnpm docs:build
+
 # 清理构建产物
 pnpm clean
 ```
@@ -77,7 +80,7 @@ pnpm clean
 | `playgrounds/play/` | Nuxt playground，含 `app/pages/` 演示页与 `server/api/` mock |
 | `playgrounds/vue/` | 纯 Vite + Vue playground，验证非 Nuxt 模式（`vite.config.ts` 用 `@movk/nuxt/vite`，入口 `app.use(@movk/nuxt/vue-plugin)`） |
 | 根 `vue-plugin.d.ts` | `@movk/nuxt/vue-plugin` 类型声明 |
-| `docs/` | 文档站：`content/` 文档、`app/components/content/examples/` 示例组件、`server/mcp/` MCP Server、`skills/` |
+| `docs/` | 文档站（`@movk/nuxt-docs` v3 Layer）：`content/docs` 文档、`app/components/content/examples/` 示例组件、`server/mcp/` MCP Server、`skills/`，详见下文「文档站」 |
 | `test/` | Vitest 用例：`composables/`、`domains/api/`、`domains/auto-form/`、`plugins/`、`utils/`；`helpers/` 放 Nuxt 错误、XHR 等测试替身 |
 
 **核心约定**：业务逻辑落在 `runtime/domains/<域>`，对外组件保持薄壳；私有子组件放在对应域的 `components/` 下，不进入 `runtime/components/`。
@@ -106,6 +109,17 @@ pnpm clean
 - **模板内自动导入**：`autoImport.vueTemplate: true` 已开启，自动导入可直接用于 `<template>`（对齐 Nuxt），无需改写为脚本常量。
 - **两模式共享纯函数**放 `src/runtime/utils/`；`runtime/**` 不得反向 import 构建期 `src/utils/`。
 - **改动后必验**：动了 `MOVK_COMPOSABLES` / `UI_COMPONENTS` / stub / 主题模板 / 组件结构，须同跑 `pnpm dev:prepare`（Nuxt）与 `pnpm dev:vue:build`（Vue）。
+
+## 文档站
+
+`docs/` 继承 `@movk/nuxt-docs` v3，以 `../src/module` 直接加载本地模块源码。
+
+- **内容路径**：中文在 `content/docs`，英文在 `content/en/docs`，路由前缀固定为 `/docs`；`content/index.md`、`releases.yml` 保持在 `content/` 根目录
+- **功能开关**：`movkNuxtDocs.componentDocs: true`（`ComponentProps` / `ComponentExample` 等依赖 `nuxt-component-meta`、`vue-component-meta`、`prettier`）；Mermaid、`a11y` 未开启，开启前需安装对应依赖
+- **导航与分类**：在 `app/app.config.ts` 的 `header.nav` / `header.mobileNav` / `docs.categories` 声明，文案按语言写成 `{ 'zh-CN': ..., 'en': ... }`，不要再覆盖 `useHeader` / `useCategory`
+- **国际化**：`i18n.locales` 不声明 `file`，翻译由 Layer 注册；站点翻译放 `i18n/locales/{code}.json`
+- **组件覆盖**：只覆盖 Layer「自定义」页覆盖契约中列出的组件（当前为 `HeaderLogo`、`ComponentExampleExtras`）
+- **环境变量**：`NUXT_GITHUB_TOKEN`（Releases 与提交历史）、`AI_API_KEY`（AI Chat 开关）、`AI_BASE_URL`（OpenAI 兼容端点，留空走 AI Gateway）、`NUXT_SESSION_PASSWORD`（API 演示的会话认证），模板见 `docs/.env.example`
 
 ## 开发工作流
 
