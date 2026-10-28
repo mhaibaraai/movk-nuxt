@@ -239,7 +239,7 @@ const confirmActionsColumns: DataTableColumn<Person>[] = [
           description: row.status === 'active'
             ? '该员工处于在职状态，删除前请二次确认。'
             : '已离职员工删除后无法恢复。',
-          confirmText: '我已确认'
+          confirmLabel: '我已确认'
         }),
         onClick: ({ row }) => record(`deleted ${row.name}`)
       }
@@ -533,7 +533,7 @@ const sharedFieldsColumns: DataTableColumn<Person>[] = [
 
     <Showcase
       title="二次确认"
-      description="confirm 开启后点击先弹 MessageBox，confirmProps 动态返回 title、type、description、confirmText"
+      description="confirm 开启后点击先弹 MessageBox，confirmProps 动态返回 title、type、description、confirmLabel"
       :state="log"
       aside-label="action 日志"
     >
