@@ -50,7 +50,7 @@ export interface SearchFormProps<S extends z.ZodObject> extends BaseAutoFormProp
    * @defaultValue [{ key: 'search', ... }, { key: 'reset', ... }]
    */
   actions?: SearchFormAction[]
-  /** 搜索按钮加载状态（作用于 type==='submit' 或 key==='search' 的按钮） */
+  /** 外部 loading 状态，与提交中状态合并，作用于 type==='submit' 或 key==='search' 的按钮 */
   loading?: boolean
   /** 收起按钮属性 */
   collapseButtonProps?: ButtonProps
@@ -64,8 +64,6 @@ export interface SearchFormProps<S extends z.ZodObject> extends BaseAutoFormProp
   expandText?: string
   /** 收起按钮文本，缺省时取 locale 的 `searchForm.collapse` */
   collapseText?: string
-  /** 受控展开状态；优先级高于 defaultExpanded */
-  expanded?: boolean
   /**
    * 默认展开状态
    * @defaultValue false
@@ -74,11 +72,10 @@ export interface SearchFormProps<S extends z.ZodObject> extends BaseAutoFormProp
 }
 
 export interface SearchFormEmits<S extends z.ZodObject = z.ZodObject> {
-  'reset': [state: Partial<InferInput<S>>]
-  'clear': [state: Partial<InferInput<S>>]
-  'expand': [expanded: boolean]
-  'update:expanded': [expanded: boolean]
-  'error': [event: FormErrorEvent]
+  reset: [state: Partial<InferInput<S>>]
+  clear: [state: Partial<InferInput<S>>]
+  expand: [expanded: boolean]
+  error: [event: FormErrorEvent]
 }
 
 export type SearchFormSlots<S extends z.ZodObject> = {

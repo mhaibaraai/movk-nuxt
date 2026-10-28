@@ -3,7 +3,7 @@ import { z } from 'zod'
 
 import { AUTOFORM_META } from '../../../src/runtime/domains/auto-form/constants'
 import { applyMeta } from '../../../src/runtime/domains/auto-form/metadata'
-import { extractPureSchema, introspectSchema, omitFields } from '../../../src/runtime/domains/auto-form/schema'
+import { extractPureSchema, introspectSchema, omitPaths } from '../../../src/runtime/domains/auto-form/schema'
 import { useAutoForm } from '../../../src/runtime/composables/useAutoForm'
 
 // controls 顶层 import 了多个 .vue 文件，vitest 默认无 @vitejs/plugin-vue 会解析失败；按 useAutoForm.test.ts 的方式打桩
@@ -61,28 +61,98 @@ describe('auto-form schema', () => {
     expect(Object.keys(shape)).toEqual(['title', 'count', 'status'])
   })
 
-  describe('omitFields（meta.if 隐藏字段不参与校验）', () => {
-    const schema = afz.object({
+  it('extractPureSchema 保留根 refinement 与 strict 设置', () => {
+    const layoutField = applyMeta(z.any(), {
+      type: AUTOFORM_META.LAYOUT_KEY,
+      layout: { fields: { a: z.string() } }
+    })
+    const schema = z.strictObject({ hero: layoutField, b: z.string() })
+      .refine(v => v.b !== 'bad', { message: 'refined' })
+
+    const pure = extractPureSchema(schema)
+
+    expect(pure.safeParse({ a: 'x', b: 'bad' }).error?.issues[0]?.message).toBe('refined')
+    expect(pure.safeParse({ a: 'x', b: 'ok', extra: 1 }).success).toBe(false)
+  })
+
+  it('extractPureSchema 展开嵌套对象中的 layout', () => {
+    const layoutField = applyMeta(z.any(), {
+      type: AUTOFORM_META.LAYOUT_KEY,
+      layout: { fields: { city: z.string() } }
+    })
+    const schema = z.object({ address: z.object({ row: layoutField }).optional() })
+
+    const pure = extractPureSchema(schema)
+
+    expect(pure.safeParse({ address: {} }).success).toBe(false)
+    expect(pure.safeParse({ address: { city: 'x' } }).success).toBe(true)
+    expect(pure.safeParse({}).success).toBe(true)
+  })
+
+  describe('omitPaths（meta.if 隐藏字段不参与校验）', () => {
+    const schema = z.object({
       username: z.string().min(1),
-      password: z.string().min(6)
+      password: z.string().min(6),
+      profile: z.object({
+        phone: z.string(),
+        email: z.string()
+      }).optional()
     })
 
-    it('剔除隐藏字段后，该字段不再参与校验', () => {
-      const omitted = omitFields(schema, ['password'])
+    it('剔除顶层隐藏字段', () => {
+      const omitted = omitPaths(schema, ['password'])
 
-      expect(Object.keys((omitted as any).shape)).toEqual(['username'])
+      expect(Object.keys((omitted as any).shape)).toEqual(['username', 'profile'])
       expect(omitted.safeParse({ username: 'admin' }).success).toBe(true)
     })
 
-    it('不剔除时保留必填校验', () => {
-      expect(schema.safeParse({ username: 'admin' }).success).toBe(false)
-      expect(omitFields(schema, []).safeParse({ username: 'admin' }).success).toBe(false)
+    it('剔除嵌套字段并保留外层 optional', () => {
+      const omitted = omitPaths(schema, ['password', 'profile.phone'])
+
+      expect(omitted.safeParse({ username: 'a', profile: { email: 'e' } }).success).toBe(true)
+      expect(omitted.safeParse({ username: 'a' }).success).toBe(true)
+      expect(omitted.safeParse({ username: 'a', profile: {} }).success).toBe(false)
     })
 
-    it('忽略不存在的 key，返回原 schema', () => {
-      const result = omitFields(schema, ['nope'])
+    it('带 refinement 的 schema 不抛错且保留 refinement', () => {
+      const refined = schema.refine(v => v.username !== 'root', { message: 'no root' })
 
-      expect(Object.keys((result as any).shape)).toEqual(['username', 'password'])
+      const omitted = omitPaths(refined, ['password'])
+
+      expect(omitted.safeParse({ username: 'root' }).error?.issues.map(i => i.message)).toEqual(['no root'])
+      expect(omitted.safeParse({ username: 'admin' }).success).toBe(true)
     })
+
+    it('没有隐藏路径时返回原 schema', () => {
+      expect(omitPaths(schema, [])).toBe(schema)
+    })
+
+    it('忽略不存在的路径', () => {
+      const result = omitPaths(schema, ['nope', 'profile.nope'])
+
+      expect(result.safeParse({ username: 'a', password: '123456' }).success).toBe(true)
+      expect(result.safeParse({ username: 'a' }).success).toBe(false)
+    })
+  })
+})
+
+describe('introspectSchema 递归保护', () => {
+  it('getter 定义的递归 schema 在最大深度处截断', () => {
+    const Category = z.object({
+      name: z.string(),
+      get child() {
+        return Category.optional()
+      }
+    })
+
+    const fields = introspectSchema(Category, {} as any, '')
+    let depth = 0
+    let current = fields.find(f => f.path === 'child')
+    while (current) {
+      depth++
+      current = current.children?.find(f => f.path.endsWith('child'))
+    }
+    expect(depth).toBeGreaterThan(5)
+    expect(depth).toBeLessThanOrEqual(21)
   })
 })

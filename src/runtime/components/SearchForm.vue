@@ -1,18 +1,16 @@
 <script lang="ts" setup generic="S extends z.ZodObject">
-import type { ComponentConfig, FormError, FormState, InferInput } from '@nuxt/ui'
+import type { ButtonProps, ComponentConfig, FormError, FormProps, FormState, InferInput } from '@nuxt/ui'
 import type { z } from 'zod'
 import type { CSSProperties, Ref } from 'vue'
 import type { AppConfig } from 'nuxt/schema'
 import { UButton, UCollapsible, UForm } from '#components'
-import { computed, onMounted, ref, toRaw, unref, useAttrs, useTemplateRef, watch } from 'vue'
-import { deepClone, isFunction } from '@movk/core'
-import { useAutoFormProvider } from '../domains/auto-form/provider'
-import { extractPureSchema, introspectSchema } from '../domains/auto-form/schema'
-import { applyFieldDefaults } from '../domains/auto-form/fields'
-import { DEFAULT_CONTROLS } from '../domains/auto-form/controls'
+import { computed, ref, useAttrs, useTemplateRef, watch } from 'vue'
+import { useBreakpoints } from '@vueuse/core'
+import { useAutoFormCore } from '../domains/auto-form/useAutoFormCore'
+import { isLeafField } from '../domains/auto-form/fields'
+import { AUTOFORM_META } from '../domains/auto-form/constants'
 import { createDefaultSearchActions } from '../domains/auto-form/actions'
 import { useMovkLocale } from '../composables/useMovkLocale'
-import { useZodLocaleSync } from '../domains/zod/sync'
 import AutoFormRendererField from '../domains/auto-form/components/Field.vue'
 import { useAppConfig } from '#imports'
 import theme from '#build/movk-ui/search-form'
@@ -23,7 +21,14 @@ import type {
   SearchFormSlotProps,
   SearchFormSlots
 } from '../types/auto-form/search-form'
+import type { AutoFormField } from '../types/auto-form'
 import { useExtendedTv } from '../utils/extend-theme'
+
+type SearchState = Partial<InferInput<S>>
+type ColsBreakpoint = 'sm' | 'md' | 'lg' | 'xl'
+
+const BREAKPOINTS: Record<ColsBreakpoint, number> = { sm: 640, md: 768, lg: 1024, xl: 1280 }
+const BREAKPOINT_KEYS = Object.keys(BREAKPOINTS) as ColsBreakpoint[]
 
 const props = withDefaults(defineProps<SearchFormProps<S> & {
   ui?: ComponentConfig<typeof theme, AppConfig, 'searchForm'>['slots']
@@ -36,33 +41,33 @@ const props = withDefaults(defineProps<SearchFormProps<S> & {
   validateOn: () => []
 })
 
-const modelValue = defineModel<Partial<InferInput<S>>>({ default: () => ({}) })
-const expandedModel = defineModel<boolean>('expanded')
+const modelValue = defineModel<SearchState>({ default: () => ({}) })
+const expandedModel = defineModel<boolean | undefined>('expanded')
 const emits = defineEmits<SearchFormEmits<S>>()
 const slots = defineSlots<SearchFormSlots<S>>()
 defineOptions({ inheritAttrs: false })
 
 const attrs = useAttrs()
 const { t } = useMovkLocale()
-useZodLocaleSync()
-const actionList = computed(() => props.actions ?? createDefaultSearchActions(t))
-
-let baseline = deepClone(toRaw(modelValue.value)) as Partial<InferInput<S>>
-
-const appConfig = useAppConfig() as {
-  movk?: { searchForm?: unknown }
-}
-
+const appConfig = useAppConfig() as { movk?: { searchForm?: unknown } }
 const formRef = useTemplateRef('formRef')
-const internalExpanded = ref<boolean>(props.defaultExpanded ?? false)
 
+const core = useAutoFormCore({
+  schema: () => props.schema,
+  controls: () => props.controls,
+  globalMeta: () => props.globalMeta,
+  hiddenValue: () => props.hiddenValue,
+  model: modelValue as Ref<Record<string, any>>,
+  slots
+})
+const { validationSchema, resolvedButtonSize } = core
+
+const internalExpanded = ref(props.defaultExpanded)
 const expanded = computed<boolean>({
   get: () => expandedModel.value ?? internalExpanded.value,
-  set: (val) => {
-    internalExpanded.value = val
-    if (expandedModel.value !== undefined) {
-      expandedModel.value = val
-    }
+  set: (value: boolean) => {
+    internalExpanded.value = value
+    expandedModel.value = value
   }
 })
 
@@ -78,47 +83,90 @@ const { baseUi, extraUi } = useExtendedTv(
   })
 )
 
-function maxCols(cols: SearchFormProps<S>['cols']): number {
+const breakpoints = useBreakpoints(BREAKPOINTS)
+
+/** 与 gridStyle 的 CSS 断点规则一致：取当前已命中的最大断点上声明的列数 */
+const currentCols = computed(() => {
+  const cols = props.cols
   if (typeof cols === 'number') return cols
   if (!cols) return 1
-  return Math.max(cols.sm ?? 1, cols.md ?? 1, cols.lg ?? 1, cols.xl ?? 1)
-}
+  const base = cols.sm ?? cols.md ?? cols.lg ?? cols.xl ?? 1
+  return BREAKPOINT_KEYS.reduce((acc, key) =>
+    cols[key] !== undefined && breakpoints.greaterOrEqual(key).value ? cols[key]! : acc, base)
+})
 
 const gridStyle = computed<CSSProperties>(() => {
-  const c = props.cols
-  const vars: Record<string, string> = {}
-  if (typeof c === 'number') {
-    vars['--m-search-cols'] = String(c)
-  }
-  else if (c) {
-    const base = c.sm ?? c.md ?? c.lg ?? c.xl ?? 1
-    vars['--m-search-cols'] = String(base)
-    if (c.sm !== undefined) vars['--m-search-cols-sm'] = String(c.sm)
-    if (c.md !== undefined) vars['--m-search-cols-md'] = String(c.md)
-    if (c.lg !== undefined) vars['--m-search-cols-lg'] = String(c.lg)
-    if (c.xl !== undefined) vars['--m-search-cols-xl'] = String(c.xl)
+  const cols = props.cols
+  if (typeof cols === 'number') return { '--m-search-cols': String(cols) } as CSSProperties
+  if (!cols) return {}
+  const vars: Record<string, string> = { '--m-search-cols': String(cols.sm ?? cols.md ?? cols.lg ?? cols.xl ?? 1) }
+  for (const key of BREAKPOINT_KEYS) {
+    if (cols[key] !== undefined) vars[`--m-search-cols-${key}`] = String(cols[key])
   }
   return vars as CSSProperties
 })
 
-useAutoFormProvider(modelValue as Ref<unknown>, slots)
+function isSupportedField(field: AutoFormField): boolean {
+  return isLeafField(field) && field.meta?.type !== AUTOFORM_META.LAYOUT_KEY
+}
 
-const resolvedButtonSize = computed(() => {
-  const size = props.globalMeta?.size
-  if (size === undefined || isFunction(size)) return undefined
-  return unref(size)
+watch(core.fields, (fields) => {
+  const unsupported = fields.filter(field => !isSupportedField(field)).map(field => field.path)
+  if (import.meta.dev && unsupported.length) {
+    console.warn(`[SearchForm] Object, array and layout fields are not supported and will be skipped: ${unsupported.join(', ')}`)
+  }
+}, { immediate: true })
+
+const renderFields = computed(() => core.visibleFields.value.filter(isSupportedField))
+
+const actionList = computed(() => props.actions ?? createDefaultSearchActions(t))
+const showActionsCell = computed(() => actionList.value.length > 0 || !!slots.actions || !!slots.extraActions)
+
+const visibleCount = computed(() => {
+  const total = currentCols.value * props.visibleRows
+  return showActionsCell.value && currentCols.value > 1 ? Math.max(0, total - 1) : total
 })
 
-const pureSchema = computed(() => extractPureSchema(props.schema) as S)
+const visibleFields = computed(() => renderFields.value.slice(0, visibleCount.value))
+const collapsedFields = computed(() => renderFields.value.slice(visibleCount.value))
+const needsCollapse = computed(() => collapsedFields.value.length > 0)
 
-const controlsMapping = computed(() => ({ ...DEFAULT_CONTROLS, ...props.controls }))
-const fields = computed(() => introspectSchema(props.schema, controlsMapping.value, '', props.globalMeta))
+function toggle() {
+  expanded.value = !expanded.value
+  emits('expand', expanded.value)
+}
 
-const actionsBag = { toggle, search: submit, reset, clear } as const
+const submit = async () => formRef.value?.submit()
+const validate = ((...args: Parameters<NonNullable<typeof formRef.value>['validate']>) =>
+  formRef.value?.validate(...args)) as NonNullable<typeof formRef.value>['validate']
+
+/**
+ * 覆盖全部 schema 字段的载荷：清空字段为 undefined，有默认值的字段为其默认值，
+ * 供合并语义的消费方据此覆盖每个搜索字段
+ */
+function buildFieldPayload(state: SearchState): SearchState {
+  const keys = Object.keys(core.pureSchema.value?.shape ?? {}) as (keyof SearchState)[]
+  return Object.fromEntries(keys.map(key => [key, state[key]])) as SearchState
+}
+
+function reset() {
+  const next = core.reset() as SearchState
+  formRef.value?.clear()
+  emits('reset', buildFieldPayload(next))
+}
+
+function clear() {
+  const next = core.clear() as SearchState
+  formRef.value?.clear()
+  emits('clear', buildFieldPayload(next))
+}
 
 function buildSlotProps(errors: FormError[], loading: boolean): SearchFormSlotProps<S> {
   return {
-    ...actionsBag,
+    toggle,
+    search: submit,
+    reset,
+    clear,
     expanded: expanded.value,
     loading: props.loading || loading,
     state: modelValue.value,
@@ -126,71 +174,20 @@ function buildSlotProps(errors: FormError[], loading: boolean): SearchFormSlotPr
   }
 }
 
-function resolveActions(slotCtx: SearchFormSlotProps<S>): SearchFormAction[] {
-  return actionList.value.filter((action) => {
-    if (action.visible === undefined) return true
-    if (typeof action.visible === 'function') {
-      return action.visible(slotCtx as SearchFormSlotProps<z.ZodObject>)
-    }
-    return action.visible
-  })
+function resolveActions(ctx: SearchFormSlotProps<S>): SearchFormAction[] {
+  return actionList.value.filter(({ visible }) =>
+    typeof visible === 'function' ? visible(ctx as SearchFormSlotProps<z.ZodObject>) : visible !== false)
 }
 
-const showActionsCell = computed(() => {
-  return actionList.value.length > 0 || !!slots.actions || !!slots.extraActions
-})
-
-const visibleCount = computed(() => {
-  const total = maxCols(props.cols) * props.visibleRows
-  if (!showActionsCell.value) return total
-  if (maxCols(props.cols) <= 1) return total
-  return Math.max(0, total - 1)
-})
-
-const visibleFields = computed(() => fields.value.slice(0, visibleCount.value))
-const collapsedFields = computed(() => fields.value.slice(visibleCount.value))
-const needsCollapse = computed(() => collapsedFields.value.length > 0)
-
-function toggle() {
-  const next = !expanded.value
-  expanded.value = next
-  emits('expand', next)
-  emits('update:expanded', next)
-}
-
-function submit() {
-  formRef.value?.submit()
-}
-
-// 覆盖全部 schema 字段的载荷：清空字段为 undefined，有默认值的字段为其默认值，
-// 供合并语义的消费方（handleSearch）据此覆盖每个搜索字段。
-// 基于即将写入的 state 构造，而非回读 modelValue——defineModel 写入不会同步回流，
-// 回读会拿到旧值导致已填字段无法清空
-function buildFieldPayload(state: Partial<InferInput<S>>): Partial<InferInput<S>> {
-  const keys = Object.keys(props.schema.shape) as (keyof InferInput<S>)[]
-  return keys.reduce((acc, key) => {
-    acc[key] = state[key]
-    return acc
-  }, {} as Partial<InferInput<S>>)
-}
-
-function clear() {
-  const next = {} as Partial<InferInput<S>>
-  modelValue.value = next
-  formRef.value?.clear()
-  emits('clear', buildFieldPayload(next))
-}
-
-function reset() {
-  const next = deepClone(baseline)
-  applyFieldDefaults(fields.value, next)
-  modelValue.value = next
-  formRef.value?.clear()
-  emits('reset', buildFieldPayload(next))
-}
-
-function setBaseline(value?: Partial<InferInput<S>>) {
-  baseline = deepClone(toRaw(value ?? modelValue.value)) as Partial<InferInput<S>>
+function actionButtonProps(action: SearchFormAction, ctx: SearchFormSlotProps<S>): ButtonProps {
+  const { key: _key, visible: _visible, onClick: _onClick, ...rest } = action
+  const isSearch = action.key === 'search' || action.type === 'submit'
+  return {
+    size: resolvedButtonSize.value,
+    disabled: attrs.disabled as boolean | undefined,
+    ...rest,
+    loading: isSearch ? ctx.loading : rest.loading
+  }
 }
 
 function handleAction(action: SearchFormAction, ctx: SearchFormSlotProps<S>) {
@@ -203,30 +200,19 @@ function handleAction(action: SearchFormAction, ctx: SearchFormSlotProps<S>) {
   else if (action.key === 'search') submit()
 }
 
-function actionLoading(action: SearchFormAction, ctx: SearchFormSlotProps<S>): boolean {
-  if (action.key === 'search' || action.type === 'submit') return ctx.loading
-  return false
-}
-
-watch(() => fields.value, () => {
-  applyFieldDefaults(fields.value, modelValue.value)
-}, { flush: 'post' })
-
-watch(() => props.schema, () => {
-  formRef.value?.clear()
-})
-
-onMounted(() => {
-  applyFieldDefaults(fields.value, modelValue.value)
-  setBaseline()
-})
+watch(() => props.schema, () => formRef.value?.clear())
 
 defineExpose({
   formRef,
   submit,
+  validate,
   reset,
   clear,
-  setBaseline,
+  setBaseline: core.setBaseline,
+  isDirty: core.isDirty,
+  dirtyFields: core.dirtyFields,
+  getFieldValue: core.getFieldValue,
+  setFieldValue: core.setFieldValue,
   expanded,
   toggle
 })
@@ -237,12 +223,13 @@ defineExpose({
     <UForm
       ref="formRef"
       :state="modelValue as FormState<S>"
-      :schema="pureSchema"
+      :schema="validationSchema as S"
       :loading-auto="props.loadingAuto"
       :validate-on="props.validateOn"
       :ui="baseUi"
       data-slot="form"
       v-bind="attrs"
+      :on-submit="props.onSubmit as FormProps<S, boolean>['onSubmit']"
       @error="emits('error', $event)"
     >
       <template #default="{ errors, loading }">
@@ -256,7 +243,6 @@ defineExpose({
               v-for="field in visibleFields"
               :key="field.path"
               :field="field"
-              :schema="props.schema"
               :extra-props="{ errors, loading, state: modelValue }"
             />
 
@@ -268,14 +254,7 @@ defineExpose({
               <div :class="extraUi.actions" data-slot="actions">
                 <template v-for="action in resolveActions(buildSlotProps(errors, loading))" :key="action.key">
                   <UButton
-                    :label="action.label"
-                    :type="action.type"
-                    :icon="action.icon"
-                    :color="action.color"
-                    :variant="action.variant"
-                    :loading="actionLoading(action, buildSlotProps(errors, loading))"
-                    :size="resolvedButtonSize"
-                    v-bind="action"
+                    v-bind="actionButtonProps(action, buildSlotProps(errors, loading))"
                     @click="handleAction(action, buildSlotProps(errors, loading))"
                   />
                 </template>
@@ -292,7 +271,6 @@ defineExpose({
                 v-for="field in collapsedFields"
                 :key="field.path"
                 :field="field"
-                :schema="props.schema"
                 :extra-props="{ errors, loading, state: modelValue }"
               />
             </div>

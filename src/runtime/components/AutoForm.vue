@@ -1,20 +1,15 @@
 <script lang="ts" setup generic="S extends z.ZodObject, T extends boolean = true, N extends boolean = false">
 import type { ComponentConfig, FormState, InferInput } from '@nuxt/ui'
 import type { z } from 'zod'
-import type { Ref } from 'vue'
 import { UForm } from '#components'
-import { computed, onMounted, ref, toRaw, unref, useAttrs, useTemplateRef } from 'vue'
-import { deepClone, isFunction } from '@movk/core'
-import { useAutoFormProvider } from '../domains/auto-form/provider'
-import { applyFieldDefaults, classifyFields } from '../domains/auto-form/fields'
-import { extractPureSchema, introspectSchema, omitFields } from '../domains/auto-form/schema'
-import { DEFAULT_CONTROLS } from '../domains/auto-form/controls'
+import { computed, ref, useAttrs, useTemplateRef } from 'vue'
+import { classifyFields } from '../domains/auto-form/fields'
+import { useAutoFormCore } from '../domains/auto-form/useAutoFormCore'
 import AutoFormRendererChildren from '../domains/auto-form/components/Children.vue'
 import AutoFormRendererField from '../domains/auto-form/components/Field.vue'
 import type { AutoFormProps, AutoFormEmits, AutoFormSlots } from '../types/auto-form/component'
 import { useExtendedTv } from '../utils/extend-theme'
 import { useMovkLocale } from '../composables/useMovkLocale'
-import { useZodLocaleSync } from '../domains/zod/sync'
 import theme from '#build/movk-ui/auto-form'
 import type { AppConfig } from 'nuxt/schema'
 import { useAppConfig } from '#imports'
@@ -29,53 +24,37 @@ const props = withDefaults(defineProps<AutoFormProps<S, T, N> & {
   validateOn: () => []
 })
 
-const emits = defineEmits<AutoFormEmits>()
+const modelValue = defineModel<AutoFormStateType>()
+const emits = defineEmits<AutoFormEmits<S>>()
 const slots = defineSlots<AutoFormSlots<AutoFormStateType>>()
 defineOptions({ inheritAttrs: false })
 
 const attrs = useAttrs()
 const { t } = useMovkLocale()
-useZodLocaleSync()
-
 const appConfig = useAppConfig() as { movk?: { autoForm?: unknown } }
 
-const initialState = deepClone(toRaw(props.state ?? {})) as AutoFormStateType
-const stateModel = ref(props.state ?? {}) as Ref<AutoFormStateType>
+if (import.meta.dev && props.state !== undefined) {
+  console.warn('[AutoForm] The `state` prop is deprecated, use `v-model` instead.')
+}
+
+const localState = ref<Record<string, any>>({})
+const stateModel = computed(() => (modelValue.value ?? props.state ?? localState.value) as Record<string, any>)
+
 const formRef = useTemplateRef('formRef')
-const { resolveFieldProp } = useAutoFormProvider(stateModel, slots)
 
-const resolvedButtonSize = computed(() => {
-  const size = props.globalMeta?.size
-  if (size === undefined || isFunction(size)) return undefined
-  return unref(size)
+const core = useAutoFormCore({
+  schema: () => props.schema,
+  controls: () => props.controls,
+  globalMeta: () => props.globalMeta,
+  hiddenValue: () => props.hiddenValue,
+  model: stateModel,
+  slots,
+  addButtonProps: () => props.addButtonProps
 })
-
-const controlsMapping = computed(() => ({ ...DEFAULT_CONTROLS, ...props.controls }))
-const fields = computed(() => props.schema
-  ? introspectSchema(props.schema, controlsMapping.value, '', props.globalMeta)
-  : [])
-
-const visibleFields = computed(() =>
-  fields.value.filter(field =>
-    field && (field.meta?.if === undefined || resolveFieldProp<boolean>(field, 'if') === true)
-  )
-)
-
-// 校验 schema 与渲染保持一致：剔除「带 if 且当前隐藏」的顶层字段，使 if 隐藏的字段不参与校验
-const pureSchema = computed(() => {
-  if (!props.schema) return props.schema
-  const base = extractPureSchema(props.schema)
-  const hiddenKeys = fields.value
-    .filter(field => field?.meta?.if !== undefined && resolveFieldProp<boolean>(field, 'if') !== true)
-    .map(field => field.path)
-  return omitFields(base, hiddenKeys) as S
-})
+const { visibleFields, validationSchema, resolvedButtonSize } = core
 
 const renderData = computed(() => {
-  if (!fields.value.length) return null
-
   const classified = classifyFields(visibleFields.value)
-
   return {
     ...classified,
     flatFields: classified.hasComplexFields ? [] : classified.leafFields,
@@ -96,27 +75,32 @@ const { extendUi } = useExtendedTv(
 )
 
 function reset() {
-  const target = stateModel.value as Record<string, any>
-  for (const key of Object.keys(target)) Reflect.deleteProperty(target, key)
-  Object.assign(target, deepClone(initialState))
-  applyFieldDefaults(fields.value, target)
+  const next = core.reset()
   formRef.value?.clear()
+  emits('reset', next as Partial<z.input<S>>)
 }
 
 function clear() {
-  const target = stateModel.value as Record<string, any>
-  for (const key of Object.keys(target)) Reflect.deleteProperty(target, key)
+  const next = core.clear()
   formRef.value?.clear()
+  emits('clear', next as Partial<z.input<S>>)
 }
 
-onMounted(() => {
-  applyFieldDefaults(fields.value, stateModel.value as Record<string, any>)
-})
+const submit = async () => formRef.value?.submit()
+const validate = ((...args: Parameters<NonNullable<typeof formRef.value>['validate']>) =>
+  formRef.value?.validate(...args)) as NonNullable<typeof formRef.value>['validate']
 
 defineExpose({
   formRef,
+  submit,
+  validate,
   reset,
-  clear
+  clear,
+  setBaseline: core.setBaseline,
+  isDirty: core.isDirty,
+  dirtyFields: core.dirtyFields,
+  getFieldValue: core.getFieldValue,
+  setFieldValue: core.setFieldValue
 })
 </script>
 
@@ -128,29 +112,28 @@ defineExpose({
       }"
     >
       <UForm
-        v-if="renderData"
         ref="formRef"
         :state="stateModel as FormState<S>"
-        :schema="pureSchema"
+        :schema="validationSchema as S"
         :loading-auto="props.loadingAuto"
         :validate-on="props.validateOn"
         data-slot="form"
         v-bind="attrs"
+        :on-submit="props.onSubmit"
         :ui="{
           base: extendUi.base
         }"
         @error="emits('error', $event)"
       >
-        <template #default="{ errors, loading }">
+        <template #default="{ errors, loading: submitting }">
           <div v-if="$slots.header" :class="extendUi.header" data-slot="header">
-            <slot name="header" v-bind="{ errors, loading, fields: visibleFields, state: stateModel }" />
+            <slot name="header" v-bind="{ errors, loading: props.loading || submitting, fields: visibleFields, state: stateModel as AutoFormStateType }" />
           </div>
 
           <template v-if="renderData.hasComplexFields">
             <AutoFormRendererChildren
               :fields="renderData.allFields"
-              :schema="schema"
-              :extra-props="{ errors, loading }"
+              :extra-props="{ errors, loading: props.loading || submitting }"
             />
           </template>
 
@@ -159,22 +142,21 @@ defineExpose({
               v-for="field in renderData.flatFields"
               :key="field.path"
               :field="field"
-              :schema="schema"
-              :extra-props="{ errors, loading }"
+              :extra-props="{ errors, loading: props.loading || submitting }"
             />
           </template>
 
           <div v-if="$slots.footer" :class="extendUi.footer" data-slot="footer">
-            <slot name="footer" v-bind="{ errors, loading, fields: visibleFields, state: stateModel }" />
+            <slot name="footer" v-bind="{ errors, loading: props.loading || submitting, fields: visibleFields, state: stateModel as AutoFormStateType }" />
           </div>
 
           <div v-if="props.submit" :class="extendUi.actions" data-slot="submit">
-            <slot name="submit" v-bind="{ errors, loading, fields: visibleFields, state: stateModel }">
+            <slot name="submit" v-bind="{ errors, loading: props.loading || submitting, fields: visibleFields, state: stateModel as AutoFormStateType }">
               <UButton
                 type="submit"
                 :label="t('autoForm.submit')"
                 block
-                :loading="loading"
+                :loading="props.loading || submitting"
                 :loading-auto="props.loadingAuto"
                 :size="resolvedButtonSize"
                 :disabled="attrs.disabled as boolean"

@@ -49,6 +49,8 @@ export interface ZodAutoFormFieldMeta {
   fieldSlots?: ZodValue<Partial<AutoFormFieldSlots>>
   /** 显示条件 */
   if?: ZodValue<boolean>
+  /** 被 `if` 隐藏时的取值策略，优先于表单的 `hiddenValue` */
+  hiddenValue?: 'keep' | 'clear'
   /** 是否隐藏 */
   hidden?: ZodValue<boolean>
   /** 对象字段折叠配置。 */
