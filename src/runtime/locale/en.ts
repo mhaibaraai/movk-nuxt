@@ -45,7 +45,9 @@ export default {
     expandAll: 'Expand all',
     collapseAll: 'Collapse all',
     search: 'Search nodes',
-    clearSearch: 'Clear search'
+    clearSearch: 'Clear search',
+    loadError: 'Failed to load',
+    retry: 'Retry'
   },
   datePicker: {
     placeholder: 'Select date',

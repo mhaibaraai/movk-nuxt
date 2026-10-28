@@ -45,7 +45,9 @@ export default {
     expandAll: '展开全部',
     collapseAll: '折叠全部',
     search: '搜索节点',
-    clearSearch: '清除搜索'
+    clearSearch: '清除搜索',
+    loadError: '加载失败',
+    retry: '重试'
   },
   datePicker: {
     placeholder: '选择日期',

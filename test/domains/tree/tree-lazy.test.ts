@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { isPlaceholder, LAZY_KEY_FIELD, markLazyPlaceholders } from '../../../src/runtime/domains/tree/tree-lazy'
+import { isPlaceholder, LAZY_KEY_FIELD, markLazyPlaceholders, placeholderParentKey, restoreLoadedChildren } from '../../../src/runtime/domains/tree/tree-lazy'
 
 interface Node {
   id?: string
@@ -64,5 +64,25 @@ describe('markLazyPlaceholders', () => {
     // updateNode 按 LAZY_KEY_FIELD 匹配的值须等于展开时传入的 getKey 值
     expect(out[0]![LAZY_KEY_FIELD]).toBe('1')
     expect(out[0]![LAZY_KEY_FIELD]).not.toBe(out[0]!.label)
+  })
+})
+
+describe('restoreLoadedChildren', () => {
+  const getKey = (node: { id: string }) => node.id
+
+  it('把已加载子节点回填到占位父节点，并递归处理', () => {
+    const items = markLazyPlaceholders([{ id: 'a' }, { id: 'b', isLeaf: true }], getKey)
+    const loaded = new Map([['a', [{ id: 'a1' }]]])
+
+    const result = restoreLoadedChildren(items, loaded, getKey)
+
+    expect(result[0]?.children).toEqual([{ id: 'a1' }])
+    expect(result[1]).toBe(items[1])
+  })
+
+  it('占位节点记录父 key', () => {
+    const [node] = markLazyPlaceholders([{ id: 'a' }], getKey)
+    expect(placeholderParentKey(node!.children![0]!)).toBe('a')
+    expect(placeholderParentKey({ id: 'x' })).toBeUndefined()
   })
 })

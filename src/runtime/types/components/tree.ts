@@ -6,7 +6,7 @@ import type {
 } from '@nuxt/ui'
 import type { OmitByKey } from '@movk/core'
 import type { VNode } from 'vue'
-import type { ClassNameValue, TreeSelectionResult } from '../shared'
+import type { ClassNameValue, TreeSelectionResult, TreeSelectionStrategy, TreeSelectionSummary } from '../shared'
 
 export type { TreeSelectionResult } from '../shared'
 
@@ -55,6 +55,7 @@ export interface TreeProps<T extends TreeItem[] = TreeItem[], M extends boolean 
    * 多选 / checkable 下的父子勾选策略
    * - 'cascade' 父子级联（propagateSelect + bubbleSelect）
    * - 'isolated' 父子互不关联
+   * - 'leaf' 交互同 cascade，`change` 与 `treeSelection` 以叶子为准
    * @defaultValue 'cascade'
    */
   strategy?: TreeSelectionStrategy
@@ -82,6 +83,13 @@ export interface TreeProps<T extends TreeItem[] = TreeItem[], M extends boolean 
   searchable?: boolean
   /** 自定义匹配谓词，缺省按 labelKey 文本不区分大小写包含匹配 */
   filter?: TreeFilter<T[number]>
+  /** 远程搜索：返回命中的节点树，设置后忽略 `filter` */
+  searchMethod?: (term: string) => Promise<T>
+  /**
+   * 远程搜索的防抖时长（ms）
+   * @defaultValue 300
+   */
+  searchDebounce?: number
   /**
    * 高亮命中文本，仅在 searchable 时生效
    * @defaultValue true
@@ -99,9 +107,6 @@ export interface TreeProps<T extends TreeItem[] = TreeItem[], M extends boolean 
   class?: ClassNameValue
 }
 
-/** 父子勾选策略 */
-export type TreeSelectionStrategy = 'cascade' | 'isolated'
-
 /** 组件实例暴露的命令式 API */
 export interface TreeExposed<T extends TreeItem[] = TreeItem[]> {
   /** 展开全部可展开节点 */
@@ -116,23 +121,17 @@ export interface TreeExposed<T extends TreeItem[] = TreeItem[]> {
   clearSelection: () => void
   /** 当前选中结果分类 */
   treeSelection: TreeSelectionResult<T[number]>
-}
-
-/** 工具栏选中态摘要 */
-export interface TreeSelectionSummary {
-  /** 已选节点数 */
-  checkedCount: number
-  /** 可选节点总数 */
-  total: number
-  /** 是否全部选中 */
-  allChecked: boolean
-  /** 是否处于半选态 */
-  indeterminate: boolean
+  /** 重新加载懒加载节点的子节点；不传 key 时按 `items` 重建整棵树 */
+  reload: (key?: string) => Promise<void>
+  /** 按 key 查找节点 */
+  getNode: (key: string) => T[number] | undefined
 }
 
 export type TreeEmits<T extends TreeItem[] = TreeItem[], M extends boolean = false>
   = NuxtTreeEmits<T, M> & {
     'update:search': [value: string]
+    /** 懒加载子节点失败 */
+    'loadError': [node: T[number], error: unknown]
     'change': [payload: {
       value: NuxtTreeProps<T, M>['modelValue']
       keys: string[]
@@ -161,3 +160,5 @@ interface TreeExtraSlots<T extends TreeItem[] = TreeItem[]> {
 }
 
 export type TreeSlots<T extends TreeItem[] = TreeItem[]> = NuxtTreeSlots<T> & TreeExtraSlots<T>
+
+export type { TreeSelectionStrategy, TreeSelectionSummary }

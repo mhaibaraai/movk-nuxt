@@ -2,6 +2,7 @@ import type { ButtonProps, CheckboxProps, DropdownMenuProps, TableColumn, Toolti
 import type { OmitByKey } from '@movk/core'
 import type { CellContext, ColumnDef, ColumnDefTemplate } from '@tanstack/vue-table'
 import type { MessageBoxProps } from '../components/message-box'
+import type { TreeSelectionStrategy } from '../shared'
 import type {
   DataTableCheckboxContext,
   DataTableExpandButtonContext,
@@ -13,7 +14,7 @@ import type {
 
 export type DataTableDensityPreset = 'compact' | 'normal' | 'comfortable'
 
-export type DataTableTreeSelectionStrategy = 'cascade' | 'isolated' | 'leaf'
+export type DataTableTreeSelectionStrategy = TreeSelectionStrategy
 
 export type DataTableSizePreset = 'xs' | 'sm' | 'md' | 'lg' | 'xl'
 
