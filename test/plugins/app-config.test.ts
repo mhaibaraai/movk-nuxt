@@ -2,6 +2,7 @@ import type { MovkUIOptions } from '../../src/unplugin'
 import { isAbsolute } from 'pathe'
 import { describe, expect, it } from 'vitest'
 import MovkAppConfigPlugin from '../../src/plugins/app-config'
+import { UI_COLOR_DEFAULTS } from '../../src/runtime/utils/theme-defaults'
 
 /** 对 @nuxt/ui 的 app-config 虚拟模块执行 transform，返回注入后的代码 */
 function transformAppConfig(code: string) {
@@ -21,6 +22,11 @@ describe('MovkAppConfigPlugin 的 app-config 注入', () => {
     const path = JSON.parse(specifier!) as string
     expect(isAbsolute(path)).toBe(true)
     expect(path).toMatch(/defu\.mjs$/)
+  })
+
+  it('注入与 Nuxt 模式一致的默认色板', () => {
+    const code = transformAppConfig('export default {"ui":{}}')
+    expect(code).toContain(`ui: __movkDefu({ colors: ${JSON.stringify(UI_COLOR_DEFAULTS)} }`)
   })
 
   it('非 app-config 模块不做处理', () => {

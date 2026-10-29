@@ -3,7 +3,7 @@ import type { Nuxt } from '@nuxt/schema'
 import type { ModuleOptions } from '../module'
 import { addPlugin, useLogger } from '@nuxt/kit'
 import defu from 'defu'
-import { getDefaultConfig } from '../runtime/utils/theme-defaults'
+import { getDefaultConfig, UI_COLOR_DEFAULTS } from '../runtime/utils/theme-defaults'
 import { resolveFontLinks, resolveFontSource, resolveFontWarning } from '../runtime/domains/theme/theme-font'
 import type { Direction } from '@nuxt/ui'
 
@@ -29,17 +29,7 @@ export function addTheme(nuxt: Nuxt, resolve: Resolver['resolve'], theme?: Modul
   )
 
   nuxt.options.appConfig.ui = defu(
-    {
-      colors: {
-        primary: 'blue',
-        secondary: 'blue',
-        success: 'green',
-        info: 'blue',
-        warning: 'yellow',
-        error: 'red',
-        neutral: 'slate'
-      }
-    },
+    { colors: { ...UI_COLOR_DEFAULTS } },
     nuxt.options.appConfig.ui || {}
   )
 

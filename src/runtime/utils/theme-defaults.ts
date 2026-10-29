@@ -1,6 +1,17 @@
 import type { Direction } from '@nuxt/ui'
 import type { ModuleOptions } from '../../module'
 
+/** movk 默认色板，Nuxt 模式 addTheme、Vue 模式 app-config 插件与 useTheme 共用 */
+export const UI_COLOR_DEFAULTS = {
+  primary: 'blue',
+  secondary: 'blue',
+  success: 'green',
+  info: 'blue',
+  warning: 'yellow',
+  error: 'red',
+  neutral: 'slate'
+} as const
+
 /**
  * movk 主题默认 app.config（Nuxt 模式 addTheme 与 Vue 模式 unplugin 共用）。
  * 放在 runtime 内，避免 runtime 反向依赖构建期 `src/utils`（dist 运行时无法解析）。
