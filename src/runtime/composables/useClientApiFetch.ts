@@ -5,17 +5,17 @@ import { useApiFetch } from './useApiFetch'
 /**
  * 仅客户端执行的 useApiFetch
  *
- * 设置 `server: false, lazy: true`
- * 适合非 SEO 敏感数据，需手动调用 execute() 触发请求
+ * 设置 `server: false, lazy: true`：SSR 阶段跳过，客户端水合后自动发起且不阻塞导航。
+ * 适合非 SEO 敏感数据；需手动触发时传 `immediate: false` 再调用 `execute()`
  *
  * @typeParam T - 业务数据类型（已由 $api 自动解包）
  *
  * @example
  * ```ts
- * const { data, execute } = useClientApiFetch<User>('/user/preferences')
+ * const { data, status } = useClientApiFetch<User>('/user/preferences')
  *
- * // 在 onMounted 或用户操作时触发
- * onMounted(() => execute())
+ * // 用户操作时才请求
+ * const { execute } = useClientApiFetch<User>('/user/export', { immediate: false })
  *
  * // 使用 transform 转换数据（接收已解包的业务数据）
  * const { data } = useClientApiFetch<User[]>('/users', {
