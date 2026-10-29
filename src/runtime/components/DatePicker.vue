@@ -4,7 +4,7 @@
 import type { ButtonProps, CalendarProps, ComponentConfig } from '@nuxt/ui'
 import type { AppConfig } from 'nuxt/schema'
 import type { DateValue } from '@internationalized/date'
-import { UPopover, UButton, UCalendar, UIcon } from '#components'
+import { UPopover, UButton, UCalendar } from '#components'
 import { computed, useAttrs } from 'vue'
 import { useAppConfig } from '#imports'
 import { useDateFormatter } from '../composables/useDateFormatter'
@@ -12,10 +12,12 @@ import type { ValueFormat } from '../composables/useDateFormatter'
 import { useExtendedTv } from '../utils/extend-theme'
 import { useMovkLocale } from '../composables/useMovkLocale'
 import { useFieldControl } from '../utils/form-control'
+import { useLocale } from '@nuxt/ui/composables/useLocale'
 import theme from '#build/movk-ui/date-picker'
 import popoverTheme from '#build/ui/popover'
 import type {
   DatePickerEmits,
+  DatePickerExposed,
   DatePickerPreset,
   DatePickerProps,
   DatePickerSlots,
@@ -36,7 +38,8 @@ defineOptions({ inheritAttrs: false })
 
 const attrs = useAttrs()
 const modelValue = defineModel<FormattedValue<R, M, V>>()
-const appConfig = useAppConfig() as { movk?: { datePicker?: unknown } }
+const open = defineModel<boolean>('open', { default: false })
+const appConfig = useAppConfig() as { movk?: { datePicker?: unknown }, ui?: { icons?: Record<string, string> } }
 const { t } = useMovkLocale()
 const {
   id,
@@ -51,11 +54,20 @@ const {
   emitFormInput
 } = useFieldControl(props)
 
-const formatter = useDateFormatter({
-  locale: props.locale,
-  formatOptions: props.formatOptions,
+const { code: uiLocale } = useLocale()
+const calendarType = computed(() => (attrs.type as 'date' | 'month' | 'year' | undefined) ?? 'date')
+
+// 月 / 年模式默认只显示到对应粒度
+const TYPE_FORMAT_OPTIONS: Record<string, Intl.DateTimeFormatOptions> = {
+  month: { year: 'numeric', month: 'long' },
+  year: { year: 'numeric' }
+}
+
+const formatterRef = computed(() => useDateFormatter({
+  locale: props.locale ?? uiLocale.value,
+  formatOptions: props.formatOptions ?? TYPE_FORMAT_OPTIONS[calendarType.value],
   timeZone: props.timeZone
-})
+}))
 
 type CalendarModel = CalendarProps<R, M>['modelValue']
 const asModel = (v: unknown) => v as CalendarModel
@@ -66,9 +78,9 @@ const isRange = computed(() => isOn(attrs.range))
 const isMultiple = computed(() => isOn(attrs.multiple))
 
 const calendarValue = computed<CalendarModel>({
-  get: () => formatter.convertFromFormat(modelValue.value, valueFormat.value) as CalendarModel,
+  get: () => formatterRef.value.convertFromFormat(modelValue.value, valueFormat.value) as CalendarModel,
   set: (next) => {
-    modelValue.value = formatter.convertToFormat(next, valueFormat.value) as FormattedValue<R, M, V>
+    modelValue.value = formatterRef.value.convertToFormat(next, valueFormat.value) as FormattedValue<R, M, V>
     emitFormInput()
     emitFormChange()
   }
@@ -78,20 +90,25 @@ const emptyLabel = computed(() => props.placeholder ?? props.buttonProps?.label 
 
 const fromNumber = (n: number | null): string => n === null ? '' : String(n)
 
-const converters: Record<LabelFormat, (d: DateValue) => string> = {
-  iso: formatter.toISO,
-  formatted: formatter.format,
-  date: d => formatter.toDate(d)?.toLocaleDateString() ?? '',
-  timestamp: d => fromNumber(formatter.toTimestamp(d)),
-  unix: d => fromNumber(formatter.toUnixTimestamp(d))
-}
+const converters = computed<Record<LabelFormat, (d: DateValue) => string>>(() => {
+  const formatter = formatterRef.value
+  return {
+    iso: formatter.toISO,
+    formatted: formatter.format,
+    // 纯日期的 toDate 为 UTC 午夜，须按 UTC 展示，否则负时区会显示为前一天
+    date: d => formatter.toDate(d)?.toLocaleDateString(formatter.locale, { timeZone: 'hour' in d ? formatter.timeZone : 'UTC' }) ?? '',
+    timestamp: d => fromNumber(formatter.toTimestamp(d)),
+    unix: d => fromNumber(formatter.toUnixTimestamp(d))
+  }
+})
 
 const formattedDate = computed<string>(() => {
+  const formatter = formatterRef.value
   const value = calendarValue.value
   if (typeof props.labelFormat === 'function') return props.labelFormat(formatter, value)
   if (!value) return emptyLabel.value
 
-  const convert = converters[props.labelFormat as LabelFormat] ?? formatter.format
+  const convert = converters.value[props.labelFormat as LabelFormat] ?? formatter.format
 
   if (Array.isArray(value)) {
     return value.length === 0 ? emptyLabel.value : value.map(convert).join(', ')
@@ -107,30 +124,35 @@ const hasValue = computed<boolean>(() => {
   const value = calendarValue.value
   if (value === undefined || value === null) return false
   if (Array.isArray(value)) return value.length > 0
-  if (formatter.isDateRange(value)) return !!value.start || !!value.end
+  if (formatterRef.value.isDateRange(value)) return !!value.start || !!value.end
   return true
+})
+
+// class / style 落到触发按钮，其余属性透传给日历
+const calendarAttrs = computed(() => {
+  const { class: _class, style: _style, ...rest } = attrs
+  return rest
 })
 
 const triggerButtonAttrs = computed<ButtonProps>(() => ({
   color: color.value === 'error' ? 'error' : 'neutral',
   variant: 'subtle',
-  icon: 'i-lucide-calendar',
+  icon: appConfig.ui?.icons?.calendar ?? 'i-lucide-calendar',
   size: effectiveSize.value as ButtonProps['size'],
-  label: formattedDate.value,
   disabled: effectiveDisabled.value,
-  class: 'w-full',
-  ...props.buttonProps
+  ...props.buttonProps,
+  label: formattedDate.value,
+  class: ['w-full', attrs.class, props.buttonProps?.class]
 }))
 
-function handleClear(event: MouseEvent) {
+function handleClear(event: Event) {
   event.stopPropagation()
-  if (isRange.value) calendarValue.value = asModel({ start: undefined, end: undefined })
-  else if (isMultiple.value) calendarValue.value = asModel([])
-  else calendarValue.value = asModel(undefined)
+  calendarValue.value = asModel(isMultiple.value ? [] : undefined)
 }
 
 function buildDefaultPresets(): DatePickerPreset<R, M>[] {
-  const today = formatter.getToday()
+  if (calendarType.value !== 'date') return []
+  const today = formatterRef.value.getToday()
   const range = (start: DateValue, end: DateValue) => asModel({ start, end })
 
   if (isRange.value) return [
@@ -157,9 +179,14 @@ const resolvedPresets = computed<DatePickerPreset<R, M>[]>(() => {
 })
 
 function applyPreset(preset: DatePickerPreset<R, M>) {
-  const value = typeof preset.value === 'function' ? preset.value(formatter) : preset.value
+  const value = typeof preset.value === 'function' ? preset.value(formatterRef.value) : preset.value
   calendarValue.value = value as CalendarModel
 }
+
+defineExpose<DatePickerExposed>({
+  open: () => { open.value = true },
+  close: () => { open.value = false }
+})
 
 const { baseUi, extraUi } = useExtendedTv(
   popoverTheme,
@@ -174,10 +201,10 @@ const { baseUi, extraUi } = useExtendedTv(
 
 <template>
   <UPopover
+    v-model:open="open"
     v-bind="popoverProps"
     :ui="baseUi"
     @close:prevent="emits('close:prevent')"
-    @update:open="emits('update:open', $event)"
   >
     <template #default="defaultSlotProps">
       <slot v-bind="defaultSlotProps">
@@ -185,6 +212,7 @@ const { baseUi, extraUi } = useExtendedTv(
           :id="id"
           :name="name"
           v-bind="{ ...triggerButtonAttrs, ...ariaAttrs }"
+          :style="attrs.style"
           @blur="emitFormBlur"
           @focus="emitFormFocus"
         >
@@ -194,8 +222,16 @@ const { baseUi, extraUi } = useExtendedTv(
           <template v-if="$slots.trailing" #trailing="trailing">
             <slot name="trailing" v-bind="trailing" />
           </template>
-          <template v-else-if="clearable && hasValue" #trailing>
-            <UIcon name="i-lucide-x" :class="extraUi.clearIcon" @click="handleClear" />
+          <template v-else-if="clearable && hasValue && !effectiveDisabled" #trailing>
+            <UButton
+              :icon="appConfig.ui?.icons?.close ?? 'i-lucide-x'"
+              color="neutral"
+              variant="link"
+              size="xs"
+              :aria-label="t('datePicker.clear')"
+              :class="extraUi.clearIcon"
+              @click="handleClear"
+            />
           </template>
         </UButton>
       </slot>
@@ -205,8 +241,8 @@ const { baseUi, extraUi } = useExtendedTv(
       <div :class="extraUi.wrapper">
         <div v-if="resolvedPresets.length" :class="extraUi.presets">
           <UButton
-            v-for="preset in resolvedPresets"
-            :key="preset.label"
+            v-for="(preset, index) in resolvedPresets"
+            :key="index"
             :label="preset.label"
             size="sm"
             color="neutral"
@@ -218,7 +254,10 @@ const { baseUi, extraUi } = useExtendedTv(
         <UCalendar
           v-model="calendarValue"
           :class="extraUi.calendar"
-          v-bind="attrs"
+          v-bind="calendarAttrs"
+          :locale="props.locale"
+          :size="effectiveSize"
+          :color="props.color"
           :disabled="effectiveDisabled"
           @update:placeholder="e => emits('update:placeholder', e)"
           @update:start-value="emits('update:startValue', $event)"

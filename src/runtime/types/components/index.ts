@@ -1,5 +1,6 @@
 export type {
   DatePickerEmits,
+  DatePickerExposed,
   DatePickerLabelFormatter,
   DatePickerPreset,
   DatePickerProps,

@@ -49,6 +49,7 @@ export interface MovkMessages {
   }
   datePicker: {
     placeholder: string
+    clear: string
     today: string
     yesterday: string
     tomorrow: string

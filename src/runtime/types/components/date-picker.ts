@@ -42,9 +42,14 @@ export interface DatePickerProps<
   V extends ValueFormat = 'date-value'
 > extends
   DateFormatterOptions,
-  /** @vue-ignore */ OmitByKey<CalendarProps<R, M>, 'modelValue' | 'placeholder' | 'ui'> {
+  /** @vue-ignore */ OmitByKey<CalendarProps<R, M>, 'modelValue' | 'placeholder' | 'ui' | 'size' | 'color' | 'disabled'> {
   id?: string
   name?: string
+  /** 同时作用于触发按钮与日历，缺省时继承 UFormField / UFieldGroup */
+  size?: CalendarProps<R, M>['size']
+  /** 日历主色；处于表单错误态时触发按钮显示为 error */
+  color?: CalendarProps<R, M>['color']
+  disabled?: boolean
   /** 未选择时的按钮文本，缺省时依次取 `buttonProps.label`、locale 的 `datePicker.placeholder` */
   placeholder?: string
   buttonProps?: ButtonProps
@@ -78,7 +83,7 @@ export type DatePickerEmits<
   R extends boolean,
   M extends boolean,
   V extends ValueFormat = 'date-value'
-> = PopoverEmits
+> = Omit<PopoverEmits, 'update:open'>
   & Omit<CalendarEmits<R, M>, 'update:modelValue'>
   & {
     'update:modelValue': [value: FormattedValue<R, M, V>]
@@ -87,3 +92,10 @@ export type DatePickerEmits<
 export type DatePickerSlots<
   P extends PopoverMode = PopoverMode
 > = OmitByKey<PopoverSlots<P>, 'anchor'> & CalendarSlots & OmitByKey<ButtonSlots, 'default'>
+
+export interface DatePickerExposed {
+  /** 打开弹层 */
+  open: () => void
+  /** 关闭弹层 */
+  close: () => void
+}

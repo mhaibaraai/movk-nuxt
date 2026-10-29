@@ -51,6 +51,7 @@ export default {
   },
   datePicker: {
     placeholder: '选择日期',
+    clear: '清除',
     today: '今天',
     yesterday: '昨天',
     tomorrow: '明天',

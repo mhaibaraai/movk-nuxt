@@ -51,6 +51,7 @@ export default {
   },
   datePicker: {
     placeholder: 'Select date',
+    clear: 'Clear',
     today: 'Today',
     yesterday: 'Yesterday',
     tomorrow: 'Tomorrow',
