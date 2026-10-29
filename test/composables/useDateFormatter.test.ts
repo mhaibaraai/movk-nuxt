@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { CalendarDate, getLocalTimeZone } from '@internationalized/date'
+import { CalendarDate, CalendarDateTime, getLocalTimeZone } from '@internationalized/date'
 import type { DateValue } from '@internationalized/date'
 import { useDateFormatter } from '../../src/runtime/composables/useDateFormatter'
 
@@ -10,7 +10,7 @@ describe('useDateFormatter', () => {
   describe('初始化', () => {
     it('使用默认配置', () => {
       const formatter = useDateFormatter()
-      expect(formatter.locale).toBe('zh-CN')
+      expect(formatter.locale).toBe('en')
       expect(formatter.timeZone).toBe(getLocalTimeZone())
     })
 
@@ -208,7 +208,7 @@ describe('useDateFormatter', () => {
   })
 
   describe('批量转换方法', () => {
-    const formatter = useDateFormatter()
+    const formatter = useDateFormatter({ locale: 'zh-CN' })
 
     it('convertToISO: 批量转换对象', () => {
       const data = {
@@ -375,6 +375,23 @@ describe('useDateFormatter', () => {
     it('convertToFormat: date-value 直接透传', () => {
       const data = [fixedDate, fixedDate2]
       expect(formatter.convertToFormat(data, 'date-value')).toBe(data)
+    })
+  })
+
+  describe('转换边界', () => {
+    const formatter = useDateFormatter({ locale: 'zh-CN', timeZone: 'UTC' })
+
+    it('convertData 保留 Date 与类实例，只递归普通对象', () => {
+      const date = new Date('2025-01-01T00:00:00Z')
+      const result = formatter.convertToISO({ d: date, nested: { day: fixedDate } })
+      expect(result.d).toBe(date)
+      expect(result.nested.day).toBe('2025-11-29')
+    })
+
+    it('toDate 保留带时间值的时分秒', () => {
+      const value = new CalendarDateTime(2025, 1, 2, 10, 30)
+      expect(formatter.toDate(value)?.toISOString()).toBe('2025-01-02T10:30:00.000Z')
+      expect(formatter.toTimestamp(fixedDate)).toBe(Date.UTC(2025, 10, 29))
     })
   })
 })
