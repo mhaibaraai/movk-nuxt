@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import type { FormSubmitEvent } from '@nuxt/ui'
 import type { z } from 'zod'
-import { TagSelector } from '#components'
+import TagSelector from './AutoFormTagSelector.vue'
 
 const toast = useToast()
 
@@ -76,8 +76,8 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 
 <template>
   <MAutoForm
+    v-model="form"
     :schema="schema"
-    :state="form"
     :controls="controls"
     @submit="onSubmit"
   />

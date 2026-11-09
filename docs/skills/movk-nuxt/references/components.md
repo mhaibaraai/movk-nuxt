@@ -42,6 +42,15 @@ Notes:
 - Input wrappers (`MWithClear`, `MWithCopy`, `MWithPasswordToggle`, etc.), `MPillGroup`, `MSlideVerify`, `MColorChooser` and `MPopconfirm` were removed in v2. Use Nuxt UI controls (`UInput` with slots, `URadioGroup`, `UColorPicker` + `UPopover`) or register a custom control with `defineControl`.
 - `MAutoForm` and `MDataTable` are listed above for discoverability; load their dedicated references before writing code that uses them.
 
+## DatePicker behavior
+
+- Bind the popover with `v-model:open`, or call `open()` / `close()` through a template ref typed as `DatePickerExposed`.
+- `clearable` displays a clear button only when a value is present and the field is enabled. Clearing does not open the calendar: single/range values become `undefined`, multiple values become `[]`. Its accessible label is locale key `datePicker.clear`.
+- `size` applies to both the trigger and calendar, inheriting `UFormField` / `UFieldGroup` size when omitted.
+- `color` sets the calendar selection color. The trigger defaults to `neutral`, becomes `error` in an invalid form field, and can be customized through `buttonProps`.
+- `disabled` disables both the trigger and calendar and inherits the form field state when omitted.
+- `valueFormat` controls the model representation; `labelFormat` controls the trigger text. Calendar props such as `minValue` / `maxValue` and `isDateUnavailable` are forwarded.
+
 ## MCP & docs
 
 - Docs: `/docs/components/<name>` (e.g. `/docs/components/date-picker`, `/docs/components/tree`)

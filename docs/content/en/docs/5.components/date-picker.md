@@ -1,27 +1,23 @@
 ---
 title: DatePicker
-description: An internationalized date picker component.
+description: A button-triggered date picker with single, range and multiple selection, month and year views, and configurable v-model output formats.
 category: advanced
 seo:
   title: DatePicker
-  description: An internationalized date picker supporting single, range and multiple selection, presets and custom output formats.
+  description: A button-triggered date picker built on Nuxt UI Calendar, supporting single, range and multiple selection, month and year granularity, presets, clearing and configurable v-model value formats, plus the useDateFormatter composable.
 ---
 
-## Introduction
+Use `MDatePicker` when a form or filter bar needs a date field, especially when v-model should contain an ISO string or timestamp for your backend. It combines Nuxt UI `UPopover`, `UButton` and `UCalendar`, inherits size and error state from `UFormField` / `UFieldGroup`, and converts values between v-model and the calendar. AutoForm uses it by default for `afz.calendarDate()` fields.
 
-`MDatePicker` is an internationalized date picker built on `@internationalized/date` for timezone and locale handling. It supports single date, date range, and multiple date selection, with button trigger, clearable, and quick preset interactions.
+Date calculations and formatting use [`useDateFormatter`](#usedateformatter), documented below and built on [`@internationalized/date`](https://react-spectrum.adobe.com/internationalized/date/index.html). A timezone-independent `CalendarDate` keeps its calendar date across user time zones.
 
 ::callout{color="neutral" to="https://ui.nuxt.com/docs/components/calendar"}
-Built on Nuxt UI's Calendar component
-::
-
-::note{to="https://react-spectrum.adobe.com/internationalized/date/index.html"}
-Uses the `@internationalized/date` library for date handling, ensuring timezone safety and i18n support.
+Props not declared by `MDatePicker`, including `minValue`, `maxValue`, `isDateUnavailable`, `numberOfMonths` and `weekStartsOn`, are forwarded to Nuxt UI Calendar.
 ::
 
 ## Usage
 
-The default button trigger displays the current date. Click to open the calendar panel and write the selected date to v-model:
+By default, the picker selects one date and v-model contains a `DateValue`, such as `CalendarDate`:
 
 ::component-code
 ---
@@ -35,7 +31,7 @@ props:
 
 ### `range` Date Range
 
-`range` mode maintains `start` / `end` dates. `numberOfMonths` can display a dual-month calendar simultaneously:
+`range` changes v-model to `{ start, end }`. Use `numberOfMonths` to display multiple months side by side for cross-month selection:
 
 ::component-code
 ---
@@ -47,76 +43,103 @@ props:
   range: true
   numberOfMonths: 2
 items:
-  range: [true, false]
----
-::
-
-### `numberOfMonths` Number of Months
-
-`numberOfMonths` controls the number of months displayed side by side in the popover, making cross-month selection easier:
-
-::component-code
----
-name: MDatePicker
-props:
-  numberOfMonths: 3
-items:
   numberOfMonths: [1, 2, 3]
 ---
 ::
 
-### `clearable` Clearable
+### `multiple` Multiple Dates
 
-`clearable` shows a clear entry when a value is set. Clicking it resets without opening the calendar:
-
-::component-code
----
-name: MDatePicker
-props:
-  clearable: true
----
-::
-
-### `presets` Quick Presets
-
-Setting `presets` to `default` automatically generates quick items like "Today", "This Week", "This Month" based on the current mode:
+`multiple` changes v-model to an array of dates. The trigger lists the selected dates:
 
 ::component-code
 ---
 name: MDatePicker
-hide: ['placeholder']
-ignore: ['presets']
+external: ['modelValue']
+hide: ['modelValue']
 props:
-  range: true
-  presets: default
-  placeholder: Select range
-items:
-  range: [true, false]
----
-::
-
-### `multiple` Multiple Date Selection
-
-`multiple` mode saves multiple dates in an array. The button label can dynamically display the number of selected dates:
-
-::component-code
----
-name: MDatePicker
-prettier: true
-props:
+  modelValue: ''
   multiple: true
-  buttonProps:
-    label: Select multiple dates
-    color: primary
+---
+::
+
+### `type` Month and Year Views
+
+`type` switches to a month or year selection panel. The trigger label uses the corresponding granularity, such as “March 2025” or “2025”:
+
+::component-code
+---
+name: MDatePicker
+external: ['modelValue']
+hide: ['modelValue']
+props:
+  modelValue: ''
+  type: month
 items:
-  multiple: [true, false]
-  buttonProps.color: ['primary', 'info', 'success', 'warning', 'error', 'neutral']
+  type: ['date', 'month', 'year']
+---
+::
+
+::note
+`formatOptions` overrides the default format for the selected granularity. `presets: 'default'` generates shortcuts only when `type` is `date`; custom preset arrays are not restricted by this condition.
+::
+
+### `valueFormat` Output Format
+
+`valueFormat` determines the shape of v-model. The component converts in both directions while the calendar always uses `DateValue`. Available formats are `date-value` (default), `iso`, `timestamp` (milliseconds), `unix` (seconds) and `date` (JavaScript `Date`), for single values, ranges and arrays:
+
+::component-example
+---
+name: ComponentsDatePickerValueFormatExample
+---
+::
+
+::note
+Date-only values convert to `timestamp`, `unix` and `date` at UTC midnight, preserving the same calendar date when read back in any time zone. Date-time values without a time zone use `timeZone`; zoned values retain their instant.
+::
+
+### `labelFormat` Trigger Label Format
+
+`labelFormat` controls how dates appear on the trigger. Choose `formatted` (default, localized using `locale` and `formatOptions`), `iso`, `date`, `timestamp` or `unix`. Select a date, then switch formats:
+
+::component-code
+---
+name: MDatePicker
+external: ['modelValue']
+hide: ['modelValue']
+props:
+  modelValue: ''
+  labelFormat: iso
+items:
+  labelFormat: ['formatted', 'iso', 'date', 'timestamp', 'unix']
+---
+::
+
+Pass a function for complete control of the label. It receives the formatter and the current calendar value:
+
+```vue
+<template>
+  <MDatePicker
+    v-model="date"
+    :label-format="(f, value) => f.isDateValue(value) ? `${f.format(value)} ${f.getDayOfWeekName(value)}` : 'Select a date'"
+  />
+</template>
+```
+
+### `placeholder` Empty Label
+
+`placeholder` sets the trigger label when no date is selected. If omitted, the component uses `buttonProps.label`, then the locale's `datePicker.placeholder`:
+
+::component-code
+---
+name: MDatePicker
+props:
+  placeholder: 选择入职日期
 ---
 ::
 
 ### `buttonProps` Trigger Button
 
-`buttonProps` is passed to the trigger button, allowing adjustment of label, color, variant, and icon:
+`buttonProps` forwards options to the trigger button, including `color`, `variant`, `icon` and `ui`. Its `label` is used only when the value is empty; selecting a date replaces it with the date label:
 
 ::component-code
 ---
@@ -124,21 +147,109 @@ name: MDatePicker
 prettier: true
 props:
   buttonProps:
-    label: Select birthday
+    label: 选择生日
     color: primary
     variant: outline
     icon: i-lucide-cake
 items:
-  buttonProps.color: ['primary', 'info', 'success', 'warning', 'error', 'neutral']
+  buttonProps.color: ['primary', 'secondary', 'success', 'info', 'warning', 'error', 'neutral']
   buttonProps.variant: ['solid', 'outline', 'soft', 'subtle', 'ghost', 'link']
+---
+::
+
+::note
+The component's `class` and `style` apply to the trigger button, which defaults to `w-full`. Other undeclared attributes are forwarded to the calendar. Configure the popover with `popoverProps`.
+::
+
+### `clearable` Clear Selection
+
+`clearable` shows a trailing clear button when the picker has a value and is enabled. Clicking it clears the value without opening the calendar. Single values and ranges become `undefined`; `multiple` becomes `[]`. The accessible label comes from the locale's `datePicker.clear`. Select dates to reveal the button:
+
+::component-code
+---
+name: MDatePicker
+external: ['modelValue']
+hide: ['modelValue']
+props:
+  modelValue: ''
+  clearable: true
+  range: true
+---
+::
+
+### `presets` Shortcuts
+
+`presets` displays shortcuts to the left of the calendar. Set it to `'default'` to generate Today / Yesterday / Tomorrow for single selection, or Today / This week / This month / Last 7 days / Last 30 days for ranges. No default presets are generated for `multiple`. Labels follow the locale:
+
+::component-code
+---
+name: MDatePicker
+external: ['modelValue']
+hide: ['modelValue']
+props:
+  modelValue: ''
+  range: true
+  presets: default
+items:
+  range: [true, false]
+---
+::
+
+### `size` Size
+
+`size` applies to both the trigger button and the calendar. If omitted, it inherits the size of the surrounding `UFormField` / `UFieldGroup`:
+
+::component-code
+---
+name: MDatePicker
+props:
+  size: md
+items:
+  size: ['xs', 'sm', 'md', 'lg', 'xl']
+---
+::
+
+### `color` Accent Color
+
+`color` sets the calendar selection color. The trigger defaults to `neutral`, or `error` when the form field has an error or `color` is `error`. Override the trigger separately with `buttonProps.color`:
+
+::component-code
+---
+name: MDatePicker
+props:
+  color: success
+items:
+  color: ['primary', 'secondary', 'success', 'info', 'warning', 'error', 'neutral']
+---
+::
+
+### `disabled` Disabled State
+
+`disabled` disables both the trigger button and the calendar. If omitted, it inherits the surrounding `UFormField` disabled state:
+
+::component-code
+---
+name: MDatePicker
+props:
+  disabled: true
+---
+::
+
+### `open` Controlled Popover
+
+`open` supports two-way binding with `v-model:open`. The component also exposes `open()` and `close()` so external buttons or application flows can control the calendar:
+
+::component-example
+---
+name: ComponentsDatePickerOpenExample
 ---
 ::
 
 ## Examples
 
-### Inheriting Field Context
+### Form Field Context
 
-When placed inside `UFormField`, it inherits `size` and error state, and the trigger button renders according to the form state:
+Inside `UFormField`, the picker inherits size, `id` and error state. Inside `UFieldGroup`, it shares the size and connected borders of neighboring buttons:
 
 ::component-example
 ---
@@ -151,32 +262,13 @@ options:
       - md
       - lg
       - xl
-    default: xs
+    default: md
 ---
 ::
 
-### Inside `UFieldGroup`
+### Restrict Available Dates
 
-When placed alongside a button inside `UFieldGroup`, they share size and border connection — ideal for filter bars with shortcut actions:
-
-::component-example
----
-name: ComponentsDatePickerFieldGroupExample
-options:
-  - name: size
-    items:
-      - xs
-      - sm
-      - md
-      - lg
-      - xl
-    default: xs
----
-::
-
-### Constraining Selectable Date Boundaries
-
-`minValue` and `maxValue` disable dates outside the boundary, restricting selection to future or past dates respectively:
+`minValue` and `maxValue` set the date boundaries. `isDateUnavailable` disables dates by a rule, such as weekends below. These props are forwarded to the calendar:
 
 ::component-example
 ---
@@ -184,29 +276,9 @@ name: ComponentsDatePickerValidationExample
 ---
 ::
 
-### Disabling Dates by Rule
+### Custom Shortcuts
 
-`isDateUnavailable` disables dates according to business rules (e.g., weekends as shown in the example):
-
-::component-example
----
-name: ComponentsDatePickerUnavailableExample
----
-::
-
-### Custom Trigger Button Label
-
-`labelFormat` receives formatting utilities and the current value to combine date and weekday info into the button label:
-
-::component-example
----
-name: ComponentsDatePickerFormatExample
----
-::
-
-### Custom Quick Presets
-
-Passing an array to `presets` allows business-rule-based date returns. Each item's `value` is a function that receives a `formatter`:
+When `presets` is an array, each item's `value` can be a fixed value or a function receiving the formatter to calculate a value relative to the current date:
 
 ::component-example
 ---
@@ -216,392 +288,99 @@ name: ComponentsDatePickerPresetsExample
 
 ## useDateFormatter
 
-### Usage
+Use the auto-imported `useDateFormatter` to format, convert or compare dates in scripts, or convert form dates to ISO strings before submission. It also powers `MDatePicker` labels, presets and `valueFormat` conversions.
 
-Use the auto-imported `useDateFormatter` composable for date formatting, conversion and manipulation, built on the `@internationalized/date` library for internationalized date handling.
+```ts
+const f = useDateFormatter()
 
-```vue
-<script setup lang="ts">
-const formatter = useDateFormatter({ locale: 'en-US' })
-
-const today = formatter.getToday()
-const formattedDate = formatter.format(today)
-// "Nov 29, 2025"
-
-const isoString = formatter.toISO(today)
-// "2025-11-29"
-</script>
+const today = f.getToday()
+f.format(today) // Localized using the current locale, for example "Nov 29, 2025"
+f.toISO(today) // "2025-11-29"
+f.fromISO('2025-11-29') // CalendarDate
 ```
 
-- `useDateFormatter` provides locale-aware date formatting based on `Intl.DateTimeFormat`.
-- Supports bulk conversion of single dates, date ranges, date arrays and nested objects.
-- Specify a timezone via the `timeZone` option (defaults to the local timezone); identifiers follow the IANA timezone database specification.
+### Options
+
+| Option | Description |
+| --- | --- |
+| `locale` | Locale code. Defaults to `<UApp :locale>` inside component setup, or `'en'` outside a component |
+| `formatOptions` | [`Intl.DateTimeFormat`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/DateTimeFormat/DateTimeFormat) options; defaults to `{ dateStyle: 'medium' }` |
+| `timeZone` | IANA time zone identifier, such as `'Asia/Shanghai'`; defaults to the local time zone |
 
 ::note
-All formatting and conversion methods have built-in error handling: passing `null` or `undefined` returns an empty string or `null` without throwing an exception.
+The locale is resolved once per call. After `<UApp :locale>` changes, call `useDateFormatter()` again, for example inside `computed`, to use the new locale.
 ::
 
-### Capabilities at a Glance
+### Method Overview
 
-The table below covers the output shapes of `useDateFormatter` across common date scenarios:
+Inspect the output of common methods using the current locale and time zone:
 
 ::component-example
 ---
-name: 'composables-use-date-formatter-overview-example'
+name: ComposablesUseDateFormatterOverviewExample
 ---
 ::
 
-### Integration with AutoForm
+### Batch Conversion Before Submission
 
-When using date fields in AutoForm, use `convertToISO()` for bulk conversion before submitting:
+`convertToISO` recursively processes individual dates, `{ start, end }` ranges, arrays and plain objects while preserving their structure. Use it to convert AutoForm data in one step:
 
-```vue
-<script setup lang="ts">
+```ts
+import type { FormSubmitEvent } from '@nuxt/ui'
+import type { z } from 'zod'
+
 const { afz } = useAutoForm()
-const formatter = useDateFormatter()
+const f = useDateFormatter()
 
 const schema = afz.object({
   eventDate: afz.calendarDate(),
-  eventRange: afz.calendarDate({
-    controlProps: { mode: 'range' }
-  })
+  eventRange: afz.calendarDate({ controlProps: { range: true } })
 })
 
-const formData = ref()
-
-async function handleSubmit() {
-  // Automatically handle conversion for all date fields
-  const payload = formatter.convertToISO(formData.value)
-
-  // payload.eventDate: "2025-11-29"
-  // payload.eventRange: { start: "2025-11-01", end: "2025-11-30" }
-
-  await api.submit(payload)
+async function onSubmit(event: FormSubmitEvent<z.output<typeof schema>>) {
+  const payload = f.convertToISO(event.data)
+  // { eventDate: '2025-11-29', eventRange: { start: '2025-11-01', end: '2025-11-30' } }
+  await $fetch('/api/events', { method: 'POST', body: payload })
 }
-</script>
 ```
 
-::note
-`convertToISO` automatically traverses all nested date fields while preserving the object structure — no manual conversion required.
+::tip
+If your backend accepts a single date format, you can set `valueFormat` on `MDatePicker` so form data uses that format from the start.
 ::
 
-### API
-
-#### useDateFormatter()
-
-`useDateFormatter(options?: DateFormatterOptions): DateFormatter`{lang="ts-type"}
-
-Creates a date formatter instance.
-
-##### Parameters
-
-::field-group
-
-  ::field{name="options" type="DateFormatterOptions"}
-  Date formatter configuration options.
-
-    ::collapsible
-
-      ::field-group
-        ::field{name="locale" type="string"}
-        Locale. Defaults to `'zh-CN'`.
-        ::
-
-        ::field{name="formatOptions" type="Intl.DateTimeFormatOptions"}
-        Date format options, following the [Intl.DateTimeFormat](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Intl/DateTimeFormat/DateTimeFormat) specification. Defaults to `{ dateStyle: 'medium' }`.
-        ::
-
-        ::field{name="timeZone" type="string"}
-        Timezone identifier (e.g. `'Asia/Shanghai'`, `'America/New_York'`). Defaults to the local timezone. See the [@internationalized/date timezone docs](https://react-spectrum.adobe.com/internationalized/date/index.html#timezones).
-        ::
-      ::
-    ::
-  ::
-::
-
-##### Returns
-
-Returns a date formatter object with the following methods and properties.
-
-#### Formatting Methods
-
-::field-group
-
-  ::field{name="format()" type="(date: DateValue | undefined | null) => string"}
-  Format a single date as a localized string.
-
-    ::collapsible
-      ```ts
-      formatter.format(date)
-      // "Nov 29, 2025"
-      ```
-    ::
-  ::
-
-  ::field{name="formatRange()" type="(start: DateValue | undefined | null, end: DateValue | undefined | null, separator?: string) => string"}
-  Format a date range. Default separator is `' - '`.
-
-    ::collapsible
-      ```ts
-      formatter.formatRange(startDate, endDate)
-      // "Nov 1, 2025 - Nov 30, 2025"
-
-      formatter.formatRange(startDate, endDate, ' to ')
-      // "Nov 1, 2025 to Nov 30, 2025"
-      ```
-    ::
-  ::
-
-  ::field{name="formatArray()" type="(dates: DateValue[] | undefined | null, separator?: string) => string"}
-  Format an array of dates. Default separator is `', '`.
-
-    ::collapsible
-      ```ts
-      formatter.formatArray([date1, date2, date3])
-      // "Nov 1, 2025, Nov 15, 2025, Nov 29, 2025"
-      ```
-    ::
-  ::
-::
-
-#### Conversion Methods
-
-::field-group
-
-  ::field{name="toISO()" type="(date: DateValue | undefined | null) => string"}
-  Convert to an ISO 8601 string.
-
-    ::collapsible
-      ```ts
-      formatter.toISO(date)
-      // "2025-11-29"
-      ```
-    ::
-  ::
-
-  ::field{name="toDate()" type="(date: DateValue | undefined | null) => Date | null"}
-  Convert to a JavaScript Date object.
-  ::
-
-  ::field{name="toTimestamp()" type="(date: DateValue | undefined | null) => number | null"}
-  Convert to a timestamp (milliseconds).
-
-    ::collapsible
-      ```ts
-      formatter.toTimestamp(date)
-      // 1732838400000
-      ```
-    ::
-  ::
-
-  ::field{name="toUnixTimestamp()" type="(date: DateValue | undefined | null) => number | null"}
-  Convert to a Unix timestamp (seconds).
-
-    ::collapsible
-      ```ts
-      formatter.toUnixTimestamp(date)
-      // 1732838400
-      ```
-    ::
-  ::
-
-  ::field{name="parse()" type="(value: string) => DateValue | null"}
-  Parse an ISO 8601 date string. Automatically identifies `CalendarDate`, `CalendarDateTime` or `ZonedDateTime`.
-
-    ::collapsible
-      ```ts
-      formatter.parse('2025-11-29')
-      // CalendarDate
-
-      formatter.parse('2025-11-29T10:30:00')
-      // CalendarDateTime
-
-      formatter.parse('2025-11-29T10:30:00[Asia/Shanghai]')
-      // ZonedDateTime
-      ```
-    ::
-  ::
-::
-
-#### Utility Methods — Getting Dates
-
-::field-group
-  ::field{name="getToday()" type="() => CalendarDate"}
-  Get today's date.
-  ::
-
-  ::field{name="getNow()" type="() => ZonedDateTime"}
-  Get the current date and time.
-  ::
-
-  ::field{name="getStartOfWeek()" type="(date: DateValue) => DateValue"}
-  Get the start of the week (based on the current locale).
-  ::
-
-  ::field{name="getEndOfWeek()" type="(date: DateValue) => DateValue"}
-  Get the end of the week (based on the current locale).
-  ::
-
-  ::field{name="getStartOfMonth()" type="(date: DateValue) => DateValue"}
-  Get the start of the month.
-  ::
-
-  ::field{name="getEndOfMonth()" type="(date: DateValue) => DateValue"}
-  Get the end of the month.
-  ::
-
-  ::field{name="getStartOfYear()" type="(date: DateValue) => DateValue"}
-  Get the start of the year.
-  ::
-
-  ::field{name="getEndOfYear()" type="(date: DateValue) => DateValue"}
-  Get the end of the year.
-  ::
-::
-
-#### Utility Methods — Queries
-
-::field-group
-  ::field{name="getDayOfWeek()" type="(date: DateValue) => number"}
-  Get the day of the week as a number (0–6, where 0 is the localized first day of the week).
-  ::
-
-  ::field{name="getDayOfWeekName()" type="(date: DateValue, style?: 'narrow' | 'short' | 'long') => string"}
-  Get the localized name of the day of the week.
-
-    ::collapsible
-      **Parameters**
-
-      ::field-group
-        ::field{name="date" type="DateValue" required}
-        Date object.
-        ::
-
-        ::field{name="style" type="'narrow' | 'short' | 'long'"}
-        Format style. Defaults to `long`.
-
-        - `'narrow'` — Shortest format, e.g. "M"
-        - `'short'` — Short format, e.g. "Mon"
-        - `'long'` — Full format, e.g. "Monday"
-        ::
-      ::
-
-      ```ts
-      const date = formatter.getToday()
-
-      formatter.getDayOfWeekName(date, 'narrow')  // "M"
-      formatter.getDayOfWeekName(date, 'short')   // "Mon"
-      formatter.getDayOfWeekName(date, 'long')    // "Monday"
-      formatter.getDayOfWeekName(date)            // "Monday" (default)
-      ```
-    ::
-  ::
-
-  ::field{name="getWeeksInMonth()" type="(date: DateValue) => number"}
-  Get the number of weeks in the month.
-  ::
-
-  ::field{name="isWeekday()" type="(date: DateValue) => boolean"}
-  Check whether the date is a weekday.
-  ::
-
-  ::field{name="isWeekend()" type="(date: DateValue) => boolean"}
-  Check whether the date is a weekend day.
-  ::
-
-  ::field{name="isSameDay()" type="(a: DateValue, b: DateValue) => boolean"}
-  Check whether two dates are the same day.
-  ::
-
-  ::field{name="isSameMonth()" type="(a: DateValue, b: DateValue) => boolean"}
-  Check whether two dates are in the same month.
-  ::
-
-  ::field{name="isSameYear()" type="(a: DateValue, b: DateValue) => boolean"}
-  Check whether two dates are in the same year.
-  ::
-
-  ::field{name="isToday()" type="(date: DateValue) => boolean"}
-  Check whether the date is today.
-  ::
-
-  ::field{name="isDateValue()" type="(value: unknown) => value is DateValue"}
-  Type guard: check whether a value is a `DateValue`.
-  ::
-
-  ::field{name="isDateRange()" type="(value: unknown) => value is DateRange"}
-  Type guard: check whether a value is a `DateRange`.
-  ::
-::
-
-#### Bulk Conversion Methods
-
-::field-group
-
-  ::field{name="convertData()" type="<T>(data: T, converter: (value: DateValue) => any) => T"}
-  Generic data conversion function. Automatically handles single dates, date ranges, date arrays and nested objects.
-
-    ::collapsible
-      ```ts
-      const converted = formatter.convertData(complexData, formatter.toISO)
-      ```
-    ::
-  ::
-
-  ::field{name="convertToISO()" type="<T>(data: T) => T"}
-  Bulk convert to ISO strings. Supports single dates, date ranges, arrays and nested objects.
-
-    ::collapsible
-      ```ts
-      // Single date
-      formatter.convertToISO(date)
-      // "2025-11-29"
-
-      // Date range
-      formatter.convertToISO({ start: date1, end: date2 })
-      // { start: "2025-11-01", end: "2025-11-30" }
-
-      // Date array
-      formatter.convertToISO([date1, date2])
-      // ["2025-11-01", "2025-11-15"]
-
-      // Nested object
-      formatter.convertToISO({
-        createdAt: date1,
-        range: { start: date2, end: date3 }
-      })
-      // {
-      //   createdAt: "2025-11-01",
-      //   range: { start: "2025-11-20", end: "2025-11-29" }
-      // }
-      ```
-    ::
-  ::
-
-  ::field{name="convertToFormatted()" type="<T>(data: T) => T"}
-  Bulk convert to formatted strings.
-  ::
-
-  ::field{name="convertToDate()" type="<T>(data: T) => T"}
-  Bulk convert to Date objects.
-  ::
-::
-
-#### Configuration Properties
-
-::field-group
-  ::field{name="locale" type="string"}
-  The current locale in use.
-  ::
-
-  ::field{name="timeZone" type="string"}
-  The current timezone in use.
-  ::
-::
-
-### Changelog
-
-:commit-changelog{prefix="composables" suffix="ts"}
+### Return Value
+
+`format`, `formatRange`, `formatArray` and `toISO` return an empty string for empty values. `toDate`, timestamp conversions and reverse parsers return `null` for empty or invalid values. `toFormat` returns `undefined` for an empty value. Date queries and week / month / year boundary methods require a valid `DateValue` and do not provide a shared empty-value fallback.
+
+| Category | Method | Description |
+| --- | --- | --- |
+| Formatting | `format(date)` | Localized date string |
+| | `formatRange(start, end, separator?)` | Range string; separator defaults to `' - '`. Returns an empty string if either endpoint is empty |
+| | `formatArray(dates, separator?)` | Array string; separator defaults to `', '` |
+| | `getDayOfWeekName(date, style?)` | Weekday name; `style` is `'narrow'`, `'short'` or `'long'` (default) |
+| Forward conversion | `toISO(date)` | ISO 8601 string |
+| | `toDate(date)` | JavaScript `Date`; date-only values use UTC midnight |
+| | `toTimestamp(date)` / `toUnixTimestamp(date)` | Millisecond / second timestamp |
+| | `toFormat(date, valueFormat)` | Dispatches by `ValueFormat` |
+| Reverse parsing | `parse(value)` / `fromISO(value)` | Parses an ISO string into `CalendarDate`, `CalendarDateTime` or `ZonedDateTime`. Supports `Z`, `±HH:mm` offsets and `[Asia/Shanghai]` time zone suffixes |
+| | `fromDate(value)` | Converts JavaScript `Date` to `CalendarDate`, reversing date-only `toDate` conversion |
+| | `fromTimestamp(value)` / `fromUnixTimestamp(value)` | Converts a timestamp to `CalendarDate` |
+| | `fromFormat(value, valueFormat)` | Dispatches by `ValueFormat`; returns `null` for a type mismatch |
+| Batch conversion | `convertData(data, converter)` | Recursively converts dates, ranges, arrays and plain objects; preserves JavaScript `Date` and class instances |
+| | `convertToISO(data)` / `convertToFormatted(data)` / `convertToDate(data)` | Common `convertData` presets |
+| | `convertToFormat(data, valueFormat)` / `convertFromFormat(data, valueFormat)` | Converts by `ValueFormat` in either direction; used by `MDatePicker` value formatting |
+| Date creation | `getToday()` / `getNow()` | Today (`CalendarDate`) / current instant (`ZonedDateTime`) |
+| | `getStartOfWeek(date)` / `getEndOfWeek(date)` | First / last day of the week, using the locale's week start |
+| | `getStartOfMonth(date)` / `getEndOfMonth(date)` | First / last day of the month |
+| | `getStartOfYear(date)` / `getEndOfYear(date)` | First / last day of the year |
+| Queries | `getDayOfWeek(date)` | 0–6, with 0 representing the locale's first weekday |
+| | `getWeeksInMonth(date)` | Number of weeks in the month |
+| | `isWeekday(date)` / `isWeekend(date)` / `isToday(date)` | Weekday / weekend / today checks |
+| | `isSameDay(a, b)` / `isSameMonth(a, b)` / `isSameYear(a, b)` | Same day / month / year checks |
+| | `isDateValue(value)` / `isDateRange(value)` | Type guards |
+| Properties | `locale` / `timeZone` | Effective locale and time zone |
+
+`CalendarDate` is auto-imported alongside `useDateFormatter`. Import types such as `DateValue`, `DateRange`, `DateFormatter` and `ValueFormat` from `@movk/nuxt`.
 
 ## API
 
@@ -617,7 +396,18 @@ Returns a date formatter object with the following methods and properties.
 
 :component-slots{slug="MDatePicker"}
 
+### Expose
+
+Access the component instance with [`useTemplateRef`](https://vuejs.org/api/composition-api-helpers.html#usetemplateref), using the `DatePickerExposed` type.
+
+| Name | Type |
+| ---- | ---- |
+| `open()`{lang="ts-type"} | `void`{lang="ts-type"} <br> <div class="text-default mt-1"><p>Open the popover</p></div> |
+| `close()`{lang="ts-type"} | `void`{lang="ts-type"} <br> <div class="text-default mt-1"><p>Close the popover</p></div> |
+
 ## Theme
+
+Override the component theme through `ui.movkDatePicker` in `app.config.ts`. The popover uses Nuxt UI Popover slots:
 
 :component-theme
 

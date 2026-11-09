@@ -189,84 +189,18 @@ name: ComponentsMessageBoxControlledExample
 ---
 ::
 
-### 正文插槽
+### 插槽定制
 
-`body` 插槽渲染富文本正文，slot 参数 `close` 可在正文内主动关闭弹窗：
-
-::component-example
----
-name: ComponentsMessageBoxBodySlotExample
----
-::
-
-### 标题插槽
-
-`title` 插槽完全接管标题区，覆盖默认的图标加文本组合：
+通过 `body`、`title`、`description`、`header`、`footer`、`close` 或 `content` 替换对应区域；带操作的插槽使用 Nuxt UI Modal 提供的 `close()` 关闭弹层。切换区域分别查看：
 
 ::component-example
 ---
-name: ComponentsMessageBoxTitleSlotExample
----
-::
-
-### 描述插槽
-
-`description` 插槽支持富文本描述，可与 `title` prop 配合工作：
-
-::component-example
----
-name: ComponentsMessageBoxDescriptionSlotExample
----
-::
-
-### 头部插槽
-
-`header` 插槽完整接管 title 与 description 容器，可自定义布局与排版：
-
-::component-example
----
-name: ComponentsMessageBoxHeaderSlotExample
----
-::
-
-### 操作插槽
-
-`footer` 插槽完全接管按钮区，slot 参数 `close` 用于关闭弹窗：
-
-::component-example
----
-name: ComponentsMessageBoxFooterSlotExample
----
-::
-
-### 关闭按钮插槽
-
-`close` 插槽自定义右上角关闭按钮，可改 icon、color 与样式：
-
-::component-example
----
-name: ComponentsMessageBoxCloseSlotExample
----
-::
-
-### 内容插槽
-
-`content` 插槽替代 header / body / footer 的整体布局，适合极致定制场景：
-
-::component-example
----
-name: ComponentsMessageBoxContentSlotExample
----
-::
-
-### 命令式调用
-
-使用 `useMessageBox()` 在任意逻辑中调用对话框，无需在模板中声明组件。`alert()` 返回 `Promise<void>`，`confirm()` 返回 `Promise<boolean>`：
-
-::component-example
----
-name: ComponentsMessageBoxProgrammaticExample
-prettier: true
+name: ComponentsMessageBoxSlotsExample
+options:
+  - name: section
+    label: section
+    items: ['body', 'title', 'description', 'header', 'footer', 'close', 'content']
+    default: body
 ---
 ::
 
@@ -296,23 +230,6 @@ async function onSave() {
 }
 ```
 
-::component-example
----
-name: 'composables-use-message-box-alert-example'
-options:
-  - name: type
-    label: type
-    items:
-      - primary
-      - info
-      - success
-      - warning
-      - error
-      - neutral
-    default: success
----
-::
-
 ### confirm
 
 `confirm(options)` 返回 `Promise<boolean>`，把确认/取消映射为布尔值：
@@ -331,35 +248,27 @@ async function onDelete() {
 }
 ```
 
-::component-example
----
-name: 'composables-use-message-box-confirm-example'
-options:
-  - name: type
-    label: type
-    items:
-      - primary
-      - info
-      - success
-      - warning
-      - error
-      - neutral
-    default: warning
----
-::
-
 ### 异步确认流程
 
 `confirm` 适合串联异步流程——确认后再执行耗时任务：
 
-::component-example
----
-name: 'composables-use-message-box-async-example'
----
-::
-
 ::tip{icon="i-lucide-message-square" to="/docs/components/message-box"}
 声明式用法与完整 props 见 MessageBox 组件文档。
+::
+
+## 命令式调用示例
+
+选择提示、确认或确认后执行异步任务，观察 Promise 完成后的结果：
+
+::component-example
+---
+name: ComponentsMessageBoxProgrammaticExample
+options:
+  - name: mode
+    label: mode
+    items: ['alert', 'confirm', 'async']
+    default: confirm
+---
 ::
 
 ## API

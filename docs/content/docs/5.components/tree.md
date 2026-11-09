@@ -647,12 +647,12 @@ name: ComponentsTreeSelectionExample
 
 | Name | Type |
 | ---- | ---- |
-| `expandAll()`{lang="ts-type"} | `void`{lang="ts-type"} <br> <div class="text-toned mt-1"><p>展开全部可展开节点</p> |
-| `collapseAll()`{lang="ts-type"} | `void`{lang="ts-type"} <br> <div class="text-toned mt-1"><p>收起全部节点</p> |
-| `expandToDepth(depth)`{lang="ts-type"} | `void`{lang="ts-type"} <br> <div class="text-toned mt-1"><p>展开到指定层级，`depth=0` 收起全部</p> |
-| `selectAll()`{lang="ts-type"} | `void`{lang="ts-type"} <br> <div class="text-toned mt-1"><p>选中全部可选节点</p> |
-| `clearSelection()`{lang="ts-type"} | `void`{lang="ts-type"} <br> <div class="text-toned mt-1"><p>清空选中</p> |
-| `treeSelection`{lang="ts-type"} | `TreeSelectionResult`{lang="ts-type"} <br> <div class="text-toned mt-1"><p>当前选中结果分类（`selected` / `leaves` / `parents` / `halfSelected` / `strictlyChecked`）</p> |
+| `expandAll()`{lang="ts-type"} | `void`{lang="ts-type"} <br> <div class="text-default mt-1"><p>展开全部可展开节点</p> |
+| `collapseAll()`{lang="ts-type"} | `void`{lang="ts-type"} <br> <div class="text-default mt-1"><p>收起全部节点</p> |
+| `expandToDepth(depth)`{lang="ts-type"} | `void`{lang="ts-type"} <br> <div class="text-default mt-1"><p>展开到指定层级，`depth=0` 收起全部</p> |
+| `selectAll()`{lang="ts-type"} | `void`{lang="ts-type"} <br> <div class="text-default mt-1"><p>选中全部可选节点</p> |
+| `clearSelection()`{lang="ts-type"} | `void`{lang="ts-type"} <br> <div class="text-default mt-1"><p>清空选中</p> |
+| `treeSelection`{lang="ts-type"} | `TreeSelectionResult`{lang="ts-type"} <br> <div class="text-default mt-1"><p>当前选中结果分类（`selected` / `leaves` / `parents` / `halfSelected` / `strictlyChecked`）</p> |
 
 ## Theme
 

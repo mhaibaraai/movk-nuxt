@@ -40,6 +40,6 @@ const columns: DataTableColumn<Person>[] = [
       children-key="children"
       row-key="id"
     />
-    <pre class="text-xs p-3 rounded-md bg-muted overflow-auto">{{ result }}</pre>
+    <pre class="text-xs p-3 rounded-md bg-tint overflow-auto">{{ result }}</pre>
   </div>
 </template>

@@ -19,7 +19,7 @@ const state = reactive<Partial<z.output<typeof schema>>>({})
 </script>
 
 <template>
-  <MAutoForm :schema="schema" :state="state">
+  <MAutoForm v-model="state" :schema="schema">
     <template #field-content:profile="{ path, value, setValue }">
       <div class="space-y-4 rounded-md border border-default p-4">
         <div class="flex items-center justify-between">

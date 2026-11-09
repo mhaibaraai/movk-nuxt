@@ -35,7 +35,7 @@ const columns: DataTableDataColumn<User>[] = [
 - **Always set `row-key`** — selection, expansion, tree data and pinning all use it to identify rows.
 - **Derive callback / event types from official exports** — `DataTableDataColumn<T>['cell' | 'truncate' | 'tooltip']`, `DataTableProps<T>['sortable' | 'pinable' | 'resizable']`, and `DataTableSelectHandler` / `DataTableHoverHandler` / `DataTableContextmenuHandler` for events.
 - **Per-column prop > global prop** — use "global on + individual off" or vice versa to express exceptions, not row-by-row repetition.
-- **Server-side pagination**: set `paginationOptions.manualPagination: true` + `rowCount`, and reset `pagination.pageIndex` to 0 whenever the search/filter changes.
+- **Server-side pagination**: set `options.manualPagination: true` + `options.rowCount`, and reset `pagination.pageIndex` to 0 whenever the search/filter changes.
 
 ## Sorting, pinning, resizing
 
@@ -49,7 +49,7 @@ const sortable: DataTableProps<User>['sortable'] = true
 const pinable: DataTableProps<User>['pinable'] = col => col.id !== 'actions'
 
 const columns: DataTableDataColumn<User>[] = [
-  { accessorKey: 'name', header: 'Name', fixed: 'left' },
+  { accessorKey: 'name', header: 'Name', fixed: 'start' },
   { accessorKey: 'email', header: 'Email', sortable: false }, // override the global
   { accessorKey: 'role', header: 'Role', resizable: false }
 ]
@@ -160,7 +160,7 @@ Expand column with a detail slot:
 <template>
   <MDataTable :columns="columns" :data="data" row-key="id">
     <template #expanded="{ row }">
-      <div class="p-4 bg-muted">{{ row.original.bio }}</div>
+      <div class="p-4 bg-tint">{{ row.original.bio }}</div>
     </template>
   </MDataTable>
 </template>
@@ -251,7 +251,7 @@ watch(search, () => { pagination.value.pageIndex = 0 }) // reset to first page o
     row-key="id"
     :loading="status === 'pending'"
     v-model:pagination="pagination"
-    :pagination-options="{ manualPagination: true, rowCount: data?.total ?? 0 }"
+    :options="{ manualPagination: true, rowCount: data?.total ?? 0 }"
     :pagination-ui="{
       pageSizes: [10, 20, 50],
       showSelectedCount: true,

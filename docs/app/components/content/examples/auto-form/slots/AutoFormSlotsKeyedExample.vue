@@ -13,7 +13,7 @@ const state = reactive<Partial<z.output<typeof schema>>>({})
 </script>
 
 <template>
-  <MAutoForm :schema="schema" :state="state">
+  <MAutoForm v-model="state" :schema="schema">
     <template #field-label:username="{ label }">
       <UBadge icon="i-lucide-user" color="success" variant="subtle" size="xs">
         {{ label }}

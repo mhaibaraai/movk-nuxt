@@ -1,41 +1,39 @@
 <script setup lang="ts">
+const props = defineProps<{
+  mode: 'alert' | 'confirm' | 'async'
+}>()
+
 const { alert, confirm } = useMessageBox()
-const alertResult = ref('')
-const confirmResult = ref('')
+const pending = ref(false)
+const result = ref('')
 
-async function showAlert() {
-  await alert({
-    type: 'success',
-    title: '操作成功',
-    description: '数据已成功提交，await 会等待弹窗关闭后继续执行。'
-  })
-  alertResult.value = 'await 后的逻辑已执行'
-}
-
-async function showConfirm() {
-  const ok = await confirm({
-    type: 'error',
-    title: '清空数据',
-    description: '即将清空所有本地缓存，此操作不可撤销。',
-    icon: 'i-lucide-database-zap',
-    confirmButton: { color: 'error', label: '确认清空' },
-    cancelButton: { label: '我再想想' }
-  })
-  confirmResult.value = ok ? '数据已清空' : '操作已取消'
+async function run() {
+  pending.value = true
+  try {
+    if (props.mode === 'alert') {
+      await alert({ title: '保存成功', type: 'success' })
+      result.value = '提示已关闭'
+      return
+    }
+    const accepted = await confirm({ title: '是否继续？', type: 'warning' })
+    if (!accepted) {
+      result.value = '已取消'
+      return
+    }
+    if (props.mode === 'async') {
+      await new Promise(resolve => setTimeout(resolve, 500))
+    }
+    result.value = props.mode === 'async' ? '异步任务已完成' : '已确认'
+  }
+  finally {
+    pending.value = false
+  }
 }
 </script>
 
 <template>
-  <div class="space-y-3">
-    <div class="flex flex-wrap gap-3">
-      <div class="flex items-center gap-3">
-        <UButton color="success" variant="soft" label="alert()" icon="i-lucide-bell" @click="showAlert" />
-        <span v-if="alertResult" class="text-sm text-muted">{{ alertResult }}</span>
-      </div>
-      <div class="flex items-center gap-3">
-        <UButton color="error" variant="outline" label="confirm()" icon="i-lucide-database-zap" @click="showConfirm" />
-        <span v-if="confirmResult" class="text-sm text-muted">{{ confirmResult }}</span>
-      </div>
-    </div>
+  <div class="flex items-center gap-3">
+    <UButton :loading="pending" label="执行" @click="run" />
+    <span class="text-sm text-muted" aria-live="polite">{{ result }}</span>
   </div>
 </template>

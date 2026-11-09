@@ -6,8 +6,8 @@ const props = defineProps<{
   type: 'string' | 'textarea'
   size: 'sm' | 'xs' | 'md' | 'lg' | 'xl'
   color: 'error' | 'primary' | 'secondary' | 'success' | 'info' | 'warning' | 'neutral'
-  rows?: number
-  maxLength?: number
+  rows?: number | string
+  maxLength?: number | string
 }>()
 
 const { afz } = useAutoForm()
@@ -16,8 +16,8 @@ const toast = useToast()
 const resolvedControlProps = computed(() => ({
   leadingIcon: 'i-lucide-type',
   color: props.color,
-  rows: props.rows,
-  maxlength: props.maxLength
+  rows: props.rows === undefined ? undefined : Number(props.rows),
+  maxlength: props.maxLength === undefined ? undefined : Number(props.maxLength)
 }))
 
 const schema = computed(() => (afz.object({
@@ -45,8 +45,8 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 <template>
   <UCard class="w-lg">
     <MAutoForm
+      v-model="form"
       :schema="schema"
-      :state="form"
       :submit-button-props="{
         color
       }"

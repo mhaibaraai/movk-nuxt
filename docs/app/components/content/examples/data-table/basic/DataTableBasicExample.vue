@@ -28,7 +28,7 @@ const moneyCell: DataTableDataColumn<Person>['cell'] = ({ getValue }) => `¥${ge
 const columns: DataTableColumn<Person>[] = [
   { type: 'selection' },
   { type: 'index' },
-  { accessorKey: 'name', header: '姓名', size: 120, fixed: 'left', pinable: true },
+  { accessorKey: 'name', header: '姓名', size: 120, fixed: 'start', pinable: true },
   { accessorKey: 'department', header: '部门', size: 100 },
   { accessorKey: 'role', header: '岗位', size: 160, resizable: true },
   { accessorKey: 'status', header: '状态', size: 100, cell: statusCell },

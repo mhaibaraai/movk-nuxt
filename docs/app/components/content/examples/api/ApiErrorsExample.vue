@@ -40,6 +40,6 @@ const info = computed(() => {
     <p class="text-xs text-muted">
       所有失败统一为 <code>ApiError</code>（NuxtError），按 <code>error.data.kind</code> 区分场景。
     </p>
-    <pre class="text-xs p-3 rounded bg-elevated overflow-auto">{{ info }}</pre>
+    <pre class="text-xs p-3 rounded bg-soft overflow-auto">{{ info }}</pre>
   </div>
 </template>

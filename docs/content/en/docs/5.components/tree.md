@@ -647,12 +647,12 @@ You can access the typed component instance via [`useTemplateRef`](https://vuejs
 
 | Name | Type |
 | ---- | ---- |
-| `expandAll()`{lang="ts-type"} | `void`{lang="ts-type"} <br> <div class="text-toned mt-1"><p>Expand all expandable nodes</p> |
-| `collapseAll()`{lang="ts-type"} | `void`{lang="ts-type"} <br> <div class="text-toned mt-1"><p>Collapse all nodes</p> |
-| `expandToDepth(depth)`{lang="ts-type"} | `void`{lang="ts-type"} <br> <div class="text-toned mt-1"><p>Expand to the specified depth. `depth=0` collapses all</p> |
-| `selectAll()`{lang="ts-type"} | `void`{lang="ts-type"} <br> <div class="text-toned mt-1"><p>Select all selectable nodes</p> |
-| `clearSelection()`{lang="ts-type"} | `void`{lang="ts-type"} <br> <div class="text-toned mt-1"><p>Clear all selections</p> |
-| `treeSelection`{lang="ts-type"} | `TreeSelectionResult`{lang="ts-type"} <br> <div class="text-toned mt-1"><p>Current selection categorization (`selected` / `leaves` / `parents` / `halfSelected` / `strictlyChecked`)</p> |
+| `expandAll()`{lang="ts-type"} | `void`{lang="ts-type"} <br> <div class="text-default mt-1"><p>Expand all expandable nodes</p> |
+| `collapseAll()`{lang="ts-type"} | `void`{lang="ts-type"} <br> <div class="text-default mt-1"><p>Collapse all nodes</p> |
+| `expandToDepth(depth)`{lang="ts-type"} | `void`{lang="ts-type"} <br> <div class="text-default mt-1"><p>Expand to the specified depth. `depth=0` collapses all</p> |
+| `selectAll()`{lang="ts-type"} | `void`{lang="ts-type"} <br> <div class="text-default mt-1"><p>Select all selectable nodes</p> |
+| `clearSelection()`{lang="ts-type"} | `void`{lang="ts-type"} <br> <div class="text-default mt-1"><p>Clear all selections</p> |
+| `treeSelection`{lang="ts-type"} | `TreeSelectionResult`{lang="ts-type"} <br> <div class="text-default mt-1"><p>Current selection categorization (`selected` / `leaves` / `parents` / `halfSelected` / `strictlyChecked`)</p> |
 
 ## Theme
 

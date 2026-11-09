@@ -12,7 +12,8 @@ defineProps<{
 }>()
 
 const route = useRoute()
-const slug = computed(() => camelCase(route.path.split('/').pop() ?? ''))
+// 对应 app.config.ui 中的 movk 前缀主题键，如 movkDatePicker
+const slug = computed(() => camelCase(`movk-${route.path.split('/').pop() ?? ''}`))
 </script>
 
 <template>

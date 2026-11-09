@@ -30,7 +30,7 @@ function createTodo() {
 </script>
 
 <template>
-  <MAutoForm :schema="schema" :state="state">
+  <MAutoForm v-model="state" :schema="schema">
     <template #field-content:todos="{ value, setValue }">
       <div class="space-y-3">
         <div

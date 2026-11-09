@@ -189,84 +189,18 @@ name: ComponentsMessageBoxControlledExample
 ---
 ::
 
-### Body Slot
+### Custom Slots
 
-The `body` slot renders rich text content. The `close` slot parameter allows programmatically closing the dialog from within the body:
-
-::component-example
----
-name: ComponentsMessageBoxBodySlotExample
----
-::
-
-### Title Slot
-
-The `title` slot fully takes over the title area, replacing the default icon-plus-text combination:
+Replace the body, title, description, header, footer, close button or entire content. Action slots receive the Nuxt UI Modal `close()` function to dismiss the dialog. Select a region to inspect its customization:
 
 ::component-example
 ---
-name: ComponentsMessageBoxTitleSlotExample
----
-::
-
-### Description Slot
-
-The `description` slot supports rich text descriptions and works alongside the `title` prop:
-
-::component-example
----
-name: ComponentsMessageBoxDescriptionSlotExample
----
-::
-
-### Header Slot
-
-The `header` slot fully takes over the title and description container, enabling custom layout and typography:
-
-::component-example
----
-name: ComponentsMessageBoxHeaderSlotExample
----
-::
-
-### Footer Slot
-
-The `footer` slot fully takes over the button area. The `close` slot parameter is used to close the dialog:
-
-::component-example
----
-name: ComponentsMessageBoxFooterSlotExample
----
-::
-
-### Close Button Slot
-
-The `close` slot customizes the top-right close button — change icon, color, and styles:
-
-::component-example
----
-name: ComponentsMessageBoxCloseSlotExample
----
-::
-
-### Content Slot
-
-The `content` slot replaces the entire header / body / footer layout — ideal for fully custom scenarios:
-
-::component-example
----
-name: ComponentsMessageBoxContentSlotExample
----
-::
-
-### Programmatic Usage
-
-Use `useMessageBox()` to invoke dialogs from any logic without declaring the component in templates. `alert()` returns `Promise<void>`, and `confirm()` returns `Promise<boolean>`:
-
-::component-example
----
-name: ComponentsMessageBoxProgrammaticExample
-prettier: true
+name: ComponentsMessageBoxSlotsExample
+options:
+  - name: section
+    label: section
+    items: ['body', 'title', 'description', 'header', 'footer', 'close', 'content']
+    default: body
 ---
 ::
 
@@ -274,7 +208,7 @@ prettier: true
 
 ### Introduction
 
-`useMessageBox` provides an imperative dialog API — pop up dialogs without declaring a component in the template. It is built on the [`MessageBox`](/docs/components/message-box) component and Nuxt UI's `useOverlay`.
+`useMessageBox` provides an imperative dialog API — pop up dialogs without declaring a component in the template. It is built on the [`MessageBox`](/en/docs/components/message-box) component and Nuxt UI's `useOverlay`.
 
 ```ts
 const { alert, confirm } = useMessageBox()
@@ -296,23 +230,6 @@ async function onSave() {
 }
 ```
 
-::component-example
----
-name: 'composables-use-message-box-alert-example'
-options:
-  - name: type
-    label: type
-    items:
-      - primary
-      - info
-      - success
-      - warning
-      - error
-      - neutral
-    default: success
----
-::
-
 ### confirm
 
 `confirm(options)` returns `Promise<boolean>`, mapping confirm/cancel to a boolean value:
@@ -331,35 +248,27 @@ async function onDelete() {
 }
 ```
 
-::component-example
----
-name: 'composables-use-message-box-confirm-example'
-options:
-  - name: type
-    label: type
-    items:
-      - primary
-      - info
-      - success
-      - warning
-      - error
-      - neutral
-    default: warning
----
-::
-
 ### Async Confirmation Flow
 
 `confirm` is well-suited for chaining async flows — execute the time-consuming task only after confirmation:
 
-::component-example
----
-name: 'composables-use-message-box-async-example'
----
+::tip{icon="i-lucide-message-square" to="/en/docs/components/message-box"}
+See the MessageBox component documentation for declarative usage and the full props reference.
 ::
 
-::tip{icon="i-lucide-message-square" to="/docs/components/message-box"}
-See the MessageBox component documentation for declarative usage and the full props reference.
+## Programmatic Example
+
+Choose an alert, confirmation, or confirmation followed by an asynchronous task. The result updates after the promise completes:
+
+::component-example
+---
+name: ComponentsMessageBoxProgrammaticExample
+options:
+  - name: mode
+    label: mode
+    items: ['alert', 'confirm', 'async']
+    default: confirm
+---
 ::
 
 ## API

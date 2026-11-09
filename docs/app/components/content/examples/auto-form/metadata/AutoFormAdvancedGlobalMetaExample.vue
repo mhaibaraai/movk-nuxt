@@ -14,5 +14,5 @@ const form = ref<Partial<z.output<typeof schema>>>({})
 </script>
 
 <template>
-  <MAutoForm :schema="schema" :state="form" />
+  <MAutoForm v-model="form" :schema="schema" />
 </template>

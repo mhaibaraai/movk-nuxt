@@ -1,4 +1,12 @@
 <script setup lang="ts">
+const props = withDefaults(defineProps<{
+  cols?: string | number
+  visibleRows?: string | number
+}>(), {
+  cols: '3',
+  visibleRows: '1'
+})
+
 const { afz } = useAutoForm()
 
 const schema = afz.object({
@@ -13,5 +21,5 @@ const schema = afz.object({
 </script>
 
 <template>
-  <MSearchForm :schema="schema" />
+  <MSearchForm :schema="schema" :cols="Number(props.cols)" :visible-rows="Number(props.visibleRows)" />
 </template>

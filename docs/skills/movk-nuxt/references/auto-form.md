@@ -27,7 +27,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 </script>
 
 <template>
-  <MAutoForm :schema="schema" :state="state" @submit="onSubmit" />
+  <MAutoForm :schema="schema" v-model="state" @submit="onSubmit" />
 </template>
 ```
 
@@ -182,7 +182,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 ```vue
 <MAutoForm
   :schema="schema"
-  :state="state"
+  v-model="state"
   :loading-auto="false"
   :submit-button-props="{ loading: saving, label: 'Save' }"
   @submit="onSubmit"
@@ -214,7 +214,7 @@ function onError(errors: FormError[]) {
 </script>
 
 <template>
-  <MAutoForm ref="form" :schema="schema" :state="state" @submit="onSubmit" @error="onError" />
+  <MAutoForm ref="form" :schema="schema" v-model="state" @submit="onSubmit" @error="onError" />
 </template>
 ```
 
@@ -230,10 +230,31 @@ function clear() { form.value?.clear() }
 </script>
 
 <template>
-  <MAutoForm ref="form" :schema="schema" :state="state" :submit="false" @submit="onSubmit" />
+  <MAutoForm ref="form" :schema="schema" v-model="state" :submit="false" @submit="onSubmit" />
   <UButton label="Save" @click="save" />
   <UButton label="Reset" variant="outline" @click="reset" />
 </template>
 ```
 
 `form.formRef` exposes the underlying `UForm` instance — `validate()`, `getErrors()`, `setErrors()`, `clearErrors()`, plus reactive `dirty`, `dirtyFields`, `touchedFields`, `blurredFields`.
+
+## SearchForm query and payload
+
+`MSearchForm` shares AutoForm controls and supports:
+
+- `syncQuery: false` (default): no URL synchronization.
+- `syncQuery: true`: read schema fields from the query on mount; write on submit, reset and clear, preserving unrelated query keys. Uses `router.replace`.
+- `syncQuery: { replace: false, parse, serialize }`: use `router.push` and optional custom query/state conversion. Keep serialized keys aligned with schema fields so old values are replaced. Query changes after mount do not automatically overwrite form state.
+- `transformPayload: true` (default): trim top-level strings and omit empty strings, `null` and `undefined` from `event.data`.
+- `transformPayload: false`: submit unchanged data.
+- `transformPayload: state => ({ ...state, keyword: state.keyword?.trim().toUpperCase() })`: customize the submitted payload; `v-model` stays unchanged. URL writes still apply default cleanup independently.
+
+```vue
+<MSearchForm
+  v-model="filters"
+  :schema="schema"
+  :sync-query="{ replace: false }"
+  :transform-payload="false"
+  @submit="event => search(event.data)"
+/>
+```

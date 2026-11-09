@@ -12,7 +12,7 @@ const fetchers = {
   'message': useApiFetch(target, {
     key: 'toast-message',
     immediate: false,
-    toast: { successMessage: '加载成功 ✓', errorMessage: '加载失败 ✗' }
+    toast: { successMessage: '资料已加载', errorMessage: '资料加载失败' }
   }),
   'error-only': useApiFetch(target, { key: 'toast-error-only', immediate: false, toast: { success: false } }),
   'custom': useApiFetch(target, {
@@ -51,6 +51,6 @@ const display = computed(() => active.value.error.value
     <p class="text-xs text-muted">
       {{ hints[mode] }}
     </p>
-    <pre class="text-xs p-3 rounded bg-elevated overflow-auto">{{ display }}</pre>
+    <pre class="text-xs p-3 rounded bg-soft overflow-auto">{{ display }}</pre>
   </div>
 </template>

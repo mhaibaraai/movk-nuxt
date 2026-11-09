@@ -24,8 +24,8 @@ async function onSubmit() {
 
 <template>
   <MAutoForm
+    v-model="state"
     :schema="schema"
-    :state="state"
     :loading-auto="false"
     :submit-button-props="{ loading, label: loading ? '提交中…' : '提交' }"
     @submit="onSubmit"

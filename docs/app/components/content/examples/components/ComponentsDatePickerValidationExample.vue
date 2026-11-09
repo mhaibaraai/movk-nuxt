@@ -1,27 +1,19 @@
 <script setup lang="ts">
-import type { CalendarDate } from '#movk/types'
+import type { DateValue } from '@movk/nuxt'
 
 const formatter = useDateFormatter()
-const futureDate = shallowRef<CalendarDate>()
-const pastDate = shallowRef<CalendarDate>()
+const futureDate = shallowRef<DateValue>()
+const workday = shallowRef<DateValue>()
 </script>
 
 <template>
   <div class="space-y-4">
-    <UFormField label="未来日期">
-      <MDatePicker
-        v-model="futureDate"
-        :min-value="formatter.getToday()"
-        :button-props="{ label: '选择未来日期', class: 'w-full' }"
-      />
+    <UFormField label="今天及以后">
+      <MDatePicker v-model="futureDate" :min-value="formatter.getToday()" />
     </UFormField>
 
-    <UFormField label="过去日期">
-      <MDatePicker
-        v-model="pastDate"
-        :max-value="formatter.getToday()"
-        :button-props="{ label: '选择过去日期', class: 'w-full' }"
-      />
+    <UFormField label="仅工作日">
+      <MDatePicker v-model="workday" :is-date-unavailable="formatter.isWeekend" />
     </UFormField>
   </div>
 </template>

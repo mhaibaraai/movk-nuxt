@@ -1,40 +1,48 @@
 <script setup lang="ts">
-const f = useDateFormatter({ locale: 'zh-CN' })
+const f = useDateFormatter()
 const today = f.getToday()
-const range = { start: today, end: today.add({ days: 7 }) }
-const list = [today, today.add({ days: 1 }), today.add({ days: 2 })]
+const nextWeek = today.add({ days: 7 })
 
 const rows = [
-  { method: 'format(today)', value: f.format(today) },
-  { method: 'toISO(today)', value: f.toISO(today) },
-  { method: 'toTimestamp(today)', value: f.toTimestamp(today) },
-  { method: 'toUnixTimestamp(today)', value: f.toUnixTimestamp(today) },
-  { method: 'isWeekend(today)', value: f.isWeekend(today) },
-  { method: 'isWeekday(today)', value: f.isWeekday(today) },
-  { method: 'isToday(today)', value: f.isToday(today) },
-  { method: 'getDayOfWeek(today)', value: f.getDayOfWeek(today) },
-  { method: 'getDayOfWeekName(today, "long")', value: f.getDayOfWeekName(today, 'long') },
-  { method: 'getDayOfWeekName(today, "short")', value: f.getDayOfWeekName(today, 'short') },
-  { method: 'getStartOfMonth(today)', value: f.toISO(f.getStartOfMonth(today)) },
-  { method: 'getEndOfMonth(today)', value: f.toISO(f.getEndOfMonth(today)) },
-  { method: 'getStartOfYear(today)', value: f.toISO(f.getStartOfYear(today)) },
-  { method: 'getEndOfYear(today)', value: f.toISO(f.getEndOfYear(today)) },
-  { method: 'formatRange(start, end)', value: f.formatRange(range.start, range.end) },
-  { method: 'formatArray([d, d+1, d+2])', value: f.formatArray(list) },
-  { method: 'parse("2026-01-01")?.toString()', value: f.parse('2026-01-01')?.toString() ?? 'null' }
-]
-
-const columns = [
-  { accessorKey: 'method', header: '调用' },
-  { accessorKey: 'value', header: '返回值' }
+  { call: 'format(today)', value: f.format(today) },
+  { call: 'formatRange(today, nextWeek)', value: f.formatRange(today, nextWeek) },
+  { call: 'toISO(today)', value: f.toISO(today) },
+  { call: 'toTimestamp(today)', value: f.toTimestamp(today) },
+  { call: 'toUnixTimestamp(today)', value: f.toUnixTimestamp(today) },
+  { call: 'fromISO(\'2026-01-01\')', value: f.fromISO('2026-01-01')?.toString() },
+  { call: 'getDayOfWeekName(today)', value: f.getDayOfWeekName(today) },
+  { call: 'getEndOfMonth(today)', value: f.toISO(f.getEndOfMonth(today)) },
+  { call: 'isWeekend(today)', value: f.isWeekend(today) },
+  { call: 'convertToISO({ start, end })', value: JSON.stringify(f.convertToISO({ start: today, end: nextWeek })) }
 ]
 </script>
 
 <template>
-  <div class="flex flex-col gap-3">
+  <div class="space-y-2">
     <p class="text-xs text-muted">
-      当前 locale: {{ f.locale }} · timeZone: {{ f.timeZone }}
+      locale：{{ f.locale }} · timeZone：{{ f.timeZone }}
     </p>
-    <MDataTable :columns="columns" :data="rows" stripe bordered density="compact" />
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="border-b border-default text-left">
+          <th class="py-1.5 pe-4 font-medium">
+            调用
+          </th>
+          <th class="py-1.5 font-medium">
+            返回值
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="row in rows" :key="row.call" class="border-b border-default last:border-0">
+          <td class="py-1.5 pe-4 font-mono text-xs">
+            {{ row.call }}
+          </td>
+          <td class="py-1.5 text-muted">
+            {{ row.value }}
+          </td>
+        </tr>
+      </tbody>
+    </table>
   </div>
 </template>

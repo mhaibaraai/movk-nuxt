@@ -40,8 +40,8 @@ watch(() => props.endpoint, load, { immediate: true })
       </UButton>
     </div>
     <p class="text-xs text-muted">
-      $api 默认走 default 端点的 baseURL，$api.use(name) 切换到别名端点后请求改用对应 baseURL。
+      $api.use('{{ endpoint }}')('/profile') 按该端点的 baseURL 发出请求，端点实例按名称缓存。
     </p>
-    <pre class="text-xs p-3 rounded bg-elevated overflow-auto">{{ error ? { error } : data }}</pre>
+    <pre class="text-xs p-3 rounded bg-soft overflow-auto">{{ error ? { error } : data }}</pre>
   </div>
 </template>

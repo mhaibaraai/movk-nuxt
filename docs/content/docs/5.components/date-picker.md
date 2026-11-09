@@ -1,27 +1,23 @@
 ---
 title: DatePicker
-description: 基于国际化标准的日期选择器组件。
+description: 按钮触发的日期选择器，支持单选、范围、多选、月 / 年粒度与 v-model 输出格式转换。
 category: advanced
 seo:
   title: DatePicker
-  description: An internationalized date picker supporting single, range and multiple selection, presets and custom output formats.
+  description: A button-triggered date picker built on Nuxt UI Calendar, supporting single, range and multiple selection, month and year granularity, presets, clearing and configurable v-model value formats, plus the useDateFormatter composable.
 ---
 
-## 简介
+需要在表单或筛选栏里选择日期，并希望 v-model 直接是后端要的 ISO 字符串或时间戳时，使用 `MDatePicker`。它把 Nuxt UI 的 `UPopover`、`UButton` 与 `UCalendar` 组合成一个字段控件：继承 `UFormField` / `UFieldGroup` 的尺寸与错误态，并在 v-model 与日历之间自动转换值格式。AutoForm 的 `afz.calendarDate()` 字段默认渲染的就是它。
 
-`MDatePicker` 是一个国际化日期选择器，基于 `@internationalized/date` 处理时区与本地化。支持单日期、日期范围、多日期选择，并提供按钮触发、可清空、快捷预设等多种交互形态。
+日期计算与格式化由同页的 [`useDateFormatter`](#usedateformatter) 提供，基于 [`@internationalized/date`](https://react-spectrum.adobe.com/internationalized/date/index.html)，与时区无关的 `CalendarDate` 不会因用户所在时区偏移一天。
 
 ::callout{color="neutral" to="https://ui.nuxt.com/docs/components/calendar"}
-基于 Nuxt UI 的 Calendar 组件封装
-::
-
-::note{to="https://react-spectrum.adobe.com/internationalized/date/index.html"}
-使用 `@internationalized/date` 库进行日期处理，确保时区安全和国际化支持。
+未被 `MDatePicker` 声明的 props（`minValue`、`maxValue`、`isDateUnavailable`、`numberOfMonths`、`weekStartsOn` 等）全部透传给 Nuxt UI Calendar。
 ::
 
 ## 用法
 
-默认按钮触发器展示当前日期，点击打开日历面板后选择并写入 v-model：
+默认选择单个日期，v-model 为 `DateValue`（如 `CalendarDate`）：
 
 ::component-code
 ---
@@ -35,7 +31,7 @@ props:
 
 ### `range` 日期范围
 
-`range` 模式维护 `start` / `end` 两端日期，`numberOfMonths` 可同时展示双月日历：
+`range` 作用：v-model 变为 `{ start, end }`，配合 `numberOfMonths` 并排展示多个月份，便于跨月选择：
 
 ::component-code
 ---
@@ -47,76 +43,103 @@ props:
   range: true
   numberOfMonths: 2
 items:
-  range: [true, false]
----
-::
-
-### `numberOfMonths` 月份数量
-
-`numberOfMonths` 控制弹层内并排展示的月份数量，便于跨月选择：
-
-::component-code
----
-name: MDatePicker
-props:
-  numberOfMonths: 3
-items:
   numberOfMonths: [1, 2, 3]
 ---
 ::
 
-### `clearable` 可清空
+### `multiple` 多日期
 
-`clearable` 在已有值时显示清除入口，点击后重置且不展开日历：
-
-::component-code
----
-name: MDatePicker
-props:
-  clearable: true
----
-::
-
-### `presets` 快捷预设
-
-`presets` 设为 `default` 会按当前模式自动生成「今天」「本周」「本月」等快捷项：
+`multiple` 作用：v-model 变为日期数组，按钮依次列出已选日期：
 
 ::component-code
 ---
 name: MDatePicker
-hide: ['placeholder']
-ignore: ['presets']
+external: ['modelValue']
+hide: ['modelValue']
 props:
-  range: true
-  presets: default
-  placeholder: 选择范围
-items:
-  range: [true, false]
----
-::
-
-### `multiple` 多日期选择
-
-`multiple` 模式将多个日期保存在数组中，按钮文案可根据已选数量动态展示：
-
-::component-code
----
-name: MDatePicker
-prettier: true
-props:
+  modelValue: ''
   multiple: true
-  buttonProps:
-    label: 选择多个日期
-    color: primary
+---
+::
+
+### `type` 月 / 年粒度
+
+`type` 作用：切换为月份或年份选择面板，按钮文案只显示到对应粒度（如「2025年3月」「2025年」）：
+
+::component-code
+---
+name: MDatePicker
+external: ['modelValue']
+hide: ['modelValue']
+props:
+  modelValue: ''
+  type: month
 items:
-  multiple: [true, false]
-  buttonProps.color: ['primary', 'info', 'success', 'warning', 'error', 'neutral']
+  type: ['date', 'month', 'year']
+---
+::
+
+::note
+`formatOptions` 优先于粒度默认格式；`presets: 'default'` 只在 `type` 为 `date` 时生成快捷项，自定义预设数组不受此限制。
+::
+
+### `valueFormat` 输出格式
+
+`valueFormat` 作用：决定 v-model 的值形态，组件内部负责双向转换，日历始终操作 `DateValue`。可选 `date-value`（默认）、`iso`、`timestamp`（毫秒）、`unix`（秒）、`date`（JS `Date`），对单值、范围与数组同样生效：
+
+::component-example
+---
+name: ComponentsDatePickerValueFormatExample
+---
+::
+
+::note
+纯日期转为 `timestamp` / `unix` / `date` 时取 UTC 零点，任何时区下回读都是同一天；无时区的日期时间按 `timeZone` 解释，带时区的值保留对应时刻。
+::
+
+### `labelFormat` 按钮文案格式
+
+`labelFormat` 作用：控制触发按钮上的日期展示，可选 `formatted`（默认，按 `locale` 与 `formatOptions` 本地化）、`iso`、`date`、`timestamp`、`unix`。选择日期后切换观察：
+
+::component-code
+---
+name: MDatePicker
+external: ['modelValue']
+hide: ['modelValue']
+props:
+  modelValue: ''
+  labelFormat: iso
+items:
+  labelFormat: ['formatted', 'iso', 'date', 'timestamp', 'unix']
+---
+::
+
+传入函数可完全接管文案，参数为格式化器与当前日历值：
+
+```vue
+<template>
+  <MDatePicker
+    v-model="date"
+    :label-format="(f, value) => f.isDateValue(value) ? `${f.format(value)} ${f.getDayOfWeekName(value)}` : '选择日期'"
+  />
+</template>
+```
+
+### `placeholder` 空值文案
+
+`placeholder` 作用：未选择日期时的按钮文案。缺省时依次取 `buttonProps.label`、locale 的 `datePicker.placeholder`：
+
+::component-code
+---
+name: MDatePicker
+props:
+  placeholder: 选择入职日期
 ---
 ::
 
 ### `buttonProps` 触发按钮
 
-`buttonProps` 透传给触发按钮，可调整 label、color、variant 与 icon：
+`buttonProps` 作用：透传给触发按钮，覆盖 `color`、`variant`、`icon`、`ui` 等。`label` 只作为空值文案，选中日期后按钮仍显示日期：
 
 ::component-code
 ---
@@ -129,16 +152,104 @@ props:
     variant: outline
     icon: i-lucide-cake
 items:
-  buttonProps.color: ['primary', 'info', 'success', 'warning', 'error', 'neutral']
+  buttonProps.color: ['primary', 'secondary', 'success', 'info', 'warning', 'error', 'neutral']
   buttonProps.variant: ['solid', 'outline', 'soft', 'subtle', 'ghost', 'link']
+---
+::
+
+::note
+组件上的 `class` / `style` 落在触发按钮上（按钮默认 `w-full`），其余未声明的属性透传给日历；弹层配置用 `popoverProps`。
+::
+
+### `clearable` 可清除
+
+`clearable` 作用：有值且未禁用时在按钮末尾显示清除按钮，点击后清空且不展开日历。单值与范围清除后得到 `undefined`，`multiple` 得到 `[]`；清除按钮的无障碍文案来自 locale 的 `datePicker.clear`。选择日期后可见：
+
+::component-code
+---
+name: MDatePicker
+external: ['modelValue']
+hide: ['modelValue']
+props:
+  modelValue: ''
+  clearable: true
+  range: true
+---
+::
+
+### `presets` 快捷预设
+
+`presets` 作用：在日历左侧渲染快捷项。设为 `'default'` 时单选生成「今天 / 昨天 / 明天」，范围生成「今天 / 本周 / 本月 / 最近 7 天 / 最近 30 天」，`multiple` 不生成；文案随 locale 切换：
+
+::component-code
+---
+name: MDatePicker
+external: ['modelValue']
+hide: ['modelValue']
+props:
+  modelValue: ''
+  range: true
+  presets: default
+items:
+  range: [true, false]
+---
+::
+
+### `size` 尺寸
+
+`size` 作用：同时作用于触发按钮与日历；未传时继承外层 `UFormField` / `UFieldGroup` 的尺寸：
+
+::component-code
+---
+name: MDatePicker
+props:
+  size: md
+items:
+  size: ['xs', 'sm', 'md', 'lg', 'xl']
+---
+::
+
+### `color` 主色
+
+`color` 作用：日历选中态的主色。触发按钮默认使用 `neutral`，表单错误态或 `color: error` 时使用 `error`；可用 `buttonProps.color` 单独覆盖：
+
+::component-code
+---
+name: MDatePicker
+props:
+  color: success
+items:
+  color: ['primary', 'secondary', 'success', 'info', 'warning', 'error', 'neutral']
+---
+::
+
+### `disabled` 禁用
+
+`disabled` 作用：同时禁用触发按钮与日历；未传时继承外层 `UFormField` 的禁用状态：
+
+::component-code
+---
+name: MDatePicker
+props:
+  disabled: true
+---
+::
+
+### `open` 受控弹层
+
+`open` 作用：用 `v-model:open` 双向绑定弹层开关；组件实例另暴露 `open()` / `close()`，可在外部按钮或流程中打开日历：
+
+::component-example
+---
+name: ComponentsDatePickerOpenExample
 ---
 ::
 
 ## 示例
 
-### 继承字段上下文
+### 表单字段上下文
 
-放入 `UFormField` 后继承 `size` 与错误态，触发按钮按表单状态渲染：
+放入 `UFormField` 时继承尺寸、`id` 与错误态；放入 `UFieldGroup` 时与相邻按钮共用尺寸与边框衔接：
 
 ::component-example
 ---
@@ -151,32 +262,13 @@ options:
       - md
       - lg
       - xl
-    default: xs
+    default: md
 ---
 ::
 
-### 融入`UFieldGroup`
+### 限制可选日期
 
-与按钮置于 `UFieldGroup` 时共用尺寸与边框衔接，适合筛选栏中组合快捷操作：
-
-::component-example
----
-name: ComponentsDatePickerFieldGroupExample
-options:
-  - name: size
-    items:
-      - xs
-      - sm
-      - md
-      - lg
-      - xl
-    default: xs
----
-::
-
-### 限制可选日期边界
-
-`minValue` 与 `maxValue` 会禁用边界外日期，分别约束只能选择未来或过去日期：
+`minValue` / `maxValue` 限定边界，`isDateUnavailable` 按规则禁用日期（下例禁用周末），二者都透传给日历：
 
 ::component-example
 ---
@@ -184,29 +276,9 @@ name: ComponentsDatePickerValidationExample
 ---
 ::
 
-### 按规则禁用日期
-
-`isDateUnavailable` 可按业务规则禁用日期（如示例中的周末）：
-
-::component-example
----
-name: ComponentsDatePickerUnavailableExample
----
-::
-
-### 自定义触发按钮文案
-
-`labelFormat` 接收格式化工具和当前值，可把日期与星期信息组合为按钮 label：
-
-::component-example
----
-name: ComponentsDatePickerFormatExample
----
-::
-
 ### 自定义快捷预设
 
-`presets` 传入数组可按业务规则返回日期，每项 `value` 是接收 `formatter` 的函数：
+`presets` 传入数组时，每项 `value` 可以是固定值，也可以是接收格式化器的函数，按当前日期动态计算：
 
 ::component-example
 ---
@@ -216,392 +288,99 @@ name: ComponentsDatePickerPresetsExample
 
 ## useDateFormatter
 
-### 用法
+需要在脚本中格式化、换算或比较日期，或在提交前把表单里的日期统一转成 ISO 字符串时，使用自动导入的 `useDateFormatter`。`MDatePicker` 的按钮文案、预设与 `valueFormat` 转换都由它完成。
 
-使用自动导入的 `useDateFormatter` composable 进行日期格式化、转换和操作，基于 `@internationalized/date` 库实现国际化日期处理。
+```ts
+const f = useDateFormatter()
 
-```vue
-<script setup lang="ts">
-const formatter = useDateFormatter({ locale: 'zh-CN' })
-
-const today = formatter.getToday()
-const formattedDate = formatter.format(today)
-// "2025年11月29日"
-
-const isoString = formatter.toISO(today)
-// "2025-11-29"
-</script>
+const today = f.getToday()
+f.format(today) // 按当前 locale 本地化，如 "2025年11月29日"
+f.toISO(today) // "2025-11-29"
+f.fromISO('2025-11-29') // CalendarDate
 ```
 
-- `useDateFormatter` 基于 `Intl.DateTimeFormat` 提供本地化日期格式化。
-- 支持单个日期、日期范围、日期数组以及嵌套对象的批量转换。
-- 通过 `timeZone` 选项指定时区（默认本地时区），标识符遵循 IANA 时区数据库规范。
+### 选项
+
+| 选项 | 说明 |
+| --- | --- |
+| `locale` | 语言区域。未传时跟随 `<UApp :locale>`，在组件 `setup` 之外调用时为 `'en'` |
+| `formatOptions` | [`Intl.DateTimeFormat`](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Intl/DateTimeFormat/DateTimeFormat) 选项，默认 `{ dateStyle: 'medium' }` |
+| `timeZone` | IANA 时区标识（如 `'Asia/Shanghai'`），默认本地时区 |
 
 ::note
-所有格式化和转换方法都内置了错误处理，当传入 `null` 或 `undefined` 时会返回空字符串或 `null`，避免抛出异常。
+locale 在调用时解析一次，切换 `<UApp :locale>` 后需重新调用 `useDateFormatter()`（如放进 `computed`）才能拿到新语言。
 ::
 
 ### 能力一览
 
-下表覆盖了 `useDateFormatter` 在常用日期场景下的输出形态：
+当前 locale 与时区下常用方法的实际输出：
 
 ::component-example
 ---
-name: 'composables-use-date-formatter-overview-example'
+name: ComposablesUseDateFormatterOverviewExample
 ---
 ::
 
-### 与 AutoForm 集成
+### 提交前批量转换
 
-在 AutoForm 中使用日期字段时，建议使用 `convertToISO()` 进行批量转换后提交：
+`convertToISO` 递归处理单个日期、`{ start, end }` 范围、数组与普通对象，保持结构不变，适合在 AutoForm 提交时一次性转换：
 
-```vue
-<script setup lang="ts">
+```ts
+import type { FormSubmitEvent } from '@nuxt/ui'
+import type { z } from 'zod'
+
 const { afz } = useAutoForm()
-const formatter = useDateFormatter()
+const f = useDateFormatter()
 
 const schema = afz.object({
   eventDate: afz.calendarDate(),
-  eventRange: afz.calendarDate({
-    controlProps: { mode: 'range' }
-  })
+  eventRange: afz.calendarDate({ controlProps: { range: true } })
 })
 
-const formData = ref()
-
-async function handleSubmit() {
-  // 自动处理所有日期字段的转换
-  const payload = formatter.convertToISO(formData.value)
-
-  // payload.eventDate: "2025-11-29"
-  // payload.eventRange: { start: "2025-11-01", end: "2025-11-30" }
-
-  await api.submit(payload)
+async function onSubmit(event: FormSubmitEvent<z.output<typeof schema>>) {
+  const payload = f.convertToISO(event.data)
+  // { eventDate: '2025-11-29', eventRange: { start: '2025-11-01', end: '2025-11-30' } }
+  await $fetch('/api/events', { method: 'POST', body: payload })
 }
-</script>
 ```
 
-::note
-`convertToISO` 自动遍历所有嵌套日期字段并保持对象结构不变，无需手动转换。
+::tip
+如果后端只接受某一种格式，也可以直接给 `MDatePicker` 设置 `valueFormat`，表单数据从一开始就是目标格式。
 ::
 
-### API
-
-#### useDateFormatter()
-
-`useDateFormatter(options?: DateFormatterOptions): DateFormatter`{lang="ts-type"}
-
-创建日期格式化器实例。
-
-##### Parameters
-
-::field-group
-
-  ::field{name="options" type="DateFormatterOptions"}
-  日期格式化配置选项。
-
-    ::collapsible
-
-      ::field-group
-        ::field{name="locale" type="string"}
-        语言区域，默认 `'zh-CN'`。
-        ::
-
-        ::field{name="formatOptions" type="Intl.DateTimeFormatOptions"}
-        日期格式化选项，遵循 [Intl.DateTimeFormat](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Intl/DateTimeFormat/DateTimeFormat) 规范。默认为 `{ dateStyle: 'medium' }`。
-        ::
-
-        ::field{name="timeZone" type="string"}
-        时区标识符（如 `'Asia/Shanghai'`, `'America/New_York'`），默认使用本地时区。详见 [@internationalized/date 时区文档](https://react-spectrum.adobe.com/internationalized/date/index.html#timezones)。
-        ::
-      ::
-    ::
-  ::
-::
-
-##### Returns
-
-返回包含以下方法和属性的日期格式化器对象。
-
-#### 格式化方法
-
-::field-group
-
-  ::field{name="format()" type="(date: DateValue | undefined | null) => string"}
-  格式化单个日期为本地化字符串。
-
-    ::collapsible
-      ```ts
-      formatter.format(date)
-      // "2025年11月29日"
-      ```
-    ::
-  ::
-
-  ::field{name="formatRange()" type="(start: DateValue | undefined | null, end: DateValue | undefined | null, separator?: string) => string"}
-  格式化日期范围，默认分隔符为 `' - '`。
-
-    ::collapsible
-      ```ts
-      formatter.formatRange(startDate, endDate)
-      // "2025年11月1日 - 2025年11月30日"
-
-      formatter.formatRange(startDate, endDate, ' 至 ')
-      // "2025年11月1日 至 2025年11月30日"
-      ```
-    ::
-  ::
-
-  ::field{name="formatArray()" type="(dates: DateValue[] | undefined | null, separator?: string) => string"}
-  格式化日期数组，默认分隔符为 `', '`。
-
-    ::collapsible
-      ```ts
-      formatter.formatArray([date1, date2, date3])
-      // "2025年11月1日, 2025年11月15日, 2025年11月29日"
-      ```
-    ::
-  ::
-::
-
-#### 转换方法
-
-::field-group
-
-  ::field{name="toISO()" type="(date: DateValue | undefined | null) => string"}
-  转换为 ISO 8601 字符串。
-
-    ::collapsible
-      ```ts
-      formatter.toISO(date)
-      // "2025-11-29"
-      ```
-    ::
-  ::
-
-  ::field{name="toDate()" type="(date: DateValue | undefined | null) => Date | null"}
-  转换为 JavaScript Date 对象。
-  ::
-
-  ::field{name="toTimestamp()" type="(date: DateValue | undefined | null) => number | null"}
-  转换为时间戳（毫秒）。
-
-    ::collapsible
-      ```ts
-      formatter.toTimestamp(date)
-      // 1732838400000
-      ```
-    ::
-  ::
-
-  ::field{name="toUnixTimestamp()" type="(date: DateValue | undefined | null) => number | null"}
-  转换为 Unix 时间戳（秒）。
-
-    ::collapsible
-      ```ts
-      formatter.toUnixTimestamp(date)
-      // 1732838400
-      ```
-    ::
-  ::
-
-  ::field{name="parse()" type="(value: string) => DateValue | null"}
-  解析 ISO 8601 日期字符串。自动识别 `CalendarDate`、`CalendarDateTime` 或 `ZonedDateTime`。
-
-    ::collapsible
-      ```ts
-      formatter.parse('2025-11-29')
-      // CalendarDate
-
-      formatter.parse('2025-11-29T10:30:00')
-      // CalendarDateTime
-
-      formatter.parse('2025-11-29T10:30:00[Asia/Shanghai]')
-      // ZonedDateTime
-      ```
-    ::
-  ::
-::
-
-#### 工具方法 - 获取日期
-
-::field-group
-  ::field{name="getToday()" type="() => CalendarDate"}
-  获取今天的日期。
-  ::
-
-  ::field{name="getNow()" type="() => ZonedDateTime"}
-  获取当前日期时间。
-  ::
-
-  ::field{name="getStartOfWeek()" type="(date: DateValue) => DateValue"}
-  获取一周的开始日期（基于当前语言区域）。
-  ::
-
-  ::field{name="getEndOfWeek()" type="(date: DateValue) => DateValue"}
-  获取一周的结束日期（基于当前语言区域）。
-  ::
-
-  ::field{name="getStartOfMonth()" type="(date: DateValue) => DateValue"}
-  获取一月的开始日期。
-  ::
-
-  ::field{name="getEndOfMonth()" type="(date: DateValue) => DateValue"}
-  获取一月的结束日期。
-  ::
-
-  ::field{name="getStartOfYear()" type="(date: DateValue) => DateValue"}
-  获取一年的开始日期。
-  ::
-
-  ::field{name="getEndOfYear()" type="(date: DateValue) => DateValue"}
-  获取一年的结束日期。
-  ::
-::
-
-#### 工具方法 - 查询
-
-::field-group
-  ::field{name="getDayOfWeek()" type="(date: DateValue) => number"}
-  获取星期几数字（0-6，0 为本地化的一周第一天）。
-  ::
-
-  ::field{name="getDayOfWeekName()" type="(date: DateValue, style?: 'narrow' | 'short' | 'long') => string"}
-  获取本地化的星期几名称。
-
-    ::collapsible
-      **Parameters**
-
-      ::field-group
-        ::field{name="date" type="DateValue" required}
-        日期对象。
-        ::
-
-        ::field{name="style" type="'narrow' | 'short' | 'long'"}
-        格式样式。 默认 `long`
-
-        - `'narrow'` - 最短格式，如「一」
-        - `'short'` - 短格式，如「周一」
-        - `'long'` - 完整格式，如「星期一」
-        ::
-      ::
-
-      ```ts
-      const date = formatter.getToday()
-
-      formatter.getDayOfWeekName(date, 'narrow')  // "一"
-      formatter.getDayOfWeekName(date, 'short')   // "周一"
-      formatter.getDayOfWeekName(date, 'long')    // "星期一"
-      formatter.getDayOfWeekName(date)            // "星期一" (默认)
-      ```
-    ::
-  ::
-
-  ::field{name="getWeeksInMonth()" type="(date: DateValue) => number"}
-  获取本月的周数。
-  ::
-
-  ::field{name="isWeekday()" type="(date: DateValue) => boolean"}
-  判断是否为工作日。
-  ::
-
-  ::field{name="isWeekend()" type="(date: DateValue) => boolean"}
-  判断是否为周末。
-  ::
-
-  ::field{name="isSameDay()" type="(a: DateValue, b: DateValue) => boolean"}
-  判断是否为同一天。
-  ::
-
-  ::field{name="isSameMonth()" type="(a: DateValue, b: DateValue) => boolean"}
-  判断是否为同一月。
-  ::
-
-  ::field{name="isSameYear()" type="(a: DateValue, b: DateValue) => boolean"}
-  判断是否为同一年。
-  ::
-
-  ::field{name="isToday()" type="(date: DateValue) => boolean"}
-  判断是否为今天。
-  ::
-
-  ::field{name="isDateValue()" type="(value: unknown) => value is DateValue"}
-  类型守卫，判断是否为 `DateValue` 类型。
-  ::
-
-  ::field{name="isDateRange()" type="(value: unknown) => value is DateRange"}
-  类型守卫，判断是否为 `DateRange` 类型。
-  ::
-::
-
-#### 批量转换方法
-
-::field-group
-
-  ::field{name="convertData()" type="<T>(data: T, converter: (value: DateValue) => any) => T"}
-  通用数据转换函数，自动处理单个日期、日期范围、日期数组以及嵌套对象。
-
-    ::collapsible
-      ```ts
-      const converted = formatter.convertData(complexData, formatter.toISO)
-      ```
-    ::
-  ::
-
-  ::field{name="convertToISO()" type="<T>(data: T) => T"}
-  批量转换为 ISO 字符串。支持单个日期、日期范围、数组和嵌套对象。
-
-    ::collapsible
-      ```ts
-      // 单个日期
-      formatter.convertToISO(date)
-      // "2025-11-29"
-
-      // 日期范围
-      formatter.convertToISO({ start: date1, end: date2 })
-      // { start: "2025-11-01", end: "2025-11-30" }
-
-      // 日期数组
-      formatter.convertToISO([date1, date2])
-      // ["2025-11-01", "2025-11-15"]
-
-      // 嵌套对象
-      formatter.convertToISO({
-        createdAt: date1,
-        range: { start: date2, end: date3 }
-      })
-      // {
-      //   createdAt: "2025-11-01",
-      //   range: { start: "2025-11-20", end: "2025-11-29" }
-      // }
-      ```
-    ::
-  ::
-
-  ::field{name="convertToFormatted()" type="<T>(data: T) => T"}
-  批量转换为格式化字符串。
-  ::
-
-  ::field{name="convertToDate()" type="<T>(data: T) => T"}
-  批量转换为 Date 对象。
-  ::
-::
-
-#### 配置属性
-
-::field-group
-  ::field{name="locale" type="string"}
-  当前使用的语言区域。
-  ::
-
-  ::field{name="timeZone" type="string"}
-  当前使用的时区。
-  ::
-::
-
-### Changelog
-
-:commit-changelog{prefix="composables" suffix="ts"}
+### 返回值
+
+`format`、`formatRange`、`formatArray` 与 `toISO` 对空值返回空字符串；`toDate`、时间戳转换与反向解析对空值或非法值返回 `null`。`toFormat` 的空值结果为 `undefined`。日期查询和周 / 月 / 年边界方法要求有效的 `DateValue`，不提供统一的空值兜底。
+
+| 分类 | 方法 | 说明 |
+| --- | --- | --- |
+| 格式化 | `format(date)` | 本地化字符串 |
+| | `formatRange(start, end, separator?)` | 范围字符串，默认分隔符 `' - '`，任一端为空返回空串 |
+| | `formatArray(dates, separator?)` | 数组字符串，默认分隔符 `', '` |
+| | `getDayOfWeekName(date, style?)` | 星期名，`style` 为 `'narrow'` / `'short'` / `'long'`（默认） |
+| 正向转换 | `toISO(date)` | ISO 8601 字符串 |
+| | `toDate(date)` | JS `Date`，纯日期取 UTC 零点 |
+| | `toTimestamp(date)` / `toUnixTimestamp(date)` | 毫秒 / 秒时间戳 |
+| | `toFormat(date, valueFormat)` | 按 `ValueFormat` 分发 |
+| 反向解析 | `parse(value)` / `fromISO(value)` | 解析 ISO 字符串，按内容返回 `CalendarDate`、`CalendarDateTime` 或 `ZonedDateTime`，支持 `Z`、`±HH:mm` 偏移与 `[Asia/Shanghai]` 时区后缀 |
+| | `fromDate(value)` | JS `Date` 转 `CalendarDate`（与 `toDate` 互逆） |
+| | `fromTimestamp(value)` / `fromUnixTimestamp(value)` | 时间戳转 `CalendarDate` |
+| | `fromFormat(value, valueFormat)` | 按 `ValueFormat` 分发，类型不匹配返回 `null` |
+| 批量转换 | `convertData(data, converter)` | 递归转换日期、范围、数组与普通对象，`Date` 与类实例原样保留 |
+| | `convertToISO(data)` / `convertToFormatted(data)` / `convertToDate(data)` | `convertData` 的常用预设 |
+| | `convertToFormat(data, valueFormat)` / `convertFromFormat(data, valueFormat)` | 按 `ValueFormat` 双向转换，`MDatePicker` 的 `valueFormat` 即基于此 |
+| 取日期 | `getToday()` / `getNow()` | 今天（`CalendarDate`）/ 当前时刻（`ZonedDateTime`） |
+| | `getStartOfWeek(date)` / `getEndOfWeek(date)` | 周首 / 周末，按 locale 决定一周起始日 |
+| | `getStartOfMonth(date)` / `getEndOfMonth(date)` | 月初 / 月末 |
+| | `getStartOfYear(date)` / `getEndOfYear(date)` | 年初 / 年末 |
+| 查询 | `getDayOfWeek(date)` | 0-6，0 为当前 locale 的一周第一天 |
+| | `getWeeksInMonth(date)` | 当月周数 |
+| | `isWeekday(date)` / `isWeekend(date)` / `isToday(date)` | 工作日 / 周末 / 今天 |
+| | `isSameDay(a, b)` / `isSameMonth(a, b)` / `isSameYear(a, b)` | 同日 / 同月 / 同年 |
+| | `isDateValue(value)` / `isDateRange(value)` | 类型守卫 |
+| 属性 | `locale` / `timeZone` | 实际生效的语言区域与时区 |
+
+`CalendarDate` 随 `useDateFormatter` 自动导入；`DateValue`、`DateRange`、`DateFormatter`、`ValueFormat` 等类型从 `@movk/nuxt` 导入。
 
 ## API
 
@@ -617,7 +396,18 @@ async function handleSubmit() {
 
 :component-slots{slug="MDatePicker"}
 
+### Expose
+
+通过 [`useTemplateRef`](https://vuejs.org/api/composition-api-helpers.html#usetemplateref) 访问组件实例（类型 `DatePickerExposed`）。
+
+| Name | Type |
+| ---- | ---- |
+| `open()`{lang="ts-type"} | `void`{lang="ts-type"} <br> <div class="text-default mt-1"><p>打开弹层</p></div> |
+| `close()`{lang="ts-type"} | `void`{lang="ts-type"} <br> <div class="text-default mt-1"><p>关闭弹层</p></div> |
+
 ## Theme
+
+通过 `app.config.ts` 的 `ui.movkDatePicker` 覆盖组件主题，弹层部分沿用 Nuxt UI Popover 的 slots：
 
 :component-theme
 

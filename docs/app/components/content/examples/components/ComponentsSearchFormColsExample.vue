@@ -1,4 +1,10 @@
 <script setup lang="ts">
+const props = withDefaults(defineProps<{
+  cols?: string | number
+}>(), {
+  cols: '4'
+})
+
 const { afz } = useAutoForm()
 
 const schema = afz.object({
@@ -11,5 +17,5 @@ const schema = afz.object({
 </script>
 
 <template>
-  <MSearchForm :schema="schema" />
+  <MSearchForm :schema="schema" :cols="Number(props.cols)" />
 </template>

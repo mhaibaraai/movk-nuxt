@@ -25,6 +25,6 @@ function shuffle(): void {
       </UButton>
     </div>
     <MDataTable v-model:row-selection="selection" row-key="id" :columns="columns" :data="rows" />
-    <pre class="text-xs p-3 rounded-md bg-muted overflow-auto">selection: {{ selection }}</pre>
+    <pre class="text-xs p-3 rounded-md bg-tint overflow-auto">selection: {{ selection }}</pre>
   </div>
 </template>

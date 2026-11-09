@@ -154,7 +154,7 @@ const treeItems: TreeItem[] = [
 
       <div v-else-if="item.key === 'components'" class="p-4 sm:p-6">
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div class="rounded-xl border border-default bg-elevated p-4">
+          <div class="rounded-xl border border-default bg-soft p-4">
             <div class="flex items-center justify-between mb-2">
               <p class="text-sm font-medium">
                 日期选择器
@@ -169,7 +169,7 @@ const treeItems: TreeItem[] = [
             <MDatePicker v-model="pickedDate" />
           </div>
 
-          <div class="rounded-xl border border-default bg-elevated p-4">
+          <div class="rounded-xl border border-default bg-soft p-4">
             <div class="flex items-center justify-between mb-2">
               <p class="text-sm font-medium">
                 命令式确认
@@ -187,7 +187,7 @@ const treeItems: TreeItem[] = [
             </div>
           </div>
 
-          <div class="rounded-xl border border-default bg-elevated p-4 sm:col-span-2">
+          <div class="rounded-xl border border-default bg-soft p-4 sm:col-span-2">
             <div class="flex items-center justify-between mb-2">
               <p class="text-sm font-medium">
                 树形组件

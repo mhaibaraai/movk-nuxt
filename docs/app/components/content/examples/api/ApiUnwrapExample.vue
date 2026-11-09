@@ -30,6 +30,6 @@ watch(() => props.mode, () => active.value.execute(), { immediate: true })
     <p class="text-xs text-muted">
       {{ hints[mode] }}
     </p>
-    <pre class="text-xs p-3 rounded bg-elevated overflow-auto">{{ active.data.value }}</pre>
+    <pre class="text-xs p-3 rounded bg-soft overflow-auto">{{ active.data.value }}</pre>
   </div>
 </template>

@@ -12,7 +12,7 @@ const schema = afz.object({
   email: afz.email({ controlProps: { placeholder: '请输入邮箱' } }).meta({ label: '邮箱' }).optional()
 })
 
-const state = ref<Partial<z.output<typeof schema>>>({})
+const state = ref<Partial<z.output<typeof schema>>>({ name: '张三', status: '启用' })
 const result = ref('')
 
 function handleSearch(event: FormSubmitEvent<Record<string, unknown>>) {
@@ -32,6 +32,7 @@ function handleReset() {
       @submit="handleSearch"
       @reset="handleReset"
     />
-    <pre v-if="result" class="text-sm bg-muted p-3 rounded-(--ui-radius)">{{ result }}</pre>
+    <pre class="text-sm bg-tint p-3 rounded-(--ui-radius)">{{ JSON.stringify(state, null, 2) }}</pre>
+    <pre v-if="result" class="text-sm bg-tint p-3 rounded-(--ui-radius)">{{ result }}</pre>
   </div>
 </template>

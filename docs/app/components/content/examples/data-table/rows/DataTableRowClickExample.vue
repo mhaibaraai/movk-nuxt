@@ -24,7 +24,7 @@ const columns: DataTableColumn<Person>[] = [
     :ui="{ root: 'max-h-[50vh]' }"
   >
     <template #expanded="{ row }">
-      <div class="px-4 py-2 text-xs text-muted bg-elevated/30">
+      <div class="px-4 py-2 text-xs text-muted bg-soft/30">
         {{ row.original.bio }}
       </div>
     </template>

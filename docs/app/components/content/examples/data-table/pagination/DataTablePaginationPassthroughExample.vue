@@ -19,6 +19,7 @@ const columns: DataTableColumn<Person>[] = [
     :columns="columns"
     :pagination-ui="{
       pageSizes: [5, 10, 20],
+      ui: { root: 'bg-tint rounded-lg', summary: 'font-medium' },
       paginationProps: { showEdges: true, siblingCount: 1, color: 'success' },
       pageSizeSelectProps: { size: 'sm', variant: 'subtle' }
     }"

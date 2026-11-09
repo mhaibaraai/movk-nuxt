@@ -31,6 +31,6 @@ const onSelect: DataTableSelectHandler<Person> = (_e, row) => {
     <p class="text-xs text-muted">
       最近点击：{{ lastSelected || '（无）' }}
     </p>
-    <pre class="text-xs p-3 rounded-md bg-muted overflow-auto">selection: {{ selection }}</pre>
+    <pre class="text-xs p-3 rounded-md bg-tint overflow-auto">selection: {{ selection }}</pre>
   </div>
 </template>

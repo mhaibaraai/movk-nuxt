@@ -22,7 +22,7 @@ const columns: DataTableColumn<Person>[] = [
     :ui="{ root: 'max-h-[50vh]' }"
   >
     <template #expanded="{ row }">
-      <div class="px-4 py-3 text-sm bg-elevated/30">
+      <div class="px-4 py-3 text-sm bg-soft/30">
         <p>邮箱 {{ row.original.email }} · 入职 {{ row.original.joinedAt }}</p>
         <p class="text-muted">
           {{ row.original.bio }}

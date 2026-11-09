@@ -18,8 +18,8 @@ async function onSubmit() {
 
 <template>
   <MAutoForm
+    v-model="form"
     :schema="schema"
-    :state="form"
     :submit="false"
     @submit="onSubmit"
   >

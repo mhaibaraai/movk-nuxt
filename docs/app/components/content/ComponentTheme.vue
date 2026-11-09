@@ -2,7 +2,7 @@
 import json5 from 'json5'
 import { camelCase } from 'scule'
 import { hash } from 'ohash'
-import * as theme from '#build/movk-ui'
+import * as theme from '#movk/themes'
 
 const props = defineProps<{
   slug?: string
@@ -12,7 +12,8 @@ const props = defineProps<{
 const route = useRoute()
 
 const name = props.slug ?? route.path.split('/').pop() ?? ''
-const camelName = camelCase(name)
+// movk 主题在 app.config.ui 中以 movk 前缀登记，如 movkDatePicker
+const camelName = camelCase(`movk-${name}`)
 
 const strippedCompoundVariants = ref(false)
 
@@ -69,7 +70,7 @@ const component = computed(() => {
 })
 
 const themeLink = computed(() =>
-  `https://github.com/mhaibaraai/movk-nuxt/blob/main/src/theme/${name}.ts`
+  `https://github.com/mhaibaraai/movk-nuxt/blob/main/src/runtime/themes/${name}.ts`
 )
 
 const { data: ast } = useAsyncData(`component-theme-${camelName}-${hash({ props })}`, async () => {

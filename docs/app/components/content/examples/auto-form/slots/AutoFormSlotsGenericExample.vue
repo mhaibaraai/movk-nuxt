@@ -14,7 +14,7 @@ const state = reactive<Partial<z.output<typeof schema>>>({})
 </script>
 
 <template>
-  <MAutoForm :schema="schema" :state="state" :validate-on="['input', 'blur']">
+  <MAutoForm v-model="state" :schema="schema" :validate-on="['input', 'blur']">
     <template #field-label="{ label, path }">
       <span class="inline-flex items-center gap-2">
         <UBadge color="primary" variant="subtle" size="xs">
@@ -29,7 +29,7 @@ const state = reactive<Partial<z.output<typeof schema>>>({})
     <template #field-description="{ description }">
       <span
         v-if="description"
-        class="text-xs text-toned"
+        class="text-xs text-default"
       >
         {{ description }}
       </span>

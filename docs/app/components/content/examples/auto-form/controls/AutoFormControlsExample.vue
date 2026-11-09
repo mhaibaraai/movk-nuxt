@@ -70,5 +70,5 @@ const state = reactive<Partial<z.output<typeof schema>>>({})
 </script>
 
 <template>
-  <MAutoForm :schema="schema" :state="state" />
+  <MAutoForm v-model="state" :schema="schema" />
 </template>

@@ -168,12 +168,8 @@ export default defineAppConfig({
       }
     },
     form: {
-      base: 'space-y-4 min-w-0 sm:min-w-md'
-    },
-    prose: {
-      codeIcon: {
-        source: 'i-lucide-file-code',
-        example: 'i-lucide-app-window-mac'
+      slots: {
+        root: 'space-y-4 min-w-0 sm:min-w-md'
       }
     }
   },
@@ -190,7 +186,7 @@ export default defineAppConfig({
     }
   },
   footer: {
-    credits: `Copyright © 2025 - ${new Date().getFullYear()} YiXuan - <span class="text-highlighted">MIT License</span>`,
+    credits: `Copyright © 2025 - ${new Date().getFullYear()} YiXuan - <span class="text-strong">MIT License</span>`,
     socials: [
       {
         'icon': 'i-simple-icons-nuxt',

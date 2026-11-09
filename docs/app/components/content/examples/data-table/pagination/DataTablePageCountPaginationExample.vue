@@ -23,7 +23,7 @@ const columns: DataTableColumn<Person>[] = [
     v-model:pagination="pagination"
     :data="pageData"
     :columns="columns"
-    :pagination-options="{ manualPagination: true, pageCount }"
+    :options="{ manualPagination: true, pageCount }"
     :ui="{ root: 'max-h-[60vh]' }"
   />
 </template>
