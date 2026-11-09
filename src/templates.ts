@@ -50,7 +50,7 @@ export function getTemplates(options: ModuleOptions, nuxt?: Nuxt) {
       const themeEntries = Object.keys(themes).map(key => `    ${key}: typeof movkThemes.${key}`).join('\n')
       return `import type * as movkThemes from '#movk/themes'
 import type { Direction } from '@nuxt/ui'
-import type { MovkApiPublicConfig, ApiError, ApiInstance, ModuleOptions, MovkZodRuntimeConfig } from '@movk/nuxt'
+import type { MovkApiPublicConfig, ApiError, ApiInstance, ModuleOptions, MovkZodRuntimeConfig, AutoFormProps, SearchFormProps, DataTableProps, DatePickerProps, MessageBoxProps, TreeProps } from '@movk/nuxt'
 import type { HookResult } from '@nuxt/schema'
 import type { FetchContext } from 'ofetch'
 
@@ -72,6 +72,16 @@ type AppConfigUI = {
 declare module '@nuxt/ui' {
   interface CustomThemes {
 ${themeEntries}
+  }
+
+  // <UTheme :props> 的组件默认 prop
+  interface ThemeDefaults {
+    movkAutoForm?: Partial<AutoFormProps<any, any, any>>
+    movkSearchForm?: Partial<SearchFormProps<any>>
+    movkDataTable?: Partial<DataTableProps<any>>
+    movkDatePicker?: Partial<DatePickerProps<any, any, any, any>>
+    movkMessageBox?: Partial<MessageBoxProps>
+    movkTree?: Partial<TreeProps<any, any>>
   }
 }
 

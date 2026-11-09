@@ -20,6 +20,7 @@ import type { VNode } from 'vue'
 import { computed, ref, toRaw, useAttrs, useTemplateRef, watch } from 'vue'
 import { useResizeObserver, useScroll } from '@vueuse/core'
 import { useExtendedTv } from '../utils/extend-theme'
+import { useComponentProps } from '@nuxt/ui/composables/useComponentProps'
 import { useMovkLocale } from '../composables/useMovkLocale'
 import { resolveColumns } from '../domains/data-table/columns/resolve-columns'
 import {
@@ -63,7 +64,7 @@ type Pagination = ComponentConfig<typeof paginationTheme, AppConfig, 'movkDataTa
 const HEADER_SLOT_SUFFIX = '-header'
 const PAGINATION_SLOTS = ['pagination', 'pagination-summary', 'pagination-actions', 'toolbar']
 
-const props = withDefaults(defineProps<DataTableProps<T> & {
+const _props = withDefaults(defineProps<DataTableProps<T> & {
   ui?: DataTable['slots']
   paginationUi?: DataTablePaginationUi & {
     ui?: Pagination['slots']
@@ -78,6 +79,8 @@ const props = withDefaults(defineProps<DataTableProps<T> & {
   sticky: true,
   columnResizeMode: 'onChange'
 })
+// 经 <UTheme :props> 与 app.config.ui.movkDataTable.defaultVariants 解析未显式传入的 prop
+const props = useComponentProps('movkDataTable', _props, theme)
 
 const paginationState = defineModel<PaginationState>('pagination')
 const columnVisibilityState = defineModel<ColumnVisibilityState>('columnVisibility')

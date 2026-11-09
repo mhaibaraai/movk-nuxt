@@ -10,6 +10,7 @@ import { useAppConfig } from '#imports'
 import { useDateFormatter } from '../composables/useDateFormatter'
 import type { ValueFormat } from '../composables/useDateFormatter'
 import { useExtendedTv } from '../utils/extend-theme'
+import { useComponentProps } from '@nuxt/ui/composables/useComponentProps'
 import { useMovkLocale } from '../composables/useMovkLocale'
 import { useFieldControl } from '../utils/form-control'
 import { useLocale } from '@nuxt/ui/composables/useLocale'
@@ -25,11 +26,13 @@ import type {
   LabelFormat
 } from '../types/components/date-picker'
 
-const props = withDefaults(defineProps<DatePickerProps<R, M, P, V> & {
+const _props = withDefaults(defineProps<DatePickerProps<R, M, P, V> & {
   ui?: ComponentConfig<typeof popoverTheme & typeof theme, AppConfig, 'movkDatePicker'>['slots']
 }>(), {
   labelFormat: 'formatted'
 })
+// 经 <UTheme :props> 与 app.config.ui.movkDatePicker.defaultVariants 解析未显式传入的 prop
+const props = useComponentProps('movkDatePicker', _props, theme)
 
 const emits = defineEmits<DatePickerEmits<R, M, V>>()
 defineSlots<DatePickerSlots<P>>()

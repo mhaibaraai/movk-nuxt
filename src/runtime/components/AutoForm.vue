@@ -9,19 +9,22 @@ import AutoFormRendererChildren from '../domains/auto-form/components/Children.v
 import AutoFormRendererField from '../domains/auto-form/components/Field.vue'
 import type { AutoFormProps, AutoFormEmits, AutoFormSlots } from '../types/auto-form/component'
 import { useExtendedTv } from '../utils/extend-theme'
+import { useComponentProps } from '@nuxt/ui/composables/useComponentProps'
 import { useMovkLocale } from '../composables/useMovkLocale'
 import theme from '../themes/auto-form'
 import type { AppConfig } from 'nuxt/schema'
 
 type AutoFormStateType = N extends false ? Partial<InferInput<S>> : never
 
-const props = withDefaults(defineProps<AutoFormProps<S, T, N> & {
+const _props = withDefaults(defineProps<AutoFormProps<S, T, N> & {
   ui?: ComponentConfig<typeof theme, AppConfig, 'movkAutoForm'>['slots']
 }>(), {
   submit: true,
   loadingAuto: true,
   validateOn: () => []
 })
+// 经 <UTheme :props> 与 app.config.ui.movkAutoForm.defaultVariants 解析未显式传入的 prop
+const props = useComponentProps('movkAutoForm', _props, theme)
 
 const modelValue = defineModel<AutoFormStateType>()
 const emits = defineEmits<AutoFormEmits<S>>()

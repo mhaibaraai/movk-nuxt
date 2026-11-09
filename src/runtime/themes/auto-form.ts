@@ -1,4 +1,6 @@
-export default {
+import { defineTheme } from '@nuxt/ui/utils/theme'
+
+export default defineTheme({
   slots: {
     root: '',
     base: 'space-y-4',
@@ -7,4 +9,4 @@ export default {
     footer: '',
     actions: ''
   }
-}
+})

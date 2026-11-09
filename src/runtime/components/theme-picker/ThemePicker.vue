@@ -9,12 +9,15 @@ import type { AppConfig } from 'nuxt/schema'
 import theme from '../../themes/theme-picker'
 import popoverTheme from '#build/ui/popover'
 import { useExtendedTv } from '../../utils/extend-theme'
+import { useComponentProps } from '@nuxt/ui/composables/useComponentProps'
 
 interface ThemePickerProps {
   ui?: ComponentConfig<typeof popoverTheme & typeof theme, AppConfig, 'movkThemePicker'>['slots']
 }
 
-const props = defineProps<ThemePickerProps>()
+const _props = defineProps<ThemePickerProps>()
+// 经 <UTheme :props> 与 app.config.ui.movkThemePicker.defaultVariants 解析未显式传入的 prop
+const props = useComponentProps('movkThemePicker', _props, theme)
 const colorMode = useColorMode()
 
 const { extendUi } = useExtendedTv(

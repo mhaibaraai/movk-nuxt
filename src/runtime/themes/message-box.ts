@@ -1,4 +1,6 @@
-export default {
+import { defineTheme } from '@nuxt/ui/utils/theme'
+
+export default defineTheme({
   slots: {
     title: 'flex gap-2 items-center',
     footer: 'justify-end',
@@ -14,4 +16,4 @@ export default {
       neutral: { icon: 'text-muted' }
     }
   }
-}
+})

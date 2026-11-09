@@ -1,4 +1,6 @@
-export default {
+import { defineTheme } from '@nuxt/ui/utils/theme'
+
+export default defineTheme({
   slots: {
     root: 'group/search',
     form: 'space-y-4',
@@ -12,4 +14,4 @@ export default {
     toggleIcon: 'size-3.5 transition-all duration-200 opacity-80 group-data-[state=open]:rotate-180 group-data-[state=open]:opacity-100',
     collapsed: 'mt-4'
   }
-}
+})

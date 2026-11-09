@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest'
-import { nextTick } from 'vue'
+import { defineComponent, h, nextTick } from 'vue'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
+import { UTheme } from '#components'
 import DataTable from '../../src/runtime/components/DataTable.vue'
 
 interface Row {
@@ -150,6 +151,20 @@ describe('DataTable', () => {
     await nextTick()
     expect(wrapper.findAll('th').map(th => [th.text(), th.attributes('data-pinned')])).toEqual([['name', 'false'], ['age', 'false']])
     localStorage.removeItem('movk-data-table:legacy')
+  })
+
+  it('<UTheme :props> 为未显式传入的 prop 提供默认值，显式 prop 优先', async () => {
+    const rows = [{ id: 1, name: '' }]
+    const Wrapper = defineComponent({
+      render: () => h(UTheme, { props: { movkDataTable: { emptyCell: 'N/A' } } }, () => [
+        h(DataTable, { data: rows, columns: [{ accessorKey: 'name' }] }),
+        h(DataTable, { data: rows, columns: [{ accessorKey: 'name' }], emptyCell: '--' })
+      ])
+    })
+    const wrapper = await mountSuspended(Wrapper)
+    mounted.push(wrapper)
+    await nextTick()
+    expect(wrapper.findAll('tbody td').map(td => td.text())).toEqual(['N/A', '--'])
   })
 
   it('加载中且无数据时渲染骨架行', async () => {

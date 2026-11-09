@@ -3,6 +3,7 @@ import type { ButtonProps, ComponentConfig } from '@nuxt/ui'
 import { computed, ref, useAttrs } from 'vue'
 import { UModal, UButton, UIcon } from '#components'
 import { useExtendedTv } from '../utils/extend-theme'
+import { useComponentProps } from '@nuxt/ui/composables/useComponentProps'
 import { useMovkLocale } from '../composables/useMovkLocale'
 import theme from '../themes/message-box'
 import modalTheme from '#build/ui/modal'
@@ -10,13 +11,15 @@ import type { AppConfig } from 'nuxt/schema'
 import type { MessageBoxProps, MessageBoxEmits, MessageBoxSlots } from '../types/components/message-box'
 import type { SemanticColor } from '../types/shared'
 
-const props = withDefaults(defineProps<MessageBoxProps & {
+const _props = withDefaults(defineProps<MessageBoxProps & {
   type?: ComponentConfig<typeof modalTheme & typeof theme, AppConfig, 'movkMessageBox'>['variants']['type']
   ui?: ComponentConfig<typeof modalTheme & typeof theme, AppConfig, 'movkMessageBox'>['slots']
 }>(), {
   type: 'primary',
   mode: 'alert'
 })
+// 经 <UTheme :props> 与 app.config.ui.movkMessageBox.defaultVariants 解析未显式传入的 prop
+const props = useComponentProps('movkMessageBox', _props, theme)
 const open = defineModel<boolean>('open')
 const emits = defineEmits<MessageBoxEmits>()
 defineSlots<MessageBoxSlots>()

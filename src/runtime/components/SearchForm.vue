@@ -24,6 +24,7 @@ import type {
 } from '../types/auto-form/search-form'
 import type { AutoFormField } from '../types/auto-form'
 import { useExtendedTv } from '../utils/extend-theme'
+import { useComponentProps } from '@nuxt/ui/composables/useComponentProps'
 
 type SearchState = Partial<InferInput<S>>
 type ColsBreakpoint = 'sm' | 'md' | 'lg' | 'xl'
@@ -31,7 +32,7 @@ type ColsBreakpoint = 'sm' | 'md' | 'lg' | 'xl'
 const BREAKPOINTS: Record<ColsBreakpoint, number> = { sm: 640, md: 768, lg: 1024, xl: 1280 }
 const BREAKPOINT_KEYS = Object.keys(BREAKPOINTS) as ColsBreakpoint[]
 
-const props = withDefaults(defineProps<SearchFormProps<S> & {
+const _props = withDefaults(defineProps<SearchFormProps<S> & {
   ui?: ComponentConfig<typeof theme, AppConfig, 'movkSearchForm'>['slots']
 }>(), {
   cols: 3,
@@ -43,6 +44,8 @@ const props = withDefaults(defineProps<SearchFormProps<S> & {
   loadingAuto: true,
   validateOn: () => []
 })
+// 经 <UTheme :props> 与 app.config.ui.movkSearchForm.defaultVariants 解析未显式传入的 prop
+const props = useComponentProps('movkSearchForm', _props, theme)
 
 const modelValue = defineModel<SearchState>({ default: () => ({}) })
 const expandedModel = defineModel<boolean | undefined>('expanded')

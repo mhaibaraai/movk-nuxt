@@ -53,7 +53,7 @@ pnpm clean
 - **runtime 不得 import 构建期 `src/utils/`**（不进 dist）；两模式共用纯函数放 `src/runtime/utils/`。
 - **测试**：新增或修改 `runtime/domains`、`runtime/composables`、`runtime/utils` 逻辑须在 `test/` 补用例；组件行为测试放 `test/nuxt/`，用 `mountSuspended`（以 `playgrounds/play` 为根，需先 `pnpm dev:prepare`）。
 - **图标注入**：消费方扫描器扫不到 `node_modules`，故 `src/utils/icons.ts` 收集 `runtime/**` 的 `i-lucide-*`/`i-ph-*`/`i-tabler-*` 字面量。Nuxt 侧只走 `icon:clientBundleIcons` 钩子，**不得**写 `icon.clientBundle.icons`（缺失图标集会让消费方 build 报错）；Vue 侧只能用 `ui.icon.clientBundle.icons`，须先经 `filterResolvableIcons` 按项目根过滤。
-- **主题**：基于 `@nuxt/ui` v5 内置变体引擎。新增主题放 `runtime/themes/` 并在 `index.ts` 以 `movk<组件>` 导出，组件经 `useExtendedTv(parentTheme, theme, 'movk<组件>', ...)` 合并；类型经 `declare module '@nuxt/ui' { interface CustomThemes }` 并入 Nuxt UI 主题清单，`app.config.ui` 与 `<UTheme>` 自动可用。主题类由 `src/utils/theme-classes.ts` 构建期求值生成 `@source inline()`，引用 Nuxt UI 元素的 `data-slot` 须带组件命名空间（如 `table-tr`）。
+- **主题**：基于 `@nuxt/ui` v5 内置变体引擎。新增主题放 `runtime/themes/`，用 `defineTheme` 声明并在 `index.ts` 以 `movk<组件>` 导出；组件沿用 Nuxt UI 自身写法：`const props = useComponentProps('movk<组件>', _props, theme)` 让 `<UTheme :props>` 与 `defaultVariants` 生效，再经 `useExtendedTv(parentTheme, theme, 'movk<组件>', ...)` 合并类名并按被包装组件的 slot 拆分。类型经 `declare module '@nuxt/ui'` 的 `CustomThemes` / `ThemeDefaults` 并入 Nuxt UI 主题清单，`app.config.ui` 与 `<UTheme>` 自动可用。主题类由 `src/utils/theme-classes.ts` 构建期求值生成 `@source inline()`，引用 Nuxt UI 元素的 `data-slot` 须带组件命名空间（如 `table-tr`）。
 - **样式入口**：`src/runtime/index.css` 是片段（不含 `@import "tailwindcss"`），由项目 CSS `@import "@movk/nuxt"`，模块不注册到 `nuxt.options.css`。全项目只能有一个 Tailwind 入口，否则会覆盖 `--font-sans` 等主题变量；漏引时 `src/utils/css.ts` 构建期告警。
 
 ## Vite/Vue 双模式

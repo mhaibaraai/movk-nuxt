@@ -11,6 +11,7 @@ import { Tree, omitUndefined, splitHighlight } from '@movk/core'
 import { UButton, UCheckbox, UIcon, UTree } from '#components'
 import { useAppConfig } from '#imports'
 import { useExtendedTv } from '../utils/extend-theme'
+import { useComponentProps } from '@nuxt/ui/composables/useComponentProps'
 import { useMovkLocale } from '../composables/useMovkLocale'
 import treeTheme from '#build/ui/tree'
 import theme from '../themes/tree'
@@ -29,7 +30,7 @@ import type { TreeEmits, TreeExposed, TreeProps, TreeSlots } from '../types/comp
 type WorkNode = Record<string, any>
 type DefaultExpanded = boolean | number | ((node: WorkNode, depth: number) => boolean)
 
-const props = withDefaults(defineProps<TreeProps<T, M> & {
+const _props = withDefaults(defineProps<TreeProps<T, M> & {
   ui?: ComponentConfig<typeof treeTheme & typeof theme, AppConfig, 'movkTree'>['slots']
 }>(), {
   childrenKey: 'children',
@@ -38,6 +39,8 @@ const props = withDefaults(defineProps<TreeProps<T, M> & {
   searchDebounce: 300,
   labelKey: 'label'
 })
+// 经 <UTheme :props> 与 app.config.ui.movkTree.defaultVariants 解析未显式传入的 prop
+const props = useComponentProps('movkTree', _props, theme)
 
 const emit = defineEmits<TreeEmits<T, M>>()
 defineSlots<TreeSlots<T>>()
