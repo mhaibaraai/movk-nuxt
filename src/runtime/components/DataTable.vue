@@ -341,7 +341,6 @@ const { baseUi, extraUi } = useExtendedTv(
       fitContent: !!props.fitContent,
       bordered: !!props.bordered,
       striped: !!props.stripe,
-      tree: isTreeMode.value,
       resizing: isColumnResizing.value
     }
   })
