@@ -38,7 +38,7 @@ describe('module 的 moduleDependencies', () => {
   it('依赖表只声明版本约束，不再用失效的 defaults 表达 fonts 意图', async () => {
     const deps = await getModuleDependencies(createNuxt({}))
 
-    expect(deps['@nuxt/ui']).toEqual({ version: '>=4.6.0' })
+    expect(deps['@nuxt/ui']).toEqual({ version: '>=4.12.0' })
     expect(Object.keys(deps)).toEqual([
       '@nuxt/image',
       '@nuxt/ui',

@@ -1,53 +1,63 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { createColorSwapScript } from '../../../src/runtime/domains/theme/theme-fouc'
+import { createColorRestoreScript, restorePaletteVars } from '../../../src/runtime/domains/theme/theme-fouc'
 
-function colorsCss(prefix = '') {
-  const p = prefix ? `${prefix}-` : ''
-  return [
-    `--ui-color-primary-500: var(--${p}color-blue-500, #3b82f6);`,
-    `--ui-color-neutral-500: var(--${p}color-old-neutral-500, #737373);`
-  ].join('\n')
-}
-
-function runScript(script: string, stored: Record<string, string>, css: string) {
-  const el = { innerHTML: css }
+function runScript(script: string, stored: Record<string, string>) {
+  const props = new Map<string, string>()
   const localStorage = { getItem: (key: string) => stored[key] ?? null }
-  const document = { querySelector: () => el, head: {} }
+  const document = { documentElement: { style: { setProperty: (k: string, v: string) => props.set(k, v) } } }
   new Function('localStorage', 'document', script)(localStorage, document)
-  return el.innerHTML
+  return props
 }
 
-describe('createColorSwapScript', () => {
-  it('按 localStorage 替换主色与中性色的色板引用', () => {
-    const script = createColorSwapScript('app')
-    const html = runScript(script, { 'app-ui-primary': 'green', 'app-ui-neutral': 'zinc' }, colorsCss())
-    expect(html).toContain('--ui-color-primary-500: var(--color-green-500, #3b82f6)')
-    expect(html).toContain('--ui-color-neutral-500: var(--color-zinc-500, #737373)')
+describe('createColorRestoreScript', () => {
+  it('首屏前把存储的色板变量写到 <html>', () => {
+    const vars = { '--ui-color-primary-500': 'oklch(1 0 0)', '--ui-color-neutral-50': 'oklch(0 0 0)' }
+    const props = runScript(createColorRestoreScript('app'), { 'app-ui-colors': JSON.stringify(vars) })
+    expect(Object.fromEntries(props)).toEqual(vars)
   })
 
-  it('配置 theme.prefix 时匹配带前缀的 Tailwind 变量', () => {
-    const script = createColorSwapScript('app', 'tw')
-    const html = runScript(script, { 'app-ui-primary': 'green' }, colorsCss('tw'))
-    expect(html).toContain('var(--tw-color-green-500, #3b82f6)')
+  it('只接受 primary/neutral 色阶变量', () => {
+    const vars = { '--ui-color-primary-500': 'red', '--ui-radius': '1rem', '--ui-color-error-500': 'red' }
+    const props = runScript(createColorRestoreScript('app'), { 'app-ui-colors': JSON.stringify(vars) })
+    expect([...props.keys()]).toEqual(['--ui-color-primary-500'])
   })
 
-  it('选择 neutral 色板时映射为 old-neutral', () => {
-    const script = createColorSwapScript('app')
-    const html = runScript(script, { 'app-ui-primary': 'neutral', 'app-ui-neutral': 'neutral' }, colorsCss())
-    expect(html).toContain('var(--color-old-neutral-500, #3b82f6)')
-    expect(html).toContain('var(--color-old-neutral-500, #737373)')
+  it('存储缺失或损坏时静默跳过', () => {
+    expect(runScript(createColorRestoreScript('app'), {}).size).toBe(0)
+    expect(runScript(createColorRestoreScript('app'), { 'app-ui-colors': '{bad' }).size).toBe(0)
+  })
+})
+
+describe('restorePaletteVars', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
   })
 
-  it('黑色主色与非法色名不改写色板', () => {
-    const script = createColorSwapScript('app')
-    const css = colorsCss()
-    expect(runScript(script, { 'app-ui-primary': 'black' }, css)).toBe(css)
-    expect(runScript(script, { 'app-ui-primary': 'red);}body{' }, css)).toBe(css)
+  function stub(stored: Record<string, string>) {
+    const props = new Map<string, string>()
+    const removed: string[] = []
+    vi.stubGlobal('localStorage', {
+      getItem: (key: string) => stored[key] ?? null,
+      removeItem: (key: string) => removed.push(key)
+    })
+    vi.stubGlobal('document', {
+      documentElement: { style: { setProperty: (k: string, v: string) => props.set(k, v), removeProperty: () => {} } }
+    })
+    return { props, removed }
+  }
+
+  it('与首屏脚本按同一规则过滤后回放', () => {
+    const vars = { '--ui-color-neutral-900': 'oklch(0 0 0)', '--ui-radius': '1rem' }
+    const { props } = stub({ 'app-ui-colors': JSON.stringify(vars) })
+    restorePaletteVars('app')
+    expect(Object.fromEntries(props)).toEqual({ '--ui-color-neutral-900': 'oklch(0 0 0)' })
   })
 
-  it('未存储任何颜色时不触碰 DOM', () => {
-    const script = createColorSwapScript('app')
-    expect(runScript(script, {}, colorsCss())).toBe(colorsCss())
+  it('存储损坏时清除该键', () => {
+    const { props, removed } = stub({ 'app-ui-colors': '{bad' })
+    restorePaletteVars('app')
+    expect(props.size).toBe(0)
+    expect(removed).toEqual(['app-ui-colors'])
   })
 })

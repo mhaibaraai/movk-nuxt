@@ -75,7 +75,11 @@ function createMovkComponentSource(cwd: string, prefix: string, ignore: string[]
 }
 
 export const MovkPlugin = createUnplugin<MovkUIOptions | undefined>((_options = {}, meta) => {
-  const options = defu(_options, { prefix: 'M', theme: { enabled: true } }) as MovkUIOptions & { prefix: string }
+  // theme.prefix 缺省取 @nuxt/ui 的 tailwindPrefix，与 Nuxt 模式一致
+  const options = defu(_options, {
+    prefix: 'M',
+    theme: { enabled: true, prefix: _options.ui?.tailwindPrefix }
+  }) as MovkUIOptions & { prefix: string }
 
   const componentIgnore = options.theme?.enabled === false ? ['theme-picker/**'] : []
   const movkComponents = createMovkComponentSource(join(runtimeDir, 'components'), options.prefix, componentIgnore)

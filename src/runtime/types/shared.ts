@@ -1,4 +1,4 @@
-import type { ClassValue } from 'tailwind-variants'
+import type { ClassValue } from '@nuxt/ui'
 
 export type ClassNameValue = ClassValue
 export type ClassNameArray = ClassNameValue[]

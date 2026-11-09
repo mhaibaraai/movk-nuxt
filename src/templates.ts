@@ -1,105 +1,28 @@
 import type { NuxtTemplate, NuxtTypeTemplate } from '@nuxt/schema'
-import { fileURLToPath } from 'node:url'
-import { kebabCase } from 'scule'
 import { addTemplate, addTypeTemplate, getLayerDirectories, hasNuxtModule, useLogger } from '@nuxt/kit'
-import * as theme from './theme'
+import * as themes from './runtime/themes'
 import type { ModuleOptions } from './module'
 import type { Nuxt } from 'nuxt/schema'
-import { applyDefaultVariants, applyPrefixToObject } from './utils/theme-variants'
+import { getThemeClasses } from './utils/theme-classes'
 import { resolveFontFamily, resolveFontSource } from './runtime/domains/theme/theme-font'
 import { generateZodTemplate, resolveZodOptions } from './utils/zod'
 
 export function getTemplates(options: ModuleOptions, nuxt?: Nuxt) {
   const templates: NuxtTemplate[] = []
 
-  const isDev = process.argv.includes('--uiDev')
+  const prefix = options.theme?.prefix
 
-  function writeThemeTemplate(theme: Record<string, any>, path?: string) {
-    for (const component in theme) {
-      templates.push({
-        filename: `movk-ui/${path ? path + '/' : ''}${kebabCase(component)}.ts`,
-        write: true,
-        getContents: async () => {
-          const template = (theme as any)[component]
-          let result = typeof template === 'function' ? template(options) : template
+  function generateSources() {
+    const layers = nuxt ? getLayerDirectories(nuxt).map(layer => `@source "${layer.app}**/*";`) : []
+    const themeClasses = getThemeClasses(Object.values(themes), prefix).join(' ')
+    // SearchForm 按断点动态拼接列数类名
+    const gridCols = `${prefix ? `${prefix}:` : ''}{,sm:,md:,lg:,xl:}grid-cols-{1,2,3,4,5,6,7,8,9,10,11,12}`
 
-          // Override default variants from nuxt.config.ts
-          result = applyDefaultVariants(result, options.theme?.defaultVariants)
-          // Apply Tailwind prefix if configured
-          result = applyPrefixToObject(result, options.theme?.prefix)
-
-          const variants = Object.entries(result.variants || {})
-            .filter(([_, values]) => {
-              const keys = Object.keys(values as Record<string, unknown>)
-              return keys.some(key => key !== 'true' && key !== 'false')
-            })
-            .map(([key]) => key)
-
-          let json = JSON.stringify(result, null, 2)
-
-          for (const variant of variants) {
-            json = json.replace(new RegExp(`("${variant}": "[^"]+")`, 'g'), `$1 as typeof ${variant}[number]`)
-            json = json.replace(new RegExp(`("${variant}": \\[\\s*)((?:"[^"]+",?\\s*)+)(\\])`, 'g'), (_, before, match, after) => {
-              const replaced = match.replace(/("[^"]+")/g, `$1 as typeof ${variant}[number]`)
-              return `${before}${replaced}${after}`
-            })
-          }
-
-          function generateVariantDeclarations(variants: string[]) {
-            return variants.filter(variant => json.includes(`as typeof ${variant}`)).map((variant) => {
-              const keys = Object.keys(result.variants[variant])
-              return `const ${variant} = ${JSON.stringify(keys, null, 2)} as const`
-            })
-          }
-
-          // For local development, import directly from theme
-          if (isDev) {
-            const templatePath = fileURLToPath(new URL(`./theme/${path ? `${path}/` : ''}${kebabCase(component)}`, import.meta.url))
-            const themeUtilsPath = fileURLToPath(new URL('./utils/theme-variants', import.meta.url))
-            const defaultVariantsJson = JSON.stringify(options.theme?.defaultVariants) ?? 'undefined'
-            const prefixJson = JSON.stringify(options.theme?.prefix) ?? 'undefined'
-
-            return [
-              `import template from ${JSON.stringify(templatePath)}`,
-              `import { applyDefaultVariants, applyPrefixToObject } from ${JSON.stringify(themeUtilsPath)}`,
-              ...generateVariantDeclarations(variants),
-              `const options = ${JSON.stringify(options, null, 2)}`,
-              `let result = typeof template === 'function' ? (template as Function)(options) : template`,
-              `result = applyDefaultVariants(result, ${defaultVariantsJson})`,
-              `result = applyPrefixToObject(result, ${prefixJson})`,
-              `const theme = ${json}`,
-              `export default result as typeof theme`
-            ].join('\n\n')
-          }
-
-          // For production build
-          return [
-            ...generateVariantDeclarations(variants),
-            `export default ${json}`
-          ].join('\n\n')
-        }
-      })
-    }
-  }
-
-  writeThemeTemplate(theme)
-
-  async function generateSources() {
-    if (!nuxt) {
-      return '@source "./movk-ui";'
-    }
-
-    const sources: string[] = []
-    const layers = getLayerDirectories(nuxt).map(layer => layer.app)
-
-    // Add layer sources
-    for (const layer of layers) {
-      sources.push(`@source "${layer}**/*";`)
-    }
-
-    sources.push('@source "./movk-ui";')
-
-    return sources.join('\n')
+    return [
+      ...layers,
+      `@source inline(${JSON.stringify(themeClasses)});`,
+      `@source inline(${JSON.stringify(gridCols)});`
+    ].join('\n')
   }
 
   /**
@@ -118,27 +41,15 @@ export function getTemplates(options: ModuleOptions, nuxt?: Nuxt) {
   templates.push({
     filename: 'movk-ui.css',
     write: true,
-    getContents: async () => {
-      const sources = await generateSources()
-      const inlineSafelist = '@source inline("{,sm:,md:,lg:,xl:}grid-cols-{1,2,3,4,5,6,7,8,9,10,11,12}");'
-      return [sources, inlineSafelist, generateFontTheme()].filter(Boolean).join('\n')
-    }
-  })
-
-  templates.push({
-    filename: 'movk-ui/index.ts',
-    write: true,
-    getContents: () => [
-      ...Object.keys(theme).map(component => `export { default as ${component} } from './${kebabCase(component)}'`)
-    ].join('\n')
+    getContents: () => [generateSources(), generateFontTheme()].filter(Boolean).join('\n')
   })
 
   templates.push({
     filename: 'types/movk-ui.d.ts',
     getContents: () => {
-      return `import * as movkUi from '#build/movk-ui'
-import type { TVConfig, Direction } from '@nuxt/ui'
-import type { defaultConfig } from 'tailwind-variants'
+      const themeEntries = Object.keys(themes).map(key => `    ${key}: typeof movkThemes.${key}`).join('\n')
+      return `import type * as movkThemes from '#movk/themes'
+import type { Direction } from '@nuxt/ui'
 import type { MovkApiPublicConfig, ApiError, ApiInstance, ModuleOptions, MovkZodRuntimeConfig } from '@movk/nuxt'
 import type { HookResult } from '@nuxt/schema'
 import type { FetchContext } from 'ofetch'
@@ -151,13 +62,18 @@ type AppConfigUI = {
   radius?: Radius | (number & {})
   blackAsPrimary?: boolean
   icons?: Icons | (string & {})
-  prefix?: string
-  tv?: typeof defaultConfig
   picker?: {
     radiuses?: number[]
     neutralColors?: string[]
   }
-} & TVConfig<typeof movkUi>
+}
+
+// 并入 Nuxt UI 的主题清单：app.config.ui.movk*、<UTheme :ui/:variants> 由此获得类型
+declare module '@nuxt/ui' {
+  interface CustomThemes {
+${themeEntries}
+  }
+}
 
 declare module 'nuxt/app' {
   interface NuxtApp {

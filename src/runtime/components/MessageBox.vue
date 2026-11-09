@@ -2,18 +2,17 @@
 import type { ButtonProps, ComponentConfig } from '@nuxt/ui'
 import { computed, ref, useAttrs } from 'vue'
 import { UModal, UButton, UIcon } from '#components'
-import { useAppConfig } from '#imports'
 import { useExtendedTv } from '../utils/extend-theme'
 import { useMovkLocale } from '../composables/useMovkLocale'
-import theme from '#build/movk-ui/message-box'
+import theme from '../themes/message-box'
 import modalTheme from '#build/ui/modal'
 import type { AppConfig } from 'nuxt/schema'
 import type { MessageBoxProps, MessageBoxEmits, MessageBoxSlots } from '../types/components/message-box'
 import type { SemanticColor } from '../types/shared'
 
 const props = withDefaults(defineProps<MessageBoxProps & {
-  type?: ComponentConfig<typeof modalTheme & typeof theme, AppConfig, 'messageBox'>['variants']['type']
-  ui?: ComponentConfig<typeof modalTheme & typeof theme, AppConfig, 'messageBox'>['slots']
+  type?: ComponentConfig<typeof modalTheme & typeof theme, AppConfig, 'movkMessageBox'>['variants']['type']
+  ui?: ComponentConfig<typeof modalTheme & typeof theme, AppConfig, 'movkMessageBox'>['slots']
 }>(), {
   type: 'primary',
   mode: 'alert'
@@ -25,7 +24,6 @@ defineSlots<MessageBoxSlots>()
 defineOptions({ inheritAttrs: false })
 
 const attrs = useAttrs()
-const appConfig = useAppConfig() as { movk?: { messageBox?: unknown } }
 const { t } = useMovkLocale()
 
 const iconMap = {
@@ -74,7 +72,7 @@ function handleUpdateOpen(val: boolean) {
 const { baseUi, extraUi } = useExtendedTv(
   modalTheme,
   theme,
-  () => appConfig.movk?.messageBox,
+  'movkMessageBox',
   () => ({ ui: props.ui, variants: { type: props.type } })
 )
 </script>

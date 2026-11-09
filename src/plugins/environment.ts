@@ -13,22 +13,18 @@ function resolveRouterMode(options: MovkUIOptions): 'vue-router' | 'inertia' | '
 }
 
 /**
- * 构建 @nuxt/ui Vue 覆盖组件的「文件名 → 覆盖文件绝对路径」映射。
- * 复刻 @nuxt/ui 在 Vue 模式下用 Vue 兼容版替换 Nuxt 版（Icon / Link / LinkBase / color-mode）的语义；
- * Nuxt 版会引用 `#build/nuxt-icon-client-bundle`、`NuxtLink` 等 Nuxt 专属物，在纯 Vite 下无效。
+ * @nuxt/ui Vue 覆盖组件（Icon / Link / LinkBase 等）的「文件名 → 绝对路径」映射。
+ * @nuxt/ui 自身的重定向只认它所在副本的 runtime；pnpm 按 peer 拆出多个副本时（如 monorepo 中
+ * 项目与 movk 解析到不同副本），其余副本内的相对导入会落到 Nuxt 版组件，这里按文件名兜底
  */
 function buildUiOverrideMap(routerMode: 'vue-router' | 'inertia' | 'none'): Map<string, string> {
   const map = new Map<string, string>()
-  const overridesLink = resolvePathSync(`@nuxt/ui/runtime/vue/overrides/${routerMode}/Link.vue`, {
-    extensions: ['.vue'],
-    url: import.meta.url
-  })
-  const componentsIcon = resolvePathSync('@nuxt/ui/runtime/vue/components/Icon.vue', {
-    extensions: ['.vue'],
-    url: import.meta.url
-  })
+  const dirs = [
+    `@nuxt/ui/runtime/vue/overrides/${routerMode}/Link.vue`,
+    '@nuxt/ui/runtime/vue/components/Icon.vue'
+  ].map(id => dirname(resolvePathSync(id, { extensions: ['.vue'], url: import.meta.url })))
   // 路由覆盖优先级高于通用覆盖
-  for (const dir of [dirname(overridesLink), dirname(componentsIcon)]) {
+  for (const dir of dirs) {
     for (const file of globSync('**/*.vue', { cwd: dir, absolute: true })) {
       const name = basename(file, '.vue')
       if (!map.has(name)) map.set(name, file)
@@ -37,13 +33,16 @@ function buildUiOverrideMap(routerMode: 'vue-router' | 'inertia' | 'none'): Map<
   return map
 }
 
+const RELATIVE_VUE_IMPORT = /^\.{1,2}\/(?:.*\/)?[^/]+\.vue$/
+
 const MOVK_COMPONENTS_VIRTUAL = 'virtual:movk-components'
 
 /**
  * 规整 movk 组件的 Nuxt 环境：
  * - `#imports` → movk vue 桩（@nuxt/ui 同模式桩 + useSiteConfig/useOverlay）
- * - `#components` → movk shim（U* → @nuxt/ui/components）
- * - movk runtime 内的 `import.meta.client` 替换为 true
+ * - `#components` → movk shim（U* → @nuxt/ui/components，Vue 覆盖由 @nuxt/ui 解析）
+ * - 任一 @nuxt/ui 副本 runtime 内的相对 *.vue 导入按文件名重定向到 Vue 覆盖版
+ * - movk runtime 内的 `import.meta.client` / `import.meta.dev` 替换为浏览器端等价表达式（对齐 @nuxt/ui）
  */
 export default function MovkEnvironmentPlugin(options: MovkUIOptions): UnpluginOptions {
   const routerMode = resolveRouterMode(options)
@@ -59,35 +58,29 @@ export default function MovkEnvironmentPlugin(options: MovkUIOptions): UnpluginO
     resolveId(id, importer) {
       if (id === '#imports') return stubPath
       if (id === '#components') return MOVK_COMPONENTS_VIRTUAL
-      // 把 @nuxt/ui runtime 内相对 *.vue 导入按文件名重定向到 Vue 覆盖版
-      if (importer && /^\.{1,2}\/(?:.*\/)?[^/]+\.vue$/.test(id)) {
-        const ni = normalize(importer)
-        if (ni.includes('/@nuxt/ui/') && ni.includes('/runtime/')) {
-          const override = uiOverrides.get(basename(id, '.vue'))
-          if (override) return override
+      if (importer && RELATIVE_VUE_IMPORT.test(id)) {
+        const normalized = normalize(importer)
+        if (normalized.includes('/@nuxt/ui/') && normalized.includes('/runtime/')) {
+          return uiOverrides.get(basename(id, '.vue'))
         }
       }
     },
     loadInclude: id => id === MOVK_COMPONENTS_VIRTUAL,
     load(id) {
       if (id !== MOVK_COMPONENTS_VIRTUAL) return
-      const iconOverride = uiOverrides.get('Icon')
-      const reExports = UI_COMPONENTS.map((name) => {
-        // UIcon 用 @nuxt/ui 的 Vue 覆盖版（Nuxt 版 Icon.vue 会拉入 @nuxt/icon 的 #build 虚拟模块）
-        const from = name === 'UIcon' && iconOverride
-          ? iconOverride
-          : `@nuxt/ui/components/${name.slice(1)}.vue`
-        return `export { default as ${name} } from ${JSON.stringify(from)}`
-      })
-      return reExports.join('\n')
+      // @nuxt/ui 的 nuxt:ui:components 会把包路径导入的 Icon / Link 等重定向到 Vue 覆盖版
+      return UI_COMPONENTS
+        .map(name => `export { default as ${name} } from ${JSON.stringify(`@nuxt/ui/components/${name.slice(1)}.vue`)}`)
+        .join('\n')
     },
     transformInclude(id) {
       return normalize(id).includes(runtimeDir)
     },
     transform(code) {
-      if (code.includes('import.meta.client')) {
+      if (code.includes('import.meta.client') || code.includes('import.meta.dev')) {
         const s = new MagicString(code)
         s.replaceAll('import.meta.client', 'true')
+        s.replaceAll('import.meta.dev', '(process.env.NODE_ENV !== \'production\')')
         if (s.hasChanged()) {
           return { code: s.toString(), map: s.generateMap({ hires: true }) }
         }

@@ -10,14 +10,13 @@ import AutoFormRendererField from '../domains/auto-form/components/Field.vue'
 import type { AutoFormProps, AutoFormEmits, AutoFormSlots } from '../types/auto-form/component'
 import { useExtendedTv } from '../utils/extend-theme'
 import { useMovkLocale } from '../composables/useMovkLocale'
-import theme from '#build/movk-ui/auto-form'
+import theme from '../themes/auto-form'
 import type { AppConfig } from 'nuxt/schema'
-import { useAppConfig } from '#imports'
 
 type AutoFormStateType = N extends false ? Partial<InferInput<S>> : never
 
 const props = withDefaults(defineProps<AutoFormProps<S, T, N> & {
-  ui?: ComponentConfig<typeof theme, AppConfig, 'autoForm'>['slots']
+  ui?: ComponentConfig<typeof theme, AppConfig, 'movkAutoForm'>['slots']
 }>(), {
   submit: true,
   loadingAuto: true,
@@ -31,7 +30,6 @@ defineOptions({ inheritAttrs: false })
 
 const attrs = useAttrs()
 const { t } = useMovkLocale()
-const appConfig = useAppConfig() as { movk?: { autoForm?: unknown } }
 
 if (import.meta.dev && props.state !== undefined) {
   console.warn('[AutoForm] The `state` prop is deprecated, use `v-model` instead.')
@@ -65,7 +63,7 @@ const renderData = computed(() => {
 const { extendUi } = useExtendedTv(
   { slots: {} },
   theme,
-  () => appConfig.movk?.autoForm,
+  'movkAutoForm',
   () => ({
     ui: {
       ...props.ui,
@@ -120,9 +118,7 @@ defineExpose({
         data-slot="form"
         v-bind="attrs"
         :on-submit="props.onSubmit"
-        :ui="{
-          base: extendUi.base
-        }"
+        :ui="{ root: extendUi.base }"
         @error="emits('error', $event)"
       >
         <template #default="{ errors, loading: submitting }">

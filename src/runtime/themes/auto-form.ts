@@ -1,4 +1,4 @@
-export default () => ({
+export default {
   slots: {
     root: '',
     base: 'space-y-4',
@@ -7,4 +7,4 @@ export default () => ({
     footer: '',
     actions: ''
   }
-})
+}

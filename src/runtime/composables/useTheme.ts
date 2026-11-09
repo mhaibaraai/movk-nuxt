@@ -1,24 +1,26 @@
 import { useAppConfig, useColorMode, useSiteConfig } from '#imports'
 import { resolveThemeColor } from '../domains/theme/theme-color'
+import { colorsStorageKey } from '../domains/theme/theme-fouc'
+import { applyPaletteVars, resolvePaletteVars } from '../domains/theme/theme-palette'
 import { resolveThemeIcons, themeIcons } from '../domains/theme/theme-icons'
 import { resolveActiveRadius, resolveRadiusStyle } from '../domains/theme/theme-radius'
 import { omit, kebabCase } from '@movk/core'
-import { useLocalStorage } from '@vueuse/core'
+import { StorageSerializers, useLocalStorage } from '@vueuse/core'
 import colors from 'tailwindcss/colors'
-import { computed } from 'vue'
-import { getDefaultConfig, UI_COLOR_DEFAULTS } from '../utils/theme-defaults'
+import { computed, watch } from 'vue'
+import { getDefaultConfig } from '../utils/theme-defaults'
 
 type IconSet = 'lucide' | 'phosphor' | 'tabler'
 
 /** @nuxt/ui 自身的 --ui-radius 默认值，仅用于 ThemePicker 在未配置时的回显 */
 const UI_DEFAULT_RADIUS = 0.25
+/** @nuxt/ui v5 未配置 neutral 时使用的色板，仅用于推导浏览器 theme-color */
+const UI_DEFAULT_NEUTRAL = 'gray'
 
 export function useTheme() {
   const { movk, ui } = useAppConfig()
   const colorMode = useColorMode()
   const name = kebabCase(useSiteConfig().name)
-
-  const color = computed<string>(() => resolveThemeColor(ui.colors.neutral, colorMode.value))
 
   const defaultConfig = getDefaultConfig()
 
@@ -26,30 +28,46 @@ export function useTheme() {
   const _radius = useLocalStorage<number | null>(`${name}-ui-radius`, null, { writeDefaults: false })
   const _iconSet = useLocalStorage(`${name}-ui-icons`, movk?.icons ?? defaultConfig.icons)
   const _blackAsPrimary = useLocalStorage(`${name}-ui-black-as-primary`, defaultConfig.blackAsPrimary)
+  // 未选择时为 null：沿用项目 CSS 中 @plugin "@nuxt/ui/colors" 的配置
+  const _primary = useLocalStorage<string | null>(`${name}-ui-primary`, null, { writeDefaults: false })
+  const _neutral = useLocalStorage<string | null>(`${name}-ui-neutral`, null, { writeDefaults: false })
+  const _colors = useLocalStorage<Record<string, string> | null>(colorsStorageKey(name), null, {
+    writeDefaults: false,
+    serializer: StorageSerializers.object
+  })
+
+  const paletteVars = computed(() => resolvePaletteVars({ primary: _primary.value, neutral: _neutral.value }))
+
+  if (import.meta.client) {
+    watch(paletteVars, (next, prev) => {
+      applyPaletteVars(document.documentElement, next, prev)
+      _colors.value = Object.keys(next).length ? next : null
+    }, { immediate: true })
+  }
+
+  const color = computed<string>(() => resolveThemeColor(_neutral.value ?? UI_DEFAULT_NEUTRAL, colorMode.value))
 
   const configuredRadius: number | undefined = movk?.radius ?? defaultConfig.radius
   const activeRadius = computed(() => resolveActiveRadius(_radius.value, configuredRadius))
 
   const neutralColors: string[] = movk?.picker?.neutralColors ?? []
-  const neutral = computed<string>({
+  const neutral = computed<string | undefined>({
     get() {
-      return ui.colors.neutral
+      return _neutral.value ?? undefined
     },
     set(option) {
-      ui.colors.neutral = option as typeof ui.colors.neutral
-      window.localStorage.setItem(`${name}-ui-neutral`, ui.colors.neutral)
+      _neutral.value = option ?? null
     }
   })
 
   const colorsToOmit = ['inherit', 'current', 'transparent', 'black', 'white', ...neutralColors]
   const primaryColors = Object.keys(omit(colors, colorsToOmit as any))
-  const primary = computed<string>({
+  const primary = computed<string | undefined>({
     get() {
-      return ui.colors.primary
+      return _primary.value ?? undefined
     },
     set(option) {
-      ui.colors.primary = option as typeof ui.colors.primary
-      window.localStorage.setItem(`${name}-ui-primary`, ui.colors.primary)
+      _primary.value = option ?? null
       setBlackAsPrimary(false)
     }
   })
@@ -99,6 +117,12 @@ export function useTheme() {
     _blackAsPrimary.value = value
   }
 
+  if (import.meta.client) {
+    // 首屏脚本的内联值优先于 useHead 样式，交互后交还给响应式主题。
+    watch(activeRadius, () => document.documentElement.style.removeProperty('--ui-radius'))
+    watch([_blackAsPrimary, () => colorMode.value], () => document.documentElement.style.removeProperty('--ui-primary'))
+  }
+
   const radiusStyle = computed(() => resolveRadiusStyle(activeRadius.value))
   const blackAsPrimaryStyle = computed(() => _blackAsPrimary.value ? `:root { --ui-primary: black; } .dark { --ui-primary: white; }` : ':root {}')
 
@@ -110,19 +134,25 @@ export function useTheme() {
   const hasCSSChanges = computed(() => {
     return activeRadius.value !== configuredRadius
       || _blackAsPrimary.value
+      || !!_primary.value
+      || !!_neutral.value
   })
 
-  const hasConfigChanges = computed(() => {
-    return ui.colors.primary !== UI_COLOR_DEFAULTS.primary
-      || ui.colors.neutral !== UI_COLOR_DEFAULTS.neutral
-      || _iconSet.value !== (movk?.icons ?? defaultConfig.icons)
-  })
+  const hasConfigChanges = computed(() => _iconSet.value !== (movk?.icons ?? defaultConfig.icons))
 
   function exportCSS(): string {
     const lines = [
       '@import "tailwindcss";',
       '@import "@movk/nuxt";'
     ]
+
+    const colorLines = [
+      _primary.value && `  primary: ${_primary.value};`,
+      _neutral.value && `  neutral: ${_neutral.value};`
+    ].filter(Boolean) as string[]
+    if (colorLines.length) {
+      lines.push('', '@plugin "@nuxt/ui/colors" {', ...colorLines, '}')
+    }
 
     const rootLines: string[] = []
     if (activeRadius.value !== undefined && activeRadius.value !== configuredRadius) {
@@ -150,15 +180,8 @@ export function useTheme() {
   function exportConfig(): string {
     const config: Record<string, any> = {}
 
-    const colorEntries = Object.entries(UI_COLOR_DEFAULTS).filter(([key, def]) => (ui.colors as any)[key] !== def)
-    if (colorEntries.length) {
-      config.ui = { colors: Object.fromEntries(colorEntries.map(([key]) => [key, (ui.colors as any)[key]])) }
-    }
-
     if (_iconSet.value !== defaultConfig.icons) {
-      const iconMapping = themeIcons[_iconSet.value as keyof typeof themeIcons]
-      config.ui = config.ui || {}
-      config.ui.icons = iconMapping
+      config.ui = { icons: themeIcons[_iconSet.value as keyof typeof themeIcons] }
     }
 
     const configString = JSON.stringify(config, null, 2)
@@ -171,11 +194,8 @@ export function useTheme() {
   function resetTheme() {
     const defaultIcon = movk?.icons ?? defaultConfig.icons
 
-    ui.colors.primary = UI_COLOR_DEFAULTS.primary
-    window.localStorage.removeItem(`${name}-ui-primary`)
-
-    ui.colors.neutral = UI_COLOR_DEFAULTS.neutral
-    window.localStorage.removeItem(`${name}-ui-neutral`)
+    _primary.value = null
+    _neutral.value = null
 
     _radius.value = null
     _iconSet.value = defaultIcon

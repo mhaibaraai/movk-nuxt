@@ -3,7 +3,7 @@ import type { Nuxt } from '@nuxt/schema'
 import type { ModuleOptions } from '../module'
 import { addPlugin, useLogger } from '@nuxt/kit'
 import defu from 'defu'
-import { getDefaultConfig, UI_COLOR_DEFAULTS } from '../runtime/utils/theme-defaults'
+import { getDefaultConfig } from '../runtime/utils/theme-defaults'
 import { resolveFontLinks, resolveFontSource, resolveFontWarning } from '../runtime/domains/theme/theme-font'
 import type { Direction } from '@nuxt/ui'
 
@@ -26,11 +26,6 @@ export function addTheme(nuxt: Nuxt, resolve: Resolver['resolve'], theme?: Modul
   nuxt.options.appConfig.movk = defu(
     nuxt.options.appConfig.movk || {},
     getDefaultConfig(theme)
-  )
-
-  nuxt.options.appConfig.ui = defu(
-    { colors: { ...UI_COLOR_DEFAULTS } },
-    nuxt.options.appConfig.ui || {}
   )
 
   addPlugin({

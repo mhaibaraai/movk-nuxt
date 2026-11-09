@@ -1,4 +1,4 @@
-export default () => ({
+export default {
   slots: {
     wrapper: 'flex',
     presets: 'flex flex-col gap-1 p-2 border-r border-default min-w-[120px]',
@@ -15,4 +15,4 @@ export default () => ({
   defaultVariants: {
     withPresets: false
   }
-})
+}

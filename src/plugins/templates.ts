@@ -6,8 +6,8 @@ import { getTemplates } from '../templates'
 
 /**
  * 生成 movk 主题虚拟模板并供给 Vue 构建。
- * 关键：把模板写到真实磁盘（node_modules/.movk-ui），再把 `#build/movk-ui/*`、
- * `#build/movk-ui.css` alias 到真实文件——否则 Tailwind v4 扫不到主题类，组件无样式。
+ * 关键：把模板写到真实磁盘（node_modules/.movk-ui），再把 `#build/movk-ui.css`、
+ * `#build/movk-zod`、`#build/movk-session` alias 到真实文件——否则 Tailwind v4 扫不到主题类，组件无样式。
  */
 export default function MovkTemplatePlugin(options: MovkUIOptions): UnpluginOptions {
   const templates = getTemplates(options as any).filter(t => t.write && t.filename)

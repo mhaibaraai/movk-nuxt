@@ -1,17 +1,17 @@
-const ROW_SEP = '[[data-slot=tr]+[data-slot=tr]>&]'
+const ROW_SEP = '[[data-slot=table-tr]+[data-slot=table-tr]>&]'
 const PINNED = 'data-[pinned]'
 const PINNED_L = 'data-[pinned=left]'
 const NOT_LAST_NOT_PIN = 'not-last:not-data-[pinned=left]:not-data-[pinned=right]'
-const GROUP_HEADER = '[[data-slot=tr]:has([colspan])>&]'
+const GROUP_HEADER = '[[data-slot=table-tr]:has([colspan])>&]'
 
 // 真正固定的列(左/右),区别于非固定列的 data-pinned="false"
 const PIN = '&:is([data-pinned=left],[data-pinned=right])'
 // 非固定的普通列,保留半透明行底色以适配任意容器背景
 const NOT_PIN = '&[data-pinned]:not([data-pinned=left]):not([data-pinned=right])'
-// 行状态下固定列的不透明底色,与半透明版同色但混入 --ui-bg 防止横向滚动透出
-const PIN_BG_SELECTED = `[[data-selected=true]>${PIN}]:bg-[color:color-mix(in_oklab,var(--ui-bg-elevated)_50%,var(--ui-bg))]`
-const PIN_BG_HOVER = `[[data-slot=tr][data-selectable=true]:hover>${PIN}]:bg-[color:color-mix(in_oklab,var(--ui-bg-elevated)_50%,var(--ui-bg))]`
-const NOT_PIN_BG_SELECTED = `[[data-selected=true]>${NOT_PIN}]:bg-[color:color-mix(in_oklab,var(--ui-bg-elevated)_50%,transparent)]`
+// 行状态下固定列的不透明底色,与半透明版同色但混入 --ui-bg-default 防止横向滚动透出
+const PIN_BG_SELECTED = `[[data-selected=true]>${PIN}]:bg-[color:color-mix(in_oklab,var(--ui-bg-soft)_50%,var(--ui-bg-default))]`
+const PIN_BG_HOVER = `[[data-slot=table-tr][data-selectable=true]:hover>${PIN}]:bg-[color:color-mix(in_oklab,var(--ui-bg-soft)_50%,var(--ui-bg-default))]`
+const NOT_PIN_BG_SELECTED = `[[data-selected=true]>${NOT_PIN}]:bg-[color:color-mix(in_oklab,var(--ui-bg-soft)_50%,transparent)]`
 // 固定列柔和分隔阴影色,可经 --m-dt-pin-shadow-color 覆盖
 const PIN_SHADOW_COLOR = `[${PIN}]:[--m-dt-pin-shadow-color:color-mix(in_oklab,var(--ui-text-muted)_25%,transparent)]`
 // 横向滚动到左侧下方时,最后一个左固定列浮出右向阴影
@@ -20,10 +20,10 @@ const PIN_L_EDGE = `[[data-pin-start]_&[data-pinned=left]:not(:has(+[data-pinned
 const PIN_R_EDGE = `[[data-pin-end]_:not([data-pinned=right])+&[data-pinned=right]]:[--m-dt-pin-shadow:-8px_0_10px_-8px_var(--m-dt-pin-shadow-color)]`
 
 const BW = 'var(--m-dt-border-width,1px)'
-const BC = 'var(--m-dt-border-color,var(--ui-border))'
+const BC = 'var(--m-dt-border-color,var(--ui-border-default))'
 const BS = 'var(--m-dt-border-style,solid)'
 
-export default () => ({
+export default {
   slots: {
     wrapper: 'flex flex-col min-h-0 relative',
     toolbar: 'flex items-center justify-end gap-2 pb-2',
@@ -93,14 +93,14 @@ export default () => ({
     striped: {
       true: {
         td: [
-          `[[data-slot=tr]:nth-child(even)>${NOT_PIN}]:bg-[color:color-mix(in_oklab,var(--ui-bg-accented)_10%,transparent)]`,
-          `[[data-slot=tr]:nth-child(even)>${PIN}]:bg-[color:color-mix(in_oklab,var(--ui-bg-accented)_10%,var(--ui-bg))]`
+          `[[data-slot=table-tr]:nth-child(even)>${NOT_PIN}]:bg-[color:color-mix(in_oklab,var(--ui-bg-strong)_10%,transparent)]`,
+          `[[data-slot=table-tr]:nth-child(even)>${PIN}]:bg-[color:color-mix(in_oklab,var(--ui-bg-strong)_10%,var(--ui-bg-default))]`
         ].join(' ')
       }
     },
     tree: {
       true: {
-        tr: 'has-[>[data-slot=td]:only-child:empty]:hidden'
+        tr: 'has-[>[data-slot=table-td]:only-child:empty]:hidden'
       }
     },
     resizing: {
@@ -109,4 +109,4 @@ export default () => ({
       }
     }
   }
-})
+}

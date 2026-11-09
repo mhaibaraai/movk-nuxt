@@ -1,27 +1,26 @@
 <script lang="ts" setup>
-import { useAppConfig, useColorMode } from '#imports'
+import { useColorMode } from '#imports'
 import { useClipboard } from '@vueuse/core'
 import { ref } from 'vue'
 import { useTheme } from '../../composables/useTheme'
 import ThemePickerButton from './ThemePickerButton.vue'
 import type { ComponentConfig } from '@nuxt/ui'
 import type { AppConfig } from 'nuxt/schema'
-import theme from '#build/movk-ui/theme-picker'
+import theme from '../../themes/theme-picker'
 import popoverTheme from '#build/ui/popover'
 import { useExtendedTv } from '../../utils/extend-theme'
 
 interface ThemePickerProps {
-  ui?: ComponentConfig<typeof popoverTheme & typeof theme, AppConfig, 'themePicker'>['slots']
+  ui?: ComponentConfig<typeof popoverTheme & typeof theme, AppConfig, 'movkThemePicker'>['slots']
 }
 
 const props = defineProps<ThemePickerProps>()
-const appConfig = useAppConfig() as { movk?: { themePicker?: unknown } }
 const colorMode = useColorMode()
 
 const { extendUi } = useExtendedTv(
   popoverTheme,
   theme,
-  () => appConfig.movk?.themePicker,
+  'movkThemePicker',
   () => ({ ui: props.ui })
 )
 
@@ -123,7 +122,7 @@ const {
             v-for="color in neutralColors"
             :key="color"
             :label="color"
-            :chip="color === 'neutral' ? 'old-neutral' : color"
+            :chip="color"
             :selected="neutral === color"
             @click="neutral = color"
           />
@@ -179,7 +178,7 @@ const {
             color="neutral"
             :icon="icons.find(i => i.value === icon)?.icon"
             :items="icons"
-            class="w-full ring-default rounded-sm hover:bg-elevated/50 capitalize text-[11px] data-[state=open]:bg-elevated/50"
+            class="w-full ring-default rounded-sm hover:bg-tint capitalize text-[11px] data-[state=open]:bg-tint"
             :ui="{ item: 'capitalize text-[11px]', trailingIcon: 'group-data-[state=open]:rotate-180 transition-transform duration-200' }"
           />
         </div>
@@ -243,7 +242,7 @@ const {
               variant="outline"
               size="sm"
               icon="i-lucide-rotate-ccw"
-              class="ms-auto ring-default hover:bg-elevated/50"
+              class="ms-auto ring-default hover:bg-tint"
               @click="resetTheme"
             />
           </UTooltip>

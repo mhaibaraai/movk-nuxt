@@ -1,35 +1,33 @@
 <script setup lang="ts">
 import type { DropdownMenuItem } from '@nuxt/ui'
 
-const appConfig = useAppConfig()
+const { primary, neutral, primaryColors, neutralColors } = useTheme()
 
-const colors = ['red', 'orange', 'amber', 'yellow', 'lime', 'green', 'emerald', 'teal', 'cyan', 'sky', 'blue', 'indigo', 'violet', 'purple', 'fuchsia', 'pink', 'rose']
-const neutrals = ['slate', 'gray', 'zinc', 'neutral', 'stone']
-
+// 未选择时沿用 @nuxt/ui v5 的默认色板
 const items = computed<DropdownMenuItem[]>(() => [{
   label: 'Primary',
-  chip: appConfig.ui.colors.primary,
-  children: colors.map(color => ({
+  chip: primary.value ?? 'sky',
+  children: primaryColors.map(color => ({
     label: color,
     chip: color,
     type: 'checkbox' as const,
-    checked: appConfig.ui.colors.primary === color,
+    checked: primary.value === color,
     onSelect: (e: Event) => {
       e.preventDefault()
-      appConfig.ui.colors.primary = color
+      primary.value = color
     }
   }))
 }, {
   label: 'Neutral',
-  chip: appConfig.ui.colors.neutral === 'neutral' ? 'old-neutral' : appConfig.ui.colors.neutral,
-  children: neutrals.map(color => ({
+  chip: neutral.value ?? 'gray',
+  children: neutralColors.map(color => ({
     label: color,
-    chip: color === 'neutral' ? 'old-neutral' : color,
+    chip: color,
     type: 'checkbox' as const,
-    checked: appConfig.ui.colors.neutral === color,
+    checked: neutral.value === color,
     onSelect: (e: Event) => {
       e.preventDefault()
-      appConfig.ui.colors.neutral = color
+      neutral.value = color
     }
   }))
 }])
@@ -42,7 +40,7 @@ const items = computed<DropdownMenuItem[]>(() => [{
       color="neutral"
       variant="ghost"
       size="sm"
-      class="data-[state=open]:bg-elevated"
+      class="data-[state=open]:bg-soft"
       aria-label="Switch theme"
     />
     <template #item-leading="{ item }">
@@ -52,7 +50,7 @@ const items = computed<DropdownMenuItem[]>(() => [{
             '--chip-light': `var(--color-${(item as { chip: string }).chip}-500)`,
             '--chip-dark': `var(--color-${(item as { chip: string }).chip}-400)`
           }"
-          class="size-2 rounded-full ring ring-bg bg-(--chip-light) dark:bg-(--chip-dark)"
+          class="size-2 rounded-full ring ring-(--ui-bg-default) bg-(--chip-light) dark:bg-(--chip-dark)"
         />
       </div>
     </template>

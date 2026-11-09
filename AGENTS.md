@@ -6,8 +6,8 @@ This file provides guidance for AI coding agents working on this repository.
 
 `@movk/nuxt` 是 Nuxt 4 模块，四大能力域：AutoForm（Zod v4 Schema 驱动表单）、DataTable、API 集成（`useApiFetch` + 进度监控）、独立组件 + Composables。另提供 Vite/Vue 兼容层（`@movk/nuxt/vite` + `@movk/nuxt/vue-plugin`），**不含 API 域**。
 
-- **peerDependencies**：`@nuxt/ui >=4.6.0`、`zod >=4.3.6`
-- **moduleDependencies**（自动校验版本）：`@vueuse/nuxt >=14.2.1`、`@nuxt/image >=2.0.0`、`@nuxt/ui >=4.6.0`、`nuxt-site-config >=4.0.8`、`nuxt-auth-utils >=0.5.29`（仅 `api.auth.enabled` 且 `tokenSource: 'session'` 时登记，runtime 经 `#build/movk-session` 取 `useUserSession`）
+- **peerDependencies**：`@nuxt/ui`（v5，当前为预览包，约束 `>=4.12.0`）、`tailwindcss ^4.2.0`、`zod >=4.3.6`；可选 `@tanstack/vue-table`（DataTable）、`ai`
+- **moduleDependencies**（自动校验版本）：`@vueuse/nuxt >=14.2.1`、`@nuxt/image >=2.0.0`、`@nuxt/ui >=4.12.0`、`nuxt-site-config >=4.0.8`、`nuxt-auth-utils >=0.5.29`（仅 `api.auth.enabled` 且 `tokenSource: 'session'` 时登记，runtime 经 `#build/movk-session` 取 `useUserSession`）
 
 ## 常用命令
 
@@ -39,10 +39,10 @@ pnpm clean
 | `src/runtime/domains/` | 业务逻辑 + 私有子组件：`api/`、`auto-form/`、`data-table/`、`tree/`、`theme/` |
 | `src/runtime/composables/` | `useApiFetch`/`useLazyApiFetch`/`useClientApiFetch`、`useAutoForm`、`useTheme`、`useDateFormatter`、`useMessageBox`、`useUploadWithProgress`/`useDownloadWithProgress` |
 | `src/runtime/types/` | 按域聚合（`api/`、`auto-form/`、`components/`、`data-table/`、`shared`），各域 `index.ts` re-export |
-| `src/runtime/utils/` | 运行时工具，含两模式共用的 `theme-defaults`、`tree-expand`/`tree-selection` |
+| `src/runtime/themes/` | 组件主题，每组件一个文件；`index.ts` 以 `movk*` 键导出，即 `app.config.ui.movk*` 的覆盖键 |
+| `src/runtime/utils/` | 运行时工具，含两模式共用的 `theme-defaults`、`extend-theme`、`tree-expand`/`tree-selection` |
 | `src/runtime/vue/` | 非 Nuxt 桩层：`stubs/`（`#imports` 桩）、`composables/useSiteConfig`、`plugins/theme` |
-| `src/theme/` | 主题配置，每组件一个文件，`index.ts` 聚合 |
-| `src/utils/` | 构建期工具：`defaults`、`theme-variants`、`theme`、`css`、`icons` |
+| `src/utils/` | 构建期工具：`defaults`、`theme`、`theme-classes`、`css`、`icons` |
 | `playgrounds/play/` · `playgrounds/vue/` | Nuxt playground（含 `server/api/` mock）· 纯 Vue playground |
 | `docs/` | 文档站（`@movk/nuxt-docs` v3 Layer） |
 | `test/` | Vitest：`composables/`、`domains/`、`plugins/`、`utils/`（`unit` 项目）；`nuxt/` 组件测试（`nuxt` 项目）；`helpers/` 放测试替身 |
@@ -53,16 +53,18 @@ pnpm clean
 - **runtime 不得 import 构建期 `src/utils/`**（不进 dist）；两模式共用纯函数放 `src/runtime/utils/`。
 - **测试**：新增或修改 `runtime/domains`、`runtime/composables`、`runtime/utils` 逻辑须在 `test/` 补用例；组件行为测试放 `test/nuxt/`，用 `mountSuspended`（以 `playgrounds/play` 为根，需先 `pnpm dev:prepare`）。
 - **图标注入**：消费方扫描器扫不到 `node_modules`，故 `src/utils/icons.ts` 收集 `runtime/**` 的 `i-lucide-*`/`i-ph-*`/`i-tabler-*` 字面量。Nuxt 侧只走 `icon:clientBundleIcons` 钩子，**不得**写 `icon.clientBundle.icons`（缺失图标集会让消费方 build 报错）；Vue 侧只能用 `ui.icon.clientBundle.icons`，须先经 `filterResolvableIcons` 按项目根过滤。
+- **主题**：基于 `@nuxt/ui` v5 内置变体引擎。新增主题放 `runtime/themes/` 并在 `index.ts` 以 `movk<组件>` 导出，组件经 `useExtendedTv(parentTheme, theme, 'movk<组件>', ...)` 合并；类型经 `declare module '@nuxt/ui' { interface CustomThemes }` 并入 Nuxt UI 主题清单，`app.config.ui` 与 `<UTheme>` 自动可用。主题类由 `src/utils/theme-classes.ts` 构建期求值生成 `@source inline()`，引用 Nuxt UI 元素的 `data-slot` 须带组件命名空间（如 `table-tr`）。
 - **样式入口**：`src/runtime/index.css` 是片段（不含 `@import "tailwindcss"`），由项目 CSS `@import "@movk/nuxt"`，模块不注册到 `nuxt.options.css`。全项目只能有一个 Tailwind 入口，否则会覆盖 `--font-sans` 等主题变量；漏引时 `src/utils/css.ts` 构建期告警。
 
 ## Vite/Vue 双模式
 
-- **解析覆盖**：`MovkPlugin` 链入 `NuxtUIPlugin.raw()` 后先注册 movk 子插件，接管 `#imports`、`#components`（`U*` shim、`UIcon`/`Link` 用 `@nuxt/ui/runtime/vue/` 版）、`#build/app.config`（注入 `movk` 键）、`#build/movk-ui/*`（写盘供 Tailwind `@source` 扫描）。
+- **解析覆盖**：`MovkPlugin` 链入 `NuxtUIPlugin.raw()` 后先注册 movk 子插件，接管 `#imports`、`#components`（`U*` 以包路径重导出）、`#build/app.config`（注入 `movk`/`movkSite` 键）、`#build/movk-ui.css`（写盘供 CSS `@import`）。
+- **跨副本覆盖**：pnpm 按 peer 会拆出多个 `@nuxt/ui` 副本，其自带的 Vue 覆盖只认所在副本；`plugins/environment.ts` 按文件名把任一副本 runtime 内的 Link/Icon 相对导入重定向到 Vue 版，**不得删除**。
 - **判定归属**：依赖 Nuxt 服务端运行时（nitro、`useApiFetch*`、上传下载、`nuxt-auth-utils`）→ 仅 Nuxt，归 `domains/api/*`，**不得**纳入 `MOVK_COMPOSABLES` 与组件 glob；其余需双模式可用。
 - **新增组件**：组件 glob 自动纳入。从 `#components` 引入新 `U*` → 补 `src/unplugin.ts` 的 `UI_COMPONENTS`；用到桩未导出的 `#imports` 符号 → 补 `src/runtime/vue/stubs/movk-extra.ts`。
 - **新增 composable 或新增导出**：须在 `MOVK_COMPOSABLES` 显式登记文件及**全部公开导出**（含 re-export，如 `defineControl`/`CalendarDate`），Nuxt 侧自动可用，易漏 Vue 侧。
 - **模板自动导入**：`autoImport.vueTemplate: true` 已开启，`<template>` 可直接用。
-- **必验**：改动主题模板、`getDefaultConfig`、`MOVK_COMPOSABLES`、`UI_COMPONENTS`、stub 或组件结构后，同跑 `pnpm dev:prepare` 与 `pnpm dev:vue:build`。
+- **必验**：改动主题、`getDefaultConfig`、`MOVK_COMPOSABLES`、`UI_COMPONENTS`、stub 或组件结构后，同跑 `pnpm dev:prepare` 与 `pnpm build && pnpm dev:vue:build`（Vue playground 引用根 `dist/`，不先 build 会验证到旧产物）。
 - **reka-ui 版本锁定**：直接依赖须与 `@nuxt/ui` 内部版本完全一致，升级 `@nuxt/ui` 时同步；不一致会让 `pnpm build` 报 TS2883。
 - **Calendar 类型收窄**：reka-ui 未从公共入口导出 `Matcher` / `WeekStartsOn` 等类型，`types/components/date-picker.ts` 与 `controls.ts` 的收窄写法须保留，否则声明发射报 TS2883。
 

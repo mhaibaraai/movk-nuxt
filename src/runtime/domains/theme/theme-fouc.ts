@@ -1,50 +1,39 @@
-function escapeRegExp(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-}
+import { applyPaletteVars } from './theme-palette'
 
-/** 匹配 `--ui-color-<key>-500: var(--[prefix-]color-<任意色名>-500` 中的色名段 */
-function shadePattern(key: 'primary' | 'neutral', prefix?: string): string {
-  const varPrefix = prefix ? escapeRegExp(`${prefix}-`) : ''
-  return `(--ui-color-${key}-\\d{2,3}:\\s*var\\(--${varPrefix}color-)[a-z-]+?(-\\d{2,3}\\s*[,)])`
+const PALETTE_VAR = /^--ui-color-(primary|neutral)-\d{2,3}$/
+
+/** 存放运行时色板变量表（`resolvePaletteVars` 的结果）的 localStorage 键 */
+export function colorsStorageKey(name: string): string {
+  return `${name}-ui-colors`
 }
 
 /**
- * 首屏前按 localStorage 改写 `style#nuxt-ui-colors` 中的色板引用，避免切换过的主色/中性色闪烁。
- * 色名段按通配匹配，不依赖构建期配置色，兼容 `theme.prefix` 与 `neutral → old-neutral` 映射。
+ * 首屏前把 localStorage 中的色板变量写到 `<html>` 内联样式，避免切换过的主色/中性色闪烁。
+ * 只接受 `--ui-color-{primary,neutral}-<shade>`，存储缺失或损坏时静默跳过
  */
-export function createColorSwapScript(name: string, prefix?: string): string {
+export function createColorRestoreScript(name: string): string {
   return `(function () {
-    var primary = localStorage.getItem(${JSON.stringify(`${name}-ui-primary`)});
-    var neutral = localStorage.getItem(${JSON.stringify(`${name}-ui-neutral`)});
-    if (!primary && !neutral) return;
-    function resolve(color) {
-      if (!color || !/^[a-z-]+$/.test(color)) return null;
-      return color === 'neutral' ? 'old-neutral' : color;
-    }
-    function replace(html, pattern, color) {
-      var resolved = resolve(color);
-      return resolved ? html.replace(new RegExp(pattern, 'g'), '$1' + resolved + '$2') : html;
-    }
-    function swap(el) {
-      var html = el.innerHTML;
-      if (primary !== 'black') html = replace(html, ${JSON.stringify(shadePattern('primary', prefix))}, primary);
-      html = replace(html, ${JSON.stringify(shadePattern('neutral', prefix))}, neutral);
-      if (html !== el.innerHTML) el.innerHTML = html;
-    }
-    var el = document.querySelector('style#nuxt-ui-colors');
-    if (el) return swap(el);
-    var obs = new MutationObserver(function (mutations) {
-      for (var i = 0; i < mutations.length; i++) {
-        for (var j = 0; j < mutations[i].addedNodes.length; j++) {
-          var node = mutations[i].addedNodes[j];
-          if (node.id === 'nuxt-ui-colors') {
-            swap(node);
-            obs.disconnect();
-            return;
-          }
+    try {
+      var vars = JSON.parse(localStorage.getItem(${JSON.stringify(colorsStorageKey(name))}) || 'null');
+      if (!vars || typeof vars !== 'object') return;
+      for (var key in vars) {
+        if (${PALETTE_VAR}.test(key) && typeof vars[key] === 'string') {
+          document.documentElement.style.setProperty(key, vars[key]);
         }
       }
-    });
-    obs.observe(document.head, { childList: true });
+    } catch (e) {}
   })();`.replace(/\s+/g, ' ')
+}
+
+/** 客户端兜底（SPA、Vue 模式或首屏脚本未执行时）：按同一规则回放 localStorage 中的色板变量 */
+export function restorePaletteVars(name: string): void {
+  const key = colorsStorageKey(name)
+  try {
+    const vars: unknown = JSON.parse(localStorage.getItem(key) || 'null')
+    if (!vars || typeof vars !== 'object') return
+    const valid = Object.fromEntries(Object.entries(vars).filter(([k, v]) => PALETTE_VAR.test(k) && typeof v === 'string'))
+    applyPaletteVars(document.documentElement, valid)
+  } catch {
+    localStorage.removeItem(key)
+  }
 }

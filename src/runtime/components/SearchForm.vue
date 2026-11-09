@@ -12,9 +12,9 @@ import { AUTOFORM_META } from '../domains/auto-form/constants'
 import { createDefaultSearchActions } from '../domains/auto-form/actions'
 import { useMovkLocale } from '../composables/useMovkLocale'
 import AutoFormRendererField from '../domains/auto-form/components/Field.vue'
-import { useAppConfig, useRoute, useRouter } from '#imports'
+import { useRoute, useRouter } from '#imports'
 import { cleanSearchPayload, parseSearchQuery, serializeSearchQuery } from '../domains/auto-form/search-query'
-import theme from '#build/movk-ui/search-form'
+import theme from '../themes/search-form'
 import type {
   SearchFormAction,
   SearchFormEmits,
@@ -32,7 +32,7 @@ const BREAKPOINTS: Record<ColsBreakpoint, number> = { sm: 640, md: 768, lg: 1024
 const BREAKPOINT_KEYS = Object.keys(BREAKPOINTS) as ColsBreakpoint[]
 
 const props = withDefaults(defineProps<SearchFormProps<S> & {
-  ui?: ComponentConfig<typeof theme, AppConfig, 'searchForm'>['slots']
+  ui?: ComponentConfig<typeof theme, AppConfig, 'movkSearchForm'>['slots']
 }>(), {
   cols: 3,
   visibleRows: 1,
@@ -52,7 +52,6 @@ defineOptions({ inheritAttrs: false })
 
 const attrs = useAttrs()
 const { t } = useMovkLocale()
-const appConfig = useAppConfig() as { movk?: { searchForm?: unknown } }
 const formRef = useTemplateRef('formRef')
 
 const core = useAutoFormCore({
@@ -74,10 +73,10 @@ const expanded = computed<boolean>({
   }
 })
 
-const { baseUi, extraUi } = useExtendedTv(
-  { slots: { base: '' } },
+const { extraUi } = useExtendedTv(
+  { slots: {} },
   theme,
-  () => appConfig.movk?.searchForm,
+  'movkSearchForm',
   () => ({
     ui: {
       ...props.ui,
@@ -266,7 +265,7 @@ defineExpose({
       :schema="validationSchema as S"
       :loading-auto="props.loadingAuto"
       :validate-on="props.validateOn"
-      :ui="baseUi"
+      :ui="{ root: extraUi.form }"
       data-slot="form"
       v-bind="attrs"
       :on-submit="handleSubmit"

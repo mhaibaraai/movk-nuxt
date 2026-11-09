@@ -13,7 +13,7 @@ import { useExtendedTv } from '../utils/extend-theme'
 import { useMovkLocale } from '../composables/useMovkLocale'
 import { useFieldControl } from '../utils/form-control'
 import { useLocale } from '@nuxt/ui/composables/useLocale'
-import theme from '#build/movk-ui/date-picker'
+import theme from '../themes/date-picker'
 import popoverTheme from '#build/ui/popover'
 import type {
   DatePickerEmits,
@@ -26,7 +26,7 @@ import type {
 } from '../types/components/date-picker'
 
 const props = withDefaults(defineProps<DatePickerProps<R, M, P, V> & {
-  ui?: ComponentConfig<typeof popoverTheme & typeof theme, AppConfig, 'datePicker'>['slots']
+  ui?: ComponentConfig<typeof popoverTheme & typeof theme, AppConfig, 'movkDatePicker'>['slots']
 }>(), {
   labelFormat: 'formatted'
 })
@@ -39,7 +39,7 @@ defineOptions({ inheritAttrs: false })
 const attrs = useAttrs()
 const modelValue = defineModel<FormattedValue<R, M, V>>()
 const open = defineModel<boolean>('open', { default: false })
-const appConfig = useAppConfig() as { movk?: { datePicker?: unknown }, ui?: { icons?: Record<string, string> } }
+const appConfig = useAppConfig() as { ui?: { icons?: Record<string, string> } }
 const { t } = useMovkLocale()
 const {
   id,
@@ -191,7 +191,7 @@ defineExpose<DatePickerExposed>({
 const { baseUi, extraUi } = useExtendedTv(
   popoverTheme,
   theme,
-  () => appConfig.movk?.datePicker,
+  'movkDatePicker',
   () => ({
     ui: props.ui,
     variants: { withPresets: resolvedPresets.value.length > 0 }

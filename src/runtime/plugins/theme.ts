@@ -1,6 +1,6 @@
 import { kebabCase } from '@movk/core'
 import { defineNuxtPlugin, useAppConfig, useHead, useSiteConfig } from '#imports'
-import { createColorSwapScript } from '../domains/theme/theme-fouc'
+import { createColorRestoreScript, restorePaletteVars } from '../domains/theme/theme-fouc'
 import { resolveThemeIcons } from '../domains/theme/theme-icons'
 
 export default defineNuxtPlugin({
@@ -11,11 +11,7 @@ export default defineNuxtPlugin({
     const name = kebabCase(site.name)
 
     if (import.meta.client) {
-      const primary = localStorage.getItem(`${name}-ui-primary`)
-      if (primary) appConfig.ui.colors.primary = primary
-
-      const neutral = localStorage.getItem(`${name}-ui-neutral`)
-      if (neutral) appConfig.ui.colors.neutral = neutral
+      restorePaletteVars(name)
 
       const icons = localStorage.getItem(`${name}-ui-icons`)
       if (icons) appConfig.ui.icons = resolveThemeIcons(icons, appConfig.ui.icons) as any
@@ -24,8 +20,7 @@ export default defineNuxtPlugin({
     if (import.meta.server) {
       useHead({
         script: [{
-          // 与 @nuxt/ui colors 插件生成色板变量时读取的 prefix 保持一致
-          innerHTML: createColorSwapScript(name, (appConfig.ui as { prefix?: string }).prefix),
+          innerHTML: createColorRestoreScript(name),
           type: 'text/javascript',
           tagPriority: -1
         }, {

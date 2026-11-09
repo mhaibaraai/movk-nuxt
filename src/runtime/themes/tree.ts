@@ -1,4 +1,4 @@
-export default () => ({
+export default {
   slots: {
     container: 'flex flex-col gap-2 min-h-0',
     toolbar: 'flex items-center gap-1.5',
@@ -10,4 +10,4 @@ export default () => ({
     loadingIcon: 'size-4 shrink-0 animate-spin',
     empty: 'py-6 text-center text-sm text-muted'
   }
-})
+}

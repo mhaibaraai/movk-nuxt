@@ -13,7 +13,7 @@ import { useAppConfig } from '#imports'
 import { useExtendedTv } from '../utils/extend-theme'
 import { useMovkLocale } from '../composables/useMovkLocale'
 import treeTheme from '#build/ui/tree'
-import theme from '#build/movk-ui/tree'
+import theme from '../themes/tree'
 import { createGetKey, normalizeChildren } from '../domains/tree/resolve-tree'
 import { resolveLeadingIcon } from '../domains/tree/tree-icon'
 import { labelOf } from '../domains/tree/tree-search'
@@ -30,7 +30,7 @@ type WorkNode = Record<string, any>
 type DefaultExpanded = boolean | number | ((node: WorkNode, depth: number) => boolean)
 
 const props = withDefaults(defineProps<TreeProps<T, M> & {
-  ui?: ComponentConfig<typeof treeTheme & typeof theme, AppConfig, 'tree'>['slots']
+  ui?: ComponentConfig<typeof treeTheme & typeof theme, AppConfig, 'movkTree'>['slots']
 }>(), {
   childrenKey: 'children',
   highlight: true,
@@ -50,7 +50,7 @@ const search = defineModel<string>('search', { default: '' })
 const expanded = defineModel<string[]>('expanded', { default: () => [] })
 
 const slots = useSlots()
-const appConfig = useAppConfig() as { movk?: { tree?: unknown }, ui?: { icons?: Record<string, string> } }
+const appConfig = useAppConfig() as { ui?: { icons?: Record<string, string> } }
 const { t } = useMovkLocale()
 const labelKey = computed(() => props.labelKey)
 
@@ -68,7 +68,7 @@ const getKey = computed(() => createGetKey<WorkNode>(props.getKey as ((node: Wor
 const { baseUi, extraUi } = useExtendedTv(
   treeTheme,
   theme,
-  () => appConfig.movk?.tree,
+  'movkTree',
   () => ({
     ui: {
       ...props.ui,

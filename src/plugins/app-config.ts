@@ -3,7 +3,7 @@ import type { MovkUIOptions } from '../unplugin'
 import { defu } from 'defu'
 import { resolvePathSync } from 'mlly'
 import { kebabCase } from 'scule'
-import { getDefaultConfig, UI_COLOR_DEFAULTS } from '../runtime/utils/theme-defaults'
+import { getDefaultConfig } from '../runtime/utils/theme-defaults'
 import { getPackageJsonMetadata } from '../runtime/utils/meta'
 
 /**
@@ -14,7 +14,6 @@ export default function MovkAppConfigPlugin(options: MovkUIOptions): UnpluginOpt
   // 虚拟模块无真实路径，裸 'defu' 会从消费方项目根解析；改用包内 ESM 入口绝对路径
   const defuPath = resolvePathSync('defu', { url: import.meta.url })
   const movkDefault = JSON.stringify(getDefaultConfig(options.theme))
-  const colorDefaults = JSON.stringify(UI_COLOR_DEFAULTS)
   let movkSite = JSON.stringify(options.site ?? {})
 
   return {
@@ -37,8 +36,7 @@ export default function MovkAppConfigPlugin(options: MovkUIOptions): UnpluginOpt
         code.replace('export default', 'const __movkUiAppConfig ='),
         `export default __movkDefu({`,
         `  movk: ${movkDefault},`,
-        `  movkSite: ${movkSite},`,
-        `  ui: __movkDefu({ colors: ${colorDefaults} }, __movkUiAppConfig.ui || {})`,
+        `  movkSite: ${movkSite}`,
         `}, __movkUiAppConfig)`
       ].join('\n')
 

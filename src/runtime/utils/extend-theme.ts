@@ -1,15 +1,19 @@
 import type { ComputedRef } from 'vue'
 import { computed } from 'vue'
 import type { SlotClass } from '@nuxt/ui'
-import { tv } from './tv'
+import { tv } from '@nuxt/ui/utils/tv'
+import { useComponentOverrides } from '@nuxt/ui/composables/useComponentProps'
+import type * as themes from '../themes'
 
 type SlotsLike = { slots: Record<string, unknown> }
-type SlotFn = (opts: { class?: unknown }) => string
+type SlotFn = (opts: { class?: unknown }) => string | undefined
 type SlotMap = Record<string, SlotFn>
 type MergeParams = {
   ui?: Record<string, SlotClass | SlotClass[]>
   variants?: Record<string, unknown>
 }
+
+export type MovkThemeKey = keyof typeof themes
 
 type BaseKeys<P extends SlotsLike> = string & keyof P['slots']
 type ExtraKeys<P extends SlotsLike, M extends SlotsLike> = string & Exclude<keyof M['slots'], keyof P['slots']>
@@ -21,64 +25,47 @@ interface ExtendedTv<P extends SlotsLike, M extends SlotsLike> {
   extraUi: ComputedRef<Record<ExtraKeys<P, M>, string>>
 }
 
+/**
+ * 合并 movk 主题、`app.config.ui.<key>` 与各级 `<UTheme>` 覆盖以及组件 `ui` prop，
+ * 并按被包装组件（parentTheme）的原生 slot 拆分结果
+ */
 export function useExtendedTv<P extends SlotsLike, M extends SlotsLike>(
   parentTheme: P,
   movkTheme: M,
-  getOverride: () => unknown = () => ({}),
+  key: MovkThemeKey,
   getParams: () => MergeParams = () => ({})
 ): ExtendedTv<P, M> {
-  // 父 theme 只用于划分被包装组件的原生 slot 边界。
+  // 父 theme 只用于划分被包装组件的原生 slot 边界
   const parentSlotKeys = new Set(Object.keys(parentTheme.slots))
-  // 补齐父 slot key，让最终 ui 同时包含父组件和扩展组件的 slot。
-  const emptySlots = Object.fromEntries(
-    Object.keys(parentTheme.slots).map(key => [key, ''])
-  )
-  const movkTv = tv(movkTheme as never)
+  // 补齐父 slot key，让最终 ui 同时包含父组件和扩展组件的 slot
+  const theme = {
+    ...movkTheme,
+    slots: { ...Object.fromEntries([...parentSlotKeys].map(slot => [slot, ''])), ...movkTheme.slots }
+  }
+  const overrides = useComponentOverrides((ui: Record<string, any>) => ui[key])
 
-  // 完整合并结果：包含父组件原生 slot 与 movk 扩展 slot。
   const extendUi = computed(() => {
-    const ov = (getOverride() ?? {}) as Record<string, unknown>
-    const { ui: uiOverride, variants } = getParams()
+    const { ui: uiOverride = {}, variants } = getParams()
+    const cls = (tv(theme as never, overrides.value) as unknown as (v?: unknown) => SlotMap)(variants)
 
-    const tvFn = tv({
-      slots: { ...emptySlots, ...(ov.slots as Record<string, unknown> | undefined) },
-      ...(ov.variants ? { variants: ov.variants } : {}),
-      ...(ov.compoundVariants ? { compoundVariants: ov.compoundVariants } : {}),
-      ...(ov.defaultVariants ? { defaultVariants: ov.defaultVariants } : {}),
-      extend: movkTv
-    } as never)
+    // 主题之外的 slot 原样透传给被包装组件
+    const passthrough = Object.entries(uiOverride).filter(([slot]) => !(slot in cls))
+    const merged = Object.entries(cls).flatMap(([slot, slotFn]) => {
+      const value = slotFn({ class: uiOverride[slot] || undefined })
+      return value ? [[slot, value] as const] : []
+    })
 
-    const cls = (tvFn as unknown as (v?: unknown) => SlotMap)(variants)
-    const slotKeys = new Set(Object.keys(cls))
-
-    const result: Record<string, string> = Object.fromEntries(
-      Object.entries((uiOverride as Record<string, string> | undefined) ?? {}).filter(
-        ([key]) => !slotKeys.has(key)
-      )
-    )
-
-    for (const key of slotKeys) {
-      const slotFn = cls[key]
-      if (!slotFn) continue
-      const merged = slotFn({ class: uiOverride?.[key] || undefined })
-      if (merged) result[key] = merged
-    }
-
-    return result
+    return Object.fromEntries([...passthrough, ...merged])
   }) as ComputedRef<Record<AllKeys<P, M>, string>>
 
-  // 仅父组件原生 slot，适合传给 UPopover、UInput 等被包装组件的 :ui。
+  // 仅父组件原生 slot，适合传给 UPopover、UTable 等被包装组件的 :ui
   const baseUi = computed(() =>
-    Object.fromEntries(
-      Object.entries(extendUi.value).filter(([k]) => parentSlotKeys.has(k))
-    )
+    Object.fromEntries(Object.entries(extendUi.value).filter(([slot]) => parentSlotKeys.has(slot)))
   ) as ComputedRef<Record<BaseKeys<P>, string>>
 
-  // 仅 movk 扩展 slot，适合当前封装组件内部元素使用。
+  // 仅 movk 扩展 slot，适合当前封装组件内部元素使用
   const extraUi = computed(() =>
-    Object.fromEntries(
-      Object.entries(extendUi.value).filter(([k]) => !parentSlotKeys.has(k))
-    )
+    Object.fromEntries(Object.entries(extendUi.value).filter(([slot]) => !parentSlotKeys.has(slot)))
   ) as ComputedRef<Record<ExtraKeys<P, M>, string>>
 
   return { extendUi, baseUi, extraUi }

@@ -35,10 +35,6 @@ interface NuxtWithExtra {
   }
 }
 
-type StrictUiTheme = {
-  [K in keyof NonNullable<UiModuleOptions['theme']>]?: Exclude<NonNullable<UiModuleOptions['theme']>[K], null>
-}
-
 export interface ModuleOptions {
   /**
    * 组件前缀
@@ -70,24 +66,11 @@ export interface ModuleOptions {
      */
     enabled?: boolean
     /**
-     * Define the color aliases available for components
-     * @defaultValue `['primary', 'secondary', 'success', 'info', 'warning', 'error']`
-     * @see https://ui.nuxt.com/docs/getting-started/installation/nuxt#themecolors
-     */
-    colors?: StrictUiTheme['colors']
-    /**
-     * The default variants to use for components
-     * @defaultValue 'nuxt.options.ui.theme.defaultVariants'
-     * @see https://ui.nuxt.com/docs/getting-started/installation/nuxt#themedefaultvariants
-     */
-    defaultVariants?: StrictUiTheme['defaultVariants']
-    /**
-     * Prefix for Tailwind CSS utility classes
-     * @defaultValue 'nuxt.options.ui.theme.prefix'
-     * @see https://ui.nuxt.com/docs/getting-started/installation/nuxt#themeprefix
+     * Tailwind CSS 工具类前缀，缺省时沿用 `ui.tailwindPrefix`
+     * @see https://ui.nuxt.com/docs/getting-started/installation/nuxt#tailwindprefix
      * @example 'tw'
      */
-    prefix?: StrictUiTheme['prefix']
+    prefix?: string
     /**
      * 全局字体。内置字体给名字即可，模块在构建期注入样式表与带中文回退栈的 `--font-sans`；
      * 自托管字体用 `{ name, href }` 形式补上入口 CSS 地址。
@@ -120,7 +103,7 @@ function resolveModuleDependencies(nuxt: Nuxt): ModuleDependencies {
 
   return {
     '@nuxt/image': { version: '>=2.0.0' },
-    '@nuxt/ui': { version: '>=4.6.0' },
+    '@nuxt/ui': { version: '>=4.12.0' },
     '@vueuse/nuxt': { version: '>=14.2.1' },
     ...(usesSessionAuth(options.movk?.api) && { 'nuxt-auth-utils': { version: '>=0.5.29' } }),
     'nuxt-site-config': { version: '>=4.0.8' }
@@ -159,12 +142,12 @@ const movkModule: NuxtModule<ModuleOptions> = defineNuxtModule<ModuleOptions>({
     const movkUiDeps = UI_COMPONENTS.map(name => name.slice(1))
     const uiOptions = (nuxt as NuxtWithExtra).options
     const ui = (uiOptions.ui ??= {})
-    const experimental = (ui.experimental ??= {})
-    const detection = experimental.componentDetection
+    // v5 缺省即开启检测；仅在显式关闭（生成全部主题）时不追加
+    const detection = ui.componentDetection ?? true
     if (detection === true) {
-      experimental.componentDetection = movkUiDeps
+      ui.componentDetection = movkUiDeps
     } else if (Array.isArray(detection)) {
-      experimental.componentDetection = [...new Set([...detection, ...movkUiDeps])]
+      ui.componentDetection = [...new Set([...detection, ...movkUiDeps])]
     }
 
     const componentIgnore: string[] = []
@@ -226,14 +209,10 @@ const movkModule: NuxtModule<ModuleOptions> = defineNuxtModule<ModuleOptions>({
 
       updateSiteConfig(site as SiteConfigInput)
 
-      const uiTheme = (nuxt as NuxtWithExtra).options.ui?.theme
-      const themeDefaults: StrictUiTheme = {
-        prefix: uiTheme?.prefix ?? undefined,
-        colors: uiTheme?.colors ?? undefined,
-        defaultVariants: uiTheme?.defaultVariants ?? undefined
+      options.theme = {
+        ...options.theme,
+        prefix: options.theme?.prefix ?? (nuxt as NuxtWithExtra).options.ui?.tailwindPrefix
       }
-
-      options.theme = defu(options.theme || {}, themeDefaults)
 
       addTheme(nuxt, resolve, options.theme)
       await addTemplates(options, nuxt)
