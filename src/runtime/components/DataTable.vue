@@ -1,23 +1,21 @@
 <script lang="ts" setup generic="T extends TableData">
-import { getPaginationRowModel } from '@tanstack/vue-table'
+import { createPaginatedRowModel, rowPaginationFeature } from '@tanstack/vue-table'
 import type {
   ColumnOrderState,
   ColumnPinningState,
   ColumnSizingState,
+  ColumnVisibilityState,
   ExpandedState,
   HeaderContext,
   PaginationState,
-  Row,
   RowPinningState,
   RowSelectionState,
   SortingState,
   Table,
-  TableMeta,
-  VisibilityState
+  TableMeta
 } from '@tanstack/vue-table'
-import type { TableData, TableProps, ComponentConfig } from '@nuxt/ui'
+import type { TableData, TableFeatures, TableProps, TableRow, ComponentConfig } from '@nuxt/ui'
 import { USkeleton, UTable } from '#components'
-import { useAppConfig } from '#imports'
 import type { VNode } from 'vue'
 import { computed, ref, toRaw, useAttrs, useTemplateRef, watch } from 'vue'
 import { useResizeObserver, useScroll } from '@vueuse/core'
@@ -41,7 +39,7 @@ import { buildPaginationView } from '../domains/data-table/pagination'
 import { useExpandColumnAutoSize } from '../domains/data-table/tree-layout'
 import { runLoadMore } from '../domains/data-table/load-more'
 import { useTablePersistence } from '../domains/data-table/persist'
-import { downloadCsv } from '../domains/data-table/export'
+import { downloadCsv, getPrePaginatedRows } from '../domains/data-table/export'
 import type { DataTableExportOptions } from '../domains/data-table/export'
 import ColumnSettings from '../domains/data-table/components/ColumnSettings.vue'
 import type { ColumnSettingsItem } from '../domains/data-table/components/ColumnSettings.vue'
@@ -50,17 +48,17 @@ import { resolveCallbackValue } from '../domains/data-table/columns/utils'
 import { computeTreeSelection } from '../utils/tree-selection'
 import { resolveDefaultExpandedKeys } from '../utils/tree-expand'
 import { useInfiniteScrollBinding, separate } from '@movk/core'
-import theme from '#build/movk-ui/data-table'
+import theme from '../themes/data-table'
 import tableTheme from '#build/ui/table'
-import type paginationTheme from '#build/movk-ui/data-table-pagination'
+import type paginationTheme from '../themes/data-table-pagination'
 import DataTablePagination from '../domains/data-table/components/Pagination.vue'
 import type { AppConfig } from 'nuxt/schema'
 import type { DataTableExposed, DataTableProps, DataTableSlots } from '../types/data-table/component'
 import type { TreeSelectionResult } from '../types/data-table/columns'
 import type { DataTablePaginationUi } from '../types/data-table/pagination'
 
-type DataTable = ComponentConfig<(typeof theme & typeof tableTheme), AppConfig, 'dataTable'>
-type Pagination = ComponentConfig<typeof paginationTheme, AppConfig, 'dataTablePagination'>
+type DataTable = ComponentConfig<(typeof theme & typeof tableTheme), AppConfig, 'movkDataTable'>
+type Pagination = ComponentConfig<typeof paginationTheme, AppConfig, 'movkDataTablePagination'>
 
 const HEADER_SLOT_SUFFIX = '-header'
 const PAGINATION_SLOTS = ['pagination', 'pagination-summary', 'pagination-actions', 'toolbar']
@@ -82,7 +80,7 @@ const props = withDefaults(defineProps<DataTableProps<T> & {
 })
 
 const paginationState = defineModel<PaginationState>('pagination')
-const columnVisibilityState = defineModel<VisibilityState>('columnVisibility')
+const columnVisibilityState = defineModel<ColumnVisibilityState>('columnVisibility')
 const columnPinningState = defineModel<ColumnPinningState>('columnPinning')
 const columnSizingState = defineModel<ColumnSizingState>('columnSizing')
 const rowSelectionState = defineModel<RowSelectionState>('rowSelection')
@@ -103,7 +101,7 @@ const headerSlots = Object.fromEntries(
   Object.keys(slots)
     .filter(name => name.endsWith(HEADER_SLOT_SUFFIX))
     // 包一层而非直接引用，父组件重渲染后仍取到最新的插槽函数
-    .map(name => [name, (ctx: HeaderContext<T, unknown>) => slotRecord[name]?.(ctx) ?? []])
+    .map(name => [name, (ctx: HeaderContext<TableFeatures, T, unknown>) => slotRecord[name]?.(ctx) ?? []])
 ) as HeaderSlotMap<T>
 
 const { t } = useMovkLocale()
@@ -130,14 +128,24 @@ const effectiveVisibility = useEffectiveModel(
   hasEntries
 )
 
-const effectivePinning = useEffectiveModel(
+const initialPinning = (): ColumnPinningState => ({
+  start: [...resolved.value.initialPinning.start],
+  end: [...resolved.value.initialPinning.end]
+})
+
+const pinningModel = useEffectiveModel(
   columnPinningState,
-  () => ({
-    left: [...(resolved.value.initialPinning.left ?? [])],
-    right: [...(resolved.value.initialPinning.right ?? [])]
-  }),
-  v => (v.left?.length ?? 0) + (v.right?.length ?? 0) > 0
+  initialPinning,
+  v => v.start.length + v.end.length > 0
 )
+
+// 持久化或外部写入的旧格式（left/right）缺少 start/end，补齐为空数组，避免 TanStack 读取时报错
+const effectivePinning = computed<ColumnPinningState>({
+  get: () => pinningModel.value,
+  set: (value) => {
+    pinningModel.value = { start: value?.start ?? [], end: value?.end ?? [] }
+  }
+})
 
 const effectiveSizing = useEffectiveModel(
   columnSizingState,
@@ -219,10 +227,9 @@ useSyncKeys(
 defineOptions({ inheritAttrs: false })
 
 const attrs = useAttrs()
-const appConfig = useAppConfig() as { movk?: { dataTable?: unknown } }
 const tableRef = useTemplateRef<{
   $el: HTMLElement | null
-  tableApi: Table<T>
+  tableApi: Table<TableFeatures, T>
   tableRef: HTMLTableElement | null
 }>('tableRef')
 
@@ -255,8 +262,8 @@ function scrollToTop(options: ScrollToOptions = { top: 0, behavior: 'smooth' }) 
   tableRef.value?.$el?.scrollTo({ top: 0, ...options })
 }
 
-const tableApi = computed<Table<T> | null>(() => tableRef.value?.tableApi ?? null)
-const isColumnResizing = computed(() => Boolean(tableApi.value?.getState().columnSizingInfo.isResizingColumn))
+const tableApi = computed<Table<TableFeatures, T> | null>(() => tableRef.value?.tableApi ?? null)
+const isColumnResizing = computed(() => Boolean(tableApi.value?.atoms.columnResizing?.get().isResizingColumn))
 
 const isTreeMode = computed(() => Boolean(props.childrenKey))
 
@@ -268,17 +275,27 @@ useExpandColumnAutoSize({
   sizing: effectiveSizing
 })
 
-const isManualPagination = computed(() => props.paginationOptions?.manualPagination === true)
+const isManualPagination = computed(() => props.options?.manualPagination === true)
 const hasPaginationIntent = computed(() =>
   !props.loadMore && (
-    props.paginationOptions !== undefined
+    isManualPagination.value
     || paginationState.value !== undefined
     || (props.paginationUi?.pageSizes?.length ?? 0) > 0
     || props.paginationUi?.show === true
   )
 )
 
-const tableMeta = computed((): TableMeta<T> => ({
+// UTable 只在挂载时读取一次 features，分页意图变化经 tableResetKey 重建表格
+const tableFeatures = computed((): TableProps<T>['features'] => {
+  const pagination = hasPaginationIntent.value && {
+    rowPaginationFeature,
+    // 手动分页由调用方切片，只需分页状态，不注册分页行模型
+    ...(!isManualPagination.value && { paginatedRowModel: createPaginatedRowModel() })
+  }
+  return pagination || props.features ? { ...pagination, ...props.features } : undefined
+})
+
+const tableMeta = computed((): TableMeta<TableFeatures, T> => ({
   ...((props.stripe || props.rowClass || props.meta?.class?.tr) && {
     class: {
       tr: row => [
@@ -314,7 +331,7 @@ const borderedStyle = computed(() => {
 const { baseUi, extraUi } = useExtendedTv(
   tableTheme,
   theme,
-  () => appConfig.movk?.dataTable,
+  'movkDataTable',
   () => ({
     ui: {
       ...props.ui,
@@ -351,42 +368,19 @@ const uTableProps = computed(() => {
     columns: resolved.value.columnDefs,
     meta: tableMeta.value,
     ui: baseUi.value,
-    columnSizingOptions: {
-      enableColumnResizing: !!props.resizable || resolved.value.hasColumnResizing,
+    features: tableFeatures.value,
+    options: {
       ...(props.columnResizeMode && { columnResizeMode: props.columnResizeMode }),
-      ...props.columnSizingOptions
-    },
-    sortingOptions: {
       enableSorting: !!props.sortable || resolved.value.hasColumnSort,
-      ...props.sortingOptions
-    },
-    columnPinningOptions: {
       enableColumnPinning: !!props.pinable || resolved.value.hasColumnPinning,
-      ...props.columnPinningOptions
-    },
-    rowSelectionOptions: resolved.value.selectionMode
-      ? {
-          ...(resolved.value.selectionMode === 'single' && { enableMultiRowSelection: false }),
-          ...(resolved.value.subRowSelection === false && { enableSubRowSelection: false }),
-          ...props.rowSelectionOptions
-        }
-      : {
-          ...(resolved.value.subRowSelection === false && { enableSubRowSelection: false }),
-          ...props.rowSelectionOptions
-        },
-    expandedOptions: {
+      ...(resolved.value.selectionMode === 'single' && { enableMultiRowSelection: false }),
+      ...(resolved.value.subRowSelection === false && { enableSubRowSelection: false }),
       ...(resolved.value.hasExpandColumn && { enableExpanding: true }),
-      ...props.expandedOptions
-    },
-    // pageCount / rowCount 由 MDataTable 自管，不灌进 TanStack，避免 setPageIndex 的 clamp 副作用
-    paginationOptions: {
-      ...(hasPaginationIntent.value && !isManualPagination.value && {
-        getPaginationRowModel: getPaginationRowModel()
-      }),
-      ...separate(props.paginationOptions ?? {}, ['pageCount', 'rowCount']).omitted
+      // pageCount / rowCount 由 MDataTable 自管，不灌进 TanStack，避免 setPageIndex 的 clamp 副作用
+      ...separate(props.options ?? {}, ['pageCount', 'rowCount']).omitted
     },
     ...(hasRowClickBehavior && {
-      onSelect: (e: Event, row: Row<T>) => {
+      onSelect: (e: Event, row: TableRow<T>) => {
         if (props.expandOnRowClick) {
           const canToggle = isTreeMode.value ? row.getCanExpand() : true
           if (canToggle) row.toggleExpanded()
@@ -407,8 +401,8 @@ const paginationView = computed(() => {
   if (!api || !hasPaginationIntent.value) return null
   return buildPaginationView(api, {
     manual: isManualPagination.value,
-    rowCount: props.paginationOptions?.rowCount,
-    pageCount: props.paginationOptions?.pageCount,
+    rowCount: props.options?.rowCount,
+    pageCount: props.options?.pageCount,
     show: props.paginationUi?.show,
     pageSizes: props.paginationUi?.pageSizes
   })
@@ -462,7 +456,7 @@ function expandToDepth(depth: number) {
   const api = tableApi.value
   if (!api) return
   const next: Record<string, boolean> = {}
-  for (const row of api.getPrePaginationRowModel().flatRows) {
+  for (const row of getPrePaginatedRows(api)) {
     if (row.getCanExpand() && row.depth < depth) next[row.id] = true
   }
   effectiveExpanded.value = next
@@ -506,7 +500,7 @@ function resetColumns() {
     : { ...initialVisibility }
   effectiveColumnOrder.value = []
   effectiveSizing.value = { ...initialSizing }
-  effectivePinning.value = { left: [...(initialPinning.left ?? [])], right: [...(initialPinning.right ?? [])] }
+  effectivePinning.value = { start: [...initialPinning.start], end: [...initialPinning.end] }
   persistence.clear()
 }
 
@@ -557,7 +551,8 @@ const tableResetKey = computed(() => {
     resolved.value.hasColumnSort,
     isManualPagination.value,
     resolved.value.selectionMode === 'single',
-    resolved.value.subRowSelection === false
+    resolved.value.subRowSelection === false,
+    hasPaginationIntent.value
   ].reduce((mask, enabled, index) => mask | ((enabled ? 1 : 0) << index), 0)
 
   return `${props.columnResizeMode === 'onEnd' ? 'e' : 'c'}${flags.toString(36)}`

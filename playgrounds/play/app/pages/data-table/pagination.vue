@@ -94,7 +94,7 @@ const fullQuery = fetchPeople(() => ({
 
     <Showcase
       title="服务端手动分页"
-      description="paginationOptions 设 manualPagination 与 rowCount 接管分页，搜索重置 pageIndex、manualSorting 排序、refresh 刷新由 loading 反馈。"
+      description="options 设 manualPagination 与 rowCount 接管分页，搜索重置 pageIndex、manualSorting 排序、refresh 刷新由 loading 反馈。"
     >
       <template #toolbar>
         <UInput
@@ -123,15 +123,14 @@ const fullQuery = fetchPeople(() => ({
         :loading="server.pending.value"
         sortable
         bordered
-        :pagination-options="{ manualPagination: true, rowCount: server.total.value }"
-        :sorting-options="{ manualSorting: true }"
+        :options="{ manualPagination: true, manualSorting: true, rowCount: server.total.value }"
         :ui="{ root: 'max-h-[60vh]' }"
       />
     </Showcase>
 
     <Showcase
       title="手动分页页数形态"
-      description="手动分页改用 paginationOptions.pageCount 直接指定总页数，适用于后端只返回页数而非总条数的场景。"
+      description="手动分页改用 options.pageCount 直接指定总页数，适用于后端只返回页数而非总条数的场景。"
     >
       <MDataTable
         v-model:pagination="countPagination"
@@ -139,7 +138,7 @@ const fullQuery = fetchPeople(() => ({
         :columns="columns"
         :loading="countQuery.pending.value"
         bordered
-        :pagination-options="{ manualPagination: true, pageCount: countPageCount }"
+        :options="{ manualPagination: true, pageCount: countPageCount }"
         :ui="{ root: 'max-h-[60vh]' }"
       />
     </Showcase>
@@ -154,7 +153,7 @@ const fullQuery = fetchPeople(() => ({
         :columns="columns"
         :loading="sizeQuery.pending.value"
         bordered
-        :pagination-options="{ manualPagination: true, rowCount: sizeQuery.total.value }"
+        :options="{ manualPagination: true, rowCount: sizeQuery.total.value }"
         :pagination-ui="{ pageSizes: [5, 10, 20, 50] }"
         :ui="{ root: 'max-h-[60vh]' }"
       />
@@ -173,7 +172,7 @@ const fullQuery = fetchPeople(() => ({
         row-key="id"
         select-on-row-click
         bordered
-        :pagination-options="{ manualPagination: true, rowCount: summaryQuery.total.value }"
+        :options="{ manualPagination: true, rowCount: summaryQuery.total.value }"
         :pagination-ui="{
           showSelectedCount: true,
           showRowRange: true,
@@ -193,7 +192,7 @@ const fullQuery = fetchPeople(() => ({
         :columns="columns"
         :loading="passthroughQuery.pending.value"
         bordered
-        :pagination-options="{ manualPagination: true, rowCount: passthroughQuery.total.value }"
+        :options="{ manualPagination: true, rowCount: passthroughQuery.total.value }"
         :pagination-ui="{
           pageSizes: [5, 10, 20],
           paginationProps: { showEdges: true, siblingCount: 1, color: 'success' },
@@ -213,7 +212,7 @@ const fullQuery = fetchPeople(() => ({
         :columns="columns"
         :loading="slotQuery.pending.value"
         bordered
-        :pagination-options="{ manualPagination: true, rowCount: slotQuery.total.value }"
+        :options="{ manualPagination: true, rowCount: slotQuery.total.value }"
         :pagination-ui="{ show: true }"
         :ui="{ root: 'max-h-[60vh]' }"
       >
@@ -240,7 +239,7 @@ const fullQuery = fetchPeople(() => ({
         :columns="columns"
         :loading="fullQuery.pending.value"
         bordered
-        :pagination-options="{ manualPagination: true, rowCount: fullQuery.total.value }"
+        :options="{ manualPagination: true, rowCount: fullQuery.total.value }"
         :ui="{ root: 'max-h-[60vh]' }"
       >
         <template #pagination="{ page, pageCount, from, to, setPage }">

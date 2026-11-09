@@ -1,15 +1,16 @@
 import { describe, expect, it, vi } from 'vitest'
+import type { TableFeatures } from '@nuxt/ui'
 import type { Table } from '@tanstack/vue-table'
 import { buildPaginationView } from '../../../src/runtime/domains/data-table/pagination'
 
 function createApi(state: { pageIndex: number, pageSize: number }, rows: number, totals: { rowCount: number, pageCount: number }) {
   return {
-    getState: () => ({ pagination: state }),
+    atoms: { pagination: { get: () => state } },
     getRowModel: () => ({ rows: Array.from({ length: rows }) }),
     getPageCount: () => totals.pageCount,
     getRowCount: () => totals.rowCount,
     setPagination: vi.fn()
-  } as unknown as Table<unknown> & { setPagination: ReturnType<typeof vi.fn> }
+  } as unknown as Table<TableFeatures, Record<string, unknown>> & { setPagination: ReturnType<typeof vi.fn> }
 }
 
 describe('buildPaginationView', () => {

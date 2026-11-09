@@ -1,12 +1,11 @@
 <script lang="ts" setup generic="T extends TableData">
 import type { TableData } from '@nuxt/ui'
 import { UPagination, USelect } from '#components'
-import { useAppConfig } from '#imports'
 import { computed } from 'vue'
 import { useExtendedTv } from '../../../utils/extend-theme'
 import { useMovkLocale } from '../../../composables/useMovkLocale'
 import { interpolate } from '../../../utils/interpolate'
-import theme from '#build/movk-ui/data-table-pagination'
+import theme from '../../../themes/data-table-pagination'
 import type { MovkMessages } from '../../../types/locale'
 import type { DataTablePaginationProps, DataTablePaginationSlots } from '../../../types/data-table/pagination'
 
@@ -14,7 +13,6 @@ const props = defineProps<DataTablePaginationProps<T>>()
 
 defineSlots<DataTablePaginationSlots<T>>()
 
-const appConfig = useAppConfig() as { movk?: { dataTablePagination?: unknown } }
 const { t } = useMovkLocale()
 
 const cfg = computed(() => ({
@@ -28,7 +26,7 @@ const cfg = computed(() => ({
 const { extendUi: ui } = useExtendedTv(
   { slots: {} },
   theme,
-  () => appConfig.movk?.dataTablePagination,
+  'movkDataTablePagination',
   () => ({
     ui: {
       ...props.uiConfig?.ui,

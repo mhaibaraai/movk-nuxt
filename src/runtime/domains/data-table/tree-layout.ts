@@ -3,12 +3,13 @@ import type { WritableComputedRef } from 'vue'
 import { computed, watch } from 'vue'
 import { Tree } from '@movk/core'
 import { resolveMaxIndentPx } from './indent'
+import type { TableData } from '@nuxt/ui'
 import type { DataTableProps } from '../../types/data-table/component'
 
 const EXPAND_DEFAULT_SIZE = 60
 const EXPAND_BUTTON_SLOT = 60
 
-interface ExpandColumnAutoSizeOptions<T> {
+interface ExpandColumnAutoSizeOptions<T extends TableData> {
   data: () => unknown[]
   childrenKey: () => string | undefined
   hasExpandColumn: () => boolean
@@ -17,7 +18,7 @@ interface ExpandColumnAutoSizeOptions<T> {
 }
 
 /** 树模式下按最大缩进深度放宽展开列；用户手动调整过的宽度不覆盖 */
-export function useExpandColumnAutoSize<T>(options: ExpandColumnAutoSizeOptions<T>): void {
+export function useExpandColumnAutoSize<T extends TableData>(options: ExpandColumnAutoSizeOptions<T>): void {
   const treeMaxDepth = computed(() => {
     const childrenKey = options.childrenKey()
     const data = options.data()

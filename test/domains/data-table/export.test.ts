@@ -1,7 +1,14 @@
 import { describe, expect, it } from 'vitest'
-import { createTable, getCoreRowModel, getPaginationRowModel } from '@tanstack/vue-table'
+import {
+  columnVisibilityFeature,
+  createPaginatedRowModel,
+  rowPaginationFeature,
+  rowSelectionFeature,
+  tableFeatures,
+  useTable
+} from '@tanstack/vue-table'
 import type { ColumnDef } from '@tanstack/vue-table'
-import { buildCsv } from '../../../src/runtime/domains/data-table/export'
+import { buildCsv, getPrePaginatedRows } from '../../../src/runtime/domains/data-table/export'
 
 interface Row {
   id: number
@@ -15,7 +22,16 @@ const data: Row[] = [
   { id: 3, name: 'c' }
 ]
 
-const columns: ColumnDef<Row>[] = [
+const features = tableFeatures({
+  columnVisibilityFeature,
+  rowSelectionFeature,
+  rowPaginationFeature,
+  paginatedRowModel: createPaginatedRowModel()
+})
+
+const plainFeatures = tableFeatures({ columnVisibilityFeature })
+
+const columns: ColumnDef<typeof features, Row>[] = [
   { id: '__selection', header: '' },
   { accessorKey: 'id', header: 'ID' },
   { accessorKey: 'name', header: () => 'Name' },
@@ -23,13 +39,11 @@ const columns: ColumnDef<Row>[] = [
 ]
 
 function create(rowSelection = {}, pagination = { pageIndex: 0, pageSize: 10 }) {
-  return createTable<Row>({
+  return useTable<typeof features, Row>({
+    features,
     data,
     columns,
-    state: { rowSelection, pagination, columnVisibility: {} },
-    onStateChange: () => {},
-    getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
+    initialState: { rowSelection, pagination },
     renderFallbackValue: null
   })
 }
@@ -50,5 +64,16 @@ describe('buildCsv', () => {
 
   it('page 只导出当前页', () => {
     expect(buildCsv(create({}, { pageIndex: 1, pageSize: 2 }), { columns: ['id'], rows: 'page' })).toBe('ID\r\n3')
+  })
+})
+
+describe('getPrePaginatedRows', () => {
+  it('注册分页时返回分页前的全部行', () => {
+    expect(getPrePaginatedRows(create({}, { pageIndex: 0, pageSize: 1 })).map(row => row.original.id)).toEqual([1, 2, 3])
+  })
+
+  it('未注册分页时回退到行模型本身', () => {
+    const api = useTable<typeof plainFeatures, Row>({ features: plainFeatures, data, columns: [{ accessorKey: 'id' }] })
+    expect(getPrePaginatedRows(api).map(row => row.original.id)).toEqual([1, 2, 3])
   })
 })

@@ -1,5 +1,6 @@
 import type { MovkTranslator } from '../../../composables/useMovkLocale'
-import type { ColumnDef, ColumnMeta, ColumnPinningState, ColumnSizingState, HeaderContext, VisibilityState } from '@tanstack/vue-table'
+import type { TableData, TableFeatures } from '@nuxt/ui'
+import type { ColumnDef, ColumnMeta, ColumnPinningState, ColumnSizingState, ColumnVisibilityState, HeaderContext } from '@tanstack/vue-table'
 import type { VNode } from 'vue'
 import type {
   DataTableDensityPreset,
@@ -24,7 +25,7 @@ export const SIZE_PRESET_MAP: Record<DataTableSizePreset, number> = {
 
 export interface SpecialColumnDefaults {
   id: string
-  fixed?: 'left' | 'right'
+  fixed?: 'start' | 'end'
   size?: number
   align?: 'left' | 'center' | 'right'
   header?: string
@@ -41,10 +42,10 @@ export const SPECIAL_COLUMN_DEFAULTS: Record<SpecialColumnType, SpecialColumnDef
   'actions': { id: '__actions', size: 60, align: 'center' }
 } as const
 
-export interface ResolvedColumnState<T> {
-  columnDefs: ColumnDef<T, unknown>[]
+export interface ResolvedColumnState<T extends TableData> {
+  columnDefs: ColumnDef<TableFeatures, T, unknown>[]
   initialPinning: ColumnPinningState
-  initialVisibility: VisibilityState
+  initialVisibility: ColumnVisibilityState
   initialSizing: ColumnSizingState
   hasColumnPinning: boolean
   hasColumnResizing: boolean
@@ -57,15 +58,15 @@ export interface ResolvedColumnState<T> {
 }
 
 /** 列表头插槽渲染器，键为 `<columnId>-header` */
-export type HeaderSlotMap<T> = Record<string, ((ctx: HeaderContext<T, unknown>) => VNode[]) | undefined>
+export type HeaderSlotMap<T extends TableData> = Record<string, ((ctx: HeaderContext<TableFeatures, T, unknown>) => VNode[]) | undefined>
 
-export interface ResolveContext<T> {
+export interface ResolveContext<T extends TableData> {
   options: DataTableProps<T>
   /** 用户提供的表头插槽，命中列 id 时取代该列 header 标签 */
   headerSlots?: HeaderSlotMap<T>
-  density: ColumnMeta<T, unknown>['class'] | null
+  density: ColumnMeta<TableFeatures, T, unknown>['class'] | null
   pinning: ColumnPinningState
-  visibility: VisibilityState
+  visibility: ColumnVisibilityState
   sizing: ColumnSizingState
   flags: { hasPinning: boolean, hasResizing: boolean, hasSort: boolean, hasExpand: boolean }
   selectionMode?: 'single' | 'multiple'

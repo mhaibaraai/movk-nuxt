@@ -101,6 +101,57 @@ describe('DataTable', () => {
     expect(wrapper.find('[data-slot="toolbar"] button[aria-label="Columns"]').exists()).toBe(true)
   })
 
+  it('绑定 pagination 时注册分页行模型并在本地切片', async () => {
+    const wrapper = await mountTable({
+      columns: [{ accessorKey: 'name' }],
+      pagination: { pageIndex: 0, pageSize: 1 }
+    })
+    await nextTick()
+    const cells = wrapper.findAll('tbody td').map(td => td.text())
+    expect(cells).toEqual(['a'])
+  })
+
+  it('options.manualPagination 时不切片，总数取 options.rowCount', async () => {
+    const wrapper = await mountTable({
+      columns: [{ accessorKey: 'name' }],
+      pagination: { pageIndex: 0, pageSize: 1 },
+      options: { manualPagination: true, rowCount: 10 },
+      paginationUi: { show: true }
+    })
+    await nextTick()
+    expect(wrapper.findAll('tbody td').map(td => td.text())).toEqual(['a', 'b'])
+    expect(wrapper.text()).toContain('10')
+  })
+
+  it('全部选中时表头复选框为选中而非半选', async () => {
+    const wrapper = await mountTable({
+      columns: [{ type: 'selection' }, { accessorKey: 'name' }],
+      rowKey: 'id',
+      rowSelection: { 1: true, 2: true }
+    })
+    await nextTick()
+    expect(wrapper.find('th [role="checkbox"]').attributes('data-state')).toBe('checked')
+  })
+
+  it('fixed: start 固定到起始侧', async () => {
+    const wrapper = await mountTable({
+      columns: [{ accessorKey: 'name', fixed: 'start' }, { accessorKey: 'age' }]
+    })
+    await nextTick()
+    expect(wrapper.findAll('th').map(th => th.attributes('data-pinned'))).toEqual(['start', 'false'])
+  })
+
+  it('持久化的旧格式列固定状态（left / right）被忽略，表格正常渲染', async () => {
+    localStorage.setItem('movk-data-table:legacy', JSON.stringify({ columnPinning: { left: ['name'], right: [] } }))
+    const wrapper = await mountTable({
+      columns: [{ accessorKey: 'name' }, { accessorKey: 'age' }],
+      persistKey: 'legacy'
+    })
+    await nextTick()
+    expect(wrapper.findAll('th').map(th => [th.text(), th.attributes('data-pinned')])).toEqual([['name', 'false'], ['age', 'false']])
+    localStorage.removeItem('movk-data-table:legacy')
+  })
+
   it('加载中且无数据时渲染骨架行', async () => {
     const wrapper = await mountTable({ data: [], columns: [{ accessorKey: 'name' }], loading: true, skeletonRows: 3 })
     expect(wrapper.findAll('[data-slot="skeleton"] > *')).toHaveLength(3)

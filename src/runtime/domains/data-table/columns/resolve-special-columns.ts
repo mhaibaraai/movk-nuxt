@@ -1,3 +1,4 @@
+import type { TableData, TableFeatures } from '@nuxt/ui'
 import type { CellContext, ColumnDef, HeaderContext } from '@tanstack/vue-table'
 import type {
   DataTableActionsColumn,
@@ -43,15 +44,15 @@ function computeLeafAggregate(row: { subRows: Array<{ subRows: unknown[], getIsS
   return { all: selected === total, some: selected > 0 && selected < total }
 }
 
-function buildSpecialColumnDef<T>(
+function buildSpecialColumnDef<T extends TableData>(
   col: DataTableSpecialColumnBase<T>,
   type: SpecialColumnType,
   ctx: ResolveContext<T>,
   render: {
-    cell: (cellCtx: CellContext<T, unknown>) => unknown
-    header: string | undefined | ((hctx: HeaderContext<T, unknown>) => unknown)
+    cell: (cellCtx: CellContext<TableFeatures, T, unknown>) => unknown
+    header: string | undefined | ((hctx: HeaderContext<TableFeatures, T, unknown>) => unknown)
   }
-): ColumnDef<T, unknown> {
+): ColumnDef<TableFeatures, T, unknown> {
   const defaults = SPECIAL_COLUMN_DEFAULTS[type]
   const { options, density } = ctx
   const { id } = defaults
@@ -62,7 +63,7 @@ function buildSpecialColumnDef<T>(
     id,
     col.fixed ?? defaults.fixed,
     col.size ?? (hasExplicitBounds ? undefined : defaults.size),
-    ctx as ResolveContext<unknown>
+    ctx as unknown as ResolveContext<TableData>
   )
 
   if (col.visibility === false) ctx.visibility[id] = false
@@ -82,7 +83,7 @@ function buildSpecialColumnDef<T>(
   const headerSlot = ctx.headerSlots?.[`${id}-header`]
 
   const resolvedHeader = (effectivePinable || effectiveResizable)
-    ? (hctx: HeaderContext<T, unknown>) => {
+    ? (hctx: HeaderContext<TableFeatures, T, unknown>) => {
         const label = headerSlot
           ? headerSlot(hctx)
           : isFunction(render.header) ? render.header(hctx) : (render.header ?? '')
@@ -93,7 +94,7 @@ function buildSpecialColumnDef<T>(
         })
       }
     : headerSlot
-      ? (hctx: HeaderContext<T, unknown>) => headerSlot(hctx)
+      ? (hctx: HeaderContext<TableFeatures, T, unknown>) => headerSlot(hctx)
       : render.header
 
   const classMeta = buildClassMeta(density, alignClass, effectiveResizable, defaults.tdClass)
@@ -106,14 +107,13 @@ function buildSpecialColumnDef<T>(
       }
     : classMeta
 
-  const def: ColumnDef<T, unknown> = {
+  const def: ColumnDef<TableFeatures, T, unknown> = {
     id,
     header: resolvedHeader,
     ...(resolvedSize != null && { size: resolvedSize }),
     ...(col.minSize != null && { minSize: col.minSize }),
     ...(col.maxSize != null && { maxSize: col.maxSize }),
     enableSorting: false,
-    enableResizing: effectiveResizable,
     enablePinning: effectivePinable,
     cell: render.cell,
     meta: {
@@ -127,10 +127,10 @@ function buildSpecialColumnDef<T>(
   return def
 }
 
-export function resolveSelectionColumn<T>(
+export function resolveSelectionColumn<T extends TableData>(
   col: DataTableSelectionColumn<T>,
   ctx: ResolveContext<T>
-): ColumnDef<T, unknown> {
+): ColumnDef<TableFeatures, T, unknown> {
   ctx.selectionMode = col.mode ?? 'multiple'
   const isTree = !!ctx.options.childrenKey
   const strategy: DataTableTreeSelectionStrategy = col.strategy ?? 'cascade'
@@ -141,9 +141,10 @@ export function resolveSelectionColumn<T>(
 
   return buildSpecialColumnDef(col, 'selection', ctx, {
     header: ctx.selectionMode === 'multiple'
-      ? (hctx: HeaderContext<T, unknown>) => {
-          const isIndeterminate = hctx.table.getIsSomePageRowsSelected()
+      ? (hctx: HeaderContext<TableFeatures, T, unknown>) => {
+          // v9 起全选时 getIsSomePageRowsSelected 同样为 true，须先判断全选
           const isAllSelected = hctx.table.getIsAllPageRowsSelected()
+          const isIndeterminate = !isAllSelected && hctx.table.getIsSomePageRowsSelected()
           const cbCtx: DataTableCheckboxContext<T> = {
             scope: 'header',
             headerContext: hctx,
@@ -159,7 +160,7 @@ export function resolveSelectionColumn<T>(
           })
         }
       : col.header ?? SPECIAL_COLUMN_DEFAULTS.selection.header!,
-    cell: (cellCtx: CellContext<T, unknown>) => {
+    cell: (cellCtx: CellContext<TableFeatures, T, unknown>) => {
       if (isLeafStrategy && cellCtx.row.subRows.length > 0) {
         const { all, some } = computeLeafAggregate(cellCtx.row)
         const cbCtx: DataTableCheckboxContext<T> = {
@@ -202,26 +203,26 @@ export function resolveSelectionColumn<T>(
   })
 }
 
-export function resolveIndexColumn<T>(
+export function resolveIndexColumn<T extends TableData>(
   col: DataTableIndexColumn<T>,
   ctx: ResolveContext<T>
-): ColumnDef<T, unknown> {
+): ColumnDef<TableFeatures, T, unknown> {
   return buildSpecialColumnDef(col, 'index', ctx, {
     header: col.header ?? SPECIAL_COLUMN_DEFAULTS.index.header!,
-    cell: (cellCtx: CellContext<T, unknown>) => cellCtx.row.index + 1
+    cell: (cellCtx: CellContext<TableFeatures, T, unknown>) => cellCtx.row.index + 1
   })
 }
 
-export function resolveExpandColumn<T>(
+export function resolveExpandColumn<T extends TableData>(
   col: DataTableExpandColumn<T>,
   ctx: ResolveContext<T>
-): ColumnDef<T, unknown> {
+): ColumnDef<TableFeatures, T, unknown> {
   ctx.flags.hasExpand = true
   const isTreeMode = ctx.options.childrenKey != null
   const showToggleAll = col.toggleAll !== false
   return buildSpecialColumnDef(col, 'expand', ctx, {
     header: showToggleAll
-      ? (hctx: HeaderContext<T, unknown>) => {
+      ? (hctx: HeaderContext<TableFeatures, T, unknown>) => {
           const isAllExpanded = hctx.table.getIsAllRowsExpanded()
           const isSomeExpanded = hctx.table.getIsSomeRowsExpanded()
           const toggleCtx: DataTableExpandToggleAllContext<T> = {
@@ -247,7 +248,7 @@ export function resolveExpandColumn<T>(
           })
         }
       : undefined,
-    cell: (cellCtx: CellContext<T, unknown>) => {
+    cell: (cellCtx: CellContext<TableFeatures, T, unknown>) => {
       if (isTreeMode && !cellCtx.row.getCanExpand()) return null
 
       const depth = cellCtx.row.depth
@@ -288,13 +289,13 @@ export function resolveExpandColumn<T>(
   })
 }
 
-export function resolveRowPinningColumn<T>(
+export function resolveRowPinningColumn<T extends TableData>(
   col: DataTableRowPinningColumn<T>,
   ctx: ResolveContext<T>
-): ColumnDef<T, unknown> {
+): ColumnDef<TableFeatures, T, unknown> {
   return buildSpecialColumnDef(col, 'row-pinning', ctx, {
     header: col.header ?? SPECIAL_COLUMN_DEFAULTS['row-pinning'].header!,
-    cell: (cellCtx: CellContext<T, unknown>) => {
+    cell: (cellCtx: CellContext<TableFeatures, T, unknown>) => {
       const pinned = cellCtx.row.getIsPinned()
       const position = col.position ?? 'top'
       const rpCtx: DataTableRowPinningButtonContext<T> = { cellContext: cellCtx, pinned, position }
@@ -319,13 +320,13 @@ export function resolveRowPinningColumn<T>(
   })
 }
 
-export function resolveActionsColumn<T>(
+export function resolveActionsColumn<T extends TableData>(
   col: DataTableActionsColumn<T>,
   ctx: ResolveContext<T>
-): ColumnDef<T, unknown> {
+): ColumnDef<TableFeatures, T, unknown> {
   return buildSpecialColumnDef(col, 'actions', ctx, {
     header: col.header ?? ctx.t('dataTable.actions'),
-    cell: (cellCtx: CellContext<T, unknown>) =>
+    cell: (cellCtx: CellContext<TableFeatures, T, unknown>) =>
       h(DataTableActionsCell, { col, cellCtx, options: ctx.options } as any)
   })
 }

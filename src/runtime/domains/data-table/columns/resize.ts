@@ -1,3 +1,4 @@
+import type { TableData, TableFeatures } from '@nuxt/ui'
 import type { HeaderContext } from '@tanstack/vue-table'
 import type { CSSProperties, VNode } from 'vue'
 import { h } from 'vue'
@@ -31,7 +32,7 @@ const BADGE_STYLE: CSSProperties = {
   padding: '2px 6px',
   borderRadius: '4px',
   backgroundColor: 'var(--ui-primary)',
-  color: 'var(--ui-text-inverted)',
+  color: 'var(--ui-text-contrast)',
   fontSize: '12px',
   fontWeight: '500',
   lineHeight: '1',
@@ -47,7 +48,7 @@ function lineStyle(active: boolean): CSSProperties {
     height: '60%',
     marginRight: '3px',
     borderRadius: '1px',
-    backgroundColor: active ? 'var(--ui-primary)' : 'var(--ui-border-accented)',
+    backgroundColor: active ? 'var(--ui-primary)' : 'var(--ui-border-strong)',
     opacity: active ? '1' : '0.6',
     transition: 'background-color 0.15s, width 0.15s, opacity 0.15s'
   }
@@ -63,7 +64,7 @@ function clientXOf(e: MouseEvent | TouchEvent): number | undefined {
 }
 
 // 自管拖拽：以实测起始宽 + 指针位移驱动 columnSizing（不走 TanStack getResizeHandler，避免其默认 150 起拖吸附），按 [min, max] 自夹
-function startResize<T>(ctx: HeaderContext<T, unknown>, options: DataTableProps<T>, e: MouseEvent | TouchEvent): void {
+function startResize<T extends TableData>(ctx: HeaderContext<TableFeatures, T, unknown>, options: DataTableProps<T>, e: MouseEvent | TouchEvent): void {
   const id = ctx.column.id
   const th = (e.currentTarget as HTMLElement | null)?.closest('th')
   const startWidth = th ? th.getBoundingClientRect().width : ctx.column.getSize()
@@ -113,7 +114,7 @@ function startResize<T>(ctx: HeaderContext<T, unknown>, options: DataTableProps<
       if (Math.abs(x - startX) <= DRAG_THRESHOLD) return
       moved = true
       freezeLeftColumns()
-      ctx.table.setColumnSizingInfo(prev => ({ ...prev, isResizingColumn: id }))
+      ctx.table.setColumnResizing(prev => ({ ...prev, isResizingColumn: id }))
     }
     lastX = x
     // rAF 节流：每帧最多一次 setColumnSizing，避免事件频率刷爆整表重渲染与重排
@@ -126,7 +127,7 @@ function startResize<T>(ctx: HeaderContext<T, unknown>, options: DataTableProps<
       const x = clientXOf(ev)
       if (typeof x === 'number') lastX = x
       ctx.table.setColumnSizing(prev => ({ ...prev, [id]: widthAt(lastX) }))
-      ctx.table.setColumnSizingInfo(prev => ({ ...prev, isResizingColumn: false }))
+      ctx.table.setColumnResizing(prev => ({ ...prev, isResizingColumn: false }))
     }
     stop()
   }
@@ -138,7 +139,7 @@ function startResize<T>(ctx: HeaderContext<T, unknown>, options: DataTableProps<
 }
 
 // 列宽拖拽手柄：命中区落在 <th> 右 padding 区（紧贴分隔线、不越界叠到右侧固定列），手柄锚定已 relative/sticky 的 <th>
-export function buildResizeHandle<T>(ctx: HeaderContext<T, unknown>, options: DataTableProps<T>): VNode {
+export function buildResizeHandle<T extends TableData>(ctx: HeaderContext<TableFeatures, T, unknown>, options: DataTableProps<T>): VNode {
   const isResizing = ctx.column.getIsResizing()
   return h('div', {
     style: HANDLE_STYLE,

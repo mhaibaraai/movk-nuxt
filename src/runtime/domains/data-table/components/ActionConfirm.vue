@@ -2,13 +2,13 @@
 import { computed, ref } from 'vue'
 import { resolveCallbackValue } from '../columns/utils'
 import { useMessageBox } from '../../../composables/useMessageBox'
-import type { ButtonProps } from '@nuxt/ui'
+import type { ButtonProps, TableData } from '@nuxt/ui'
 import type { DataTableAction, DataTableActionButtonContext, DataTableDynamic } from '../../../types/data-table'
 
 interface DataTableRendererActionConfirmProps {
-  action: DataTableAction<unknown>
-  ctx: DataTableActionButtonContext<unknown>
-  globalButtonProps?: DataTableDynamic<ButtonProps, DataTableActionButtonContext<unknown>>
+  action: DataTableAction<TableData>
+  ctx: DataTableActionButtonContext<TableData>
+  globalButtonProps?: DataTableDynamic<ButtonProps, DataTableActionButtonContext<TableData>>
 }
 
 const props = defineProps<DataTableRendererActionConfirmProps>()

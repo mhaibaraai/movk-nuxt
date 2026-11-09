@@ -1,3 +1,4 @@
+import type { TableData, TableFeatures } from '@nuxt/ui'
 import type { ColumnDef, Header } from '@tanstack/vue-table'
 import type { DataTableColumn, DataTableGroupColumn } from '../../../types/data-table'
 import type { ResolveContext } from './constants'
@@ -5,12 +6,12 @@ import { isString } from '@movk/core'
 import { resolvePresetSize } from './utils'
 import { groupHeaderStyle, resolveAlignClass } from './style'
 
-export function resolveGroupColumn<T>(
+export function resolveGroupColumn<T extends TableData>(
   col: DataTableGroupColumn<T>,
   ctx: ResolveContext<T>,
-  resolveChild: (col: DataTableColumn<T>, ctx: ResolveContext<T>, inheritedFixed?: 'left' | 'right') => ColumnDef<T, unknown>,
-  inheritedFixed?: 'left' | 'right'
-): ColumnDef<T, unknown> {
+  resolveChild: (col: DataTableColumn<T>, ctx: ResolveContext<T>, inheritedFixed?: 'start' | 'end') => ColumnDef<TableFeatures, T, unknown>,
+  inheritedFixed?: 'start' | 'end'
+): ColumnDef<TableFeatures, T, unknown> {
   const effectiveFixed = col.fixed ?? inheritedFixed
   const resolvedSize = col.size != null
     ? (isString(col.size) ? resolvePresetSize(col.size) : col.size)
@@ -25,7 +26,7 @@ export function resolveGroupColumn<T>(
     columns: col.children?.map(child => resolveChild(child, ctx, effectiveFixed)),
     meta: {
       class: { th: resolveAlignClass(col.align) || undefined },
-      style: { th: (header: Header<T, unknown>) => groupHeaderStyle(header, effectiveFixed) }
+      style: { th: (header: Header<TableFeatures, T, unknown>) => groupHeaderStyle(header) }
     }
-  } as ColumnDef<T, unknown>
+  } as ColumnDef<TableFeatures, T, unknown>
 }

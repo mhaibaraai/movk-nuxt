@@ -1,28 +1,28 @@
-import type { ExpandedState, RowSelectionState, VisibilityState } from '@tanstack/vue-table'
+import type { ColumnVisibilityState, ExpandedState, RowSelectionState } from '@tanstack/vue-table'
 
 export function hasEntries(v: unknown): boolean {
   return typeof v === 'object' && v !== null && Object.keys(v).length > 0
 }
 
-export function keysToVisibility(keys: string[], allColumnIds: string[]): VisibilityState {
+export function keysToVisibility(keys: string[], allColumnIds: string[]): ColumnVisibilityState {
   const set = new Set(keys)
-  const state: VisibilityState = {}
+  const state: ColumnVisibilityState = {}
   for (const id of allColumnIds) state[id] = set.has(id)
   return state
 }
 
-export function visibilityToKeys(state: VisibilityState, allColumnIds: string[]): string[] {
+export function visibilityToKeys(state: ColumnVisibilityState, allColumnIds: string[]): string[] {
   return allColumnIds.filter(id => state[id] !== false)
 }
 
-export function keysToVisibilityExclude(excludeKeys: string[], allColumnIds: string[]): VisibilityState {
+export function keysToVisibilityExclude(excludeKeys: string[], allColumnIds: string[]): ColumnVisibilityState {
   const set = new Set(excludeKeys)
-  const state: VisibilityState = {}
+  const state: ColumnVisibilityState = {}
   for (const id of allColumnIds) state[id] = !set.has(id)
   return state
 }
 
-export function visibilityToExcludeKeys(state: VisibilityState, allColumnIds: string[]): string[] {
+export function visibilityToExcludeKeys(state: ColumnVisibilityState, allColumnIds: string[]): string[] {
   return allColumnIds.filter(id => state[id] === false)
 }
 

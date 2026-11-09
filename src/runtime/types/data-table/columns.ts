@@ -1,4 +1,4 @@
-import type { ButtonProps, CheckboxProps, DropdownMenuProps, TableColumn, TooltipProps } from '@nuxt/ui'
+import type { ButtonProps, CheckboxProps, DropdownMenuProps, TableColumn, TableData, TableFeatures, TooltipProps } from '@nuxt/ui'
 import type { OmitByKey } from '@movk/core'
 import type { CellContext, ColumnDef, ColumnDefTemplate } from '@tanstack/vue-table'
 import type { MessageBoxProps } from '../components/message-box'
@@ -23,8 +23,8 @@ export type DataTableDynamic<V, Ctx> = V | ((ctx: Ctx) => V)
 interface DataTableBaseColumn {
   /** 列头文本 */
   header: string
-  /** 固定到左/右侧 */
-  fixed?: 'left' | 'right'
+  /** 固定到起始 / 末尾侧（随文字方向，LTR 下为左 / 右） */
+  fixed?: 'start' | 'end'
   /** 对齐方式 */
   align?: 'left' | 'center' | 'right'
   /** 列宽，支持数值或预设 */
@@ -35,7 +35,7 @@ interface DataTableBaseColumn {
   maxSize?: number
 }
 
-export interface DataTableDataColumn<T> extends DataTableBaseColumn {
+export interface DataTableDataColumn<T extends TableData> extends DataTableBaseColumn {
   /** 数据字段键 */
   accessorKey: keyof T & string | (string & {})
   /**
@@ -43,7 +43,7 @@ export interface DataTableDataColumn<T> extends DataTableBaseColumn {
    * @defaultValue true
    */
   visibility?: boolean
-  /** 允许通过表头交互切换列固定（left -> right -> none），优先级高于全局 pinable */
+  /** 允许通过表头交互切换列固定（start -> end -> none），优先级高于全局 pinable */
   pinable?: boolean
   /** 固定列按钮 props 透传，列级可覆盖全局 pinButtonProps */
   pinButtonProps?: DataTableDynamic<ButtonProps, DataTablePinButtonContext<T>>
@@ -60,12 +60,12 @@ export interface DataTableDataColumn<T> extends DataTableBaseColumn {
    * - false = 禁用截断
    * - 函数 = 按 cell 上下文动态决定
    */
-  truncate?: boolean | number | ((ctx: CellContext<T, unknown>) => boolean | number)
+  truncate?: boolean | number | ((ctx: CellContext<TableFeatures, T, unknown>) => boolean | number)
   /**
    * 空值占位，false 禁用，函数接收 CellContext 动态渲染
    * @defaultValue 继承全局 emptyCell
    */
-  emptyCell?: string | false | ColumnDefTemplate<CellContext<T, unknown>>
+  emptyCell?: string | false | ColumnDefTemplate<CellContext<TableFeatures, T, unknown>>
   /**
    * 溢出 Tooltip，优先级高于全局 tooltip
    * - true = 溢出时单行显示
@@ -73,28 +73,28 @@ export interface DataTableDataColumn<T> extends DataTableBaseColumn {
    * - false = 禁用
    * - 函数 = 按 cell 上下文动态决定
    */
-  tooltip?: boolean | number | ((ctx: CellContext<T, unknown>) => boolean | number)
+  tooltip?: boolean | number | ((ctx: CellContext<TableFeatures, T, unknown>) => boolean | number)
   /** UTooltip 额外 props 透传（tooltip 启用时生效） */
   tooltipProps?: TooltipProps
   /** 单元格自定义渲染，string 直接显示，函数接收 CellContext */
   cell?: TableColumn<T>['cell']
   /** TanStack ColumnDef 透传（逃生舱） */
-  _raw?: Partial<ColumnDef<T, unknown>>
+  _raw?: Partial<ColumnDef<TableFeatures, T, unknown>>
 }
 
-export interface DataTableGroupColumn<T> extends DataTableBaseColumn {
+export interface DataTableGroupColumn<T extends TableData> extends DataTableBaseColumn {
   /** 分组子列，设置后作为分组表头 */
   children: (DataTableDataColumn<T> | DataTableGroupColumn<T>)[]
 }
 
-export interface DataTableSpecialColumnBase<T = unknown> extends Omit<DataTableBaseColumn, 'header' | 'truncate'> {
+export interface DataTableSpecialColumnBase<T extends TableData = TableData> extends Omit<DataTableBaseColumn, 'header' | 'truncate'> {
   /**
    * 默认是否可见
    * @defaultValue true
    */
   visibility?: boolean
   /**
-   * 允许通过表头交互切换列固定位置（left -> right -> none）
+   * 允许通过表头交互切换列固定位置（start -> end -> none）
    * @defaultValue false
    */
   pinable?: boolean
@@ -106,11 +106,11 @@ export interface DataTableSpecialColumnBase<T = unknown> extends Omit<DataTableB
   /** 固定列按钮 props 透传，列级可覆盖全局 pinButtonProps */
   pinButtonProps?: DataTableDynamic<ButtonProps, DataTablePinButtonContext<T>>
   /** TanStack ColumnDef 透传（逃生舱） */
-  _raw?: Partial<ColumnDef<any, unknown>>
+  _raw?: Partial<ColumnDef<TableFeatures, any, unknown>>
 }
 
-/** @defaultValue size=48, fixed='left', align='center' */
-export interface DataTableSelectionColumn<T = unknown> extends DataTableSpecialColumnBase<T> {
+/** @defaultValue size=48, fixed='start', align='center' */
+export interface DataTableSelectionColumn<T extends TableData = TableData> extends DataTableSpecialColumnBase<T> {
   /** 选择列，显示复选框/单选框用于行选择 */
   type: 'selection'
   /**
@@ -133,7 +133,7 @@ export interface DataTableSelectionColumn<T = unknown> extends DataTableSpecialC
 }
 
 /** @defaultValue size=60, align='center' */
-export interface DataTableIndexColumn<T = unknown> extends DataTableSpecialColumnBase<T> {
+export interface DataTableIndexColumn<T extends TableData = TableData> extends DataTableSpecialColumnBase<T> {
   /** 索引列，显示行索引 */
   type: 'index'
   /**
@@ -144,7 +144,7 @@ export interface DataTableIndexColumn<T = unknown> extends DataTableSpecialColum
 }
 
 /** @defaultValue size=48 */
-export interface DataTableExpandColumn<T = unknown> extends DataTableSpecialColumnBase<T> {
+export interface DataTableExpandColumn<T extends TableData = TableData> extends DataTableSpecialColumnBase<T> {
   /** 展开列，显示展开图标用于树形表格 */
   type: 'expand'
   /** 展开/折叠按钮 props 透传 */
@@ -158,8 +158,8 @@ export interface DataTableExpandColumn<T = unknown> extends DataTableSpecialColu
   toggleAllButtonProps?: DataTableDynamic<ButtonProps, DataTableExpandToggleAllContext<T>>
 }
 
-/** @defaultValue size=48, fixed='left', align='center' */
-export interface DataTableRowPinningColumn<T = unknown> extends DataTableSpecialColumnBase<T> {
+/** @defaultValue size=48, fixed='start', align='center' */
+export interface DataTableRowPinningColumn<T extends TableData = TableData> extends DataTableSpecialColumnBase<T> {
   /** 行固定列，显示图标用于行固定 */
   type: 'row-pinning'
   /**
@@ -177,8 +177,8 @@ export interface DataTableRowPinningColumn<T = unknown> extends DataTableSpecial
 }
 
 /** 操作按钮回调上下文 */
-export interface DataTableActionButtonContext<T> {
-  cellContext: CellContext<T, unknown>
+export interface DataTableActionButtonContext<T extends TableData> {
+  cellContext: CellContext<TableFeatures, T, unknown>
   row: T
   index: number
   action: DataTableAction<T>
@@ -187,7 +187,7 @@ export interface DataTableActionButtonContext<T> {
 /** 操作确认弹窗属性，与 `useMessageBox().confirm` 的选项一致 */
 type DataTableActionConfirmProps = OmitByKey<MessageBoxProps, 'mode'>
 
-export interface DataTableAction<T> {
+export interface DataTableAction<T extends TableData> {
   /** 唯一 key，用于渲染稳定性与溢出菜单定位；未提供时回退到数组下标 */
   key?: string | number
   /** 按钮 props，支持整体回调按行动态计算 */
@@ -206,8 +206,8 @@ export interface DataTableAction<T> {
   divider?: boolean
 }
 
-/** @defaultValue fixed='right' */
-export interface DataTableActionsColumn<T = unknown> extends DataTableSpecialColumnBase<T> {
+/** @defaultValue fixed='end' */
+export interface DataTableActionsColumn<T extends TableData = TableData> extends DataTableSpecialColumnBase<T> {
   /** 操作列，显示操作按钮 */
   type: 'actions'
   /**
@@ -216,21 +216,21 @@ export interface DataTableActionsColumn<T = unknown> extends DataTableSpecialCol
    */
   header?: string
   /** 操作按钮列表，支持整体回调 */
-  actions: DataTableAction<T>[] | ((ctx: CellContext<T, unknown>) => DataTableAction<T>[])
+  actions: DataTableAction<T>[] | ((ctx: CellContext<TableFeatures, T, unknown>) => DataTableAction<T>[])
   /**
    * 最多平铺的 action 数；超出部分收纳到 UDropdownMenu
    * @defaultValue 3
    */
   maxInline?: number
   /** 溢出触发按钮 props */
-  overflowTrigger?: DataTableDynamic<ButtonProps, CellContext<T, unknown>>
+  overflowTrigger?: DataTableDynamic<ButtonProps, CellContext<TableFeatures, T, unknown>>
   /** 溢出菜单透传 props（UDropdownMenu） */
-  dropdownProps?: DataTableDynamic<Partial<DropdownMenuProps>, CellContext<T, unknown>>
+  dropdownProps?: DataTableDynamic<Partial<DropdownMenuProps>, CellContext<TableFeatures, T, unknown>>
   /** 容器 class，默认 'flex items-center gap-1' */
-  wrapperClass?: string | ((ctx: CellContext<T, unknown>) => string)
+  wrapperClass?: string | ((ctx: CellContext<TableFeatures, T, unknown>) => string)
 }
 
-export type DataTableColumn<T>
+export type DataTableColumn<T extends TableData>
   = | DataTableDataColumn<T>
     | DataTableGroupColumn<T>
     | DataTableSelectionColumn<T>
@@ -240,11 +240,11 @@ export type DataTableColumn<T>
     | DataTableActionsColumn<T>
     | TableColumn<T>
 
-export function isDataColumn<T>(col: DataTableColumn<T>): col is DataTableDataColumn<T> {
+export function isDataColumn<T extends TableData>(col: DataTableColumn<T>): col is DataTableDataColumn<T> {
   return 'accessorKey' in col && !('children' in col) && !('type' in col)
 }
 
-export function isGroupColumn<T>(col: DataTableColumn<T>): col is DataTableGroupColumn<T> {
+export function isGroupColumn<T extends TableData>(col: DataTableColumn<T>): col is DataTableGroupColumn<T> {
   return 'children' in col && !('type' in col)
 }
 

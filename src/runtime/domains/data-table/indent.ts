@@ -1,4 +1,5 @@
 import type { CellContext } from '@tanstack/vue-table'
+import type { TableData, TableFeatures } from '@nuxt/ui'
 import type { DataTableProps } from '../../types/data-table'
 import { lengthToPx } from '@movk/core'
 
@@ -8,7 +9,7 @@ import { lengthToPx } from '@movk/core'
  * - `number` / `string`：等差缩进 `depth * step`，取 `maxButtonDepth * step`
  * - `function`：对每个 depth 评估并取最大值；评估失败回退 0
  */
-export function resolveMaxIndentPx<T>(
+export function resolveMaxIndentPx<T extends TableData>(
   size: DataTableProps<T>['indentSize'],
   maxButtonDepth: number
 ): number {
@@ -19,7 +20,7 @@ export function resolveMaxIndentPx<T>(
     let max = 0
     for (let d = 1; d <= maxButtonDepth; d++) {
       try {
-        const ret = size({ row: { depth: d } } as unknown as CellContext<T, unknown>)
+        const ret = size({ row: { depth: d } } as unknown as CellContext<TableFeatures, T, unknown>)
         const px = typeof ret === 'number' ? ret : typeof ret === 'string' ? lengthToPx(ret) : 0
         if (px > max) max = px
       }

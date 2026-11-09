@@ -1,3 +1,4 @@
+import type { TableFeatures } from '@nuxt/ui'
 import type { RowData, Table } from '@tanstack/vue-table'
 
 export interface PaginationViewOptions {
@@ -11,7 +12,7 @@ export interface PaginationViewOptions {
 }
 
 export interface PaginationView<T extends RowData> {
-  tableApi: Table<T>
+  tableApi: Table<TableFeatures, T>
   pagination: { pageIndex: number, pageSize: number }
   page: number
   rowCount: number
@@ -26,10 +27,10 @@ export interface PaginationView<T extends RowData> {
 }
 
 /** 由 TanStack 实例与分页配置推导分页栏展示所需的全部数据 */
-export function buildPaginationView<T extends RowData>(api: Table<T>, options: PaginationViewOptions): PaginationView<T> {
+export function buildPaginationView<T extends RowData>(api: Table<TableFeatures, T>, options: PaginationViewOptions): PaginationView<T> {
   const { manual } = options
   const rowCountKnown = !manual || options.rowCount !== undefined
-  const pagination = api.getState().pagination
+  const pagination = api.atoms.pagination?.get()
   const pageIndex = pagination?.pageIndex ?? 0
   const pageSize = pagination?.pageSize ?? 10
   const currentPageRowCount = api.getRowModel().rows.length

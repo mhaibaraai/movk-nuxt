@@ -8,12 +8,12 @@ const moneyCell: DataTableDataColumn<Person>['cell'] = ({ getValue }) => `¥${ge
 
 // 1. 固定列
 const fixedColumns: DataTableColumn<Person>[] = [
-  { accessorKey: 'id', header: '工号', fixed: 'left', size: 100 },
-  { accessorKey: 'name', header: '姓名', fixed: 'left', size: 120 },
+  { accessorKey: 'id', header: '工号', fixed: 'start', size: 100 },
+  { accessorKey: 'name', header: '姓名', fixed: 'start', size: 120 },
   { accessorKey: 'role', header: '岗位', size: 140 },
   { accessorKey: 'address', header: '地址', size: 240 },
   { accessorKey: 'email', header: '邮箱', size: 200 },
-  { accessorKey: 'salary', header: '薪资', fixed: 'right', align: 'right', size: 120, cell: moneyCell }
+  { accessorKey: 'salary', header: '薪资', fixed: 'end', align: 'right', size: 120, cell: moneyCell }
 ]
 
 // 2. 排序
@@ -26,7 +26,7 @@ const sortableColumns: DataTableColumn<Person>[] = [
 
 // 3. 列固定切换 pinable
 const pinableColumns: DataTableColumn<Person>[] = [
-  { accessorKey: 'id', header: '工号', fixed: 'left', size: 100, pinable: false },
+  { accessorKey: 'id', header: '工号', fixed: 'start', size: 100, pinable: false },
   { accessorKey: 'name', header: '姓名', size: 120 },
   { accessorKey: 'department', header: '部门', size: 100 },
   { accessorKey: 'role', header: '岗位', size: 140 },

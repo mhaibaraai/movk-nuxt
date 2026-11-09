@@ -1,3 +1,4 @@
+import type { TableData, TableFeatures } from '@nuxt/ui'
 import type { Cell, Column, ColumnDef, ColumnMeta, Header, Table } from '@tanstack/vue-table'
 import type { DataTableSizePreset } from '../../../types/data-table'
 import type { ResolveContext } from './constants'
@@ -15,29 +16,29 @@ function fixedWidth(n: number): Record<string, string> {
   return { width: w, minWidth: w, maxWidth: w }
 }
 
-function clampWidth<T>(size: number, columnDef: ColumnDef<T, unknown>): Record<string, string> {
+function clampWidth<T extends TableData>(size: number, columnDef: ColumnDef<TableFeatures, T, unknown>): Record<string, string> {
   return fixedWidth(clampSize(size, columnDef.minSize ?? -Infinity, columnDef.maxSize ?? Infinity))
 }
 
 // 仅守 minSize 下限：maxSize 上限已在拖拽时由 clampSize 写入 columnSizing，渲染处不再夹，
 // 免得自适应列（auto 布局忽略单元格 max-width 而撑过 maxSize）被夹回造成跳变
-function clampMinWidth<T>(size: number, columnDef: ColumnDef<T, unknown>): Record<string, string> {
+function clampMinWidth<T extends TableData>(size: number, columnDef: ColumnDef<TableFeatures, T, unknown>): Record<string, string> {
   return fixedWidth(clampSize(size, columnDef.minSize ?? -Infinity, Infinity))
 }
 
-// 内侧固定列（贴近滚动区）无人依赖其宽度，可省略宽度按内容自适应：右固定取首个、左固定取末个 leaf
-function isInnermostPinned<T>(column: Column<T, unknown>, table: Table<T>, pinned: 'left' | 'right'): boolean {
-  const cols = pinned === 'left' ? table.getLeftLeafColumns() : table.getRightLeafColumns()
-  const target = pinned === 'left' ? cols[cols.length - 1] : cols[0]
+// 内侧固定列（贴近滚动区）无人依赖其宽度，可省略宽度按内容自适应：末尾固定取首个、起始固定取末个 leaf
+function isInnermostPinned<T extends TableData>(column: Column<TableFeatures, T, unknown>, table: Table<TableFeatures, T>, pinned: 'start' | 'end'): boolean {
+  const cols = pinned === 'start' ? table.getStartLeafColumns() : table.getEndLeafColumns()
+  const target = pinned === 'start' ? cols[cols.length - 1] : cols[0]
   return target?.id === column.id
 }
 
-export function resolveColumnSize<T>(ctx: Header<T, unknown> | Cell<T, unknown>): Record<string, string> {
+export function resolveColumnSize<T extends TableData>(ctx: Header<TableFeatures, T, unknown> | Cell<TableFeatures, T, unknown>): Record<string, string> {
   const { columnDef } = ctx.column
   const table = ctx.getContext().table
   const pinned = ctx.column.getIsPinned()
-  const isSized = ctx.column.id in table.getState().columnSizing
-  const hasExplicitSize = columnDef.size != table._getDefaultColumnDef().size
+  const isSized = ctx.column.id in (table.atoms.columnSizing?.get() ?? {})
+  const hasExplicitSize = columnDef.size != table.getDefaultColumnDef().size
 
   // 用户显式 size 双向收敛（含 maxSize），保留文档承诺
   if (hasExplicitSize) return clampWidth(ctx.column.getSize(), columnDef)
@@ -53,22 +54,22 @@ export function resolveColumnSize<T>(ctx: Header<T, unknown> | Cell<T, unknown>)
   return style
 }
 
-export function makeColumnStyle<T>(
+export function makeColumnStyle<T extends TableData>(
   align?: 'left' | 'center' | 'right'
-): { th: (ctx: Header<T, unknown>) => Record<string, string>, td: (ctx: Cell<T, unknown>) => Record<string, string> } {
-  const resolver = (ctx: Header<T, unknown> | Cell<T, unknown>): Record<string, string> =>
+): { th: (ctx: Header<TableFeatures, T, unknown>) => Record<string, string>, td: (ctx: Cell<TableFeatures, T, unknown>) => Record<string, string> } {
+  const resolver = (ctx: Header<TableFeatures, T, unknown> | Cell<TableFeatures, T, unknown>): Record<string, string> =>
     align ? { ...resolveColumnSize(ctx), textAlign: align } : resolveColumnSize(ctx)
   return { th: resolver, td: resolver }
 }
 
 export function applyBaseState(
   id: string,
-  fixed: 'left' | 'right' | undefined,
+  fixed: 'start' | 'end' | undefined,
   size: number | string | undefined,
-  ctx: ResolveContext<unknown>
+  ctx: ResolveContext<TableData>
 ): number | undefined {
   if (fixed) {
-    ctx.pinning[fixed]!.push(id)
+    ctx.pinning[fixed].push(id)
   }
 
   const resolvedSize = size != null
@@ -90,45 +91,20 @@ export function resolveAlignClass(align?: 'left' | 'center' | 'right'): string {
   }
 }
 
-export function buildClassMeta<T, V>(
-  density: ColumnMeta<T, unknown>['class'] | null,
+export function buildClassMeta<T extends TableData, V>(
+  density: ColumnMeta<TableFeatures, T, unknown>['class'] | null,
   align?: string,
   resizable?: boolean,
   tdClass?: string
-): ColumnMeta<T, V>['class'] {
+): ColumnMeta<TableFeatures, T, V>['class'] {
   return {
     td: [align, density?.td, tdClass].filter(Boolean).join(' ') || undefined,
     th: [resizable ? 'relative' : '', align, density?.th].filter(Boolean).join(' ') || undefined
   }
 }
 
-function getFirstLeafHeader<T>(header: Header<T, unknown>): Header<T, unknown> {
-  return header.subHeaders.length
-    ? getFirstLeafHeader(header.subHeaders[0]!)
-    : header
-}
-
-function getLastLeafHeader<T>(header: Header<T, unknown>): Header<T, unknown> {
-  return header.subHeaders.length
-    ? getLastLeafHeader(header.subHeaders[header.subHeaders.length - 1]!)
-    : header
-}
-
-export function groupHeaderStyle<T>(header: Header<T, unknown>, fixed?: 'left' | 'right'): Record<string, string> {
+// 分组表头只锁定宽度；固定列的 sticky 偏移由 UTable 按子列统一计算（子列同侧固定时）
+export function groupHeaderStyle<T extends TableData>(header: Header<TableFeatures, T, unknown>): Record<string, string> {
   const w = `${header.getSize()}px`
-  const style: Record<string, string> = { width: w, minWidth: w }
-  const pinned = fixed ?? header.column.getIsPinned()
-
-  if (pinned === 'left') {
-    const first = getFirstLeafHeader(header)
-    style.position = 'sticky'
-    style.left = `${first.column.getStart('left')}px`
-  }
-  else if (pinned === 'right') {
-    const last = getLastLeafHeader(header)
-    style.position = 'sticky'
-    style.right = `${last.column.getAfter('right')}px`
-  }
-
-  return style
+  return { width: w, minWidth: w }
 }

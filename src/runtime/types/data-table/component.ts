@@ -5,11 +5,10 @@ import type {
   ColumnMeta,
   HeaderContext,
   PaginationState,
-  Row,
   Table,
   TableMeta
 } from '@tanstack/vue-table'
-import type { ButtonProps, TableData, TableProps, TableRow, TooltipProps } from '@nuxt/ui'
+import type { ButtonProps, TableData, TableFeatures, TableProps, TableRow, TooltipProps } from '@nuxt/ui'
 import type { FirstParameter, OmitByKey } from '@movk/core'
 import type { VNode } from 'vue'
 import type {
@@ -35,7 +34,7 @@ export type DataTableContextmenuHandler<T extends TableData>
 
 export interface DataTableExposed<T extends TableData> {
   tableRef: HTMLTableElement | null
-  tableApi: Table<T> | null
+  tableApi: Table<TableFeatures, T> | null
   /** UTable 根元素，即滚动容器 */
   el: HTMLElement | null
   scrollToTop: (options?: ScrollToOptions) => void
@@ -64,12 +63,8 @@ export interface DataTableProps<T extends TableData> extends /* @vue-ignore */ O
   | 'sticky'
   | 'loading'
   | 'ui'
-  | 'columnSizingOptions'
-  | 'columnPinningOptions'
-  | 'rowSelectionOptions'
-  | 'sortingOptions'
-  | 'expandedOptions'
-  | 'paginationOptions'
+  | 'options'
+  | 'features'
   | 'onSelect'
   | 'onHover'
   | 'onContextmenu'
@@ -116,7 +111,7 @@ export interface DataTableProps<T extends TableData> extends /* @vue-ignore */ O
    * 空值占位符
    * @defaultValue '-'
    */
-  emptyCell?: false | string | ColumnDefTemplate<CellContext<T, unknown>>
+  emptyCell?: false | string | ColumnDefTemplate<CellContext<TableFeatures, T, unknown>>
   /**
    * 启用列固定按钮，传函数可按列动态决定
    * @defaultValue false
@@ -136,7 +131,7 @@ export interface DataTableProps<T extends TableData> extends /* @vue-ignore */ O
    * @defaultValue 3
    */
   actionsMaxInline?: number
-  actionsOverflowTrigger?: DataTableDynamic<ButtonProps, CellContext<T, unknown>>
+  actionsOverflowTrigger?: DataTableDynamic<ButtonProps, CellContext<TableFeatures, T, unknown>>
   /**
    * 启用列宽拖拽，传函数可按列动态决定
    * @defaultValue false
@@ -149,25 +144,39 @@ export interface DataTableProps<T extends TableData> extends /* @vue-ignore */ O
    */
   columnResizeMode?: 'onChange' | 'onEnd'
   /** 单元格内边距密度 */
-  density?: DataTableDensityPreset | ColumnMeta<T, unknown>['class']
-  meta?: TableMeta<T>
+  density?: DataTableDensityPreset | ColumnMeta<TableFeatures, T, unknown>['class']
+  meta?: TableMeta<TableFeatures, T>
   rowClass?: string | ((row: T) => string)
   rowStyle?: string | Record<string, string> | ((row: T) => string | Record<string, string>)
   /**
    * 单元格溢出 Tooltip：true 单行 / number 多行 / false 禁用 / 函数 动态
    * @defaultValue false
    */
-  tooltip?: boolean | number | ((ctx: CellContext<T, unknown>) => boolean | number)
+  tooltip?: boolean | number | ((ctx: CellContext<TableFeatures, T, unknown>) => boolean | number)
   tooltipProps?: OmitByKey<TooltipProps, 'text'>
   /**
    * 单元格文本截断：true 单行 / number 多行 / false 禁用 / 函数 动态
    * @defaultValue true
    */
-  truncate?: boolean | number | ((ctx: CellContext<T, unknown>) => boolean | number)
-  sortingOptions?: TableProps<T>['sortingOptions']
-  columnSizingOptions?: TableProps<T>['columnSizingOptions']
-  columnPinningOptions?: TableProps<T>['columnPinningOptions']
-  rowSelectionOptions?: TableProps<T>['rowSelectionOptions']
+  truncate?: boolean | number | ((ctx: CellContext<TableFeatures, T, unknown>) => boolean | number)
+  /**
+   * TanStack Table 选项，透传给 UTable 的 `options`，与 MDataTable 由列配置派生的
+   * `enableSorting`、`enableColumnPinning`、`enableMultiRowSelection` 等合并，同名时以此为准。
+   * 分页相关：
+   * - 客户端分页：传入 `v-model:pagination` 或 `paginationUi.pageSizes` 即启用，自动注册分页行模型
+   * - 服务端分页：`manualPagination: true` 并提供 `rowCount` 或 `pageCount`
+   */
+  options?: TableProps<T>['options'] & {
+    /** 服务端分页的总行数，仅供分页栏展示，不写入 TanStack */
+    rowCount?: number
+    /** 服务端分页的总页数，缺省时由 `rowCount` 推导，不写入 TanStack */
+    pageCount?: number
+  }
+  /**
+   * 额外注册的 TanStack Table 功能（分组、分面、单元格合并等），与分页功能合并后在挂载时读取一次
+   * @see https://ui.nuxt.com/docs/components/table#features
+   */
+  features?: TableProps<T>['features']
   /**
    * 子行字段名，设置后启用树形模式
    * @example 'children'
@@ -177,13 +186,12 @@ export interface DataTableProps<T extends TableData> extends /* @vue-ignore */ O
    * 树形缩进：number 每层缩进 px / string CSS 值 / 函数 动态返回 CSS
    * @defaultValue '1rem'
    */
-  indentSize?: number | string | ((ctx: CellContext<T, unknown>) => string)
+  indentSize?: number | string | ((ctx: CellContext<TableFeatures, T, unknown>) => string)
   /**
    * 树形模式下的默认展开行为，仅在未提供 expanded / expandedKeys 时生效。true 展开全部父级行，number 展开 depth 小于该值的父级行，函数按行与深度自定义
    * @defaultValue false
    */
   defaultExpanded?: boolean | number | ((row: T, depth: number) => boolean)
-  expandedOptions?: TableProps<T>['expandedOptions']
   /** @defaultValue false */
   expandOnRowClick?: boolean
   /** @defaultValue false */
@@ -199,12 +207,6 @@ export interface DataTableProps<T extends TableData> extends /* @vue-ignore */ O
   onSelect?: DataTableSelectHandler<T>
   onHover?: DataTableHoverHandler<T>
   onRowContextmenu?: DataTableContextmenuHandler<T>
-  /**
-   * 分页配置，透传给 TanStack / UTable
-   * - 客户端分页：传入即启用，自动注入 getPaginationRowModel
-   * - 服务端分页：manualPagination=true 并提供 rowCount 或 pageCount
-   */
-  paginationOptions?: TableProps<T>['paginationOptions']
   /**
    * 粘性表头
    * @defaultValue true
@@ -232,7 +234,7 @@ export interface DataTableProps<T extends TableData> extends /* @vue-ignore */ O
 }
 
 export interface DataTablePaginationSlotProps<T extends TableData> {
-  tableApi: Table<T>
+  tableApi: Table<TableFeatures, T>
   pagination: PaginationState
   page: number
   rowCount: number
@@ -248,7 +250,7 @@ export interface DataTablePaginationSlotProps<T extends TableData> {
 }
 
 interface DataTableNamedSlots<T extends TableData> {
-  'expanded'(props: { row: Row<T> }): VNode[]
+  'expanded'(props: { row: TableRow<T> }): VNode[]
   'empty'(): VNode[]
   'loading'(): VNode[]
   'caption'(): VNode[]
@@ -258,7 +260,7 @@ interface DataTableNamedSlots<T extends TableData> {
   'pagination-summary'(props: FirstParameter<DataTablePaginationSlots<T>['summary']>): VNode[]
   'pagination-actions'(props: FirstParameter<DataTablePaginationSlots<T>['actions']>): VNode[]
   /** 表格上方工具栏；开启 `columnSettings` 时默认渲染列设置按钮 */
-  'toolbar'(props: { tableApi: Table<T> | null, resetColumns: () => void }): VNode[]
+  'toolbar'(props: { tableApi: Table<TableFeatures, T> | null, resetColumns: () => void }): VNode[]
 }
 
 /**
@@ -267,7 +269,7 @@ interface DataTableNamedSlots<T extends TableData> {
  * `<id>-cell` / `<id>-footer` 整体替换单元格与表尾内容
  */
 type DataTableColumnSlots<T extends TableData>
-  = Record<`${string}-header` | `${string}-footer`, (props: HeaderContext<T, unknown>) => VNode[]>
-    & Record<`${string}-cell`, (props: CellContext<T, unknown>) => VNode[]>
+  = Record<`${string}-header` | `${string}-footer`, (props: HeaderContext<TableFeatures, T, unknown>) => VNode[]>
+    & Record<`${string}-cell`, (props: CellContext<TableFeatures, T, unknown>) => VNode[]>
 
 export type DataTableSlots<T extends TableData> = DataTableNamedSlots<T> & Partial<DataTableColumnSlots<T>>

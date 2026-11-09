@@ -1,4 +1,5 @@
 import type { MovkTranslator } from '../../../composables/useMovkLocale'
+import type { TableData, TableFeatures } from '@nuxt/ui'
 import type { CellContext, ColumnDef, HeaderContext } from '@tanstack/vue-table'
 import type { VNode } from 'vue'
 import type {
@@ -15,22 +16,22 @@ import { applyBaseState, buildClassMeta, makeColumnStyle, resolveAlignClass } fr
 import { buildResizeHandle } from './resize'
 import type { DataTableProps } from '../../../types/data-table/component'
 
-interface HeaderAction<T> {
+interface HeaderAction<T extends TableData> {
   id: string
   position: 'leading' | 'trailing'
-  render: (ctx: HeaderContext<T, unknown>) => VNode | null
+  render: (ctx: HeaderContext<TableFeatures, T, unknown>) => VNode | null
 }
 
-function buildDataCellRenderer<T>(
+function buildDataCellRenderer<T extends TableData>(
   col: DataTableDataColumn<T>,
   options: DataTableProps<T>
-): ((ctx: CellContext<T, unknown>) => unknown) | undefined {
+): ((ctx: CellContext<TableFeatures, T, unknown>) => unknown) | undefined {
   const maybeTooltip = col.tooltip !== undefined ? !!col.tooltip : !!options.tooltip
   const maybeTruncate = col.truncate !== undefined ? !!col.truncate : !!options.truncate
   const needCustomCell = !!(col.cell || maybeTooltip || maybeTruncate || col.emptyCell !== undefined || options.emptyCell !== false)
   if (!needCustomCell) return undefined
 
-  return (ctx: CellContext<T, unknown>) => {
+  return (ctx: CellContext<TableFeatures, T, unknown>) => {
     const raw = ctx.getValue()
     const emptyText = col.emptyCell !== undefined ? col.emptyCell : options.emptyCell
 
@@ -80,7 +81,7 @@ function buildDataCellRenderer<T>(
   }
 }
 
-function buildSortAction<T>(
+function buildSortAction<T extends TableData>(
   col: Pick<DataTableDataColumn<T>, 'sortButtonProps'>,
   options: DataTableProps<T>
 ): HeaderAction<T> {
@@ -109,7 +110,7 @@ function buildSortAction<T>(
   }
 }
 
-function buildPinAction<T>(
+function buildPinAction<T extends TableData>(
   col: Pick<DataTableDataColumn<T>, 'pinButtonProps'>,
   options: DataTableProps<T>,
   t: MovkTranslator
@@ -129,11 +130,11 @@ function buildPinAction<T>(
         'aria-label': pinned ? t('dataTable.unpinColumn') : t('dataTable.pinColumn'),
         'onClick': (event: Event) => {
           event.stopPropagation()
-          if (pinned === 'left') {
-            ctx.column.pin('right')
+          if (pinned === 'start') {
+            ctx.column.pin('end')
             return
           }
-          if (pinned === 'right') {
+          if (pinned === 'end') {
             ctx.column.pin(false)
             return
           }
@@ -142,7 +143,7 @@ function buildPinAction<T>(
             const w = Math.ceil(th.getBoundingClientRect().width)
             if (w > 0) ctx.table.setColumnSizing(prev => ({ ...prev, [ctx.column.id]: w }))
           }
-          ctx.column.pin('left')
+          ctx.column.pin('start')
         },
         ...resolveCallbackValue(options.pinButtonProps ?? {}, pinCtx),
         ...resolveCallbackValue(col.pinButtonProps ?? {}, pinCtx)
@@ -157,8 +158,8 @@ interface HeaderActionFlags {
   resizable: boolean
 }
 
-export function renderHeaderActions<T>(
-  ctx: HeaderContext<T, unknown>,
+export function renderHeaderActions<T extends TableData>(
+  ctx: HeaderContext<TableFeatures, T, unknown>,
   col: Pick<DataTableDataColumn<T>, 'pinButtonProps' | 'sortButtonProps'>,
   resolveCtx: Pick<ResolveContext<T>, 'options' | 't'>,
   label: unknown,
@@ -187,11 +188,11 @@ export function renderHeaderActions<T>(
   ])
 }
 
-export function resolveDataColumn<T>(
+export function resolveDataColumn<T extends TableData>(
   col: DataTableDataColumn<T>,
   ctx: ResolveContext<T>,
-  inheritedFixed?: 'left' | 'right'
-): ColumnDef<T, unknown> {
+  inheritedFixed?: 'start' | 'end'
+): ColumnDef<TableFeatures, T, unknown> {
   const { options, density } = ctx
   const id = col.accessorKey
   const effectiveSortable = resolveColumnFlag(col.sortable, options.sortable, col)
@@ -202,7 +203,7 @@ export function resolveDataColumn<T>(
   ctx.flags.hasResizing ||= effectiveResizable
   ctx.flags.hasSort ||= effectiveSortable
 
-  const resolvedSize = applyBaseState(id, col.fixed ?? inheritedFixed, col.size, ctx as ResolveContext<unknown>)
+  const resolvedSize = applyBaseState(id, col.fixed ?? inheritedFixed, col.size, ctx as unknown as ResolveContext<TableData>)
 
   if (col.visibility === false) ctx.visibility[id] = false
   ctx.allColumnIds.push(id)
@@ -210,23 +211,22 @@ export function resolveDataColumn<T>(
   const cellRenderer = buildDataCellRenderer(col, options)
   const headerSlot = ctx.headerSlots?.[`${id}-header`]
 
-  const def: ColumnDef<T, unknown> = {
+  const def: ColumnDef<TableFeatures, T, unknown> = {
     accessorKey: id,
     header: (effectiveSortable || effectivePinable || effectiveResizable)
-      ? (hctx: HeaderContext<T, unknown>) => renderHeaderActions(hctx, col, ctx, headerSlot ? headerSlot(hctx) : (col.header ?? id), {
+      ? (hctx: HeaderContext<TableFeatures, T, unknown>) => renderHeaderActions(hctx, col, ctx, headerSlot ? headerSlot(hctx) : (col.header ?? id), {
           sortable: effectiveSortable,
           pinable: effectivePinable,
           resizable: effectiveResizable
         })
       : headerSlot
-        ? (hctx: HeaderContext<T, unknown>) => headerSlot(hctx)
+        ? (hctx: HeaderContext<TableFeatures, T, unknown>) => headerSlot(hctx)
         : (col.header ?? id),
     ...(col.minSize != null && { minSize: col.minSize }),
     ...(col.maxSize != null && { maxSize: col.maxSize }),
     ...(resolvedSize != null && { size: resolvedSize }),
     enableSorting: effectiveSortable,
     enablePinning: effectivePinable,
-    enableResizing: effectiveResizable,
     ...(cellRenderer && { cell: cellRenderer }),
     meta: {
       class: buildClassMeta<T, unknown>(density, resolveAlignClass(col.align), effectiveResizable),

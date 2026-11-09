@@ -1,4 +1,5 @@
 import type { ColumnDefTemplate } from '@tanstack/vue-table'
+import type { TableData } from '@nuxt/ui'
 import type { DataTableDataColumn, DataTableSizePreset } from '../../../types/data-table'
 import { isFunction, isString } from '@movk/core'
 import { SIZE_PRESET_MAP } from './constants'
@@ -7,7 +8,7 @@ export function resolveCallbackValue<V, A>(valueOrFn: V | ((arg: A) => V), arg: 
   return isFunction(valueOrFn) ? valueOrFn(arg) : valueOrFn
 }
 
-export function resolveColumnFlag<T>(
+export function resolveColumnFlag<T extends TableData>(
   colValue: boolean | undefined,
   globalValue: boolean | ((col: DataTableDataColumn<T>) => boolean) | undefined,
   col: DataTableDataColumn<T>,

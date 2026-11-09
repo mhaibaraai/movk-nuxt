@@ -44,14 +44,14 @@ function onDrop(index: number) {
             v-for="(item, index) in items"
             :key="item.id"
             draggable="true"
-            class="flex items-center gap-2 rounded-md px-1.5 py-1 hover:bg-elevated/50"
+            class="flex items-center gap-2 rounded-md px-1.5 py-1 hover:bg-tint"
             :class="{ 'opacity-50': dragIndex === index }"
             @dragstart="dragIndex = index"
             @dragover.prevent
             @drop="onDrop(index)"
             @dragend="dragIndex = undefined"
           >
-            <UIcon name="i-lucide-grip-vertical" class="size-4 shrink-0 cursor-grab text-dimmed" />
+            <UIcon name="i-lucide-grip-vertical" class="size-4 shrink-0 cursor-grab text-faint" />
             <UCheckbox
               :model-value="item.visible"
               :disabled="!item.hideable"

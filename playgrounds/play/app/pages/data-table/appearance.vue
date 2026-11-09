@@ -79,7 +79,7 @@ const sizeColumns: DataTableColumn<Person>[] = [
   { accessorKey: 'bio', header: '简介', maxSize: 320, resizable: true },
   {
     type: 'actions',
-    fixed: 'right',
+    fixed: 'end',
     minSize: 60,
     resizable: true,
     actions: [

@@ -1,4 +1,5 @@
 import type { MovkTranslator } from '../../../composables/useMovkLocale'
+import type { TableData, TableFeatures } from '@nuxt/ui'
 import type { ColumnDef } from '@tanstack/vue-table'
 import type {
   DataTableActionsColumn,
@@ -23,11 +24,11 @@ import {
   resolveSelectionColumn
 } from './resolve-special-columns'
 
-function resolveColumn<T>(
+function resolveColumn<T extends TableData>(
   col: DataTableColumn<T>,
   ctx: ResolveContext<T>,
-  inheritedFixed?: 'left' | 'right'
-): ColumnDef<T, unknown> {
+  inheritedFixed?: 'start' | 'end'
+): ColumnDef<TableFeatures, T, unknown> {
   if (isGroupColumn(col)) return resolveGroupColumn(col, ctx, resolveColumn, inheritedFixed)
   if (isDataColumn(col)) return resolveDataColumn(col, ctx, inheritedFixed)
 
@@ -41,10 +42,10 @@ function resolveColumn<T>(
     }
   }
 
-  return col as ColumnDef<T, unknown>
+  return col as ColumnDef<TableFeatures, T, unknown>
 }
 
-export function resolveColumns<T>(
+export function resolveColumns<T extends TableData>(
   columns: DataTableColumn<T>[],
   options: DataTableProps<T>,
   t: MovkTranslator,
@@ -57,7 +58,7 @@ export function resolveColumns<T>(
     density: options.density
       ? (isString(options.density) ? DENSITY_PRESETS[options.density] : options.density)
       : null,
-    pinning: { left: [], right: [] },
+    pinning: { start: [], end: [] },
     visibility: {},
     sizing: {},
     flags: { hasPinning: false, hasResizing: false, hasSort: false, hasExpand: false },

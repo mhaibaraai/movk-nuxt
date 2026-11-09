@@ -68,10 +68,10 @@ interface MockColumnOptions {
   id: string
   columnDef: { size?: number, minSize?: number, maxSize?: number }
   size: number
-  pinned?: 'left' | 'right' | false
+  pinned?: 'start' | 'end' | false
   columnSizing?: Record<string, number>
-  leftLeafIds?: string[]
-  rightLeafIds?: string[]
+  startLeafIds?: string[]
+  endLeafIds?: string[]
 }
 
 function makeCtx(opts: MockColumnOptions) {
@@ -83,10 +83,10 @@ function makeCtx(opts: MockColumnOptions) {
     getIsPinned: () => opts.pinned ?? false
   }
   const table = {
-    getState: () => ({ columnSizing: opts.columnSizing ?? {} }),
-    _getDefaultColumnDef: () => ({ size: 150 }),
-    getLeftLeafColumns: () => (opts.leftLeafIds ?? []).map(id => ({ id })),
-    getRightLeafColumns: () => (opts.rightLeafIds ?? []).map(id => ({ id }))
+    atoms: { columnSizing: { get: () => opts.columnSizing ?? {} } },
+    getDefaultColumnDef: () => ({ size: 150 }),
+    getStartLeafColumns: () => (opts.startLeafIds ?? []).map(id => ({ id })),
+    getEndLeafColumns: () => (opts.endLeafIds ?? []).map(id => ({ id }))
   }
   return { column, getContext: () => ({ table }) } as never
 }
@@ -101,24 +101,24 @@ describe('resolveColumnSize 渲染宽度', () => {
     expect(style).toEqual({ minWidth: '60px' })
   })
 
-  it('右固定唯一列 + minSize 无显式宽 → 自适应（仅 minWidth）', () => {
+  it('末尾固定唯一列 + minSize 无显式宽 → 自适应（仅 minWidth）', () => {
     const style = resolveColumnSize(makeCtx({
       id: '__actions',
       columnDef: { minSize: 60 },
       size: 150,
-      pinned: 'right',
-      rightLeafIds: ['__actions']
+      pinned: 'end',
+      endLeafIds: ['__actions']
     }))
     expect(style).toEqual({ minWidth: '60px' })
   })
 
-  it('右固定但存在更内侧固定列（非内侧）→ 固定宽', () => {
+  it('末尾固定但存在更内侧固定列（非内侧）→ 固定宽', () => {
     const style = resolveColumnSize(makeCtx({
       id: '__actions',
       columnDef: {},
       size: 150,
-      pinned: 'right',
-      rightLeafIds: ['__inner', '__actions']
+      pinned: 'end',
+      endLeafIds: ['__inner', '__actions']
     }))
     expect(style).toEqual({ width: '150px', minWidth: '150px', maxWidth: '150px' })
   })

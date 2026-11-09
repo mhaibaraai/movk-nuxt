@@ -1,4 +1,4 @@
-import type { PaginationProps, SelectProps, TableData } from '@nuxt/ui'
+import type { PaginationProps, SelectProps, TableData, TableFeatures } from '@nuxt/ui'
 import type { PaginationState, RowData, Table } from '@tanstack/vue-table'
 import type { VNode } from 'vue'
 import type { ClassNameValue } from '../shared'
@@ -20,7 +20,7 @@ export interface DataTablePaginationUi {
   /**
    * 分页栏 UI 是否显示（仅在分页已启用时生效）。
    * 仅控 UI 显隐，不影响数据切片；
-   * 若要完全关闭分页，请不要传入 `paginationOptions` / `v-model:pagination` / `pageSizes`。
+   * 若要完全关闭分页，请不要传入 `options.manualPagination` / `v-model:pagination` / `pageSizes`。
    * @defaultValue 分页启用时为 `pageCount > 1 || pageSizes.length > 1`，否则为 `false`
    */
   show?: boolean
@@ -51,7 +51,7 @@ export interface DataTablePaginationUi {
 }
 
 export interface DataTablePaginationProps<TData extends RowData> {
-  tableApi: Table<TData>
+  tableApi: Table<TableFeatures, TData>
   pagination: PaginationState
   page: number
   rowCount: number
@@ -79,7 +79,7 @@ export interface DataTablePaginationSlots<TData extends RowData = RowData> {
     showSelectedCount: boolean
   }): VNode[]
   actions(props: {
-    tableApi: Table<TData>
+    tableApi: Table<TableFeatures, TData>
     page: number
     pageCount: number
     pageSize: number

@@ -5,7 +5,7 @@ import { resolveCallbackValue } from '../columns/utils'
 import { useMessageBox } from '../../../composables/useMessageBox'
 import { UButton, UDropdownMenu } from '#components'
 import DataTableActionConfirm from './ActionConfirm.vue'
-import type { ButtonProps } from '@nuxt/ui'
+import type { ButtonProps, TableData, TableFeatures } from '@nuxt/ui'
 import type { CellContext } from '@tanstack/vue-table'
 import type {
   DataTableAction,
@@ -16,8 +16,8 @@ import type {
 import type { DataTableProps } from '../../../types/data-table/component'
 
 interface DataTableRendererActionsCellProps {
-  col: DataTableActionsColumn<unknown>
-  cellCtx: CellContext<unknown, unknown>
+  col: DataTableActionsColumn<TableData>
+  cellCtx: CellContext<TableFeatures, TableData, unknown>
   options: DataTableProps<any>
 }
 
@@ -25,7 +25,7 @@ const props = defineProps<DataTableRendererActionsCellProps>()
 
 const { confirm } = useMessageBox()
 
-function buildActionCtx(action: DataTableAction<unknown>): DataTableActionButtonContext<unknown> {
+function buildActionCtx(action: DataTableAction<TableData>): DataTableActionButtonContext<TableData> {
   return {
     cellContext: props.cellCtx,
     row: props.cellCtx.row.original,
@@ -34,17 +34,17 @@ function buildActionCtx(action: DataTableAction<unknown>): DataTableActionButton
   }
 }
 
-function renderInline(action: DataTableAction<unknown>, idx: number) {
+function renderInline(action: DataTableAction<TableData>, idx: number) {
   const actionCtx = buildActionCtx(action)
   return h(DataTableActionConfirm, {
     key: action.key ?? `${idx}`,
     action,
     ctx: actionCtx,
-    globalButtonProps: props.options.actionButtonProps as DataTableDynamic<ButtonProps, DataTableActionButtonContext<unknown>> | undefined
+    globalButtonProps: props.options.actionButtonProps as DataTableDynamic<ButtonProps, DataTableActionButtonContext<TableData>> | undefined
   })
 }
 
-function renderOverflow(actions: DataTableAction<unknown>[]) {
+function renderOverflow(actions: DataTableAction<TableData>[]) {
   const groups: Record<string, unknown>[][] = []
   let currentGroup: Record<string, unknown>[] = []
 
@@ -90,7 +90,7 @@ function renderOverflow(actions: DataTableAction<unknown>[]) {
 }
 
 function render() {
-  const actionList: DataTableAction<unknown>[] = isFunction(props.col.actions)
+  const actionList: DataTableAction<TableData>[] = isFunction(props.col.actions)
     ? props.col.actions(props.cellCtx)
     : props.col.actions
 
