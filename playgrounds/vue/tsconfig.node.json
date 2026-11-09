@@ -20,7 +20,6 @@
 
     /* Aliases */
     "paths": {
-      "#build/movk-ui": ["./node_modules/.movk-ui/movk-ui"],
       "#build/ui": ["./node_modules/.nuxt-ui/ui"]
     }
   },

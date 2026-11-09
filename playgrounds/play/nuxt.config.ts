@@ -5,12 +5,6 @@ export default defineNuxtConfig({
 
   css: ['~/assets/css/main.css'],
 
-  ui: {
-    experimental: {
-      componentDetection: true
-    }
-  },
-
   compatibilityDate: '2026-06-30',
 
   vite: {
@@ -19,7 +13,6 @@ export default defineNuxtConfig({
         '@internationalized/date',
         '@movk/core',
         '@tanstack/vue-table',
-        'tailwind-variants',
         'tailwindcss/colors',
         'zod'
       ]
