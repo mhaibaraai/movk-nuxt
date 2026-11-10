@@ -2,6 +2,8 @@
 
 Declarative data grid built on `@tanstack/vue-table` and Nuxt UI `UTable`. A single `columns` array drives data columns, special columns (selection / index / expand / row-pinning / actions), grouped headers, sorting, pinning, resizing, tree data, pagination, and load-more — fully typed.
 
+Requires `@tanstack/vue-table ^9.3.1` with Nuxt UI v5. Older v8 APIs and types are not compatible.
+
 ## Basic table
 
 ```vue
@@ -36,6 +38,10 @@ const columns: DataTableDataColumn<User>[] = [
 - **Derive callback / event types from official exports** — `DataTableDataColumn<T>['cell' | 'truncate' | 'tooltip']`, `DataTableProps<T>['sortable' | 'pinable' | 'resizable']`, and `DataTableSelectHandler` / `DataTableHoverHandler` / `DataTableContextmenuHandler` for events.
 - **Per-column prop > global prop** — use "global on + individual off" or vice versa to express exceptions, not row-by-row repetition.
 - **Server-side pagination**: set `options.manualPagination: true` + `options.rowCount`, and reset `pagination.pageIndex` to 0 whenever the search/filter changes.
+- **Unified options**: pass TanStack settings through `options`; the former `sortingOptions`, `paginationOptions`, `columnSizingOptions`, `columnPinningOptions`, `rowSelectionOptions` and `expandedOptions` props are removed. Explicit `options` take precedence over settings derived from Movk column props.
+- **Extra features**: declare additional TanStack features once and pass them through `features`; Movk adds its pagination feature and client row model when needed.
+- **Logical pinning**: `fixed` and column pinning state use `start` / `end`, following the text direction. Do not use `left` / `right`.
+- **Instance types**: `tableApi` is `Table<TableFeatures, T> | null`; import `Table` from `@tanstack/vue-table` and `TableFeatures` / `TableRow` from `@nuxt/ui` when these types are needed directly.
 
 ## Sorting, pinning, resizing
 
