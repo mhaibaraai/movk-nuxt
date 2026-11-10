@@ -124,6 +124,13 @@ export default defineNuxtConfig({
 
   compatibilityDate: '2026-06-30',
 
+  // 本地 link 的 Layer 位于 workspace 外，内联 Prettier 避免产物保留跨仓库相对导入。
+  nitro: {
+    externals: {
+      inline: [/[/\\]prettier[/\\]/]
+    }
+  },
+
   vite: {
     optimizeDeps: {
       include: [
@@ -131,11 +138,15 @@ export default defineNuxtConfig({
         '@movk/core',
         '@tanstack/vue-table',
         'json5',
-        'tailwind-variants',
         'tailwindcss/colors',
         'zod'
       ]
     }
+  },
+
+  // 本地 link 的 Layer 使用本站 Content 副本，确保服务端查询读取本站生成的集合类型。
+  typescript: {
+    hoist: ['@nuxt/content/server']
   },
 
   aiChat: {
