@@ -27,6 +27,27 @@ afterEach(() => {
 })
 
 describe('useTheme 色板', () => {
+  it('两个主题入口同步选择，任一入口重置后都回到 CSS 默认值', async () => {
+    const { theme: header } = await mountTheme()
+    const { theme: example } = await mountTheme()
+
+    header.primary.value = 'blue'
+    header.neutral.value = 'zinc'
+    await nextTick()
+    await nextTick()
+    expect(example.primary.value).toBe('blue')
+    expect(example.neutral.value).toBe('zinc')
+    expect(root().getPropertyValue('--ui-color-primary-500')).toBe(colors.blue[500])
+
+    example.resetTheme()
+    await nextTick()
+    await nextTick()
+    expect(header.primary.value).toBeUndefined()
+    expect(header.neutral.value).toBeUndefined()
+    expect(root().getPropertyValue('--ui-color-primary-500')).toBe('')
+    expect(root().getPropertyValue('--ui-color-neutral-500')).toBe('')
+  })
+
   it('切换圆角和黑白主色后移除首屏恢复的内联变量', async () => {
     root().setProperty('--ui-radius', '1rem')
     root().setProperty('--ui-primary', 'black')

@@ -4,6 +4,7 @@ import { createColorRestoreScript, restorePaletteVars } from '../domains/theme/t
 import { resolveThemeIcons } from '../domains/theme/theme-icons'
 
 export default defineNuxtPlugin({
+  name: 'movk-theme',
   enforce: 'post',
   setup() {
     const appConfig = useAppConfig()
