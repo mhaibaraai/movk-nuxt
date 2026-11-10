@@ -5,7 +5,7 @@ import type { ButtonProps, CalendarProps, ComponentConfig } from '@nuxt/ui'
 import type { AppConfig } from 'nuxt/schema'
 import type { DateValue } from '@internationalized/date'
 import { UPopover, UButton, UCalendar } from '#components'
-import { computed, useAttrs } from 'vue'
+import { computed, shallowRef, useAttrs } from 'vue'
 import { useAppConfig } from '#imports'
 import { useDateFormatter } from '../composables/useDateFormatter'
 import type { ValueFormat } from '../composables/useDateFormatter'
@@ -32,7 +32,8 @@ const _props = withDefaults(defineProps<DatePickerProps<R, M, P, V> & {
   labelFormat: 'formatted'
 })
 // 经 <UTheme :props> 与 app.config.ui.movkDatePicker.defaultVariants 解析未显式传入的 prop
-const props = useComponentProps('movkDatePicker', _props, theme)
+// 浅引用保留主题代理与泛型 props 类型，避免模板误判 Ref 或递归解包 schema。
+const props = shallowRef(useComponentProps('movkDatePicker', _props, theme))
 
 const emits = defineEmits<DatePickerEmits<R, M, V>>()
 defineSlots<DatePickerSlots<P>>()
@@ -55,7 +56,7 @@ const {
   emitFormChange,
   emitFormFocus,
   emitFormInput
-} = useFieldControl(props)
+} = useFieldControl(props.value)
 
 const { code: uiLocale } = useLocale()
 const calendarType = computed(() => (attrs.type as 'date' | 'month' | 'year' | undefined) ?? 'date')
@@ -67,16 +68,16 @@ const TYPE_FORMAT_OPTIONS: Record<string, Intl.DateTimeFormatOptions> = {
 }
 
 const formatterRef = computed(() => useDateFormatter({
-  locale: props.locale ?? uiLocale.value,
-  formatOptions: props.formatOptions ?? TYPE_FORMAT_OPTIONS[calendarType.value],
-  timeZone: props.timeZone
+  locale: props.value.locale ?? uiLocale.value,
+  formatOptions: props.value.formatOptions ?? TYPE_FORMAT_OPTIONS[calendarType.value],
+  timeZone: props.value.timeZone
 }))
 
 type CalendarModel = CalendarProps<R, M>['modelValue']
 const asModel = (v: unknown) => v as CalendarModel
 const isOn = (v: unknown) => v === '' || v === true || v === 'true'
 
-const valueFormat = computed<ValueFormat>(() => props.valueFormat ?? 'date-value')
+const valueFormat = computed<ValueFormat>(() => props.value.valueFormat ?? 'date-value')
 const isRange = computed(() => isOn(attrs.range))
 const isMultiple = computed(() => isOn(attrs.multiple))
 
@@ -89,7 +90,7 @@ const calendarValue = computed<CalendarModel>({
   }
 })
 
-const emptyLabel = computed(() => props.placeholder ?? props.buttonProps?.label ?? t('datePicker.placeholder'))
+const emptyLabel = computed(() => props.value.placeholder ?? props.value.buttonProps?.label ?? t('datePicker.placeholder'))
 
 const fromNumber = (n: number | null): string => n === null ? '' : String(n)
 
@@ -108,10 +109,10 @@ const converters = computed<Record<LabelFormat, (d: DateValue) => string>>(() =>
 const formattedDate = computed<string>(() => {
   const formatter = formatterRef.value
   const value = calendarValue.value
-  if (typeof props.labelFormat === 'function') return props.labelFormat(formatter, value)
+  if (typeof props.value.labelFormat === 'function') return props.value.labelFormat(formatter, value)
   if (!value) return emptyLabel.value
 
-  const convert = converters.value[props.labelFormat as LabelFormat] ?? formatter.format
+  const convert = converters.value[props.value.labelFormat as LabelFormat] ?? formatter.format
 
   if (Array.isArray(value)) {
     return value.length === 0 ? emptyLabel.value : value.map(convert).join(', ')
@@ -143,9 +144,9 @@ const triggerButtonAttrs = computed<ButtonProps>(() => ({
   icon: appConfig.ui?.icons?.calendar ?? 'i-lucide-calendar',
   size: effectiveSize.value as ButtonProps['size'],
   disabled: effectiveDisabled.value,
-  ...props.buttonProps,
+  ...props.value.buttonProps,
   label: formattedDate.value,
-  class: ['w-full', attrs.class, props.buttonProps?.class]
+  class: ['w-full', attrs.class, props.value.buttonProps?.class]
 }))
 
 function handleClear(event: Event) {
@@ -176,9 +177,9 @@ function buildDefaultPresets(): DatePickerPreset<R, M>[] {
 }
 
 const resolvedPresets = computed<DatePickerPreset<R, M>[]>(() => {
-  if (!props.presets) return []
-  if (props.presets === 'default') return buildDefaultPresets()
-  return props.presets
+  if (!props.value.presets) return []
+  if (props.value.presets === 'default') return buildDefaultPresets()
+  return props.value.presets
 })
 
 function applyPreset(preset: DatePickerPreset<R, M>) {
@@ -196,7 +197,7 @@ const { baseUi, extraUi } = useExtendedTv(
   theme,
   'movkDatePicker',
   () => ({
-    ui: props.ui,
+    ui: props.value.ui,
     variants: { withPresets: resolvedPresets.value.length > 0 }
   })
 )

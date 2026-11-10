@@ -2,7 +2,7 @@
 import type { ComponentConfig, FormState, InferInput } from '@nuxt/ui'
 import type { z } from 'zod'
 import { UForm } from '#components'
-import { computed, ref, useAttrs, useTemplateRef } from 'vue'
+import { computed, shallowRef, ref, useAttrs, useTemplateRef } from 'vue'
 import { classifyFields } from '../domains/auto-form/fields'
 import { useAutoFormCore } from '../domains/auto-form/useAutoFormCore'
 import AutoFormRendererChildren from '../domains/auto-form/components/Children.vue'
@@ -24,7 +24,8 @@ const _props = withDefaults(defineProps<AutoFormProps<S, T, N> & {
   validateOn: () => []
 })
 // 经 <UTheme :props> 与 app.config.ui.movkAutoForm.defaultVariants 解析未显式传入的 prop
-const props = useComponentProps('movkAutoForm', _props, theme)
+// 浅引用保留主题代理与泛型 props 类型，避免模板误判 Ref 或递归解包 schema。
+const props = shallowRef(useComponentProps('movkAutoForm', _props, theme))
 
 const modelValue = defineModel<AutoFormStateType>()
 const emits = defineEmits<AutoFormEmits<S>>()
@@ -34,23 +35,23 @@ defineOptions({ inheritAttrs: false })
 const attrs = useAttrs()
 const { t } = useMovkLocale()
 
-if (import.meta.dev && props.state !== undefined) {
+if (import.meta.dev && props.value.state !== undefined) {
   console.warn('[AutoForm] The `state` prop is deprecated, use `v-model` instead.')
 }
 
 const localState = ref<Record<string, any>>({})
-const stateModel = computed(() => (modelValue.value ?? props.state ?? localState.value) as Record<string, any>)
+const stateModel = computed(() => (modelValue.value ?? props.value.state ?? localState.value) as Record<string, any>)
 
 const formRef = useTemplateRef('formRef')
 
 const core = useAutoFormCore({
-  schema: () => props.schema,
-  controls: () => props.controls,
-  globalMeta: () => props.globalMeta,
-  hiddenValue: () => props.hiddenValue,
+  schema: () => props.value.schema,
+  controls: () => props.value.controls,
+  globalMeta: () => props.value.globalMeta,
+  hiddenValue: () => props.value.hiddenValue,
   model: stateModel,
   slots,
-  addButtonProps: () => props.addButtonProps
+  addButtonProps: () => props.value.addButtonProps
 })
 const { visibleFields, validationSchema, resolvedButtonSize } = core
 
@@ -69,8 +70,8 @@ const { extendUi } = useExtendedTv(
   'movkAutoForm',
   () => ({
     ui: {
-      ...props.ui,
-      root: [props.ui?.root, props.class]
+      ...props.value.ui,
+      root: [props.value.ui?.root, props.value.class]
     }
   })
 )

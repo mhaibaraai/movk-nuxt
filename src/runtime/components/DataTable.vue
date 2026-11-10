@@ -17,7 +17,7 @@ import type {
 import type { TableData, TableFeatures, TableProps, TableRow, ComponentConfig } from '@nuxt/ui'
 import { USkeleton, UTable } from '#components'
 import type { VNode } from 'vue'
-import { computed, ref, toRaw, useAttrs, useTemplateRef, watch } from 'vue'
+import { computed, shallowRef, ref, toRaw, useAttrs, useTemplateRef, watch } from 'vue'
 import { useResizeObserver, useScroll } from '@vueuse/core'
 import { useExtendedTv } from '../utils/extend-theme'
 import { useComponentProps } from '@nuxt/ui/composables/useComponentProps'
@@ -80,7 +80,8 @@ const _props = withDefaults(defineProps<DataTableProps<T> & {
   columnResizeMode: 'onChange'
 })
 // 经 <UTheme :props> 与 app.config.ui.movkDataTable.defaultVariants 解析未显式传入的 prop
-const props = useComponentProps('movkDataTable', _props, theme)
+// 浅引用保留主题代理与泛型 props 类型，避免模板误判 Ref 或递归解包 schema。
+const props = shallowRef(useComponentProps('movkDataTable', _props, theme))
 
 const paginationState = defineModel<PaginationState>('pagination')
 const columnVisibilityState = defineModel<ColumnVisibilityState>('columnVisibility')
@@ -108,7 +109,7 @@ const headerSlots = Object.fromEntries(
 ) as HeaderSlotMap<T>
 
 const { t } = useMovkLocale()
-const resolved = computed(() => resolveColumns<T>(props.columns || [], props, t, headerSlots))
+const resolved = computed(() => resolveColumns<T>(props.value.columns || [], props.value, t, headerSlots))
 
 const forwardSlots = computed(() => Object.keys(slots).filter((name) => {
   if (PAGINATION_SLOTS.includes(name)) return false
@@ -167,12 +168,12 @@ const effectiveRowSelection = useEffectiveModel(
 )
 
 const defaultExpandedRecord = computed<Record<string, boolean>>(() => {
-  if (!props.childrenKey || !props.defaultExpanded) return {}
+  if (!props.value.childrenKey || !props.value.defaultExpanded) return {}
   const data = ((attrs as { data?: T[] }).data ?? []) as T[]
-  const childrenKey = props.childrenKey
-  const rowKey = props.rowKey
+  const childrenKey = props.value.childrenKey
+  const rowKey = props.value.rowKey
   // 复刻 TanStack getRowId：有 rowKey 取 String(row[rowKey])，否则根层 index、子层 parentId.index
-  const keys = resolveDefaultExpandedKeys(data, props.defaultExpanded, {
+  const keys = resolveDefaultExpandedKeys(data, props.value.defaultExpanded, {
     getChildren: row => (row as Record<string, unknown>)[childrenKey],
     getKey: (row, { index, parentKey }) => rowKey !== undefined
       ? String((row as Record<string, unknown>)[rowKey])
@@ -246,17 +247,17 @@ useResizeObserver(scrollTarget, () => measure())
 const internalLoading = ref(false)
 
 function invokeLoadMore() {
-  return runLoadMore(props.loadMore, {
+  return runLoadMore(props.value.loadMore, {
     setLoading: (value) => { internalLoading.value = value },
-    onError: props.onLoadMoreError
+    onError: props.value.onLoadMoreError
   })
 }
 
 useInfiniteScrollBinding(
   () => tableRef.value?.$el ?? null,
   {
-    distance: () => props.loadMoreDistance,
-    canLoadMore: () => !!props.loadMore && props.canLoadMore !== false && !internalLoading.value,
+    distance: () => props.value.loadMoreDistance,
+    canLoadMore: () => !!props.value.loadMore && props.value.canLoadMore !== false && !internalLoading.value,
     onLoadMore: invokeLoadMore
   }
 )
@@ -268,23 +269,23 @@ function scrollToTop(options: ScrollToOptions = { top: 0, behavior: 'smooth' }) 
 const tableApi = computed<Table<TableFeatures, T> | null>(() => tableRef.value?.tableApi ?? null)
 const isColumnResizing = computed(() => Boolean(tableApi.value?.atoms.columnResizing?.get().isResizingColumn))
 
-const isTreeMode = computed(() => Boolean(props.childrenKey))
+const isTreeMode = computed(() => Boolean(props.value.childrenKey))
 
 useExpandColumnAutoSize({
   data: () => ((attrs as { data?: readonly unknown[] }).data ?? []) as unknown[],
-  childrenKey: () => props.childrenKey,
+  childrenKey: () => props.value.childrenKey,
   hasExpandColumn: () => resolved.value.hasExpandColumn,
-  indentSize: () => props.indentSize,
+  indentSize: () => props.value.indentSize,
   sizing: effectiveSizing
 })
 
-const isManualPagination = computed(() => props.options?.manualPagination === true)
+const isManualPagination = computed(() => props.value.options?.manualPagination === true)
 const hasPaginationIntent = computed(() =>
-  !props.loadMore && (
+  !props.value.loadMore && (
     isManualPagination.value
     || paginationState.value !== undefined
-    || (props.paginationUi?.pageSizes?.length ?? 0) > 0
-    || props.paginationUi?.show === true
+    || (props.value.paginationUi?.pageSizes?.length ?? 0) > 0
+    || props.value.paginationUi?.show === true
   )
 )
 
@@ -295,39 +296,39 @@ const tableFeatures = computed((): TableProps<T>['features'] => {
     // 手动分页由调用方切片，只需分页状态，不注册分页行模型
     ...(!isManualPagination.value && { paginatedRowModel: createPaginatedRowModel() })
   }
-  return pagination || props.features ? { ...pagination, ...props.features } : undefined
+  return pagination || props.value.features ? { ...pagination, ...props.value.features } : undefined
 })
 
 const tableMeta = computed((): TableMeta<TableFeatures, T> => ({
-  ...((props.stripe || props.rowClass || props.meta?.class?.tr) && {
+  ...((props.value.stripe || props.value.rowClass || props.value.meta?.class?.tr) && {
     class: {
       tr: row => [
-        props.rowClass && resolveCallbackValue(props.rowClass, row.original),
-        props.meta?.class?.tr && resolveCallbackValue(props.meta.class.tr, row)
+        props.value.rowClass && resolveCallbackValue(props.value.rowClass, row.original),
+        props.value.meta?.class?.tr && resolveCallbackValue(props.value.meta.class.tr, row)
       ].filter(Boolean).join(' ')
     }
   }),
-  ...((props.rowStyle || props.meta?.style?.tr) && {
+  ...((props.value.rowStyle || props.value.meta?.style?.tr) && {
     style: {
-      tr: props.rowStyle && props.meta?.style?.tr
+      tr: props.value.rowStyle && props.value.meta?.style?.tr
         ? (row) => {
-            const a = resolveCallbackValue(props.rowStyle!, row.original)
-            const b = resolveCallbackValue(props.meta!.style!.tr!, row)
+            const a = resolveCallbackValue(props.value.rowStyle!, row.original)
+            const b = resolveCallbackValue(props.value.meta!.style!.tr!, row)
             return typeof a === 'object' && typeof b === 'object' ? { ...a, ...b } : b
           }
-        : props.rowStyle
-          ? row => resolveCallbackValue(props.rowStyle!, row.original)
-          : props.meta!.style!.tr!
+        : props.value.rowStyle
+          ? row => resolveCallbackValue(props.value.rowStyle!, row.original)
+          : props.value.meta!.style!.tr!
     }
   })
 }))
 
 const borderedStyle = computed(() => {
-  if (!props.bordered || typeof props.bordered === 'boolean') return undefined
+  if (!props.value.bordered || typeof props.value.bordered === 'boolean') return undefined
   return {
-    '--m-dt-border-color': props.bordered.color,
-    '--m-dt-border-width': props.bordered.width,
-    '--m-dt-border-style': props.bordered.style
+    '--m-dt-border-color': props.value.bordered.color,
+    '--m-dt-border-width': props.value.bordered.width,
+    '--m-dt-border-style': props.value.bordered.style
   }
 })
 
@@ -337,62 +338,62 @@ const { baseUi, extraUi } = useExtendedTv(
   'movkDataTable',
   () => ({
     ui: {
-      ...props.ui,
-      wrapper: [props.ui?.wrapper, props.class]
+      ...props.value.ui,
+      wrapper: [props.value.ui?.wrapper, props.value.class]
     },
     variants: {
-      fitContent: !!props.fitContent,
-      bordered: !!props.bordered,
-      striped: !!props.stripe,
+      fitContent: !!props.value.fitContent,
+      bordered: !!props.value.bordered,
+      striped: !!props.value.stripe,
       resizing: isColumnResizing.value
     }
   })
 )
 
 const uTableProps = computed(() => {
-  const hasRowClickBehavior = props.expandOnRowClick || props.selectOnRowClick || !!props.onSelect
+  const hasRowClickBehavior = props.value.expandOnRowClick || props.value.selectOnRowClick || !!props.value.onSelect
 
   return {
-    ...(props.rowKey && {
-      getRowId: (row => String(row[props.rowKey as keyof T])) as TableProps<T>['getRowId']
+    ...(props.value.rowKey && {
+      getRowId: (row => String(row[props.value.rowKey as keyof T])) as TableProps<T>['getRowId']
     }),
-    ...(props.childrenKey && {
+    ...(props.value.childrenKey && {
       getSubRows: (row: T) => {
-        const children = row[props.childrenKey as keyof T]
+        const children = row[props.value.childrenKey as keyof T]
         return Array.isArray(children) && children.length > 0
           ? (children as T[])
           : undefined
       }
     }),
     ...attrs,
-    sticky: props.sticky,
-    loading: Boolean(props.loading) || internalLoading.value,
+    sticky: props.value.sticky,
+    loading: Boolean(props.value.loading) || internalLoading.value,
     columns: resolved.value.columnDefs,
     meta: tableMeta.value,
     ui: baseUi.value,
     features: tableFeatures.value,
     options: {
-      ...(props.columnResizeMode && { columnResizeMode: props.columnResizeMode }),
-      enableSorting: !!props.sortable || resolved.value.hasColumnSort,
-      enableColumnPinning: !!props.pinable || resolved.value.hasColumnPinning,
+      ...(props.value.columnResizeMode && { columnResizeMode: props.value.columnResizeMode }),
+      enableSorting: !!props.value.sortable || resolved.value.hasColumnSort,
+      enableColumnPinning: !!props.value.pinable || resolved.value.hasColumnPinning,
       ...(resolved.value.selectionMode === 'single' && { enableMultiRowSelection: false }),
       ...(resolved.value.subRowSelection === false && { enableSubRowSelection: false }),
       ...(resolved.value.hasExpandColumn && { enableExpanding: true }),
       // pageCount / rowCount 由 MDataTable 自管，不灌进 TanStack，避免 setPageIndex 的 clamp 副作用
-      ...separate(props.options ?? {}, ['pageCount', 'rowCount']).omitted
+      ...separate(props.value.options ?? {}, ['pageCount', 'rowCount']).omitted
     },
     ...(hasRowClickBehavior && {
       onSelect: (e: Event, row: TableRow<T>) => {
-        if (props.expandOnRowClick) {
+        if (props.value.expandOnRowClick) {
           const canToggle = isTreeMode.value ? row.getCanExpand() : true
           if (canToggle) row.toggleExpanded()
         }
-        if (props.selectOnRowClick) row.toggleSelected()
-        ;(props.onSelect as DataTableProps<T>['onSelect'])?.(e, row)
+        if (props.value.selectOnRowClick) row.toggleSelected()
+        ;(props.value.onSelect as DataTableProps<T>['onSelect'])?.(e, row)
       }
     }),
-    ...(props.onHover && { onHover: props.onHover }),
-    ...(props.onRowContextmenu && { onContextmenu: props.onRowContextmenu })
+    ...(props.value.onHover && { onHover: props.value.onHover }),
+    ...(props.value.onRowContextmenu && { onContextmenu: props.value.onRowContextmenu })
   }
 })
 
@@ -403,10 +404,10 @@ const paginationView = computed(() => {
   if (!api || !hasPaginationIntent.value) return null
   return buildPaginationView(api, {
     manual: isManualPagination.value,
-    rowCount: props.options?.rowCount,
-    pageCount: props.options?.pageCount,
-    show: props.paginationUi?.show,
-    pageSizes: props.paginationUi?.pageSizes
+    rowCount: props.value.options?.rowCount,
+    pageCount: props.value.options?.pageCount,
+    show: props.value.paginationUi?.show,
+    pageSizes: props.value.paginationUi?.pageSizes
   })
 })
 
@@ -434,8 +435,8 @@ const treeSelection = computed<TreeSelectionResult<T>>(() => {
   const data = ((attrs as { data?: T[] }).data ?? []) as T[]
   const keys = rowSelectionKeysState.value
     ?? Object.keys(effectiveRowSelection.value).filter(k => effectiveRowSelection.value[k])
-  const rowKey = props.rowKey
-  const childrenKey = props.childrenKey
+  const rowKey = props.value.rowKey
+  const childrenKey = props.value.childrenKey
   // 未设 rowKey 时 TanStack 以下标路径作 row id，借助行模型反查
   const rowIds = rowKey === undefined
     ? new Map((tableApi.value?.getCoreRowModel().flatRows ?? []).map(row => [toRaw(row.original), row.id]))
@@ -487,7 +488,7 @@ const pageSize = computed<number | undefined>({
   }
 })
 
-const persistence = useTablePersistence(() => props.persistKey, {
+const persistence = useTablePersistence(() => props.value.persistKey, {
   columnVisibility: effectiveVisibility,
   columnOrder: effectiveColumnOrder,
   columnSizing: effectiveSizing,
@@ -541,13 +542,13 @@ function moveColumn(from: number, to: number) {
   effectiveColumnOrder.value = [...leading, ...ids, ...special.filter(id => id === '__actions')]
 }
 
-const showToolbar = computed(() => props.columnSettings || !!slots.toolbar)
+const showToolbar = computed(() => props.value.columnSettings || !!slots.toolbar)
 
 const tableResetKey = computed(() => {
   const flags = [
-    !!props.resizable,
-    !!props.sortable,
-    !!props.pinable,
+    !!props.value.resizable,
+    !!props.value.sortable,
+    !!props.value.pinable,
     resolved.value.hasColumnPinning,
     resolved.value.hasColumnResizing,
     resolved.value.hasColumnSort,
@@ -557,7 +558,7 @@ const tableResetKey = computed(() => {
     hasPaginationIntent.value
   ].reduce((mask, enabled, index) => mask | ((enabled ? 1 : 0) << index), 0)
 
-  return `${props.columnResizeMode === 'onEnd' ? 'e' : 'c'}${flags.toString(36)}`
+  return `${props.value.columnResizeMode === 'onEnd' ? 'e' : 'c'}${flags.toString(36)}`
 })
 
 defineExpose<DataTableExposed<T>>({

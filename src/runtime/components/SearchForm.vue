@@ -4,7 +4,7 @@ import type { z } from 'zod'
 import type { CSSProperties, Ref } from 'vue'
 import type { AppConfig } from 'nuxt/schema'
 import { UButton, UCollapsible, UForm } from '#components'
-import { computed, onMounted, ref, useAttrs, useTemplateRef, watch } from 'vue'
+import { computed, onMounted, shallowRef, ref, useAttrs, useTemplateRef, watch } from 'vue'
 import { useBreakpoints } from '@vueuse/core'
 import { useAutoFormCore } from '../domains/auto-form/useAutoFormCore'
 import { isLeafField } from '../domains/auto-form/fields'
@@ -45,7 +45,8 @@ const _props = withDefaults(defineProps<SearchFormProps<S> & {
   validateOn: () => []
 })
 // 经 <UTheme :props> 与 app.config.ui.movkSearchForm.defaultVariants 解析未显式传入的 prop
-const props = useComponentProps('movkSearchForm', _props, theme)
+// 浅引用保留主题代理与泛型 props 类型，避免模板误判 Ref 或递归解包 schema。
+const props = shallowRef(useComponentProps('movkSearchForm', _props, theme))
 
 const modelValue = defineModel<SearchState>({ default: () => ({}) })
 const expandedModel = defineModel<boolean | undefined>('expanded')
@@ -58,16 +59,16 @@ const { t } = useMovkLocale()
 const formRef = useTemplateRef('formRef')
 
 const core = useAutoFormCore({
-  schema: () => props.schema,
-  controls: () => props.controls,
-  globalMeta: () => props.globalMeta,
-  hiddenValue: () => props.hiddenValue,
+  schema: () => props.value.schema,
+  controls: () => props.value.controls,
+  globalMeta: () => props.value.globalMeta,
+  hiddenValue: () => props.value.hiddenValue,
   model: modelValue as Ref<Record<string, any>>,
   slots
 })
 const { validationSchema, resolvedButtonSize } = core
 
-const internalExpanded = ref(props.defaultExpanded)
+const internalExpanded = ref(props.value.defaultExpanded)
 const expanded = computed<boolean>({
   get: () => expandedModel.value ?? internalExpanded.value,
   set: (value: boolean) => {
@@ -82,8 +83,8 @@ const { extraUi } = useExtendedTv(
   'movkSearchForm',
   () => ({
     ui: {
-      ...props.ui,
-      root: [props.ui?.root, props.class]
+      ...props.value.ui,
+      root: [props.value.ui?.root, props.value.class]
     }
   })
 )
@@ -92,7 +93,7 @@ const breakpoints = useBreakpoints(BREAKPOINTS)
 
 /** 与 gridStyle 的 CSS 断点规则一致：取当前已命中的最大断点上声明的列数 */
 const currentCols = computed(() => {
-  const cols = props.cols
+  const cols = props.value.cols
   if (typeof cols === 'number') return cols
   if (!cols) return 1
   const base = cols.sm ?? cols.md ?? cols.lg ?? cols.xl ?? 1
@@ -101,7 +102,7 @@ const currentCols = computed(() => {
 })
 
 const gridStyle = computed<CSSProperties>(() => {
-  const cols = props.cols
+  const cols = props.value.cols
   if (typeof cols === 'number') return { '--m-search-cols': String(cols) } as CSSProperties
   if (!cols) return {}
   const vars: Record<string, string> = { '--m-search-cols': String(cols.sm ?? cols.md ?? cols.lg ?? cols.xl ?? 1) }
@@ -124,11 +125,11 @@ watch(core.fields, (fields) => {
 
 const renderFields = computed(() => core.visibleFields.value.filter(isSupportedField))
 
-const actionList = computed(() => props.actions ?? createDefaultSearchActions(t))
+const actionList = computed<SearchFormAction[]>(() => props.value.actions ?? createDefaultSearchActions(t))
 const showActionsCell = computed(() => actionList.value.length > 0 || !!slots.actions || !!slots.extraActions)
 
 const visibleCount = computed(() => {
-  const total = currentCols.value * props.visibleRows
+  const total = currentCols.value * props.value.visibleRows
   return showActionsCell.value && currentCols.value > 1 ? Math.max(0, total - 1) : total
 })
 
@@ -156,10 +157,10 @@ function buildFieldPayload(state: SearchState): SearchState {
 
 const route = useRoute()
 const router = useRouter()
-const querySync = computed(() => props.syncQuery === true ? {} : props.syncQuery || undefined)
+const querySync = computed(() => props.value.syncQuery === true ? {} : props.value.syncQuery || undefined)
 
 function applyTransform(data: SearchState): SearchState {
-  const transform = props.transformPayload
+  const transform = props.value.transformPayload
   if (transform === false) return data
   return transform === true ? cleanSearchPayload(data) as SearchState : transform(data)
 }
@@ -186,7 +187,7 @@ onMounted(() => {
 const handleSubmit = ((event: FormSubmitEvent<SearchState>) => {
   const data = applyTransform(event.data)
   writeQuery(data)
-  return props.onSubmit?.({ ...event, data } as never)
+  return props.value.onSubmit?.({ ...event, data } as never)
 }) as FormProps<S, boolean>['onSubmit']
 
 function reset() {
@@ -210,7 +211,7 @@ function buildSlotProps(errors: FormError[], loading: boolean): SearchFormSlotPr
     reset,
     clear,
     expanded: expanded.value,
-    loading: props.loading || loading,
+    loading: props.value.loading || loading,
     state: modelValue.value,
     errors
   }
@@ -242,7 +243,7 @@ function handleAction(action: SearchFormAction, ctx: SearchFormSlotProps<S>) {
   else if (action.key === 'search') submit()
 }
 
-watch(() => props.schema, () => formRef.value?.clear())
+watch(() => props.value.schema, () => formRef.value?.clear())
 
 defineExpose({
   formRef,
