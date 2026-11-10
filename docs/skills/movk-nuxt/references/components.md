@@ -51,6 +51,12 @@ Notes:
 - `disabled` disables both the trigger and calendar and inherits the form field state when omitted.
 - `valueFormat` controls the model representation; `labelFormat` controls the trigger text. Calendar props such as `minValue` / `maxValue` and `isDateUnavailable` are forwarded.
 
+## Tree node keys
+
+- `valueKey` defaults to `value`; string and number values become string keys, otherwise `labelKey` is used. A non-empty `getKey` result overrides both; an empty result falls back to the field rules.
+- Set `value-key="id"` for data with stable IDs, especially when labels repeat. `expanded`, `selectedKeys`, `change.keys`, `getNode(key)` and `reload(key)` all use these keys, including lazy-loaded nodes.
+- Existing label-based state can opt into `value-key="label"`. Keep keys unique and stable across item updates.
+
 ## MCP & docs
 
 - Docs: `/docs/components/<name>` (e.g. `/docs/components/date-picker`, `/docs/components/tree`)

@@ -38,7 +38,12 @@ export interface TreeProps<T extends TreeItem[] = TreeItem[], M extends boolean 
    * @defaultValue 'label'
    */
   labelKey?: NuxtTreeProps<T, M>['labelKey']
-  /** 自定义节点 key，缺省取 labelKey 字段值 */
+  /**
+   * 节点 key 字段名，取值为字符串或数字时作为 key，否则回退 labelKey 字段
+   * @defaultValue 'value'
+   */
+  valueKey?: NuxtTreeProps<T, M>['valueKey']
+  /** 自定义节点 key，优先于 valueKey；返回空串时按 valueKey、labelKey 回退 */
   getKey?: NuxtTreeProps<T, M>['getKey']
   /**
    * 初始展开策略，缺省回退节点上的 defaultExpanded 标记

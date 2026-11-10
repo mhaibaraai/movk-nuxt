@@ -2,18 +2,22 @@ import type { AnyObject } from '@movk/core'
 import { getPath } from '@movk/core'
 
 /**
- * 构造与 UTree 一致的取键函数
+ * 构造节点取键函数，结果同时交给 UTree 使用，保证展开、选中与 UTree 内部的 key 一致
  *
- * 复刻 UTree：提供 getKey 时取其返回值（为空则回退 label），否则按 labelKey 取值（支持点路径，与 UTree 内部 get 一致）。
+ * getKey 返回值（空串沿用回退行为）优先于 valueKey 字段（仅字符串或数字，数字转为字符串），最后回退 labelKey 字段；
+ * 字段名支持点路径。
  */
 export function createGetKey<T extends AnyObject>(
   getKey?: (node: T) => string,
-  labelKey = 'label'
+  labelKey = 'label',
+  valueKey = 'value'
 ): (node: T) => string {
   return (node) => {
-    const label = getPath(node, labelKey)
-    const key = getKey ? getKey(node) || label : label
-    return String(key)
+    const custom = getKey?.(node)
+    if (custom) return String(custom)
+    const value = getPath(node, valueKey)
+    if (typeof value === 'string' || typeof value === 'number') return String(value)
+    return String(getPath(node, labelKey))
   }
 }
 

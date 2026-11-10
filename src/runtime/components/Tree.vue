@@ -5,7 +5,7 @@ import type { AppConfig } from 'nuxt/schema'
 import type { ComponentConfig, TreeItem } from '@nuxt/ui'
 import type { TreeItemSelectEvent } from 'reka-ui'
 import type { Ref } from 'vue'
-import { computed, ref, useSlots, watch } from 'vue'
+import { computed, shallowRef, ref, useSlots, watch } from 'vue'
 import { reactiveOmit } from '@vueuse/core'
 import { Tree, omitUndefined, splitHighlight } from '@movk/core'
 import { UButton, UCheckbox, UIcon, UTree } from '#components'
@@ -40,7 +40,8 @@ const _props = withDefaults(defineProps<TreeProps<T, M> & {
   labelKey: 'label'
 })
 // 经 <UTheme :props> 与 app.config.ui.movkTree.defaultVariants 解析未显式传入的 prop
-const props = useComponentProps('movkTree', _props, theme)
+// 浅引用保留主题代理与泛型 props 类型，避免模板误判 Ref 或递归解包 schema。
+const props = shallowRef(useComponentProps('movkTree', _props, theme))
 
 const emit = defineEmits<TreeEmits<T, M>>()
 defineSlots<TreeSlots<T>>()
@@ -55,18 +56,22 @@ const expanded = defineModel<string[]>('expanded', { default: () => [] })
 const slots = useSlots()
 const appConfig = useAppConfig() as { ui?: { icons?: Record<string, string> } }
 const { t } = useMovkLocale()
-const labelKey = computed(() => props.labelKey)
+const labelKey = computed(() => props.value.labelKey)
 
 // 父节点 leading 图标：prop 优先，回退 app.config，最终回退 lucide 默认（与 UTree 一致）
 function folderIcon(expanded: boolean): string {
   return expanded
-    ? props.expandedIcon ?? appConfig.ui?.icons?.folderOpen ?? 'i-lucide-folder-open'
-    : props.collapsedIcon ?? appConfig.ui?.icons?.folder ?? 'i-lucide-folder'
+    ? props.value.expandedIcon ?? appConfig.ui?.icons?.folderOpen ?? 'i-lucide-folder-open'
+    : props.value.collapsedIcon ?? appConfig.ui?.icons?.folder ?? 'i-lucide-folder'
 }
 function leadingIcon(node: WorkNode, expanded: boolean): string | undefined {
   return resolveLeadingIcon(node, folderIcon(expanded))
 }
-const getKey = computed(() => createGetKey<WorkNode>(props.getKey as ((node: WorkNode) => string) | undefined, labelKey.value))
+const getKey = computed(() => createGetKey<WorkNode>(
+  props.value.getKey as ((node: WorkNode) => string) | undefined,
+  labelKey.value,
+  (props.value.valueKey as string | undefined) ?? 'value'
+))
 
 const { baseUi, extraUi } = useExtendedTv(
   treeTheme,
@@ -74,15 +79,15 @@ const { baseUi, extraUi } = useExtendedTv(
   'movkTree',
   () => ({
     ui: {
-      ...props.ui,
-      container: [props.ui?.container, props.class]
+      ...props.value.ui,
+      container: [props.value.ui?.container, props.value.class]
     }
   })
 )
 
 function buildBase(items: WorkNode[]): WorkNode[] {
-  const normalized = normalizeChildren(items ?? [], props.childrenKey)
-  return props.lazy ? markLazyPlaceholders(normalized, getKey.value, labelKey.value) : normalized
+  const normalized = normalizeChildren(items ?? [], props.value.childrenKey)
+  return props.value.lazy ? markLazyPlaceholders(normalized, getKey.value, labelKey.value) : normalized
 }
 
 const baseItems = ref<WorkNode[]>([])
@@ -91,19 +96,19 @@ const lazy = useTreeLazy({
   baseItems,
   getKey: () => getKey.value,
   buildBase,
-  loadChildren: () => props.lazy ? props.loadChildren as ((node: WorkNode) => Promise<WorkNode[]>) | undefined : undefined,
+  loadChildren: () => props.value.lazy ? props.value.loadChildren as ((node: WorkNode) => Promise<WorkNode[]>) | undefined : undefined,
   onError: (node, error) => emit('loadError', node as T[number], error)
 })
 
 let initialized = false
-watch(() => props.items, (items) => {
+watch(() => props.value.items, (items) => {
   baseItems.value = lazy.rebuild((items ?? []) as WorkNode[])
   if (initialized || baseItems.value.length === 0) return
   initialized = true
   if (expanded.value.length > 0) return
   // 按类型走策略分支，确保 number 0（收起全部）不被当作假值；
   // undefined / false（含未传时 Vue 对 boolean prop 的降级）回退节点级 defaultExpanded 标记
-  const de = props.defaultExpanded as DefaultExpanded
+  const de = props.value.defaultExpanded as DefaultExpanded
   expanded.value = (de === true || typeof de === 'number' || typeof de === 'function')
     ? resolveDefaultExpandedKeys(baseItems.value, de, { getKey: getKey.value })
     : Tree.findAll(baseItems.value, ({ node }) => !!node.defaultExpanded).map(n => getKey.value(n))
@@ -111,14 +116,14 @@ watch(() => props.items, (items) => {
 
 const { term, searching, matchedItems, isEmpty } = useTreeSearch({
   search,
-  enabled: () => !!props.searchable,
+  enabled: () => !!props.value.searchable,
   baseItems,
   expanded,
   getKey: () => getKey.value,
   labelKey: () => labelKey.value,
-  filter: () => props.filter as ((node: WorkNode, term: string) => boolean) | undefined,
-  searchMethod: () => props.searchMethod as ((term: string) => Promise<WorkNode[]>) | undefined,
-  searchDebounce: () => props.searchDebounce,
+  filter: () => props.value.filter as ((node: WorkNode, term: string) => boolean) | undefined,
+  searchMethod: () => props.value.searchMethod as ((term: string) => Promise<WorkNode[]>) | undefined,
+  searchDebounce: () => props.value.searchDebounce,
   buildBase
 })
 
@@ -127,7 +132,7 @@ const disabledKeys = computed(() => collectDisabledKeys(baseItems.value, getKey.
 const displayItems = computed(() => applyDisabled(matchedItems.value, disabledKeys.value, getKey.value))
 
 function onExpandedUpdate(incoming: string[]) {
-  if (props.disabled) return
+  if (props.value.disabled) return
   const previous = expanded.value
   // 冻结 disabled 子树展开态：新值仅取非 disabled 键，disabled 键保留前值
   const keys = disabledKeys.value.size
@@ -138,43 +143,43 @@ function onExpandedUpdate(incoming: string[]) {
 
 // 已展开（含初始 expanded / defaultExpanded）且仍为占位的懒加载节点自动加载
 watch([expanded, baseItems], ([keys]) => {
-  if (props.lazy) keys.forEach(key => lazy.load(key))
+  if (props.value.lazy) keys.forEach(key => lazy.load(key))
 }, { immediate: true })
 
 // MTree 拦截或重命名的键不转发给 UTree，其余属性原样透传。
 const FORWARD_OMIT = new Set([
-  'items', 'modelValue', 'selectedKeys', 'expanded', 'defaultExpanded', 'ui', 'class',
+  'items', 'modelValue', 'selectedKeys', 'expanded', 'defaultExpanded', 'ui', 'class', 'getKey', 'valueKey',
   'childrenKey', 'searchable', 'search', 'filter', 'highlight', 'searchMethod', 'searchDebounce',
   'lazy', 'loadChildren', 'toolbar', 'checkable',
   'multiple', 'strategy', 'propagateSelect', 'bubbleSelect'
 ])
-const forwardProps = reactiveOmit(props, (_value, key) => FORWARD_OMIT.has(key as string))
+const forwardProps = reactiveOmit(props.value, (_value, key) => FORWARD_OMIT.has(key as string))
 
 const utreeProps = computed(() => {
-  const multiple = props.checkable ? true : props.multiple
-  const cascade = props.strategy !== 'isolated'
+  const multiple = props.value.checkable ? true : props.value.multiple
+  const cascade = props.value.strategy !== 'isolated'
   // propagateSelect / bubbleSelect 类型含 boolean，未传时 Vue 降级为 false（而非 undefined），
   // 故用 || 回退：cascade 策略下强制开启，isolated 下保持关闭（可由显式 true 覆盖）
   const selectOptions = multiple
     ? {
         multiple: true,
-        propagateSelect: props.propagateSelect || cascade,
-        bubbleSelect: props.bubbleSelect || cascade
+        propagateSelect: props.value.propagateSelect || cascade,
+        bubbleSelect: props.value.bubbleSelect || cascade
       }
     : { multiple }
 
   return omitUndefined({ ...forwardProps, ...selectOptions }) as Record<string, any>
 })
 
-const isMultiple = computed(() => !!(props.checkable || props.multiple))
+const isMultiple = computed(() => !!(props.value.checkable || props.value.multiple))
 
 const selection = useTreeSelection({
   baseItems,
   getKey: () => getKey.value,
   disabledKeys,
-  strategy: () => props.strategy,
+  strategy: () => props.value.strategy,
   multiple: () => isMultiple.value,
-  disabled: () => !!props.disabled,
+  disabled: () => !!props.value.disabled,
   modelValue: modelValue as Ref<WorkNode | WorkNode[] | undefined>,
   selectedKeys: selectedKeysState,
   onChange: payload => emit('change', payload as never)
@@ -216,7 +221,7 @@ function expandToDepth(depth: number) {
 async function reload(key?: string) {
   if (key !== undefined) return lazy.reload(key)
   lazy.clearLoaded()
-  baseItems.value = lazy.rebuild((props.items ?? []) as WorkNode[])
+  baseItems.value = lazy.rebuild((props.value.items ?? []) as WorkNode[])
 }
 
 defineExpose<TreeExposed<T>>({
@@ -281,6 +286,7 @@ defineExpose<TreeExposed<T>>({
       v-else
       v-bind="{ ...utreeProps, ...$attrs, ...(props.checkable ? { as: { link: 'div' }, onSelect: onItemSelect } : {}) }"
       :items="(displayItems as any)"
+      :get-key="getKey"
       :model-value="(effectiveModel as any)"
       :expanded="expanded"
       :ui="baseUi"

@@ -244,7 +244,7 @@ props:
 
 ### `selectedKeys` Key Binding
 
-`selectedKeys` two-way binds the selection using an array of node keys — useful for re-populating from the backend or syncing with routes. `v-model:selectedKeys` and `v-model` are interoperable. Keys are derived from `getKey` / `labelKey`:
+`selectedKeys` two-way binds the selection using an array of node keys — useful for re-populating from the backend or syncing with routes. `v-model:selectedKeys` and `v-model` are interoperable. Keys are derived from `getKey` / `valueKey` / `labelKey`:
 
 ::component-code
 ---
@@ -401,6 +401,20 @@ props:
 
 ::note
 The dot-path must align with UTree's internal value extraction. Only dot notation (`a.b.c`) is supported — bracket notation (`a[0].b`) is not.
+::
+
+### `valueKey` Node Key
+
+`valueKey` sets the field used as the node key, defaults to `value` and supports dot paths. Strings (including an empty string) and numbers (including `0`) become keys, with numbers converted to strings; other values fall back to `labelKey`. A non-empty `getKey` result takes precedence; an empty result falls back to the field rules. Nodes with the same label keep unique keys, so their expanded and selected states stay independent:
+
+::component-example
+---
+name: ComponentsTreeValueKeyExample
+---
+::
+
+::note
+`expanded`, `selectedKeys`, `change.keys`, `getNode(key)` and `reload(key)` all use node keys. Keep keys unique and stable across item updates, including lazy-loaded nodes. If your items carry a `value` field and you previously bound state by label, switch to the values, or set `value-key="label"` to keep the old behavior.
 ::
 
 ### `virtualize` Virtual Scrolling
@@ -634,7 +648,7 @@ In addition to passing through Nuxt UI Tree's `update:modelValue` and `update:ex
 
 - `update:search`: Fires when the search keyword changes, supports `v-model:search`.
 - `update:selectedKeys`: Fires when the selected key list changes, supports `v-model:selectedKeys`.
-- `change`: Fires when the selection changes. Payload is `{ value, keys, selection }`. `keys` is derived from `getKey`/`labelKey`. `selection` is the selection categorization result.
+- `change`: Fires when the selection changes. Payload is `{ value, keys, selection }`. `keys` is derived from `getKey`/`valueKey`/`labelKey`. `selection` is the selection categorization result.
 ::
 
 ### Slots

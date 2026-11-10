@@ -23,6 +23,99 @@ afterEach(() => {
 })
 
 describe('Tree', () => {
+  it('缺省按 value 取键，同名父节点的展开状态互不影响', async () => {
+    const wrapper = await mountTree({
+      items: [
+        { label: 'dir', value: 'a', children: [{ label: 'a-child', value: 'a1' }] },
+        { label: 'dir', value: 'b', children: [{ label: 'b-child', value: 'b1' }] }
+      ],
+      expanded: ['a']
+    })
+    await nextTick()
+
+    const tree = wrapper.findComponent({ name: 'UTree' })
+    expect((tree.props('getKey') as (item: object) => string)({ label: 'dir', value: 'b' })).toBe('b')
+    expect(wrapper.text()).toContain('a-child')
+    expect(wrapper.text()).not.toContain('b-child')
+  })
+
+  it.each([
+    [true, ['a', 'b']],
+    [undefined, ['b']]
+  ])('valueKey 用于默认展开策略 %s 与节点标记', async (defaultExpanded, expected) => {
+    const wrapper = await mountTree({
+      items: [
+        { id: 'a', label: 'dir', children: [{ id: 'a1', label: 'a-child' }] },
+        { id: 'b', label: 'dir', defaultExpanded: true, children: [{ id: 'b1', label: 'b-child' }] }
+      ],
+      valueKey: 'id',
+      defaultExpanded
+    })
+
+    expect(wrapper.emitted('update:expanded')?.at(-1)?.[0]).toEqual(expected)
+    expect(wrapper.text()).toContain('b-child')
+    expect(wrapper.text().includes('a-child')).toBe(defaultExpanded === true)
+  })
+
+  it('valueKey 隔离同名节点的选中状态、事件与 getNode 查询', async () => {
+    const wrapper = await mountTree({
+      items: [{ id: 'a', label: 'same' }, { id: 'b', label: 'same' }],
+      valueKey: 'id',
+      selectedKeys: ['a'],
+      checkable: true,
+      strategy: 'isolated'
+    })
+    const checkboxes = wrapper.findAll('[role="checkbox"]')
+    expect(checkboxes.map(checkbox => checkbox.attributes('aria-checked'))).toEqual(['true', 'false'])
+
+    await checkboxes[1]!.trigger('click')
+    await nextTick()
+
+    expect(wrapper.emitted('update:selectedKeys')?.at(-1)?.[0]).toEqual(['a', 'b'])
+    expect(wrapper.emitted('change')?.at(-1)?.[0]).toMatchObject({ keys: ['a', 'b'] })
+    const vm = wrapper.vm as unknown as { getNode: (key: string) => unknown }
+    expect(vm.getNode('a')).toMatchObject({ id: 'a' })
+    expect(vm.getNode('b')).toMatchObject({ id: 'b' })
+    expect(vm.getNode('same')).toBeUndefined()
+  })
+
+  it('同名懒加载节点按 valueKey 分别加载、重试并保留子树', async () => {
+    let fail = true
+    const loadChildren = vi.fn(async (node: { id: string }) => {
+      if (node.id === 'b' && fail) throw new Error('retry b')
+      return [{ id: `${node.id}1`, label: `${node.id}-child`, isLeaf: true }]
+    })
+    const createItems = () => [{ id: 'a', label: 'dir' }, { id: 'b', label: 'dir' }]
+    const wrapper = await mountTree({
+      items: createItems(),
+      valueKey: 'id',
+      defaultExpanded: true,
+      lazy: true,
+      loadChildren
+    })
+    await settle()
+    await nextTick()
+
+    expect(loadChildren.mock.calls.map(([node]) => node.id)).toEqual(['a', 'b'])
+    expect(wrapper.text()).toContain('a-child')
+    expect(wrapper.text()).not.toContain('b-child')
+    expect(wrapper.emitted('loadError')?.[0]?.[0]).toMatchObject({ id: 'b' })
+
+    fail = false
+    await wrapper.findAll('button').find(button => button.text() === 'Retry')!.trigger('click')
+    await settle()
+    await nextTick()
+    expect(loadChildren.mock.calls.map(([node]) => node.id)).toEqual(['a', 'b', 'b'])
+    expect(wrapper.text()).toContain('a-child')
+    expect(wrapper.text()).toContain('b-child')
+
+    await wrapper.setProps({ items: createItems() } as never)
+    await settle()
+    expect(wrapper.text()).toContain('a-child')
+    expect(wrapper.text()).toContain('b-child')
+    expect(loadChildren).toHaveBeenCalledTimes(3)
+  })
+
   it('懒加载失败时显示重试，重试成功后渲染子节点并 emit loadError', async () => {
     let fail = true
     const loadChildren = vi.fn(async () => {

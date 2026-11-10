@@ -46,6 +46,12 @@ const changeKeys = ref<string[]>([])
 const cascadeChecked = shallowRef<TreeItem[]>([])
 const isolatedChecked = shallowRef<TreeItem[]>([])
 const keysSelected = ref<string[]>(['useAuth.ts'])
+const keyedItems = [
+  { id: 'tech', label: '技术中心', children: [{ id: 'tech-design', label: '设计组' }] },
+  { id: 'product', label: '产品中心', children: [{ id: 'product-design', label: '设计组' }] }
+]
+const keyedSelected = ref(['tech-design'])
+const keyedExpanded = ref(['tech', 'product'])
 
 const selData = useTemplateRef<TreeExposed>('selData')
 const selectionLeaves = computed(() => (selData.value?.treeSelection.leaves ?? []).map(n => String(n.label)))
@@ -168,12 +174,23 @@ const nodeDisabledChecked = shallowRef<TreeItem[]>([])
       </div>
     </Showcase>
 
-    <Showcase title="键绑定" description="v-model:selectedKeys 以 key 数组双向绑定选中，key 由 getKey/labelKey 派生，与 v-model 互通。" :state="{ keys: keysSelected }">
+    <Showcase title="键绑定" description="通过 v-model:selectedKeys 绑定节点键，按 getKey、valueKey、labelKey 派生并与 v-model 互通。" :state="{ keys: keysSelected }">
       <MTree
         v-model:selected-keys="keysSelected"
         :items="fileTree"
         checkable
         :default-expanded="true"
+      />
+    </Showcase>
+
+    <Showcase title="节点标识" description="通过 valueKey 指定唯一标识字段，同名节点的展开与选中状态独立保存。" :state="{ expanded: keyedExpanded, selectedKeys: keyedSelected }">
+      <MTree
+        v-model:expanded="keyedExpanded"
+        v-model:selected-keys="keyedSelected"
+        :items="keyedItems"
+        value-key="id"
+        checkable
+        strategy="isolated"
       />
     </Showcase>
 

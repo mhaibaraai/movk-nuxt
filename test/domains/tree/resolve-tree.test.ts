@@ -6,13 +6,15 @@ interface Node {
   label?: string
   name?: string
   id?: string
+  value?: unknown
+  key?: string
   children?: Node[]
   nodes?: Node[]
-  meta?: { title?: string }
+  meta?: { title?: string, id?: number }
 }
 
 describe('createGetKey', () => {
-  it('缺省按 label 字段取键', () => {
+  it('缺少 value 时回退 label 字段', () => {
     expect(createGetKey<Node>()({ label: 'a' })).toBe('a')
   })
 
@@ -25,11 +27,41 @@ describe('createGetKey', () => {
   })
 
   it('提供 getKey 时优先使用其返回值', () => {
-    expect(createGetKey<Node>(n => n.id ?? '')({ id: '7', label: 'a' })).toBe('7')
+    expect(createGetKey<Node>(n => n.id ?? '')({ id: '7', value: 'value', label: 'a' })).toBe('7')
   })
 
   it('getKey 返回空值时回退到 label', () => {
     expect(createGetKey<Node>(() => '')({ label: 'fallback' })).toBe('fallback')
+  })
+
+  it('缺省优先按 value 字段取键，同 label 不同 value 的节点互不冲突', () => {
+    const key = createGetKey<Node>()
+    expect([key({ label: 'a', value: 'x' }), key({ label: 'a', value: 'y' })]).toEqual(['x', 'y'])
+  })
+
+  it('数字 value 转为字符串，非字符串 / 数字的 value 回退 label', () => {
+    const key = createGetKey<Node>()
+    expect(key({ label: 'a', value: 42 })).toBe('42')
+    expect(key({ label: 'a', value: { id: 1 } })).toBe('a')
+  })
+
+  it.each([
+    [0, '0'],
+    ['', ''],
+    [false, 'fallback'],
+    [null, 'fallback'],
+    [undefined, 'fallback']
+  ])('value 为 %s 时取键为 %s', (value, expected) => {
+    expect(createGetKey<Node>()({ label: 'fallback', value })).toBe(expected)
+  })
+
+  it('valueKey 支持点路径，并保留数字零', () => {
+    expect(createGetKey<Node>(undefined, 'label', 'meta.id')({ label: 'a', meta: { id: 0 } })).toBe('0')
+  })
+
+  it('自定义 valueKey，getKey 返回空值时按 valueKey 回退', () => {
+    expect(createGetKey<Node>(undefined, 'label', 'key')({ label: 'a', key: 'k' })).toBe('k')
+    expect(createGetKey<Node>(() => '', 'label', 'key')({ label: 'a', key: 'k' })).toBe('k')
   })
 })
 

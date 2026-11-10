@@ -244,7 +244,7 @@ props:
 
 ### `selectedKeys` 键绑定
 
-`selectedKeys` 作用：以节点 key 数组双向绑定选中，适合从后端回显或与路由同步。`v-model:selectedKeys` 与 `v-model` 互通，键由 `getKey` / `labelKey` 派生：
+`selectedKeys` 作用：以节点 key 数组双向绑定选中，适合从后端回显或与路由同步。`v-model:selectedKeys` 与 `v-model` 互通，键由 `getKey` / `valueKey` / `labelKey` 派生：
 
 ::component-code
 ---
@@ -401,6 +401,20 @@ props:
 
 ::note
 点路径需与 UTree 内部取值一致，仅支持点分隔（`a.b.c`），不支持括号下标（`a[0].b`）。
+::
+
+### `valueKey` 节点标识
+
+`valueKey` 作用：指定作为节点键的字段，缺省为 `value`，支持点路径。字符串（包括空串）或数字（包括 `0`）作为键，数字转为字符串；其他值回退 `labelKey` 字段。`getKey` 的非空返回值优先，空串继续按字段回退。同名节点各自持有唯一键，展开与选中状态互不影响：
+
+::component-example
+---
+name: ComponentsTreeValueKeyExample
+---
+::
+
+::note
+`expanded`、`selectedKeys`、`change` 载荷中的 `keys`，以及 `getNode(key)`、`reload(key)` 均使用节点键。键应唯一且在数据更新后保持稳定，懒加载节点也遵循此规则。数据带 `value` 字段且原先按 label 绑定状态时，需改为对应的 value；也可设 `value-key="label"` 维持旧行为。
 ::
 
 ### `virtualize` 虚拟滚动
@@ -634,7 +648,7 @@ name: ComponentsTreeSelectionExample
 
 - `update:search`：搜索关键字变化时触发，支持 `v-model:search`。
 - `update:selectedKeys`：选中 key 列表变化时触发，支持 `v-model:selectedKeys`。
-- `change`：选中变化时触发，载荷为 `{ value, keys, selection }`，`keys` 由 `getKey`/`labelKey` 派生，`selection` 为选中结果分类。
+- `change`：选中变化时触发，载荷为 `{ value, keys, selection }`，`keys` 由 `getKey`/`valueKey`/`labelKey` 派生，`selection` 为选中结果分类。
 ::
 
 ### Slots
