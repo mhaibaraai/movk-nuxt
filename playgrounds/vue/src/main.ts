@@ -48,5 +48,11 @@ const ClientOnly = defineComponent({
 createApp(App)
   .component('ClientOnly', ClientOnly)
   .use(router)
-  .use(movkVuePlugin)
+  .use(movkVuePlugin, {
+    ui: {
+      movkDataTable: {
+        slots: { wrapper: 'rounded-md ring ring-primary/30 p-3' }
+      }
+    }
+  })
   .mount('#app')

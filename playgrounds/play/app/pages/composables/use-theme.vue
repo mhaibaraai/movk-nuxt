@@ -21,14 +21,14 @@ const configOutput = computed(() => theme.exportConfig())
         title="CSS 变量导出"
         description="exportCSS() 将当前主题差异序列化为 main.css 片段"
       >
-        <pre class="text-xs bg-elevated/30 rounded p-3 overflow-auto max-h-64">{{ cssOutput }}</pre>
+        <pre class="text-xs bg-soft/30 rounded p-3 overflow-auto max-h-64">{{ cssOutput }}</pre>
       </Showcase>
 
       <Showcase
         title="App Config 导出"
         description="exportConfig() 生成可写入 app.config.ts 的主题配置片段"
       >
-        <pre class="text-xs bg-elevated/30 rounded p-3 overflow-auto max-h-64">{{ configOutput }}</pre>
+        <pre class="text-xs bg-soft/30 rounded p-3 overflow-auto max-h-64">{{ configOutput }}</pre>
       </Showcase>
 
       <Showcase

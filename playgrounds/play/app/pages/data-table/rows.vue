@@ -131,7 +131,7 @@ function callScrollToTop() {
         :ui="{ root: 'max-h-[50vh]' }"
       >
         <template #expanded="{ row }">
-          <div class="px-4 py-3 text-sm bg-elevated/30">
+          <div class="px-4 py-3 text-sm bg-soft/30">
             <p>邮箱 {{ row.original.email }} · 入职 {{ row.original.joinedAt }}</p>
             <p>薪资 {{ row.original.salary.toLocaleString() }} · {{ row.original.level }}</p>
             <p class="text-muted">
@@ -167,7 +167,7 @@ function callScrollToTop() {
         :ui="{ root: 'max-h-[50vh]' }"
       >
         <template #expanded="{ row }">
-          <div class="px-4 py-2 text-xs text-muted bg-elevated/30">
+          <div class="px-4 py-2 text-xs text-muted bg-soft/30">
             {{ row.original.bio }}
           </div>
         </template>

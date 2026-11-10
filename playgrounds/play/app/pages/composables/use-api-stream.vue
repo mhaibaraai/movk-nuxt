@@ -64,7 +64,7 @@ async function startFailing() {
         </UButton>
       </div>
 
-      <pre class="min-h-24 whitespace-pre-wrap rounded-md bg-elevated p-3 text-sm">{{ text || '（等待输出）' }}</pre>
+      <pre class="min-h-24 whitespace-pre-wrap rounded-md bg-soft p-3 text-sm">{{ text || '（等待输出）' }}</pre>
     </Showcase>
 
     <Showcase

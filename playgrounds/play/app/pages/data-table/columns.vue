@@ -129,7 +129,7 @@ tooltip:   (ctx) => ctx.column.id === 'address'`
 
     <Showcase
       title="列固定切换"
-      description="全局 pinable 让用户点表头图钉在 left、right、none 间循环，列级 pinable 锁住强制位"
+      description="全局 pinable 让用户点表头图钉在 start、end、none 间循环，列级 pinable 锁住强制位"
     >
       <MDataTable
         :columns="pinableColumns"

@@ -7,7 +7,7 @@ defineProps<{
 </script>
 
 <template>
-  <details :open="!collapsed" class="rounded-md border border-default bg-elevated/30 text-sm">
+  <details :open="!collapsed" class="rounded-md border border-default bg-soft/30 text-sm">
     <summary class="cursor-pointer px-3 py-2 text-muted font-medium select-none">
       {{ label || 'State' }}
     </summary>

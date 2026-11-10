@@ -18,16 +18,16 @@ const Counter = defineComponent({
       const next = Math.min(props.max, Math.max(props.min, (props.modelValue ?? 0) + delta))
       emit('update:modelValue', next)
     }
-    return () => h('div', { class: 'inline-flex items-center gap-1 rounded-md border border-default bg-elevated p-1' }, [
+    return () => h('div', { class: 'inline-flex items-center gap-1 rounded-md border border-default bg-soft p-1' }, [
       h('button', {
         type: 'button',
-        class: 'size-7 rounded text-muted hover:bg-accented hover:text-toned',
+        class: 'size-7 rounded text-muted hover:bg-strong hover:text-toned',
         onClick: () => update(-props.step)
       }, '−'),
       h('span', { class: 'min-w-10 text-center text-sm font-medium tabular-nums' }, String(props.modelValue ?? 0)),
       h('button', {
         type: 'button',
-        class: 'size-7 rounded text-muted hover:bg-accented hover:text-toned',
+        class: 'size-7 rounded text-muted hover:bg-strong hover:text-toned',
         onClick: () => update(props.step)
       }, '+')
     ])
@@ -78,7 +78,7 @@ const RatingDescription = defineComponent({
             type: 'button',
             class: [
               'size-7 rounded-full text-sm font-medium transition-colors',
-              n <= (props.modelValue ?? 0) ? 'bg-primary text-inverted' : 'bg-elevated text-muted hover:bg-accented'
+              n <= (props.modelValue ?? 0) ? 'bg-primary text-inverted' : 'bg-soft text-muted hover:bg-strong'
             ],
             onClick: () => emit('update:modelValue', n)
           }, String(n))

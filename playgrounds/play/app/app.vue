@@ -21,13 +21,13 @@ provide('components', components)
 
     <UDashboardGroup unit="rem">
       <UDashboardSidebar
-        class="bg-elevated/25"
+        class="bg-soft/25"
         resizable
         collapsible
         :toggle="{ size: 'sm', variant: 'outline', class: 'ring-default' }"
       >
         <template #header="{ collapsed }">
-          <NuxtLink to="/" class="text-highlighted inline-flex items-center gap-2" aria-label="Home">
+          <NuxtLink to="/" class="text-strong inline-flex items-center gap-2" aria-label="Home">
             <UIcon name="i-lucide-zap" class="size-5" />
             <span v-if="!collapsed" class="font-semibold">Movk</span>
           </NuxtLink>
