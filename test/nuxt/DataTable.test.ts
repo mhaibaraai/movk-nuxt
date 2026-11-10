@@ -29,6 +29,23 @@ afterEach(() => {
 })
 
 describe('DataTable', () => {
+  it.each([true, false])('复选框 Shift 区间选择遵守 enableRowRangeSelection=%s', async (enabled) => {
+    const wrapper = await mountTable({
+      data: Array.from({ length: 5 }, (_, index) => ({ id: index + 1, name: `row-${index + 1}` })),
+      columns: [{ type: 'selection' }, { accessorKey: 'name' }],
+      rowKey: 'id',
+      options: { enableRowRangeSelection: enabled }
+    })
+    const checkboxes = wrapper.findAll('tbody [role="checkbox"]')
+    await checkboxes[0]!.trigger('click')
+    await checkboxes[3]!.trigger('click', { shiftKey: true })
+    await nextTick()
+
+    const selected = (wrapper.vm as unknown as { getSelectedRows: () => Row[] }).getSelectedRows()
+    expect(selected.map(row => row.id)).toEqual(enabled ? [1, 2, 3, 4] : [1, 4])
+    expect(wrapper.find('thead [role="checkbox"]').attributes('aria-checked')).toBe('mixed')
+  })
+
   it('分页摘要的已选数只统计为 true 的行', async () => {
     const wrapper = await mountTable({
       columns: [{ type: 'selection' }, { accessorKey: 'name' }],

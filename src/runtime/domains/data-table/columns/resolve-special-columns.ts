@@ -192,11 +192,19 @@ export function resolveSelectionColumn<T extends TableData>(
         isIndeterminate,
         isLeafAggregate: false
       }
+      let selectionEvent: Event | undefined
+      const toggleSelected = cellCtx.row.getToggleSelectedHandler()
       return h(UCheckbox, {
         'aria-label': ctx.t('dataTable.selectRow'),
         'class': 'inline-flex',
         'modelValue': isSelected ? true : isIndeterminate ? 'indeterminate' : false,
-        'onUpdate:modelValue': (value: unknown) => cellCtx.row.toggleSelected(!!(value as boolean | 'indeterminate')),
+        // UCheckbox 的 change 事件不保留修饰键，捕获原始事件供 v9 区间选择判断。
+        'onClickCapture': (event: MouseEvent) => { selectionEvent = event },
+        'onKeydownCapture': (event: KeyboardEvent) => { selectionEvent = event },
+        'onUpdate:modelValue': (value: unknown) => {
+          toggleSelected({ target: { checked: !!value }, nativeEvent: selectionEvent })
+          selectionEvent = undefined
+        },
         ...resolveCallbackValue(col.checkboxProps ?? {}, cbCtx)
       })
     }
