@@ -1,5 +1,5 @@
 {
-  "name": "@movk/nuxt-docs",
+  "name": "@movk/nuxt-docs-site",
   "type": "module",
   "private": true,
   "scripts": {
@@ -7,21 +7,31 @@
     "dev": "nuxt dev"
   },
   "dependencies": {
-    "@iconify-json/vscode-icons": "^1.2.93",
+    "@ai-sdk/openai": "^4.0.104",
+    "@ai-sdk/vue": "^4.0.155",
+    "@comark/vue": "^0.8.1",
+    "@iconify-json/vscode-icons": "^1.2.99",
     "@internationalized/date": "^3.12.4",
     "@movk/nuxt": "workspace:*",
-    "@movk/nuxt-docs": "^2.4.4",
-    "@nuxt/content": "^3.16.2",
-    "@nuxt/ui": "^4.12.0",
+    "@movk/nuxt-docs": "^3.0.2",
+    "@nuxt/content": "^3.17.0",
+    "@nuxt/ui": "^4.12.2",
     "@nuxtjs/i18n": "^10.6.0",
-    "@tanstack/charts": "^1.1.0",
+    "@shikijs/engine-javascript": "^4.5.0",
+    "@shikijs/langs": "^4.5.0",
+    "@shikijs/themes": "^4.5.0",
+    "@tanstack/charts": "^1.5.0",
     "@vercel/analytics": "^2.0.1",
-    "@vercel/speed-insights": "^2.0.0",
+    "@vercel/speed-insights": "^2.1.0",
+    "ai": "^7.0.176",
     "json5": "^2.2.3",
-    "motion-v": "^2.8.0",
+    "motion-v": "^2.12.0",
     "nuxt": "^4.6.4",
+    "nuxt-component-meta": "^0.19.0",
     "ohash": "^2.0.12",
-    "tailwindcss": "^4.3.3",
+    "prettier": "^3.9.10",
+    "tailwindcss": "^4.3.5",
+    "vue-component-meta": "^3.3.13",
     "zod": "^4.6.7"
   }
 }

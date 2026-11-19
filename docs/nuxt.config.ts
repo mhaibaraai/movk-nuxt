@@ -1,4 +1,16 @@
 import pkg from '../package.json'
+import type { NuxtConfig } from 'nuxt/schema'
+import type { ModuleHooks } from 'nuxt-component-meta'
+
+const hooks: NonNullable<NuxtConfig['hooks']> & Pick<ModuleHooks, 'component-meta:extend'> = {
+  'component-meta:extend'(options) {
+    // These Nuxt UI wrappers are used in interactive component code examples.
+    const documentedUiComponents = new Set(['UFieldGroup', 'UFormField'])
+    options.exclude = options.exclude?.map(rule => rule === '@nuxt/ui'
+      ? component => component.filePath.includes('@nuxt/ui') && !documentedUiComponents.has(component.pascalName)
+      : rule)
+  }
+}
 
 export default defineNuxtConfig({
   extends: ['@movk/nuxt-docs'],
@@ -65,6 +77,8 @@ export default defineNuxtConfig({
     }
   },
 
+  hooks,
+
   aiChat: {
     model: 'alibaba/qwen3.8-27b',
     models: [
@@ -76,8 +90,8 @@ export default defineNuxtConfig({
   i18n: {
     defaultLocale: 'zh-CN',
     locales: [
-      { code: 'zh-CN', name: '简体中文', file: 'zh-CN.json' },
-      { code: 'en', name: 'English', file: 'en.json' }
+      { code: 'zh-CN', name: '简体中文' },
+      { code: 'en', name: 'English' }
     ]
   },
 
@@ -113,5 +127,9 @@ export default defineNuxtConfig({
         }
       }
     }
+  },
+
+  movkNuxtDocs: {
+    componentDocs: true
   }
 })

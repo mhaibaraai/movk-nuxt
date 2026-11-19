@@ -1,4 +1,38 @@
 export default defineAppConfig({
+  header: {
+    nav: [
+      { label: { 'zh-CN': '文档', 'en': 'Docs' }, to: '/docs/getting-started', activeMatch: '/docs' },
+      { label: { 'zh-CN': '版本发布', 'en': 'Releases' }, to: '/releases' }
+    ],
+    mobileNav: [
+      { label: { 'zh-CN': '快速开始', 'en': 'Quick Start' }, icon: 'i-lucide-rocket', to: '/docs/getting-started' },
+      { label: 'Components', icon: 'i-lucide-box', to: '/docs/components' },
+      { label: 'AutoForm', icon: 'i-lucide-square-pen', to: '/docs/auto-form' },
+      { label: 'DataTable', icon: 'i-lucide-table', to: '/docs/data-table' },
+      { label: 'API', icon: 'i-lucide-cloud', to: '/docs/api' },
+      { label: 'Composables', icon: 'i-lucide-square-function', to: '/docs/composables' },
+      { label: { 'zh-CN': '版本发布', 'en': 'Releases' }, icon: 'i-lucide-newspaper', to: '/releases' },
+      { label: 'GitHub', icon: 'i-simple-icons-github', to: 'https://github.com/mhaibaraai/movk-nuxt', target: '_blank' as const }
+    ]
+  },
+  docs: {
+    categories: {
+      'getting-started': [
+        { id: 'ai', title: { 'zh-CN': 'AI 集成', 'en': 'AI Integration' }, icon: 'i-lucide-bot' }
+      ],
+      'components': [
+        { id: 'input', title: { 'zh-CN': '输入框', 'en': 'Input' }, icon: 'i-lucide-pencil-line' },
+        { id: 'feedback', title: { 'zh-CN': '反馈组件', 'en': 'Feedback' }, icon: 'i-lucide-message-square-dot' },
+        { id: 'advanced', title: { 'zh-CN': '进阶组件', 'en': 'Advanced' }, icon: 'i-lucide-blocks' },
+        { id: 'form', title: { 'zh-CN': '表单组件', 'en': 'Form' }, icon: 'i-lucide-clipboard-list' }
+      ],
+      'auto-form': [
+        { id: 'field-types', title: { 'zh-CN': '字段类型', 'en': 'Field Types' }, icon: 'i-lucide-shapes' },
+        { id: 'config', title: { 'zh-CN': '配置', 'en': 'Config' }, icon: 'i-lucide-settings-2' },
+        { id: 'advanced', title: { 'zh-CN': '进阶', 'en': 'Advanced' }, icon: 'i-lucide-blocks' }
+      ]
+    }
+  },
   aside: {
     filter: {
       enabled: true
@@ -128,12 +162,19 @@ export default defineAppConfig({
   },
   github: {
     rootDir: 'docs',
-    commitPath: 'src/runtime'
+    commitPath: 'src/runtime',
+    dateFormat: {
+      options: {
+        year: 'numeric',
+        month: 'numeric',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZone: 'Asia/Shanghai'
+      }
+    }
   },
   ui: {
-    colors: {
-      primary: 'indigo'
-    },
     collapsible: {
       slots: {
         content: 'space-y-4'
