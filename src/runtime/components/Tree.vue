@@ -106,9 +106,9 @@ watch(() => props.items, (items) => {
     : Tree.findAll(baseItems.value, ({ node }) => !!node.defaultExpanded).map(n => getKey.value(n))
 }, { immediate: true })
 
-const { term, searching, matchedItems, isEmpty } = useTreeSearch({
+const { term, searching, matchedItems, isEmpty, remote, remoteLoading, remoteError, retry } = useTreeSearch({
   search,
-  enabled: () => !!props.searchable,
+  enabled: () => !!props.searchable && !props.disabled,
   baseItems,
   expanded,
   getKey: () => getKey.value,
@@ -116,11 +116,15 @@ const { term, searching, matchedItems, isEmpty } = useTreeSearch({
   filter: () => props.filter as ((node: WorkNode, term: string) => boolean) | undefined,
   searchMethod: () => props.searchMethod as ((term: string) => Promise<WorkNode[]>) | undefined,
   searchDebounce: () => props.searchDebounce,
-  buildBase
+  buildBase: items => normalizeChildren(items, props.childrenKey),
+  onError: (term, error) => emit('searchError', term, error)
 })
 
-// disabled 子树（节点自身或祖先 disabled）的 key 集合，是 disabled 级联的唯一真相来源
-const disabledKeys = computed(() => collectDisabledKeys(baseItems.value, getKey.value))
+const remoteItems = computed(() => remote.value ? matchedItems.value : undefined)
+const disabledKeys = computed(() => collectDisabledKeys(
+  remoteItems.value ? [...baseItems.value, ...remoteItems.value] : baseItems.value,
+  getKey.value
+))
 const displayItems = computed(() => applyDisabled(matchedItems.value, disabledKeys.value, getKey.value))
 
 function onExpandedUpdate(incoming: string[]) {
@@ -167,6 +171,7 @@ const isMultiple = computed(() => !!(props.checkable || props.multiple))
 
 const selection = useTreeSelection({
   baseItems,
+  remoteItems,
   getKey: () => getKey.value,
   disabledKeys,
   strategy: () => props.strategy,
@@ -268,7 +273,14 @@ defineExpose<TreeExposed<T>>({
       </TreeToolbar>
     </slot>
 
-    <div v-if="isEmpty" :class="extraUi.empty" data-slot="empty">
+    <div v-if="remoteLoading" :class="extraUi.empty" role="status">
+      {{ t('tree.searchLoading') }}
+    </div>
+    <div v-else-if="remoteError" :class="extraUi.empty">
+      <span role="status">{{ t('tree.searchError') }}</span>
+      <UButton :label="t('tree.retry')" color="error" variant="link" size="xs" @click="retry" />
+    </div>
+    <div v-else-if="isEmpty" :class="extraUi.empty" data-slot="empty">
       <slot name="empty">
         {{ t('tree.empty') }}
       </slot>

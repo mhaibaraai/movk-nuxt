@@ -619,6 +619,16 @@ name: ComponentsTreeSelectionExample
 ---
 ::
 
+### Remote Search and Reload
+
+`searchMethod` returns matching nodes and `searchDebounce` defaults to 300 ms. Selected nodes persist across searches. Users can retry failures and `searchError` provides the term and error. `reload(key)` refreshes a lazy branch and `reload()` rebuilds from `items`. `getNode(key)` also finds current or still-selected remote nodes. The `leaf` strategy classifies selection by leaves.
+
+::component-example
+---
+name: ComponentsTreeRemoteSearchExample
+---
+::
+
 ## API
 
 ### Props

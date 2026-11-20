@@ -132,6 +132,12 @@ const nodeDisabledTree: TreeItem[] = [
   { label: 'composables', icon: 'i-lucide-folder', disabled: true, defaultExpanded: true, children: [{ label: 'useAuth.ts', icon: 'i-vscode-icons-file-type-typescript' }] }
 ]
 const nodeDisabledChecked = shallowRef<TreeItem[]>([])
+const remoteSearch = ref('pe')
+const remoteKeys = ref<string[]>([])
+const remoteTree = useTemplateRef('remoteTree')
+const sampleRoot: { label: string, defaultExpanded?: boolean, isLeaf?: boolean }[] = [{ label: 'Fruit', defaultExpanded: true }]
+const sampleFruit = ['Apple', 'Pear', 'Banana'].map(label => ({ label, isLeaf: true }))
+const searchFruit = async (term: string) => sampleFruit.filter(node => node.label.toLowerCase().includes(term.toLowerCase()))
 </script>
 
 <template>
@@ -141,6 +147,21 @@ const nodeDisabledChecked = shallowRef<TreeItem[]>([])
   </Navbar>
 
   <div class="p-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <Showcase title="远程搜索与重载" description="searchMethod 筛选远程节点，leaf 策略保留已选叶子，reload 重载懒加载分支。">
+      <UButton label="重载子节点" @click="remoteTree?.reload('Fruit')" />
+      <MTree
+        ref="remoteTree"
+        v-model:search="remoteSearch"
+        v-model:selected-keys="remoteKeys"
+        :items="sampleRoot"
+        :search-method="searchFruit"
+        :load-children="async () => sampleFruit"
+        strategy="leaf"
+        lazy
+        searchable
+        checkable
+      />
+    </Showcase>
     <Showcase title="基础用法" description="传入 items 渲染层级结构，节点 defaultExpanded 控制初始展开，v-model 绑定单选节点。" :state="{ selected: basicValue?.label }">
       <MTree v-model="basicValue" :items="fileTree" class="max-h-50" />
     </Showcase>

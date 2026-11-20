@@ -47,6 +47,8 @@ export default {
     search: 'Search nodes',
     clearSearch: 'Clear search',
     loadError: 'Failed to load',
+    searchError: 'Search failed',
+    searchLoading: 'Searching…',
     retry: 'Retry'
   },
   datePicker: {

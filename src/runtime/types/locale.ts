@@ -45,6 +45,8 @@ export interface MovkMessages {
     search: string
     clearSearch: string
     loadError: string
+    searchError: string
+    searchLoading: string
     retry: string
   }
   datePicker: {

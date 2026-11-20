@@ -619,6 +619,16 @@ name: ComponentsTreeSelectionExample
 ---
 ::
 
+### 远程搜索与重载
+
+`searchMethod` 返回匹配节点，`searchDebounce` 默认 300 ms。已选远程节点跨搜索保留。失败时可重试，`searchError` 返回关键字和错误。`reload(key)` 重载懒加载分支，`reload()` 按 `items` 重建。`getNode(key)` 可查询当前和仍选中的远程节点。`leaf` 策略按叶子归类。
+
+::component-example
+---
+name: ComponentsTreeRemoteSearchExample
+---
+::
+
 ## API
 
 ### Props

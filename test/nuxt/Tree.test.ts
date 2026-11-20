@@ -103,4 +103,36 @@ describe('Tree', () => {
     expect(wrapper.text()).toContain('remote')
     expect(wrapper.text()).not.toContain('fruit')
   })
+
+  it('初始远程搜索失败后可重试，选中结果跨搜索保留', async () => {
+    const error = new Error('offline')
+    const searchMethod = vi.fn(async (term: string) => [{ label: term }]).mockRejectedValueOnce(error)
+    const wrapper = await mountTree({
+      items, searchable: true, search: 'remote', searchMethod, searchDebounce: 0, checkable: true, selectedKeys: []
+    })
+
+    await vi.waitFor(() => expect(wrapper.emitted('searchError')).toEqual([['remote', error]]))
+    await wrapper.findAll('button').find(button => button.text() === 'Retry')!.trigger('click')
+    await vi.waitFor(() => expect(wrapper.text()).toContain('remote'))
+
+    const vm = wrapper.vm as unknown as { selectAll: () => void, getNode: (key: string) => unknown }
+    vm.selectAll()
+    expect(wrapper.emitted('update:selectedKeys')?.at(-1)).toEqual([['remote']])
+
+    await wrapper.setProps({ selectedKeys: ['remote'], search: 'other' } as never)
+    await vi.waitFor(() => expect(wrapper.text()).toContain('other'))
+    expect(vm.getNode('remote')).toMatchObject({ label: 'remote' })
+  })
+
+  it('清空搜索后忽略尚未完成的远程请求', async () => {
+    const pending = Promise.withResolvers<{ label: string }[]>()
+    const searchMethod = vi.fn(() => pending.promise)
+    const wrapper = await mountTree({ items, searchable: true, search: 'old', searchMethod, searchDebounce: 0 })
+    await vi.waitFor(() => expect(searchMethod).toHaveBeenCalledWith('old'))
+    await wrapper.setProps({ search: '' } as never)
+    pending.reject(new Error('stale error'))
+    await settle()
+    expect(wrapper.emitted('searchError')).toBeUndefined()
+    expect(wrapper.text()).toContain('fruit')
+  })
 })

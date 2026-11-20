@@ -47,6 +47,8 @@ export default {
     search: '搜索节点',
     clearSearch: '清除搜索',
     loadError: '加载失败',
+    searchError: '搜索失败',
+    searchLoading: '正在搜索…',
     retry: '重试'
   },
   datePicker: {

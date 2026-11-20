@@ -132,6 +132,7 @@ export type TreeEmits<T extends TreeItem[] = TreeItem[], M extends boolean = fal
     'update:search': [value: string]
     /** 懒加载子节点失败 */
     'loadError': [node: T[number], error: unknown]
+    'searchError': [term: string, error: unknown]
     'change': [payload: {
       value: NuxtTreeProps<T, M>['modelValue']
       keys: string[]
