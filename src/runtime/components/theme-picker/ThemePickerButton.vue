@@ -12,9 +12,23 @@ interface ThemePickerButtonSlots {
 </script>
 
 <script lang="ts" setup>
-defineProps<ThemePickerButtonProps>()
+import { useAppConfig } from '#imports'
+import { computed } from 'vue'
+import { resolveSwatchColor } from '../../domains/theme/theme-color'
 
+const props = defineProps<ThemePickerButtonProps>()
 const slots = defineSlots<ThemePickerButtonSlots>()
+const appConfig = useAppConfig()
+
+const chipStyle = computed(() => {
+  if (!props.chip) return
+  const ui = appConfig.ui
+  const prefix = ui && 'prefix' in ui && typeof ui.prefix === 'string' ? ui.prefix : undefined
+  return {
+    '--color-light': resolveSwatchColor(props.chip, 500, prefix),
+    '--color-dark': resolveSwatchColor(props.chip, 400, prefix)
+  }
+})
 </script>
 
 <template>
@@ -31,11 +45,7 @@ const slots = defineSlots<ThemePickerButtonSlots>()
       <slot name="leading">
         <span
           class="inline-block size-2 rounded-full bg-(--color-light) dark:bg-(--color-dark)"
-
-          :style="{
-            '--color-light': `var(--color-${chip}-500)`,
-            '--color-dark': `var(--color-${chip}-400)`
-          }"
+          :style="chipStyle"
         />
       </slot>
     </template>
