@@ -87,7 +87,8 @@ const { baseUi, extraUi } = useExtendedTv(
   })
 )
 
-const breakpoints = useBreakpoints(BREAKPOINTS)
+// SSR 和水合使用同一套基础列数，挂载后再跟随实际视口。
+const activeBreakpoints = useBreakpoints(BREAKPOINTS, { ssrWidth: 0 }).current()
 
 /** 与 gridStyle 的 CSS 断点规则一致：取当前已命中的最大断点上声明的列数 */
 const currentCols = computed(() => {
@@ -95,8 +96,7 @@ const currentCols = computed(() => {
   if (typeof cols === 'number') return cols
   if (!cols) return 1
   const base = cols.sm ?? cols.md ?? cols.lg ?? cols.xl ?? 1
-  return BREAKPOINT_KEYS.reduce((acc, key) =>
-    cols[key] !== undefined && breakpoints.greaterOrEqual(key).value ? cols[key]! : acc, base)
+  return activeBreakpoints.value.reduce((acc, key) => cols[key] ?? acc, base)
 })
 
 const gridStyle = computed<CSSProperties>(() => {

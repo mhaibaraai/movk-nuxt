@@ -1,6 +1,6 @@
 import type { InferInput } from '@nuxt/ui'
 import { deepClone, isDeepEqual } from '@movk/core'
-import { onMounted, watch } from 'vue'
+import { onMounted, toRaw, watch } from 'vue'
 import type { z } from 'zod'
 import { useRouter } from '#imports'
 import { supportsSearchQuery } from '#build/movk-router'
@@ -34,7 +34,7 @@ export function useSearchQuerySync<S extends z.ZodObject>(options: SearchQueryOp
       return
     }
 
-    const baseline = deepClone(options.state())
+    const baseline = deepClone(toRaw(options.state()))
     let previous: SearchQuery | undefined
     watch([getSync, options.schema, () => router.currentRoute.value.query], ([sync, schema, query]) => {
       if (!sync || !schema) {

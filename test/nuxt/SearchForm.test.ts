@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { nextTick } from 'vue'
+import { createSSRApp, h, nextTick, reactive } from 'vue'
+import { renderToString } from 'vue/server-renderer'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { useRouter } from '#imports'
 import SearchForm from '../../src/runtime/components/SearchForm.vue'
@@ -21,6 +22,43 @@ afterEach(() => {
 })
 
 describe('SearchForm', () => {
+  it('响应式列数在水合后采用浏览器断点', async () => {
+    const schema = afz.object({
+      q1: afz.string().optional(),
+      q2: afz.string().optional(),
+      q3: afz.string().optional(),
+      q4: afz.string().optional()
+    })
+    const createApp = () => createSSRApp({
+      render: () => h(SearchForm, { schema, cols: { sm: 1, xl: 4 } })
+    })
+    const container = document.createElement('div')
+    document.body.append(container)
+    const matchMedia = window.matchMedia.bind(window)
+    const viewport = vi.spyOn(window, 'matchMedia').mockImplementation(() => matchMedia('(min-width: 100000px)'))
+    const app = createApp()
+    const warn = vi.fn()
+    app.config.warnHandler = warn
+
+    try {
+      container.innerHTML = await renderToString(createApp())
+      expect(container.querySelector('[data-slot="visible"] input[name="q2"]')).toBeNull()
+
+      viewport.mockImplementation(() => matchMedia('(min-width: 0px)'))
+      app.mount(container)
+
+      expect(warn.mock.calls.map(([message]) => message)).not.toEqual(
+        expect.arrayContaining([expect.stringContaining('Hydration')])
+      )
+      await nextTick()
+      expect(container.querySelector('[data-slot="visible"] input[name="q2"]')).not.toBeNull()
+    }
+    finally {
+      app.unmount()
+      viewport.mockRestore()
+    }
+  })
+
   it('自定义 action 的 onClick 只调用一次，且不把 visible/key 透传给按钮', async () => {
     const onClick = vi.fn()
     const schema = afz.object({ keyword: afz.string().optional() })
@@ -100,6 +138,22 @@ describe('SearchForm', () => {
     await vm.submit()
 
     expect(onSubmit.mock.calls[0]?.[0].data).toEqual({ keyword: 'a' })
+  })
+
+  it.each([false, true])('syncQuery 为 %s 时可挂载响应式表单状态', async (syncQuery) => {
+    const schema = afz.object({ keyword: afz.string().optional() })
+    const model = reactive({ keyword: 'baseline' })
+    const onError = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    try {
+      await mountForm({ schema, modelValue: model, syncQuery }, '/?keyword=restored')
+
+      expect(onError).not.toHaveBeenCalledWith('Error occurred while cloning:', expect.anything())
+      expect(model.keyword).toBe(syncQuery ? 'restored' : 'baseline')
+    }
+    finally {
+      onError.mockRestore()
+    }
   })
 
   it('syncQuery 挂载时读取 URL query，提交时写回并保留其他 query', async () => {
