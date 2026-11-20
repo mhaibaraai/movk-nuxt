@@ -1,11 +1,13 @@
 import type { DataTableExportOptions } from '../../domains/data-table/export'
 import type {
   CellContext,
+  ColumnFiltersState,
   ColumnDefTemplate,
   ColumnMeta,
   HeaderContext,
   PaginationState,
   Row,
+  SortingState,
   Table,
   TableMeta
 } from '@tanstack/vue-table'
@@ -33,6 +35,14 @@ export type DataTableHoverHandler<T extends TableData>
 export type DataTableContextmenuHandler<T extends TableData>
   = ((e: Event, row: TableRow<T>) => void) | ((e: Event, row: TableRow<T>) => void)[]
 
+export interface DataTableServerCsvContext {
+  columns: string[]
+  filename?: string
+  sorting: SortingState
+  columnFilters: ColumnFiltersState
+  globalFilter: unknown
+}
+
 export interface DataTableExposed<T extends TableData> {
   tableRef: HTMLTableElement | null
   tableApi: Table<T> | null
@@ -54,6 +64,8 @@ export interface DataTableExposed<T extends TableData> {
   resetColumns: () => void
   /** 按当前列导出 CSV 并下载 */
   exportCsv: (options?: DataTableExportOptions) => void
+  /** 使用调用方的下载方法导出所有符合条件的服务端数据 */
+  exportServerCsv: (options?: Omit<DataTableExportOptions, 'rows'>) => Promise<void>
   treeSelection: TreeSelectionResult<T>
 }
 
@@ -93,6 +105,8 @@ export interface DataTableProps<T extends TableData> extends /* @vue-ignore */ O
   columnSettings?: boolean
   /** 设置后将列可见性、顺序、宽度、固定与每页条数持久化到 localStorage，值作为存储 key */
   persistKey?: string
+  /** 服务端全量 CSV 下载回调，应使用应用当前的外部筛选条件及表格传入的查询条件 */
+  serverCsvExport?: (context: DataTableServerCsvContext) => void | Promise<void>
   /**
    * 斑马纹
    * @defaultValue false

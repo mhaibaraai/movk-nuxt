@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { PaginationState, RowSelectionState, SortingState } from '@movk/nuxt'
+import type { DataTableServerCsvContext, PaginationState, RowSelectionState, SortingState } from '@movk/nuxt'
 import type { Person } from '../../composables/useMockData'
 
 const columns = usePeopleColumns()
@@ -29,6 +29,20 @@ const server = fetchPeople(() => {
     ...(sort && { sortBy: sort.id, sortDir: sort.desc ? 'desc' : 'asc' })
   }
 })
+
+const serverTable = useTemplateRef('serverTable')
+const { download, status: exportStatus, error: exportError } = useDownloadWithProgress()
+
+async function downloadPeople({ columns, sorting, filename }: DataTableServerCsvContext) {
+  const sort = sorting[0]
+  const query = new URLSearchParams({
+    format: 'csv',
+    columns: columns.join(','),
+    keyword: keyword.value,
+    ...(sort && { sortBy: sort.id, sortDir: sort.desc ? 'desc' : 'asc' })
+  })
+  await download(`/api/people?${query}`, { filename })
+}
 
 // 3. 手动分页页数形态（pageCount）
 const countPagination = ref<PaginationState>({ pageIndex: 0, pageSize: 5 })
@@ -113,9 +127,20 @@ const fullQuery = fetchPeople(() => ({
         >
           刷新
         </UButton>
+        <UButton
+          label="导出全部匹配行"
+          variant="outline"
+          size="sm"
+          :loading="exportStatus === 'pending'"
+          @click="serverTable?.exportServerCsv({ filename: 'people.csv' })"
+        />
+        <p v-if="exportError" role="status">
+          {{ exportError.message }}
+        </p>
       </template>
 
       <MDataTable
+        ref="serverTable"
         v-model:pagination="serverPagination"
         v-model:sorting="sorting"
         :data="server.items.value"
@@ -125,6 +150,7 @@ const fullQuery = fetchPeople(() => ({
         bordered
         :pagination-options="{ manualPagination: true, rowCount: server.total.value }"
         :sorting-options="{ manualSorting: true }"
+        :server-csv-export="downloadPeople"
         :ui="{ root: 'max-h-[60vh]' }"
       />
     </Showcase>

@@ -35,21 +35,33 @@ function headerOf<T extends RowData>(column: Column<T, unknown>): string {
 
 function rowsOf<T extends RowData>(api: Table<T>, scope: DataTableExportRows): Row<T>[] {
   if (scope === 'selected') return api.getSelectedRowModel().flatRows
-  if (scope === 'page') return api.getRowModel().flatRows
+  if (scope === 'page') {
+    const pinning = api.getState().rowPinning
+    if (pinning?.top?.length || pinning?.bottom?.length) {
+      const top = api.getTopRows()
+      const bottom = api.getBottomRows()
+      if (top.length || bottom.length) return [...top, ...api.getCenterRows(), ...bottom]
+    }
+    return api.getRowModel().rows
+  }
   return api.getPrePaginationRowModel().flatRows
 }
 
 /** 按列访问器取值生成 CSV 文本，单元格按 RFC 4180 转义 */
 export function buildCsv<T extends RowData>(api: Table<T>, options: DataTableCsvOptions = {}): string {
-  const columns = options.columns
-    ? options.columns.map(id => api.getColumn(id)).filter((column): column is Column<T, unknown> => !!column)
-    : api.getVisibleLeafColumns().filter(column => !column.id.startsWith(SPECIAL_COLUMN_PREFIX))
+  const columns = resolveCsvColumns(api, options.columns)
 
   const lines = [
     columns.map(column => escapeCell(headerOf(column))),
     ...rowsOf(api, options.rows ?? 'all').map(row => columns.map(column => escapeCell(row.getValue(column.id))))
   ]
   return lines.map(cells => cells.join(',')).join('\r\n')
+}
+
+export function resolveCsvColumns<T extends RowData>(api: Table<T>, ids?: string[]): Column<T, unknown>[] {
+  return ids
+    ? ids.map(id => api.getColumn(id)).filter((column): column is Column<T, unknown> => !!column)
+    : api.getVisibleLeafColumns().filter(column => !column.id.startsWith(SPECIAL_COLUMN_PREFIX))
 }
 
 /** 生成 CSV 并触发下载；带 BOM 以便 Excel 正确识别 UTF-8 */

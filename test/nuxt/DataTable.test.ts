@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { nextTick } from 'vue'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import DataTable from '../../src/runtime/components/DataTable.vue'
@@ -94,6 +94,30 @@ describe('DataTable', () => {
     expect(wrapper.findAll('th').map(th => th.text())).toEqual(['name', 'age'])
     expect(localStorage.getItem('movk-data-table:users')).not.toContain('"age":false')
     localStorage.removeItem('movk-data-table:users')
+  })
+
+  it('selectAll 在单选模式下保留当前选中行', async () => {
+    const wrapper = await mountTable({
+      columns: [{ type: 'selection', mode: 'single' }, { accessorKey: 'name' }],
+      rowKey: 'id', rowSelection: { 2: true }
+    })
+    const vm = wrapper.vm as unknown as { selectAll: () => void, getSelectedRows: () => Row[] }
+    vm.selectAll()
+    await nextTick()
+    expect(vm.getSelectedRows().map(row => row.id)).toEqual([2])
+  })
+
+  it('全量服务端导出传递选定列和查询条件', async () => {
+    const serverCsvExport = vi.fn()
+    const sorting = [{ id: 'name', desc: true }]
+    const columnFilters = [{ id: 'name', value: 'a' }]
+    const wrapper = await mountTable({
+      columns: [{ type: 'selection' }, { accessorKey: 'name' }], sorting, columnFilters,
+      globalFilter: 'term', serverCsvExport
+    })
+    const vm = wrapper.vm as unknown as { exportServerCsv: (options: { filename: string }) => Promise<void> }
+    await vm.exportServerCsv({ filename: 'records.csv' })
+    expect(serverCsvExport).toHaveBeenCalledWith({ columns: ['name'], filename: 'records.csv', sorting, columnFilters, globalFilter: 'term' })
   })
 
   it('columnSettings 渲染工具栏按钮', async () => {

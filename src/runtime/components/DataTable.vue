@@ -41,7 +41,7 @@ import { buildPaginationView } from '../domains/data-table/pagination'
 import { useExpandColumnAutoSize } from '../domains/data-table/tree-layout'
 import { runLoadMore } from '../domains/data-table/load-more'
 import { useTablePersistence } from '../domains/data-table/persist'
-import { downloadCsv } from '../domains/data-table/export'
+import { downloadCsv, resolveCsvColumns } from '../domains/data-table/export'
 import type { DataTableExportOptions } from '../domains/data-table/export'
 import ColumnSettings from '../domains/data-table/components/ColumnSettings.vue'
 import type { ColumnSettingsItem } from '../domains/data-table/components/ColumnSettings.vue'
@@ -477,7 +477,9 @@ function expandAll() {
 }
 
 function selectAll() {
-  tableApi.value?.toggleAllRowsSelected(true)
+  const api = tableApi.value
+  if (resolved.value.selectionMode === 'single' || api?.options.enableMultiRowSelection === false) return
+  api?.toggleAllRowsSelected(true)
 }
 
 function getSelectedRows(): T[] {
@@ -512,6 +514,20 @@ function resetColumns() {
 
 function exportCsv(options?: DataTableExportOptions) {
   if (tableApi.value) downloadCsv(tableApi.value, options)
+}
+
+const exportServerCsv: DataTableExposed<T>['exportServerCsv'] = async (options) => {
+  const api = tableApi.value
+  if (!props.serverCsvExport || !api) throw new Error('DataTable server CSV export is not configured.')
+
+  const { sorting, columnFilters, globalFilter } = api.getState()
+  await props.serverCsvExport({
+    columns: resolveCsvColumns(api, options?.columns).map(column => column.id),
+    filename: options?.filename,
+    sorting: sorting.map(sort => ({ ...sort })),
+    columnFilters: columnFilters.map(filter => ({ ...filter })),
+    globalFilter
+  })
 }
 
 const settingsItems = computed<ColumnSettingsItem[]>(() => {
@@ -576,6 +592,7 @@ defineExpose<DataTableExposed<T>>({
   getSelectedRows,
   resetColumns,
   exportCsv,
+  exportServerCsv,
   get treeSelection() { return treeSelection.value }
 })
 </script>
