@@ -40,6 +40,8 @@ Or create a repository from the [Movk Nuxt Starter](https://github.com/mhaibaraa
 
 ### Installation
 
+Requires `@nuxt/ui >=4.13.0`.
+
 ```bash
 # pnpm
 pnpm add @movk/nuxt @nuxt/ui zod

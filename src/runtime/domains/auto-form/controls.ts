@@ -17,7 +17,9 @@ import type {
   SelectProps, SelectSlots,
   SliderProps,
   SwitchProps, SwitchSlots,
-  TextareaProps, TextareaSlots
+  TextareaProps, TextareaSlots,
+  ToggleGroupProps, ToggleGroupSlots,
+  ToggleProps, ToggleSlots
 } from '@nuxt/ui'
 import type { CalendarDateControlProps } from '../../types/components/date-picker'
 import { defineAsyncComponent } from 'vue'
@@ -26,6 +28,7 @@ import {
   UInputNumber,
   UCheckbox,
   USwitch,
+  UToggle,
   UTextarea,
   USlider,
   UPinInput,
@@ -36,6 +39,7 @@ import {
   UInputMenu,
   UCheckboxGroup,
   URadioGroup,
+  UToggleGroup,
   UInputDate,
   UInputTime,
   UListbox
@@ -75,12 +79,14 @@ const DEFAULT_CONTROL_COMPONENTS = {
 
   textarea: UTextarea,
   switch: USwitch,
+  toggle: UToggle,
   slider: USlider,
 
   selectMenu: USelectMenu,
   inputMenu: UInputMenu,
   checkboxGroup: UCheckboxGroup,
   radioGroup: URadioGroup,
+  toggleGroup: UToggleGroup,
   inputTags: UInputTags,
   pinInput: UPinInput,
   listbox: UListbox
@@ -107,11 +113,13 @@ interface NuxtUIControlTypes {
   inputTime: [InputTimeProps, InputTimeSlots]
   textarea: [TextareaProps, TextareaSlots]
   switch: [SwitchProps, SwitchSlots]
+  toggle: [ToggleProps, ToggleSlots]
   slider: [SliderProps, _Unset]
   selectMenu: [SelectMenuProps, SelectMenuSlots]
   inputMenu: [InputMenuProps, InputMenuSlots]
   checkboxGroup: [CheckboxGroupProps, CheckboxGroupSlots]
   radioGroup: [RadioGroupProps, RadioGroupSlots]
+  toggleGroup: [ToggleGroupProps, ToggleGroupSlots]
   inputTags: [InputTagsProps, InputTagsSlots]
   pinInput: [PinInputProps, PinInputSlots]
   listbox: [ListboxProps, ListboxSlots]

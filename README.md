@@ -40,6 +40,8 @@ npm create nuxt@latest -- -t gh:mhaibaraai/movk-nuxt-starter
 
 ### 安装
 
+需要 `@nuxt/ui >=4.13.0`。
+
 ```bash
 # pnpm
 pnpm add @movk/nuxt @nuxt/ui zod

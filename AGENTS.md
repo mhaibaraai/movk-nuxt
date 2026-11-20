@@ -6,8 +6,8 @@ This file provides guidance for AI coding agents working on this repository.
 
 `@movk/nuxt` 是 Nuxt 4 模块，四大能力域：AutoForm（Zod v4 Schema 驱动表单）、DataTable、API 集成（`useApiFetch` + 进度监控）、独立组件 + Composables。另提供 Vite/Vue 兼容层（`@movk/nuxt/vite` + `@movk/nuxt/vue-plugin`），**不含 API 域**。
 
-- **peerDependencies**：`@nuxt/ui >=4.6.0`、`zod >=4.3.6`
-- **moduleDependencies**（自动校验版本）：`@vueuse/nuxt >=14.2.1`、`@nuxt/image >=2.0.0`、`@nuxt/ui >=4.6.0`、`nuxt-site-config ^5.0.3`、`nuxt-auth-utils >=0.5.29`（仅 `api.auth.enabled` 且 `tokenSource: 'session'` 时登记，runtime 经 `#build/movk-session` 取 `useUserSession`）
+- **peerDependencies**：`@nuxt/ui >=4.13.0`、`zod >=4.3.6`
+- **moduleDependencies**（自动校验版本）：`@vueuse/nuxt >=14.2.1`、`@nuxt/image >=2.0.0`、`@nuxt/ui >=4.13.0`、`nuxt-site-config ^5.0.3`、`nuxt-auth-utils >=0.5.29`（仅 `api.auth.enabled` 且 `tokenSource: 'session'` 时登记，runtime 经 `#build/movk-session` 取 `useUserSession`）
 
 ## 常用命令
 

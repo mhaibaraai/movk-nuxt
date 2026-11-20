@@ -55,7 +55,9 @@ The table lists the common methods; the factory also exposes `afz.email() / url(
 
 For `afz.string()`, switch the rendered control via `meta({ type })`, e.g. `'textarea'`. Input decorations (password type, placeholder, icons) go through `controlProps` on the default `UInput`; for a reusable decorated input, register it with `defineControl`.
 
-`meta({ type })` also targets any other registered control regardless of field type — Nuxt UI controls (`'switch'`, `'slider'`, `'selectMenu'`, `'inputMenu'`, `'checkboxGroup'`, `'radioGroup'`, `'inputTags'`, `'pinInput'`, `'listbox'`) and the Movk `'calendarDate'` (DatePicker), plus custom controls from `defineControl` or a component instance passed directly via `component` (e.g. `UInputRating`, requires `@nuxt/ui >=4.10.0`). This list is non-exhaustive; see the control registry or the docs for the full set.
+`meta({ type })` also targets registered controls such as `'switch'`, `'slider'`, `'selectMenu'`, `'inputMenu'`, `'checkboxGroup'`, `'radioGroup'`, `'inputTags'`, `'pinInput'`, `'listbox'`, and Movk's `'calendarDate'` (DatePicker). Register additional controls with `defineControl` or pass a component such as `UInputRating` directly via `component`.
+
+Use `afz.boolean({ type: 'toggle' })` for a pressable boolean button. Use `afz.enum(values, { type: 'toggleGroup' })` for single selection with items generated from the enum. Add `.optional()` to accept deselection. For multiple selection, use `afz.array()` with `type: 'toggleGroup'` and pass `type: 'multiple'` and item objects in `controlProps`.
 
 ## Field metadata
 

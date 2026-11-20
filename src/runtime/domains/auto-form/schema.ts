@@ -1,9 +1,10 @@
-import type { z } from 'zod'
+import { z } from 'zod'
 import type { IsComponent } from '@movk/core'
 import type { AutoFormControl, AutoFormControls, AutoFormField, AutoFormMergeMeta } from '../../types/auto-form'
-import { markRaw } from 'vue'
+import { markRaw, toRaw } from 'vue'
 import { joinPath, startCase, toPath, isFunction, isObject } from '@movk/core'
 import { getAutoFormMetadata } from './metadata'
+import { DEFAULT_CONTROLS } from './controls'
 import type { ZodAutoFormFieldMeta } from '../../types/zod'
 import { AUTOFORM_LIMITS, AUTOFORM_META } from './constants'
 
@@ -252,7 +253,15 @@ export function introspectSchema(
   field.meta.component = chosenComponent
   field.meta.mapped = mapped
 
-  if (coreSchema.type === 'enum' && mapped) {
+  if (mapped && toRaw(mapped) === DEFAULT_CONTROLS.toggleGroup && coreSchema instanceof z.ZodEnum) {
+    // Keep generated items below field and async props so getters and refs stay reactive.
+    field.meta.mapped = {
+      ...mapped,
+      controlProps: Object.assign({
+        items: coreSchema.options.map(value => ({ label: String(value), value }))
+      }, mapped.controlProps)
+    }
+  } else if (coreSchema.type === 'enum' && mapped) {
     const enumValues = extractEnumValues(coreSchema)
     if (enumValues && enumValues.length > 0) {
       field.meta.controlProps = {

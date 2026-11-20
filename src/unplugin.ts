@@ -16,6 +16,7 @@ import MovkPluginsPlugin from './plugins/plugins'
 import MovkFontPlugin from './plugins/font'
 import MovkCompatPlugin from './plugins/compat'
 import { formatMissingCollections, resolveMovkIcons } from './utils/icons'
+import { includeMovkUiComponents } from './utils/ui-components'
 
 export interface MovkUIOptions extends Pick<ModuleOptions, 'prefix' | 'theme' | 'icon' | 'zod'> {
   /** 站点信息，注入 app.config.movkSite；name 作为主题 localStorage key 前缀 */
@@ -80,7 +81,7 @@ export const MovkPlugin = createUnplugin<MovkUIOptions | undefined>((_options = 
   const componentIgnore = options.theme?.enabled === false ? ['theme-picker/**'] : []
   const movkComponents = createMovkComponentSource(join(runtimeDir, 'components'), options.prefix, componentIgnore)
 
-  // @nuxt/ui 的 unplugin 配置统一从 ui 透传口读取；movk 仅对 autoImport/components/icon 注入自有贡献后整体下发
+  // @nuxt/ui 的 unplugin 配置从 ui 透传，并补齐 Movk 的自动导入、图标和组件依赖。
   const ui = options.ui || {}
   const movkIcons = resolveMovkClientBundleIcons(options)
   const uiOptions = defu(
@@ -106,6 +107,14 @@ export const MovkPlugin = createUnplugin<MovkUIOptions | undefined>((_options = 
     },
     ui
   )
+
+  const detection = uiOptions.experimental?.componentDetection
+  if (detection) {
+    uiOptions.experimental = {
+      ...uiOptions.experimental,
+      componentDetection: includeMovkUiComponents(detection)
+    }
+  }
 
   const uiPlugins = NuxtUIPlugin.raw(uiOptions as NuxtUIOptions, meta) as UnpluginOptions | UnpluginOptions[]
 

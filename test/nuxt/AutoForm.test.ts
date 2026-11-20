@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { nextTick, reactive } from 'vue'
+import { nextTick, reactive, ref } from 'vue'
 import { CalendarDate } from '@internationalized/date'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import AutoForm from '../../src/runtime/components/AutoForm.vue'
@@ -27,6 +27,110 @@ afterEach(() => {
 })
 
 describe('AutoForm', () => {
+  it('toggle 按钮在 true 和 false 之间切换', async () => {
+    const schema = afz.object({
+      pinned: afz.boolean({ type: 'toggle', controlProps: { label: 'Pin' } })
+    })
+    const state = reactive({ pinned: false })
+    const wrapper = await mountForm({ schema, modelValue: state })
+    const button = wrapper.get('button[aria-pressed="false"]')
+
+    await button.trigger('click')
+    expect(button.attributes('aria-pressed')).toBe('true')
+    expect(state.pinned).toBe(true)
+
+    await button.trigger('click')
+    expect(button.attributes('aria-pressed')).toBe('false')
+    expect(state.pinned).toBe(false)
+  })
+
+  it('toggleGroup 从枚举生成选项并校验取消单选后的值', async () => {
+    enum Period { Day, Week }
+    const schema = afz.object({
+      period: afz.enum(Period, { type: 'toggleGroup' })
+    })
+    const state = reactive<{ period?: Period }>({ period: Period.Day })
+    const wrapper = await mountForm({ schema, modelValue: state })
+    const buttons = wrapper.get('[role="group"]').findAll('button')
+    const week = buttons[1]!
+    const vm = wrapper.vm as unknown as { validate: () => Promise<unknown> }
+
+    expect(buttons.map(button => button.text())).toEqual(['0', '1'])
+    expect(buttons[0]!.attributes('aria-pressed')).toBe('true')
+    await week.trigger('click')
+    expect(week.attributes('aria-pressed')).toBe('true')
+    await expect(vm.validate()).resolves.toEqual({ period: Period.Week })
+
+    await week.trigger('click')
+    expect(week.attributes('aria-pressed')).toBe('false')
+    expect(state.period).toBeUndefined()
+    await expect(vm.validate()).rejects.toMatchObject({ errors: [{ name: 'period' }] })
+  })
+
+  it('toggleGroup 多选提交数组', async () => {
+    const schema = afz.object({
+      formats: afz.array(afz.string(), {
+        type: 'toggleGroup',
+        controlProps: {
+          type: 'multiple',
+          items: [{ label: 'Bold', value: 'bold' }, { label: 'Italic', value: 'italic' }]
+        }
+      })
+    })
+    const state = reactive({ formats: [] as string[] })
+    const onSubmit = vi.fn()
+    const wrapper = await mountForm({ schema, modelValue: state, onSubmit })
+    const [bold, italic] = wrapper.get('[role="group"]').findAll('button')
+    const vm = wrapper.vm as unknown as { submit: () => Promise<void> }
+
+    await bold!.trigger('click')
+    await italic!.trigger('click')
+    await vm.submit()
+    expect(onSubmit.mock.calls[0]?.[0].data).toEqual({ formats: ['bold', 'italic'] })
+
+    await bold!.trigger('click')
+    expect(state.formats).toEqual(['italic'])
+  })
+
+  it('toggleGroup 的响应式选项覆盖枚举默认选项', async () => {
+    const items = ref([{ label: 'Every day', value: 'day' }])
+    const schema = afz.object({
+      period: afz.enum(['day', 'week'], { type: 'toggleGroup', controlProps: () => ({ items: items.value }) }).optional()
+    })
+    const state = reactive<{ period?: 'day' | 'week' }>({})
+    const wrapper = await mountForm({ schema, modelValue: state })
+    const group = wrapper.get('[role="group"]')
+
+    expect(group.findAll('button').map(button => button.text())).toEqual(['Every day'])
+
+    items.value = [{ label: 'Every week', value: 'week' }]
+    await nextTick()
+    const button = group.get('button')
+    expect(button.text()).toBe('Every week')
+    await button.trigger('click')
+    expect(state.period).toBe('week')
+    await button.trigger('click')
+    expect(state.period).toBeUndefined()
+
+    items.value = []
+    await nextTick()
+    expect(group.findAll('button')).toHaveLength(0)
+  })
+
+  it('toggleGroup 的异步选项覆盖枚举默认选项', async () => {
+    const schema = afz.object({
+      period: afz.enum(['day', 'week'], { type: 'toggleGroup' }).meta({
+        asyncItems: { load: async () => [{ label: 'Every week', value: 'week' }] }
+      })
+    })
+    const wrapper = await mountForm({ schema, modelValue: {} })
+    const group = wrapper.get('[role="group"]')
+
+    await vi.waitFor(() => {
+      expect(group.findAll('button').map(button => button.text())).toEqual(['Every week'])
+    })
+  })
+
   it('异步日期控件渲染后可提交日期值', async () => {
     const schema = afz.object({ day: afz.calendarDate() })
     const day = new CalendarDate(2026, 11, 20)

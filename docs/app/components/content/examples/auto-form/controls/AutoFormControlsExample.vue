@@ -28,10 +28,13 @@ const schema = afz.object({
 
       boolean: 'boolean',
       switch: 'boolean',
+      toggle: 'boolean',
 
       enum: 'select',
       selectMenu: 'select',
       radioGroup: 'select',
+      toggleGroupSingle: 'select',
+      toggleGroupMultiple: 'select',
       listbox: 'select',
       checkboxGroup: 'select',
       inputTags: 'select',
@@ -51,10 +54,16 @@ const schema = afz.object({
 
       boolean: afz.boolean().meta({ label: 'Checkbox' }),
       switch: afz.boolean({ type: 'switch' }).meta({ label: 'Switch' }),
+      toggle: afz.boolean({ type: 'toggle', controlProps: { label: '置顶' } }).default(false).meta({ label: 'Toggle' }),
 
       enum: afz.enum(['low', 'medium', 'high']).default('medium').meta({ label: 'Select' }),
       selectMenu: afz.enum(['北京', '上海', '广州', '深圳'], { type: 'selectMenu' }).meta({ label: 'SelectMenu' }),
       radioGroup: afz.enum(['男', '女', '其他'], { type: 'radioGroup' }).meta({ label: 'RadioGroup' }),
+      toggleGroupSingle: afz.enum(['日', '周', '月'], { type: 'toggleGroup' }).optional().meta({ label: 'ToggleGroup 单选' }),
+      toggleGroupMultiple: afz.array(afz.enum(['bold', 'italic']), {
+        type: 'toggleGroup',
+        controlProps: { type: 'multiple', items: [{ label: '加粗', value: 'bold' }, { label: '斜体', value: 'italic' }] }
+      }).default(['bold']).meta({ label: 'ToggleGroup 多选' }),
       listbox: afz.enum(['草稿', '已发布', '已归档'], { type: 'listbox' }).default('草稿').meta({ label: 'Listbox' }),
       checkboxGroup: afz.array(afz.string(), { type: 'checkboxGroup', controlProps: { items: ['阅读', '游戏', '运动'] } }).meta({ label: 'CheckboxGroup' }),
       inputTags: afz.array(afz.string(), { type: 'inputTags' }).default(['nuxt', 'vue']).meta({ label: 'InputTags' }),

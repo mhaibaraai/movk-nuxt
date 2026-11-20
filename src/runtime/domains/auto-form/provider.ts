@@ -17,7 +17,7 @@ const AUTO_FORM_CONTEXT_KEY: InjectionKey<AutoFormProvider> = Symbol('AUTO_FORM_
 // 数组（如 items）整体替换而非拼接，用户值优先
 const defu = createDefu((obj, key, value) => {
   if (Array.isArray(obj[key]) || Array.isArray(value)) {
-    obj[key] = obj[key] ?? value
+    obj[key] = value
     return true
   }
 })

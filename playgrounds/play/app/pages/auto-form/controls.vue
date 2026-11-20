@@ -16,12 +16,22 @@ const schema = afz.object({
 
   textarea: afz.string({ type: 'textarea', controlProps: { rows: 3 } }).meta({ label: 'textarea' }),
   switch: afz.boolean({ type: 'switch' }).meta({ label: 'switch' }),
+  toggle: afz.boolean({ type: 'toggle', controlProps: { label: '置顶' } }).default(false).meta({ label: 'toggle' }),
   slider: afz.number({ type: 'slider', controlProps: { min: 0, max: 100, step: 5 } }).default(40).meta({ label: 'slider' }),
 
   selectMenu: afz.enum(['北京', '上海', '广州', '深圳'], { type: 'selectMenu' }).meta({ label: 'selectMenu' }),
   inputMenu: afz.enum(['Vue', 'React', 'Svelte', 'Solid'], { type: 'inputMenu' }).meta({ label: 'inputMenu' }),
   checkboxGroup: afz.array(afz.string(), { type: 'checkboxGroup', controlProps: { items: ['读书', '运动', '音乐'] } }).meta({ label: 'checkboxGroup' }),
   radioGroup: afz.enum(['男', '女', '其他'], { type: 'radioGroup' }).meta({ label: 'radioGroup' }),
+  toggleGroupSingle: afz.enum(['日', '周', '月'], { type: 'toggleGroup', controlProps: { attached: true } })
+    .optional().meta({ label: 'toggleGroup 单选' }),
+  toggleGroupMultiple: afz.array(afz.enum(['bold', 'italic', 'underline']), {
+    type: 'toggleGroup',
+    controlProps: {
+      type: 'multiple',
+      items: [{ label: '加粗', value: 'bold' }, { label: '斜体', value: 'italic' }, { label: '下划线', value: 'underline' }]
+    }
+  }).default(['bold']).meta({ label: 'toggleGroup 多选' }),
   inputTags: afz.array(afz.string(), { type: 'inputTags' }).default(['nuxt', 'vue']).meta({ label: 'inputTags' }),
   pinInput: afz.array(afz.string(), ({ type: 'pinInput', controlProps: { length: 4 } })).meta({ label: 'pinInput' }),
   listboxString: afz.string({ type: 'listbox', controlProps: { valueKey: 'value', items: [{ label: 'Vue', value: 'vue' }, { label: 'React', value: 'react' }, { label: 'Svelte', value: 'svelte' }, { label: 'Solid', value: 'solid' }] } }).default('svelte').meta({ label: 'listboxString' }),

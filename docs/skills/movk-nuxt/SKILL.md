@@ -84,7 +84,7 @@ Based on the task, load the relevant reference files **before writing any code**
 
 - **Node.js** — `^22.22.3 || ^24.15.0 || >=26.0.0`
 - **Nuxt** — `^4.6.4` (Nuxt 4)
-- Peer deps: `@nuxt/ui >=4.6.0`, `zod >=4.3.6`
+- Peer deps: `@nuxt/ui >=4.13.0`, `zod >=4.3.6`
 
 ### Add to a Nuxt project
 

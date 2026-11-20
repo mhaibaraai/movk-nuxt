@@ -49,7 +49,11 @@ import { CalendarDate } from '@internationalized/date'
 import { ref } from 'vue'
 
 const { afz } = useAutoForm()
-const schema = afz.object({ day: afz.calendarDate() })
+const schema = afz.object({
+  day: afz.calendarDate(),
+  pinned: afz.boolean({ type: 'toggle', controlProps: { label: 'Pin article', activeColor: 'primary' } }).default(false),
+  period: afz.enum(['day', 'week'], { type: 'toggleGroup', controlProps: { attached: true } }).default('week')
+})
 const state = ref({ day: new CalendarDate(2026, 11, 20) })
 const searchSchema = afz.object({ keyword: afz.string().optional() })
 </script>
@@ -67,7 +71,7 @@ const searchSchema = afz.object({ keyword: afz.string().optional() })
     ...shared,
     nuxt: '4.6.4'
   }, {
-    'nuxt.config.ts': 'export default defineNuxtConfig({ modules: [\'@movk/nuxt\'], css: [\'~/main.css\'], devtools: { enabled: false } })\n',
+    'nuxt.config.ts': 'export default defineNuxtConfig({ modules: [\'@movk/nuxt\'], css: [\'~/main.css\'], devtools: { enabled: false }, ui: { experimental: { componentDetection: true } } })\n',
     'tsconfig.json': '{ "extends": "./.nuxt/tsconfig.app.json" }\n',
     'app/app.vue': files['app.vue'],
     'app/main.css': files['main.css'],
@@ -77,6 +81,9 @@ const searchSchema = afz.object({ keyword: afz.string().optional() })
   run('pnpm', ['exec', 'nuxt', 'generate'], nuxt)
   const html = readFileSync(join(nuxt, '.output/public/index.html'), 'utf8')
   if (!html.includes('Nov 20, 2026')) throw new Error('The packaged calendar control did not render on the server.')
+  if (!html.includes('>Pin article</span>') || !html.includes('>week</span>')) {
+    throw new Error('The packaged toggle controls did not render on the server.')
+  }
 
   const vite = fixture('movk-pack-vue', {
     ...shared,
@@ -84,13 +91,18 @@ const searchSchema = afz.object({ keyword: afz.string().optional() })
     'vite': versionOf('../playgrounds/vue/node_modules/vite/package.json')
   }, {
     ...files,
-    'vite.config.ts': 'import vue from \'@vitejs/plugin-vue\'\nimport movk from \'@movk/nuxt/vite\'\nimport { defineConfig } from \'vite\'\nexport default defineConfig({ plugins: [vue(), movk({ ui: { router: false } })] })\n',
+    'vite.config.ts': 'import vue from \'@vitejs/plugin-vue\'\nimport movk from \'@movk/nuxt/vite\'\nimport { defineConfig } from \'vite\'\nexport default defineConfig({ plugins: [vue(), movk({ ui: { router: false, experimental: { componentDetection: [\'Separator\'] } } })] })\n',
     'index.html': '<div id="app"></div><script type="module" src="/main.ts"></script>\n',
     'tsconfig.json': '{ "compilerOptions": { "module": "esnext", "moduleResolution": "bundler", "target": "esnext", "strict": true, "skipLibCheck": true, "types": ["vite/client", "@movk/nuxt/vue-plugin"] }, "include": ["*.ts", "*.vue"] }\n',
     'main.ts': 'import \'./main.css\'\nimport { createApp } from \'vue\'\nimport plugin from \'@movk/nuxt/vue-plugin\'\nimport App from \'./app.vue\'\ncreateApp(App).use(plugin).mount(\'#app\')\n'
   })
   run('pnpm', ['exec', 'vite', 'build'], vite)
   run('pnpm', ['exec', 'vue-tsc', '--noEmit'], vite)
+  const toggleGroupTheme = readFileSync(join(vite, 'node_modules/.nuxt-ui/ui/toggle-group.ts'), 'utf8')
+  const separatorTheme = readFileSync(join(vite, 'node_modules/.nuxt-ui/ui/separator.ts'), 'utf8')
+  if (!toggleGroupTheme.includes('inline-flex items-center') || !separatorTheme.includes('flex items-center text-center')) {
+    throw new Error('Component detection did not retain the ToggleGroup and Separator themes.')
+  }
 }
 finally {
   rmSync(root, { recursive: true, force: true })
