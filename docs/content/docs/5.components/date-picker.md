@@ -304,7 +304,7 @@ async function handleSubmit() {
 
       ::field-group
         ::field{name="locale" type="string"}
-        语言区域，默认 `'zh-CN'`。
+        语言区域，默认跟随外层 UApp，在组件外调用时使用 `'en'`。
         ::
 
         ::field{name="formatOptions" type="Intl.DateTimeFormatOptions"}
@@ -602,6 +602,16 @@ async function handleSubmit() {
 ### Changelog
 
 :commit-changelog{prefix="composables" suffix="ts"}
+
+### 控制日历开关
+
+`v-model:open` 同步弹层状态，也可调用实例的 `open()` 和 `close()`。旧 `popoverProps.open` 作为次级控制，`popoverProps.defaultOpen` 只用于初始化非受控状态。
+
+::component-example
+---
+name: ComponentsDatePickerOpenExample
+---
+::
 
 ## API
 

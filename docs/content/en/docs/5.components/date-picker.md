@@ -304,7 +304,7 @@ Creates a date formatter instance.
 
       ::field-group
         ::field{name="locale" type="string"}
-        Locale. Defaults to `'zh-CN'`.
+        Locale. Defaults to the enclosing UApp locale, or `'en'` outside a component.
         ::
 
         ::field{name="formatOptions" type="Intl.DateTimeFormatOptions"}
@@ -602,6 +602,16 @@ Returns a date formatter object with the following methods and properties.
 ### Changelog
 
 :commit-changelog{prefix="composables" suffix="ts"}
+
+### Calendar Visibility
+
+`v-model:open` tracks the popover state. Use the exposed `open()` and `close()` methods to update it. The legacy `popoverProps.open` applies when there is no top-level value. `popoverProps.defaultOpen` initializes uncontrolled state.
+
+::component-example
+---
+name: ComponentsDatePickerOpenExample
+---
+::
 
 ## API
 

@@ -5,7 +5,7 @@ import type { ButtonProps, CalendarProps, ComponentConfig } from '@nuxt/ui'
 import type { AppConfig } from 'nuxt/schema'
 import type { DateValue } from '@internationalized/date'
 import { UPopover, UButton, UCalendar } from '#components'
-import { computed, useAttrs } from 'vue'
+import { computed, getCurrentInstance, ref, useAttrs } from 'vue'
 import { useAppConfig } from '#imports'
 import { useDateFormatter } from '../composables/useDateFormatter'
 import type { ValueFormat } from '../composables/useDateFormatter'
@@ -38,7 +38,19 @@ defineOptions({ inheritAttrs: false })
 
 const attrs = useAttrs()
 const modelValue = defineModel<FormattedValue<R, M, V>>()
-const open = defineModel<boolean>('open', { default: false })
+const openModel = defineModel<boolean | undefined>('open', { default: undefined })
+const instance = getCurrentInstance()
+const localOpen = ref(props.popoverProps?.defaultOpen ?? false)
+const open = computed({
+  get: () => {
+    const controlled = instance?.props.open
+    return typeof controlled === 'boolean' ? controlled : props.popoverProps?.open ?? localOpen.value
+  },
+  set: (value: boolean) => {
+    localOpen.value = value
+    openModel.value = value
+  }
+})
 const appConfig = useAppConfig() as { movk?: { datePicker?: unknown }, ui?: { icons?: Record<string, string> } }
 const { t } = useMovkLocale()
 const {
@@ -201,8 +213,8 @@ const { baseUi, extraUi } = useExtendedTv(
 
 <template>
   <UPopover
-    v-model:open="open"
     v-bind="popoverProps"
+    v-model:open="open"
     :ui="baseUi"
     @close:prevent="emits('close:prevent')"
   >

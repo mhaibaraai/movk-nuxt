@@ -64,6 +64,13 @@ describe('DatePicker', () => {
     expect(wrapper.emitted('update:open')?.at(-1)).toEqual([false])
   })
 
+  it('支持旧 defaultOpen，并让顶层 open 覆盖旧受控值', async () => {
+    const legacy = await mountPicker({ popoverProps: { defaultOpen: true } })
+    expect(legacy.find('button').attributes('data-state')).toBe('open')
+    const controlled = await mountPicker({ open: false, popoverProps: { open: true } })
+    expect(controlled.find('button').attributes('data-state')).toBe('closed')
+  })
+
   it('month 模式只显示年月', async () => {
     const wrapper = await mountPicker({ type: 'month', modelValue: new CalendarDate(2025, 3, 1), locale: 'en-US' })
     expect(wrapper.find('button').text()).toBe('March 2025')
