@@ -115,4 +115,28 @@ describe('SearchForm', () => {
     await vm.submit()
     await vi.waitFor(() => expect(useRouter().currentRoute.value.query).toEqual({ tab: 'x', keyword: 'next', page: '2' }))
   })
+
+  it('syncQuery 从路由恢复变更和移除的字段且保留其他状态', async () => {
+    const schema = afz.object({ keyword: afz.string().optional(), status: afz.string().default('all') })
+    const model = { keyword: 'baseline', extra: 1 }
+    const onSubmit = vi.fn()
+    const wrapper = await mountForm({ schema, modelValue: model, syncQuery: { replace: false }, onSubmit }, '/?keyword=first&status=open')
+    const router = useRouter()
+    const vm = wrapper.vm as unknown as { submit: () => Promise<void>, setFieldValue: (p: string, v: unknown) => void }
+    expect(model.keyword).toBe('first')
+
+    vm.setFieldValue('keyword', 'submitted')
+    await vm.submit()
+    await vi.waitFor(() => expect(router.currentRoute.value.query.keyword).toBe('submitted'))
+    expect(wrapper.emitted('query-restore')).toHaveLength(1)
+
+    router.back()
+    await vi.waitFor(() => expect(model.keyword).toBe('first'))
+    router.forward()
+    await vi.waitFor(() => expect(model.keyword).toBe('submitted'))
+    await router.push('/?tab=x')
+    await vi.waitFor(() => expect(model).toEqual({ keyword: 'baseline', status: 'all', extra: 1 }))
+    expect(wrapper.emitted('query-restore')?.at(-1)?.[0]).toEqual({ keyword: 'baseline', status: 'all' })
+    expect(onSubmit).toHaveBeenCalledTimes(1)
+  })
 })

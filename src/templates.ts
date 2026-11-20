@@ -9,7 +9,7 @@ import { applyDefaultVariants, applyPrefixToObject } from './utils/theme-variant
 import { resolveFontFamily, resolveFontSource } from './runtime/domains/theme/theme-font'
 import { generateZodTemplate, resolveZodOptions } from './utils/zod'
 
-export function getTemplates(options: ModuleOptions, nuxt?: Nuxt) {
+export function getTemplates(options: ModuleOptions, nuxt?: Nuxt, supportsSearchQuery = true) {
   const templates: NuxtTemplate[] = []
 
   const isDev = process.argv.includes('--uiDev')
@@ -222,6 +222,12 @@ export const useUserSession: (() => unknown) | undefined = _useUserSession
 `
       : `export const useUserSession: (() => unknown) | undefined = undefined
 `
+  })
+
+  templates.push({
+    filename: 'movk-router.ts',
+    write: true,
+    getContents: () => `export const supportsSearchQuery = ${supportsSearchQuery}\n`
   })
 
   templates.push({

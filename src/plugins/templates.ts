@@ -10,7 +10,8 @@ import { getTemplates } from '../templates'
  * `#build/movk-ui.css` alias 到真实文件——否则 Tailwind v4 扫不到主题类，组件无样式。
  */
 export default function MovkTemplatePlugin(options: MovkUIOptions): UnpluginOptions {
-  const templates = getTemplates(options as any).filter(t => t.write && t.filename)
+  const supportsSearchQuery = options.ui?.router !== false && options.ui?.router !== 'inertia'
+  const templates = getTemplates(options as any, undefined, supportsSearchQuery).filter(t => t.write && t.filename)
   const templateKeys = new Set(templates.map(t => `#build/${t.filename}`))
 
   async function writeTemplates(root: string) {

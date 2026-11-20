@@ -44,7 +44,7 @@ export interface SearchFormQuerySync<S extends z.ZodObject = z.ZodObject> {
 
 export interface SearchFormProps<S extends z.ZodObject> extends BaseAutoFormProps<S> {
   /**
-   * 将搜索条件同步到 URL query：挂载时读取，提交、重置、清空时写入；仅写入 schema 顶层字段，保留其他 query
+   * Nuxt 或 Vue Router 下同步 schema 顶层字段：挂载和路由变化时读取，提交、重置、清空时写入
    * @defaultValue false
    */
   syncQuery?: boolean | SearchFormQuerySync<S>
@@ -95,10 +95,11 @@ export interface SearchFormProps<S extends z.ZodObject> extends BaseAutoFormProp
 }
 
 export interface SearchFormEmits<S extends z.ZodObject = z.ZodObject> {
-  reset: [state: Partial<InferInput<S>>]
-  clear: [state: Partial<InferInput<S>>]
-  expand: [expanded: boolean]
-  error: [event: FormErrorEvent]
+  'reset': [state: Partial<InferInput<S>>]
+  'clear': [state: Partial<InferInput<S>>]
+  'expand': [expanded: boolean]
+  'query-restore': [state: Partial<InferInput<S>>]
+  'error': [event: FormErrorEvent]
 }
 
 export type SearchFormSlots<S extends z.ZodObject> = {

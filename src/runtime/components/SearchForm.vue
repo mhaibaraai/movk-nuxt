@@ -4,7 +4,7 @@ import type { z } from 'zod'
 import type { CSSProperties, Ref } from 'vue'
 import type { AppConfig } from 'nuxt/schema'
 import { UButton, UCollapsible, UForm } from '#components'
-import { computed, onMounted, ref, useAttrs, useTemplateRef, watch } from 'vue'
+import { computed, ref, useAttrs, useTemplateRef, watch } from 'vue'
 import { useBreakpoints } from '@vueuse/core'
 import { useAutoFormCore } from '../domains/auto-form/useAutoFormCore'
 import { isLeafField } from '../domains/auto-form/fields'
@@ -12,8 +12,9 @@ import { AUTOFORM_META } from '../domains/auto-form/constants'
 import { createDefaultSearchActions } from '../domains/auto-form/actions'
 import { useMovkLocale } from '../composables/useMovkLocale'
 import AutoFormRendererField from '../domains/auto-form/components/Field.vue'
-import { useAppConfig, useRoute, useRouter } from '#imports'
-import { cleanSearchPayload, parseSearchQuery, serializeSearchQuery } from '../domains/auto-form/search-query'
+import { useAppConfig } from '#imports'
+import { cleanSearchPayload } from '../domains/auto-form/search-query'
+import { useSearchQuerySync } from '../domains/auto-form/useSearchQuerySync'
 import theme from '#build/movk-ui/search-form'
 import type {
   SearchFormAction,
@@ -152,33 +153,25 @@ function buildFieldPayload(state: SearchState): SearchState {
   return Object.fromEntries(keys.map(key => [key, state[key]])) as SearchState
 }
 
-const route = useRoute()
-const router = useRouter()
-const querySync = computed(() => props.syncQuery === true ? {} : props.syncQuery || undefined)
+const syncQuery = useSearchQuerySync<S>({
+  sync: () => props.syncQuery,
+  schema: () => core.pureSchema.value,
+  state: () => modelValue.value,
+  onRestore: (state) => {
+    formRef.value?.clear()
+    emits('query-restore', state)
+  }
+})
+
+function writeQuery(state: SearchState) {
+  syncQuery(state).catch(error => console.error('[SearchForm] Failed to update the URL query.', error))
+}
 
 function applyTransform(data: SearchState): SearchState {
   const transform = props.transformPayload
   if (transform === false) return data
   return transform === true ? cleanSearchPayload(data) as SearchState : transform(data)
 }
-
-/** 只改写 schema 顶层字段对应的 query，保留其他 query */
-function writeQuery(state: SearchState) {
-  const sync = querySync.value
-  if (!sync) return
-  const keys = new Set(Object.keys(core.pureSchema.value?.shape ?? {}))
-  const others = Object.fromEntries(Object.entries(route.query).filter(([key]) => !keys.has(key)))
-  const query = { ...others, ...(sync.serialize ?? serializeSearchQuery)(cleanSearchPayload(state) as SearchState) }
-  router[sync.replace === false ? 'push' : 'replace']({ query })
-}
-
-onMounted(() => {
-  const sync = querySync.value
-  const schema = core.pureSchema.value
-  if (!sync || !schema) return
-  const parsed = sync.parse ? sync.parse(route.query) : parseSearchQuery(route.query, schema)
-  Object.assign(modelValue.value, parsed)
-})
 
 // UForm 未传 transform 时 T 推断为 boolean，onSubmit 须按同一泛型声明
 const handleSubmit = ((event: FormSubmitEvent<SearchState>) => {
