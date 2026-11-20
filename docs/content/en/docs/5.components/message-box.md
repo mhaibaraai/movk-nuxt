@@ -2,9 +2,6 @@
 title: MessageBox
 description: A modal message dialog offering both declarative and programmatic usage.
 category: feedback
-seo:
-  title: MessageBox
-  description: A modal message dialog component, offering both declarative and programmatic (alert/confirm) usage.
 ---
 
 ## Introduction
@@ -274,7 +271,7 @@ prettier: true
 
 ### Introduction
 
-`useMessageBox` provides an imperative dialog API — pop up dialogs without declaring a component in the template. It is built on the [`MessageBox`](/docs/components/message-box) component and Nuxt UI's `useOverlay`.
+`useMessageBox` provides an imperative dialog API — pop up dialogs without declaring a component in the template. It is built on the [`MessageBox`](/en/docs/components/message-box) component and Nuxt UI's `useOverlay`.
 
 ```ts
 const { alert, confirm } = useMessageBox()
@@ -358,7 +355,7 @@ name: 'composables-use-message-box-async-example'
 ---
 ::
 
-::tip{icon="i-lucide-message-square" to="/docs/components/message-box"}
+::tip{icon="i-lucide-message-square" to="/en/docs/components/message-box"}
 See the MessageBox component documentation for declarative usage and the full props reference.
 ::
 

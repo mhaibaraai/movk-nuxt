@@ -2,9 +2,6 @@
 title: DatePicker
 description: An internationalized date picker component.
 category: advanced
-seo:
-  title: DatePicker
-  description: An internationalized date picker supporting single, range and multiple selection, presets and custom output formats.
 ---
 
 ## Introduction

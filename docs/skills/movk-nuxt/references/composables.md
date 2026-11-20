@@ -49,5 +49,5 @@ Notes:
 
 ## MCP & docs
 
-- Docs: v2 has no standalone composables section; each composable lives with its domain — `/docs/auto-form/use-auto-form`, `/docs/components/date-picker#usedateformatter`, `/docs/getting-started/theme#usetheme-reference`, `/docs/components/message-box#usemessagebox`, `/docs/api/upload-download`, `/docs/api/stream`
+- Docs: v2 has no standalone composables section; each composable lives with its domain — `/docs/auto-form/use-auto-form`, `/docs/components/date-picker#usedateformatter`, `/docs/getting-started/theme#usetheme`, `/docs/components/message-box#usemessagebox`, `/docs/api/upload-download`, `/docs/api/stream`
 - MCP: `mcp__movk-nuxt__search-composables`, `mcp__movk-nuxt__get-documentation-page`, `mcp__movk-nuxt__get-example`

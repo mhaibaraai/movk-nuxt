@@ -91,7 +91,7 @@ pnpm clean
 
 ### 写作规范
 
-- **frontmatter**：中文 `title`/`description`（简洁）+ 英文 `seo.title`/`seo.description`；组件页另加 `category`。
+- **frontmatter**：`title`/`description`（简洁）；非首页不写 `seo.*`，仅中英文首页配置 `seo.title`/`seo.description`；组件页另加 `category`。
 - **标题**：`## 用法`、`## 示例` 为 H2，条目为 H3。用法按 prop：`### \`size\` 尺寸`，首句「`prop` 作用：行为」；示例用场景名：`### 异步提交与校验`。
 - **`::component-code`**：仅用于全部 props 可 YAML 内联的简单组件；标量不加引号（`size: md`），但 `options:`/`items:` 中的字符串离散值保留引号。多层级 props 加 `prettier: true`。
 - **`::component-example`**：需脚本或 schema 驱动的组件（AutoForm 全家、`MSearchForm`）。示例放 `docs/app/components/content/examples/<scope>/`，命名 `<Scope><Component><Topic>Example.vue`；`options:`/`props:` 经 `defineProps` 注入，离散值用 `options:`（每项带 `items`，string items + `Number()`），schema/数组/自由文案保持静态。

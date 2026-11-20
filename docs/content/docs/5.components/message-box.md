@@ -2,9 +2,6 @@
 title: MessageBox
 description: 模态消息对话框，提供声明式与编程式两种调用方式。
 category: feedback
-seo:
-  title: MessageBox
-  description: A modal message dialog component, offering both declarative and programmatic (alert/confirm) usage.
 ---
 
 ## 简介
