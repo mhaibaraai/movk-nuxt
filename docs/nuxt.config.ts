@@ -1,5 +1,7 @@
 import pkg from '../package.json'
 
+const chatModel = process.env.NUXT_PUBLIC_AI_CHAT_MODEL || 'cloudflare/@cf/qwen/qwen3.8-27b'
+
 function i18nRedirects(
   rules: Record<string, string>
 ): Record<string, { redirect: string, prerender: false }> {
@@ -118,11 +120,8 @@ export default defineNuxtConfig({
   },
 
   aiChat: {
-    model: 'alibaba/qwen3.8-27b',
-    models: [
-      'alibaba/qwen3.8-27b',
-      'deepseek/deepseek-v4-pro-0813'
-    ]
+    model: chatModel,
+    models: [chatModel]
   },
 
   i18n: {
