@@ -45,8 +45,8 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 <template>
   <UCard class="w-lg">
     <MAutoForm
+      v-model="form"
       :schema="schema"
-      :state="form"
       :submit-button-props="{
         color
       }"

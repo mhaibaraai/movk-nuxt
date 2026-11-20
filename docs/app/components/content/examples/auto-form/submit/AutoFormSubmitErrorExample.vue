@@ -24,5 +24,5 @@ function onError() {
 </script>
 
 <template>
-  <MAutoForm :schema="schema" :state="state" @submit="onSubmit" @error="onError" />
+  <MAutoForm v-model="state" :schema="schema" @submit="onSubmit" @error="onError" />
 </template>

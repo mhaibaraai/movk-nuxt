@@ -25,8 +25,8 @@ function onReset() {
 <template>
   <MAutoForm
     ref="searchForm"
+    v-model="state"
     :schema="schema"
-    :state="state"
     :global-meta="{ orientation: 'horizontal', size: 'sm' }"
     :submit="false"
     @submit="onSubmit"

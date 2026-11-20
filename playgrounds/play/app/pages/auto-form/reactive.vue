@@ -74,19 +74,19 @@ watch(() => dependsState.country, () => {
 
   <div class="p-4 grid grid-cols-1 xl:grid-cols-2 gap-4">
     <Showcase title="条件字段渲染" description="if 控制字段挂载，hidden 按其它字段值隐藏" :state="conditionalState">
-      <MAutoForm :schema="conditionalSchema" :state="conditionalState" />
+      <MAutoForm v-model="conditionalState" :schema="conditionalSchema" />
     </Showcase>
 
     <Showcase title="依赖项联动" description="国家字段变化时重算城市选项并清空失效值" :state="dependsState">
-      <MAutoForm :schema="dependsSchema" :state="dependsState" />
+      <MAutoForm v-model="dependsState" :schema="dependsSchema" />
     </Showcase>
 
     <Showcase title="数组对象编辑" description="afz.array() 渲染对象列表，支持添加、删除与状态同步" :state="arrayState">
-      <MAutoForm :schema="arraySchema" :state="arrayState" />
+      <MAutoForm v-model="arrayState" :schema="arraySchema" />
     </Showcase>
 
     <Showcase title="异步字段校验" description="异步 refine 模拟服务端校验，失焦后返回占用错误" :state="asyncState">
-      <MAutoForm :schema="asyncSchema" :state="asyncState" :validate-on="['blur']" />
+      <MAutoForm v-model="asyncState" :schema="asyncSchema" :validate-on="['blur']" />
     </Showcase>
   </div>
 </template>

@@ -121,7 +121,7 @@ const schema = afz.object({
 })
 
 // Type inference
-type Schema = z.output<typeof schema>
+type Schema = z.input<typeof schema>
 
 // Form state
 const form = ref<Partial<Schema>>({})
@@ -133,7 +133,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 </script>
 
 <template>
-  <MAutoForm :schema="schema" :state="form" @submit="onSubmit" />
+  <MAutoForm :schema="schema" v-model="form" @submit="onSubmit" />
 </template>
 ```
 

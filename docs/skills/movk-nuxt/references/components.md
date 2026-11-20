@@ -29,6 +29,10 @@ Standalone interactive controls, usable inside or outside a form.
 
 ## Advanced
 
+- `MTree` can use `searchMethod` and `searchDebounce` for remote results. Use `reload(key)` to refresh a lazy branch, and `strategy="leaf"` to classify selection by leaf.
+- Use `MDatePicker v-model:open` to control the calendar. `useDateFormatter` follows UApp locale and falls back to English outside components.
+- Configure component text with `extendMovkLocale`. For form validation language use `movk.zod`; the `movk:zod:config` custom error callback is scoped to AutoForm and SearchForm in the current app.
+
 | Component | Purpose |
 | --- | --- |
 | `MDatePicker` | Calendar-backed date picker built on `@internationalized/date` |

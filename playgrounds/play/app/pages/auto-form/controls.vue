@@ -46,7 +46,7 @@ const state = reactive<Partial<z.output<typeof schema>>>({})
       <template #toolbar>
         <UButton size="sm" label="重置" @click="autoForm?.reset()" />
       </template>
-      <MAutoForm ref="autoForm" :schema="schema" :state="state" />
+      <MAutoForm ref="autoForm" v-model="state" :schema="schema" />
     </Showcase>
     <StateViewer :state="state" label="state" />
   </div>

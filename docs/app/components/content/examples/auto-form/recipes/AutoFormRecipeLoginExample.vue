@@ -19,8 +19,8 @@ async function onSubmit() {
 
 <template>
   <MAutoForm
+    v-model="state"
     :schema="schema"
-    :state="state"
     :submit-button-props="{ block: true, label: '登 录' }"
     @submit="onSubmit"
   />

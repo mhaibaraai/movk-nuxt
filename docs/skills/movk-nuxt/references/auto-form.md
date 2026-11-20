@@ -17,7 +17,7 @@ const schema = afz.object({
   age: afz.number().min(18).meta({ label: 'Age' })
 })
 
-type Schema = z.output<typeof schema>
+type Schema = z.input<typeof schema>
 const state = ref<Partial<Schema>>({})
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
@@ -27,14 +27,14 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 </script>
 
 <template>
-  <MAutoForm :schema="schema" :state="state" @submit="onSubmit" />
+  <MAutoForm :schema="schema" v-model="state" @submit="onSubmit" />
 </template>
 ```
 
 ## Key rules
 
 - **Always use `afz`, never raw `z`** — `afz` proxies Zod methods to preserve `.meta()` through `.optional()`, `.default()`, etc. Raw `z` drops UI metadata.
-- **Derive state type from the schema** — `type Schema = z.output<typeof schema>`, then `ref<Partial<Schema>>({})`. Never declare a parallel `interface`.
+- **Derive state type from the schema** — `type Schema = z.input<typeof schema>`, then `ref<Partial<Schema>>({})`. Never declare a parallel `interface`.
 - **`@submit` only fires after validation** — for field-level errors, use `@error` with `FormError[]`.
 - **Metadata priority**: global (`movk.autoForm` in `nuxt.config.ts`) → field (`.meta()`) → decorator. Higher wins.
 
@@ -129,6 +129,8 @@ const schema = afz.object({
 
 ## Conditional & reactive fields
 
+Use `asyncItems: { deps, load }` for dependent choices, forwarding the supplied abort signal to the request. Array field metadata supports `sortable` and `duplicable`; use schema length rules to constrain the available actions. For SearchForm use `syncQuery` with Nuxt routing or Vue Router. Use `@query-restore` to refresh results after browser history navigation and `@submit` for new searches.
+
 `if` and `hidden` accept either a boolean or `(ctx) => boolean`. Mark conditionally-rendered fields `.optional()` so validation doesn't fail when they're hidden.
 
 ```ts
@@ -182,7 +184,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 ```vue
 <MAutoForm
   :schema="schema"
-  :state="state"
+  v-model="state"
   :loading-auto="false"
   :submit-button-props="{ loading: saving, label: 'Save' }"
   @submit="onSubmit"
@@ -214,7 +216,7 @@ function onError(errors: FormError[]) {
 </script>
 
 <template>
-  <MAutoForm ref="form" :schema="schema" :state="state" @submit="onSubmit" @error="onError" />
+  <MAutoForm ref="form" :schema="schema" v-model="state" @submit="onSubmit" @error="onError" />
 </template>
 ```
 
@@ -230,7 +232,7 @@ function clear() { form.value?.clear() }
 </script>
 
 <template>
-  <MAutoForm ref="form" :schema="schema" :state="state" :submit="false" @submit="onSubmit" />
+  <MAutoForm ref="form" :schema="schema" v-model="state" :submit="false" @submit="onSubmit" />
   <UButton label="Save" @click="save" />
   <UButton label="Reset" variant="outline" @click="reset" />
 </template>
