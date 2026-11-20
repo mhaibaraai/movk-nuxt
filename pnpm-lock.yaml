@@ -337,7 +337,7 @@ importers:
         specifier: workspace:*
         version: link:..
       '@movk/nuxt-docs':
-        specifier: ^3.0.3
+        specifier: ^3.0.4
         version: 3.0.4(82b8434b3e45f616007df00d1a2a421c)
       '@nuxt/content':
         specifier: ^3.17.0
