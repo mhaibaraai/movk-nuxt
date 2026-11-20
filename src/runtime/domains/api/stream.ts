@@ -127,7 +127,8 @@ export function withStreamAccept(headers?: HeadersInit): Headers {
  * 发起请求并取出 SSE 分片流
  *
  * @description 走 `$fetch.raw` 而非原生 fetch：端点 baseURL、鉴权头、业务码校验、toast 与
- *  `movk:api:*` hook 全部复用。响应是流时拦截器已短路，不会拿流去做 `{ code, data }` 解包。
+ *  `movk:api:*` hook 全部复用。固定按流读取，网关把 SSE 标成非 `text/event-stream` 也不受影响；
+ *  JSON 响应（错误信封）由拦截器还原后照常校验，真正的流则短路。
  */
 export async function openEventStream<T>(
   $fetch: $Fetch,
@@ -137,6 +138,7 @@ export async function openEventStream<T>(
   const { parse, headers, ...fetchOptions } = options
   // ofetch 的 FetchOptions 把 method 放宽成 string，nitro 侧要求字面量联合，此处只做类型收窄
   const response = await $fetch.raw(url, {
+    responseType: 'stream',
     ...fetchOptions,
     headers: withStreamAccept(headers)
   } as NitroFetchOptions<string>)
@@ -144,8 +146,7 @@ export async function openEventStream<T>(
 
   if (!isReadableStream(body)) {
     throw new Error(
-      `[@movk/nuxt] 期望 SSE 流，实际收到 ${describe(body)}。`
-      + '请确认接口返回 text/event-stream，或显式传 responseType: \'stream\''
+      `[@movk/nuxt] 期望 SSE 流，实际收到 ${describe(body)}。请确认接口返回事件流`
     )
   }
 

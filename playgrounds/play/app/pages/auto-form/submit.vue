@@ -78,7 +78,7 @@ async function onRefSubmit() {
       description="@submit 返回 Promise 时，按钮 loading 由 AutoForm 自动管理"
       :state="autoState"
     >
-      <MAutoForm :schema="autoSchema" :state="autoState" @submit="onAutoSubmit" />
+      <MAutoForm v-model="autoState" :schema="autoSchema" @submit="onAutoSubmit" />
     </Showcase>
 
     <Showcase
@@ -87,8 +87,8 @@ async function onRefSubmit() {
       :state="manualState"
     >
       <MAutoForm
+        v-model="manualState"
         :schema="manualSchema"
-        :state="manualState"
         :loading-auto="false"
         :submit-button-props="{ loading: manualLoading, label: manualLoading ? '提交中…' : '提交' }"
         @submit="onManualSubmit"
@@ -101,8 +101,8 @@ async function onRefSubmit() {
       :state="errState"
     >
       <MAutoForm
+        v-model="errState"
         :schema="errSchema"
-        :state="errState"
         @submit="onErrSubmit"
         @error="onErrError"
       />
@@ -120,8 +120,8 @@ async function onRefSubmit() {
       </template>
       <MAutoForm
         ref="apiForm"
+        v-model="refState"
         :schema="refSchema"
-        :state="refState"
         :submit="false"
         @submit="onRefSubmit"
       />

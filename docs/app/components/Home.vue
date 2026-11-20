@@ -15,10 +15,6 @@ const slides = [{
   key: 'components',
   label: 'UI 组件',
   icon: 'i-lucide-layout-grid'
-}, {
-  key: 'enhanced',
-  label: '输入增强',
-  icon: 'i-lucide-sparkles'
 }]
 
 const active = ref(0)
@@ -103,8 +99,12 @@ const tableColumns: DataTableColumn<Member>[] = [
 ]
 
 const pickedDate = ref<DateValue | undefined>()
-const color = ref('#3B82F6')
-const verified = ref(false)
+const confirmed = ref<boolean>()
+const { confirm } = useMessageBox()
+
+async function onConfirm() {
+  confirmed.value = await confirm({ type: 'warning', title: '确认删除？', description: '删除后不可恢复。' })
+}
 
 const treeItems: TreeItem[] = [
   {
@@ -118,13 +118,6 @@ const treeItems: TreeItem[] = [
   },
   { label: 'package.json', icon: 'i-vscode-icons-file-type-json' }
 ]
-
-const copyText = ref('Hello Movk Nuxt!')
-const passwordText = ref('secret123')
-const clearText = ref('可清除的内容')
-const limitText = ref('')
-const floatingText = ref('')
-const phoneText = ref('')
 </script>
 
 <template>
@@ -179,37 +172,22 @@ const phoneText = ref('')
           <div class="rounded-xl border border-default bg-elevated p-4">
             <div class="flex items-center justify-between mb-2">
               <p class="text-sm font-medium">
-                颜色选择器
+                命令式确认
               </p>
               <UBadge variant="outline" size="xs" class="font-mono text-[10px]">
-                MColorChooser
+                useMessageBox
               </UBadge>
             </div>
             <p class="text-xs text-muted mb-3">
-              RGB · HEX · HSL · Popover 触发
+              无需声明组件 · await 获取用户选择
             </p>
             <div class="flex items-center gap-3">
-              <MColorChooser v-model="color" />
-              <code class="text-xs text-muted">{{ color }}</code>
+              <UButton label="删除" color="error" variant="soft" icon="i-lucide-trash-2" @click="onConfirm" />
+              <code v-if="confirmed !== undefined" class="text-xs text-muted">{{ confirmed }}</code>
             </div>
           </div>
 
-          <div class="rounded-xl border border-default bg-elevated p-4">
-            <div class="flex items-center justify-between mb-2">
-              <p class="text-sm font-medium">
-                滑动验证
-              </p>
-              <UBadge variant="outline" size="xs" class="font-mono text-[10px]">
-                MSlideVerify
-              </UBadge>
-            </div>
-            <p class="text-xs text-muted mb-3">
-              Motion.js 流畅动画 · 可配置验证阈值
-            </p>
-            <MSlideVerify v-model="verified" @success="verified = true" />
-          </div>
-
-          <div class="rounded-xl border border-default bg-elevated p-4">
+          <div class="rounded-xl border border-default bg-elevated p-4 sm:col-span-2">
             <div class="flex items-center justify-between mb-2">
               <p class="text-sm font-medium">
                 树形组件
@@ -224,82 +202,6 @@ const phoneText = ref('')
             <div class="max-h-44 overflow-auto">
               <MTree :items="treeItems" searchable />
             </div>
-          </div>
-        </div>
-      </div>
-
-      <div v-else class="p-4 sm:p-6">
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div class="rounded-xl border border-default bg-elevated p-3 space-y-2.5">
-            <div class="flex items-center justify-between">
-              <p class="text-xs font-medium">
-                带复制功能
-              </p>
-              <UBadge variant="soft" size="xs" class="font-mono text-[10px]">
-                WithCopy
-              </UBadge>
-            </div>
-            <MWithCopy v-model="copyText" />
-          </div>
-
-          <div class="rounded-xl border border-default bg-elevated p-3 space-y-2.5">
-            <div class="flex items-center justify-between">
-              <p class="text-xs font-medium">
-                密码切换
-              </p>
-              <UBadge variant="soft" size="xs" class="font-mono text-[10px]">
-                WithPasswordToggle
-              </UBadge>
-            </div>
-            <MWithPasswordToggle v-model="passwordText" />
-          </div>
-
-          <div class="rounded-xl border border-default bg-elevated p-3 space-y-2.5">
-            <div class="flex items-center justify-between">
-              <p class="text-xs font-medium">
-                带清除功能
-              </p>
-              <UBadge variant="soft" size="xs" class="font-mono text-[10px]">
-                WithClear
-              </UBadge>
-            </div>
-            <MWithClear v-model="clearText" />
-          </div>
-
-          <div class="rounded-xl border border-default bg-elevated p-3 space-y-2.5">
-            <div class="flex items-center justify-between">
-              <p class="text-xs font-medium">
-                字符计数
-              </p>
-              <UBadge variant="soft" size="xs" class="font-mono text-[10px]">
-                WithCharacterLimit
-              </UBadge>
-            </div>
-            <MWithCharacterLimit v-model="limitText" :max-length="30" placeholder="最多 30 个字符" />
-          </div>
-
-          <div class="rounded-xl border border-default bg-elevated p-3 space-y-2.5">
-            <div class="flex items-center justify-between">
-              <p class="text-xs font-medium">
-                浮动标签
-              </p>
-              <UBadge variant="soft" size="xs" class="font-mono text-[10px]">
-                WithFloatingLabel
-              </UBadge>
-            </div>
-            <MWithFloatingLabel v-model="floatingText" label="用户名" placeholder="输入内容后标签上浮" />
-          </div>
-
-          <div class="rounded-xl border border-default bg-elevated p-3 space-y-2.5">
-            <div class="flex items-center justify-between">
-              <p class="text-xs font-medium">
-                电话格式
-              </p>
-              <UBadge variant="soft" size="xs" class="font-mono text-[10px]">
-                AsPhoneNumberInput
-              </UBadge>
-            </div>
-            <MAsPhoneNumberInput v-model="phoneText" dial-code="+86" mask="### #### ####" />
           </div>
         </div>
       </div>

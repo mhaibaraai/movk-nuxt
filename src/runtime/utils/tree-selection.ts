@@ -1,21 +1,8 @@
-import type { TreeSelectionResult } from '../types/shared'
+import type { TreeSelectionResult, TreeSelectionStrategy, TreeSelectionSummary } from '../types/shared'
+
+export type { TreeSelectionStrategy, TreeSelectionSummary }
 
 type AnyNode = Record<string, any>
-
-/** 父子勾选策略，仅 cascade 会在 strictlyChecked 中剔除随父级联的子节点 */
-export type TreeSelectionStrategy = 'cascade' | 'isolated' | 'leaf'
-
-/** 工具栏选中态摘要 */
-export interface TreeSelectionSummary {
-  /** 已选节点数 */
-  checkedCount: number
-  /** 可选节点总数 */
-  total: number
-  /** 是否全部选中 */
-  allChecked: boolean
-  /** 是否处于半选态 */
-  indeterminate: boolean
-}
 
 /**
  * 由已选数量与可选总数推导工具栏选中态摘要

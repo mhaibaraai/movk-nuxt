@@ -1,3 +1,4 @@
+import type { MovkTranslator } from '../../../composables/useMovkLocale'
 import type { CellContext, ColumnDef, HeaderContext } from '@tanstack/vue-table'
 import type { VNode } from 'vue'
 import type {
@@ -110,7 +111,8 @@ function buildSortAction<T>(
 
 function buildPinAction<T>(
   col: Pick<DataTableDataColumn<T>, 'pinButtonProps'>,
-  options: DataTableProps<T>
+  options: DataTableProps<T>,
+  t: MovkTranslator
 ): HeaderAction<T> {
   return {
     id: 'pin',
@@ -124,7 +126,7 @@ function buildPinAction<T>(
         'color': pinned ? 'primary' : 'neutral',
         'class': pinned ? 'opacity-100' : 'opacity-60 group-hover:opacity-100',
         'icon': pinned ? 'i-lucide-pin-off' : 'i-lucide-pin',
-        'aria-label': pinned ? 'Cancel column pin' : 'Pin column',
+        'aria-label': pinned ? t('dataTable.unpinColumn') : t('dataTable.pinColumn'),
         'onClick': (event: Event) => {
           event.stopPropagation()
           if (pinned === 'left') {
@@ -149,17 +151,22 @@ function buildPinAction<T>(
   }
 }
 
+interface HeaderActionFlags {
+  sortable: boolean
+  pinable: boolean
+  resizable: boolean
+}
+
 export function renderHeaderActions<T>(
   ctx: HeaderContext<T, unknown>,
   col: Pick<DataTableDataColumn<T>, 'pinButtonProps' | 'sortButtonProps'>,
-  options: DataTableProps<T>,
+  resolveCtx: Pick<ResolveContext<T>, 'options' | 't'>,
   label: unknown,
-  sortable: boolean,
-  pinable: boolean,
-  resizable: boolean
+  { sortable, pinable, resizable }: HeaderActionFlags
 ) {
+  const { options, t } = resolveCtx
   const actions: HeaderAction<T>[] = []
-  if (pinable) actions.push(buildPinAction(col, options))
+  if (pinable) actions.push(buildPinAction(col, options, t))
   if (sortable) actions.push(buildSortAction(col, options))
   const leading = actions.filter(a => a.position === 'leading').map(a => a.render(ctx))
   const trailing = actions.filter(a => a.position === 'trailing').map(a => a.render(ctx))
@@ -206,7 +213,11 @@ export function resolveDataColumn<T>(
   const def: ColumnDef<T, unknown> = {
     accessorKey: id,
     header: (effectiveSortable || effectivePinable || effectiveResizable)
-      ? (hctx: HeaderContext<T, unknown>) => renderHeaderActions(hctx, col, options, headerSlot ? headerSlot(hctx) : (col.header ?? id), effectiveSortable, effectivePinable, effectiveResizable)
+      ? (hctx: HeaderContext<T, unknown>) => renderHeaderActions(hctx, col, ctx, headerSlot ? headerSlot(hctx) : (col.header ?? id), {
+          sortable: effectiveSortable,
+          pinable: effectivePinable,
+          resizable: effectiveResizable
+        })
       : headerSlot
         ? (hctx: HeaderContext<T, unknown>) => headerSlot(hctx)
         : (col.header ?? id),

@@ -1,8 +1,7 @@
 import type { $Fetch, AvailableRouterMethod } from 'nitropack/types'
 import type { MaybeRefOrGetter } from 'vue'
-import type { FetchError } from 'ofetch'
 import type { UseFetchOptions as NuxtUseFetchOptions, AsyncData } from 'nuxt/app'
-import type { RequestToastOptions, ApiError } from './response'
+import type { ApiError, ApiRequestOptions } from './response'
 import type { ApiStreamOptions } from './stream'
 
 /**
@@ -38,27 +37,15 @@ export type ApiInstance = $Fetch & {
  * @template DataT - transform 转换后的类型（默认等于 T）
  */
 export type UseApiFetchOptions<T = unknown, DataT = T>
-  = Omit<NuxtUseFetchOptions<T, DataT>, '$fetch' | 'context' | 'method'> & {
+  = Omit<NuxtUseFetchOptions<T, DataT>, '$fetch' | 'method' | keyof ApiRequestOptions> & ApiRequestOptions & {
     /** 请求方法；请求经端点 baseURL 发往外部服务，不按本地 Nitro 路由收窄 */
     method?: MaybeRefOrGetter<AvailableRouterMethod<string> | Uppercase<AvailableRouterMethod<string>>>
     /** 使用的端点名称（默认使用 defaultEndpoint） */
     endpoint?: MovkApiEndpointName
-    /** Toast 提示配置，设置为 false 禁用提示 */
-    toast?: RequestToastOptions | false
-    /**
-     * 是否跳过业务状态码检查
-     * @description 仅跳过 code 校验，仍解包；与 skipUnwrap 正交。
-     */
-    skipBusinessCheck?: boolean
-    /**
-     * 是否跳过数据解包
-     * @description 为 true 时返回原始响应；与 skipBusinessCheck 正交。
-     */
-    skipUnwrap?: boolean
   }
 
 /**
  * useApiFetch 返回值类型
  * @template DataT - 最终数据类型
  */
-export type UseApiFetchReturn<DataT> = AsyncData<DataT | null, FetchError | ApiError | null>
+export type UseApiFetchReturn<DataT> = AsyncData<DataT | null, ApiError | null>

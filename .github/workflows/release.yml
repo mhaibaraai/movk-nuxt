@@ -17,7 +17,7 @@ permissions:
 jobs:
   publish:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
 
     steps:
       - uses: actions/checkout@v7
@@ -56,5 +56,14 @@ jobs:
       - name: Build
         run: pnpm run build
 
+      - name: Pack and verify packaged consumers
+        id: package
+        run: |
+          TARBALL="$RUNNER_TEMP/$(npm pack --ignore-scripts --pack-destination "$RUNNER_TEMP")"
+          pnpm run test:pack "$TARBALL"
+          echo "tarball=$TARBALL" >> "$GITHUB_OUTPUT"
+
       - name: Publish
-        run: npm publish --provenance --access public --ignore-scripts
+        env:
+          TARBALL: ${{ steps.package.outputs.tarball }}
+        run: npm publish "$TARBALL" --provenance --access public --ignore-scripts

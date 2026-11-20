@@ -1,15 +1,19 @@
 import type { ToastProps } from '@nuxt/ui'
-import type { ApiResponse, ApiResponseConfig, ApiToastConfig, RequestToastOptions } from '../../types/api'
+import type { ApiResponseConfig, ApiToastConfig, RequestToastOptions } from '../../types/api'
 import type { ApiToast, ApiToastTypeConfig } from '../../types/api/config'
 import { extractMessage } from './response'
-import { useNuxtApp, useToast } from '#imports'
+import type { useNuxtApp } from '#imports'
+import { tryUseNuxtApp, useToast } from '#imports'
 
 type ToastType = 'success' | 'error'
+type NuxtApp = ReturnType<typeof useNuxtApp>
 
-function getToast(): ReturnType<typeof useToast> | null {
+// useToast 依赖 useState，需 nuxtApp.runWithContext 恢复 Nuxt 上下文（vueApp 版只恢复 Vue 上下文，SSR 拦截器中会触发 NUXT_E1001）；
+// 未传入时用 tryUseNuxtApp，无上下文返回 null 而非抛错
+function getToast(nuxtApp: NuxtApp | null = tryUseNuxtApp()): ReturnType<typeof useToast> | null {
+  if (!nuxtApp) return null
   try {
-    const nuxtApp = useNuxtApp()
-    return nuxtApp.vueApp.runWithContext(() => useToast())
+    return nuxtApp.runWithContext(() => useToast()) as ReturnType<typeof useToast>
   }
   catch {
     return null
@@ -18,7 +22,7 @@ function getToast(): ReturnType<typeof useToast> | null {
 
 function pickMessage(
   type: ToastType,
-  source: ApiResponse | string | undefined,
+  source: unknown,
   requestOptions: RequestToastOptions | false | undefined,
   responseConfig?: Partial<ApiResponseConfig>
 ): string {
@@ -27,7 +31,7 @@ function pickMessage(
     if (custom) return custom
   }
   if (typeof source === 'string') return source
-  if (source && responseConfig) {
+  if (responseConfig) {
     const extracted = extractMessage(source, responseConfig)
     if (extracted) return extracted
   }
@@ -58,22 +62,24 @@ function compact<T extends Record<string, unknown>>(obj: T): Partial<T> {
  * @description 决策收敛在本函数内：是否启用 / 类型是否启用 / 提示文案选择 / payload 构造。
  *
  * @param type 提示类型
- * @param source 字符串作为 fallback 文案；ApiResponse 时按 responseConfig 抽取 message；undefined 走类型默认文案
+ * @param source 字符串作为文案；对象按 responseConfig 抽取 message；其余走类型默认文案
  * @param requestOptions 单次请求覆盖配置；为 false 时整体禁用
  * @param globalConfig 全局 Toast 配置（已合并端点级覆盖）
  * @param responseConfig 用于从 ApiResponse 抽取 message 的字段映射；source 为字符串时可省略
  * @param method 当前请求的 HTTP 方法，用于匹配 globalConfig 的方法白名单；缺省按 GET 处理
+ * @param nuxtApp 创建客户端时捕获的实例；拦截器中 await 之后已无上下文，须显式传入
  * @description 开关优先级：请求级 show 显式声明 > 请求级 successMessage / errorMessage >
  * 全局 typeConfig.show / typeConfig.methods > 全局 enabled。
  * 请求级 `show: true` 或自定义文案均可在全局关闭时单次开启。
  */
 export function showToast(
   type: ToastType,
-  source: ApiResponse | string | undefined,
+  source: unknown,
   requestOptions: RequestToastOptions | false | undefined,
   globalConfig: Partial<ApiToastConfig>,
   responseConfig?: Partial<ApiResponseConfig>,
-  method?: string
+  method?: string,
+  nuxtApp?: NuxtApp
 ): void {
   if (requestOptions === false) return
 
@@ -93,7 +99,7 @@ export function showToast(
   const message = pickMessage(type, source, requestOptions, responseConfig)
   if (!message) return
 
-  const toast = getToast()
+  const toast = getToast(nuxtApp)
   if (!toast) return
 
   const { show: _show, methods: _methods, ...typeConfigProps } = typeConfig ?? {}

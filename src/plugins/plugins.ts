@@ -6,14 +6,19 @@ const MOVK_PLUGINS_VIRTUAL = 'virtual:movk-plugins'
 
 /**
  * 把 `@movk/nuxt/vue-plugin` 解析为 virtual:movk-plugins。
- * install(app)：先链入 @nuxt/ui 的 vue-plugin，再装 movk 主题插件。
+ * install(app)：先链入 @nuxt/ui 的 vue-plugin，再装 movk 主题与 zod 插件。
  */
 export default function MovkPluginsPlugin(options: MovkUIOptions): UnpluginOptions {
   const themePath = resolvePathSync('../runtime/vue/plugins/theme', {
     extensions: ['.ts', '.mjs', '.js'],
     url: import.meta.url
   })
+  const zodPath = resolvePathSync('../runtime/vue/plugins/zod', {
+    extensions: ['.ts', '.mjs', '.js'],
+    url: import.meta.url
+  })
   const themeEnabled = options.theme?.enabled !== false
+  const zodEnabled = !!options.zod
 
   return {
     name: 'movk:plugins',
@@ -27,10 +32,12 @@ export default function MovkPluginsPlugin(options: MovkUIOptions): UnpluginOptio
       return [
         `import nuxtUIPlugin from '@nuxt/ui/vue-plugin'`,
         themeEnabled ? `import movkThemePlugin from ${JSON.stringify(themePath)}` : '',
+        zodEnabled ? `import movkZodPlugin from ${JSON.stringify(zodPath)}` : '',
         `export default {`,
         `  install(app, pluginOptions = {}) {`,
         `    app.use(nuxtUIPlugin, pluginOptions)`,
         themeEnabled ? `    app.use(movkThemePlugin)` : '',
+        zodEnabled ? `    app.use(movkZodPlugin, pluginOptions.zod)` : '',
         `  }`,
         `}`
       ].filter(Boolean).join('\n')

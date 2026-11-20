@@ -6,7 +6,7 @@ const toast = useToast()
 
 const loginSchema = afz.object({
   email: afz.email({ controlProps: { placeholder: 'demo@movk.dev' } }).meta({ label: '邮箱' }),
-  password: afz.string({ type: 'withPasswordToggle' }).min(6).meta({ label: '密码' }),
+  password: afz.string({ controlProps: { type: 'password' } }).min(6).meta({ label: '密码' }),
   remember: afz.boolean({ type: 'switch' }).default(false).meta({ label: '记住我' })
 })
 const loginState = reactive<Partial<z.input<typeof loginSchema>>>({})
@@ -19,12 +19,12 @@ async function onLogin() {
 const registerSchema = afz.object({
   account: afz.object({
     username: afz.string().min(3).meta({ label: '用户名' }),
-    password: afz.string({ type: 'withPasswordToggle' }).min(8).meta({ label: '密码' }),
-    confirm: afz.string({ type: 'withPasswordToggle' }).min(8).meta({ label: '确认密码' })
+    password: afz.string({ controlProps: { type: 'password' } }).min(8).meta({ label: '密码' }),
+    confirm: afz.string({ controlProps: { type: 'password' } }).min(8).meta({ label: '确认密码' })
   }).meta({ label: '账号信息' }),
   profile: afz.object({
     name: afz.string().meta({ label: '昵称' }),
-    phone: afz.string({ type: 'asPhoneNumberInput' }).meta({ label: '手机' }),
+    phone: afz.string({ controlProps: { type: 'tel', placeholder: '138 0013 8000' } }).meta({ label: '手机' }),
     interests: afz.array(afz.string(), { type: 'inputTags' }).default([]).meta({ label: '兴趣标签' })
   }).meta({ label: '个人资料' }),
   agreement: afz
@@ -57,7 +57,7 @@ async function onFileSubmit() {
 const searchSchema = afz.object({
   keyword: afz.string({ controlProps: { placeholder: '输入关键字' } }).optional().meta({ label: '关键字' }),
   category: afz
-    .enum(['全部', '前端', '后端', '运维'], { type: 'pillGroup' })
+    .enum(['全部', '前端', '后端', '运维'], { type: 'radioGroup', controlProps: { orientation: 'horizontal' } })
     .default('全部')
     .meta({ label: '分类' }),
   status: afz
@@ -85,8 +85,8 @@ function onSearchReset() {
   <div class="p-4 grid grid-cols-1 xl:grid-cols-2 gap-4">
     <Showcase title="登录表单" description="组合邮箱、密码与记住我字段，loadingAuto 接管异步提交态" :state="loginState">
       <MAutoForm
+        v-model="loginState"
         :schema="loginSchema"
-        :state="loginState"
         :submit-button-props="{ block: true, label: '登 录' }"
         @submit="onLogin"
       />
@@ -94,8 +94,8 @@ function onSearchReset() {
 
     <Showcase title="注册分组校验" description="嵌套 object 分组字段，refine 校验确认密码一致" :state="registerState">
       <MAutoForm
+        v-model="registerState"
         :schema="registerSchema"
-        :state="registerState"
         :submit-button-props="{ label: '注 册' }"
         @submit="onRegister"
       />
@@ -103,8 +103,8 @@ function onSearchReset() {
 
     <Showcase title="多文件上传" description="afz.array(afz.file()) 渲染多文件字段，提交后汇总附件数量" :state="fileState">
       <MAutoForm
+        v-model="fileState"
         :schema="fileSchema"
-        :state="fileState"
         :submit-button-props="{ label: '上 传' }"
         @submit="onFileSubmit"
       />
@@ -113,8 +113,8 @@ function onSearchReset() {
     <Showcase title="横向搜索表单" description="globalMeta 横向排布筛选项，footer 插槽承载操作按钮" :state="searchState">
       <MAutoForm
         ref="searchForm"
+        v-model="searchState"
         :schema="searchSchema"
-        :state="searchState"
         :global-meta="{ orientation: 'horizontal', size: 'sm' }"
         :submit="false"
         @submit="onSearch"

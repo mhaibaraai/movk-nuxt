@@ -3,18 +3,8 @@ import type { MovkUIOptions } from '../unplugin'
 import { defu } from 'defu'
 import { resolvePathSync } from 'mlly'
 import { kebabCase } from 'scule'
-import { getDefaultConfig } from '../runtime/utils/theme-defaults'
+import { getDefaultConfig, UI_COLOR_DEFAULTS } from '../runtime/utils/theme-defaults'
 import { getPackageJsonMetadata } from '../runtime/utils/meta'
-
-const UI_COLOR_DEFAULTS = {
-  primary: 'blue',
-  secondary: 'blue',
-  success: 'green',
-  info: 'blue',
-  warning: 'yellow',
-  error: 'red',
-  neutral: 'slate'
-}
 
 /**
  * 在 @nuxt/ui 生成的 `#build/app.config`（virtual:nuxt-ui-app-config）之上注入 movk 键，

@@ -1,10 +1,13 @@
+import type { DataTableExportOptions } from '../../domains/data-table/export'
 import type {
   CellContext,
+  ColumnFiltersState,
   ColumnDefTemplate,
   ColumnMeta,
   HeaderContext,
   PaginationState,
   Row,
+  SortingState,
   Table,
   TableMeta
 } from '@tanstack/vue-table'
@@ -32,6 +35,14 @@ export type DataTableHoverHandler<T extends TableData>
 export type DataTableContextmenuHandler<T extends TableData>
   = ((e: Event, row: TableRow<T>) => void) | ((e: Event, row: TableRow<T>) => void)[]
 
+export interface DataTableServerCsvContext {
+  columns: string[]
+  filename?: string
+  sorting: SortingState
+  columnFilters: ColumnFiltersState
+  globalFilter: unknown
+}
+
 export interface DataTableExposed<T extends TableData> {
   tableRef: HTMLTableElement | null
   tableApi: Table<T> | null
@@ -43,6 +54,18 @@ export interface DataTableExposed<T extends TableData> {
   expandToDepth: (depth: number) => void
   /** 收起全部行 */
   collapseAll: () => void
+  /** 展开全部可展开行 */
+  expandAll: () => void
+  /** 选中全部行（单选模式下无效） */
+  selectAll: () => void
+  /** 已选行的原始数据，含子行 */
+  getSelectedRows: () => T[]
+  /** 恢复列的初始可见性、顺序、宽度与固定，并清除持久化的列状态 */
+  resetColumns: () => void
+  /** 按当前列导出 CSV 并下载 */
+  exportCsv: (options?: DataTableExportOptions) => void
+  /** 使用调用方的下载方法导出所有符合条件的服务端数据 */
+  exportServerCsv: (options?: Omit<DataTableExportOptions, 'rows'>) => Promise<void>
   treeSelection: TreeSelectionResult<T>
 }
 
@@ -70,6 +93,20 @@ export interface DataTableProps<T extends TableData> extends /* @vue-ignore */ O
   rowKey?: keyof T & string | (string & {})
   columns?: DataTableColumn<T>[]
   loading?: TableProps<T>['loading']
+  /**
+   * 加载中且无数据时显示的骨架行数，`0` 时沿用 UTable 默认的加载样式；`loading` 插槽优先
+   * @defaultValue 5
+   */
+  skeletonRows?: number
+  /**
+   * 在表格上方的工具栏显示列设置面板（显隐与拖拽排序）
+   * @defaultValue false
+   */
+  columnSettings?: boolean
+  /** 设置后将列可见性、顺序、宽度、固定与每页条数持久化到 localStorage，值作为存储 key */
+  persistKey?: string
+  /** 服务端全量 CSV 下载回调，应使用应用当前的外部筛选条件及表格传入的查询条件 */
+  serverCsvExport?: (context: DataTableServerCsvContext) => void | Promise<void>
   /**
    * 斑马纹
    * @defaultValue false
@@ -192,6 +229,8 @@ export interface DataTableProps<T extends TableData> extends /* @vue-ignore */ O
    * 触底加载回调，传入即启用无限滚动模式（自动隐藏内置分页、async 期间派生 loading）
    */
   loadMore?: () => void | Promise<void>
+  /** `loadMore` 返回的 Promise 被拒绝时调用；缺省时输出到控制台 */
+  onLoadMoreError?: (error: unknown) => void
   /**
    * 是否还能加载更多
    * @defaultValue true
@@ -232,6 +271,8 @@ interface DataTableNamedSlots<T extends TableData> {
   'pagination'(props: DataTablePaginationSlotProps<T>): VNode[]
   'pagination-summary'(props: FirstParameter<DataTablePaginationSlots<T>['summary']>): VNode[]
   'pagination-actions'(props: FirstParameter<DataTablePaginationSlots<T>['actions']>): VNode[]
+  /** 表格上方工具栏；开启 `columnSettings` 时默认渲染列设置按钮 */
+  'toolbar'(props: { tableApi: Table<T> | null, resetColumns: () => void }): VNode[]
 }
 
 /**

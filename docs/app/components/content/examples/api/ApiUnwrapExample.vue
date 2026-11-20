@@ -1,22 +1,22 @@
 <script setup lang="ts">
 const props = defineProps<{
-  mode: 'default' | 'skip-unwrap' | 'skip-business-check' | 'combined'
+  mode: 'default' | 'no-unwrap' | 'no-business-check' | 'combined'
 }>()
 
 const fetchers = {
   'default': useApiFetch('/profile', { key: 'unwrap-default', immediate: false }),
-  'skip-unwrap': useApiFetch('/profile', { key: 'unwrap-skip-unwrap', immediate: false, skipUnwrap: true }),
-  'skip-business-check': useApiFetch('/demo/legacy', { key: 'unwrap-skip-business-check', immediate: false, skipBusinessCheck: true }),
-  'combined': useApiFetch('/demo/external', { key: 'unwrap-combined', immediate: false, skipBusinessCheck: true, skipUnwrap: true })
+  'no-unwrap': useApiFetch('/profile', { key: 'unwrap-no-unwrap', immediate: false, unwrap: false }),
+  'no-business-check': useApiFetch('/demo/legacy', { key: 'unwrap-no-business-check', immediate: false, businessCheck: false }),
+  'combined': useApiFetch('/demo/external', { key: 'unwrap-combined', immediate: false, businessCheck: false, unwrap: false })
 }
 
 const active = computed(() => fetchers[props.mode])
 
 const hints: Record<typeof props.mode, string> = {
   'default': '按 dataKey（默认 data）抽取业务数据，调用方直接拿到去信封后的对象。',
-  'skip-unwrap': 'skipUnwrap: true 不重写 response._data，保留完整 code/message/data 信封。',
-  'skip-business-check': 'legacy 接口未返回 code 字段，跳过校验后仍按 dataKey 解包出业务数据。',
-  'combined': 'external 接口信封非标，同时开两开关由调用方完全自处理响应。'
+  'no-unwrap': 'unwrap: false 不重写 response._data，保留完整 code/message/data 信封。',
+  'no-business-check': 'legacy 接口未返回 code 字段，关闭校验后仍按 dataKey 解包出业务数据。',
+  'combined': 'external 接口信封非标，同时关闭两项由调用方完全自处理响应。'
 }
 
 watch(() => props.mode, () => active.value.execute(), { immediate: true })

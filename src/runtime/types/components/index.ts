@@ -1,12 +1,6 @@
 export type {
-  ColorChooserEmits,
-  ColorChooserProps,
-  ColorChooserSlots,
-  ColorChooserTrigger,
-  ColorFormat
-} from './color-chooser'
-export type {
   DatePickerEmits,
+  DatePickerExposed,
   DatePickerLabelFormatter,
   DatePickerPreset,
   DatePickerProps,
@@ -28,24 +22,3 @@ export type {
   TreeSelectionSummary,
   TreeSlots
 } from './tree'
-export type { PopconfirmEmits, PopconfirmProps, PopconfirmSlots } from './popconfirm'
-export type { SlideVerifyEmits, SlideVerifyProps, SlideVerifySlots } from './slide-verify'
-export type {
-  PillGroupEmits,
-  PillGroupProps,
-  PillGroupSlots,
-  PillItem,
-  PillGroupValue,
-  PillSelectPayload
-} from './pill-group'
-export type {
-  AsPhoneNumberInputProps,
-  WithCharacterLimitProps,
-  WithClearEmits,
-  WithClearProps,
-  WithCopyEmits,
-  WithCopyProps,
-  WithFloatingLabelEmits,
-  WithFloatingLabelProps,
-  WithPasswordToggleProps
-} from './input'

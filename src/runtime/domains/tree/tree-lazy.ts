@@ -11,6 +11,9 @@ export const PLACEHOLDER_FLAG = '__movkLazyPlaceholder'
  */
 export const LAZY_KEY_FIELD = '__movkKey'
 
+/** 占位节点记录所属父节点 key，供加载失败时定位重试 */
+export const PLACEHOLDER_PARENT_FIELD = '__movkParent'
+
 /** 判断节点是否为懒加载占位 */
 export function isPlaceholder(node: AnyObject): boolean {
   return !!node[PLACEHOLDER_FLAG]
@@ -35,8 +38,35 @@ export function markLazyPlaceholders<T extends AnyObject>(
     if (node.isLeaf) return node
     const placeholder = {
       [labelKey]: `${PLACEHOLDER_FLAG}:${getKey(node)}`,
-      [PLACEHOLDER_FLAG]: true
+      [PLACEHOLDER_FLAG]: true,
+      [PLACEHOLDER_PARENT_FIELD]: getKey(node)
     } as unknown as T
     return { ...node, [LAZY_KEY_FIELD]: getKey(node), children: [placeholder] }
+  })
+}
+
+/** 占位节点所属父节点的 key */
+export function placeholderParentKey(node: AnyObject): string | undefined {
+  return isPlaceholder(node) ? node[PLACEHOLDER_PARENT_FIELD] : undefined
+}
+
+/**
+ * 把已加载的子节点回填到仍为占位的父节点上，使 `items` 引用变化后已展开的懒加载子树不丢失。不修改入参
+ */
+export function restoreLoadedChildren<T extends AnyObject>(
+  items: T[],
+  loaded: ReadonlyMap<string, T[]>,
+  getKey: (node: T) => string
+): T[] {
+  if (!loaded.size) return items
+  return items.map((node) => {
+    const children = node.children as T[] | undefined
+    if (!Array.isArray(children)) return node
+    const key = getKey(node)
+    if (children.length === 1 && isPlaceholder(children[0]!) && loaded.has(key)) {
+      const restored = loaded.get(key)!
+      return { ...node, children: restoreLoadedChildren(restored, loaded, getKey) }
+    }
+    return { ...node, children: restoreLoadedChildren(children, loaded, getKey) }
   })
 }

@@ -1,11 +1,12 @@
 import { useAppConfig, useColorMode, useSiteConfig } from '#imports'
+import { resolveThemeColor } from '../domains/theme/theme-color'
 import { resolveThemeIcons, themeIcons } from '../domains/theme/theme-icons'
 import { resolveActiveRadius, resolveRadiusStyle } from '../domains/theme/theme-radius'
 import { omit, kebabCase } from '@movk/core'
 import { useLocalStorage } from '@vueuse/core'
 import colors from 'tailwindcss/colors'
 import { computed } from 'vue'
-import { getDefaultConfig } from '../utils/theme-defaults'
+import { getDefaultConfig, UI_COLOR_DEFAULTS } from '../utils/theme-defaults'
 
 type IconSet = 'lucide' | 'phosphor' | 'tabler'
 
@@ -17,7 +18,7 @@ export function useTheme() {
   const colorMode = useColorMode()
   const name = kebabCase(useSiteConfig().name)
 
-  const color = computed<string>(() => colorMode.value === 'dark' ? (colors as any)[ui.colors.neutral][900] : 'white')
+  const color = computed<string>(() => resolveThemeColor(ui.colors.neutral, colorMode.value))
 
   const defaultConfig = getDefaultConfig()
 
@@ -112,8 +113,8 @@ export function useTheme() {
   })
 
   const hasConfigChanges = computed(() => {
-    return ui.colors.primary !== 'blue'
-      || ui.colors.neutral !== 'slate'
+    return ui.colors.primary !== UI_COLOR_DEFAULTS.primary
+      || ui.colors.neutral !== UI_COLOR_DEFAULTS.neutral
       || _iconSet.value !== (movk?.icons ?? defaultConfig.icons)
   })
 
@@ -149,16 +150,7 @@ export function useTheme() {
   function exportConfig(): string {
     const config: Record<string, any> = {}
 
-    const defaultColors: Record<string, string> = {
-      primary: 'blue',
-      neutral: 'slate',
-      secondary: 'blue',
-      success: 'green',
-      info: 'blue',
-      warning: 'yellow',
-      error: 'red'
-    }
-    const colorEntries = Object.entries(defaultColors).filter(([key, def]) => (ui.colors as any)[key] !== def)
+    const colorEntries = Object.entries(UI_COLOR_DEFAULTS).filter(([key, def]) => (ui.colors as any)[key] !== def)
     if (colorEntries.length) {
       config.ui = { colors: Object.fromEntries(colorEntries.map(([key]) => [key, (ui.colors as any)[key]])) }
     }
@@ -177,14 +169,12 @@ export function useTheme() {
   }
 
   function resetTheme() {
-    const defaultPrimary = 'blue'
-    const defaultNeutral = 'slate'
     const defaultIcon = movk?.icons ?? defaultConfig.icons
 
-    ui.colors.primary = defaultPrimary
+    ui.colors.primary = UI_COLOR_DEFAULTS.primary
     window.localStorage.removeItem(`${name}-ui-primary`)
 
-    ui.colors.neutral = defaultNeutral
+    ui.colors.neutral = UI_COLOR_DEFAULTS.neutral
     window.localStorage.removeItem(`${name}-ui-neutral`)
 
     _radius.value = null

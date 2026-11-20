@@ -2,8 +2,13 @@
 export const UI_COMPONENTS = [
   'UAccordion',
   'UButton', 'UBadge', 'UCheckbox', 'UCollapsible', 'UForm', 'UDropdownMenu', 'UIcon', 'UInput',
-  'UModal', 'UPagination', 'USelect', 'UPopover', 'UCalendar', 'UColorPicker', 'UTable', 'UFormField',
+  'UModal', 'UPagination', 'USelect', 'UPopover', 'UCalendar', 'UTable', 'UFormField',
   'UTooltip', 'UInputNumber', 'USwitch', 'UTextarea', 'USlider', 'UPinInput', 'UInputTags',
   'UFileUpload', 'USelectMenu', 'UInputMenu', 'UCheckboxGroup', 'URadioGroup', 'UInputDate',
-  'UInputTime', 'UListbox', 'UTree'
+  'UInputTime', 'UListbox', 'UTree', 'USkeleton', 'UToggle', 'UToggleGroup'
 ] as const
+
+export function includeMovkUiComponents(detection: true | string[]): string[] {
+  const components = UI_COMPONENTS.map(name => name.slice(1))
+  return detection === true ? components : [...new Set([...detection, ...components])]
+}

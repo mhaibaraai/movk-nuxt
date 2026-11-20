@@ -1,5 +1,5 @@
 import type { MovkApiEndpointName } from './fetch'
-import type { ApiError, RequestToastOptions } from './response'
+import type { ApiError, ApiRequestOptions } from './response'
 
 /**
  * 传输状态
@@ -15,7 +15,7 @@ export interface TransferResult<T = unknown> {
   /** 业务数据（已按 dataKey 解包）；失败或中止时为 null */
   data: T | null
   /** 错误对象；成功或中止时为 null */
-  error: ApiError | Error | null
+  error: ApiError | null
   /** 是否因调用方主动 abort 而结束 */
   aborted: boolean
 }
@@ -23,13 +23,9 @@ export interface TransferResult<T = unknown> {
 /**
  * 传输请求公共选项
  */
-export interface TransferRequestOptions {
+export interface TransferRequestOptions extends ApiRequestOptions {
   /** 端点名称，未指定时使用 defaultEndpoint */
   endpoint?: MovkApiEndpointName
   /** 额外的请求头（覆盖同名 auth 头） */
   headers?: Record<string, string>
-  /** Toast 配置，设置为 false 整体禁用 */
-  toast?: RequestToastOptions | false
-  /** 跳过业务码校验（仍按 dataKey 解包），与 useApiFetch.skipBusinessCheck 同义 */
-  skipBusinessCheck?: boolean
 }

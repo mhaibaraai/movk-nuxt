@@ -1,10 +1,8 @@
 <script lang="ts">
-import type { z } from 'zod'
 import type { AutoFormField } from '../../../types/auto-form'
 import type { AnyObject } from '@movk/core'
 
 interface AutoFormRendererLayoutProps {
-  schema: z.ZodObject
   field: AutoFormField
   extraProps?: AnyObject
 }
@@ -18,7 +16,7 @@ import AutoFormRendererChildren from './Children.vue'
 
 const props = defineProps<AutoFormRendererLayoutProps>()
 
-const { createFieldContext, resolveFieldProp } = useAutoFormInjector()
+const { createFieldContext, isFieldVisible } = useAutoFormInjector()
 
 function getFieldName(f: AutoFormField) {
   return f.path.split('.').pop() || f.path
@@ -26,9 +24,7 @@ function getFieldName(f: AutoFormField) {
 
 const visibleFields = computed(() => {
   if (!props.field.children?.length) return []
-  return props.field.children.filter(f =>
-    f && (f.meta?.if === undefined || resolveFieldProp<boolean>(f, 'if') === true)
-  )
+  return props.field.children.filter(isFieldVisible)
 })
 
 const layoutComponent = computed(() => {
@@ -101,7 +97,7 @@ const fieldsBySlot = computed(() => {
     </template>
 
     <template v-for="[slotName, fields] in fieldsBySlot.entries()" :key="`fields-${slotName}`" #[slotName]>
-      <AutoFormRendererChildren :fields="fields" :schema="props.schema" :extra-props="props.extraProps" />
+      <AutoFormRendererChildren :fields="fields" :extra-props="props.extraProps" />
     </template>
   </component>
 </template>

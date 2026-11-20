@@ -42,17 +42,13 @@ const MOVK_COMPONENTS_VIRTUAL = 'virtual:movk-components'
 /**
  * 规整 movk 组件的 Nuxt 环境：
  * - `#imports` → movk vue 桩（@nuxt/ui 同模式桩 + useSiteConfig/useOverlay）
- * - `#components` → movk shim（U* → @nuxt/ui/components、LazyMMessageBox → 本地 MessageBox）
+ * - `#components` → movk shim（U* → @nuxt/ui/components）
  * - movk runtime 内的 `import.meta.client` 替换为 true
  */
 export default function MovkEnvironmentPlugin(options: MovkUIOptions): UnpluginOptions {
   const routerMode = resolveRouterMode(options)
   const stubPath = resolvePathSync(`../runtime/vue/stubs/${routerMode}`, {
     extensions: ['.ts', '.mjs', '.js'],
-    url: import.meta.url
-  })
-  const messageBoxPath = resolvePathSync('../runtime/components/MessageBox', {
-    extensions: ['.vue'],
     url: import.meta.url
   })
   const uiOverrides = buildUiOverrideMap(routerMode)
@@ -83,11 +79,7 @@ export default function MovkEnvironmentPlugin(options: MovkUIOptions): UnpluginO
           : `@nuxt/ui/components/${name.slice(1)}.vue`
         return `export { default as ${name} } from ${JSON.stringify(from)}`
       })
-      return [
-        `import LazyMMessageBoxComponent from ${JSON.stringify(messageBoxPath)}`,
-        ...reExports,
-        `export const LazyMMessageBox = LazyMMessageBoxComponent`
-      ].join('\n')
+      return reExports.join('\n')
     },
     transformInclude(id) {
       return normalize(id).includes(runtimeDir)

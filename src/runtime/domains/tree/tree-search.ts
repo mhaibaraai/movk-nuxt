@@ -12,7 +12,13 @@ export function matchLabel(label: unknown, term: string): boolean {
   return String(label).toLowerCase().includes(term.toLowerCase())
 }
 
-/** 按 labelKey 取节点文本（点路径，与 nodeLabel / createGetKey 一致）后做默认匹配 */
+/** 按 labelKey（点路径）取节点文本，缺失时为空串 */
+export function labelOf(node: AnyObject, labelKey: string): string {
+  const value = getPath(node, labelKey)
+  return value == null ? '' : String(value)
+}
+
+/** 按 labelKey 取节点文本后做默认匹配 */
 export function matchNode(node: AnyObject, labelKey: string, term: string): boolean {
   return matchLabel(getPath(node, labelKey), term)
 }

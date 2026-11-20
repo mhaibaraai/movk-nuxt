@@ -22,6 +22,11 @@ export default defineEventHandler(async (event) => {
     return
   }
 
+  if (type === 'slow') {
+    await new Promise(r => setTimeout(r, 2000))
+    return { code: 0, data: 'late' }
+  }
+
   if (type === '500') {
     throw createError({ statusCode: 500, message: '服务器内部错误' })
   }

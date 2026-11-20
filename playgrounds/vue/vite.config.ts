@@ -7,6 +7,7 @@ export default defineConfig({
     vue(),
     movk({
       theme: { font: 'Alibaba PuHuiTi' },
+      zod: { locale: 'zh-CN' },
       // 复用 Nuxt playground（playgrounds/play）的演示组件与 composables
       ui: {
         components: {

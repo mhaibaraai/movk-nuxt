@@ -19,3 +19,18 @@ export interface TreeSelectionResult<T> {
   /** 严格被勾选：cascade 下排除因父级联带上的子节点 */
   strictlyChecked: T[]
 }
+
+/** 父子勾选策略：cascade 父子联动；isolated 互不影响；leaf 联动但结果只计叶子 */
+export type TreeSelectionStrategy = 'cascade' | 'isolated' | 'leaf'
+
+/** 工具栏选中态摘要 */
+export interface TreeSelectionSummary {
+  /** 已选叶子节点数 */
+  checkedCount: number
+  /** 可选叶子节点数（排除 disabled 子树与懒加载占位） */
+  total: number
+  /** 是否全部选中 */
+  allChecked: boolean
+  /** 是否处于半选态 */
+  indeterminate: boolean
+}

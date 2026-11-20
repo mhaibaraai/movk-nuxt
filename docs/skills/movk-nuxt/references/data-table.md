@@ -322,6 +322,8 @@ const onContextmenu: DataTableContextmenuHandler<User> = (event, row) => {
 
 ## Programmatic control
 
+Enable `columnSettings` and use `persistKey` for browser-local layout preferences. Use `exportCsv({ rows: 'page' })` for the current page or `rows: 'selected'` for selected loaded rows. For all matching server records, supply `serverCsvExport` and call `await table.exportServerCsv()`; merge the supplied columns, sorting and filters with application-level search criteria in that handler.
+
 ```vue
 <script setup lang="ts">
 const table = useTemplateRef<InstanceType<typeof MDataTable>>('table')
