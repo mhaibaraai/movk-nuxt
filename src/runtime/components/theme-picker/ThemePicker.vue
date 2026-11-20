@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { useAppConfig, useColorMode } from '#imports'
 import { useClipboard } from '@vueuse/core'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useTheme } from '../../composables/useTheme'
 import ThemePickerButton from './ThemePickerButton.vue'
 import type { ComponentConfig } from '@nuxt/ui'
@@ -50,6 +50,9 @@ const {
   exportConfig,
   resetTheme
 } = useTheme()
+
+const selectedIcon = computed(() => icons.find(option => option.value === icon.value)?.icon)
+const colorModePreference = computed(() => colorMode.preference)
 </script>
 
 <template>
@@ -177,7 +180,7 @@ const {
             v-model="icon"
             size="sm"
             color="neutral"
-            :icon="icons.find(i => i.value === icon)?.icon"
+            :icon="selectedIcon"
             :items="icons"
             class="w-full ring-default rounded-sm hover:bg-elevated/50 capitalize text-[11px] data-[state=open]:bg-elevated/50"
             :ui="{ item: 'capitalize text-[11px]', trailingIcon: 'group-data-[state=open]:rotate-180 transition-transform duration-200' }"
@@ -205,7 +208,7 @@ const {
             v-for="m in modes"
             :key="m.label"
             v-bind="m"
-            :selected="colorMode.preference === m.label"
+            :selected="colorModePreference === m.label"
             @click="mode = m.label"
           />
         </div>
