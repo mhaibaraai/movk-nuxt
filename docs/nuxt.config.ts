@@ -1,5 +1,16 @@
 import pkg from '../package.json'
 
+function i18nRedirects(
+  rules: Record<string, string>
+): Record<string, { redirect: string, prerender: false }> {
+  return Object.fromEntries(
+    Object.entries(rules).flatMap(([from, to]) => [
+      [from, { redirect: to, prerender: false as const }],
+      [`/en${from}`, { redirect: `/en${to}`, prerender: false as const }]
+    ])
+  )
+}
+
 export default defineNuxtConfig({
   extends: ['@movk/nuxt-docs'],
 
@@ -37,89 +48,57 @@ export default defineNuxtConfig({
   },
 
   // 章节入口重定向；v2 按能力域重组文档，旧路由统一指向新位置
+  // i18nRedirects 自动生成中英文双语对，每条规则只需维护一次
   routeRules: {
-    '/docs': { redirect: '/docs/getting-started', prerender: false },
-    '/docs/components': { redirect: '/docs/components/date-picker', prerender: false },
-    '/docs/auto-form': { redirect: '/docs/auto-form/quickstart', prerender: false },
-    '/docs/components/search-form': { redirect: '/docs/auto-form/search-form', prerender: false },
-    '/docs/components/theme-picker': { redirect: '/docs/getting-started/theme', prerender: false },
-    '/docs/components/as-phone-number-input': { redirect: '/docs/getting-started/migration', prerender: false },
-    '/docs/components/color-chooser': { redirect: '/docs/getting-started/migration', prerender: false },
-    '/docs/components/pill-group': { redirect: '/docs/getting-started/migration', prerender: false },
-    '/docs/components/popconfirm': { redirect: '/docs/getting-started/migration', prerender: false },
-    '/docs/components/slide-verify': { redirect: '/docs/getting-started/migration', prerender: false },
-    '/docs/components/with-clear': { redirect: '/docs/getting-started/migration', prerender: false },
-    '/docs/components/with-copy': { redirect: '/docs/getting-started/migration', prerender: false },
-    '/docs/components/with-character-limit': { redirect: '/docs/getting-started/migration', prerender: false },
-    '/docs/components/with-floating-label': { redirect: '/docs/getting-started/migration', prerender: false },
-    '/docs/components/with-password-toggle': { redirect: '/docs/getting-started/migration', prerender: false },
-    '/docs/composables': { redirect: '/docs/getting-started/migration', prerender: false },
-    '/docs/composables/use-auto-form': { redirect: '/docs/auto-form/use-auto-form', prerender: false },
-    '/docs/composables/use-date-formatter': { redirect: '/docs/components/date-picker', prerender: false },
-    '/docs/composables/use-theme': { redirect: '/docs/getting-started/theme', prerender: false },
-    '/docs/composables/use-message-box': { redirect: '/docs/components/message-box', prerender: false },
-    '/docs/composables/use-upload-with-progress': { redirect: '/docs/api/upload-download', prerender: false },
-    '/docs/composables/use-download-with-progress': { redirect: '/docs/api/upload-download', prerender: false },
-    '/docs/composables/use-api-stream': { redirect: '/docs/api/stream', prerender: false },
-    '/docs/api/use-lazy-api-fetch': { redirect: '/docs/api/use-api-fetch', prerender: false },
-    '/docs/api/use-client-api-fetch': { redirect: '/docs/api/use-api-fetch', prerender: false },
-    '/docs/api/chat-transport': { redirect: '/docs/api/stream', prerender: false },
-    '/docs/auto-form/string': { redirect: '/docs/auto-form/field-types', prerender: false },
-    '/docs/auto-form/number': { redirect: '/docs/auto-form/field-types', prerender: false },
-    '/docs/auto-form/boolean': { redirect: '/docs/auto-form/field-types', prerender: false },
-    '/docs/auto-form/date': { redirect: '/docs/auto-form/field-types', prerender: false },
-    '/docs/auto-form/enum': { redirect: '/docs/auto-form/field-types', prerender: false },
-    '/docs/auto-form/file': { redirect: '/docs/auto-form/field-types', prerender: false },
-    '/docs/auto-form/object': { redirect: '/docs/auto-form/object-array', prerender: false },
-    '/docs/auto-form/array': { redirect: '/docs/auto-form/object-array', prerender: false },
-    '/docs/auto-form/metadata': { redirect: '/docs/auto-form/metadata-layout', prerender: false },
-    '/docs/auto-form/layout': { redirect: '/docs/auto-form/metadata-layout', prerender: false },
-    '/docs/auto-form/reactive': { redirect: '/docs/auto-form/reactive-submit', prerender: false },
-    '/docs/auto-form/submit': { redirect: '/docs/auto-form/reactive-submit', prerender: false },
-    '/docs/getting-started/ai/mcp': { redirect: '/docs/getting-started/ai', prerender: false },
-    '/docs/getting-started/ai/llms-txt': { redirect: '/docs/getting-started/ai', prerender: false },
-    '/docs/getting-started/ai/skills': { redirect: '/docs/getting-started/ai', prerender: false },
-    '/en/docs': { redirect: '/en/docs/getting-started', prerender: false },
-    '/en/docs/components': { redirect: '/en/docs/components/date-picker', prerender: false },
-    '/en/docs/auto-form': { redirect: '/en/docs/auto-form/quickstart', prerender: false },
-    '/en/docs/components/search-form': { redirect: '/en/docs/auto-form/search-form', prerender: false },
-    '/en/docs/components/theme-picker': { redirect: '/en/docs/getting-started/theme', prerender: false },
-    '/en/docs/components/as-phone-number-input': { redirect: '/en/docs/getting-started/migration', prerender: false },
-    '/en/docs/components/color-chooser': { redirect: '/en/docs/getting-started/migration', prerender: false },
-    '/en/docs/components/pill-group': { redirect: '/en/docs/getting-started/migration', prerender: false },
-    '/en/docs/components/popconfirm': { redirect: '/en/docs/getting-started/migration', prerender: false },
-    '/en/docs/components/slide-verify': { redirect: '/en/docs/getting-started/migration', prerender: false },
-    '/en/docs/components/with-clear': { redirect: '/en/docs/getting-started/migration', prerender: false },
-    '/en/docs/components/with-copy': { redirect: '/en/docs/getting-started/migration', prerender: false },
-    '/en/docs/components/with-character-limit': { redirect: '/en/docs/getting-started/migration', prerender: false },
-    '/en/docs/components/with-floating-label': { redirect: '/en/docs/getting-started/migration', prerender: false },
-    '/en/docs/components/with-password-toggle': { redirect: '/en/docs/getting-started/migration', prerender: false },
-    '/en/docs/composables': { redirect: '/en/docs/getting-started/migration', prerender: false },
-    '/en/docs/composables/use-auto-form': { redirect: '/en/docs/auto-form/use-auto-form', prerender: false },
-    '/en/docs/composables/use-date-formatter': { redirect: '/en/docs/components/date-picker', prerender: false },
-    '/en/docs/composables/use-theme': { redirect: '/en/docs/getting-started/theme', prerender: false },
-    '/en/docs/composables/use-message-box': { redirect: '/en/docs/components/message-box', prerender: false },
-    '/en/docs/composables/use-upload-with-progress': { redirect: '/en/docs/api/upload-download', prerender: false },
-    '/en/docs/composables/use-download-with-progress': { redirect: '/en/docs/api/upload-download', prerender: false },
-    '/en/docs/composables/use-api-stream': { redirect: '/en/docs/api/stream', prerender: false },
-    '/en/docs/api/use-lazy-api-fetch': { redirect: '/en/docs/api/use-api-fetch', prerender: false },
-    '/en/docs/api/use-client-api-fetch': { redirect: '/en/docs/api/use-api-fetch', prerender: false },
-    '/en/docs/api/chat-transport': { redirect: '/en/docs/api/stream', prerender: false },
-    '/en/docs/auto-form/string': { redirect: '/en/docs/auto-form/field-types', prerender: false },
-    '/en/docs/auto-form/number': { redirect: '/en/docs/auto-form/field-types', prerender: false },
-    '/en/docs/auto-form/boolean': { redirect: '/en/docs/auto-form/field-types', prerender: false },
-    '/en/docs/auto-form/date': { redirect: '/en/docs/auto-form/field-types', prerender: false },
-    '/en/docs/auto-form/enum': { redirect: '/en/docs/auto-form/field-types', prerender: false },
-    '/en/docs/auto-form/file': { redirect: '/en/docs/auto-form/field-types', prerender: false },
-    '/en/docs/auto-form/object': { redirect: '/en/docs/auto-form/object-array', prerender: false },
-    '/en/docs/auto-form/array': { redirect: '/en/docs/auto-form/object-array', prerender: false },
-    '/en/docs/auto-form/metadata': { redirect: '/en/docs/auto-form/metadata-layout', prerender: false },
-    '/en/docs/auto-form/layout': { redirect: '/en/docs/auto-form/metadata-layout', prerender: false },
-    '/en/docs/auto-form/reactive': { redirect: '/en/docs/auto-form/reactive-submit', prerender: false },
-    '/en/docs/auto-form/submit': { redirect: '/en/docs/auto-form/reactive-submit', prerender: false },
-    '/en/docs/getting-started/ai/mcp': { redirect: '/en/docs/getting-started/ai', prerender: false },
-    '/en/docs/getting-started/ai/llms-txt': { redirect: '/en/docs/getting-started/ai', prerender: false },
-    '/en/docs/getting-started/ai/skills': { redirect: '/en/docs/getting-started/ai', prerender: false }
+    ...i18nRedirects({
+      '/docs': '/docs/getting-started',
+      '/docs/components': '/docs/components/date-picker',
+      '/docs/auto-form': '/docs/auto-form/quickstart',
+      // 组件路由变更
+      '/docs/components/search-form': '/docs/auto-form/search-form',
+      '/docs/components/theme-picker': '/docs/getting-started/theme',
+      // v1 已移除组件，统一指向迁移指南
+      '/docs/components/as-phone-number-input': '/docs/getting-started/migration',
+      '/docs/components/color-chooser': '/docs/getting-started/migration',
+      '/docs/components/pill-group': '/docs/getting-started/migration',
+      '/docs/components/popconfirm': '/docs/getting-started/migration',
+      '/docs/components/slide-verify': '/docs/getting-started/migration',
+      '/docs/components/with-clear': '/docs/getting-started/migration',
+      '/docs/components/with-copy': '/docs/getting-started/migration',
+      '/docs/components/with-character-limit': '/docs/getting-started/migration',
+      '/docs/components/with-floating-label': '/docs/getting-started/migration',
+      '/docs/components/with-password-toggle': '/docs/getting-started/migration',
+      // composables 路由变更
+      '/docs/composables': '/docs/getting-started/migration',
+      '/docs/composables/use-auto-form': '/docs/auto-form/use-auto-form',
+      '/docs/composables/use-date-formatter': '/docs/components/date-picker',
+      '/docs/composables/use-theme': '/docs/getting-started/theme',
+      '/docs/composables/use-message-box': '/docs/components/message-box',
+      '/docs/composables/use-upload-with-progress': '/docs/api/upload-download',
+      '/docs/composables/use-download-with-progress': '/docs/api/upload-download',
+      '/docs/composables/use-api-stream': '/docs/api/stream',
+      // api 路由变更
+      '/docs/api/use-lazy-api-fetch': '/docs/api/use-api-fetch',
+      '/docs/api/use-client-api-fetch': '/docs/api/use-api-fetch',
+      '/docs/api/chat-transport': '/docs/api/stream',
+      // auto-form 拆分页合并
+      '/docs/auto-form/string': '/docs/auto-form/field-types',
+      '/docs/auto-form/number': '/docs/auto-form/field-types',
+      '/docs/auto-form/boolean': '/docs/auto-form/field-types',
+      '/docs/auto-form/date': '/docs/auto-form/field-types',
+      '/docs/auto-form/enum': '/docs/auto-form/field-types',
+      '/docs/auto-form/file': '/docs/auto-form/field-types',
+      '/docs/auto-form/object': '/docs/auto-form/object-array',
+      '/docs/auto-form/array': '/docs/auto-form/object-array',
+      '/docs/auto-form/metadata': '/docs/auto-form/metadata-layout',
+      '/docs/auto-form/layout': '/docs/auto-form/metadata-layout',
+      '/docs/auto-form/reactive': '/docs/auto-form/reactive-submit',
+      '/docs/auto-form/submit': '/docs/auto-form/reactive-submit',
+      // AI 子页合并
+      '/docs/getting-started/ai/mcp': '/docs/getting-started/ai',
+      '/docs/getting-started/ai/llms-txt': '/docs/getting-started/ai',
+      '/docs/getting-started/ai/skills': '/docs/getting-started/ai'
+    })
   },
 
   compatibilityDate: '2026-06-30',
