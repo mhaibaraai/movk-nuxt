@@ -48,7 +48,7 @@ export interface ModuleOptions {
   /** API 模块配置 */
   api?: MovkApiFullConfig
   /**
-   * zod 校验文案本地化。`z.config` 是全局单例，开启后应用内所有 zod 校验（含服务端）都会使用该配置
+   * zod 校验文案本地化。全局配置使用固定语言或 fallback，当前应用的表单可另外覆盖错误映射
    * @defaultValue false
    */
   zod?: MovkZodOptions | false

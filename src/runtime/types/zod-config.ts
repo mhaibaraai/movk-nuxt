@@ -34,6 +34,6 @@ export interface MovkZodOptions {
 
 /** `movk:zod:config` 钩子与 Vue 插件选项可扩展的运行时配置 */
 export interface MovkZodRuntimeConfig {
-  /** 优先级最高的自定义错误映射，返回空值时继续走必填规则与 locale 文案 */
+  /** 当前应用的 AutoForm / SearchForm 校验错误映射，返回空值时使用必填规则与 locale 文案 */
   customError?: z.core.$ZodErrorMap
 }

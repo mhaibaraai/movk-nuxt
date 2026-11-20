@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import { z } from 'zod'
 import { en, zhCN } from 'zod/locales'
-import { extendZodConfig, installZod, syncZodLocale } from '../../../src/runtime/domains/zod/apply'
+import { installZod } from '../../../src/runtime/domains/zod/apply'
 import type { ResolvedZodOptions } from '../../../src/runtime/domains/zod/apply'
 
 const base: ResolvedZodOptions = {
@@ -37,31 +37,15 @@ describe('installZod', () => {
     expect(z.config().jitless).toBe(true)
   })
 
-  it('auto 模式初始使用 fallback，syncZodLocale 后切换', () => {
+  it('auto 模式的全局配置保持 fallback', () => {
     installZod({ ...base, locale: 'auto' }, locales)
     expect(messageOf(z.string(), undefined)).toBe('This field is required')
 
-    syncZodLocale('zh-CN', () => '必填')
-    expect(messageOf(z.string(), undefined)).toBe('必填')
-    expect(messageOf(z.string().min(3), 'a')).toContain('过小')
-  })
-
-  it('固定 locale 时忽略 syncZodLocale', () => {
-    installZod(base, locales)
-    syncZodLocale('en', () => 'required')
-    expect(messageOf(z.string(), undefined)).toBe('此项为必填')
-  })
-
-  it('映射不到的语言回退到 fallback', () => {
-    installZod({ ...base, locale: 'auto' }, locales)
-    syncZodLocale('xx', () => 'x')
     expect(messageOf(z.string().min(3), 'a')).toContain('Too small')
   })
 
-  it('extendZodConfig 追加的 customError 优先于必填规则', () => {
-    installZod(base, locales)
-    extendZodConfig({ customError: issue => issue.input === undefined ? '自定义' : undefined })
-    expect(messageOf(z.string(), undefined)).toBe('自定义')
-    expect(messageOf(z.string().min(3), 'a')).toContain('过小')
+  it('映射不到的语言回退到 fallback', () => {
+    installZod({ ...base, locale: 'xx' }, locales)
+    expect(messageOf(z.string().min(3), 'a')).toContain('Too small')
   })
 })

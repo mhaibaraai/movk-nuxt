@@ -10,7 +10,7 @@ import { applyFieldDefaults, isLeafField } from './fields'
 import { extractPureSchema, introspectSchema, omitPaths } from './schema'
 import { DEFAULT_CONTROLS } from './controls'
 import { AUTOFORM_META } from './constants'
-import { useZodLocaleSync } from '../zod/sync'
+import { useZodFormSchema } from '../zod/sync'
 
 type FormState = Record<string, any>
 
@@ -49,7 +49,6 @@ export function useAutoFormCore(options: AutoFormCoreOptions) {
   const { model, slots } = options
   const provider = useAutoFormProvider(model, slots, { addButtonProps: options.addButtonProps })
   const { resolveFieldProp, isFieldVisible } = provider
-  useZodLocaleSync()
 
   const controlsMapping = computed(() => ({ ...DEFAULT_CONTROLS, ...options.controls() }))
   const fields = computed<AutoFormField[]>(() => {
@@ -64,7 +63,7 @@ export function useAutoFormCore(options: AutoFormCoreOptions) {
     const schema = options.schema()
     return schema ? extractPureSchema(schema) : undefined
   })
-  const validationSchema = computed(() => pureSchema.value && omitPaths(pureSchema.value, hiddenPaths.value))
+  const validationSchema = useZodFormSchema(() => pureSchema.value && omitPaths(pureSchema.value, hiddenPaths.value))
 
   const resolvedButtonSize = computed(() => {
     const size = options.globalMeta()?.size
