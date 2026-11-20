@@ -9,7 +9,6 @@ seo:
 orientation: horizontal
 ---
 #top
-:hero-background
 
 #title
 :::motion
