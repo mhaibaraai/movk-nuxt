@@ -632,7 +632,6 @@ defineExpose<DataTableExposed<T>>({
       :style="borderedStyle"
       v-bind="uTableProps"
     >
-      <!-- 插槽名是联合类型，vue-tsc 会把作用域参数收敛成全部插槽 props 的交叉类型，转发时只能绕过 -->
       <template v-for="name in forwardSlots" #[name]="slotProps" :key="name">
         <slot :name="name" v-bind="(slotProps ?? {}) as any" />
       </template>
