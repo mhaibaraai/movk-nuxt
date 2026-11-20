@@ -20,7 +20,7 @@ import type {
   TextareaProps, TextareaSlots
 } from '@nuxt/ui'
 import type { CalendarDateControlProps } from '../../types/components/date-picker'
-import DatePicker from '../../components/DatePicker.vue'
+import { defineAsyncComponent } from 'vue'
 import {
   UInput,
   UInputNumber,
@@ -42,6 +42,7 @@ import {
 } from '#components'
 
 const DEFAULT_CONTROL_PROPS = { class: 'w-full' } as const
+const DatePicker = defineAsyncComponent(() => import('../../components/DatePicker.vue'))
 
 export function defineControl<C extends IsComponent, P = _Unset, S = _Unset>(
   e: AutoFormControl<C, P, S>

@@ -1,5 +1,6 @@
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { nextTick, reactive } from 'vue'
+import { CalendarDate } from '@internationalized/date'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import AutoForm from '../../src/runtime/components/AutoForm.vue'
 import { useAutoForm } from '../../src/runtime/composables/useAutoForm'
@@ -26,6 +27,17 @@ afterEach(() => {
 })
 
 describe('AutoForm', () => {
+  it('异步日期控件渲染后可提交日期值', async () => {
+    const schema = afz.object({ day: afz.calendarDate() })
+    const day = new CalendarDate(2026, 11, 20)
+    const onSubmit = vi.fn()
+    const wrapper = await mountForm({ schema, modelValue: { day }, onSubmit })
+    await vi.waitFor(() => expect(wrapper.text()).toContain('2026'))
+    const vm = wrapper.vm as unknown as { submit: () => Promise<void> }
+    await vm.submit()
+    expect(onSubmit.mock.calls[0]?.[0].data.day.toString()).toBe('2026-11-20')
+  })
+
   it('根 schema 带 refine 且字段被 if 隐藏时正常渲染', async () => {
     const schema = afz.object({
       mode: afz.string(),
