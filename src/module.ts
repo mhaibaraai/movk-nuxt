@@ -123,7 +123,7 @@ function resolveModuleDependencies(nuxt: Nuxt): ModuleDependencies {
     '@nuxt/ui': { version: '>=4.6.0' },
     '@vueuse/nuxt': { version: '>=14.2.1' },
     ...(usesSessionAuth(options.movk?.api) && { 'nuxt-auth-utils': { version: '>=0.5.29' } }),
-    'nuxt-site-config': { version: '>=4.0.8' }
+    'nuxt-site-config': { version: '^5.0.3' }
   }
 }
 
@@ -144,7 +144,7 @@ const movkModule: NuxtModule<ModuleOptions> = defineNuxtModule<ModuleOptions>({
     name,
     version,
     configKey: 'movk',
-    compatibility: { nuxt: '>=4.4.2' }
+    compatibility: { nuxt: '^4.6.4' }
   },
   defaults: defaultOptions,
   moduleDependencies: resolveModuleDependencies,

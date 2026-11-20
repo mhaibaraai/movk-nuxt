@@ -7,7 +7,7 @@ This file provides guidance for AI coding agents working on this repository.
 `@movk/nuxt` 是 Nuxt 4 模块，四大能力域：AutoForm（Zod v4 Schema 驱动表单）、DataTable、API 集成（`useApiFetch` + 进度监控）、独立组件 + Composables。另提供 Vite/Vue 兼容层（`@movk/nuxt/vite` + `@movk/nuxt/vue-plugin`），**不含 API 域**。
 
 - **peerDependencies**：`@nuxt/ui >=4.6.0`、`zod >=4.3.6`
-- **moduleDependencies**（自动校验版本）：`@vueuse/nuxt >=14.2.1`、`@nuxt/image >=2.0.0`、`@nuxt/ui >=4.6.0`、`nuxt-site-config >=4.0.8`、`nuxt-auth-utils >=0.5.29`（仅 `api.auth.enabled` 且 `tokenSource: 'session'` 时登记，runtime 经 `#build/movk-session` 取 `useUserSession`）
+- **moduleDependencies**（自动校验版本）：`@vueuse/nuxt >=14.2.1`、`@nuxt/image >=2.0.0`、`@nuxt/ui >=4.6.0`、`nuxt-site-config ^5.0.3`、`nuxt-auth-utils >=0.5.29`（仅 `api.auth.enabled` 且 `tokenSource: 'session'` 时登记，runtime 经 `#build/movk-session` 取 `useUserSession`）
 
 ## 常用命令
 
@@ -21,6 +21,7 @@ pnpm typecheck        # src + playgrounds/play + docs + playgrounds/vue
 pnpm lint / pnpm lint:fix
 pnpm test             # Vitest（unit + nuxt 两个 project）；单文件：pnpm test -- useDateFormatter
 pnpm test:coverage    # v8 覆盖率，范围 src/runtime
+pnpm test:pack        # 构建后在隔离的 Nuxt 和 Vue + Vite 项目中验证 tarball
 pnpm docs / pnpm docs:build   # docs:build 在 CI 拦截预渲染死链 [request error]
 pnpm clean
 ```
