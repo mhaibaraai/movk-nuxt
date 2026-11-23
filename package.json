@@ -3,7 +3,7 @@
   "type": "module",
   "version": "1.8.3",
   "packageManager": "pnpm@12.21.0",
-  "description": "An engineering suite built on Nuxt UI: schema-driven AutoForm (Zod v4), a full-featured DataTable, standalone UI components and composables. Get the full capabilities — including API integration with auth & progress — in Nuxt 4, and use its UI, forms, tables and theming in plain Vue + Vite via the Vite plugin.",
+  "description": "An application toolkit for Nuxt and Vue with schema-driven forms, configurable data tables, reusable components, and composables. Nuxt mode also includes API integration.",
   "author": "YiXuan <mhaibaraai@gmail.com>",
   "license": "MIT",
   "repository": {
@@ -21,6 +21,9 @@
     "nuxt",
     "nuxt-module",
     "nuxt4",
+    "nuxt-ui",
+    "vue",
+    "vite",
     "zod",
     "form",
     "auto-form",

@@ -2,7 +2,7 @@
 
 简体中文 | [English](./README.en.md)
 
-> 构建在 Nuxt UI 之上的 UI 工程套件 —— Schema 驱动的 AutoForm（Zod v4）、功能完备的 DataTable、独立组件与 Composables。在 Nuxt 4 中获得含认证与进度追踪的 API 集成在内的完整能力；其 UI、表单、表格与主题亦可经 Vite 插件直接用于纯 Vue + Vite 项目（API 集成域仅 Nuxt）。
+> 面向 Nuxt 与 Vue 的应用开发工具包。用 AutoForm 从 Zod Schema 生成表单，用 DataTable 的列配置构建表格，再按需加入独立组件和组合式函数。Nuxt 项目还可统一处理 API 请求、认证和文件传输。
 
 [![Install MCP in Cursor](https://nuxt.mhaibaraai.cn/mcp/badge.svg)](https://nuxt.mhaibaraai.cn/mcp/deeplink)
 [![Install MCP in VS Code](https://nuxt.mhaibaraai.cn/mcp/badge.svg?ide=vscode)](https://nuxt.mhaibaraai.cn/mcp/deeplink?ide=vscode)
@@ -18,7 +18,7 @@
 
 ## ✨ 特性
 
-Movk Nuxt 是构建在 Nuxt UI 之上的 UI 工程套件，提供两种使用方式：在 **Nuxt 4** 中享受含 API 集成的完整能力，或经 **Vite 插件**在纯 **Vue + Vite** 项目中使用其 UI 层。各能力的可用框架如下：
+表单、表格、组件和主题基于 Nuxt UI，可在 **Nuxt 4** 中使用，也可通过插件接入 **Vue + Vite**。API 集成适用于 **Nuxt 4**。
 
 - **AutoForm — Schema 驱动表单**（✅ Nuxt ｜ ✅ Vue + Vite）- 基于 Zod v4 的「定义即渲染」，一份 Schema 同时声明数据结构、验证规则和 UI 配置，自动生成完整表单界面。
 - **DataTable — 数据表格**（✅ Nuxt ｜ ✅ Vue + Vite）- 基于 TanStack Table 封装，覆盖数据列、特殊列（选择/索引/展开/操作）、树形数据、行交互、外观定制、分页与加载更多。

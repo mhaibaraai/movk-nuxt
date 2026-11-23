@@ -1,210 +1,115 @@
-<script lang="ts" setup>
-import type { DateValue, AutoFormFieldContext, DataTableColumn, TreeItem } from '#movk/types'
-import type z from 'zod'
-import { UInputRating } from '#components'
+<script setup lang="ts">
+import { homeCopy } from '../data/home'
 
-const slides = [{
-  key: 'autoform',
-  label: 'AutoForm',
-  icon: 'i-lucide-square-pen'
-}, {
-  key: 'datatable',
-  label: 'DataTable',
-  icon: 'i-lucide-table'
-}, {
-  key: 'components',
-  label: 'UI 组件',
-  icon: 'i-lucide-layout-grid'
-}]
+const { locale, localePath } = useMovkI18n()
+const appConfig = useAppConfig()
+const copy = computed(() => homeCopy[locale.value === 'en' ? 'en' : 'zh-CN'])
 
-const active = ref(0)
-const activeSlide = computed(() => slides[active.value]!)
-
-const { afz } = useAutoForm()
-
-const formSchema = afz.object({
-  $personalInfo: afz.layout({
-    class: 'grid grid-cols-1 sm:grid-cols-2 gap-4',
-    fields: {
-      username: afz.string('请填写用户名').min(3).max(20).regex(/^\w+$/)
-        .meta({ hint: '仅支持字母、数字和下划线' }),
-      age: afz.number().min(18, '年龄必须大于 18 岁').max(99)
-        .meta({ hint: '年龄范围：18-99' }),
-      role: afz.enum(['管理员', '编辑', '访客'] as const)
-        .meta({ label: '角色', placeholder: '选择角色' }),
-      email: afz.email({
-        controlProps: { leadingIcon: 'i-lucide-mail', placeholder: '请输入您的邮箱' },
-        error: '请输入有效的邮箱地址'
-      })
-    }
-  }),
-  $preferences: afz.layout({
-    class: 'grid grid-cols-1 sm:grid-cols-2 gap-4',
-    fields: {
-      adminScope: afz.enum(['全局', '部门', '项目'] as const).meta({
-        label: '管理范围',
-        if: ({ state }: AutoFormFieldContext) => state?.role === '管理员'
-      }).optional(),
-      notifications: afz.boolean({ type: 'switch' }).default(true)
-        .meta({ label: '接收通知', hint: '开启后接收系统消息' }),
-      rating: afz.number({ component: UInputRating, controlProps: { step: 0.5 } })
-        .min(0).max(5).default(4)
-        .meta({ label: '满意度评分' }),
-      interests: afz.array(afz.string(), { type: 'inputTags' })
-        .default(['Vue', 'Nuxt'])
-        .meta({ label: '兴趣标签', hint: '按 Enter 添加', class: 'sm:col-span-2' })
-    }
-  })
-})
-
-type Schema = z.output<typeof formSchema>
-
-const formState = ref<Partial<Schema>>({
-  username: 'johndoe',
-  email: 'john@example.com',
-  age: 25,
-  role: '编辑',
-  notifications: true,
-  rating: 4,
-  interests: ['Vue', 'Nuxt']
-})
-
-interface Member {
-  id: string
-  name: string
-  role: string
-  level: 'P5' | 'P6' | 'P7' | 'P8'
-  salary: number
-}
-
-const tableData: Member[] = [
-  { id: 'P0001', name: '张伟', role: '前端工程师', level: 'P7', salary: 42000 },
-  { id: 'P0002', name: '李娜', role: 'UI 设计师', level: 'P6', salary: 36000 },
-  { id: 'P0003', name: '王强', role: '产品经理', level: 'P7', salary: 45000 },
-  { id: 'P0004', name: '陈静', role: '后端工程师', level: 'P6', salary: 38000 },
-  { id: 'P0005', name: '刘洋', role: '数据分析师', level: 'P5', salary: 28000 }
-]
-
-const tableColumns: DataTableColumn<Member>[] = [
-  { type: 'selection' },
-  { accessorKey: 'name', header: '姓名', resizable: true },
-  { accessorKey: 'role', header: '岗位', pinable: true },
-  { accessorKey: 'level', header: '职级' },
-  {
-    accessorKey: 'salary',
-    header: '薪资',
-    align: 'right',
-    cell: ({ getValue }) => `¥${getValue<number>().toLocaleString()}`
-  }
-]
-
-const pickedDate = ref<DateValue | undefined>()
-const confirmed = ref<boolean>()
-const { confirm } = useMessageBox()
-
-async function onConfirm() {
-  confirmed.value = await confirm({ type: 'warning', title: '确认删除？', description: '删除后不可恢复。' })
-}
-
-const treeItems: TreeItem[] = [
-  {
-    label: 'app',
-    icon: 'i-lucide-folder',
-    defaultExpanded: true,
-    children: [
-      { label: 'app.vue', icon: 'i-vscode-icons-file-type-vue' },
-      { label: 'nuxt.config.ts', icon: 'i-vscode-icons-file-type-nuxt' }
-    ]
-  },
-  { label: 'package.json', icon: 'i-vscode-icons-file-type-json' }
-]
+const features = [
+  { id: 'autoForm', to: '/docs/auto-form/quickstart', icon: 'i-lucide-list-checks' },
+  { id: 'dataTable', to: '/docs/data-table', icon: 'i-lucide-table-2' },
+  { id: 'components', to: '/docs/components/message-box', icon: 'i-lucide-blocks' },
+  { id: 'api', to: '/docs/api', icon: 'i-lucide-plug' }
+] as const
 </script>
 
 <template>
-  <UCard class="w-full max-w-2xl mx-auto shadow-lg">
-    <template #header>
-      <div class="flex items-center justify-between">
-        <div class="flex items-center gap-2">
-          <UIcon :name="activeSlide.icon" class="size-5 text-primary" />
-          <h2 class="text-base font-semibold">
-            {{ activeSlide.label }}
-          </h2>
-        </div>
-        <UBadge color="primary" variant="subtle" size="xs">
-          Live Demo
-        </UBadge>
-      </div>
-    </template>
+  <section class="border-b border-default bg-muted/35">
+    <UContainer class="grid items-center gap-10 pt-12 pb-14 sm:pt-16 sm:pb-18 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-12 lg:py-20 xl:gap-16">
+      <div>
+        <h1 class="max-w-3xl font-sans text-[clamp(2rem,9.7vw,2.25rem)]/tight font-bold tracking-tight text-balance text-highlighted sm:text-5xl/tight lg:text-4xl/tight xl:text-5xl/tight 2xl:text-6xl/[1.12]">
+          {{ copy.title }}
+          <span v-if="copy.titleContinuation" class="block">{{ copy.titleContinuation }}</span>
+        </h1>
 
-    <UCarousel
-      v-slot="{ item }"
-      :items="slides"
-      dots
-      loop
-      :ui="{ item: 'basis-full min-w-0', dots: 'bottom-0' }"
-      @select="active = $event"
-    >
-      <div v-if="item.key === 'autoform'" class="p-4 sm:p-6">
-        <MAutoForm :schema="formSchema" :state="formState" :submit="false" />
-      </div>
+        <p class="mt-5 max-w-xl text-base/relaxed text-pretty text-toned sm:text-lg/relaxed">
+          {{ copy.description }}
+        </p>
 
-      <div v-else-if="item.key === 'datatable'" class="p-4 sm:p-6">
-        <MDataTable :columns="tableColumns" :data="tableData" sortable />
-      </div>
-
-      <div v-else-if="item.key === 'components'" class="p-4 sm:p-6">
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div class="rounded-xl border border-default bg-elevated p-4">
-            <div class="flex items-center justify-between mb-2">
-              <p class="text-sm font-medium">
-                日期选择器
-              </p>
-              <UBadge variant="outline" size="xs" class="font-mono text-[10px]">
-                MDatePicker
-              </UBadge>
-            </div>
-            <p class="text-xs text-muted mb-3">
-              日期 / 范围 / 多选 · 多种格式输出
-            </p>
-            <MDatePicker v-model="pickedDate" />
-          </div>
-
-          <div class="rounded-xl border border-default bg-elevated p-4">
-            <div class="flex items-center justify-between mb-2">
-              <p class="text-sm font-medium">
-                命令式确认
-              </p>
-              <UBadge variant="outline" size="xs" class="font-mono text-[10px]">
-                useMessageBox
-              </UBadge>
-            </div>
-            <p class="text-xs text-muted mb-3">
-              无需声明组件 · await 获取用户选择
-            </p>
-            <div class="flex items-center gap-3">
-              <UButton label="删除" color="error" variant="soft" icon="i-lucide-trash-2" @click="onConfirm" />
-              <code v-if="confirmed !== undefined" class="text-xs text-muted">{{ confirmed }}</code>
-            </div>
-          </div>
-
-          <div class="rounded-xl border border-default bg-elevated p-4 sm:col-span-2">
-            <div class="flex items-center justify-between mb-2">
-              <p class="text-sm font-medium">
-                树形组件
-              </p>
-              <UBadge variant="outline" size="xs" class="font-mono text-[10px]">
-                MTree
-              </UBadge>
-            </div>
-            <p class="text-xs text-muted mb-3">
-              搜索过滤 · 懒加载 · 工具栏 · 复选框级联
-            </p>
-            <div class="max-h-44 overflow-auto">
-              <MTree :items="treeItems" searchable />
-            </div>
-          </div>
+        <div class="mt-7 flex flex-wrap gap-3">
+          <UButton
+            :label="copy.getStarted"
+            :to="localePath('/docs/getting-started')"
+            trailing-icon="i-lucide-arrow-right"
+            size="lg"
+          />
+          <UButton
+            v-if="appConfig.github"
+            :label="copy.viewSource"
+            :to="appConfig.github.url"
+            icon="i-simple-icons-github"
+            color="neutral"
+            variant="outline"
+            size="lg"
+            target="_blank"
+          />
         </div>
       </div>
-    </UCarousel>
-  </UCard>
+
+      <HomeRegistrationDemo :copy="copy.demo" />
+    </UContainer>
+  </section>
+
+  <section>
+    <UContainer class="py-12 sm:py-16 lg:py-20">
+      <h2 class="font-sans text-3xl font-bold tracking-tight text-highlighted sm:text-4xl">
+        {{ copy.featuresTitle }}
+      </h2>
+
+      <ul class="mt-6 grid gap-x-10 sm:grid-cols-2">
+        <li v-for="feature in features" :key="feature.id" class="flex items-start gap-4 border-t border-default py-5 sm:py-6">
+          <UIcon :name="feature.icon" class="mt-1 size-5 shrink-0 text-primary" aria-hidden="true" />
+          <div>
+            <h3>
+              <NuxtLink
+                :to="localePath(feature.to)"
+                class="rounded-sm text-lg font-semibold text-highlighted underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary"
+              >
+                {{ copy.features[feature.id].title }}
+              </NuxtLink>
+            </h3>
+            <p class="mt-1 text-sm/relaxed text-muted sm:text-base/relaxed">
+              {{ copy.features[feature.id].description }}
+            </p>
+          </div>
+        </li>
+      </ul>
+    </UContainer>
+  </section>
+
+  <section class="border-y border-default bg-muted/35">
+    <UContainer class="py-12 sm:py-16 lg:py-20">
+      <h2 class="font-sans text-3xl font-bold tracking-tight text-highlighted sm:text-4xl">
+        {{ copy.setupTitle }}
+      </h2>
+
+      <div class="mt-6 grid gap-x-10 gap-y-7 sm:grid-cols-2">
+        <div class="border-t border-default pt-5">
+          <h3 class="text-lg font-semibold text-highlighted">
+            Nuxt 4
+          </h3>
+          <p class="mt-1 text-muted">
+            {{ copy.nuxtDescription }}
+          </p>
+          <UButton :label="copy.nuxtGuide" :to="localePath('/docs/getting-started/installation')" variant="link" class="mt-3 p-0" />
+        </div>
+        <div class="border-t border-default pt-5">
+          <h3 class="text-lg font-semibold text-highlighted">
+            Vue + Vite
+          </h3>
+          <p class="mt-1 text-muted">
+            {{ copy.vueDescription }}
+          </p>
+          <UButton :label="copy.vueGuide" :to="localePath('/docs/getting-started/vue')" variant="link" class="mt-3 p-0" />
+        </div>
+      </div>
+
+      <div class="mt-8 flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2 border-t border-default pt-5">
+        <p class="text-sm/relaxed text-muted">
+          {{ copy.aiDescription }}
+        </p>
+        <UButton :label="copy.aiGuide" :to="localePath('/docs/getting-started/ai')" variant="link" class="p-0" />
+      </div>
+    </UContainer>
+  </section>
 </template>
