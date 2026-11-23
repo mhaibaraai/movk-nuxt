@@ -88,7 +88,7 @@ export default defineNuxtConfig({
   routeRules: {
     ...i18nRedirects({
       '/docs': '/docs/getting-started',
-      '/docs/components': '/docs/components/date-picker',
+      '/docs/components': '/docs/components/message-box',
       '/docs/auto-form': '/docs/auto-form/quickstart',
       // 组件路由变更
       '/docs/components/search-form': '/docs/auto-form/search-form',
