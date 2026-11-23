@@ -1,6 +1,8 @@
 import pkg from '../package.json'
 
 const chatModel = process.env.NUXT_PUBLIC_AI_CHAT_MODEL || 'cloudflare/@cf/qwen/qwen3.8-27b'
+const localD1DatabaseId = '00000000-0000-0000-0000-000000000000'
+const d1DatabaseId = process.env.CLOUDFLARE_D1_DATABASE_ID || localD1DatabaseId
 
 function i18nRedirects(
   rules: Record<string, string>
@@ -18,9 +20,7 @@ export default defineNuxtConfig({
 
   modules: [
     '../src/module',
-    '@nuxtjs/i18n',
-    '@vercel/analytics',
-    '@vercel/speed-insights'
+    '@nuxtjs/i18n'
   ],
 
   $development: {
@@ -32,6 +32,40 @@ export default defineNuxtConfig({
   $production: {
     site: {
       url: 'https://nuxt.mhaibaraai.cn'
+    },
+    content: {
+      database: { type: 'd1', bindingName: 'DB' }
+    },
+    nitro: {
+      preset: 'cloudflare_module',
+      // Cloudflare merges matching headers. Keep Nuxt asset caching in public/_headers.
+      routeRules: {
+        '/_nuxt/**': { cache: { maxAge: 0 } },
+        '/_nuxt/builds/**': { cache: { maxAge: 0 } },
+        '/_nuxt/builds/meta/**': { cache: { maxAge: 0 } },
+        '/_nuxt/fonts/**': { cache: { maxAge: 0 } }
+      },
+      cloudflare: {
+        deployConfig: true,
+        nodeCompat: true,
+        wrangler: {
+          d1_databases: [{
+            binding: 'DB',
+            database_name: 'movk-nuxt-content',
+            database_id: d1DatabaseId
+          }]
+        }
+      }
+    },
+    hooks: {
+      'build:before'() {
+        if (process.env.WORKERS_CI === '1' && d1DatabaseId === localD1DatabaseId) {
+          throw new Error('Set CLOUDFLARE_D1_DATABASE_ID in Workers Builds before deploying.')
+        }
+      }
+    },
+    aiChat: {
+      enabled: true
     }
   },
 
@@ -120,6 +154,7 @@ export default defineNuxtConfig({
   },
 
   aiChat: {
+    enabled: Boolean(process.env.AI_BASE_URL && process.env.AI_API_KEY),
     model: chatModel,
     models: [chatModel]
   },
