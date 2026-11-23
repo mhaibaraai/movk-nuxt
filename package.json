@@ -162,7 +162,7 @@
     "zod": "^4.6.7"
   },
   "devDependencies": {
-    "@iconify-json/lucide": "^1.2.156",
+    "@iconify-json/lucide": "^1.2.158",
     "@iconify-json/ph": "^1.2.2",
     "@iconify-json/tabler": "^1.2.46",
     "@nuxt/eslint-config": "^1.17.0",
@@ -171,7 +171,7 @@
     "@nuxt/test-utils": "^4.3.4",
     "@release-it/conventional-changelog": "^12.0.2",
     "@vitest/coverage-v8": "5.1.1",
-    "@vue/test-utils": "^2.5.1",
+    "@vue/test-utils": "^2.6.0",
     "ai": "^7.0.177",
     "eslint": "^10.15.0",
     "happy-dom": "^21.0.4",
@@ -183,7 +183,7 @@
     "unplugin-auto-import": "^21.1.0",
     "unplugin-vue-components": "^32.1.0",
     "vitest": "5.1.1",
-    "vue": "^3.5.45",
+    "vue": "^3.5.46",
     "vue-tsc": "3.3.14"
   }
 }
