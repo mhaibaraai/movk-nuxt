@@ -1,53 +1,30 @@
-# Movk Nuxt Composables
+# Composables and theming
 
-## Overview
+These composables work in Nuxt and Vue + Vite with the respective Movk setup. Form and API composables are covered in the [form](auto-form.md) and [API](api.md) references.
 
-Movk Nuxt provides auto-imported utility composables. No imports needed in `<script setup>`. This file covers the general-purpose utilities; data fetching and file transfer live in [api](api.md), and `useAutoForm` is detailed in [auto-form](auto-form.md).
-
-## When to Use
-
-- Formatting, parsing, or comparing dates / ranges / arrays (`useDateFormatter`)
-- Reading or writing theme state (color, neutral, radius, icon, mode) and exporting CSS variables or app.config code (`useTheme`)
-- Opening alert / confirm dialogs imperatively and awaiting the result (`useMessageBox`)
-- Building a Zod schema and inspecting field metadata (`useAutoForm` — see [auto-form](auto-form.md))
-- When NOT to use: HTTP / upload / download — see [api](api.md)
-
-## Quick Reference
-
-| Composable | Key API |
+| Need | API |
 | --- | --- |
-| `useDateFormatter` | `format`, `parse`, `toISO`, `formatRange`, `formatArray`, `getToday`, `isWeekend`, `getStartOfMonth` |
-| `useTheme` | `color`, `mode`, `radius`, `icon` (writable refs); `exportCSS()`, `exportConfig()`, `resetTheme()`, `hasCSSChanges`, `hasConfigChanges` |
-| `useMessageBox` | `alert(options) → Promise<void>`, `confirm(options) → Promise<boolean>` |
-| `useAutoForm` | `afz`, `defineControl`, `getAutoFormMetadata` |
+| Format a calendar value, range, or array | `useDateFormatter()` with `format`, `formatRange`, or `formatArray`. Use `parse` and `toISO` at data boundaries. [Date formatting](https://nuxt.mhaibaraai.cn/docs/components/date-picker#usedateformatter) |
+| Await a dialog | `useMessageBox().confirm(options)` resolves to a boolean. `alert(options)` resolves when the dialog closes. |
+| Read or update theme preferences | `useTheme()`. Set the writable refs `primary`, `neutral`, `radius`, `icon`, or `mode` from client interactions. `color` is a derived value. Use `exportCSS()` or `exportConfig()` to export settings and `resetTheme()` to restore defaults. [Theme](https://nuxt.mhaibaraai.cn/docs/getting-started/theme) |
+| Customize localized component labels | Use `extendMovkLocale(locale, messages)` with the locale passed to `UApp`. In Nuxt, configure schema validation separately under `movk.zod`. [Localization](https://nuxt.mhaibaraai.cn/docs/getting-started/configuration) |
 
-## Key Usage
+`useDateFormatter()` defaults to the locale supplied by Nuxt UI when available. Pass an explicit `locale` when the format must stay the same across UI languages. Use `@internationalized/date` values with the calendar controls and select the desired string representation at the API boundary.
 
-```vue
-<script setup lang="ts">
-const f = useDateFormatter({ locale: 'zh-CN' })
-const today = f.getToday()
-const label = f.format(today)
+Call `useMessageBox()` in setup with a root `UApp`. Perform the action only after the user confirms.
 
-const theme = useTheme()
-function exportCss() {
-  return theme.exportCSS()
-}
-
+```ts
 const { confirm } = useMessageBox()
-async function onDelete() {
-  const ok = await confirm({ type: 'warning', title: '删除确认', description: '不可恢复' })
-  if (ok) await remove()
+
+async function requestRemoval() {
+  const accepted = await confirm({
+    title: 'Remove this record?',
+    description: 'This action cannot be undone.',
+    type: 'warning'
+  })
+
+  if (accepted) {
+    await removeRecord()
+  }
 }
-</script>
 ```
-
-Notes:
-- `useDateFormatter` is built on `@internationalized/date`; pass `DateValue` objects, not raw `Date`.
-- `useTheme` state are writable refs — assigning updates the theme immediately; `MThemePicker` is its visual wrapper.
-- `confirm()` resolves to a boolean; `alert()` resolves when the user closes the dialog.
-
-## MCP & docs
-
-- Docs: v2 has no standalone composables section; each composable lives with its domain — `/docs/auto-form/use-auto-form`, `/docs/components/date-picker#usedateformatter`, `/docs/getting-started/theme#usetheme`, `/docs/components/message-box#usemessagebox`, `/docs/api/upload-download`, `/docs/api/stream`
-- MCP: `mcp__movk-nuxt__search-composables`, `mcp__movk-nuxt__get-documentation-page`, `mcp__movk-nuxt__get-example`

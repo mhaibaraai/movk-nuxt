@@ -340,8 +340,8 @@ importers:
         specifier: workspace:*
         version: link:..
       '@movk/nuxt-docs':
-        specifier: ^3.0.6
-        version: 3.0.6(3c559a605ca9d310b2383bd829690003)
+        specifier: ^3.0.7
+        version: 3.0.7(3c559a605ca9d310b2383bd829690003)
       '@nuxt/content':
         specifier: ^3.17.0
         version: 3.17.0(@nuxt/schema@4.6.4)(@oxc-project/types@0.156.0)(confbox@0.2.4)(dotenv@17.4.2)(esbuild@0.28.2)(giget@3.3.1)(magic-string@1.4.5)(magicast@0.5.5)(mlly@1.8.2)(oxc-parser@0.141.0)(rolldown@1.2.19)(rollup@4.68.8)(supports-color@10.2.2)(vite@8.3.8(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(sass-embedded@1.108.2)(sass@1.108.2)(terser@5.51.4)(yaml@2.9.1))
@@ -1819,8 +1819,8 @@ packages:
     peerDependencies:
       vue: ^3.5.25
 
-  '@movk/nuxt-docs@3.0.6':
-    resolution: {integrity: sha512-BhC9Ta5wYtaFRtWghSvV6CMpCc3Y2QO+XZImXo+kP9HSrg0jpWrelLKbSuSWm6pecgqiNwRirWuRmiUSHOIqqQ==}
+  '@movk/nuxt-docs@3.0.7':
+    resolution: {integrity: sha512-bQK+6EuU9gn7EsIYR4345FJ1abRP5U3VJxVki2xNjF5bUx9al1K0RAZQWabTtxXm0Kq8HekXeOJ2Kfm/ujXU2g==}
     engines: {node: ^22.22.3 || ^24.15.0 || >=26.0.0}
     peerDependencies:
       '@ai-sdk/openai': ^4.0.89
@@ -10709,7 +10709,7 @@ snapshots:
       '@vueuse/core': 15.0.0(vue@3.5.46(typescript@6.0.3))
       vue: 3.5.46(typescript@6.0.3)
 
-  '@movk/nuxt-docs@3.0.6(3c559a605ca9d310b2383bd829690003)':
+  '@movk/nuxt-docs@3.0.7(3c559a605ca9d310b2383bd829690003)':
     dependencies:
       '@fontsource-variable/fraunces': 5.3.0
       '@fontsource-variable/inter': 5.3.0
