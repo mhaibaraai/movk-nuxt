@@ -2,7 +2,7 @@
 
 English | [简体中文](./README.md)
 
-> A UI engineering toolkit built on top of Nuxt UI — Schema-driven AutoForm (Zod v4), a full-featured DataTable, standalone components and Composables. Get the complete capability set in Nuxt 4, including API integration with authentication and progress tracking; its UI, forms, tables, and theming also work directly in plain Vue + Vite projects through a Vite plugin (the API integration domain is Nuxt-only).
+> An application toolkit for Nuxt and Vue. Generate forms from Zod schemas with AutoForm, build tables from column definitions with DataTable, and add standalone components and composables as needed. Nuxt projects can also integrate API requests, authentication, and file transfers.
 
 [![Install MCP in Cursor](https://nuxt.mhaibaraai.cn/mcp/badge.svg)](https://nuxt.mhaibaraai.cn/mcp/deeplink)
 [![Install MCP in VS Code](https://nuxt.mhaibaraai.cn/mcp/badge.svg?ide=vscode)](https://nuxt.mhaibaraai.cn/mcp/deeplink?ide=vscode)
@@ -18,7 +18,7 @@ English | [简体中文](./README.md)
 
 ## ✨ Features
 
-Movk Nuxt is a UI engineering toolkit built on top of Nuxt UI, offering two ways to use it: the complete capability set with API integration in **Nuxt 4**, or its UI layer in plain **Vue + Vite** projects through a **Vite plugin**. The supported frameworks for each capability are:
+Forms, tables, components, and theming build on Nuxt UI. Use them in **Nuxt 4** or with the plugins for **Vue + Vite**. API integration is available in **Nuxt 4**.
 
 - **AutoForm — Schema-driven forms** (✅ Nuxt ｜ ✅ Vue + Vite) - Built on Zod v4 with a "define-is-render" model: a single Schema declares the data structure, validation rules, and UI configuration at once, automatically generating a complete form interface.
 - **DataTable — Data table** (✅ Nuxt ｜ ✅ Vue + Vite) - Wraps TanStack Table, covering data columns, special columns (selection / index / expand / actions), tree-structured data, row interactions, appearance customization, pagination, and load-more.

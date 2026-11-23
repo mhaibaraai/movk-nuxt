@@ -43,7 +43,7 @@ const items = [
       :label="`v${config.version}`"
       variant="subtle"
       size="xs"
-      class="font-semibold rounded-full truncate"
+      class="hidden truncate rounded-full font-semibold sm:inline-flex"
     />
   </div>
 </template>
