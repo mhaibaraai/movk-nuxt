@@ -1,343 +1,81 @@
 # DataTable
 
-Declarative data grid built on `@tanstack/vue-table` and Nuxt UI `UTable`. A single `columns` array drives data columns, special columns (selection / index / expand / row-pinning / actions), grouped headers, sorting, pinning, resizing, tree data, pagination, and load-more — fully typed.
+Use `MDataTable` for data grids with configurable columns, table state, and row interactions. Use `MTree` when hierarchical items are the primary UI and column layout is unnecessary.
 
-## Basic table
-
-```vue
-<script setup lang="ts">
-import type { DataTableDataColumn } from '@movk/nuxt'
-
-interface User { id: string, name: string, email: string, role: 'admin' | 'editor' }
-
-const data = ref<User[]>([
-  { id: '1', name: 'Alice', email: 'alice@example.com', role: 'admin' },
-  { id: '2', name: 'Bob', email: 'bob@example.com', role: 'editor' }
-])
-
-const renderRole: DataTableDataColumn<User>['cell'] = ctx =>
-  ctx.row.original.role === 'admin' ? 'Administrator' : 'Editor'
-
-const columns: DataTableDataColumn<User>[] = [
-  { accessorKey: 'name', header: 'Name', size: 'md' },
-  { accessorKey: 'email', header: 'Email' },
-  { accessorKey: 'role', header: 'Role', align: 'right', cell: renderRole }
-]
-</script>
-
-<template>
-  <MDataTable :columns="columns" :data="data" row-key="id" />
-</template>
-```
-
-## Key rules
-
-- **Always set `row-key`** — selection, expansion, tree data and pinning all use it to identify rows.
-- **Derive callback / event types from official exports** — `DataTableDataColumn<T>['cell' | 'truncate' | 'tooltip']`, `DataTableProps<T>['sortable' | 'pinable' | 'resizable']`, and `DataTableSelectHandler` / `DataTableHoverHandler` / `DataTableContextmenuHandler` for events.
-- **Per-column prop > global prop** — use "global on + individual off" or vice versa to express exceptions, not row-by-row repetition.
-- **Server-side pagination**: set `paginationOptions.manualPagination: true` + `rowCount`, and reset `pagination.pageIndex` to 0 whenever the search/filter changes.
-
-## Sorting, pinning, resizing
-
-Globally enable, override per-column. The same three accept `(col) => boolean` for dynamic decisions.
+## Define columns and row identity
 
 ```vue
 <script setup lang="ts">
-import type { DataTableProps, DataTableDataColumn } from '@movk/nuxt'
-
-const sortable: DataTableProps<User>['sortable'] = true
-const pinable: DataTableProps<User>['pinable'] = col => col.id !== 'actions'
-
-const columns: DataTableDataColumn<User>[] = [
-  { accessorKey: 'name', header: 'Name', fixed: 'left' },
-  { accessorKey: 'email', header: 'Email', sortable: false }, // override the global
-  { accessorKey: 'role', header: 'Role', resizable: false }
-]
-</script>
-
-<template>
-  <MDataTable
-    :columns="columns"
-    :data="data"
-    row-key="id"
-    :sortable="sortable"
-    :pinable="pinable"
-    resizable
-    column-resize-mode="onEnd"
-  />
-</template>
-```
-
-## Header & cell slots
-
-Slots named after a column id override that column's rendering. Data column id = `accessorKey`; special columns = `__selection`, `__index`, `__expand`, `__row_pinning`, `__actions`.
-
-```vue
-<template>
-  <MDataTable :columns="columns" :data="data" row-key="id" sortable>
-    <!-- replaces the header label only; sort / pin buttons and the resize handle stay -->
-    <template #name-header>
-      <span class="inline-flex items-center gap-1 truncate">
-        <UIcon name="i-lucide-user-round" class="size-4 text-primary" />
-        Name
-      </span>
-    </template>
-
-    <!-- replaces the whole cell: truncate / tooltip / emptyCell no longer apply -->
-    <template #role-cell="{ row }">
-      <UBadge color="neutral" variant="subtle" size="sm">{{ row.original.role }}</UBadge>
-    </template>
-  </MDataTable>
-</template>
-```
-
-`#<column>-footer` works the same way. Grouped headers (`children`) cannot be targeted — their id is assembled by TanStack; use the `header` option instead.
-
-## Special columns
-
-Set `type` to add a column without an `accessorKey`. Supported: `selection`, `index`, `expand`, `row-pinning`, `actions`.
-
-```vue
-<script setup lang="ts">
+import { ref } from 'vue'
 import type { DataTableColumn } from '@movk/nuxt'
 
-const rowSelection = ref<Record<string, boolean>>({})
+interface Person {
+  id: string
+  name: string
+  email: string
+}
 
-const columns: DataTableColumn<User>[] = [
-  {
-    type: 'selection',
-    mode: 'multiple',
-    strategy: 'cascade', // tree mode: cascade | isolated | leaf
-    checkboxProps: ctx => ({
-      disabled: ctx.scope === 'cell' && ctx.row?.original.role === 'admin'
-    })
-  },
-  { type: 'index', header: '#' },
-  { accessorKey: 'name', header: 'Name' },
-  { accessorKey: 'email', header: 'Email' },
-  {
-    type: 'actions',
-    header: 'Actions',
-    items: ctx => [
-      { label: 'Edit', icon: 'i-lucide-pencil', onSelect: () => edit(ctx.row.original) },
-      {
-        label: 'Delete',
-        icon: 'i-lucide-trash',
-        color: 'error',
-        confirm: { title: 'Delete user?', confirmLabel: 'Delete' },
-        onSelect: () => remove(ctx.row.original)
-      }
-    ]
-  }
+const people: Person[] = [
+  { id: 'ada', name: 'Ada', email: 'ada@example.com' }
+]
+const selected = ref<string[]>([])
+const pagination = ref({ pageIndex: 0, pageSize: 10 })
+
+const columns: DataTableColumn<Person>[] = [
+  { type: 'selection' },
+  { accessorKey: 'name', header: 'Name', sortable: true },
+  { accessorKey: 'email', header: 'Email', tooltip: true }
 ]
 </script>
 
 <template>
   <MDataTable
+    v-model:row-selection-keys="selected"
+    v-model:pagination="pagination"
     :columns="columns"
-    :data="data"
+    :data="people"
     row-key="id"
-    v-model:row-selection="rowSelection"
   />
 </template>
 ```
 
-Row pinning column:
+- Use a stable `row-key` for selection, expansion, pinning, and updates. If supplied, `getRowId` takes precedence.
+- Use `children` on a column definition for grouped headers. Use `children-key` on the table to enable tree rows.
+- Set `sortable`, `pinable`, and `resizable` globally or per column. An explicit column setting overrides the global setting. Set `fixed: 'left'` or `'right'` for initial column pinning.
+- For a data column such as `name`, use `#name-header` to replace the label while keeping header controls, or `#name-cell` to take over cell rendering. In a cell slot, use `row.original` for source data.
+- Use `stripe`, `bordered`, `density="compact"`, `sticky`, and `empty-cell` for appearance. Use `loading` and the `#empty` slot to present table state.
+
+## Add interactions
+
+Special column types are `selection`, `index`, `expand`, `row-pinning`, and `actions`. Use an expand column with `#expanded` for detail rows on a flat table. In a tree, use selection strategies `cascade`, `isolated`, or `leaf` and bind `expanded-keys` or `row-selection-keys` when the app needs the IDs. A numeric `indent-size` sets pixels per depth. The function form takes a cell context and returns a CSS string.
+
+Use `actions` on the actions column. Each action's `onClick` receives a context whose `row` is the original record. The action can return a promise to show its pending state.
 
 ```ts
-{
-  type: 'row-pinning',
-  position: 'top', // or 'bottom'
-  buttonProps: ({ pinned }) => pinned
-    ? { icon: 'i-lucide-pin-off', color: 'primary' }
-    : { icon: 'i-lucide-pin', color: 'neutral', variant: 'ghost' }
+const actionColumn: DataTableColumn<Person> = {
+  type: 'actions',
+  actions: [{
+    key: 'delete',
+    buttonProps: { label: 'Delete', color: 'error' },
+    confirm: true,
+    confirmProps: { title: 'Delete this person?' },
+    onClick: ({ row }) => deletePerson(row.id)
+  }]
 }
 ```
 
-Expand column with a detail slot:
+For row events, use `@select`, `@hover`, and `@row-contextmenu`. Derive handler types from `DataTableSelectHandler<T>`, `DataTableHoverHandler<T>`, and `DataTableContextmenuHandler<T>`. In `row-class` and `row-style` callbacks, the argument is the original record.
 
-```vue
-<template>
-  <MDataTable :columns="columns" :data="data" row-key="id">
-    <template #expanded="{ row }">
-      <div class="p-4 bg-muted">{{ row.original.bio }}</div>
-    </template>
-  </MDataTable>
-</template>
-```
+## Choose how rows are loaded
 
-## Tree data
+| Data source | Table setup |
+| --- | --- |
+| All rows already loaded | Bind `v-model:pagination` with `pageIndex` and `pageSize` for client-side paging. |
+| Numbered pages from a server | Bind pagination, set `paginationOptions.manualPagination: true`, and provide `rowCount` or `pageCount`. Pass only the current page's rows. |
+| Append pages on scroll | Pass a `:load-more` callback and `:can-load-more`. This mode hides the built-in pager. Return a promise to drive loading. Handle rejected loads via `@load-more-error`. |
 
-```vue
-<script setup lang="ts">
-import type { DataTableColumn } from '@movk/nuxt'
+`pageIndex` starts at zero. Convert it at the request boundary if the server uses one-based pages, and reset it when filters change. For server sorting, use manual sorting and fetch based on the bound sort state.
 
-interface Dept { id: string, name: string, head?: string, children?: Dept[] }
+Enable `column-settings` to show column controls and set `persist-key` to save preferences in the browser. Use `exportCsv({ rows: 'page' })` or `exportCsv({ rows: 'selected' })` for loaded data. To export all matching server rows, provide `serverCsvExport` and merge the context's columns, sorting, and filters with the application's search criteria.
 
-const columns: DataTableColumn<Dept>[] = [
-  { type: 'selection', mode: 'multiple', strategy: 'leaf' },
-  { type: 'expand' },
-  { accessorKey: 'name', header: 'Department' },
-  { accessorKey: 'head', header: 'Head', emptyCell: '—' }
-]
-
-const selectionKeys = ref<string[]>([])
-const tableRef = useTemplateRef<InstanceType<typeof MDataTable>>('table')
-
-// expose API
-function selectAll() {
-  tableRef.value?.expandToDepth(2)
-}
-const leafSelected = computed(() => tableRef.value?.treeSelection.leaves ?? [])
-</script>
-
-<template>
-  <MDataTable
-    ref="table"
-    :columns="columns"
-    :data="data"
-    row-key="id"
-    children-key="children"
-    :indent-size="depth => depth * 24"
-    v-model:row-selection-keys="selectionKeys"
-    v-model:expanded-keys="expandedKeys"
-  />
-</template>
-```
-
-Strategies: `cascade` (parent↔children linked), `isolated` (each row independent), `leaf` (only leaves selectable; parents show derived state). The exposed `treeSelection` gives `leaves`, `parents`, `halfSelected`, `strictlyChecked`.
-
-## Pagination
-
-### Client-side
-
-```vue
-<script setup lang="ts">
-const pagination = ref({ pageIndex: 0, pageSize: 10 })
-</script>
-
-<template>
-  <MDataTable
-    :columns="columns"
-    :data="data"
-    row-key="id"
-    v-model:pagination="pagination"
-  />
-</template>
-```
-
-### Server-side
-
-```vue
-<script setup lang="ts">
-const pagination = ref({ pageIndex: 0, pageSize: 10 })
-const search = ref('')
-
-const { data, status } = await useAsyncData(
-  'users',
-  () => $api<{ items: User[], total: number }>('/users', {
-    query: { page: pagination.value.pageIndex + 1, pageSize: pagination.value.pageSize, q: search.value }
-  }),
-  { watch: [pagination, search] }
-)
-
-watch(search, () => { pagination.value.pageIndex = 0 }) // reset to first page on new search
-</script>
-
-<template>
-  <MDataTable
-    :columns="columns"
-    :data="data?.items ?? []"
-    row-key="id"
-    :loading="status === 'pending'"
-    v-model:pagination="pagination"
-    :pagination-options="{ manualPagination: true, rowCount: data?.total ?? 0 }"
-    :pagination-ui="{
-      pageSizes: [10, 20, 50],
-      showSelectedCount: true,
-      showRowRange: true
-    }"
-  />
-</template>
-```
-
-Replace the whole pagination bar with `#pagination`, or just the summary / actions area with `#pagination-summary` / `#pagination-actions`.
-
-## Row interactions
-
-```vue
-<script setup lang="ts">
-import type {
-  DataTableSelectHandler,
-  DataTableHoverHandler,
-  DataTableContextmenuHandler
-} from '@movk/nuxt'
-
-const onSelect: DataTableSelectHandler<User> = (event, row) => {
-  console.log('clicked', row.original.id)
-}
-
-const onHover: DataTableHoverHandler<User> = (event, row) => {
-  hoveredId.value = row?.original.id ?? null
-}
-
-const onContextmenu: DataTableContextmenuHandler<User> = (event, row) => {
-  event.preventDefault()
-  openMenu(event, row.original)
-}
-</script>
-
-<template>
-  <MDataTable
-    :columns="columns"
-    :data="data"
-    row-key="id"
-    select-on-row-click
-    :row-class="row => row.original.role === 'admin' ? 'bg-primary/5' : ''"
-    :row-style="row => row.original.banned ? { opacity: 0.5 } : {}"
-    @select="onSelect"
-    @hover="onHover"
-    @row-contextmenu="onContextmenu"
-  />
-</template>
-```
-
-## Appearance & state
-
-```vue
-<MDataTable
-  :columns="columns"
-  :data="data"
-  row-key="id"
-  :loading="status === 'pending'"
-  striped
-  bordered
-  dense
-  sticky-header
-  empty-cell="—"
-/>
-```
-
-`empty-cell` sets the global placeholder; column-level `emptyCell` overrides it (set `false` to disable).
-
-## Programmatic control
-
-Enable `columnSettings` and use `persistKey` for browser-local layout preferences. Use `exportCsv({ rows: 'page' })` for the current page or `rows: 'selected'` for selected loaded rows. For all matching server records, supply `serverCsvExport` and call `await table.exportServerCsv()`; merge the supplied columns, sorting and filters with application-level search criteria in that handler.
-
-```vue
-<script setup lang="ts">
-const table = useTemplateRef<InstanceType<typeof MDataTable>>('table')
-
-function clearAll() {
-  table.value?.clearSelection()
-  table.value?.collapseAll()
-  table.value?.scrollToTop()
-}
-
-function expandFirstTwoLevels() {
-  table.value?.expandToDepth(2)
-}
-</script>
-```
-
-Exposed: `clearSelection()`, `scrollToTop()`, `expandToDepth(depth)`, `collapseAll()`, `treeSelection`, plus `v-model:row-selection-keys` and `v-model:expanded-keys` for two-way state binding.
+[Columns](https://nuxt.mhaibaraai.cn/docs/data-table/columns) · [Special columns](https://nuxt.mhaibaraai.cn/docs/data-table/special-columns) · [Pagination](https://nuxt.mhaibaraai.cn/docs/data-table/pagination)

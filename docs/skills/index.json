@@ -2,7 +2,7 @@
   "skills": [
     {
       "name": "movk-nuxt",
-      "description": "Build with the Movk Nuxt (@movk/nuxt) module — Schema-driven AutoForm (Zod v4), an API integration system (useApiFetch + upload/download progress), standalone M-prefixed UI components, the MDataTable grid, and utility composables (date formatting, theming, message boxes). Use when generating forms, fetching data, rendering tables, adding UI controls, or calling Movk Nuxt composables.",
+      "description": "Build and maintain apps using @movk/nuxt on Nuxt 4 or Vue + Vite. Use when setting up Movk Nuxt, migrating from v1, building Zod v4 AutoForm or SearchForm schemas, configuring MDataTable columns or pagination, using Movk components, themes or composables, or integrating Nuxt APIs with useApiFetch, $api, file transfer progress or SSE chat.",
       "files": [
         "SKILL.md",
         "references/api.md",

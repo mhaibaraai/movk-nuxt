@@ -1,243 +1,76 @@
-# AutoForm
+# AutoForm and SearchForm
 
-Render a complete form from a single Zod v4 schema built with the `afz` factory. One schema declares data shape, validation rules, and UI configuration — define once, render. Component is `<MAutoForm>` (the `M` prefix is configurable via `movk.prefix`).
+Use `MAutoForm` for editing data with validation and `MSearchForm` for a filter bar. Both derive fields from a Zod v4 object schema. Use the `afz` factory for Movk field metadata and typed control options.
 
-## Basic pattern
+## Build and submit a form
 
 ```vue
 <script setup lang="ts">
-import type { FormSubmitEvent } from '@nuxt/ui'
+import { ref } from 'vue'
+import type { AutoFormSubmitHandler } from '@movk/nuxt'
 import type { z } from 'zod'
 
 const { afz } = useAutoForm()
-
 const schema = afz.object({
-  username: afz.string().min(3).meta({ label: 'Username' }),
-  email: afz.email().meta({ label: 'Email' }),
-  age: afz.number().min(18).meta({ label: 'Age' })
+  name: afz.string().min(1).meta({ label: 'Name' }),
+  email: afz.email().meta({ label: 'Email address' }),
+  active: afz.boolean({ type: 'toggle' }).default(true).meta({ label: 'Active' })
 })
 
-type Schema = z.input<typeof schema>
-const state = ref<Partial<Schema>>({})
+const state = ref<Partial<z.input<typeof schema>>>({})
+const submittedName = ref('')
 
-async function onSubmit(event: FormSubmitEvent<Schema>) {
-  // `@submit` only fires after validation passes — event.data is fully typed
-  await saveUser(event.data)
+const onSubmit: AutoFormSubmitHandler<typeof schema> = (event) => {
+  submittedName.value = event.data.name
 }
 </script>
 
 <template>
-  <MAutoForm :schema="schema" v-model="state" @submit="onSubmit" />
+  <MAutoForm v-model="state" :schema="schema" @submit="onSubmit" />
+  <p v-if="submittedName">Submitted {{ submittedName }}</p>
 </template>
 ```
 
-## Key rules
+- Use `z.input<typeof schema>` for editable state. Use `AutoFormSubmitHandler<typeof schema>` to type the validated payload. With the default transform behavior, `event.data` uses the schema output.
+- Return the save promise from the submit handler to use the default `loadingAuto` behavior. For externally managed pending state, pass `:loading-auto="false"` and bind `loading`.
+- `@error` receives a Nuxt UI `FormErrorEvent`. Use the exposed `formRef?.setErrors([{ name: 'email', message: 'Email already exists' }])` after interpreting a server field error.
+- The component exposes `submit()`, `validate()`, `reset()`, `clear()`, and `setBaseline()`. Use `setBaseline()` when a loaded or saved record becomes the new reset point.
 
-- **Always use `afz`, never raw `z`** — `afz` proxies Zod methods to preserve `.meta()` through `.optional()`, `.default()`, etc. Raw `z` drops UI metadata.
-- **Derive state type from the schema** — `type Schema = z.input<typeof schema>`, then `ref<Partial<Schema>>({})`. Never declare a parallel `interface`.
-- **`@submit` only fires after validation** — for field-level errors, use `@error` with `FormError[]`.
-- **Metadata priority**: global (`movk.autoForm` in `nuxt.config.ts`) → field (`.meta()`) → decorator. Higher wins.
+## Pick a field or control
 
-## Schema → control mapping
-
-| `afz` method | Default control |
+| Need | Pattern |
 | --- | --- |
-| `afz.string()` | `UInput` |
-| `afz.number()` | `UInputNumber` |
-| `afz.boolean()` | `UCheckbox` |
-| `afz.enum([...])` | `USelect` |
-| `afz.calendarDate()` | `MDatePicker` |
-| `afz.file()` | `UFileUpload` |
-| `afz.array(...)` | repeatable group |
-| `afz.object({...})` | nested fieldset (`collapsible` for accordion) |
+| Text, number, checkbox | `afz.string()`, `afz.number()`, `afz.boolean()` |
+| Email and URL validation | `afz.email()`, `afz.url()` |
+| One choice | `afz.enum(values)`, with `type: 'selectMenu'`, `'radioGroup'`, or `'toggleGroup'` when appropriate |
+| Pressed / unpressed | `afz.boolean({ type: 'toggle' })` |
+| Multiple toggle buttons | `afz.array(afz.enum(values), { type: 'toggleGroup', controlProps: { type: 'multiple', items } })` |
+| Calendar, typed date, typed time | `afz.calendarDate()`, `afz.inputDate()`, `afz.inputTime()` |
+| Nested fields or repeatable entries | `afz.object(shape)`, `afz.array(itemSchema)` |
+| File selection | `afz.file()` |
 
-The table lists the common methods; the factory also exposes `afz.email() / url() / uuid() / isoDatetime() / inputDate() / inputTime() / tuple()` and the strict/loose object variants. Full list: MCP `get-component-metadata` on `MAutoForm`.
+For a single toggle group, add `.optional()` when clearing the selection is valid. Give fields labels and descriptions through `.meta()`. Use `controlProps` for properties of the rendered control such as input icons or a password input type. Use `afz.layout({ class, fields })` to group fields visually, or add `component`, `props`, and `fieldSlots` to place fields inside named slots.
 
-For `afz.string()`, switch the rendered control via `meta({ type })`, e.g. `'textarea'`. Input decorations (password type, placeholder, icons) go through `controlProps` on the default `UInput`; for a reusable decorated input, register it with `defineControl`.
-
-`meta({ type })` also targets registered controls such as `'switch'`, `'slider'`, `'selectMenu'`, `'inputMenu'`, `'checkboxGroup'`, `'radioGroup'`, `'inputTags'`, `'pinInput'`, `'listbox'`, and Movk's `'calendarDate'` (DatePicker). Register additional controls with `defineControl` or pass a component such as `UInputRating` directly via `component`.
-
-Use `afz.boolean({ type: 'toggle' })` for a pressable boolean button. Use `afz.enum(values, { type: 'toggleGroup' })` for single selection with items generated from the enum. Add `.optional()` to accept deselection. For multiple selection, use `afz.array()` with `type: 'toggleGroup'` and pass `type: 'multiple'` and item objects in `controlProps`.
-
-## Field metadata
+## Register a control
 
 ```ts
-const schema = afz.object({
-  username: afz.string()
-    .min(3, 'At least 3 characters')
-    .meta({
-      label: 'Username',
-      description: 'Visible to other users',
-      hint: '3-20 chars',
-      placeholder: 'Enter username',
-      required: true,
-      class: 'col-span-full',
-      ui: { label: 'text-primary' },
-      controlProps: { icon: 'i-lucide-user' }
-    })
-})
-```
+import RichEditor from './RichEditor.vue'
 
-`controlProps` is forwarded to the underlying control (e.g. `UInput`), so any prop on that control is reachable here.
-
-## Layout with `afz.layout`
-
-### Grid
-
-```ts
-const schema = afz.object({
-  $row: afz.layout({
-    class: 'grid grid-cols-2 gap-4',
-    fields: {
-      firstName: afz.string().meta({ label: 'First name' }),
-      lastName: afz.string().meta({ label: 'Last name' }),
-      email: afz.email().meta({ label: 'Email', class: 'col-span-full' })
-    }
-  })
-})
-```
-
-Layout keys conventionally start with `$` but it's not required — any key whose value is `afz.layout(...)` is treated as a layout node.
-
-### Tabs / accordion via `fieldSlots`
-
-```ts
-import { UTabs } from '#components'
-
-const schema = afz.object({
-  $tabs: afz.layout({
-    component: UTabs,
-    props: {
-      items: [
-        { label: 'Profile', slot: 'profile' },
-        { label: 'Security', slot: 'security' }
-      ]
-    },
-    fieldSlots: {
-      name: 'profile',
-      email: 'profile',
-      password: 'security'
-    },
-    fields: {
-      name: afz.string().meta({ label: 'Name' }),
-      email: afz.email().meta({ label: 'Email' }),
-      password: afz.string().min(8).meta({ label: 'Password', controlProps: { type: 'password' } })
-    }
-  })
-})
-```
-
-`fieldSlot` (singular) puts **all** fields into one slot; `fieldSlots` (plural) maps fields per slot. Both accept a `(ctx) => string` function for reactive routing.
-
-## Conditional & reactive fields
-
-Use `asyncItems: { deps, load }` for dependent choices, forwarding the supplied abort signal to the request. Array field metadata supports `sortable` and `duplicable`; use schema length rules to constrain the available actions. For SearchForm use `syncQuery` with Nuxt routing or Vue Router. Use `@query-restore` to refresh results after browser history navigation and `@submit` for new searches.
-
-`if` and `hidden` accept either a boolean or `(ctx) => boolean`. Mark conditionally-rendered fields `.optional()` so validation doesn't fail when they're hidden.
-
-```ts
-const schema = afz.object({
-  userType: afz.enum(['personal', 'company']).meta({ label: 'Account type' }),
-  companyName: afz.string().optional().meta({
-    label: 'Company',
-    if: ctx => ctx.state.userType === 'company',
-    required: ctx => ctx.state.userType === 'company'
-  })
-})
-```
-
-The same `ctx` (typed as `AutoFormFieldContext`) carries `state`, `path`, `value`, `setValue`, `errors`, `loading`.
-
-## Custom controls
-
-Register at the `useAutoForm()` call site, then reference by `type`:
-
-```ts
-import MyRichEditor from '~/components/MyRichEditor.vue'
-
-const { afz, defineControl } = useAutoForm()
-
-defineControl('richEditor', {
-  component: MyRichEditor,
-  controlProps: { theme: 'snow' }
+const { afz, controls } = useAutoForm({
+  richEditor: defineControl({ component: RichEditor })
 })
 
 const schema = afz.object({
-  bio: afz.string().meta({ type: 'richEditor', label: 'Bio' })
+  biography: afz.string({ type: 'richEditor' }).meta({ label: 'Biography' })
 })
 ```
 
-Field-level `controlProps` merges over the global default.
+Bind `:controls="controls"` with `:schema="schema"` on the form. The custom control should support the field's model value and update event. For a one-off control, pass its component through field metadata.
 
-## Submit handling
+## Handle conditional fields and filters
 
-### Automatic loading
+- Use `if: ctx => ...` to exclude fields from rendering, validation, and submission. Use `hidden: ctx => ...` for visibility alone. Use the schema to validate required fields when they apply.
+- Set `asyncItems.deps` to a function of form state and use `asyncItems.load({ state, signal })` to fetch choices. Forward the signal so a new choice of dependency can cancel the previous request.
+- Use `MSearchForm` with the same schema and control map. Use `@submit` for explicit searches. With `sync-query` in Nuxt or Vue Router, use `@query-restore` to refresh results from restored URL values.
 
-Return a promise from `@submit` and AutoForm tracks the submit button's loading state (default `loadingAuto: true`):
-
-```ts
-async function onSubmit(event: FormSubmitEvent<Schema>) {
-  await $api('/users', { method: 'POST', body: event.data })
-}
-```
-
-### Manual loading
-
-```vue
-<MAutoForm
-  :schema="schema"
-  v-model="state"
-  :loading-auto="false"
-  :submit-button-props="{ loading: saving, label: 'Save' }"
-  @submit="onSubmit"
-/>
-```
-
-### Field-level errors from the server
-
-```vue
-<script setup lang="ts">
-import type { FormError } from '@nuxt/ui'
-
-const form = useTemplateRef<InstanceType<typeof MAutoForm>>('form')
-
-async function onSubmit(event: FormSubmitEvent<Schema>) {
-  try {
-    await $api('/users', { method: 'POST', body: event.data })
-  } catch {
-    form.value?.formRef?.setErrors([
-      { name: 'email', message: 'Email already taken' }
-    ])
-  }
-}
-
-function onError(errors: FormError[]) {
-  // local validation failures
-  console.warn(errors)
-}
-</script>
-
-<template>
-  <MAutoForm ref="form" :schema="schema" v-model="state" @submit="onSubmit" @error="onError" />
-</template>
-```
-
-### Programmatic submit / reset
-
-```vue
-<script setup lang="ts">
-const form = useTemplateRef<InstanceType<typeof MAutoForm>>('form')
-
-function save() { form.value?.formRef?.submit() }
-function reset() { form.value?.reset() }
-function clear() { form.value?.clear() }
-</script>
-
-<template>
-  <MAutoForm ref="form" :schema="schema" v-model="state" :submit="false" @submit="onSubmit" />
-  <UButton label="Save" @click="save" />
-  <UButton label="Reset" variant="outline" @click="reset" />
-</template>
-```
-
-`form.formRef` exposes the underlying `UForm` instance — `validate()`, `getErrors()`, `setErrors()`, `clearErrors()`, plus reactive `dirty`, `dirtyFields`, `touchedFields`, `blurredFields`.
+[AutoForm quickstart](https://nuxt.mhaibaraai.cn/docs/auto-form/quickstart) · [Controls](https://nuxt.mhaibaraai.cn/docs/auto-form/controls) · [SearchForm](https://nuxt.mhaibaraai.cn/docs/auto-form/search-form)

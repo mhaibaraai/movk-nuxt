@@ -1,168 +1,40 @@
 ---
 name: movk-nuxt
-description: Build with the Movk Nuxt (@movk/nuxt) module — Schema-driven AutoForm (Zod v4), an API integration system (useApiFetch + upload/download progress), standalone M-prefixed UI components, the MDataTable grid, and utility composables (date formatting, theming, message boxes). Works as a Nuxt module and in plain Vue + Vite (via @movk/nuxt/vite + @movk/nuxt/vue-plugin) for UI, forms, tables and theming; the API domain is Nuxt-only. Use when generating forms, fetching data, rendering tables, adding UI controls, or calling Movk Nuxt composables.
+description: Build and maintain apps using @movk/nuxt on Nuxt 4 or Vue + Vite. Use when setting up Movk Nuxt, migrating from v1, building Zod v4 AutoForm or SearchForm schemas, configuring MDataTable columns or pagination, using Movk components, themes or composables, or integrating Nuxt APIs with useApiFetch, $api, file transfer progress or SSE chat.
 ---
 
 # Movk Nuxt
 
-`@movk/nuxt` is a Nuxt 4 module providing four capability domains on top of Nuxt UI: a Schema-driven **AutoForm** (Zod v4), the **DataTable** grid, an **API** integration system (`useApiFetch` + progress upload/download), and standalone **components** (the `M` prefix) plus general-purpose **composables**.
+Use this skill for applications consuming `@movk/nuxt`. Check the installed versions and identify Nuxt or Vue + Vite before choosing an API. For v1 projects, read the [migration guide](https://nuxt.mhaibaraai.cn/docs/getting-started/migration) before applying v2 examples.
 
-## MCP Server
+## Choose a reference
 
-The `@movk/nuxt` MCP server serves live component metadata, API docs, and real code examples. If not already configured, add it:
-
-```bash
-claude mcp add --transport http movk-nuxt https://nuxt.mhaibaraai.cn/mcp
-```
-
-Key MCP tools:
-- `search-documentation` — full-text search across all Movk Nuxt docs (no params = list all pages)
-- `search-composables` — find composables by name or description (no params = list all)
-- `search-icons` — search Iconify icons (defaults to `lucide`), returns `i-{prefix}-{name}` names
-- `get-component` — full component documentation with usage examples
-- `get-component-metadata` — props, slots, events (lightweight, no docs content)
-- `get-documentation-page` — full doc page by path (supports a `sections` arg to trim)
-- `get-example` — real-world code examples
-- `list-examples` — enumerate available examples
-- `list-components` — list all components with category and basic info
-- `list-api` — list API system docs (plugin, hooks, composables)
-- `list-data-table` — list DataTable doc pages (data/special columns, tree, row behavior, appearance, pagination, load more, API)
-- `search-components-by-category` — search components by category or text
-- `search-auto-form-by-category` — search AutoForm docs by category or text
-- `search-data-table-by-category` — search DataTable doc pages by keyword
-- `search-api-by-category` — search API system docs by category or text
-
-Prompts:
-- `find-component-for-usecase` — guided selection of the best component for a use case (covers standalone widgets and DataTable)
-- `find-autoform-solution` — guided selection of AutoForm field types, config, and customization for a form requirement
-- `implement-component-with-props` — guided implementation of a component given a set of target props
-
-When you need to know **what a component accepts** or **how its API works**, use the MCP. This skill teaches you **when to use which component** and **how to build well**.
-
-## Core rules (always apply)
-
-1. **`M` prefix** — The prefix is configurable via `movk.prefix` (default `M`).
-2. **Configure module-wide behavior in `nuxt.config.ts` under `movk.*`** — `movk.api.endpoints / response / auth` for API behavior (declare bare-resource endpoints with `response: { businessCheck: false, unwrap: false }`), `movk.autoForm` for global field meta, `movk.prefix` for component prefix. Override per-call (`{ endpoint, toast, businessCheck, unwrap }`) only when the change is truly local.
-3. **Use `useApiFetch`, never raw `$fetch`** — fetch data with `useApiFetch` / `useLazyApiFetch` / `useClientApiFetch`; call imperatively via `const { $api } = useNuxtApp()` and `$api.use('endpoint')` to switch endpoints. The wrapper provides endpoint switching, auth-token injection, business-code checking, response unwrapping (`dataKey`), and toast — none of which `$fetch` provides.
-4. **Build forms from a Zod schema with `afz`** — get the factory via `const { afz } = useAutoForm()`, declare fields with `afz.string() / number() / boolean() / calendarDate() / enum() / array() / object() / file()`, attach UI via `.meta({ label, placeholder, description, controlProps })`, render with `<MAutoForm v-model="state" :schema @submit>`, and type state as `z.input<typeof schema>`. Never declare a parallel `interface` next to the schema.
-5. **Derive column / event types from official exports** — for `DataTable`, type column callbacks via index access (`DataTableDataColumn<T>['cell' | 'truncate' | 'tooltip']`, `DataTableProps<T>['sortable' | 'pinable' | 'resizable']`) and use the exported handler types (`DataTableSelectHandler`, `DataTableHoverHandler`, `DataTableContextmenuHandler`). Don't hand-write callback signatures.
-6. **Dual-mode (Nuxt / Vue + Vite)** — `@movk/nuxt` is a Nuxt module **and** a Vite plugin. In plain Vue + Vite (`@movk/nuxt/vite` + `@movk/nuxt/vue-plugin`) the standalone components, theming, AutoForm, DataTable and non-server composables (`useAutoForm` / `useTheme` / `useDateFormatter` / `useMessageBox`) all work. The **API domain is Nuxt-only**: `useApiFetch` / `useLazyApiFetch` / `useClientApiFetch`, `useUploadWithProgress` / `useDownloadWithProgress` / `useApiStream`, the `$api` plugin, auth and toast require the Nuxt server runtime — do not use them in Vue mode.
-
-## How to use this skill
-
-Based on the task, load the relevant reference files **before writing any code**. Don't load everything — only what's needed.
-
-### Reference files
-
-- [api](references/api.md) — `useApiFetch` / `$api`, endpoints, auth, business codes, toast, upload/download progress, SSE streaming
-- [auto-form](references/auto-form.md) — `AutoForm`, the `afz` schema factory, field types, controls, layout, submit
-- [components](references/components.md) — categorized component index for finding the right component name
-- [composables](references/composables.md) — `useDateFormatter`, `useTheme`, `useMessageBox`, `useAutoForm`
-- [data-table](references/data-table.md) — `DataTable` columns, special columns, tree data, row events, pagination
-
-### Routing table
-
-| Task | Load these references |
+| Task | Read |
 | --- | --- |
-| Build a CRUD / settings / login form from a schema | auto-form |
-| Customize AutoForm controls, layout, or define a new control | auto-form, components |
-| Fetch data in setup / switch endpoints / handle business errors | api |
-| Upload or download a file with progress | api, composables |
-| Consume an SSE stream or wire an LLM gateway into chat UI | api |
-| Render a data table with pagination, selection, or sorting | data-table |
-| Render tree-structured rows or grouped columns | data-table |
-| Display hierarchical data with search, lazy load, or cascading checkboxes (`MTree`) | components |
-| Add a standalone widget (date picker, color chooser, input wrapper) | components |
-| Format / parse / compare dates or ranges | composables |
-| Switch theme, export CSS variables, build a theme picker | composables |
-| Open an imperative `confirm` / `alert` dialog | composables |
-| General UI work | components |
+| Build a schema-driven editor or search form, register a field control, load dependent options, or handle validation | [AutoForm and SearchForm](references/auto-form.md) |
+| Configure columns, row actions, tree rows, pagination, infinite scrolling, or CSV export | [DataTable](references/data-table.md) |
+| Fetch from configured endpoints, handle auth or business errors, track transfers, or adapt an SSE gateway to AI SDK chat | [Nuxt API integration](references/api.md) |
+| Pick a calendar, tree, message box, or theme picker | [Components](references/components.md) |
+| Format dates, open a confirmation dialog, change the theme, or extend locale messages | [Composables](references/composables.md) |
 
-## Installation
+Read the references matching the task. Combine them when a feature spans domains, such as a search form driving server-paginated results.
 
-### Requirements
+## Set up the project
 
-- **Node.js** — `^22.22.3 || ^24.15.0 || >=26.0.0`
-- **Nuxt** — `^4.6.4` (Nuxt 4)
-- Peer deps: `@nuxt/ui >=4.13.0`, `zod >=4.3.6`
+- **Nuxt 4.** Install `@movk/nuxt`, `@nuxt/ui`, `zod`, and `tailwindcss`. Register `@movk/nuxt` in `modules` and the CSS entry in `css`. Configure the module under `movk`. [Nuxt installation](https://nuxt.mhaibaraai.cn/docs/getting-started/installation)
+- **Vue + Vite.** Add `movk()` from `@movk/nuxt/vite` alongside the Vue plugin. In the Vue entry, import the stylesheet and register `@movk/nuxt/vue-plugin` with `app.use()`. The standard setup also installs and registers Vue Router. Include the generated `auto-imports.d.ts` and `components.d.ts` in the app's TypeScript config. Use the project's HTTP client for requests. Movk's API client, transfer helpers, and chat transport require Nuxt. [Vue / Vite installation](https://nuxt.mhaibaraai.cn/docs/getting-started/vue)
 
-### Add to a Nuxt project
-
-```bash
-pnpm add @movk/nuxt @nuxt/ui zod tailwindcss
-```
-
-```ts
-// nuxt.config.ts
-export default defineNuxtConfig({
-  modules: ['@movk/nuxt']
-})
-```
-
-> **pnpm users:** set `shamefully-hoist=true` in `.npmrc`, or install `tailwindcss` at the project root, so Nuxt UI's Tailwind tree resolves correctly.
-
-### Add to a Vue project (Vite, no Nuxt)
-
-Use the Vite plugin + Vue plugin to consume the UI layer (components, theming, AutoForm, DataTable, non-server composables) in a plain Vue + Vite app. The **API domain is not available** in this mode.
-
-```bash
-pnpm add @movk/nuxt @nuxt/ui zod tailwindcss vue-router
-```
-
-```ts
-// vite.config.ts
-import { defineConfig } from 'vite'
-import vue from '@vitejs/plugin-vue'
-import movk from '@movk/nuxt/vite'
-
-export default defineConfig({
-  plugins: [vue(), movk()]
-})
-```
-
-```ts
-// src/main.ts
-import './assets/css/main.css'
-import { createApp } from 'vue'
-import { createRouter, createWebHistory } from 'vue-router'
-import movk from '@movk/nuxt/vue-plugin'
-import App from './App.vue'
-
-const router = createRouter({ routes: [], history: createWebHistory() })
-createApp(App).use(router).use(movk).mount('#app')
-```
+The current package requires Nuxt UI 4.13.0+ and Zod 4.3.6+. Use one Tailwind CSS entry in either mode. Movk's stylesheet already imports Nuxt UI.
 
 ```css
-/* src/assets/css/main.css — chains Tailwind CSS + Nuxt UI + Movk theme */
+@import "tailwindcss";
 @import "@movk/nuxt";
 ```
 
-Wrap the root in `<UApp>` (required for Toast / Tooltip / `useMessageBox`). Full guide: [Vue / Vite](https://nuxt.mhaibaraai.cn/docs/getting-started/vue).
+Wrap the root content in `UApp` for overlays, tooltips, and toasts. Movk auto-registers components with the `M` prefix by default. The `prefix` option affects component names. Composables keep names such as `useAutoForm`.
 
-### Optional config
+## Verify the API
 
-```ts
-// nuxt.config.ts
-export default defineNuxtConfig({
-  modules: ['@movk/nuxt'],
-  movk: {
-    prefix: 'M' // component / composable prefix (default 'M')
-    // api: { endpoints, successCodes, dataKey, sessionTokenPath }
-    // autoForm: { /* global field meta */ }
-  }
-})
-```
-
-### Zod v4 reminder
-
-`@movk/nuxt` requires **Zod v4**. Use the new top-level validators, not the v3 string chains:
-
-```ts
-// ✅ Zod v4
-const email = z.email()
-const url = z.url()
-const datetime = z.iso.datetime()
-
-// ❌ Zod v3 — deprecated
-const email = z.string().email()
-```
+1. Use the installed package's public types when checking compatibility. The examples use the default component prefix and import public types from `@movk/nuxt`.
+2. Find Movk docs with the MCP server at `https://nuxt.mhaibaraai.cn/mcp` if connected. Use `search-documentation` or a domain search to get a path, then `get-documentation-page` with that path and optional `headings`. Use `get-component` or `get-component-metadata` for standalone components and `list-examples` followed by `get-example` for example code.
+3. Use the [Movk Nuxt docs](https://nuxt.mhaibaraai.cn/docs/getting-started) when MCP is unavailable. For native `U*` props and slots, consult the [Nuxt UI v4 docs](https://ui.nuxt.com/docs).
