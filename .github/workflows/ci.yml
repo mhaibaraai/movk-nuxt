@@ -64,6 +64,8 @@ jobs:
   docs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    permissions:
+      contents: read
 
     steps:
       - uses: actions/checkout@v7
@@ -79,10 +81,15 @@ jobs:
       - name: Prepare
         run: pnpm run dev:prepare
 
-      # 不注入 AI_API_KEY，覆盖未启用 AI Chat 的默认场景
+      # AI Chat 随生产产物构建，密钥仅在 Worker 运行时配置
       - name: Build docs
         shell: bash
+        env:
+          NUXT_GITHUB_TOKEN: ${{ github.token }}
         run: pnpm run docs:build 2>&1 | tee build.log
 
       - name: Check prerender errors
         run: "! grep '\\[request error\\]' build.log"
+
+      - name: Verify Workers bundle
+        run: pnpm --filter @movk/nuxt-docs-site run deploy --dry-run

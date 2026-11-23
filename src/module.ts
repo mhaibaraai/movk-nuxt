@@ -128,8 +128,7 @@ function resolveModuleDependencies(nuxt: Nuxt): ModuleDependencies {
 }
 
 /**
- * 仅当 token 取自 nuxt-auth-utils 会话时才登记该模块：它的插件会在 SSR 时读取会话，
- * 生产环境缺少 NUXT_SESSION_PASSWORD 即报错，未启用会话认证的项目不应承担这一要求
+ * 按需登记 nuxt-auth-utils，因为它的插件会在 SSR 时读取会话并依赖会话密钥。
  */
 function usesSessionAuth(api?: MovkApiFullConfig): boolean {
   return api?.enabled !== false
