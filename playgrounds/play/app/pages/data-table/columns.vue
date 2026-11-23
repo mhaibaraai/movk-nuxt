@@ -96,12 +96,29 @@ truncate:  (ctx) => ctx.column.id === 'bio'
               ? (ctx.row.original.bio.length > 45 ? 3 : 2)
               : true
 tooltip:   (ctx) => ctx.column.id === 'address'`
+const configurableTable = useTemplateRef('configurableTable')
+const columnOrder = ref<string[]>([])
 </script>
 
 <template>
   <Navbar />
 
   <div class="p-4 flex flex-col gap-4">
+    <Showcase title="列设置" description="columnSettings 调整列显隐和顺序，persistKey 记住布局，CSV 可按当前列导出。">
+      <MDataTable
+        ref="configurableTable"
+        v-model:column-order="columnOrder"
+        :data="data"
+        :columns="visibilityColumns"
+        column-settings
+        persist-key="playground-columns"
+      >
+        <template #toolbar>
+          <UButton label="导出当前页" @click="configurableTable?.exportCsv({ rows: 'page' })" />
+          <UButton label="重置列" variant="outline" @click="configurableTable?.resetColumns()" />
+        </template>
+      </MDataTable>
+    </Showcase>
     <Showcase
       title="左右固定列"
       description="column.fixed 把列贴到表格两侧，横向滚动时保持可见"

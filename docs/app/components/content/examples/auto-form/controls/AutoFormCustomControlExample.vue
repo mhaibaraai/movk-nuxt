@@ -76,8 +76,8 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 
 <template>
   <MAutoForm
+    v-model="form"
     :schema="schema"
-    :state="form"
     :controls="controls"
     @submit="onSubmit"
   />

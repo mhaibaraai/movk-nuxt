@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { z } from 'zod'
-import type { AutoFormFieldContext } from '@movk/nuxt'
+import type { AutoFormAsyncItems, AutoFormFieldContext } from '@movk/nuxt'
 
 const { afz } = useAutoForm()
 const autoForm = useTemplateRef('autoForm')
@@ -76,6 +76,18 @@ const richSchema = afz.object({
 })
 
 const richState = reactive<Partial<z.output<typeof richSchema>>>({ hidden: 'secret' })
+const cities: AutoFormAsyncItems = {
+  deps: state => state.country,
+  async load({ state }) {
+    return state.country === 'Japan' ? ['Kyoto', 'Tokyo'] : ['Lyon', 'Paris']
+  }
+}
+const asyncSchema = afz.object({
+  country: afz.enum(['France', 'Japan']).default('France'),
+  city: afz.string({ type: 'selectMenu' }).optional().meta({ type: 'selectMenu', asyncItems: cities }),
+  tasks: afz.array(afz.string()).min(1).max(4).meta({ sortable: true, duplicable: true })
+})
+const asyncState = ref<Partial<z.input<typeof asyncSchema>>>({ tasks: ['Draft', 'Review'] })
 </script>
 
 <template>
@@ -86,7 +98,10 @@ const richState = reactive<Partial<z.output<typeof richSchema>>>({ hidden: 'secr
       <template #toolbar>
         <UButton size="sm" label="重置" @click="autoForm?.reset()" />
       </template>
-      <MAutoForm ref="autoForm" :schema="richSchema" :state="richState" />
+      <MAutoForm ref="autoForm" v-model="richState" :schema="richSchema" />
+    </Showcase>
+    <Showcase title="异步选项与数组操作" description="asyncItems 根据国家载入城市，sortable、duplicable 和数组长度规则控制任务操作。">
+      <MAutoForm v-model="asyncState" :schema="asyncSchema" :submit="false" />
     </Showcase>
   </div>
 </template>

@@ -37,24 +37,24 @@ const fileTree: TreeItem[] = [
   { label: 'nuxt.config.ts', icon: 'i-vscode-icons-file-type-nuxt' }
 ]
 
-const basicValue = ref<TreeItem>()
-const multipleValue = ref<TreeItem[]>([])
-const checkedValue = ref<TreeItem[]>([])
-const toolbarChecked = ref<TreeItem[]>([])
-const slotChecked = ref<TreeItem[]>([])
+const basicValue = shallowRef<TreeItem>()
+const multipleValue = shallowRef<TreeItem[]>([])
+const checkedValue = shallowRef<TreeItem[]>([])
+const toolbarChecked = shallowRef<TreeItem[]>([])
+const slotChecked = shallowRef<TreeItem[]>([])
 const changeKeys = ref<string[]>([])
-const cascadeChecked = ref<TreeItem[]>([])
-const isolatedChecked = ref<TreeItem[]>([])
+const cascadeChecked = shallowRef<TreeItem[]>([])
+const isolatedChecked = shallowRef<TreeItem[]>([])
 const keysSelected = ref<string[]>(['useAuth.ts'])
 
 const selData = useTemplateRef<TreeExposed>('selData')
 const selectionLeaves = computed(() => (selData.value?.treeSelection.leaves ?? []).map(n => String(n.label)))
 const selectionParents = computed(() => (selData.value?.treeSelection.parents ?? []).map(n => String(n.label)))
 const selectionHalf = computed(() => (selData.value?.treeSelection.halfSelected ?? []).map(n => String(n.label)))
-const selectionChecked = ref<TreeItem[]>([])
+const selectionChecked = shallowRef<TreeItem[]>([])
 
 const apiTree = useTemplateRef<TreeExposed>('apiTree')
-const apiChecked = ref<TreeItem[]>([])
+const apiChecked = shallowRef<TreeItem[]>([])
 
 const deptTree = [
   {
@@ -102,8 +102,8 @@ const bigTree: TreeItem[] = Array.from({ length: 60 }, (_, group) => ({
   children: Array.from({ length: 30 }, (_, leaf) => ({ label: `节点 ${group + 1}-${leaf + 1}` }))
 }))
 
-const matrixValue = ref<TreeItem>({ label: 'app.vue' })
-const colorSelected = ref<TreeItem>({ label: 'app.vue' })
+const matrixValue = shallowRef<TreeItem>({ label: 'app.vue' })
+const colorSelected = shallowRef<TreeItem>({ label: 'app.vue' })
 
 // 文件夹不设 item.icon，方可观察 expandedIcon / collapsedIcon
 const noIconTree: TreeItem[] = [
@@ -117,7 +117,7 @@ const noIconTree: TreeItem[] = [
   },
   { label: 'composables', children: [{ label: 'useAuth.ts', icon: 'i-vscode-icons-file-type-typescript' }] }
 ]
-const disabledChecked = ref<TreeItem[]>([{ label: 'useAuth.ts' }])
+const disabledChecked = shallowRef<TreeItem[]>([{ label: 'useAuth.ts' }])
 
 const nodeDisabledTree: TreeItem[] = [
   {
@@ -131,7 +131,13 @@ const nodeDisabledTree: TreeItem[] = [
   },
   { label: 'composables', icon: 'i-lucide-folder', disabled: true, defaultExpanded: true, children: [{ label: 'useAuth.ts', icon: 'i-vscode-icons-file-type-typescript' }] }
 ]
-const nodeDisabledChecked = ref<TreeItem[]>([])
+const nodeDisabledChecked = shallowRef<TreeItem[]>([])
+const remoteSearch = ref('pe')
+const remoteKeys = ref<string[]>([])
+const remoteTree = useTemplateRef('remoteTree')
+const sampleRoot: { label: string, defaultExpanded?: boolean, isLeaf?: boolean }[] = [{ label: 'Fruit', defaultExpanded: true }]
+const sampleFruit = ['Apple', 'Pear', 'Banana'].map(label => ({ label, isLeaf: true }))
+const searchFruit = async (term: string) => sampleFruit.filter(node => node.label.toLowerCase().includes(term.toLowerCase()))
 </script>
 
 <template>
@@ -141,6 +147,21 @@ const nodeDisabledChecked = ref<TreeItem[]>([])
   </Navbar>
 
   <div class="p-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <Showcase title="远程搜索与重载" description="searchMethod 筛选远程节点，leaf 策略保留已选叶子，reload 重载懒加载分支。">
+      <UButton label="重载子节点" @click="remoteTree?.reload('Fruit')" />
+      <MTree
+        ref="remoteTree"
+        v-model:search="remoteSearch"
+        v-model:selected-keys="remoteKeys"
+        :items="sampleRoot"
+        :search-method="searchFruit"
+        :load-children="async () => sampleFruit"
+        strategy="leaf"
+        lazy
+        searchable
+        checkable
+      />
+    </Showcase>
     <Showcase title="基础用法" description="传入 items 渲染层级结构，节点 defaultExpanded 控制初始展开，v-model 绑定单选节点。" :state="{ selected: basicValue?.label }">
       <MTree v-model="basicValue" :items="fileTree" class="max-h-50" />
     </Showcase>

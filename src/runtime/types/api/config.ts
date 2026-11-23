@@ -26,6 +26,18 @@ export interface ApiResponseConfig {
    * @defaultValue 'data'
    */
   dataKey?: string
+  /**
+   * 是否按 successCodes 校验业务状态码，关闭后任何 2xx 响应都视为成功
+   * @description 请求级 `businessCheck` 显式值优先
+   * @defaultValue true
+   */
+  businessCheck?: boolean
+  /**
+   * 是否按 dataKey 解包业务数据，关闭后调用方拿到原始响应体
+   * @description 请求级 `unwrap` 显式值优先；裸资源端点（直接返回数组 / 对象）同时关闭 businessCheck 与 unwrap
+   * @defaultValue true
+   */
+  unwrap?: boolean
 }
 
 /**

@@ -22,7 +22,7 @@ const columns: DataTableColumn<Person>[] = [
           type: row.status === 'active' ? 'warning' : 'error',
           title: `删除 ${row.name}？`,
           description: row.status === 'active' ? '该员工在职，删除前请二次确认。' : '已离职员工删除后无法恢复。',
-          confirmText: '我已确认'
+          confirmLabel: '我已确认'
         }),
         onClick: ({ row }) => notify(`已删除 ${row.name}`)
       }

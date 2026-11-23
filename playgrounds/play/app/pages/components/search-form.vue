@@ -2,6 +2,10 @@
 import type { SearchFormAction } from '@movk/nuxt'
 
 const { afz } = useAutoForm()
+const querySchema = afz.object({ keyword: afz.string().default('') })
+const queryState = ref({ keyword: '' })
+const activeKeyword = ref('')
+const queryResults = computed(() => ['Apple', 'Banana', 'Pear'].filter(item => item.toLowerCase().includes(activeKeyword.value.toLowerCase())))
 
 interface EventEntry {
   id: number
@@ -135,6 +139,17 @@ function onValidateSearch(payload: unknown) {
   <Navbar />
 
   <div class="p-4 grid grid-cols-1 gap-4">
+    <Showcase title="URL 搜索历史" description="通过 syncQuery 写入搜索条件，后退时恢复条件并刷新结果。">
+      <MSearchForm
+        v-model="queryState"
+        :schema="querySchema"
+        :sync-query="{ replace: false }"
+        @submit="activeKeyword = $event.data.keyword ?? ''"
+        @query-restore="activeKeyword = $event.keyword ?? ''"
+        @reset="activeKeyword = $event.keyword ?? ''"
+      />
+      <p>{{ queryResults.join(', ') }}</p>
+    </Showcase>
     <Showcase
       title="Schema 驱动搜索表单"
       description="按 AutoForm schema 渲染字段，cols 控制栅格，内置搜索与重置按钮。"

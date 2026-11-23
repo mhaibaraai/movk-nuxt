@@ -5,12 +5,10 @@ import AutoFormRendererField from './Field.vue'
 import AutoFormRendererArray from './Array.vue'
 import AutoFormRendererLayout from './Layout.vue'
 import AutoFormRendererNested from './Nested.vue'
-import type { z } from 'zod'
 import type { AutoFormField } from '../../../types/auto-form'
 import type { AnyObject } from '@movk/core'
 
 interface AutoFormRendererChildrenProps {
-  schema: z.ZodObject
   fields: AutoFormField[]
   extraProps?: AnyObject
 }
@@ -34,25 +32,21 @@ const fieldTypeMap = computed(() => {
     <AutoFormRendererField
       v-if="fieldTypeMap.get(childField) === 'leaf'"
       :field="childField"
-      :schema="props.schema"
       :extra-props="props.extraProps"
     />
     <AutoFormRendererArray
       v-else-if="fieldTypeMap.get(childField) === 'array'"
       :field="childField"
-      :schema="props.schema"
       :extra-props="props.extraProps"
     />
     <AutoFormRendererLayout
       v-else-if="fieldTypeMap.get(childField) === 'layout'"
       :field="childField"
-      :schema="props.schema"
       :extra-props="props.extraProps"
     />
     <AutoFormRendererNested
       v-else
       :field="childField"
-      :schema="props.schema"
       :extra-props="props.extraProps"
     />
   </template>

@@ -45,12 +45,21 @@ const clearableRange = shallowRef<DateRange>({
 
 const presetDefault = shallowRef<DateRange>()
 const presetCustom = shallowRef<DateValue>()
+const calendarOpen = ref(false)
+const controlledPicker = useTemplateRef('controlledPicker')
 </script>
 
 <template>
   <Navbar />
 
   <div class="p-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <Showcase title="控制日历开关" description="通过 v-model:open 和实例方法同步控制弹层。">
+      <div class="flex flex-wrap items-center gap-2">
+        <UButton label="打开日历" @click="controlledPicker?.open()" />
+        <MDatePicker ref="controlledPicker" v-model:open="calendarOpen" />
+        <UButton label="关闭日历" variant="outline" @click="controlledPicker?.close()" />
+      </div>
+    </Showcase>
     <Showcase title="继承字段上下文" description="放入 UFormField 后继承 size 与错误态，日期触发按钮会按表单状态渲染。" :state="{ value: formFieldDate?.toString() }">
       <UFormField label="预约日期" size="xs" error="示例错误态">
         <MDatePicker v-model="formFieldDate" />

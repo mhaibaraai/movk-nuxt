@@ -17,24 +17,18 @@ import type {
   SelectProps, SelectSlots,
   SliderProps,
   SwitchProps, SwitchSlots,
-  TextareaProps, TextareaSlots
+  TextareaProps, TextareaSlots,
+  ToggleGroupProps, ToggleGroupSlots,
+  ToggleProps, ToggleSlots
 } from '@nuxt/ui'
 import type { CalendarDateControlProps } from '../../types/components/date-picker'
-import WithClear from '../../components/input/WithClear.vue'
-import WithPasswordToggle from '../../components/input/WithPasswordToggle.vue'
-import WithCopy from '../../components/input/WithCopy.vue'
-import WithCharacterLimit from '../../components/input/WithCharacterLimit.vue'
-import AsPhoneNumberInput from '../../components/input/AsPhoneNumberInput.vue'
-import WithFloatingLabel from '../../components/input/WithFloatingLabel.vue'
-import DatePicker from '../../components/DatePicker.vue'
-import ColorChooser from '../../components/ColorChooser.vue'
-import SlideVerify from '../../components/SlideVerify.vue'
-import PillGroup from '../../components/PillGroup.vue'
+import { defineAsyncComponent } from 'vue'
 import {
   UInput,
   UInputNumber,
   UCheckbox,
   USwitch,
+  UToggle,
   UTextarea,
   USlider,
   UPinInput,
@@ -45,12 +39,14 @@ import {
   UInputMenu,
   UCheckboxGroup,
   URadioGroup,
+  UToggleGroup,
   UInputDate,
   UInputTime,
   UListbox
 } from '#components'
 
 const DEFAULT_CONTROL_PROPS = { class: 'w-full' } as const
+const DatePicker = defineAsyncComponent(() => import('../../components/DatePicker.vue'))
 
 export function defineControl<C extends IsComponent, P = _Unset, S = _Unset>(
   e: AutoFormControl<C, P, S>
@@ -81,38 +77,25 @@ const DEFAULT_CONTROL_COMPONENTS = {
   inputDate: UInputDate,
   inputTime: UInputTime,
 
-  withClear: WithClear,
-  withPasswordToggle: WithPasswordToggle,
-  withCopy: WithCopy,
-  withCharacterLimit: WithCharacterLimit,
-  withFloatingLabel: WithFloatingLabel,
-  asPhoneNumberInput: AsPhoneNumberInput,
-
   textarea: UTextarea,
   switch: USwitch,
+  toggle: UToggle,
   slider: USlider,
 
   selectMenu: USelectMenu,
   inputMenu: UInputMenu,
   checkboxGroup: UCheckboxGroup,
   radioGroup: URadioGroup,
+  toggleGroup: UToggleGroup,
   inputTags: UInputTags,
   pinInput: UPinInput,
-  listbox: UListbox,
-
-  colorChooser: ColorChooser,
-  slideVerify: SlideVerify,
-  pillGroup: PillGroup
+  listbox: UListbox
 } as const
 
 type DefaultControlComponents = typeof DEFAULT_CONTROL_COMPONENTS
 
 /** 本地 .vue 控件：组件类型在声明发射期可解析，controlProps 由组件推导 */
-type LocalControlKey
-  = 'calendarDate'
-    | 'withClear' | 'withPasswordToggle' | 'withCopy'
-    | 'withCharacterLimit' | 'withFloatingLabel' | 'asPhoneNumberInput'
-    | 'colorChooser' | 'slideVerify' | 'pillGroup'
+type LocalControlKey = 'calendarDate'
 
 /**
  * Nuxt UI 控件的 `[props, slots]` 类型登记表。
@@ -130,11 +113,13 @@ interface NuxtUIControlTypes {
   inputTime: [InputTimeProps, InputTimeSlots]
   textarea: [TextareaProps, TextareaSlots]
   switch: [SwitchProps, SwitchSlots]
+  toggle: [ToggleProps, ToggleSlots]
   slider: [SliderProps, _Unset]
   selectMenu: [SelectMenuProps, SelectMenuSlots]
   inputMenu: [InputMenuProps, InputMenuSlots]
   checkboxGroup: [CheckboxGroupProps, CheckboxGroupSlots]
   radioGroup: [RadioGroupProps, RadioGroupSlots]
+  toggleGroup: [ToggleGroupProps, ToggleGroupSlots]
   inputTags: [InputTagsProps, InputTagsSlots]
   pinInput: [PinInputProps, PinInputSlots]
   listbox: [ListboxProps, ListboxSlots]

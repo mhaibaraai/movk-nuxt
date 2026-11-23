@@ -10,11 +10,11 @@ export default defineMcpTool({
     openWorldHint: false
   },
   inputSchema: {
-    category: z.string().optional().describe('Filter AutoForm docs by category'),
+    category: z.string().optional().describe('Filter AutoForm docs by category. AutoForm pages are no longer categorized since v2, prefer `search`'),
     search: z.string().optional().describe('Search term to filter AutoForm docs by name or description')
   },
   inputExamples: [
-    { search: 'field-types' },
+    { search: 'field types' },
     { search: 'custom controls' }
   ],
   cache: '30m',

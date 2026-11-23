@@ -1,9 +1,10 @@
-import type { InjectionKey, Ref } from 'vue'
+import type { InjectionKey, MaybeRefOrGetter, Ref } from 'vue'
 import type { ReactiveValue } from '@movk/core'
+import type { ButtonProps } from '@nuxt/ui'
 import type { AutoFormField, AutoFormMergeMeta, ResolvedAutoFormFieldContext } from '../../types/auto-form'
 import { UIcon } from '#components'
-import defu from 'defu'
-import { computed, h, inject, isVNode, provide, resolveDynamicComponent, unref } from 'vue'
+import { createDefu } from 'defu'
+import { computed, h, inject, isVNode, provide, resolveDynamicComponent, toValue, unref } from 'vue'
 import { getPath, setPath } from '@movk/core'
 import { enhanceEventProps, resolveReactiveValue } from './reactive'
 
@@ -13,10 +14,24 @@ type ResolvedMetaValue<K extends keyof AutoFormMergeMeta> = _ResolveReactive<Non
 
 const AUTO_FORM_CONTEXT_KEY: InjectionKey<AutoFormProvider> = Symbol('AUTO_FORM_CONTEXT_KEY')
 
+// 数组（如 items）整体替换而非拼接，用户值优先
+const defu = createDefu((obj, key, value) => {
+  if (Array.isArray(obj[key]) || Array.isArray(value)) {
+    obj[key] = value
+    return true
+  }
+})
+
 /** 初始化表单上下文工厂并通过 provide 注入给所有子渲染器 */
+export interface AutoFormProviderOptions {
+  /** 数组字段添加按钮属性 */
+  addButtonProps?: () => ButtonProps | undefined
+}
+
 export function useAutoFormProvider(
   state: Ref<any>,
-  slots: Record<string, any>
+  slots: Record<string, any>,
+  options: AutoFormProviderOptions = {}
 ) {
   /** 为单个字段构建运行时上下文（value/setValue/errors/loading/open） */
   function createFieldContext(field: AutoFormField, extraProps?: Record<string, any>): ResolvedAutoFormFieldContext {
@@ -26,8 +41,9 @@ export function useAutoFormProvider(
       get state() { return state.value },
       path,
       get value() { return getPath(state.value, path) },
-      setValue: (pathOrValue: any, value?: any) => {
-        if (value === undefined) {
+      setValue: (...args: [any] | [string, any]) => {
+        const [pathOrValue, value] = args
+        if (args.length === 1) {
           const nextValue = typeof pathOrValue === 'function'
             ? pathOrValue(getPath(state.value, path))
             : pathOrValue
@@ -87,6 +103,11 @@ export function useAutoFormProvider(
     return result ?? defaultValue
   }
 
+  /** 字段未声明 `if`，或 `if` 求值为 `true` 时可见 */
+  function isFieldVisible(field: AutoFormField): boolean {
+    return field.meta?.if === undefined || resolveFieldProp<boolean>(field, 'if') === true
+  }
+
   function renderFieldSlot(fn?: (props?: any) => any, slotProps?: any) {
     return fn ? fn(slotProps) : null
   }
@@ -98,7 +119,7 @@ export function useAutoFormProvider(
   }
 
   /** 渲染字段对应的输入控件，合并 controlProps/controlSlots 并绑定双向绑定逻辑 */
-  function renderControl(field: AutoFormField, extraProps?: Record<string, any>) {
+  function renderControl(field: AutoFormField, extraProps?: Record<string, any>, overrides?: Record<string, unknown>) {
     const controlMeta = field?.meta
     const comp = controlMeta?.component as any
 
@@ -106,7 +127,7 @@ export function useAutoFormProvider(
       return null
 
     if (!comp) {
-      return h('div', { class: 'text-red-500' }, `[AutoForm] 控件未映射: ${field?.path ?? ''} - 类型: ${field?.meta?.type ?? 'unknown'}`)
+      return h('div', { class: 'text-red-500' }, `[AutoForm] No control mapped for "${field?.path ?? ''}" (type: ${field?.meta?.type ?? 'unknown'})`)
     }
 
     if (isVNode(comp))
@@ -120,6 +141,7 @@ export function useAutoFormProvider(
     const resolvedSize = resolveFieldProp(field, 'size', undefined, extraProps)
 
     const finalProps = defu(
+      overrides ?? {},
       resolvedControlProps,
       isReadonly ? { disabled: true } : {},
       controlMeta?.mapped?.controlProps || {},
@@ -227,17 +249,21 @@ export function useAutoFormProvider(
   }
 
   /** 为嵌套/数组字段注入折叠增强逻辑：默认 hint 图标、collapsible 开关、hidden 控制 */
-  function createCollapsibleEnhancer(field: AutoFormField, extraProps?: Record<string, any>) {
-    const collapsibleConfig = computed(() => resolveFieldProp(field, 'collapsible', undefined, extraProps))
+  function createCollapsibleEnhancer(
+    fieldSource: MaybeRefOrGetter<AutoFormField>,
+    extraPropsSource?: MaybeRefOrGetter<Record<string, any> | undefined>
+  ) {
+    const collapsibleConfig = computed(() => resolveFieldProp(toValue(fieldSource), 'collapsible', undefined, toValue(extraPropsSource)))
 
     const shouldShowCollapsible = computed(() => {
       const config = collapsibleConfig.value
       return !config || (config as any).enabled !== false
     })
 
-    const isHidden = computed(() => resolveFieldProp(field, 'hidden', undefined, extraProps))
+    const isHidden = computed(() => resolveFieldProp(toValue(fieldSource), 'hidden', undefined, toValue(extraPropsSource)))
 
     const enhancedField = computed<AutoFormField>(() => {
+      const field = toValue(fieldSource)
       if (!shouldShowCollapsible.value || field.meta.hint !== undefined) {
         return field
       }
@@ -263,6 +289,8 @@ export function useAutoFormProvider(
   }
 
   const contextFactory = {
+    addButtonProps: computed(() => options.addButtonProps?.()),
+    isFieldVisible,
     createFieldContext,
     createSlotProps,
     resolveFieldProp,

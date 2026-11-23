@@ -5,7 +5,7 @@ const { afz } = useAutoForm()
 
 const formSlotSchema = afz.object({
   email: afz.email().meta({ label: '邮箱' }),
-  password: afz.string({ type: 'withPasswordToggle' }).min(6).meta({ label: '密码' }),
+  password: afz.string({ controlProps: { type: 'password' } }).min(6).meta({ label: '密码' }),
   remember: afz.boolean({ type: 'switch', controlProps: { label: '记住登录状态' } }).default(true).meta({ label: '记住我' })
 })
 const formSlotState = reactive<Partial<z.output<typeof formSlotSchema>>>({})
@@ -24,7 +24,7 @@ const genericSlotState = reactive<Partial<z.output<typeof genericSlotSchema>>>({
 
 const fieldSlotSchema = afz.object({
   username: afz.string().min(2).meta({ label: '用户名' }),
-  password: afz.string({ type: 'withPasswordToggle' }).min(8).meta({ label: '密码' }),
+  password: afz.string({ controlProps: { type: 'password' } }).min(8).meta({ label: '密码' }),
   bio: afz.string({ type: 'textarea' }).default('一个简单的自我介绍').meta({ label: '简介' })
 })
 const fieldSlotState = reactive<Partial<z.output<typeof fieldSlotSchema>>>({})
@@ -86,8 +86,8 @@ function createTodo() {
   <div class="p-4 grid grid-cols-1 xl:grid-cols-2 gap-4">
     <Showcase title="表单级插槽接管" description="header、footer、submit 可读取 loading、errors、state 定制外层" :state="formSlotState">
       <MAutoForm
+        v-model="formSlotState"
         :schema="formSlotSchema"
-        :state="formSlotState"
         :submit="false"
         @submit="onFormSlotSubmit"
       >
@@ -132,7 +132,7 @@ function createTodo() {
     </Showcase>
 
     <Showcase title="通用字段插槽接管" description="field-label、field-hint、field-error 统一覆盖字段标签与提示" :state="genericSlotState">
-      <MAutoForm :schema="genericSlotSchema" :state="genericSlotState" :validate-on="['input', 'blur']">
+      <MAutoForm v-model="genericSlotState" :schema="genericSlotSchema" :validate-on="['input', 'blur']">
         <template #field-label="{ label, path }">
           <span class="inline-flex items-center gap-2">
             <UBadge color="primary" variant="subtle" size="xs">
@@ -165,7 +165,7 @@ function createTodo() {
     </Showcase>
 
     <Showcase title="命名字段插槽覆盖" description="field-default:bio、field-help:password 仅替换指定字段区域" :state="fieldSlotState">
-      <MAutoForm :schema="fieldSlotSchema" :state="fieldSlotState">
+      <MAutoForm v-model="fieldSlotState" :schema="fieldSlotSchema">
         <template #field-label:username="{ label }">
           <UBadge icon="i-lucide-user" color="success" variant="subtle" size="xs">
             {{ label }}
@@ -195,7 +195,7 @@ function createTodo() {
     </Showcase>
 
     <Showcase title="字段前后内容插入" description="field-before、field-after 在默认字段前后追加内容，不接管子字段" :state="beforeAfterState">
-      <MAutoForm :schema="beforeAfterSchema" :state="beforeAfterState">
+      <MAutoForm v-model="beforeAfterState" :schema="beforeAfterSchema">
         <template #field-before:settings="{ path }">
           <UAlert
             color="neutral"
@@ -224,7 +224,7 @@ function createTodo() {
     </Showcase>
 
     <Showcase title="对象字段 content 接管" description="field-content 替换对象内容，通过 setValue('key', value) 更新子字段" :state="objectContentState">
-      <MAutoForm :schema="objectContentSchema" :state="objectContentState">
+      <MAutoForm v-model="objectContentState" :schema="objectContentSchema">
         <template #field-content:profile="{ path, value, setValue }">
           <div class="space-y-4 rounded-md border border-default p-4">
             <div class="flex items-center justify-between">
@@ -273,7 +273,7 @@ function createTodo() {
     </Showcase>
 
     <Showcase title="数组字段 content 接管" description="field-content 替换数组内容，通过 setValue 写入列表或单项" :state="arrayContentState">
-      <MAutoForm :schema="arrayContentSchema" :state="arrayContentState">
+      <MAutoForm v-model="arrayContentState" :schema="arrayContentSchema">
         <template #field-content:todos="{ value, setValue }">
           <div class="space-y-3">
             <div

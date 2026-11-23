@@ -79,15 +79,15 @@ const layoutState = reactive<Partial<z.output<typeof layoutSchema>>>({})
 
   <div class="p-4 grid grid-cols-1 xl:grid-cols-2 gap-4">
     <Showcase title="字段网格布局" description="afz.layout() 注入 CSS Grid 容器，字段 class 控制跨列" :state="gridState">
-      <MAutoForm :schema="gridSchema" :state="gridState" />
+      <MAutoForm v-model="gridState" :schema="gridSchema" />
     </Showcase>
 
     <Showcase title="响应式网格布局" description="Tailwind 断点搭配字段 class，从移动端到桌面端按列适配" :state="responsiveState">
-      <MAutoForm :schema="responsiveSchema" :state="responsiveState" />
+      <MAutoForm v-model="responsiveState" :schema="responsiveSchema" />
     </Showcase>
 
     <Showcase title="组件化分组布局" description="afz.layout({ component: UAccordion }) 把字段挂到折叠面板插槽" :state="layoutState">
-      <MAutoForm :schema="layoutSchema" :state="layoutState" />
+      <MAutoForm v-model="layoutState" :schema="layoutSchema" />
     </Showcase>
   </div>
 </template>

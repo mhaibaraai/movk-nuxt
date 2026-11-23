@@ -38,7 +38,7 @@ const dynamicMeta = computed<AutoFormProps['globalMeta']>(() => ({
 
   <div class="p-4 grid grid-cols-1 xl:grid-cols-2 gap-4">
     <Showcase title="字段 meta 默认值" description="未传 globalMeta 时，字段使用自身 meta() 配置或组件默认值" :state="stateA">
-      <MAutoForm :schema="sharedSchema" :state="stateA" />
+      <MAutoForm v-model="stateA" :schema="sharedSchema" />
     </Showcase>
 
     <Showcase title="globalMeta 响应式覆盖" description="globalMeta 响应式下发 size、orientation 与 label UI 配置" :state="stateB">
@@ -46,13 +46,13 @@ const dynamicMeta = computed<AutoFormProps['globalMeta']>(() => ({
         <USelect v-model="orientation" :items="orientationItems" size="xs" class="w-30" />
         <USelect v-model="size" :items="sizeItems" size="xs" class="w-20" />
       </template>
-      <MAutoForm :schema="sharedSchema" :state="stateB" :global-meta="dynamicMeta" />
+      <MAutoForm v-model="stateB" :schema="sharedSchema" :global-meta="dynamicMeta" />
     </Showcase>
 
     <Showcase title="校验默认项下发" description="globalMeta 统一设置 validateOnInputDelay 控制输入防抖" :state="stateC">
       <MAutoForm
+        v-model="stateC"
         :schema="sharedSchema"
-        :state="stateC"
         :global-meta="{ size: 'sm', validateOnInputDelay: 800 }"
         :validate-on="['input']"
       />

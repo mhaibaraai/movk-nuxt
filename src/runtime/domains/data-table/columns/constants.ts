@@ -1,3 +1,4 @@
+import type { MovkTranslator } from '../../../composables/useMovkLocale'
 import type { ColumnDef, ColumnMeta, ColumnPinningState, ColumnSizingState, HeaderContext, VisibilityState } from '@tanstack/vue-table'
 import type { VNode } from 'vue'
 import type {
@@ -37,7 +38,7 @@ export const SPECIAL_COLUMN_DEFAULTS: Record<SpecialColumnType, SpecialColumnDef
   'index': { id: '__index', size: 60, align: 'center', header: '#', tdClass: 'text-muted' },
   'expand': { id: '__expand', size: 60, align: 'center' },
   'row-pinning': { id: '__row_pinning', size: 60, align: 'center' },
-  'actions': { id: '__actions', size: 60, header: '操作', align: 'center' }
+  'actions': { id: '__actions', size: 60, align: 'center' }
 } as const
 
 export interface ResolvedColumnState<T> {
@@ -72,4 +73,5 @@ export interface ResolveContext<T> {
   subRowSelection?: boolean
   nextGroupId: () => number
   allColumnIds: string[]
+  t: MovkTranslator
 }

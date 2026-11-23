@@ -100,7 +100,7 @@ Modular design, progressive adoption — from simple utility functions to comple
   Components & Composables
 
   #description
-  DatePicker, PillGroup, SearchForm, Tree and other standalone components, paired with useTheme, useMessageBox and other utilities.
+  DatePicker, SearchForm, Tree, MessageBox and other standalone components, paired with useTheme, useMessageBox and other utilities.
   :::
 
   :::u-page-feature{icon="i-lucide-shield-check"}
@@ -347,8 +347,8 @@ links:
     color: neutral
     variant: outline
     trailingIcon: i-lucide-arrow-right
-  - label: Browse Composables
-    to: /docs/composables
+  - label: Browse API
+    to: /docs/api
     color: neutral
     variant: ghost
     trailingIcon: i-lucide-arrow-right
@@ -357,7 +357,7 @@ links:
 Components & Composables
 
 #description
-Standalone components like DatePicker, SearchForm, PillGroup, SlideVerify and Tree are ready to use out of the box, paired with imperative utilities like useTheme, useMessageBox and useDateFormatter for common interaction patterns.
+Standalone components like DatePicker, SearchForm, Tree and MessageBox are ready to use out of the box, paired with imperative utilities like useTheme, useMessageBox and useDateFormatter for common interaction patterns.
 
 #features
   :::u-page-feature{icon="i-lucide-blocks"}
@@ -365,7 +365,7 @@ Standalone components like DatePicker, SearchForm, PillGroup, SlideVerify and Tr
   Standalone Components
 
   #description
-  Date picking, color choosing, slide verification, tree structures and input enhancements — no extra wrapping required.
+  Date ranges with presets and checkable, lazy-loaded trees — no extra wrapping required.
   :::
 
   :::u-page-feature{icon="i-lucide-square-function"}
@@ -388,9 +388,8 @@ Standalone components like DatePicker, SearchForm, PillGroup, SlideVerify and Tr
   :::code-group
   ```vue [Components.vue]
   <template>
-    <MDatePicker v-model="date" />
-    <MColorChooser v-model="color" />
-    <MSlideVerify v-model="verified" />
+    <MDatePicker v-model="date" range presets="default" />
+    <MTree :items="items" checkable searchable />
   </template>
   ```
 
@@ -409,12 +408,12 @@ Standalone components like DatePicker, SearchForm, PillGroup, SlideVerify and Tr
 ---
 links:
   - label: Configure MCP Server
-    to: /docs/getting-started/ai/mcp
+    to: /docs/getting-started/ai
     color: neutral
     variant: outline
     trailingIcon: i-lucide-arrow-right
   - label: Learn about llms.txt
-    to: /docs/getting-started/ai/llms-txt
+    to: /docs/getting-started/ai
     color: neutral
     variant: ghost
     trailingIcon: i-lucide-arrow-right

@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
-import { Fragment, h } from 'vue'
+import { Fragment, h, ref } from 'vue'
+import { en } from '@nuxt/ui/locale'
+import { useMovkLocale } from '../../../src/runtime/composables/useMovkLocale'
 import type { VNode } from 'vue'
 import type { HeaderContext } from '@tanstack/vue-table'
 import { resolveColumns } from '../../../src/runtime/domains/data-table/columns/resolve-columns'
@@ -12,13 +14,15 @@ vi.mock('#components', () => ({ UButton: 'UButton', UCheckbox: 'UCheckbox', UDro
 vi.mock('../../../src/runtime/domains/data-table/components/CellTooltip.vue', () => ({ default: 'CellTooltip' }))
 vi.mock('../../../src/runtime/domains/data-table/components/ActionsCell.vue', () => ({ default: 'ActionsCell' }))
 
+const { t } = useMovkLocale(ref(en))
+
 interface Row {
   id: string
   name: string
 }
 
 function resolve(columns: DataTableColumn<Row>[]) {
-  return resolveColumns<Row>(columns, {} as DataTableProps<Row>)
+  return resolveColumns<Row>(columns, {} as DataTableProps<Row>, t)
 }
 
 function findDef(columns: DataTableColumn<Row>[], id: string) {
@@ -189,7 +193,7 @@ describe('resolveColumns 表头插槽', () => {
   }
 
   function resolveWithSlots(columns: DataTableColumn<Row>[], slots: HeaderSlotMap<Row>, options: DataTableProps<Row> = {} as DataTableProps<Row>) {
-    return resolveColumns<Row>(columns, options, slots)
+    return resolveColumns<Row>(columns, options, t, slots)
   }
 
   it('未提供插槽时表头保持原有形态', () => {

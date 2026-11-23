@@ -1,14 +1,15 @@
 import type { NuxtTemplate, NuxtTypeTemplate } from '@nuxt/schema'
 import { fileURLToPath } from 'node:url'
 import { kebabCase } from 'scule'
-import { addTemplate, addTypeTemplate, getLayerDirectories, hasNuxtModule } from '@nuxt/kit'
+import { addTemplate, addTypeTemplate, getLayerDirectories, hasNuxtModule, useLogger } from '@nuxt/kit'
 import * as theme from './theme'
 import type { ModuleOptions } from './module'
 import type { Nuxt } from 'nuxt/schema'
 import { applyDefaultVariants, applyPrefixToObject } from './utils/theme-variants'
 import { resolveFontFamily, resolveFontSource } from './runtime/domains/theme/theme-font'
+import { generateZodTemplate, resolveZodOptions } from './utils/zod'
 
-export function getTemplates(options: ModuleOptions, nuxt?: Nuxt) {
+export function getTemplates(options: ModuleOptions, nuxt?: Nuxt, supportsSearchQuery = true) {
   const templates: NuxtTemplate[] = []
 
   const isDev = process.argv.includes('--uiDev')
@@ -138,7 +139,7 @@ export function getTemplates(options: ModuleOptions, nuxt?: Nuxt) {
       return `import * as movkUi from '#build/movk-ui'
 import type { TVConfig, Direction } from '@nuxt/ui'
 import type { defaultConfig } from 'tailwind-variants'
-import type { MovkApiPublicConfig, ApiInstance, ModuleOptions } from '@movk/nuxt'
+import type { MovkApiPublicConfig, ApiError, ApiInstance, ModuleOptions, MovkZodRuntimeConfig } from '@movk/nuxt'
 import type { HookResult } from '@nuxt/schema'
 import type { FetchContext } from 'ofetch'
 
@@ -166,8 +167,9 @@ declare module 'nuxt/app' {
   interface RuntimeNuxtHooks {
     'movk:api:request': (context: FetchContext) => HookResult
     'movk:api:response': (context: FetchContext) => HookResult
-    'movk:api:error': (context: FetchContext) => HookResult
+    'movk:api:error': (context: FetchContext, error: ApiError) => HookResult
     'movk:api:unauthorized': (context: FetchContext, result: { handled: boolean }) => HookResult
+    'movk:zod:config': (config: MovkZodRuntimeConfig) => HookResult
   }
 }
 
@@ -220,6 +222,27 @@ export const useUserSession: (() => unknown) | undefined = _useUserSession
 `
       : `export const useUserSession: (() => unknown) | undefined = undefined
 `
+  })
+
+  templates.push({
+    filename: 'movk-router.ts',
+    write: true,
+    getContents: () => `export const supportsSearchQuery = ${supportsSearchQuery}\n`
+  })
+
+  templates.push({
+    filename: 'movk-zod.ts',
+    write: true,
+    getContents: async () => {
+      if (!options.zod) return generateZodTemplate(undefined)
+
+      const available = Object.keys(await import('zod/locales'))
+      const setup = resolveZodOptions(options.zod, available)
+      if (setup.unresolved.length) {
+        useLogger('movk').warn(`No zod locale matches: ${setup.unresolved.join(', ')}. Falling back to "${setup.options.fallback}".`)
+      }
+      return generateZodTemplate(setup)
+    }
   })
 
   templates.push({

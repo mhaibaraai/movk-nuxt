@@ -23,7 +23,6 @@
       "[:\\[,]\\s*['\"`]([^'\"`]*)['\"`]"
     ]
   ],
-  "mdc.enableComponentMetadataCompletions": true,
   "[mdc]": {
     "editor.tabSize": 2,
     "editor.insertSpaces": true,

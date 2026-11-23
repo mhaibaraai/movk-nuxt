@@ -1,43 +1,9 @@
-import type { $Fetch } from 'nitropack/types'
-import type { ApiInstance, ApiStreamOptions, MovkApiPublicConfig } from '../types/api'
-import type { EndpointPrivateConfig, ResolvedEndpointConfig } from '../types/api/module'
+import type { ApiInstance, ApiStreamOptions } from '../types/api'
+import type { EndpointPrivateConfig } from '../types/api/module'
 import { resolveEndpointConfig } from '../domains/api/endpoint-config'
-import { createOnRequest } from '../domains/api/interceptors/request'
-import { createOnResponse } from '../domains/api/interceptors/response'
-import { createOnResponseError } from '../domains/api/interceptors/error'
-import { attachInterceptors } from '../domains/api/interceptors/compose'
+import { createApiClient } from '../domains/api/client'
 import { openEventStream } from '../domains/api/stream'
 import { defineNuxtPlugin, useNuxtApp, useRuntimeConfig } from '#imports'
-
-type NuxtApp = ReturnType<typeof useNuxtApp>
-
-/**
- * 为指定端点构建 $fetch 实例
- *
- * @description 三段拦截器各自由独立工厂构造，本函数仅做组装：依赖单一职责、便于单测
- */
-function createEndpointFetch(
-  resolvedConfig: ResolvedEndpointConfig,
-  publicConfig: MovkApiPublicConfig,
-  nuxtApp: NuxtApp
-): $Fetch {
-  const interceptors = {
-    onRequest: createOnRequest(resolvedConfig, publicConfig, nuxtApp),
-    onResponse: createOnResponse(resolvedConfig, publicConfig, nuxtApp),
-    onResponseError: createOnResponseError(resolvedConfig, publicConfig, nuxtApp)
-  }
-
-  const instance = $fetch.create({
-    baseURL: resolvedConfig.baseURL,
-    headers: resolvedConfig.headers,
-    ...interceptors
-  })
-
-  // 挂到实例供 useApiFetch 组合复用：用户传同名钩子时不致覆盖内置拦截器
-  attachInterceptors(instance, interceptors)
-
-  return instance
-}
 
 export default defineNuxtPlugin(() => {
   const nuxtApp = useNuxtApp()
@@ -62,12 +28,12 @@ export default defineNuxtPlugin(() => {
       return getOrCreateEndpoint(defaultEndpoint)
     }
 
-    const resolved = resolveEndpointConfig(publicConfig, endpointName, privateEndpoints)
-    const $fetchInstance = createEndpointFetch(resolved, publicConfig, nuxtApp)
+    const config = resolveEndpointConfig(publicConfig, endpointName, privateEndpoints)
+    const client = createApiClient({ endpoint: endpointName, config, publicConfig, nuxtApp })
 
-    const apiInstance = Object.assign($fetchInstance, {
+    const apiInstance = Object.assign(client, {
       use: (endpoint: string) => getOrCreateEndpoint(endpoint),
-      stream: <T>(url: string, options?: ApiStreamOptions<T>) => openEventStream<T>($fetchInstance, url, options)
+      stream: <T>(url: string, options?: ApiStreamOptions<T>) => openEventStream<T>(client, url, options)
     }) as ApiInstance
 
     endpointCache.set(endpointName, apiInstance)

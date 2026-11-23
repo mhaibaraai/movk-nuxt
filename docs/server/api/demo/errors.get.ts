@@ -17,14 +17,21 @@ export default defineEventHandler(async (event) => {
   }
 
   if (type === 'network') {
+    // 主动销毁连接，模拟网络不可达
     event.node.res.destroy()
     return
+  }
+
+  if (type === 'slow') {
+    await new Promise(r => setTimeout(r, 2000))
+    return { code: 0, data: 'late' }
   }
 
   if (type === '500') {
     throw createError({ statusCode: 500, message: '服务器内部错误' })
   }
 
+  // 默认：业务错误（HTTP 200 但 code 非成功）
   return {
     code: 4001,
     message: '业务错误：余额不足',

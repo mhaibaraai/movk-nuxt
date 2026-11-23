@@ -16,9 +16,8 @@ export interface EventStreamOptions<T> {
 /**
  * `$api.stream()` 选项
  *
- * @description 刻意不预设 `Accept` 与 `responseType`：
- *  - 部分网关（如 DRF）按 `Accept` 做内容协商，收到 `text/event-stream` 会直接拒掉整个请求
- *  - 不强制 `responseType: 'stream'` 才能让 JSON 错误信封走完业务码校验；网关把流标成非 SSE 类型时再显式传
+ * @description 默认 `responseType: 'stream'`，JSON 错误信封仍由拦截器还原后走业务码校验；
+ *  `Accept` 默认通配，部分网关（如 DRF）按 `Accept` 做内容协商，收到 `text/event-stream` 会直接拒掉整个请求
  */
 export type ApiStreamOptions<T = unknown> = FetchOptions & EventStreamOptions<T>
 

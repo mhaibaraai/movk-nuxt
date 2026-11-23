@@ -6,7 +6,7 @@ const toast = useToast()
 
 const schema = afz.object({
   keyword: afz.string({ controlProps: { placeholder: '输入关键字' } }).optional().meta({ label: '关键字' }),
-  category: afz.enum(['全部', '前端', '后端', '运维'], { type: 'pillGroup' }).default('全部').meta({ label: '分类' }),
+  category: afz.enum(['全部', '前端', '后端', '运维'], { type: 'radioGroup', controlProps: { orientation: 'horizontal' } }).default('全部').meta({ label: '分类' }),
   status: afz.enum(['active', 'archived'], { type: 'radioGroup' }).default('active').meta({ label: '状态' })
 })
 const state = reactive<Partial<z.input<typeof schema>>>({})
@@ -25,8 +25,8 @@ function onReset() {
 <template>
   <MAutoForm
     ref="searchForm"
+    v-model="state"
     :schema="schema"
-    :state="state"
     :global-meta="{ orientation: 'horizontal', size: 'sm' }"
     :submit="false"
     @submit="onSubmit"

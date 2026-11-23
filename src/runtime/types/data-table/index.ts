@@ -37,6 +37,7 @@ export type {
   DataTablePaginationSlotProps,
   DataTableProps,
   DataTableSelectHandler,
+  DataTableServerCsvContext,
   DataTableSlots
 } from './component'
 export type {

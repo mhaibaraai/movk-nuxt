@@ -1,4 +1,4 @@
-export type { AutoFormFieldContext, AutoFormFieldSlots, AutoFormNestedCollapsible, ResolvedAutoFormFieldContext } from './fields'
+export type { AutoFormAsyncItems, AutoFormFieldContext, AutoFormFieldSlots, AutoFormNestedCollapsible, ResolvedAutoFormFieldContext } from './fields'
 export type {
   AutoFormControl,
   AutoFormControlProps,
@@ -10,5 +10,5 @@ export type {
 export type { AutoFormField, AutoFormSlotProps, DynamicFormSlots } from './slots'
 export type { TypedZodFactory } from './zod-factory'
 export type { BaseAutoFormProps } from './base'
-export type { AutoFormEmits, AutoFormProps, AutoFormSlots, AutoFormErrorHandler, AutoFormSubmitHandler } from './component'
-export type { SearchFormEmits, SearchFormProps, SearchFormSlots, SearchFormAction, SearchFormSlotProps } from './search-form'
+export type { AutoFormEmits, AutoFormExposed, AutoFormProps, AutoFormSlots, AutoFormErrorHandler, AutoFormSubmitHandler } from './component'
+export type { SearchFormEmits, SearchFormProps, SearchFormQuerySync, SearchFormSlots, SearchFormAction, SearchFormSlotProps } from './search-form'

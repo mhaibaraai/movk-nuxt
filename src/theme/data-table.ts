@@ -26,6 +26,9 @@ const BS = 'var(--m-dt-border-style,solid)'
 export default () => ({
   slots: {
     wrapper: 'flex flex-col min-h-0 relative',
+    toolbar: 'flex items-center justify-end gap-2 pb-2',
+    skeleton: 'flex flex-col gap-2 py-1',
+    skeletonRow: 'h-4 w-full',
     base: 'border-separate border-spacing-0',
     tbody: 'divide-y-0',
     th: [

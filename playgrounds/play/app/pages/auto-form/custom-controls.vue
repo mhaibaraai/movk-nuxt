@@ -132,12 +132,12 @@ function onSubmit(event: FormSubmitEvent<Schema>) {
 
   <div class="p-4 grid grid-cols-1 xl:grid-cols-[1fr_360px] gap-4">
     <Showcase title="自定义控件注入" description="useAutoForm({ controls }) 注册控件，afz type 按名匹配">
-      <MAutoForm :schema="schema" :state="state" :controls="controls" @submit="onSubmit" />
+      <MAutoForm v-model="state" :schema="schema" :controls="controls" @submit="onSubmit" />
     </Showcase>
     <StateViewer :state="state" label="state" />
 
     <Showcase title="直接传入组件" description="在 schema 的 component 中直接传入组件实例（如 UInputRating），无需注册控件即可渲染。">
-      <MAutoForm :schema="directSchema" :state="directState" />
+      <MAutoForm v-model="directState" :schema="directSchema" />
     </Showcase>
     <StateViewer :state="directState" label="directState" />
   </div>

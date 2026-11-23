@@ -32,7 +32,7 @@ export default defineMcpPrompt({
           role: 'user' as const,
           content: {
             type: 'text' as const,
-            text: `Find the most suitable Movk Nuxt component for this use case: "${usecase}". The candidate set includes standalone UI components (category: input/feedback/form/advanced) and DataTable section pages (category: data-table): ${JSON.stringify(candidates, null, 2)}`
+            text: `Find the most suitable Movk Nuxt component for this use case: "${usecase}". The candidate set includes standalone UI components (category: feedback/advanced) and DataTable section pages (category: data-table): ${JSON.stringify(candidates, null, 2)}`
           }
         }
       ]

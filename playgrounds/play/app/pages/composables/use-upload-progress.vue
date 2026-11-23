@@ -148,15 +148,15 @@ const tip = (s: string, e: { message: string } | null) => {
       </Showcase>
 
       <Showcase
-        title="超时（timeoutMs + ?slow=2000）"
-        description="timeoutMs=500，服务端延迟 2s，触发 xhr.ontimeout，error.message 提示超时毫秒"
+        title="上传超时"
+        description="通过 timeout 设置 500ms，服务端延迟 2s → 以 TimeoutError 中止，error.data.kind 为 timeout。"
       >
         <UButton
           color="neutral"
           :disabled="!selected.length"
           icon="i-lucide-timer"
           @click="timeout.upload('/upload?slow=2000', selected, {
-            timeoutMs: 500,
+            timeout: 500,
             onError: e => push(`超时: ${e.message}`)
           })"
         >

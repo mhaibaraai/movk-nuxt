@@ -30,5 +30,5 @@ watch(() => state.country, () => {
 </script>
 
 <template>
-  <MAutoForm :schema="schema" :state="state" />
+  <MAutoForm v-model="state" :schema="schema" />
 </template>

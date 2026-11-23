@@ -2,6 +2,7 @@ import type { PaginationProps, SelectProps, TableData } from '@nuxt/ui'
 import type { PaginationState, RowData, Table } from '@tanstack/vue-table'
 import type { VNode } from 'vue'
 import type { ClassNameValue } from '../shared'
+import type { MovkMessages } from '../locale'
 
 type DataTablePageSizeSelectProps = Omit<
   SelectProps<Array<{ label: string, value: number }>>,
@@ -14,14 +15,6 @@ type DataTablePageSizeSelectProps = Omit<
   | 'descriptionKey'
   | 'onUpdate:modelValue'
 >
-
-interface DataTablePaginationUiText {
-  total?: string
-  item?: string
-  range?: string
-  selected?: string
-  page?: string
-}
 
 export interface DataTablePaginationUi {
   /**
@@ -48,7 +41,12 @@ export interface DataTablePaginationUi {
   showRowRange?: boolean
   paginationProps?: Omit<PaginationProps, 'page' | 'total' | 'itemsPerPage'>
   pageSizeSelectProps?: DataTablePageSizeSelectProps
-  text?: DataTablePaginationUiText
+  /**
+   * 覆盖分页文案模板，支持占位符：`empty`、`total`（`{total}`）、`range`（`{from}` `{to}` `{total}`）、
+   * `rangeUnknown`（`{from}` `{to}` `{page}` `{pageCount}`）、`selected`（`{count}`）、`pageSize`（`{size}`）。
+   * 缺省时取 locale 的 `pagination.*`。
+   */
+  text?: Partial<MovkMessages['pagination']>
   ui?: Record<string, ClassNameValue>
 }
 

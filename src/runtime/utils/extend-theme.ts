@@ -33,6 +33,7 @@ export function useExtendedTv<P extends SlotsLike, M extends SlotsLike>(
   const emptySlots = Object.fromEntries(
     Object.keys(parentTheme.slots).map(key => [key, ''])
   )
+  const movkTv = tv(movkTheme as never)
 
   // 完整合并结果：包含父组件原生 slot 与 movk 扩展 slot。
   const extendUi = computed(() => {
@@ -44,7 +45,7 @@ export function useExtendedTv<P extends SlotsLike, M extends SlotsLike>(
       ...(ov.variants ? { variants: ov.variants } : {}),
       ...(ov.compoundVariants ? { compoundVariants: ov.compoundVariants } : {}),
       ...(ov.defaultVariants ? { defaultVariants: ov.defaultVariants } : {}),
-      extend: tv(movkTheme as never)
+      extend: movkTv
     } as never)
 
     const cls = (tvFn as unknown as (v?: unknown) => SlotMap)(variants)

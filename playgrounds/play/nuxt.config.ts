@@ -19,8 +19,6 @@ export default defineNuxtConfig({
         '@internationalized/date',
         '@movk/core',
         '@tanstack/vue-table',
-        'colortranslator',
-        'maska/vue',
         'tailwind-variants',
         'tailwindcss/colors',
         'zod'
@@ -38,6 +36,10 @@ export default defineNuxtConfig({
     theme: {
       font: 'Alibaba PuHuiTi'
     },
+    zod: {
+      locale: 'auto',
+      locales: ['zh-CN']
+    },
     api: {
       endpoints: {
         default: { baseURL: '/api' },
@@ -45,6 +47,10 @@ export default defineNuxtConfig({
         mutation: {
           baseURL: '/api/demo',
           toast: { success: { methods: ['POST', 'PUT', 'PATCH', 'DELETE'] } }
+        },
+        raw: {
+          baseURL: '/api/demo/raw',
+          response: { businessCheck: false, unwrap: false }
         }
       },
       auth: {

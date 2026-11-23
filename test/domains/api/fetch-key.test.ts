@@ -30,13 +30,25 @@ describe('domains/api/fetch-key.buildApiFetchKey', () => {
     expect(new Set(keys).size).toBe(keys.length)
   })
 
-  it('endpoint / skipUnwrap / skipBusinessCheck 变化产生不同 key', () => {
+  it('endpoint / businessCheck / unwrap 变化产生不同 key', () => {
     const base = { url: '/profile' } as const
     const keys = [
       buildApiFetchKey({ ...base }),
       buildApiFetchKey({ ...base, endpoint: 'v2' }),
-      buildApiFetchKey({ ...base, skipUnwrap: true }),
-      buildApiFetchKey({ ...base, skipBusinessCheck: true })
+      buildApiFetchKey({ ...base, unwrap: false }),
+      buildApiFetchKey({ ...base, businessCheck: false })
+    ]
+    expect(new Set(keys).size).toBe(keys.length)
+  })
+
+  it('显式 true / false 与未传三态互不相同（未传时继承端点配置）', () => {
+    const base = { url: '/profile' } as const
+    const keys = [
+      buildApiFetchKey({ ...base }),
+      buildApiFetchKey({ ...base, businessCheck: true }),
+      buildApiFetchKey({ ...base, businessCheck: false }),
+      buildApiFetchKey({ ...base, unwrap: true }),
+      buildApiFetchKey({ ...base, unwrap: false })
     ]
     expect(new Set(keys).size).toBe(keys.length)
   })
