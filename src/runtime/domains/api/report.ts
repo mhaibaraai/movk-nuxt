@@ -69,7 +69,7 @@ export async function reportSuccess(context: FetchContext, message: unknown, dep
 }
 
 /**
- * 失败上报：401 → `movk:api:unauthorized`（接管后不再派发 error）→ `movk:api:error` → 错误 toast
+ * 失败上报：401 → `movk:api:unauthorized`（接管后不再派发 error 与错误 toast）→ `movk:api:error` → 错误 toast
  * @description 由客户端出口在 ofetch 重试结束后统一调用，每次请求只上报一次；中止不上报
  */
 export async function reportFailure(context: FetchContext | undefined, error: ApiError, deps: ApiClientDeps): Promise<void> {
@@ -83,8 +83,8 @@ export async function reportFailure(context: FetchContext | undefined, error: Ap
   }
 
   const handled = isUnauthorized(error) && await dispatchUnauthorized(fetchContext, deps)
-  if (!handled) {
-    await nuxtApp.callHook('movk:api:error', fetchContext, error)
-  }
+  if (handled) return
+
+  await nuxtApp.callHook('movk:api:error', fetchContext, error)
   showToast('error', error.message, fetchContext.options.toast, config.toast, config.response, fetchContext.options.method, nuxtApp)
 }
