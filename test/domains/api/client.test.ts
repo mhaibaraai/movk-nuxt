@@ -173,8 +173,8 @@ describe('domains/api/client', () => {
       expect(navigateToMock).toHaveBeenCalledWith('/login')
     })
 
-    it('业务侧接管后跳过默认处理与 error hook', async () => {
-      fetchMock.mockResolvedValue(json(401, {}))
+    it('业务侧接管后跳过默认处理、error hook 与错误 toast', async () => {
+      fetchMock.mockResolvedValue(json(401, { message: '登录已过期' }))
       callHook.mockImplementation(async (name: unknown, _ctx: unknown, result?: unknown) => {
         if (name === 'movk:api:unauthorized') (result as { handled: boolean }).handled = true
       })
@@ -184,6 +184,7 @@ describe('domains/api/client', () => {
       expect(hookNames()).toEqual(['movk:api:request', 'movk:api:unauthorized'])
       expect(userSessionClear).not.toHaveBeenCalled()
       expect(navigateToMock).not.toHaveBeenCalled()
+      expect(toastAdd).not.toHaveBeenCalled()
     })
   })
 
