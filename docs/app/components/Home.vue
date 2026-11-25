@@ -15,7 +15,7 @@ const features = [
 
 <template>
   <section class="border-b border-default bg-muted/35">
-    <UContainer class="grid items-center gap-10 pt-12 pb-14 sm:pt-16 sm:pb-18 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-12 lg:py-20 xl:gap-16">
+    <UContainer class="grid items-center gap-10 pt-12 pb-14 sm:pt-16 sm:pb-18 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-12 lg:py-36 xl:gap-16">
       <div>
         <h1 class="max-w-3xl font-sans text-[clamp(2rem,9.7vw,2.25rem)]/tight font-bold tracking-tight text-balance text-highlighted sm:text-5xl/tight lg:text-4xl/tight xl:text-5xl/tight 2xl:text-6xl/[1.12]">
           {{ copy.title }}
