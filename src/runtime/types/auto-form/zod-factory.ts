@@ -1,5 +1,5 @@
 import type { z } from 'zod'
-import type { VNodeProps } from 'vue'
+import type { MaybeRef, VNodeProps } from 'vue'
 import type { CalendarDate, Time } from '@internationalized/date'
 import type {
   ComponentProps,
@@ -126,7 +126,9 @@ type MetaPropsFor<
   TControls extends AutoFormControls,
   K extends ControlKey<TControls>
 > = {
-  controlProps?: ReactiveValue<ControlPropsByKey<TControls, K>, AutoFormFieldContext>
+  // 单一回调签名让有参和无参函数都能推断控件属性的字面量类型。
+  controlProps?: MaybeRef<ControlPropsByKey<TControls, K>>
+    | ((ctx: AutoFormFieldContext) => ControlPropsByKey<TControls, K>)
   controlSlots?: ReactiveValue<ControlSlotsByKey<TControls, K>, AutoFormFieldContext> | Record<string, unknown>
   error?: string
 }
