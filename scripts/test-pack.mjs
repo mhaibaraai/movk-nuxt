@@ -51,6 +51,7 @@ import { ref } from 'vue'
 const { afz } = useAutoForm()
 const schema = afz.object({
   day: afz.calendarDate(),
+  username: afz.string({ controlProps: () => ({ size: 'lg' }) }).optional(),
   pinned: afz.boolean({ type: 'toggle', controlProps: { label: 'Pin article', activeColor: 'primary' } }).default(false),
   period: afz.enum(['day', 'week'], { type: 'toggleGroup', controlProps: { attached: true } }).default('week')
 })
@@ -75,7 +76,23 @@ const searchSchema = afz.object({ keyword: afz.string().optional() })
     'tsconfig.json': '{ "extends": "./.nuxt/tsconfig.app.json" }\n',
     'app/app.vue': files['app.vue'],
     'app/main.css': files['main.css'],
-    'app/check.ts': 'import type { DataTableServerCsvContext } from \'@movk/nuxt\'\nexport type Check = DataTableServerCsvContext\n'
+    'app/check.ts': `import type { DataTableServerCsvContext } from '@movk/nuxt'
+import { computed, h, ref } from 'vue'
+
+export type Check = DataTableServerCsvContext
+
+export function checkAutoFormControlProps() {
+  const { afz } = useAutoForm()
+  afz.string({ controlProps: { size: 'lg' } })
+  afz.string({ controlProps: () => ({ size: 'lg' }), controlSlots: { trailing: () => h('span') } })
+  afz.string({ type: 'string', controlProps: () => ({ size: 'lg' }) })
+  afz.string({ controlProps: ctx => ({ size: ctx.path ? 'lg' : 'sm' }) })
+  afz.string({ controlProps: ref({ size: 'lg' as const }) })
+  afz.string({ controlProps: computed(() => ({ size: 'lg' as const })) })
+  // @ts-expect-error UInput 的 size 只接受预定义尺寸
+  afz.string({ controlProps: () => ({ size: 'huge' }) })
+}
+`
   })
   run('pnpm', ['exec', 'nuxt', 'typecheck'], nuxt)
   run('pnpm', ['exec', 'nuxt', 'generate'], nuxt)
