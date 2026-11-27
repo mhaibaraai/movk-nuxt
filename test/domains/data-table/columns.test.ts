@@ -237,4 +237,14 @@ describe('resolveColumns 表头插槽', () => {
     expect(typeof header).toBe('function')
     expect(header(makeHeaderCtx())[0]!.type).toBe('em')
   })
+
+  it('actions 列向 ActionsCell 传入浅拷贝的 cellCtx 以避免引用复用跳过更新', () => {
+    const { columnDefs } = resolve([{ type: 'actions', actions: [] }])
+    const def = columnDefs.find(d => d.id === '__actions')!
+    const cellFn = def.cell as (ctx: unknown) => VNode
+    const rawCellCtx = { row: { id: '1', index: 0, original: { id: '1', name: '角色管理' } } }
+    const vnode = cellFn(rawCellCtx)
+    expect(vnode.props?.cellCtx).not.toBe(rawCellCtx)
+    expect(vnode.props?.cellCtx).toEqual(rawCellCtx)
+  })
 })

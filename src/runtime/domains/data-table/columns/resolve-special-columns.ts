@@ -325,7 +325,9 @@ export function resolveActionsColumn<T>(
 ): ColumnDef<T, unknown> {
   return buildSpecialColumnDef(col, 'actions', ctx, {
     header: col.header ?? ctx.t('dataTable.actions'),
+    // FlexRender 以无 .props 的函数式组件调用 cell，同一 row-key 更新时 Vue 会原地复用 attrs 作为 cellCtx；
+    // 浅拷贝打破引用复用，确保 ActionsCell 在行数据更新时重新渲染而非停留在旧行快照。
     cell: (cellCtx: CellContext<T, unknown>) =>
-      h(DataTableActionsCell, { col, cellCtx, options: ctx.options } as any)
+      h(DataTableActionsCell, { col, cellCtx: { ...cellCtx }, options: ctx.options } as any)
   })
 }

@@ -129,4 +129,52 @@ describe('DataTable', () => {
     const wrapper = await mountTable({ data: [], columns: [{ accessorKey: 'name' }], loading: true, skeletonRows: 3 })
     expect(wrapper.findAll('[data-slot="skeleton"] > *')).toHaveLength(3)
   })
+
+  it('同 rowKey 行数据更新后操作列文案与点击回调获取最新行数据', async () => {
+    const clicked: Array<{ id: number, name: string, ctxRowName: string }> = []
+    const wrapper = await mountTable({
+      data: [
+        { id: 1, name: 'a' },
+        { id: 2, name: 'b' }
+      ],
+      rowKey: 'id',
+      columns: [
+        { accessorKey: 'name' },
+        {
+          type: 'actions',
+          actions: (ctx: { row: { original: Row } }) => {
+            const row = ctx.row.original
+            return [
+              {
+                key: 'edit',
+                buttonProps: { label: `编辑:${row.name}` },
+                onClick: (actionCtx: { row: Row }) => {
+                  clicked.push({ id: row.id, name: row.name, ctxRowName: actionCtx.row.name })
+                }
+              }
+            ]
+          }
+        }
+      ]
+    })
+    await nextTick()
+
+    const firstBtn = wrapper.findAll('button').find(btn => btn.text().startsWith('编辑:'))
+    expect(firstBtn?.text()).toBe('编辑:a')
+    await firstBtn!.trigger('click')
+    expect(clicked[0]).toEqual({ id: 1, name: 'a', ctxRowName: 'a' })
+
+    await wrapper.setProps({
+      data: [
+        { id: 1, name: 'a-updated' },
+        { id: 2, name: 'b' }
+      ]
+    } as never)
+    await nextTick()
+
+    const updatedBtn = wrapper.findAll('button').find(btn => btn.text().startsWith('编辑:'))
+    expect(updatedBtn?.text()).toBe('编辑:a-updated')
+    await updatedBtn!.trigger('click')
+    expect(clicked[1]).toEqual({ id: 1, name: 'a-updated', ctxRowName: 'a-updated' })
+  })
 })
