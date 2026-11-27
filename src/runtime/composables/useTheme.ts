@@ -16,7 +16,7 @@ const UI_DEFAULT_RADIUS = 0.25
 export function useTheme() {
   const { movk, ui } = useAppConfig()
   const colorMode = useColorMode()
-  const name = kebabCase(useSiteConfig().name)
+  const name = kebabCase(useSiteConfig().name ?? 'movk')
 
   const color = computed<string>(() => resolveThemeColor(ui.colors.neutral, colorMode.value))
 

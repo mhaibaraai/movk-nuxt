@@ -8,7 +8,7 @@ export default defineNuxtPlugin({
   setup() {
     const appConfig = useAppConfig()
     const site = useSiteConfig()
-    const name = kebabCase(site.name)
+    const name = kebabCase(site.name ?? 'movk')
 
     if (import.meta.client) {
       const primary = localStorage.getItem(`${name}-ui-primary`)
