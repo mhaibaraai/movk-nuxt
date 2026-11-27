@@ -173,7 +173,7 @@
     "@nuxt/schema": "^4.6.4",
     "@nuxt/test-utils": "^4.4.0",
     "@release-it/conventional-changelog": "^12.0.2",
-    "@vitest/coverage-v8": "5.1.1",
+    "@vitest/coverage-v8": "5.1.2",
     "@vue/test-utils": "^2.6.0",
     "ai": "^7.0.179",
     "eslint": "^10.15.0",
@@ -185,7 +185,7 @@
     "unbuild": "^3.6.1",
     "unplugin-auto-import": "^21.1.0",
     "unplugin-vue-components": "^32.1.0",
-    "vitest": "5.1.1",
+    "vitest": "5.1.2",
     "vue": "^3.5.46",
     "vue-tsc": "3.3.14"
   }
