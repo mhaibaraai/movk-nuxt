@@ -1,5 +1,51 @@
 # 📋 Changelog
 
+## [2.0.0-beta.1](https://github.com/mhaibaraai/movk-nuxt/compare/v1.8.3...v2.0.0-beta.1) (2026-11-27)
+
+这是 Movk Nuxt 2.0 的首个 Beta，面向使用 Nuxt UI v4 的 Nuxt 和 Vue + Vite 项目。可用 `pnpm add @movk/nuxt@beta` 试用。Movk Nuxt 2.0 正式版计划在 Nuxt UI v5 发布后推出。
+
+本版新增异步表单选项、筛选条件 URL 同步和表格 CSV 导出。Nuxt 模式下，普通请求、上传下载和流式请求共用端点配置与错误处理。
+
+### ⚠ BREAKING CHANGES
+
+* **运行环境**要求 Node.js `^22.22.3 || ^24.15.0 || >=26.0.0`，Nuxt 模式要求 Nuxt `^4.6.4`，Nuxt UI 最低版本为 `4.13.0`。升级前请同时检查本地、CI 和部署环境。([环境要求](https://nuxt.mhaibaraai.cn/docs/getting-started/migration#环境与-api))
+* **已移除的组件**包括六个输入包装组件，以及 `MPillGroup`、`MColorChooser`、`MSlideVerify`、`MPopconfirm` 和相应的类型、主题配置。使用已移除 AutoForm 控件类型的 Schema 需要改用内置控件，或通过 `defineControl` 注册自定义控件。([组件与控件替换清单](https://nuxt.mhaibaraai.cn/docs/getting-started/migration#移除的组件))
+* **AutoForm** 推荐从已弃用的 `:state` 迁移到 `v-model`。AutoForm 和 SearchForm 的 `reset()` 恢复基线并补齐 Schema 默认值，`clear()` 仅保留默认值。SearchForm 使用 `v-model:expanded` 控制展开，默认提交会修剪字符串并移除空值，保留 `0` 和 `false`。([表单迁移](https://nuxt.mhaibaraai.cn/docs/getting-started/migration#表单表格与语言))
+* **DataTable** 的操作确认改用 `confirmLabel`、`cancelLabel`、`confirmButton` 和 `cancelButton`。自定义 `paginationUi.text` 需改用整句模板。([表格迁移](https://nuxt.mhaibaraai.cn/docs/getting-started/migration#表单表格与语言))
+* **组件默认文案**与 `useDateFormatter` 跟随 `UApp`，缺省回退英文。需要保留中文文案时，给 `UApp` 设置 `zh_cn`。通过 `movk:zod:config` 配置的 `customError` 仅作用于当前应用的 AutoForm 和 SearchForm。([语言迁移](https://nuxt.mhaibaraai.cn/docs/getting-started/migration#表单表格与语言))
+* **迁移 API 请求选项**时，将 `skipBusinessCheck: true` 和 `skipUnwrap: true` 分别改为 `businessCheck: false` 和 `unwrap: false`，并将 `$api` 的请求级开关及 `toast` 移到选项顶层。端点直接返回裸数组或裸对象时，请同时关闭校验和解包。通过 `ApiError.data?.kind` 判断错误类型，通过 `data.response` 读取原响应。错误钩子改为 `movk:api:error(context, error)`，重试结束后最多上报一次。上传超时选项改为 `timeout`。([API 迁移表](https://nuxt.mhaibaraai.cn/docs/api#从-v1-迁移到-v2))
+* **会话认证**方面，启用 `nuxt-auth-utils` 会话的项目需要按 v0.6 迁移。生产环境设置 `NUXT_APP_SECRET`，移除旧的 `NUXT_SESSION_PASSWORD` 和 `runtimeConfig.session.password`，并安排用户重新登录。([完整迁移指南](https://nuxt.mhaibaraai.cn/docs/getting-started/migration))
+
+### ✨ Features
+
+* **AutoForm** 支持异步选项 `asyncItems`、数组项移动与复制、布尔切换按钮 `toggle` 和单选或多选按钮组 `toggleGroup`。支持嵌套字段的条件显示、隐藏值策略，以及通过 `isDirty` 和 `dirtyFields` 查看相对基线的改动。([c7a53b4](https://github.com/mhaibaraai/movk-nuxt/commit/c7a53b4f23030d83edb8219386c5ce9af1217f1d), [c07e333](https://github.com/mhaibaraai/movk-nuxt/commit/c07e33394d11a133b42ebaf842ae3a8d5857d15e), [2df748c](https://github.com/mhaibaraai/movk-nuxt/commit/2df748cb90620ce4ab26212a48cbd1a7b6325cb3))
+* **SearchForm** 可通过 `syncQuery` 将筛选条件写入 URL，并在浏览器前进或后退时恢复条件。可监听 `query-restore` 刷新列表。([812f235](https://github.com/mhaibaraai/movk-nuxt/commit/812f23537a615dff871db2a682abbafdd96c2a97))
+* **DataTable** 新增列设置、状态持久化、加载骨架屏与 CSV 导出。服务端分页场景可通过 `exportServerCsv()` 把列、排序和筛选条件交给调用方，全量导出由服务端处理。([430c246](https://github.com/mhaibaraai/movk-nuxt/commit/430c246fe03062c4bd5f7a13317d5f0cbd677d62), [e5cc852](https://github.com/mhaibaraai/movk-nuxt/commit/e5cc852ff6ba93519f273df60b713ad7d3b135ce))
+* **Tree** 支持只选择叶子节点的 `leaf` 策略、远程搜索与防抖，以及通过 `reload()` 重新加载节点。([0b7f19d](https://github.com/mhaibaraai/movk-nuxt/commit/0b7f19d70d1cfa40bb23ad030da9d95239a13184))
+* **DatePicker** 新增 `v-model:open` 和 `open()` / `close()`，修复负时区以及月、年模式的显示。([985aa8a](https://github.com/mhaibaraai/movk-nuxt/commit/985aa8a66b47557b8dbf688028bf94228adcbc7a))
+* **本地化**提供中英文组件文案和 `extendMovkLocale`，可按需开启 Zod 校验文案本地化。([dfdab5d](https://github.com/mhaibaraai/movk-nuxt/commit/dfdab5d40cda049e8a1a9b34fc444175ae08233e), [03ce56e](https://github.com/mhaibaraai/movk-nuxt/commit/03ce56e90c2869b2c2ed68fd99f9d3002009fde9))
+* **API** 可按端点分别配置业务码校验和数据解包，也可按请求覆盖。上传下载沿用端点请求头与请求钩子，SSE 和 AI Chat 传输继续按流读取。([bfdb32f](https://github.com/mhaibaraai/movk-nuxt/commit/bfdb32f3867194a2f9350c562f0cdf7eb262c4bb))
+
+### 🐛 Bug Fixes
+
+* **API** 修复 SSR 拦截器丢失 Nuxt 上下文导致认证和 Toast 失效的问题。401 被自定义钩子接管后跳过默认错误提示。([f9b9846](https://github.com/mhaibaraai/movk-nuxt/commit/f9b9846da8405dc2a333ae3b7d184da090d4927d), [954d9e2](https://github.com/mhaibaraai/movk-nuxt/commit/954d9e266161dda4cbf80a0cb7ee03bea9b50fbe))
+* **AutoForm** 修复数组字段路径错位、缺少删除按钮和动态控件属性的字面量推断问题。**SearchForm** 修复响应式布局的水合问题。([f4cb3ee](https://github.com/mhaibaraai/movk-nuxt/commit/f4cb3ee5f7129b1bf95e9fc979c3f44a9637cbbd), [cdf9172](https://github.com/mhaibaraai/movk-nuxt/commit/cdf91729a15dd1a3c894525cc3e5f7ca93928c6e), [6b78b49](https://github.com/mhaibaraai/movk-nuxt/commit/6b78b494c47c5a9609337239fee59aafcf770f3e))
+* **DataTable** 修复同行记录更新后操作列仍读取旧数据的问题，以及已选计数、树形选中和无限滚动的问题。**Tree** 修复远程搜索与选中状态。([1d07ed0](https://github.com/mhaibaraai/movk-nuxt/commit/1d07ed050ef612b589e6be50be37ef0a191f0c07), [21586b7](https://github.com/mhaibaraai/movk-nuxt/commit/21586b70f364bba7ca56ae4ee4a411efbb835ee0), [f2b8c63](https://github.com/mhaibaraai/movk-nuxt/commit/f2b8c637b2da8bfd986466e0bd775f8d0cb88536))
+* **主题**修复缺少站点名时的存储前缀以及主题选择按钮的色点。**MessageBox** 修复自定义组件前缀下的 `useMessageBox()` 调用。([0f406e0](https://github.com/mhaibaraai/movk-nuxt/commit/0f406e0848431ddbd55bd4383df53dfcd8b7d4b8), [d14acfa](https://github.com/mhaibaraai/movk-nuxt/commit/d14acfa9195a3ba2012dab61b3cb9264c95879bf), [af8ba08](https://github.com/mhaibaraai/movk-nuxt/commit/af8ba082e9d45633e131acaaf2b672850e7ab5a4))
+
+### ⚡ Performance Improvements
+
+* **AutoForm** 按需加载内置日期控件。([ee934cb](https://github.com/mhaibaraai/movk-nuxt/commit/ee934cb33b3919e6b5819b56b01dd903311a123f))
+
+### 📝 Documentation
+
+* 新增中英文 v2 迁移指南、AI 辅助迁移清单和 API 架构指南。文档按能力域重组，并为旧路径提供重定向。([迁移指南](https://nuxt.mhaibaraai.cn/docs/getting-started/migration), [API 架构指南](https://nuxt.mhaibaraai.cn/docs/api/architecture))
+* 重做双语首页，增加可交互的工作坊示例，并更新 MCP 和 Agent Skill 的接入说明。([文档首页](https://nuxt.mhaibaraai.cn/), [AI 集成](https://nuxt.mhaibaraai.cn/docs/getting-started/ai))
+
+### 📦 Build System
+
+* 将 `@nuxt/kit` 声明为运行依赖，修复 Nuxt 模块和 Vue + Vite 插件在隔离项目中的安装。发布流程验证这两类消费项目，并复用通过验证的压缩包。([2d63e32](https://github.com/mhaibaraai/movk-nuxt/commit/2d63e325ea726026b52470eaf7042b248c0def1c))
+
 ## [1.8.3](https://github.com/mhaibaraai/movk-nuxt/compare/v1.8.2...v1.8.3) (2026-10-16)
 
 ### ✨ Features
