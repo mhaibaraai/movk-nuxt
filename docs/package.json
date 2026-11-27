@@ -16,7 +16,7 @@
     "@internationalized/date": "^3.12.4",
     "@modelcontextprotocol/server": "2.4.0",
     "@movk/nuxt": "workspace:*",
-    "@movk/nuxt-docs": "^3.0.7",
+    "@movk/nuxt-docs": "^3.0.8",
     "@nuxt/content": "^3.17.0",
     "@nuxt/ui": "^4.13.1",
     "@nuxtjs/i18n": "^10.7.0",
