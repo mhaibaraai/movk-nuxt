@@ -43,6 +43,7 @@ jobs:
         run: pnpm run dev:prepare
 
       - name: Verify tag matches package version
+        id: version
         env:
           REF_NAME: ${{ inputs.tag || github.ref_name }}
         run: |
@@ -52,6 +53,13 @@ jobs:
             echo "tag $TAG 与 package.json 版本 $PKG 不一致"
             exit 1
           fi
+
+          case "${PKG%%+*}" in
+            *-beta|*-beta.*) DIST_TAG=beta ;;
+            *-*) DIST_TAG=next ;;
+            *) DIST_TAG=latest ;;
+          esac
+          echo "dist_tag=$DIST_TAG" >> "$GITHUB_OUTPUT"
 
       - name: Build
         run: pnpm run build
@@ -66,4 +74,5 @@ jobs:
       - name: Publish
         env:
           TARBALL: ${{ steps.package.outputs.tarball }}
-        run: npm publish "$TARBALL" --provenance --access public --ignore-scripts
+          DIST_TAG: ${{ steps.version.outputs.dist_tag }}
+        run: npm publish "$TARBALL" --tag "$DIST_TAG" --provenance --access public --ignore-scripts

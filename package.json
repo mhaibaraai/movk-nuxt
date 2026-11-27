@@ -1,7 +1,7 @@
 {
   "name": "@movk/nuxt",
   "type": "module",
-  "version": "1.8.3",
+  "version": "2.0.0-beta.1",
   "packageManager": "pnpm@12.23.0",
   "description": "An application toolkit for Nuxt and Vue with schema-driven forms, configurable data tables, reusable components, and composables. Nuxt mode also includes API integration.",
   "author": "YiXuan <mhaibaraai@gmail.com>",
